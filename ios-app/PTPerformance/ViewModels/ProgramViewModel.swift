@@ -13,7 +13,7 @@ class ProgramViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let supabase: SupabaseClient
+    private let supabase: PTSupabaseClient
 
     init(supabase: SupabaseClient = .shared) {
         self.supabase = supabase

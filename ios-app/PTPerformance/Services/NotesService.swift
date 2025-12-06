@@ -3,7 +3,7 @@ import Supabase
 
 /// Service for managing session notes
 class NotesService {
-    private let supabase: SupabaseClient
+    private let supabase: PTSupabaseClient
 
     init(supabase: SupabaseClient = .shared) {
         self.supabase = supabase

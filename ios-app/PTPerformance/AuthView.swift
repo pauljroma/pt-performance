@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AuthView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTPTSupabaseClient.shared
 
     @State private var email: String = ""
     @State private var password: String = ""

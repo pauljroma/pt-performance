@@ -64,7 +64,7 @@ struct SessionSummary: Codable, Identifiable {
 
 /// Service for fetching analytics data
 class AnalyticsService {
-    private let supabase: SupabaseClient
+    private let supabase: PTSupabaseClient
 
     init(supabase: SupabaseClient = .shared) {
         self.supabase = supabase

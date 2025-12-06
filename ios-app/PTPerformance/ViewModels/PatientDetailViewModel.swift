@@ -13,7 +13,7 @@ class PatientDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let supabase: SupabaseClient
+    private let supabase: PTSupabaseClient
     private let analyticsService: AnalyticsService
 
     init(supabase: SupabaseClient = .shared) {

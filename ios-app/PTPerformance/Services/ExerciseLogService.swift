@@ -3,7 +3,7 @@ import Supabase
 
 /// Service for submitting exercise logs to Supabase
 class ExerciseLogService {
-    private let supabase: SupabaseClient
+    private let supabase: PTSupabaseClient
 
     init(supabase: SupabaseClient = .shared) {
         self.supabase = supabase
