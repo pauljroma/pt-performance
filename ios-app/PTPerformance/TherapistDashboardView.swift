@@ -84,11 +84,11 @@ struct PatientCardView: View {
             
             // Info
             VStack(alignment: .leading, spacing: 4) {
-                Text(patient.name)
+                Text(patient.fullName)
                     .font(.headline)
-                
+
                 HStack(spacing: 12) {
-                    Label("\(Int(patient.adherence * 100))%", systemImage: "checkmark.circle")
+                    Label("\(Int((patient.adherencePercentage ?? 0.0)))%", systemImage: "checkmark.circle")
                         .font(.caption)
                     
                     if let lastSession = patient.lastSessionDate {
