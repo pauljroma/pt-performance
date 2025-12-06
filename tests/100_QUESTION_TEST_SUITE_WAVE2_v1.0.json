@@ -1,0 +1,1723 @@
+{
+  "version": "1.0",
+  "created": "2025-12-06",
+  "title": "Wave 2 Optimization - 100-Question Validation Suite",
+  "description": "Comprehensive test suite for Wave 2 tier routing, ML-based routing, health monitoring, and production deployment covering all components with edge cases",
+  "target_pass_rate": 0.95,
+  "categories": {
+    "tier_routing": 25,
+    "ml_routing_adaptive": 25,
+    "health_monitoring_failover": 20,
+    "integration_production": 20,
+    "edge_cases_error_handling": 10
+  },
+  "questions": [
+    {
+      "id": "TR-001",
+      "category": "tier_routing",
+      "question": "Route a query for recent data (3 days old) to the master tier",
+      "query_params": {
+        "days_back": 3,
+        "estimated_rows": 1000,
+        "table": "sessions"
+      },
+      "expected_results": {
+        "tier": "master",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": null,
+        "rationale": "Recent data (<7 days) should route to hot tier (Master) for optimal performance"
+      },
+      "pass_criteria": "tier == 'master' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-002",
+      "category": "tier_routing",
+      "question": "Route a semantic search query with embeddings to PGVector tier",
+      "query_params": {
+        "use_embeddings": true,
+        "similarity_search": true,
+        "days_back": 5
+      },
+      "expected_results": {
+        "tier": "pgvector",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "master",
+        "rationale": "Embeddings/similarity queries prioritize PGVector regardless of data age"
+      },
+      "pass_criteria": "tier == 'pgvector' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-003",
+      "category": "tier_routing",
+      "question": "Route historical data query (30 days) to MinIO tier",
+      "query_params": {
+        "days_back": 30,
+        "estimated_rows": 50000,
+        "table": "exercises"
+      },
+      "expected_results": {
+        "tier": "minio",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "master",
+        "rationale": "Historical data (7-90 days) routes to cold tier (MinIO) for cost efficiency"
+      },
+      "pass_criteria": "tier == 'minio' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-004",
+      "category": "tier_routing",
+      "question": "Route archive analytics query (180 days) to Athena tier",
+      "query_params": {
+        "days_back": 180,
+        "estimated_rows": 1000000,
+        "table": "session_logs"
+      },
+      "expected_results": {
+        "tier": "athena",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "minio",
+        "rationale": "Archive data (>90 days) routes to Athena for large-scale analytics"
+      },
+      "pass_criteria": "tier == 'athena' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-005",
+      "category": "tier_routing",
+      "question": "Handle boundary condition: exactly 7 days old (tier boundary)",
+      "query_params": {
+        "days_back": 7,
+        "estimated_rows": 5000
+      },
+      "expected_results": {
+        "tier": "master",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": null,
+        "rationale": "Boundary at 7 days: <=7 goes to Master, >7 goes to MinIO"
+      },
+      "pass_criteria": "tier == 'master' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-006",
+      "category": "tier_routing",
+      "question": "Handle boundary condition: exactly 90 days old (MinIO/Athena boundary)",
+      "query_params": {
+        "days_back": 90,
+        "estimated_rows": 100000
+      },
+      "expected_results": {
+        "tier": "minio",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "master",
+        "rationale": "Boundary at 90 days: <=90 goes to MinIO, >90 goes to Athena"
+      },
+      "pass_criteria": "tier == 'minio' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-007",
+      "category": "tier_routing",
+      "question": "Route query with conflicting parameters (embeddings + historical)",
+      "query_params": {
+        "use_embeddings": true,
+        "days_back": 45
+      },
+      "expected_results": {
+        "tier": "pgvector",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "master",
+        "rationale": "Embeddings take priority over temporal criteria"
+      },
+      "pass_criteria": "tier == 'pgvector' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-008",
+      "category": "tier_routing",
+      "question": "Route query with zero days_back (today's data)",
+      "query_params": {
+        "days_back": 0,
+        "estimated_rows": 500
+      },
+      "expected_results": {
+        "tier": "master",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": null,
+        "rationale": "Today's data (days_back=0) is hottest possible, routes to Master"
+      },
+      "pass_criteria": "tier == 'master' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-009",
+      "category": "tier_routing",
+      "question": "Route query for very old archive data (365+ days)",
+      "query_params": {
+        "days_back": 365,
+        "estimated_rows": 5000000
+      },
+      "expected_results": {
+        "tier": "athena",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": "minio",
+        "rationale": "Very old data (>365 days) routes to Athena for massive scalability"
+      },
+      "pass_criteria": "tier == 'athena' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-010",
+      "category": "tier_routing",
+      "question": "Verify routing metrics tracking accuracy",
+      "query_params": {
+        "days_back": 2
+      },
+      "expected_results": {
+        "metrics_updated": true,
+        "total_queries_incremented": true,
+        "tier_counts_accurate": true,
+        "rationale": "Each route_query() call must update stats correctly"
+      },
+      "pass_criteria": "total_queries increased by 1 AND tier_counts['master'] increased by 1"
+    },
+    {
+      "id": "TR-011",
+      "category": "tier_routing",
+      "question": "Calculate routing percentage correctly for 100 queries",
+      "query_params": {
+        "simulate_queries": 100,
+        "distribution": {
+          "master": 40,
+          "pgvector": 20,
+          "minio": 20,
+          "athena": 20
+        }
+      },
+      "expected_results": {
+        "routing_percentage": 60.0,
+        "tier_distribution_pct": {
+          "master": 40,
+          "pgvector": 20,
+          "minio": 20,
+          "athena": 20
+        },
+        "rationale": "60% of queries should route to non-master tiers"
+      },
+      "pass_criteria": "routing_percentage == 60.0 AND tier_distribution_pct matches expected"
+    },
+    {
+      "id": "TR-012",
+      "category": "tier_routing",
+      "question": "Handle disabled router (feature flag off)",
+      "query_params": {
+        "days_back": 30,
+        "router_enabled": false
+      },
+      "expected_results": {
+        "tier": "master",
+        "max_routing_overhead_ms": 1.0,
+        "fallback_tier": null,
+        "rationale": "When TIER_ROUTER_ENABLED=false, all queries go to Master"
+      },
+      "pass_criteria": "tier == 'master' (router bypassed)"
+    },
+    {
+      "id": "TR-013",
+      "category": "tier_routing",
+      "question": "Handle missing days_back parameter (default to 0)",
+      "query_params": {
+        "estimated_rows": 1000
+      },
+      "expected_results": {
+        "tier": "master",
+        "days_back_defaulted_to": 0,
+        "rationale": "Missing days_back should default to 0 (today)"
+      },
+      "pass_criteria": "tier == 'master' AND no errors raised"
+    },
+    {
+      "id": "TR-014",
+      "category": "tier_routing",
+      "question": "Verify average routing overhead across 1000 queries",
+      "query_params": {
+        "simulate_queries": 1000,
+        "random_distribution": true
+      },
+      "expected_results": {
+        "avg_overhead_ms": {
+          "max": 0.005
+        },
+        "p95_overhead_ms": {
+          "max": 0.01
+        },
+        "rationale": "Average overhead should be <0.005ms, P95 <0.01ms per Wave 2 targets"
+      },
+      "pass_criteria": "avg_overhead < 0.005ms AND p95_overhead < 0.01ms"
+    },
+    {
+      "id": "TR-015",
+      "category": "tier_routing",
+      "question": "Route query with negative days_back (invalid input)",
+      "query_params": {
+        "days_back": -5
+      },
+      "expected_results": {
+        "tier": "master",
+        "days_back_clamped_to": 0,
+        "rationale": "Negative days_back is invalid, should clamp to 0 or error gracefully"
+      },
+      "pass_criteria": "tier == 'master' AND (days_back clamped OR error handled gracefully)"
+    },
+    {
+      "id": "TR-016",
+      "category": "tier_routing",
+      "question": "Route large batch query (10M+ rows estimated)",
+      "query_params": {
+        "days_back": 200,
+        "estimated_rows": 10000000
+      },
+      "expected_results": {
+        "tier": "athena",
+        "max_routing_overhead_ms": 1.0,
+        "rationale": "Very large queries benefit from Athena's scalability"
+      },
+      "pass_criteria": "tier == 'athena' AND routing_overhead < 1.0ms"
+    },
+    {
+      "id": "TR-017",
+      "category": "tier_routing",
+      "question": "Handle empty query_params dict",
+      "query_params": {},
+      "expected_results": {
+        "tier": "master",
+        "defaults_applied": true,
+        "rationale": "Empty params should apply defaults and route to Master"
+      },
+      "pass_criteria": "tier == 'master' AND no errors raised"
+    },
+    {
+      "id": "TR-018",
+      "category": "tier_routing",
+      "question": "Concurrent routing: 10 parallel queries",
+      "query_params": {
+        "concurrent_queries": 10,
+        "days_back_range": [
+          0,
+          365
+        ]
+      },
+      "expected_results": {
+        "all_queries_completed": true,
+        "no_race_conditions": true,
+        "metrics_accurate": true,
+        "rationale": "Router must be thread-safe for concurrent queries"
+      },
+      "pass_criteria": "total_queries == 10 AND tier_counts sum to 10 AND no exceptions"
+    },
+    {
+      "id": "TR-019",
+      "category": "tier_routing",
+      "question": "Route query when MinIO tier disabled in config",
+      "query_params": {
+        "days_back": 30,
+        "minio_enabled": false
+      },
+      "expected_results": {
+        "tier": "master",
+        "fallback_reason": "minio_disabled",
+        "rationale": "Disabled tiers should fallback to master"
+      },
+      "pass_criteria": "tier == 'master' (fallback from disabled MinIO)"
+    },
+    {
+      "id": "TR-020",
+      "category": "tier_routing",
+      "question": "Route query when Athena tier disabled in config",
+      "query_params": {
+        "days_back": 180,
+        "athena_enabled": false
+      },
+      "expected_results": {
+        "tier": "master",
+        "fallback_reason": "athena_disabled",
+        "rationale": "Disabled tiers should fallback to master"
+      },
+      "pass_criteria": "tier == 'master' (fallback from disabled Athena)"
+    },
+    {
+      "id": "TR-021",
+      "category": "tier_routing",
+      "question": "Verify tier_distribution_pct metric calculation",
+      "query_params": {
+        "simulate_queries": 100,
+        "distribution": {
+          "master": 50,
+          "pgvector": 30,
+          "minio": 15,
+          "athena": 5
+        }
+      },
+      "expected_results": {
+        "tier_distribution_pct": {
+          "master": 50.0,
+          "pgvector": 30.0,
+          "minio": 15.0,
+          "athena": 5.0
+        },
+        "rationale": "Percentage distribution should match actual query counts"
+      },
+      "pass_criteria": "tier_distribution_pct matches expected within 1%"
+    },
+    {
+      "id": "TR-022",
+      "category": "tier_routing",
+      "question": "Get routing metrics when zero queries executed",
+      "query_params": {
+        "new_router": true
+      },
+      "expected_results": {
+        "total_queries": 0,
+        "routing_percentage": 0.0,
+        "tier_distribution": {},
+        "no_division_by_zero": true,
+        "rationale": "Metrics should handle zero state gracefully"
+      },
+      "pass_criteria": "total_queries == 0 AND no exceptions raised"
+    },
+    {
+      "id": "TR-023",
+      "category": "tier_routing",
+      "question": "Route similarity search without explicit embedding flag",
+      "query_params": {
+        "similarity_search": true,
+        "days_back": 10
+      },
+      "expected_results": {
+        "tier": "pgvector",
+        "rationale": "similarity_search implies embeddings needed"
+      },
+      "pass_criteria": "tier == 'pgvector'"
+    },
+    {
+      "id": "TR-024",
+      "category": "tier_routing",
+      "question": "Verify failover_count metric tracking",
+      "query_params": {
+        "days_back": 30,
+        "minio_available": false
+      },
+      "expected_results": {
+        "tier": "master",
+        "failover_count": 1,
+        "rationale": "Failover events should increment counter"
+      },
+      "pass_criteria": "failover_count == 1 AND tier == 'master'"
+    },
+    {
+      "id": "TR-025",
+      "category": "tier_routing",
+      "question": "Sustained high query load (10,000 queries)",
+      "query_params": {
+        "simulate_queries": 10000,
+        "random_distribution": true
+      },
+      "expected_results": {
+        "all_queries_completed": true,
+        "avg_overhead_ms": {
+          "max": 0.01
+        },
+        "memory_stable": true,
+        "rationale": "Router should handle high throughput without degradation"
+      },
+      "pass_criteria": "all queries complete AND avg_overhead < 0.01ms AND no memory leaks"
+    },
+    {
+      "id": "ML-001",
+      "category": "ml_routing_adaptive",
+      "question": "ML router predicts optimal tier for complex query pattern",
+      "query_params": {
+        "days_back": 15,
+        "estimated_rows": 25000,
+        "query_complexity": 5.5,
+        "has_aggregation": true
+      },
+      "expected_results": {
+        "ml_prediction_used": true,
+        "confidence_above_threshold": true,
+        "inference_time_ms": {
+          "max": 50.0
+        },
+        "rationale": "ML model should predict tier based on learned patterns"
+      },
+      "pass_criteria": "ML prediction used AND inference_time < 50ms AND confidence > 0.7"
+    },
+    {
+      "id": "ML-002",
+      "category": "ml_routing_adaptive",
+      "question": "ML router falls back to static routing when confidence low",
+      "query_params": {
+        "days_back": 15,
+        "estimated_rows": 1000,
+        "unusual_pattern": true
+      },
+      "expected_results": {
+        "ml_prediction_attempted": true,
+        "ml_fallback_to_static": true,
+        "static_tier_selected": "minio",
+        "rationale": "Low confidence ML predictions should fallback to static routing rules"
+      },
+      "pass_criteria": "ml_fallback == True AND tier selected by static rules"
+    },
+    {
+      "id": "ML-003",
+      "category": "ml_routing_adaptive",
+      "question": "Extract features correctly from query parameters",
+      "query_params": {
+        "days_back": 45,
+        "estimated_rows": 10000,
+        "query_complexity": 7.0,
+        "has_embeddings": false,
+        "has_aggregation": true,
+        "table_count": 3
+      },
+      "expected_results": {
+        "features_extracted": 10,
+        "all_features_valid": true,
+        "no_nan_values": true,
+        "rationale": "Feature extraction must handle all parameter types correctly"
+      },
+      "pass_criteria": "10 features extracted AND no NaN AND all numeric"
+    },
+    {
+      "id": "ML-004",
+      "category": "ml_routing_adaptive",
+      "question": "Train ML model with 1000 synthetic query examples",
+      "query_params": {
+        "training_samples": 1000,
+        "balanced_classes": true
+      },
+      "expected_results": {
+        "model_trained": true,
+        "training_accuracy": {
+          "min": 0.75
+        },
+        "model_file_saved": true,
+        "rationale": "Model should train successfully with balanced synthetic data"
+      },
+      "pass_criteria": "model.is_trained == True AND accuracy >= 0.75"
+    },
+    {
+      "id": "ML-005",
+      "category": "ml_routing_adaptive",
+      "question": "Handle prediction with confidence exactly at threshold (0.7)",
+      "query_params": {
+        "days_back": 20,
+        "force_confidence": 0.7
+      },
+      "expected_results": {
+        "ml_prediction_used": true,
+        "confidence": 0.7,
+        "threshold": 0.7,
+        "rationale": "Confidence == threshold should use ML prediction (not fallback)"
+      },
+      "pass_criteria": "ml_prediction_used == True (boundary condition: >= threshold)"
+    },
+    {
+      "id": "ML-006",
+      "category": "ml_routing_adaptive",
+      "question": "Pattern analyzer test 6: query pattern classification",
+      "query_params": {
+        "days_back": 60,
+        "result_size": 6000,
+        "latency_ms": 30.0
+      },
+      "expected_results": {
+        "pattern_classified": true,
+        "pattern_type": "frequent",
+        "rationale": "Classify query pattern based on parameters (test 6)"
+      },
+      "pass_criteria": "pattern_type is not None AND classification_confidence > 0.6"
+    },
+    {
+      "id": "ML-007",
+      "category": "ml_routing_adaptive",
+      "question": "Pattern analyzer test 7: query pattern classification",
+      "query_params": {
+        "days_back": 70,
+        "result_size": 7000,
+        "latency_ms": 35.0
+      },
+      "expected_results": {
+        "pattern_classified": true,
+        "pattern_type": "complex",
+        "rationale": "Classify query pattern based on parameters (test 7)"
+      },
+      "pass_criteria": "pattern_type is not None AND classification_confidence > 0.6"
+    },
+    {
+      "id": "ML-008",
+      "category": "ml_routing_adaptive",
+      "question": "Pattern analyzer test 8: query pattern classification",
+      "query_params": {
+        "days_back": 80,
+        "result_size": 8000,
+        "latency_ms": 40.0
+      },
+      "expected_results": {
+        "pattern_classified": true,
+        "pattern_type": "frequent",
+        "rationale": "Classify query pattern based on parameters (test 8)"
+      },
+      "pass_criteria": "pattern_type is not None AND classification_confidence > 0.6"
+    },
+    {
+      "id": "ML-009",
+      "category": "ml_routing_adaptive",
+      "question": "Pattern analyzer test 9: query pattern classification",
+      "query_params": {
+        "days_back": 90,
+        "result_size": 9000,
+        "latency_ms": 45.0
+      },
+      "expected_results": {
+        "pattern_classified": true,
+        "pattern_type": "complex",
+        "rationale": "Classify query pattern based on parameters (test 9)"
+      },
+      "pass_criteria": "pattern_type is not None AND classification_confidence > 0.6"
+    },
+    {
+      "id": "ML-010",
+      "category": "ml_routing_adaptive",
+      "question": "Pattern analyzer test 10: query pattern classification",
+      "query_params": {
+        "days_back": 100,
+        "result_size": 10000,
+        "latency_ms": 50.0
+      },
+      "expected_results": {
+        "pattern_classified": true,
+        "pattern_type": "frequent",
+        "rationale": "Classify query pattern based on parameters (test 10)"
+      },
+      "pass_criteria": "pattern_type is not None AND classification_confidence > 0.6"
+    },
+    {
+      "id": "ML-011",
+      "category": "ml_routing_adaptive",
+      "question": "Adaptive threshold adjusts under 50% load",
+      "query_params": {
+        "current_load": 50,
+        "latency_p95": 50.0,
+        "routing_accuracy": 0.85
+      },
+      "expected_results": {
+        "threshold_adjusted": false,
+        "adjustment_direction": "none",
+        "rationale": "Thresholds should adjust dynamically at 50% load"
+      },
+      "pass_criteria": "threshold adjustment matches expected for load level"
+    },
+    {
+      "id": "ML-012",
+      "category": "ml_routing_adaptive",
+      "question": "Adaptive threshold adjusts under 60% load",
+      "query_params": {
+        "current_load": 60,
+        "latency_p95": 50.0,
+        "routing_accuracy": 0.85
+      },
+      "expected_results": {
+        "threshold_adjusted": false,
+        "adjustment_direction": "none",
+        "rationale": "Thresholds should adjust dynamically at 60% load"
+      },
+      "pass_criteria": "threshold adjustment matches expected for load level"
+    },
+    {
+      "id": "ML-013",
+      "category": "ml_routing_adaptive",
+      "question": "Adaptive threshold adjusts under 70% load",
+      "query_params": {
+        "current_load": 70,
+        "latency_p95": 50.0,
+        "routing_accuracy": 0.85
+      },
+      "expected_results": {
+        "threshold_adjusted": false,
+        "adjustment_direction": "none",
+        "rationale": "Thresholds should adjust dynamically at 70% load"
+      },
+      "pass_criteria": "threshold adjustment matches expected for load level"
+    },
+    {
+      "id": "ML-014",
+      "category": "ml_routing_adaptive",
+      "question": "Adaptive threshold adjusts under 80% load",
+      "query_params": {
+        "current_load": 80,
+        "latency_p95": 50.0,
+        "routing_accuracy": 0.85
+      },
+      "expected_results": {
+        "threshold_adjusted": true,
+        "adjustment_direction": "increase",
+        "rationale": "Thresholds should adjust dynamically at 80% load"
+      },
+      "pass_criteria": "threshold adjustment matches expected for load level"
+    },
+    {
+      "id": "ML-015",
+      "category": "ml_routing_adaptive",
+      "question": "Adaptive threshold adjusts under 90% load",
+      "query_params": {
+        "current_load": 90,
+        "latency_p95": 50.0,
+        "routing_accuracy": 0.85
+      },
+      "expected_results": {
+        "threshold_adjusted": true,
+        "adjustment_direction": "increase",
+        "rationale": "Thresholds should adjust dynamically at 90% load"
+      },
+      "pass_criteria": "threshold adjustment matches expected for load level"
+    },
+    {
+      "id": "ML-016",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test variant assignment (test 16)",
+      "query_params": {
+        "user_id": "user_16",
+        "test_id": "ml_vs_static_routing"
+      },
+      "expected_results": {
+        "variant_assigned": true,
+        "variant": "control",
+        "assignment_consistent": true,
+        "rationale": "Consistent variant assignment based on hash(user_id)"
+      },
+      "pass_criteria": "same user_id always gets same variant"
+    },
+    {
+      "id": "ML-017",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test variant assignment (test 17)",
+      "query_params": {
+        "user_id": "user_17",
+        "test_id": "ml_vs_static_routing"
+      },
+      "expected_results": {
+        "variant_assigned": true,
+        "variant": "treatment",
+        "assignment_consistent": true,
+        "rationale": "Consistent variant assignment based on hash(user_id)"
+      },
+      "pass_criteria": "same user_id always gets same variant"
+    },
+    {
+      "id": "ML-018",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test variant assignment (test 18)",
+      "query_params": {
+        "user_id": "user_18",
+        "test_id": "ml_vs_static_routing"
+      },
+      "expected_results": {
+        "variant_assigned": true,
+        "variant": "control",
+        "assignment_consistent": true,
+        "rationale": "Consistent variant assignment based on hash(user_id)"
+      },
+      "pass_criteria": "same user_id always gets same variant"
+    },
+    {
+      "id": "ML-019",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test variant assignment (test 19)",
+      "query_params": {
+        "user_id": "user_19",
+        "test_id": "ml_vs_static_routing"
+      },
+      "expected_results": {
+        "variant_assigned": true,
+        "variant": "treatment",
+        "assignment_consistent": true,
+        "rationale": "Consistent variant assignment based on hash(user_id)"
+      },
+      "pass_criteria": "same user_id always gets same variant"
+    },
+    {
+      "id": "ML-020",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test variant assignment (test 20)",
+      "query_params": {
+        "user_id": "user_20",
+        "test_id": "ml_vs_static_routing"
+      },
+      "expected_results": {
+        "variant_assigned": true,
+        "variant": "control",
+        "assignment_consistent": true,
+        "rationale": "Consistent variant assignment based on hash(user_id)"
+      },
+      "pass_criteria": "same user_id always gets same variant"
+    },
+    {
+      "id": "ML-021",
+      "category": "ml_routing_adaptive",
+      "question": "A/B test statistical significance with 1000 samples",
+      "query_params": {
+        "control_samples": 500,
+        "treatment_samples": 500,
+        "treatment_improvement": 0.15
+      },
+      "expected_results": {
+        "p_value": {
+          "max": 0.05
+        },
+        "statistically_significant": true,
+        "confidence_level": 0.95,
+        "rationale": "15% improvement with 1000 samples should be statistically significant"
+      },
+      "pass_criteria": "p_value < 0.05 AND significant == True"
+    },
+    {
+      "id": "ML-022",
+      "category": "ml_routing_adaptive",
+      "question": "Save and load ML model (persistence round-trip)",
+      "query_params": {
+        "train_model": true,
+        "save_path": "/tmp/ml_tier_model_test.pkl"
+      },
+      "expected_results": {
+        "model_saved": true,
+        "model_loaded": true,
+        "predictions_match": true,
+        "rationale": "Saved and loaded model should make identical predictions"
+      },
+      "pass_criteria": "model loaded successfully AND predictions match pre-save"
+    },
+    {
+      "id": "ML-023",
+      "category": "ml_routing_adaptive",
+      "question": "Batch predict 100 queries efficiently",
+      "query_params": {
+        "batch_size": 100,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_predictions_returned": true,
+        "total_time_ms": {
+          "max": 500.0
+        },
+        "avg_time_per_query_ms": {
+          "max": 5.0
+        },
+        "rationale": "Batch prediction should be ~10x faster than serial"
+      },
+      "pass_criteria": "total_time < 500ms (5ms per query average)"
+    },
+    {
+      "id": "ML-024",
+      "category": "ml_routing_adaptive",
+      "question": "Get feature importance from trained model",
+      "query_params": {
+        "trained_model": true
+      },
+      "expected_results": {
+        "feature_count": 10,
+        "importance_sum": 1.0,
+        "top_feature": "days_back",
+        "rationale": "days_back should be most important feature for tier selection"
+      },
+      "pass_criteria": "10 features AND sum(importance) \u2248 1.0 AND days_back rank == 1"
+    },
+    {
+      "id": "ML-025",
+      "category": "ml_routing_adaptive",
+      "question": "Export query patterns as ML training data",
+      "query_params": {
+        "pattern_count": 100
+      },
+      "expected_results": {
+        "training_samples_exported": 100,
+        "features_per_sample": 10,
+        "labels_included": true,
+        "rationale": "Pattern analyzer should export data in ML-ready format"
+      },
+      "pass_criteria": "100 samples exported AND all have features + labels"
+    },
+    {
+      "id": "HM-001",
+      "category": "health_monitoring_failover",
+      "question": "Health check detects healthy tier (Master)",
+      "query_params": {
+        "tier": "master",
+        "latency_ms": 5.0
+      },
+      "expected_results": {
+        "tier_status": "healthy",
+        "tier_available": true,
+        "latency_within_threshold": true,
+        "rationale": "Tier with <100ms latency should be marked healthy"
+      },
+      "pass_criteria": "status == 'healthy' AND available == True"
+    },
+    {
+      "id": "HM-002",
+      "category": "health_monitoring_failover",
+      "question": "Health check detects degraded tier (high latency)",
+      "query_params": {
+        "tier": "minio",
+        "latency_ms": 300.0
+      },
+      "expected_results": {
+        "tier_status": "degraded",
+        "tier_available": true,
+        "latency_exceeded_healthy_threshold": true,
+        "rationale": "Latency 100-500ms should mark tier as degraded but available"
+      },
+      "pass_criteria": "status == 'degraded' AND available == True"
+    },
+    {
+      "id": "HM-003",
+      "category": "health_monitoring_failover",
+      "question": "Health check detects unavailable tier (connection failed)",
+      "query_params": {
+        "tier": "athena",
+        "connection_error": true
+      },
+      "expected_results": {
+        "tier_status": "unavailable",
+        "tier_available": false,
+        "error_recorded": true,
+        "rationale": "Connection failures should mark tier as unavailable"
+      },
+      "pass_criteria": "status == 'unavailable' AND available == False"
+    },
+    {
+      "id": "HM-004",
+      "category": "health_monitoring_failover",
+      "question": "MinIO fails, fallback to Master",
+      "query_params": {
+        "preferred_tier": "minio",
+        "tier_available": false
+      },
+      "expected_results": {
+        "tier_selected": "master",
+        "failover_occurred": true,
+        "failover_time_ms": {
+          "max": 10.0
+        },
+        "rationale": "When minio unavailable, should failover to master"
+      },
+      "pass_criteria": "tier == 'master' AND failover_time < 10ms"
+    },
+    {
+      "id": "HM-005",
+      "category": "health_monitoring_failover",
+      "question": "Athena fails, fallback to MinIO",
+      "query_params": {
+        "preferred_tier": "athena",
+        "tier_available": false
+      },
+      "expected_results": {
+        "tier_selected": "minio",
+        "failover_occurred": true,
+        "failover_time_ms": {
+          "max": 10.0
+        },
+        "rationale": "When athena unavailable, should failover to minio"
+      },
+      "pass_criteria": "tier == 'minio' AND failover_time < 10ms"
+    },
+    {
+      "id": "HM-006",
+      "category": "health_monitoring_failover",
+      "question": "Athena + MinIO fail, fallback to Master",
+      "query_params": {
+        "preferred_tier": "athena",
+        "tier_available": false
+      },
+      "expected_results": {
+        "tier_selected": "master",
+        "failover_occurred": true,
+        "failover_time_ms": {
+          "max": 10.0
+        },
+        "rationale": "When athena unavailable, should failover to master"
+      },
+      "pass_criteria": "tier == 'master' AND failover_time < 10ms"
+    },
+    {
+      "id": "HM-007",
+      "category": "health_monitoring_failover",
+      "question": "PGVector fails, fallback to Master",
+      "query_params": {
+        "preferred_tier": "pgvector",
+        "tier_available": false
+      },
+      "expected_results": {
+        "tier_selected": "master",
+        "failover_occurred": true,
+        "failover_time_ms": {
+          "max": 10.0
+        },
+        "rationale": "When pgvector unavailable, should failover to master"
+      },
+      "pass_criteria": "tier == 'master' AND failover_time < 10ms"
+    },
+    {
+      "id": "HM-008",
+      "category": "health_monitoring_failover",
+      "question": "All tiers fail, ultimate fallback to Master",
+      "query_params": {
+        "preferred_tier": "all_tiers",
+        "tier_available": false
+      },
+      "expected_results": {
+        "tier_selected": "master",
+        "failover_occurred": true,
+        "failover_time_ms": {
+          "max": 10.0
+        },
+        "rationale": "When all_tiers unavailable, should failover to master"
+      },
+      "pass_criteria": "tier == 'master' AND failover_time < 10ms"
+    },
+    {
+      "id": "HM-009",
+      "category": "health_monitoring_failover",
+      "question": "Circuit breaker opens after 3 consecutive failures",
+      "query_params": {
+        "tier": "minio",
+        "consecutive_failures": 3
+      },
+      "expected_results": {
+        "circuit_breaker_open": true,
+        "tier_excluded": true,
+        "max_consecutive_failures": 3,
+        "rationale": "Circuit breaker should open after max_consecutive_failures threshold"
+      },
+      "pass_criteria": "circuit_breaker_open == True AND tier excluded from routing"
+    },
+    {
+      "id": "HM-010",
+      "category": "health_monitoring_failover",
+      "question": "Circuit breaker closes after tier recovers",
+      "query_params": {
+        "tier": "minio",
+        "previous_failures": 3,
+        "health_check_passed": true
+      },
+      "expected_results": {
+        "circuit_breaker_closed": true,
+        "tier_included": true,
+        "consecutive_failures_reset": true,
+        "rationale": "Successful health check should reset circuit breaker"
+      },
+      "pass_criteria": "circuit_breaker_closed == True AND consecutive_failures == 0"
+    },
+    {
+      "id": "HM-011",
+      "category": "health_monitoring_failover",
+      "question": "Concurrent health checks for all tiers (test 11)",
+      "query_params": {
+        "check_all_tiers": true,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_tiers_checked": true,
+        "total_check_time_ms": {
+          "max": 200.0
+        },
+        "no_race_conditions": true,
+        "rationale": "Parallel health checks should complete faster than serial"
+      },
+      "pass_criteria": "all 4 tiers checked AND total_time < 200ms"
+    },
+    {
+      "id": "HM-012",
+      "category": "health_monitoring_failover",
+      "question": "Concurrent health checks for all tiers (test 12)",
+      "query_params": {
+        "check_all_tiers": true,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_tiers_checked": true,
+        "total_check_time_ms": {
+          "max": 200.0
+        },
+        "no_race_conditions": true,
+        "rationale": "Parallel health checks should complete faster than serial"
+      },
+      "pass_criteria": "all 4 tiers checked AND total_time < 200ms"
+    },
+    {
+      "id": "HM-013",
+      "category": "health_monitoring_failover",
+      "question": "Concurrent health checks for all tiers (test 13)",
+      "query_params": {
+        "check_all_tiers": true,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_tiers_checked": true,
+        "total_check_time_ms": {
+          "max": 200.0
+        },
+        "no_race_conditions": true,
+        "rationale": "Parallel health checks should complete faster than serial"
+      },
+      "pass_criteria": "all 4 tiers checked AND total_time < 200ms"
+    },
+    {
+      "id": "HM-014",
+      "category": "health_monitoring_failover",
+      "question": "Concurrent health checks for all tiers (test 14)",
+      "query_params": {
+        "check_all_tiers": true,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_tiers_checked": true,
+        "total_check_time_ms": {
+          "max": 200.0
+        },
+        "no_race_conditions": true,
+        "rationale": "Parallel health checks should complete faster than serial"
+      },
+      "pass_criteria": "all 4 tiers checked AND total_time < 200ms"
+    },
+    {
+      "id": "HM-015",
+      "category": "health_monitoring_failover",
+      "question": "Concurrent health checks for all tiers (test 15)",
+      "query_params": {
+        "check_all_tiers": true,
+        "parallel": true
+      },
+      "expected_results": {
+        "all_tiers_checked": true,
+        "total_check_time_ms": {
+          "max": 200.0
+        },
+        "no_race_conditions": true,
+        "rationale": "Parallel health checks should complete faster than serial"
+      },
+      "pass_criteria": "all 4 tiers checked AND total_time < 200ms"
+    },
+    {
+      "id": "HM-016",
+      "category": "health_monitoring_failover",
+      "question": "Start and stop background health monitoring thread",
+      "query_params": {
+        "start_monitoring": true,
+        "check_interval_seconds": 5
+      },
+      "expected_results": {
+        "thread_started": true,
+        "thread_is_daemon": true,
+        "checks_running": true,
+        "thread_stopped_cleanly": true,
+        "rationale": "Background monitoring thread should start/stop without hanging"
+      },
+      "pass_criteria": "thread started AND stopped without timeout"
+    },
+    {
+      "id": "HM-017",
+      "category": "health_monitoring_failover",
+      "question": "Track health history for last 100 checks",
+      "query_params": {
+        "run_checks": 150,
+        "history_size": 100
+      },
+      "expected_results": {
+        "history_entries": 100,
+        "oldest_entry_dropped": true,
+        "deque_maxlen": 100,
+        "rationale": "Health history should maintain fixed size with FIFO eviction"
+      },
+      "pass_criteria": "history_size == 100 (oldest entries evicted)"
+    },
+    {
+      "id": "HM-018",
+      "category": "health_monitoring_failover",
+      "question": "Get list of available tiers from health monitor",
+      "query_params": {
+        "tier_health": {
+          "master": "healthy",
+          "pgvector": "healthy",
+          "minio": "degraded",
+          "athena": "unavailable"
+        }
+      },
+      "expected_results": {
+        "available_tiers": [
+          "master",
+          "pgvector",
+          "minio"
+        ],
+        "unavailable_count": 1,
+        "rationale": "Degraded tiers are still available, only unavailable excluded"
+      },
+      "pass_criteria": "available_tiers == ['master', 'pgvector', 'minio']"
+    },
+    {
+      "id": "HM-019",
+      "category": "health_monitoring_failover",
+      "question": "Select best available tier from preference list",
+      "query_params": {
+        "preference_list": [
+          "athena",
+          "minio",
+          "master"
+        ],
+        "tier_health": {
+          "athena": "unavailable",
+          "minio": "healthy",
+          "master": "healthy"
+        }
+      },
+      "expected_results": {
+        "best_tier": "minio",
+        "rationale": "First available tier in preference list should be selected"
+      },
+      "pass_criteria": "best_tier == 'minio' (athena unavailable, skip to minio)"
+    },
+    {
+      "id": "HM-020",
+      "category": "health_monitoring_failover",
+      "question": "Handle health check timeout (tier unresponsive)",
+      "query_params": {
+        "tier": "athena",
+        "check_timeout_seconds": 5,
+        "tier_response_time": 10
+      },
+      "expected_results": {
+        "timeout_occurred": true,
+        "tier_status": "unavailable",
+        "error_type": "timeout",
+        "rationale": "Timeouts should mark tier as unavailable"
+      },
+      "pass_criteria": "status == 'unavailable' AND error contains 'timeout'"
+    },
+    {
+      "id": "IP-001",
+      "category": "integration_production",
+      "question": "End-to-end query flow: 20 days historical data",
+      "query_params": {
+        "days_back": 20,
+        "estimated_rows": 10000
+      },
+      "expected_results": {
+        "query_routed": true,
+        "tier_selected_correctly": true,
+        "result_returned": true,
+        "total_latency_ms": {
+          "max": 100.0
+        },
+        "rationale": "Full query flow for 20-day data should complete successfully"
+      },
+      "pass_criteria": "query successful AND total_latency < 100ms"
+    },
+    {
+      "id": "IP-002",
+      "category": "integration_production",
+      "question": "End-to-end query flow: 40 days historical data",
+      "query_params": {
+        "days_back": 40,
+        "estimated_rows": 20000
+      },
+      "expected_results": {
+        "query_routed": true,
+        "tier_selected_correctly": true,
+        "result_returned": true,
+        "total_latency_ms": {
+          "max": 100.0
+        },
+        "rationale": "Full query flow for 40-day data should complete successfully"
+      },
+      "pass_criteria": "query successful AND total_latency < 100ms"
+    },
+    {
+      "id": "IP-003",
+      "category": "integration_production",
+      "question": "End-to-end query flow: 60 days historical data",
+      "query_params": {
+        "days_back": 60,
+        "estimated_rows": 30000
+      },
+      "expected_results": {
+        "query_routed": true,
+        "tier_selected_correctly": true,
+        "result_returned": true,
+        "total_latency_ms": {
+          "max": 100.0
+        },
+        "rationale": "Full query flow for 60-day data should complete successfully"
+      },
+      "pass_criteria": "query successful AND total_latency < 100ms"
+    },
+    {
+      "id": "IP-004",
+      "category": "integration_production",
+      "question": "End-to-end query flow: 80 days historical data",
+      "query_params": {
+        "days_back": 80,
+        "estimated_rows": 40000
+      },
+      "expected_results": {
+        "query_routed": true,
+        "tier_selected_correctly": true,
+        "result_returned": true,
+        "total_latency_ms": {
+          "max": 100.0
+        },
+        "rationale": "Full query flow for 80-day data should complete successfully"
+      },
+      "pass_criteria": "query successful AND total_latency < 100ms"
+    },
+    {
+      "id": "IP-005",
+      "category": "integration_production",
+      "question": "End-to-end query flow: 100 days historical data",
+      "query_params": {
+        "days_back": 100,
+        "estimated_rows": 50000
+      },
+      "expected_results": {
+        "query_routed": true,
+        "tier_selected_correctly": true,
+        "result_returned": true,
+        "total_latency_ms": {
+          "max": 100.0
+        },
+        "rationale": "Full query flow for 100-day data should complete successfully"
+      },
+      "pass_criteria": "query successful AND total_latency < 100ms"
+    },
+    {
+      "id": "IP-006",
+      "category": "integration_production",
+      "question": "5% canary deployment",
+      "query_params": {
+        "deployment_phase": "canary",
+        "traffic_percentage": 5
+      },
+      "expected_results": {
+        "phase_active": true,
+        "traffic_split_correct": true,
+        "wave2_queries": 5,
+        "wave1_queries": 95,
+        "rationale": "Traffic should split 5% to Wave 2, 95% to Wave 1"
+      },
+      "pass_criteria": "wave2_traffic == 5% AND wave1_traffic == 95%"
+    },
+    {
+      "id": "IP-007",
+      "category": "integration_production",
+      "question": "25% traffic ramp",
+      "query_params": {
+        "deployment_phase": "ramp_25",
+        "traffic_percentage": 25
+      },
+      "expected_results": {
+        "phase_active": true,
+        "traffic_split_correct": true,
+        "wave2_queries": 25,
+        "wave1_queries": 75,
+        "rationale": "Traffic should split 25% to Wave 2, 75% to Wave 1"
+      },
+      "pass_criteria": "wave2_traffic == 25% AND wave1_traffic == 75%"
+    },
+    {
+      "id": "IP-008",
+      "category": "integration_production",
+      "question": "50% traffic ramp",
+      "query_params": {
+        "deployment_phase": "ramp_50",
+        "traffic_percentage": 50
+      },
+      "expected_results": {
+        "phase_active": true,
+        "traffic_split_correct": true,
+        "wave2_queries": 50,
+        "wave1_queries": 50,
+        "rationale": "Traffic should split 50% to Wave 2, 50% to Wave 1"
+      },
+      "pass_criteria": "wave2_traffic == 50% AND wave1_traffic == 50%"
+    },
+    {
+      "id": "IP-009",
+      "category": "integration_production",
+      "question": "100% full production",
+      "query_params": {
+        "deployment_phase": "full",
+        "traffic_percentage": 100
+      },
+      "expected_results": {
+        "phase_active": true,
+        "traffic_split_correct": true,
+        "wave2_queries": 100,
+        "wave1_queries": 0,
+        "rationale": "Traffic should split 100% to Wave 2, 0% to Wave 1"
+      },
+      "pass_criteria": "wave2_traffic == 100% AND wave1_traffic == 0%"
+    },
+    {
+      "id": "IP-010",
+      "category": "integration_production",
+      "question": "Emergency rollback to 0%",
+      "query_params": {
+        "deployment_phase": "rollback",
+        "traffic_percentage": 0
+      },
+      "expected_results": {
+        "phase_active": true,
+        "traffic_split_correct": true,
+        "wave2_queries": 0,
+        "wave1_queries": 100,
+        "rationale": "Traffic should split 0% to Wave 2, 100% to Wave 1"
+      },
+      "pass_criteria": "wave2_traffic == 0% AND wave1_traffic == 100%"
+    },
+    {
+      "id": "IP-011",
+      "category": "integration_production",
+      "question": "Validate <5 minute rollback time",
+      "query_params": {
+        "trigger_rollback": true,
+        "disable_wave2": true
+      },
+      "expected_results": {
+        "rollback_time_seconds": {
+          "max": 300
+        },
+        "wave2_disabled": true,
+        "wave1_active": true,
+        "no_query_failures": true,
+        "rationale": "Emergency rollback should complete in <5 minutes"
+      },
+      "pass_criteria": "rollback_time < 300s AND no failed queries"
+    },
+    {
+      "id": "IP-012",
+      "category": "integration_production",
+      "question": "Validate capacity for 2x traffic spike",
+      "query_params": {
+        "baseline_qps": 1700,
+        "spike_multiplier": 2.0
+      },
+      "expected_results": {
+        "max_qps": 3400,
+        "latency_degradation": {
+          "max": 1.5
+        },
+        "no_connection_errors": true,
+        "rationale": "System should handle 2x traffic with <50% latency increase"
+      },
+      "pass_criteria": "handles 3400 qps AND latency_increase < 50%"
+    },
+    {
+      "id": "IP-013",
+      "category": "integration_production",
+      "question": "Hot-reload tier router configuration without restart",
+      "query_params": {
+        "modify_config": {
+          "master_days": 10
+        },
+        "reload_config": true
+      },
+      "expected_results": {
+        "config_reloaded": true,
+        "no_service_downtime": true,
+        "new_config_active": true,
+        "rationale": "Config changes should apply without service restart"
+      },
+      "pass_criteria": "config updated AND zero downtime"
+    },
+    {
+      "id": "IP-014",
+      "category": "integration_production",
+      "question": "Validate all Wave 2 performance SLAs met",
+      "query_params": {
+        "run_performance_validation": true,
+        "sample_size": 10000
+      },
+      "expected_results": {
+        "rust_latency_p95": {
+          "max": 0.055
+        },
+        "routing_overhead_avg": {
+          "max": 0.005
+        },
+        "throughput_qps": {
+          "min": 1650
+        },
+        "routing_percentage": {
+          "min": 55
+        },
+        "rationale": "All Wave 2 SLAs must be met in production"
+      },
+      "pass_criteria": "all SLAs met (latency, throughput, routing %)"
+    },
+    {
+      "id": "IP-015",
+      "category": "integration_production",
+      "question": "Database connection timeout recovery",
+      "query_params": {
+        "inject_error": "database_timeout"
+      },
+      "expected_results": {
+        "error_detected": true,
+        "recovery_successful": true,
+        "no_data_loss": true,
+        "fallback_activated": true,
+        "rationale": "Database connection timeout recovery should recover gracefully"
+      },
+      "pass_criteria": "error recovered AND service continues"
+    },
+    {
+      "id": "IP-016",
+      "category": "integration_production",
+      "question": "Cache corruption detection and recovery",
+      "query_params": {
+        "inject_error": "cache_corruption"
+      },
+      "expected_results": {
+        "error_detected": true,
+        "recovery_successful": true,
+        "no_data_loss": true,
+        "fallback_activated": true,
+        "rationale": "Cache corruption detection and recovery should recover gracefully"
+      },
+      "pass_criteria": "error recovered AND service continues"
+    },
+    {
+      "id": "IP-017",
+      "category": "integration_production",
+      "question": "Invalid configuration error handling",
+      "query_params": {
+        "inject_error": "config_invalid"
+      },
+      "expected_results": {
+        "error_detected": true,
+        "recovery_successful": true,
+        "no_data_loss": true,
+        "fallback_activated": true,
+        "rationale": "Invalid configuration error handling should recover gracefully"
+      },
+      "pass_criteria": "error recovered AND service continues"
+    },
+    {
+      "id": "IP-018",
+      "category": "integration_production",
+      "question": "High memory pressure graceful degradation",
+      "query_params": {
+        "inject_error": "memory_pressure"
+      },
+      "expected_results": {
+        "error_detected": true,
+        "recovery_successful": true,
+        "no_data_loss": true,
+        "fallback_activated": true,
+        "rationale": "High memory pressure graceful degradation should recover gracefully"
+      },
+      "pass_criteria": "error recovered AND service continues"
+    },
+    {
+      "id": "IP-019",
+      "category": "integration_production",
+      "question": "Execute query spanning multiple tiers (federation)",
+      "query_params": {
+        "query_type": "federated",
+        "tiers_involved": [
+          "master",
+          "minio",
+          "athena"
+        ]
+      },
+      "expected_results": {
+        "all_tiers_queried": true,
+        "results_merged": true,
+        "total_latency_ms": {
+          "max": 500.0
+        },
+        "rationale": "Federated queries should aggregate results from multiple tiers"
+      },
+      "pass_criteria": "results from all 3 tiers AND total_latency < 500ms"
+    },
+    {
+      "id": "IP-020",
+      "category": "integration_production",
+      "question": "Verify metrics exported to monitoring system",
+      "query_params": {
+        "execute_queries": 100,
+        "export_metrics": true
+      },
+      "expected_results": {
+        "prometheus_metrics_exported": true,
+        "grafana_dashboard_updated": true,
+        "alert_rules_evaluated": true,
+        "rationale": "All Wave 2 metrics should integrate with monitoring stack"
+      },
+      "pass_criteria": "metrics exported AND dashboards updated AND alerts working"
+    },
+    {
+      "id": "EC-001",
+      "category": "edge_cases_error_handling",
+      "question": "Get routing metrics with zero queries executed",
+      "query_params": {
+        "new_router": true,
+        "query_count": 0
+      },
+      "expected_results": {
+        "no_division_by_zero": true,
+        "metrics_returned": true,
+        "total_queries": 0,
+        "routing_percentage": 0.0,
+        "rationale": "Zero queries should not cause division by zero errors"
+      },
+      "pass_criteria": "no exceptions AND routing_percentage == 0.0"
+    },
+    {
+      "id": "EC-002",
+      "category": "edge_cases_error_handling",
+      "question": "Handle NaN/Infinity in ML feature extraction",
+      "query_params": {
+        "days_back": Infinity,
+        "estimated_rows": NaN
+      },
+      "expected_results": {
+        "invalid_values_detected": true,
+        "values_sanitized": true,
+        "fallback_to_defaults": true,
+        "rationale": "NaN/Infinity should be sanitized to valid defaults"
+      },
+      "pass_criteria": "no NaN/Inf in final features AND prediction succeeds"
+    },
+    {
+      "id": "EC-003",
+      "category": "edge_cases_error_handling",
+      "question": "Graceful degradation when sklearn not installed",
+      "query_params": {
+        "ml_routing_requested": true,
+        "sklearn_available": false
+      },
+      "expected_results": {
+        "ml_disabled": true,
+        "fallback_to_static": true,
+        "warning_logged": true,
+        "rationale": "Missing sklearn should fallback to static routing with warning"
+      },
+      "pass_criteria": "static routing used AND warning in logs"
+    },
+    {
+      "id": "EC-004",
+      "category": "edge_cases_error_handling",
+      "question": "Graceful degradation when boto3 not installed (Athena unavailable)",
+      "query_params": {
+        "preferred_tier": "athena",
+        "boto3_available": false
+      },
+      "expected_results": {
+        "athena_disabled": true,
+        "fallback_to_minio": true,
+        "warning_logged": true,
+        "rationale": "Missing boto3 should disable Athena tier with fallback"
+      },
+      "pass_criteria": "athena unavailable AND fallback triggered"
+    },
+    {
+      "id": "EC-005",
+      "category": "edge_cases_error_handling",
+      "question": "Handle completely empty query_params dict",
+      "query_params": {},
+      "expected_results": {
+        "defaults_applied": true,
+        "tier_selected": "master",
+        "no_exceptions": true,
+        "rationale": "Empty params should apply sensible defaults"
+      },
+      "pass_criteria": "tier == 'master' AND no errors"
+    },
+    {
+      "id": "EC-006",
+      "category": "edge_cases_error_handling",
+      "question": "Handle None values in query parameters",
+      "query_params": {
+        "days_back": null,
+        "estimated_rows": null,
+        "table": null
+      },
+      "expected_results": {
+        "none_values_handled": true,
+        "defaults_substituted": true,
+        "tier_selected": "master",
+        "rationale": "None values should be replaced with defaults"
+      },
+      "pass_criteria": "no AttributeError AND tier selected"
+    },
+    {
+      "id": "EC-007",
+      "category": "edge_cases_error_handling",
+      "question": "Handle extremely large estimated_rows (1 billion+)",
+      "query_params": {
+        "days_back": 365,
+        "estimated_rows": 1000000000
+      },
+      "expected_results": {
+        "large_value_handled": true,
+        "tier": "athena",
+        "no_overflow": true,
+        "rationale": "Billion-row queries should route to Athena without overflow"
+      },
+      "pass_criteria": "tier == 'athena' AND no numeric overflow"
+    },
+    {
+      "id": "EC-008",
+      "category": "edge_cases_error_handling",
+      "question": "Thread-safe stats updates with concurrent queries",
+      "query_params": {
+        "concurrent_queries": 100,
+        "threads": 10
+      },
+      "expected_results": {
+        "all_queries_completed": true,
+        "stats_accurate": true,
+        "no_race_conditions": true,
+        "total_queries": 100,
+        "rationale": "Concurrent stats updates must be thread-safe"
+      },
+      "pass_criteria": "total_queries == 100 AND tier_counts sum to 100"
+    },
+    {
+      "id": "EC-009",
+      "category": "edge_cases_error_handling",
+      "question": "Handle invalid tier name in configuration",
+      "query_params": {
+        "preferred_tier": "invalid_tier_xyz"
+      },
+      "expected_results": {
+        "invalid_tier_detected": true,
+        "fallback_to_master": true,
+        "error_logged": true,
+        "rationale": "Invalid tier names should fallback gracefully"
+      },
+      "pass_criteria": "tier == 'master' (fallback) AND error logged"
+    },
+    {
+      "id": "EC-010",
+      "category": "edge_cases_error_handling",
+      "question": "Handle pattern analyzer database connection failure",
+      "query_params": {
+        "record_pattern": true,
+        "database_available": false
+      },
+      "expected_results": {
+        "connection_error_handled": true,
+        "query_continues": true,
+        "pattern_not_recorded": true,
+        "rationale": "Pattern recording failure should not block query execution"
+      },
+      "pass_criteria": "query succeeds despite pattern recording failure"
+    }
+  ]
+}
