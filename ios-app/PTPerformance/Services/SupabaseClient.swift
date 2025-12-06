@@ -8,8 +8,8 @@ class PTSupabaseClient: ObservableObject {
 
     let client: Supabase.SupabaseClient
 
-    @Published var currentSession: Session?
-    @Published var currentUser: User?
+    @Published var currentSession: Supabase.Session?
+    @Published var currentUser: Supabase.User?
     @Published var userRole: UserRole?
     @Published var userId: String?
 
@@ -144,6 +144,12 @@ class PTSupabaseClient: ObservableObject {
         let email: String
         let sport: String
         let position: String?
+
+        var initials: String {
+            let first = first_name.prefix(1).uppercased()
+            let last = last_name.prefix(1).uppercased()
+            return "\(first)\(last)"
+        }
     }
 
     struct Therapist: Codable {
