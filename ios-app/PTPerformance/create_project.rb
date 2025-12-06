@@ -13,11 +13,15 @@ project = Xcodeproj::Project.new(project_path)
 # Create app target
 target = project.new_target(:application, 'PTPerformance', :ios, '17.0')
 
-# Set bundle identifier
+# Set bundle identifier and build settings
 target.build_configurations.each do |config|
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'com.ptperformance.app'
   config.build_settings['SWIFT_VERSION'] = '5.0'
   config.build_settings['TARGETED_DEVICE_FAMILY'] = '1,2' # iPhone and iPad
+  config.build_settings['GENERATE_INFOPLIST_FILE'] = 'YES'
+  config.build_settings['PRODUCT_NAME'] = '$(TARGET_NAME)'
+  config.build_settings['MARKETING_VERSION'] = '1.0'
+  config.build_settings['CURRENT_PROJECT_VERSION'] = '1'
 end
 
 # Find all Swift files
