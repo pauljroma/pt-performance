@@ -14,7 +14,7 @@ struct PatientListView: View {
             } else if let error = viewModel.errorMessage {
                 ErrorView(message: error) {
                     Task {
-                        await viewModel.refresh(for: therapistId)
+                        await viewModel.refresh()
                     }
                 }
             } else {

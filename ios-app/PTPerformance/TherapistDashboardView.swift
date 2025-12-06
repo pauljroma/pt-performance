@@ -92,7 +92,7 @@ struct PatientCardView: View {
                         .font(.caption)
                     
                     if let lastSession = patient.lastSessionDate {
-                        Label(lastSession, style: .relative)
+                        Text(lastSession, style: .relative)
                             .font(.caption)
                     }
                 }

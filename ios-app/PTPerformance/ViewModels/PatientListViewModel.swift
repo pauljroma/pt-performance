@@ -15,6 +15,19 @@ class PatientListViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var searchText: String = ""
+    @Published var selectedFlagFilter: FlagFilter = .all
+    @Published var selectedSport: String? = nil
+
+    enum FlagFilter: String, CaseIterable {
+        case all = "All"
+        case high = "High Risk"
+        case medium = "Medium Risk"
+        case low = "Low Risk"
+    }
+
+    var availableSports: [String] {
+        Array(Set(patients.compactMap { $0.sport })).sorted()
+    }
 
     var filteredPatients: [Patient] {
         if searchText.isEmpty {
