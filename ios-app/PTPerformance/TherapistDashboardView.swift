@@ -102,7 +102,7 @@ struct PatientCardView: View {
             Spacer()
             
             // Flags indicator
-            if patient.hasActiveFlags {
+            if patient.hasHighSeverityFlags {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
             }
