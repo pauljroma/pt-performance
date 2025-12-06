@@ -3,10 +3,10 @@
   on:                                                                                                                                                                                                              
     push:                                                                                                                                                                                                          
       branches: [main, develop]                                                                                                                                                                                    
-    workflow_dispatch:
-
-  jobs:
-    build:
+    workflow_dispatch:                                                                                                                                                                                             
+                                                                                                                                                                                                                   
+  jobs:                                                                                                                                                                                                            
+    build:                                                                                                                                                                                                         
       runs-on: macos-14
 
       steps:
@@ -40,8 +40,11 @@
         if: github.ref == 'refs/heads/main'
         run: |
           cd ios-app/PTPerformance
+          # Find the DerivedData path
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "PTPerformance.app" -path "*/Release-iphoneos/*" | head -1)
+          echo "Found app at: $APP_PATH"
           mkdir -p Payload
-          cp -r build/Release-iphoneos/PTPerformance.app Payload/
+          cp -r "$APP_PATH" Payload/
           zip -r PTPerformance.ipa Payload
           rm -rf Payload
 
