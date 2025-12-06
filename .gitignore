@@ -1,0 +1,20 @@
+# Xcode
+build/
+*.xcarchive
+*.ipa
+DerivedData/
+*.xcworkspace
+!default.xcworkspace
+
+# Swift
+*.swiftmodule
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Cache
+.cache/

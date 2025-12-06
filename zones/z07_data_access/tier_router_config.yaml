@@ -1,0 +1,42 @@
+# 4-Tier Router Configuration
+# Wave 1: Python-only mode foundation
+
+# Temporal thresholds for tier selection
+tier_thresholds:
+  master_days: 7      # Recent data threshold (Tier 1)
+  minio_days: 90      # Historical data threshold (Tier 3)
+
+# Routing rules per tier
+routing_rules:
+  master:
+    enabled: true
+    description: "Hot tier - recent data, high-frequency queries"
+    max_days_back: 7
+    priority: 1
+
+  pgvector:
+    enabled: true
+    description: "Warm tier - semantic search, embeddings, similarity"
+    use_cases: ["embeddings", "similarity_search", "semantic_queries"]
+    priority: 2
+
+  minio:
+    enabled: false  # Wave 2 - not yet implemented
+    description: "Cold tier - historical data, bulk queries"
+    min_days_back: 7
+    max_days_back: 90
+    priority: 3
+
+  athena:
+    enabled: false  # Wave 2 - not yet implemented
+    description: "Archive tier - long-term analytics"
+    min_days_back: 90
+    priority: 4
+
+# Fallback configuration
+fallback_tier: "master"
+
+# Performance targets
+performance:
+  max_routing_overhead_ms: 1.0
+  target_routing_percentage: 30.0  # Route 30%+ of queries through tier system

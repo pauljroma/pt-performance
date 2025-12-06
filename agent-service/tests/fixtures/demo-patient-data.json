@@ -1,0 +1,193 @@
+{
+  "patient": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "first_name": "John",
+    "last_name": "Brebbia",
+    "email": "demo-athlete@ptperformance.app",
+    "sport": "Baseball",
+    "position": "Pitcher (Right-handed)",
+    "dominant_hand": "Right",
+    "height_in": 73,
+    "weight_lb": 195,
+    "date_of_birth": "1990-05-27"
+  },
+  "program": {
+    "id": "00000000-0000-0000-0000-000000000200",
+    "name": "8-Week On-Ramp",
+    "status": "active",
+    "start_date": "2025-02-01",
+    "end_date": "2025-03-28"
+  },
+  "scenarios": {
+    "high_pain": {
+      "description": "Pain level > 5 should trigger immediate recommendation",
+      "pain_logs": [
+        {
+          "logged_at": "2025-02-15T10:00:00Z",
+          "pain_during": 7,
+          "pain_after": 6,
+          "notes": "Sharp pain during overhead press"
+        },
+        {
+          "logged_at": "2025-02-16T10:00:00Z",
+          "pain_during": 8,
+          "pain_after": 7,
+          "notes": "Pain worsening"
+        }
+      ],
+      "expected_flag": {
+        "type": "pain_high",
+        "severity": "HIGH",
+        "should_create_pcr": true
+      }
+    },
+    "velocity_drop": {
+      "description": "Velocity drop > 3 mph should be detected",
+      "bullpen_logs": [
+        {
+          "logged_at": "2025-02-10T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 92,
+          "command_rating": 8,
+          "pitch_count": 30
+        },
+        {
+          "logged_at": "2025-02-12T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 88,
+          "command_rating": 7,
+          "pitch_count": 30
+        },
+        {
+          "logged_at": "2025-02-14T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 87,
+          "command_rating": 6,
+          "pitch_count": 30
+        }
+      ],
+      "expected_flag": {
+        "type": "velocity_drop_significant",
+        "severity": "MEDIUM",
+        "should_create_pcr": false
+      }
+    },
+    "velocity_drop_critical": {
+      "description": "Velocity drop > 5 mph should trigger critical flag",
+      "bullpen_logs": [
+        {
+          "logged_at": "2025-02-10T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 94,
+          "command_rating": 8,
+          "pitch_count": 30
+        },
+        {
+          "logged_at": "2025-02-14T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 88,
+          "command_rating": 6,
+          "pitch_count": 30
+        }
+      ],
+      "expected_flag": {
+        "type": "velocity_drop_critical",
+        "severity": "HIGH",
+        "should_create_pcr": true
+      }
+    },
+    "low_adherence": {
+      "description": "Adherence < 60% over 7 days should be flagged",
+      "sessions_scheduled": 6,
+      "sessions_completed": 3,
+      "adherence_pct": 50,
+      "expected_flag": {
+        "type": "adherence_low",
+        "severity": "MEDIUM",
+        "should_create_pcr": false
+      }
+    },
+    "safe_progression": {
+      "description": "Normal progression - no flags",
+      "pain_logs": [
+        {
+          "logged_at": "2025-02-15T10:00:00Z",
+          "pain_during": 2,
+          "pain_after": 1,
+          "notes": "Mild soreness, expected"
+        }
+      ],
+      "bullpen_logs": [
+        {
+          "logged_at": "2025-02-15T14:00:00Z",
+          "pitch_type": "Fastball",
+          "velocity": 92,
+          "command_rating": 8,
+          "pitch_count": 30
+        }
+      ],
+      "adherence_pct": 90,
+      "expected_flag": null
+    }
+  },
+  "protocol_constraints": [
+    {
+      "constraint_type": "pain_threshold",
+      "constraint_value": 3,
+      "violation_severity": "critical",
+      "rationale": "Pain >3/10 indicates tissue stress requiring protocol adjustment"
+    },
+    {
+      "constraint_type": "max_velocity_mph",
+      "constraint_value": 85,
+      "violation_severity": "error",
+      "rationale": "Current phase limits velocity to protect healing tissue"
+    },
+    {
+      "constraint_type": "max_pitch_count",
+      "constraint_value": 40,
+      "violation_severity": "warning",
+      "rationale": "Progressive volume increase - avoid overuse"
+    }
+  ],
+  "unsafe_suggestions": {
+    "increase_velocity_unsafe": {
+      "type": "increase_velocity",
+      "value": 95,
+      "context": {
+        "currentPain": 4,
+        "currentVelocity": 82
+      },
+      "should_be_blocked": true,
+      "reason": "Exceeds protocol max velocity (85 mph) and pain threshold (3/10)"
+    },
+    "overhead_exercises_unsafe": {
+      "type": "add_overhead_exercise",
+      "context": {
+        "currentPain": 2
+      },
+      "should_be_blocked": true,
+      "reason": "Protocol prohibits overhead exercises in current phase"
+    }
+  },
+  "safe_suggestions": {
+    "reduce_volume": {
+      "type": "reduce_volume",
+      "value": 20,
+      "context": {
+        "currentPain": 4,
+        "currentVelocity": 82
+      },
+      "should_be_allowed": true,
+      "reason": "Volume reduction is safe response to elevated pain"
+    },
+    "add_rest_day": {
+      "type": "add_rest_day",
+      "context": {
+        "currentPain": 3
+      },
+      "should_be_allowed": true,
+      "reason": "Rest is always a safe intervention"
+    }
+  }
+}

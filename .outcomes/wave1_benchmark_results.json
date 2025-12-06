@@ -1,0 +1,289 @@
+{
+  "timestamp": "2025-12-06 03:04:33",
+  "results": [
+    {
+      "name": "Rust Single Lookup",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: Rust primitives not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "Rust primitives not available"
+      }
+    },
+    {
+      "name": "Python Single Lookup (Baseline)",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Cached Lookup",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Bulk Lookup (100 drugs)",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Concurrent Queries (10 threads)",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Fallback Performance",
+      "category": "rust_primitives",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Routing Overhead (Single Query)",
+      "category": "tier_router",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Routing Overhead (1,000 queries)",
+      "category": "tier_router",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Routing Percentage Validation",
+      "category": "tier_router",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Tier Selection Speed",
+      "category": "tier_router",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Combined Rust + Router",
+      "category": "tier_router",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "End-to-End Query",
+      "category": "system",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Throughput (queries/sec)",
+      "category": "system",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Memory Usage",
+      "category": "system",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    },
+    {
+      "name": "Cache Hit Rate",
+      "category": "system",
+      "iterations": 0,
+      "mean_ms": 0,
+      "median_ms": 0,
+      "std_dev_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "success": false,
+      "error": "SKIPPED: TierRouter not available",
+      "metadata": {
+        "skipped": true,
+        "reason": "TierRouter not available"
+      }
+    }
+  ],
+  "analysis": {
+    "total_benchmarks": 15,
+    "successful_count": 0,
+    "failed_count": 0,
+    "skipped_count": 15,
+    "success_rate": 0.0,
+    "rust_speedup": null,
+    "avg_routing_overhead_ms": 0,
+    "rust_available": false,
+    "tier_router_available": false
+  },
+  "targets_met": {
+    "rust_sub_0_1ms": true
+  }
+}

@@ -1,0 +1,332 @@
+name: "Phase 3: Mobile Frontend - PT Performance Platform"
+description: "Build SwiftUI mobile apps for patient and therapist with real-time Supabase integration"
+created: "2025-12-06"
+estimated_duration: "8-10 hours"
+agents: 3
+dependencies: "Phase 1 complete (schema deployed), Phase 2 complete (backend APIs deployed)"
+
+context:
+  project: "PT Performance Platform MVP"
+  platform: "SwiftUI (iOS/iPadOS) + Supabase Swift SDK"
+  patient_profile: "John Brebbia (MLB pitcher, post-tricep strain)"
+  safety_critical: true
+
+success_criteria:
+  - "Patient can view today's session with real Supabase data"
+  - "Patient can log exercises with pain/RPE and submit to Supabase"
+  - "Patient can view history with pain/adherence charts"
+  - "Therapist can view patient list with flags"
+  - "Therapist can view patient detail with charts and metrics"
+  - "Therapist can view program structure (phases → sessions → exercises)"
+  - "Therapist can add notes and assessments"
+  - "All 18 mobile issues marked Done in Linear"
+
+agents:
+  - id: "agent-1-patient-app"
+    name: "Patient App (SwiftUI) Agent"
+    zones: ["zone-12", "zone-8"]
+    tasks:
+      - id: "ACP-92"
+        title: "Integrate Supabase Swift SDK and auth flow"
+        description: "Add Supabase client, implement login, session persistence"
+        deliverables:
+          - "Supabase Swift SDK integrated"
+          - "Login/logout flow working"
+          - "Session persists across app launches"
+          - "Demo user (John Brebbia) can authenticate"
+        files_to_create:
+          - "ios-app/PTPerformance/Services/SupabaseClient.swift"
+          - "ios-app/PTPerformance/Views/Auth/AuthView.swift"
+        reference: "docs/runbooks/RUNBOOK_MOBILE_SWIFTUI.md (Step B)"
+
+      - id: "ACP-93"
+        title: "Build Today Session screen with real data"
+        description: "Display today's exercises from Supabase /today-session endpoint"
+        reference: "docs/epics/EPIC_I_PATIENT_APP_UX_AND_FLOWS.md"
+        deliverables:
+          - "Today Session view loads real data from Supabase"
+          - "Displays exercise list (name, sets, reps, load)"
+          - "Navigation to exercise detail"
+          - "No hardcoded placeholders"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Patient/TodaySessionView.swift"
+          - "ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift"
+          - "ios-app/PTPerformance/Models/Exercise.swift"
+        reference: "docs/runbooks/RUNBOOK_MOBILE_SWIFTUI.md (Step C)"
+
+      - id: "ACP-94"
+        title: "Implement exercise logging UI with submission"
+        description: "Build exercise detail screen with pain/RPE/load logging"
+        deliverables:
+          - "Exercise detail screen with input fields"
+          - "Pain slider (0-10)"
+          - "RPE slider (0-10)"
+          - "Actual reps/load input"
+          - "Submit to Supabase exercise_logs table"
+          - "Success/error handling"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Patient/ExerciseLogView.swift"
+          - "ios-app/PTPerformance/Services/ExerciseLogService.swift"
+        reference: "docs/runbooks/RUNBOOK_MOBILE_SWIFTUI.md (Step D)"
+
+      - id: "ACP-95"
+        title: "Create History view with pain/adherence charts"
+        description: "Display historical data with charts"
+        deliverables:
+          - "History tab with pain trend chart"
+          - "Adherence percentage display"
+          - "Data pulled from vw_pain_trend and vw_patient_adherence"
+          - "Charts render correctly with demo data"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Patient/HistoryView.swift"
+          - "ios-app/PTPerformance/Components/Charts/PainTrendChart.swift"
+          - "ios-app/PTPerformance/Services/AnalyticsService.swift"
+        reference: "docs/runbooks/RUNBOOK_MOBILE_SWIFTUI.md (Step E)"
+
+      - id: "ACP-78"
+        title: "Implement basic pain/adherence charts in History tab"
+        description: "Use Swift Charts framework for visualizations"
+        deliverables:
+          - "Pain trend line chart (7-14 days)"
+          - "Adherence bar chart or percentage"
+          - "Responsive to different data ranges"
+          - "Accessible labels and colors"
+        files_to_modify:
+          - "ios-app/PTPerformance/Views/Patient/HistoryView.swift"
+
+      - id: "ACP-76"
+        title: "Wire Today Session to Supabase today-session endpoint"
+        description: "Connect TodaySessionView to backend endpoint"
+        endpoints:
+          - "GET /today-session/:patientId"
+        deliverables:
+          - "Network call to backend endpoint"
+          - "Parse response into Exercise models"
+          - "Loading state handling"
+          - "Error state handling"
+          - "Empty state handling (no session today)"
+        files_to_modify:
+          - "ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift"
+          - "ios-app/PTPerformance/Services/SupabaseClient.swift"
+
+  - id: "agent-2-therapist-app"
+    name: "Therapist App (SwiftUI) Agent"
+    zones: ["zone-12", "zone-7", "zone-3c"]
+    tasks:
+      - id: "ACP-96"
+        title: "Build therapist patient list view"
+        description: "Display all patients assigned to therapist with flags"
+        reference: "docs/epics/EPIC_H_THERAPIST_DASHBOARD.md"
+        deliverables:
+          - "Patient list view with card/row layout"
+          - "Show patient name, sport, position"
+          - "Show flag count (red badge for HIGH flags)"
+          - "Pull from /therapist-patients/:therapistId endpoint"
+          - "Tap to navigate to patient detail"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Therapist/PatientListView.swift"
+          - "ios-app/PTPerformance/ViewModels/PatientListViewModel.swift"
+          - "ios-app/PTPerformance/Models/Patient.swift"
+
+      - id: "ACP-97"
+        title: "Create patient detail screen with charts and flags"
+        description: "Comprehensive patient overview with metrics"
+        deliverables:
+          - "Patient header (name, sport, position, photo)"
+          - "Flag summary section (top 3 flags)"
+          - "Pain trend chart"
+          - "Adherence percentage"
+          - "Recent sessions list"
+          - "Pull from /patient-summary/:patientId endpoint"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Therapist/PatientDetailView.swift"
+          - "ios-app/PTPerformance/ViewModels/PatientDetailViewModel.swift"
+
+      - id: "ACP-98"
+        title: "Implement program viewer (phases → sessions → exercises)"
+        description: "Hierarchical view of patient's program structure"
+        deliverables:
+          - "Program name and metadata display"
+          - "Phase list (expandable)"
+          - "Session list within each phase"
+          - "Exercise list within each session"
+          - "Indicates completed vs upcoming sessions"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Therapist/ProgramViewerView.swift"
+          - "ios-app/PTPerformance/Models/Program.swift"
+          - "ios-app/PTPerformance/Models/Phase.swift"
+          - "ios-app/PTPerformance/Models/Session.swift"
+
+      - id: "ACP-99"
+        title: "Add patient notes and assessment interface"
+        description: "Enable therapist to add notes and assessments"
+        deliverables:
+          - "Notes list view (chronological)"
+          - "Add note button → note entry form"
+          - "Note types (assessment, progress, clinical)"
+          - "Save to Supabase session_notes table"
+          - "Display note history"
+        files_to_create:
+          - "ios-app/PTPerformance/Views/Therapist/NotesView.swift"
+          - "ios-app/PTPerformance/Services/NotesService.swift"
+
+      - id: "ACP-68"
+        title: "Build search/filter API for therapists"
+        description: "Add backend endpoint for therapist patient search"
+        zones: ["zone-3c", "zone-7"]
+        deliverables:
+          - "GET /therapist/:therapistId/patients?search=... endpoint"
+          - "Filter by sport, position, flag severity"
+          - "Search by patient name"
+          - "Returns matching patients with summary"
+        files_to_create:
+          - "agent-service/src/routes/therapist.js"
+          - "agent-service/src/services/therapist.js"
+
+  - id: "agent-3-integration"
+    name: "Integration & Testing Agent"
+    zones: ["zone-12", "zone-8", "zone-10b"]
+    tasks:
+      - id: "ACP-63"
+        title: "Model 8-week on-ramp as program → phases → sessions"
+        description: "Ensure data model supports 8-week on-ramp program"
+        reference: "docs/epics/EPIC_C_THROWING_ONRAMP_PLYO_MODEL.md"
+        deliverables:
+          - "Validate program structure in Supabase"
+          - "Ensure phases map correctly (4 phases)"
+          - "Ensure sessions map correctly (3 per week, 24 total)"
+          - "Validate progression logic"
+        files_to_modify:
+          - "infra/003_seed_demo_data.sql (if needed)"
+
+      - id: "ACP-62"
+        title: "Normalize bullpen tracker into bullpen_logs"
+        description: "Migrate bullpen tracking to proper table"
+        deliverables:
+          - "bullpen_logs table has all XLS fields"
+          - "Add command for migrating existing data"
+          - "Update mobile app to use bullpen_logs"
+          - "Validate throwing metrics display correctly"
+        files_to_create:
+          - "infra/004_bullpen_normalization.sql"
+          - "ios-app/PTPerformance/Models/BullpenLog.swift"
+
+      - id: "ACP-59"
+        title: "Add rm_estimate to exercise_logs and backfill logic"
+        description: "Calculate and store 1RM estimates"
+        deliverables:
+          - "rm_estimate column added to exercise_logs"
+          - "Backfill script for existing logs"
+          - "Mobile app displays estimated 1RM"
+          - "Uses Epley/Brzycki formulas"
+        files_to_create:
+          - "infra/005_add_rm_estimate.sql"
+          - "agent-service/src/utils/rm-calculator.js"
+
+      - id: "ACP-58"
+        title: "Implement 1RM computation utils from XLS formulas"
+        description: "Implement 1RM formulas (Epley, Brzycki, Lombardi)"
+        reference: "docs/epics/EPIC_B_STRENGTH_SC_MODEL_FROM_XLS.md"
+        deliverables:
+          - "1RM calculation utilities"
+          - "Support Epley, Brzycki, Lombardi formulas"
+          - "Unit tests for accuracy (±2%)"
+          - "Used by backend and mobile app"
+        files_to_create:
+          - "ios-app/PTPerformance/Utils/RMCalculator.swift"
+          - "ios-app/PTPerformance/Tests/RMCalculatorTests.swift"
+
+      - id: "ACP-71"
+        title: "Add unit tests for 1RM / strength target functions"
+        description: "Comprehensive testing for strength calculations"
+        deliverables:
+          - "Test suite for 1RM calculations"
+          - "Test suite for strength targets"
+          - "Test data from XLS examples"
+          - "All tests passing"
+          - "Coverage > 90%"
+        files_to_create:
+          - "ios-app/PTPerformance/Tests/StrengthTargetTests.swift"
+
+      - id: "ACP-73"
+        title: "Implement agent_logs table + writing from backend"
+        description: "Add observability for backend operations"
+        zones: ["zone-7", "zone-13"]
+        deliverables:
+          - "agent_logs table created"
+          - "Middleware logs all endpoint calls"
+          - "Logs include: timestamp, endpoint, patient_id, duration, status"
+          - "Error logs include stack traces"
+        files_to_create:
+          - "infra/007_agent_logs_table.sql"
+        files_to_modify:
+          - "agent-service/src/middleware/logging.js"
+
+      - id: "ACP-57"
+        title: "Final MVP Review & Sign-off"
+        description: "Comprehensive validation of all Phase 3 deliverables"
+        zones: ["zone-10b", "zone-13"]
+        deliverables:
+          - "All 18 mobile issues completed"
+          - "Patient app fully functional (auth, session, logging, history)"
+          - "Therapist app fully functional (list, detail, program, notes)"
+          - "All endpoints tested and working"
+          - "Performance acceptable (<2s load times)"
+          - "Security validated (RLS policies working)"
+          - "Create Phase 3 completion report"
+        files_to_create:
+          - ".outcomes/phase3_completion_report.md"
+          - ".outcomes/phase3_test_results.md"
+
+coordination:
+  communication: "Linear issue comments"
+  status_updates: "Every 30-60 minutes"
+  conflict_resolution: "Lower-numbered issue takes priority"
+  shared_files:
+    - "ios-app/PTPerformance/Services/SupabaseClient.swift (shared by both apps)"
+    - "ios-app/PTPerformance/Models/*.swift (shared models)"
+
+validation:
+  patient_app_tests:
+    - "Demo user (John Brebbia) can login"
+    - "Today Session loads real data from Supabase"
+    - "Exercise logging submits to exercise_logs table"
+    - "History view displays pain/adherence charts"
+
+  therapist_app_tests:
+    - "Therapist can login"
+    - "Patient list displays all assigned patients"
+    - "Patient detail shows comprehensive metrics"
+    - "Program viewer displays 8-week on-ramp structure"
+    - "Notes can be added and saved"
+
+  integration_tests:
+    - "All Supabase endpoints return valid data"
+    - "1RM calculations match XLS ±2%"
+    - "Flag detection working (HIGH flags visible)"
+    - "RLS policies prevent unauthorized access"
+
+  expected_results:
+    mobile_screens: ">= 10 screens (patient + therapist)"
+    endpoints: "All Phase 2 endpoints consumed"
+    tests: "All unit tests passing"
+    performance: "Load times < 2s"
+
+handoff:
+  document: ".outcomes/phase3_handoff.md"
+  includes:
+    - "Completion summary"
+    - "App screenshots"
+    - "Test results"
+    - "Known issues / future enhancements"
+    - "Production deployment checklist"
+
+runbooks:
+  - "docs/runbooks/RUNBOOK_MOBILE_SWIFTUI.md"
+  - "docs/runbooks/RUNBOOK_THERAPIST_DASHBOARD.md"
+
+epics:
+  - "docs/epics/EPIC_I_PATIENT_APP_UX_AND_FLOWS.md"
+  - "docs/epics/EPIC_H_THERAPIST_DASHBOARD.md"
+  - "docs/epics/EPIC_B_STRENGTH_SC_MODEL_FROM_XLS.md"
+  - "docs/epics/EPIC_C_THROWING_ONRAMP_PLYO_MODEL.md"

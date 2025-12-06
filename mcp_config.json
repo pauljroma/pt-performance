@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "linear-integration": {
+      "command": "python3",
+      "args": [
+        "/Users/expo/Code/expo/clients/linear-bootstrap/mcp_server.py"
+      ],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    }
+  }
+}
