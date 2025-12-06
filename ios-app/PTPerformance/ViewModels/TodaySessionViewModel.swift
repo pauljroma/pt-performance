@@ -10,7 +10,7 @@ class TodaySessionViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
-    private let supabase = PTPTSupabaseClient.shared
+    private let supabase = PTSupabaseClient.shared
 
     /// Fetch today's session for the authenticated patient
     func fetchTodaySession() async {

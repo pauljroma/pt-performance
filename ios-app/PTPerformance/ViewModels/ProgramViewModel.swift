@@ -15,7 +15,7 @@ class ProgramViewModel: ObservableObject {
 
     private let supabase: PTSupabaseClient
 
-    init(supabase: SupabaseClient = .shared) {
+    init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
 

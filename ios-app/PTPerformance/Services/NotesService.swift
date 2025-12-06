@@ -5,7 +5,7 @@ import Supabase
 class NotesService {
     private let supabase: PTSupabaseClient
 
-    init(supabase: SupabaseClient = .shared) {
+    init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
 

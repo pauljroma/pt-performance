@@ -200,7 +200,7 @@ struct AddNoteSheet: View {
     @State private var isSaving = false
 
     // Get current user ID (would come from auth context in real app)
-    @State private var userId: String = PTPTSupabaseClient.shared.getCurrentUserId() ?? "unknown"
+    @State private var userId: String = PTSupabaseClient.shared.getCurrentUserId() ?? "unknown"
 
     let noteTypes = ["assessment", "progress", "clinical", "general"]
 
