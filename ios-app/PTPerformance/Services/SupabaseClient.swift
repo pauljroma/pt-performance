@@ -3,10 +3,10 @@ import Supabase
 
 /// Supabase client singleton for PT Performance app
 /// Manages authentication and database access to Supabase backend
-class SupabaseClient: ObservableObject {
-    static let shared = SupabaseClient()
+class PTSupabaseClient: ObservableObject {
+    static let shared = PTSupabaseClient()
 
-    let client: SupabaseClient
+    let client: Supabase.SupabaseClient
 
     @Published var currentSession: Session?
     @Published var currentUser: User?
@@ -22,7 +22,7 @@ class SupabaseClient: ObservableObject {
             fatalError("Invalid Supabase URL")
         }
 
-        client = SupabaseClient(
+        client = Supabase.SupabaseClient(
             supabaseURL: url,
             supabaseKey: supabaseAnonKey
         )
@@ -84,7 +84,7 @@ class SupabaseClient: ObservableObject {
     private func fetchUserRole(userId: String) async {
         do {
             // Check if user is a patient
-            let patientResponse: [Patient] = try await client.database
+            let patientResponse: [Patient] = try await client
                 .from("patients")
                 .select()
                 .eq("auth_user_id", value: userId)
@@ -100,7 +100,7 @@ class SupabaseClient: ObservableObject {
             }
 
             // Check if user is a therapist
-            let therapistResponse: [Therapist] = try await client.database
+            let therapistResponse: [Therapist] = try await client
                 .from("therapists")
                 .select()
                 .eq("auth_user_id", value: userId)
