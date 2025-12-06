@@ -240,10 +240,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
-						packageReferences = (
-				AA1111111111111111111111 /* XCRemoteSwiftPackageReference "supabase-swift" */,
-			);
-		};
+				};
 			buildConfigurationList = 02A8D83EF83E1D2BD6B4BF40 /* Build configuration list for PBXProject "PTPerformance" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
@@ -253,6 +250,9 @@
 				Base,
 			);
 			mainGroup = 2B3EF0D20F09733487421FF6;
+			packageReferences = (
+				AA1111111111111111111111 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			minimizedProjectReferenceProxies = 0;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 50A2CB50BA7CA9076ABC3945 /* Products */;
