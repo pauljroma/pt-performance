@@ -53,7 +53,7 @@ class PatientDetailViewModel: ObservableObject {
             .from("patient_flags")
             .select()
             .eq("patient_id", value: patientId)
-            .is("resolved_at", value: "null")
+            .is("resolved_at", value: nil)
             .order("severity", ascending: false)
             .order("created_at", ascending: false)
             .execute()

@@ -38,6 +38,41 @@ struct Exercise: Codable, Identifiable, Hashable {
     var setsDisplay: String {
         return "\(prescribed_sets) sets"
     }
+
+    static let sampleExercises: [Exercise] = [
+        Exercise(
+            id: "ex-1",
+            session_id: "session-1",
+            exercise_template_id: "template-1",
+            exercise_order: 1,
+            prescribed_sets: 3,
+            prescribed_reps_min: 8,
+            prescribed_reps_max: 10,
+            prescribed_load: 135,
+            prescribed_load_unit: "lbs",
+            rest_seconds: 90,
+            notes: nil,
+            exercise_name: "Bench Press",
+            movement_pattern: "push",
+            equipment: "barbell"
+        ),
+        Exercise(
+            id: "ex-2",
+            session_id: "session-1",
+            exercise_template_id: "template-2",
+            exercise_order: 2,
+            prescribed_sets: 3,
+            prescribed_reps_min: 10,
+            prescribed_reps_max: 12,
+            prescribed_load: 185,
+            prescribed_load_unit: "lbs",
+            rest_seconds: 120,
+            notes: nil,
+            exercise_name: "Squat",
+            movement_pattern: "squat",
+            equipment: "barbell"
+        )
+    ]
 }
 
 /// Session model from Supabase sessions table

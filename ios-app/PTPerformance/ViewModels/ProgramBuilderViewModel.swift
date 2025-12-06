@@ -62,9 +62,9 @@ class ProgramBuilderViewModel: ObservableObject {
         availableProtocols = TherapyProtocol.sampleProtocols
     }
     
-    func loadProtocolPhases(_ protocol: TherapyProtocol) {
+    func loadProtocolPhases(_ therapyProtocol: TherapyProtocol) {
         // Load phases from protocol
-        phases = protocol.phases.map { protocolPhase in
+        phases = therapyProtocol.phases.map { protocolPhase in
             ProgramPhase(
                 name: protocolPhase.name,
                 durationWeeks: protocolPhase.durationWeeks,

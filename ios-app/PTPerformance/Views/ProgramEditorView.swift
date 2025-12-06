@@ -85,9 +85,9 @@ struct ExercisePickerSection: View {
             
             Picker("Select Exercise", selection: $selectedExercise) {
                 Text("Choose exercise...").tag(nil as Exercise?)
-                
-                ForEach(exercises) { exercise in
-                    Text(exercise.name).tag(exercise as Exercise?)
+
+                ForEach(exercises, id: \.id) { exercise in
+                    Text(exercise.exercise_name ?? "Unknown").tag(exercise as Exercise?)
                 }
             }
             .pickerStyle(.menu)

@@ -101,8 +101,8 @@ class ProgramEditorViewModel: ObservableObject {
     
     func saveExercise() async {
         guard let exercise = selectedExercise else { return }
-        
-        print("Saving exercise: \(exercise.name)")
+
+        print("Saving exercise: \(exercise.exercise_name ?? "Unknown")")
         print("Sets: \(sets), Reps: \(reps), Weight: \(recommendedWeight) lbs")
         print("Target RPE: \(targetRPE)")
         

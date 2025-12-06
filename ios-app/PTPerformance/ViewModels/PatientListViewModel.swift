@@ -64,6 +64,6 @@ class PatientListViewModel: ObservableObject {
     }
     
     func patient(for patientId: UUID) -> Patient? {
-        patients.first { $0.id == patientId }
+        patients.first { $0.id == patientId.uuidString }
     }
 }

@@ -150,6 +150,29 @@ class PTSupabaseClient: ObservableObject {
             let last = last_name.prefix(1).uppercased()
             return "\(first)\(last)"
         }
+
+        static let samplePatients: [Patient] = [
+            Patient(
+                id: "patient-1",
+                auth_user_id: "auth-1",
+                therapist_id: "therapist-1",
+                first_name: "John",
+                last_name: "Brebbia",
+                email: "demo-patient@ptperformance.app",
+                sport: "Baseball",
+                position: "Pitcher"
+            ),
+            Patient(
+                id: "patient-2",
+                auth_user_id: "auth-2",
+                therapist_id: "therapist-1",
+                first_name: "Sarah",
+                last_name: "Johnson",
+                email: "sarah@example.com",
+                sport: "Basketball",
+                position: "Guard"
+            )
+        ]
     }
 
     struct Therapist: Codable {

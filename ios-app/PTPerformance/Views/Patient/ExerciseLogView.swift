@@ -30,16 +30,16 @@ struct ExerciseLogView: View {
                 // Exercise header
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(exercise.exerciseName)
+                        Text(exercise.exercise_name ?? "Exercise")
                             .font(.headline)
 
                         HStack {
-                            Label("\(exercise.prescribedSets) sets", systemImage: "number")
+                            Label("\(exercise.prescribed_sets) sets", systemImage: "number")
                             Spacer()
-                            Label("\(exercise.prescribedReps) reps", systemImage: "repeat")
+                            Label("\(exercise.repsDisplay)", systemImage: "repeat")
                             Spacer()
-                            if let load = exercise.prescribedLoad {
-                                Label("\(Int(load)) \(exercise.loadUnit ?? "lbs")", systemImage: "scalemass")
+                            if let load = exercise.prescribed_load, let unit = exercise.prescribed_load_unit {
+                                Label("\(Int(load)) \(unit)", systemImage: "scalemass")
                             }
                         }
                         .font(.subheadline)
@@ -289,13 +289,19 @@ struct ExerciseLogView_Previews: PreviewProvider {
         ExerciseLogView(
             exercise: Exercise(
                 id: "1",
-                sessionExerciseId: "se-1",
-                exerciseName: "Back Squat",
-                prescribedSets: 3,
-                prescribedReps: 10,
-                prescribedLoad: 185,
-                loadUnit: "lbs",
-                restPeriodSeconds: 120
+                session_id: "session-1",
+                exercise_template_id: "template-1",
+                exercise_order: 1,
+                prescribed_sets: 3,
+                prescribed_reps_min: 10,
+                prescribed_reps_max: 10,
+                prescribed_load: 185,
+                prescribed_load_unit: "lbs",
+                rest_seconds: 120,
+                notes: nil,
+                exercise_name: "Back Squat",
+                movement_pattern: "squat",
+                equipment: "barbell"
             ),
             sessionExerciseId: "se-1",
             patientId: "patient-1"
