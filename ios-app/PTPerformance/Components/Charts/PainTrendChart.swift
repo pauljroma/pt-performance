@@ -90,13 +90,13 @@ struct PainTrendChart_Previews: PreviewProvider {
                 painScore: Double.random(in: 0...8),
                 sessionNumber: 14 - day
             )
-        }.reversed()
+        }
 
         return VStack {
             Text("Pain Trend Chart")
                 .font(.headline)
 
-            PainTrendChart(dataPoints: sampleData)
+            PainTrendChart(dataPoints: Array(sampleData.reversed()))
                 .padding()
 
             Spacer()

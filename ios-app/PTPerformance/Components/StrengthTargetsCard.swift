@@ -139,29 +139,36 @@ struct TargetRow: View {
 
 // Preview
 struct StrengthTargetsCard_Previews: PreviewProvider {
+    static var sampleExercise: Exercise {
+        Exercise(
+            id: UUID().uuidString,
+            session_id: UUID().uuidString,
+            exercise_template_id: UUID().uuidString,
+            exercise_order: 1,
+            prescribed_sets: 3,
+            prescribed_reps_min: 8,
+            prescribed_reps_max: 10,
+            prescribed_load: 135,
+            prescribed_load_unit: "lbs",
+            rest_seconds: 90,
+            notes: nil,
+            exercise_name: "Bench Press",
+            movement_pattern: "push",
+            equipment: "barbell"
+        )
+    }
+
     static var previews: some View {
         VStack(spacing: 16) {
             // With 1RM
             StrengthTargetsCard(
-                exercise: Exercise(
-                    id: UUID(),
-                    name: "Bench Press",
-                    category: "push",
-                    instructions: "",
-                    videoUrl: nil
-                ),
+                exercise: sampleExercise,
                 oneRepMax: 185
             )
-            
+
             // Without 1RM
             StrengthTargetsCard(
-                exercise: Exercise(
-                    id: UUID(),
-                    name: "Squat",
-                    category: "legs",
-                    instructions: "",
-                    videoUrl: nil
-                ),
+                exercise: sampleExercise,
                 oneRepMax: nil
             )
         }

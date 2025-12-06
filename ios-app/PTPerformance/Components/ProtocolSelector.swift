@@ -17,47 +17,47 @@ struct ProtocolSelector: View {
             Picker("Protocol", selection: $selectedProtocol) {
                 Text("None (Custom Program)").tag(nil as TherapyProtocol?)
                 
-                ForEach(protocols) { protocol in
-                    Text(protocol.name).tag(protocol as TherapyProtocol?)
+                ForEach(protocols) { therapyProtocol in
+                    Text(therapyProtocol.name).tag(therapyProtocol as TherapyProtocol?)
                 }
             }
             .pickerStyle(.menu)
             
-            if let protocol = selectedProtocol {
-                ProtocolInfoCard(protocol: protocol)
+            if let therapyProtocol = selectedProtocol {
+                ProtocolInfoCard(therapyProtocol: therapyProtocol)
             }
         }
     }
 }
 
 struct ProtocolInfoCard: View {
-    let protocol: TherapyProtocol
-    
+    let therapyProtocol: TherapyProtocol
+
     var totalWeeks: Int {
-        protocol.phases.map(\.durationWeeks).reduce(0, +)
+        therapyProtocol.phases.map(\.durationWeeks).reduce(0, +)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(protocol.description)
+            Text(therapyProtocol.description)
                 .font(.callout)
                 .foregroundColor(.secondary)
-            
+
             HStack(spacing: 16) {
-                Label("\(protocol.phases.count) phases", systemImage: "list.number")
+                Label("\(therapyProtocol.phases.count) phases", systemImage: "list.number")
                 Label("\(totalWeeks) weeks", systemImage: "calendar")
             }
             .font(.caption)
             .foregroundColor(.secondary)
-            
-            if !protocol.constraints.requiredExerciseTypes.isEmpty {
+
+            if !therapyProtocol.constraints.requiredExerciseTypes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Required:")
                         .font(.caption2)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                    
-                    Text(protocol.constraints.requiredExerciseTypes.joined(separator: ", "))
+
+                    Text(therapyProtocol.constraints.requiredExerciseTypes.joined(separator: ", "))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }

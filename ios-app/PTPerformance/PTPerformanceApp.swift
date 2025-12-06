@@ -16,8 +16,3 @@ final class AppState: ObservableObject {
     @Published var isAuthenticated = false
     @Published var userRole: UserRole? = nil   // .patient or .therapist
 }
-
-enum UserRole {
-    case patient
-    case therapist
-}

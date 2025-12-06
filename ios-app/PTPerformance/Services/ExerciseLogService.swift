@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 /// Service for submitting exercise logs to Supabase
-class ExerciseLogService {
+class ExerciseLogService: ObservableObject {
     private let supabase: PTSupabaseClient
 
     init(supabase: PTSupabaseClient = .shared) {

@@ -200,7 +200,7 @@ struct AddNoteSheet: View {
     @State private var isSaving = false
 
     // Get current user ID (would come from auth context in real app)
-    @State private var userId: String = PTSupabaseClient.shared.getCurrentUserId() ?? "unknown"
+    @State private var userId: String = "therapist-user-id"
 
     let noteTypes = ["assessment", "progress", "clinical", "general"]
 
@@ -282,7 +282,7 @@ struct AddNoteSheet: View {
 }
 
 // Extension to get current user ID
-extension SupabaseClient {
+extension PTSupabaseClient {
     func getCurrentUserId() -> String? {
         // This would normally come from the auth session
         // For now, return a placeholder

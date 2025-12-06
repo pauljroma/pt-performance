@@ -21,14 +21,14 @@ routing_rules:
     priority: 2
 
   minio:
-    enabled: false  # Wave 2 - not yet implemented
+    enabled: true  # Wave 2 - ENABLED
     description: "Cold tier - historical data, bulk queries"
     min_days_back: 7
     max_days_back: 90
     priority: 3
 
   athena:
-    enabled: false  # Wave 2 - not yet implemented
+    enabled: true  # Wave 2 - ENABLED
     description: "Archive tier - long-term analytics"
     min_days_back: 90
     priority: 4
@@ -39,4 +39,4 @@ fallback_tier: "master"
 # Performance targets
 performance:
   max_routing_overhead_ms: 1.0
-  target_routing_percentage: 30.0  # Route 30%+ of queries through tier system
+  target_routing_percentage: 50.0  # Wave 2 target: Route 50%+ of queries through tier system

@@ -11,8 +11,8 @@ class ProgramBuilderViewModel: ObservableObject {
     @Published var programName: String = ""
     @Published var selectedProtocol: TherapyProtocol? {
         didSet {
-            if let protocol = selectedProtocol {
-                loadProtocolPhases(protocol)
+            if let therapyProtocol = selectedProtocol {
+                loadProtocolPhases(therapyProtocol)
             }
         }
     }
@@ -31,14 +31,14 @@ class ProgramBuilderViewModel: ObservableObject {
             return false
         }
         
-        if let protocol = selectedProtocol {
-            let constraints = protocol.constraints
-            
+        if let therapyProtocol = selectedProtocol {
+            let constraints = therapyProtocol.constraints
+
             if phases.count < constraints.minPhases {
                 validationError = "Protocol requires at least \(constraints.minPhases) phases"
                 return false
             }
-            
+
             if phases.count > constraints.maxPhases {
                 validationError = "Protocol allows maximum \(constraints.maxPhases) phases"
                 return false
@@ -50,8 +50,8 @@ class ProgramBuilderViewModel: ObservableObject {
     }
     
     var canAddPhase: Bool {
-        guard let protocol = selectedProtocol else { return true }
-        return phases.count < protocol.constraints.maxPhases
+        guard let therapyProtocol = selectedProtocol else { return true }
+        return phases.count < therapyProtocol.constraints.maxPhases
     }
     
     func loadProtocols() async {

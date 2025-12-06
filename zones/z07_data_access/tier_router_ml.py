@@ -1,56 +1,50 @@
 """
-4-Tier Database Router - Wave 1 Foundation (Python-only mode)
+4-Tier Database Router with ML Support - Wave 2 Agent 11
 Routes queries across Master, PGVector, MinIO, and Athena tiers
+
+This is the ML-enhanced version. To use:
+1. Train an MLTierSelector model
+2. Create router with: router = TierRouterML(ml_selector=selector)
+3. Set USE_ML_ROUTING=true
 
 Architecture:
 - Tier 1 (Master): Recent data (<7 days), high-frequency queries
 - Tier 2 (PGVector): Semantic search, embeddings, similarity queries
 - Tier 3 (MinIO): Historical data (7-90 days), bulk queries
 - Tier 4 (Athena): Archive (>90 days), analytics queries
-
-Wave 1: Python SQL implementation only (TIER_ROUTER_USE_RUST=false)
-Wave 2: Rust primitives integration for hot path optimization
 """
 
 import os
 import time
 import yaml
 from datetime import datetime, timedelta
-from enum import Enum
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 
-
-class DataTier(Enum):
-    """Database tier enumeration"""
-    MASTER = "master"
-    PGVECTOR = "pgvector"
-    MINIO = "minio"
-    ATHENA = "athena"
+# Import shared enums from tier_router
+from .tier_router import DataTier, QueryType
 
 
-class QueryType(Enum):
-    """Query type classification"""
-    RECENT = "recent"
-    SEMANTIC = "semantic"
-    HISTORICAL = "historical"
-    ANALYTICS = "analytics"
+class TierRouterML:
+    """4-tier database routing engine with ML support"""
 
-
-class TierRouter:
-    """4-tier database routing engine"""
-
-    def __init__(self, config_path: Optional[str] = None, health_monitor: Optional[Any] = None):
+    def __init__(
+        self,
+        config_path: Optional[str] = None,
+        health_monitor: Optional[Any] = None,
+        ml_selector: Optional[Any] = None
+    ):
         """
-        Initialize router with configuration
+        Initialize router with ML support
 
         Args:
-            config_path: Path to YAML config file
-            health_monitor: Optional TierHealthMonitor for automatic failover
+            config_path: Path to configuration file
+            health_monitor: Optional health monitor for failover
+            ml_selector: Optional MLTierSelector for ML-based routing
         """
         self.use_rust = os.getenv("TIER_ROUTER_USE_RUST", "false").lower() == "true"
         self.enabled = os.getenv("TIER_ROUTER_ENABLED", "true").lower() == "true"
-        self.health_monitor = health_monitor
+        self.use_ml_routing = os.getenv("USE_ML_ROUTING", "false").lower() == "true"
 
         # Load configuration
         if config_path is None:
@@ -59,30 +53,26 @@ class TierRouter:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
+        # Integrations
+        self.health_monitor = health_monitor
+        self.ml_selector = ml_selector
+
         self.routing_stats = {
             "total_queries": 0,
             "tier_counts": {tier.value: 0 for tier in DataTier},
             "total_overhead_ms": 0.0,
-            "failover_count": 0
+            "failover_count": 0,
+            "ml_predictions": 0,
+            "ml_fallbacks": 0
         }
 
     def analyze_query(self, query_params: Dict[str, Any]) -> Tuple[QueryType, Dict[str, Any]]:
-        """
-        Analyze query parameters to determine query type and routing metadata
-
-        Args:
-            query_params: Dict with keys like 'days_back', 'use_embeddings', 'table', etc.
-
-        Returns:
-            Tuple of (QueryType, metadata dict)
-        """
+        """Analyze query parameters to determine query type"""
         metadata = {}
 
-        # Check for semantic search indicators
         if query_params.get("use_embeddings") or query_params.get("similarity_search"):
             return QueryType.SEMANTIC, {"requires_vector": True}
 
-        # Check temporal bounds
         days_back = query_params.get("days_back", 0)
         if days_back <= self.config["tier_thresholds"]["master_days"]:
             return QueryType.RECENT, {"days_back": days_back}
@@ -92,39 +82,56 @@ class TierRouter:
             return QueryType.ANALYTICS, {"days_back": days_back}
 
     def route_query(self, query_params: Dict[str, Any]) -> Tuple[DataTier, float]:
-        """
-        Route query to appropriate tier based on analysis
-
-        Args:
-            query_params: Query parameters for analysis
-
-        Returns:
-            Tuple of (selected tier, routing overhead in ms)
-        """
+        """Route query to appropriate tier"""
         start_time = time.perf_counter()
 
-        # Feature flag check
         if not self.enabled:
             tier = DataTier.MASTER
         else:
             query_type, metadata = self.analyze_query(query_params)
-            tier = self._select_tier(query_type, metadata)
+            tier = self._select_tier(query_type, metadata, query_params)
 
-        # Calculate overhead
         overhead_ms = (time.perf_counter() - start_time) * 1000
 
-        # Update stats
         self.routing_stats["total_queries"] += 1
         self.routing_stats["tier_counts"][tier.value] += 1
         self.routing_stats["total_overhead_ms"] += overhead_ms
 
         return tier, overhead_ms
 
-    def _select_tier(self, query_type: QueryType, metadata: Dict[str, Any]) -> DataTier:
-        """Select tier based on query type and metadata with health-aware failover"""
+    def _select_tier(
+        self,
+        query_type: QueryType,
+        metadata: Dict[str, Any],
+        query_params: Optional[Dict[str, Any]] = None
+    ) -> DataTier:
+        """Select tier using ML or static routing"""
+        # Try ML routing first
+        if self.use_ml_routing and self.ml_selector and query_params:
+            try:
+                prediction = self.ml_selector.predict(query_params)
+                self.routing_stats["ml_predictions"] += 1
+
+                if not prediction.fallback_to_static:
+                    # Convert ML DataTier to router DataTier by value
+                    ml_tier_value = prediction.tier.value
+                    router_tier = DataTier(ml_tier_value)
+
+                    tier_config = self.config["routing_rules"].get(router_tier.value, {})
+                    if tier_config.get("enabled", False):
+                        if self.health_monitor:
+                            if self.health_monitor.is_tier_available(router_tier.value):
+                                return router_tier
+                        else:
+                            return router_tier
+
+                self.routing_stats["ml_fallbacks"] += 1
+            except Exception:
+                self.routing_stats["ml_fallbacks"] += 1
+
+        # Static routing fallback
         routing_rules = self.config["routing_rules"]
 
-        # Direct query type to tier mapping
         tier_map = {
             QueryType.RECENT: DataTier.MASTER,
             QueryType.SEMANTIC: DataTier.PGVECTOR,
@@ -134,37 +141,19 @@ class TierRouter:
 
         preferred_tier = tier_map.get(query_type, DataTier.MASTER)
 
-        # Check if preferred tier is enabled in config
         tier_config = routing_rules.get(preferred_tier.value, {})
         if not tier_config.get("enabled", False):
-            # Fallback to master if tier disabled
             return DataTier(self.config["fallback_tier"])
 
-        # Check if health monitor is available and tier is healthy
-        if self.health_monitor is not None:
+        if self.health_monitor:
             if not self.health_monitor.is_tier_available(preferred_tier.value):
-                # Tier unhealthy - perform failover
                 self.routing_stats["failover_count"] += 1
-
-                # Failover chain
-                failover_chains = {
-                    DataTier.ATHENA: [DataTier.MINIO, DataTier.MASTER],
-                    DataTier.MINIO: [DataTier.MASTER],
-                    DataTier.PGVECTOR: [DataTier.MASTER]
-                }
-
-                chain = failover_chains.get(preferred_tier, [DataTier.MASTER])
-                for fallback_tier in chain:
-                    if self.health_monitor.is_tier_available(fallback_tier.value):
-                        return fallback_tier
-
-                # Ultimate fallback
                 return DataTier.MASTER
 
         return preferred_tier
 
     def get_routing_metrics(self) -> Dict[str, Any]:
-        """Get routing statistics and performance metrics"""
+        """Get routing statistics"""
         total = self.routing_stats["total_queries"]
         if total == 0:
             return {
@@ -172,24 +161,24 @@ class TierRouter:
                 "routing_percentage": 0.0,
                 "avg_overhead_ms": 0.0,
                 "tier_distribution": {},
-                "tier_distribution_pct": {},
-                "failover_count": 0
+                "ml_predictions": 0,
+                "ml_fallbacks": 0
             }
 
-        # Calculate routed percentage (anything not going to master)
         non_master = sum(
             count for tier, count in self.routing_stats["tier_counts"].items()
             if tier != DataTier.MASTER.value
         )
         routing_percentage = (non_master / total) * 100
+        avg_overhead = self.routing_stats["total_overhead_ms"] / total
 
-        # Calculate percentage distribution per tier
         tier_distribution_pct = {
             tier: (count / total) * 100
             for tier, count in self.routing_stats["tier_counts"].items()
         }
 
-        avg_overhead = self.routing_stats["total_overhead_ms"] / total
+        ml_predictions = self.routing_stats.get("ml_predictions", 0)
+        ml_usage_pct = (ml_predictions / total) * 100 if total > 0 else 0.0
 
         return {
             "total_queries": total,
@@ -197,5 +186,8 @@ class TierRouter:
             "avg_overhead_ms": avg_overhead,
             "tier_distribution": self.routing_stats["tier_counts"].copy(),
             "tier_distribution_pct": tier_distribution_pct,
-            "failover_count": self.routing_stats["failover_count"]
+            "failover_count": self.routing_stats.get("failover_count", 0),
+            "ml_predictions": ml_predictions,
+            "ml_fallbacks": self.routing_stats.get("ml_fallbacks", 0),
+            "ml_usage_pct": ml_usage_pct
         }

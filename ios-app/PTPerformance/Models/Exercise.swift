@@ -1,7 +1,7 @@
 import Foundation
 
 /// Exercise model from Supabase session_exercises and exercise_templates
-struct Exercise: Codable, Identifiable {
+struct Exercise: Codable, Identifiable, Hashable {
     let id: String
     let session_id: String
     let exercise_template_id: String
