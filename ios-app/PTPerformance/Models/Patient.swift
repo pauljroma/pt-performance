@@ -21,9 +21,50 @@ struct Patient: Codable, Identifiable {
         "\(firstName) \(lastName)"
     }
 
+    var initials: String {
+        let first = firstName.prefix(1).uppercased()
+        let last = lastName.prefix(1).uppercased()
+        return "\(first)\(last)"
+    }
+
     var hasHighSeverityFlags: Bool {
         (highSeverityFlagCount ?? 0) > 0
     }
+
+    static let samplePatients: [Patient] = [
+        Patient(
+            id: "patient-1",
+            therapistId: "therapist-1",
+            firstName: "John",
+            lastName: "Brebbia",
+            email: "demo-patient@ptperformance.app",
+            sport: "Baseball",
+            position: "Pitcher",
+            injuryType: "Tommy John Recovery",
+            targetLevel: "MLB",
+            createdAt: Date(),
+            flagCount: 0,
+            highSeverityFlagCount: 0,
+            adherencePercentage: 92.5,
+            lastSessionDate: Date()
+        ),
+        Patient(
+            id: "patient-2",
+            therapistId: "therapist-1",
+            firstName: "Sarah",
+            lastName: "Johnson",
+            email: "sarah@example.com",
+            sport: "Basketball",
+            position: "Guard",
+            injuryType: "ACL Recovery",
+            targetLevel: "College",
+            createdAt: Date(),
+            flagCount: 1,
+            highSeverityFlagCount: 0,
+            adherencePercentage: 87.0,
+            lastSessionDate: Date()
+        )
+    ]
 
     enum CodingKeys: String, CodingKey {
         case id

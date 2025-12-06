@@ -37,7 +37,7 @@ struct PatientListView: View {
             FilterSheet(viewModel: viewModel)
         }
         .refreshable {
-            await viewModel.refresh(for: therapistId)
+            await viewModel.refresh()
         }
         .task {
             await viewModel.fetchPatients(for: therapistId)

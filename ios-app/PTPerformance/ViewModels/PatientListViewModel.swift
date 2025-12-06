@@ -13,7 +13,24 @@ class PatientListViewModel: ObservableObject {
     @Published var patients: [Patient] = []
     @Published var activeFlags: [WorkloadFlag] = []
     @Published var isLoading = false
-    
+    @Published var errorMessage: String?
+    @Published var searchText: String = ""
+
+    var filteredPatients: [Patient] {
+        if searchText.isEmpty {
+            return patients
+        }
+        return patients.filter { patient in
+            patient.fullName.localizedCaseInsensitiveContains(searchText) ||
+            patient.email.localizedCaseInsensitiveContains(searchText) ||
+            (patient.sport?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
+    }
+
+    func applyFilters() {
+        // Filters are computed via filteredPatients
+    }
+
     func loadPatients() async {
         isLoading = true
         defer { isLoading = false }
@@ -62,7 +79,11 @@ class PatientListViewModel: ObservableObject {
         await loadPatients()
         await loadActiveFlags()
     }
-    
+
+    func fetchPatients(for therapistId: String) async {
+        await loadPatients()
+    }
+
     func patient(for patientId: UUID) -> Patient? {
         patients.first { $0.id == patientId.uuidString }
     }
