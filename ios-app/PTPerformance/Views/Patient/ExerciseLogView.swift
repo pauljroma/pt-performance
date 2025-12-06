@@ -284,6 +284,7 @@ extension Array {
 }
 
 // Preview
+#if DEBUG
 struct ExerciseLogView_Previews: PreviewProvider {
     static var previews: some View {
         ExerciseLogView(
@@ -308,3 +309,4 @@ struct ExerciseLogView_Previews: PreviewProvider {
         )
     }
 }
+#endif

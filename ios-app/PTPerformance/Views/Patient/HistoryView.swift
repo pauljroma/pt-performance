@@ -365,6 +365,7 @@ struct ErrorView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct HistoryView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -372,3 +373,4 @@ struct HistoryView_Previews: PreviewProvider {
         }
     }
 }
+#endif

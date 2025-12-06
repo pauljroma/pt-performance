@@ -292,6 +292,7 @@ extension PTSupabaseClient {
 
 // MARK: - Preview
 
+#if DEBUG
 struct NotesView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -299,3 +300,4 @@ struct NotesView_Previews: PreviewProvider {
         }
     }
 }
+#endif

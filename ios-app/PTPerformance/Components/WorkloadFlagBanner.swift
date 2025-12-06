@@ -108,6 +108,7 @@ struct WorkloadFlagsList: View {
 }
 
 // Preview
+#if DEBUG
 struct WorkloadFlagBanner_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView {
@@ -120,3 +121,4 @@ struct WorkloadFlagBanner_Previews: PreviewProvider {
         }
     }
 }
+#endif

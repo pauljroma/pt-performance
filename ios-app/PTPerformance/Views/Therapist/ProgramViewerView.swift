@@ -223,6 +223,7 @@ struct ExerciseRowCompact: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct ProgramViewerView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -230,3 +231,4 @@ struct ProgramViewerView_Previews: PreviewProvider {
         }
     }
 }
+#endif

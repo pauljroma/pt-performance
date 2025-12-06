@@ -138,6 +138,7 @@ struct TargetRow: View {
 }
 
 // Preview
+#if DEBUG
 struct StrengthTargetsCard_Previews: PreviewProvider {
     static var sampleExercise: Exercise {
         Exercise(
@@ -175,3 +176,4 @@ struct StrengthTargetsCard_Previews: PreviewProvider {
         .padding()
     }
 }
+#endif

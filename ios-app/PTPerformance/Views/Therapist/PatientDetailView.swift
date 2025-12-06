@@ -317,6 +317,7 @@ struct ActionButton: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct PatientDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -339,3 +340,4 @@ struct PatientDetailView_Previews: PreviewProvider {
         }
     }
 }
+#endif

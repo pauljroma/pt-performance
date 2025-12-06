@@ -228,6 +228,7 @@ struct FilterSheet: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct PatientListView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -235,3 +236,4 @@ struct PatientListView_Previews: PreviewProvider {
         }
     }
 }
+#endif

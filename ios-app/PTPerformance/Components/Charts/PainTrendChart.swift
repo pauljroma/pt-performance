@@ -81,6 +81,7 @@ struct PainTrendChart: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct PainTrendChart_Previews: PreviewProvider {
     static var previews: some View {
         let sampleData = (0..<14).map { day in
@@ -104,3 +105,4 @@ struct PainTrendChart_Previews: PreviewProvider {
         .padding()
     }
 }
+#endif

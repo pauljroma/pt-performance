@@ -133,6 +133,7 @@ struct AdherenceCompactCard: View {
 
 // MARK: - Preview
 
+#if DEBUG
 struct AdherenceChart_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 32) {
@@ -164,3 +165,4 @@ struct AdherenceChart_Previews: PreviewProvider {
         .padding()
     }
 }
+#endif
