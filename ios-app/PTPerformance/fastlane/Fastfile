@@ -29,12 +29,7 @@ platform :ios do
       app_identifier: "Romatechv100"
     )
 
-    # Disable automatic code signing and configure for distribution
-    disable_automatic_code_signing(
-      path: "PTPerformance.xcodeproj",
-      team_id: ENV["FASTLANE_TEAM_ID"]
-    )
-
+    # Configure manual code signing for distribution
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "PTPerformance.xcodeproj",
