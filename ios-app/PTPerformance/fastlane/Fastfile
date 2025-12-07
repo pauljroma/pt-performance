@@ -17,7 +17,8 @@ platform :ios do
       api_key: api_key,
       readonly: false,
       git_url: "https://github.com/pauljroma/apple-certificates.git",
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"]
+      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
+      app_identifier: "Romatechv100"
     )
 
     # Increment build number
