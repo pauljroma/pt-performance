@@ -3,26 +3,9 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Decode and save the API key to a temporary file
-    require 'base64'
-    require 'tempfile'
-
-    key_content = Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"])
-    key_file = Tempfile.new(['AuthKey', '.p8'])
-    key_file.write(key_content)
-    key_file.close
-
-    # Set up App Store Connect API Key
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
-      key_filepath: key_file.path
-    )
-
     # Set up code signing with Match
     match(
       type: "appstore",
-      api_key: api_key,
       readonly: false,
       git_url: "https://github.com/pauljroma/apple-certificates.git",
       git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
@@ -51,7 +34,6 @@ platform :ios do
 
     # Upload to TestFlight
     upload_to_testflight(
-      api_key: api_key,
       skip_waiting_for_build_processing: true,
       distribute_external: false
     )
