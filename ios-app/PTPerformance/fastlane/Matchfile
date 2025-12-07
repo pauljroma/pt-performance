@@ -4,8 +4,11 @@ storage_mode("git")
 
 type("appstore") # The default type, can be: appstore, adhoc, enterprise or development
 
-app_identifier(["Romatechv100"])
+app_identifier(["com.ptperformance.app"])
 username("paul@romatech.com")
+
+# Use App Store Connect API instead of username/password
+api_key_path("~/.appstoreconnect/private_keys/AuthKey_NKWNDTD3DJ.p8")
 
 # For all available options run `fastlane match --help`
 # Remove the # in the beginning of the line to enable the other options
