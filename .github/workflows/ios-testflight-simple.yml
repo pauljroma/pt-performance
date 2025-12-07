@@ -1,0 +1,50 @@
+name: Upload to TestFlight (Simple)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ipa_artifact_name:
+        description: 'Name of the IPA artifact to upload'
+        required: false
+        default: 'PTPerformance-IPA'
+
+jobs:
+  upload:
+    runs-on: macos-14
+
+    steps:
+      - name: Download IPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ipa_artifact_name || 'PTPerformance-IPA' }}
+          path: .
+
+      - name: Upload to TestFlight with xcrun altool
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APP_PASSWORD: ${{ secrets.FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD }}
+        run: |
+          # Find the IPA file
+          IPA_FILE=$(find . -name "*.ipa" | head -1)
+
+          if [ -z "$IPA_FILE" ]; then
+            echo "❌ No IPA file found"
+            exit 1
+          fi
+
+          echo "Found IPA: $IPA_FILE"
+          ls -lh "$IPA_FILE"
+
+          # Upload using xcrun altool
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_FILE" \
+            --username "$APPLE_ID" \
+            --password "$APP_PASSWORD" \
+            --verbose
+
+      - name: Success
+        if: success()
+        run: |
+          echo "✅ Upload successful!"
+          echo "Check TestFlight: https://appstoreconnect.apple.com/apps"
