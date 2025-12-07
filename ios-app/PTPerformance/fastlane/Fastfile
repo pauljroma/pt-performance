@@ -18,7 +18,25 @@ platform :ios do
       readonly: false,
       git_url: "https://github.com/pauljroma/apple-certificates.git",
       git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      app_identifier: "Romatechv100"
+      app_identifier: "com.ptperformance.app"
+    )
+
+    # Configure code signing settings to fix Swift package signing issues
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "PTPerformance.xcodeproj",
+      targets: ["PTPerformance"],
+      code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore com.ptperformance.app",
+      bundle_identifier: "com.ptperformance.app"
+    )
+
+    # Set Swift packages to use automatic signing (they don't support provisioning profiles)
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "PTPerformance.xcodeproj",
+      targets: ["swift-crypto_Crypto", "Supabase"],
+      code_sign_identity: "Apple Development"
     )
 
     # Increment build number
@@ -26,15 +44,14 @@ platform :ios do
       xcodeproj: "PTPerformance.xcodeproj"
     )
 
-    # Build and sign the app with explicit certificate/profile from Match
+    # Build and sign the app
     build_app(
       scheme: "PTPerformance",
       export_method: "app-store",
-      xcargs: "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']} CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore Romatechv100'",
       export_options: {
         method: "app-store",
         provisioningProfiles: {
-          "Romatechv100" => "match AppStore Romatechv100"
+          "com.ptperformance.app" => "match AppStore com.ptperformance.app"
         },
         signingStyle: "manual",
         teamID: ENV["FASTLANE_TEAM_ID"]
