@@ -1,0 +1,230 @@
+{
+  "dashboard": {
+    "title": "Wave 2 Comprehensive Performance Dashboard",
+    "tags": ["wave2", "sapphire", "performance", "ml-routing"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Rust Performance - Latency P95/P99",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rust_query_latency_milliseconds)",
+            "legendFormat": "P95 Latency"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rust_query_latency_milliseconds)",
+            "legendFormat": "P99 Latency"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "Rust Speedup Factor (vs Python)",
+        "type": "stat",
+        "targets": [
+          {"expr": "sapphire_rust_speedup_factor"}
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 3,
+        "title": "Throughput (queries/sec)",
+        "type": "graph",
+        "targets": [
+          {"expr": "rate(sapphire_query_total[5m])"}
+        ],
+        "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4}
+      },
+      {
+        "id": 4,
+        "title": "Tier Routing Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sapphire_tier_routing_count",
+            "legendFormat": "{{tier}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 8, "h": 8}
+      },
+      {
+        "id": 5,
+        "title": "Tier Routing Efficiency %",
+        "type": "gauge",
+        "targets": [
+          {"expr": "sapphire_tier_routing_efficiency_percent"}
+        ],
+        "gridPos": {"x": 8, "y": 8, "w": 8, "h": 8}
+      },
+      {
+        "id": 6,
+        "title": "ML Routing Accuracy %",
+        "type": "stat",
+        "targets": [
+          {"expr": "sapphire_ml_routing_accuracy_percent"}
+        ],
+        "gridPos": {"x": 16, "y": 8, "w": 8, "h": 4}
+      },
+      {
+        "id": 7,
+        "title": "ML Inference Time (ms)",
+        "type": "graph",
+        "targets": [
+          {"expr": "histogram_quantile(0.95, ml_inference_duration_milliseconds)"}
+        ],
+        "gridPos": {"x": 16, "y": 12, "w": 8, "h": 4}
+      },
+      {
+        "id": 8,
+        "title": "Connection Pool Utilization",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rust_connection_pool_active / rust_connection_pool_max",
+            "legendFormat": "Pool Utilization"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 6}
+      },
+      {
+        "id": 9,
+        "title": "Cache Hit Rates",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sapphire_cache_hit_rate_percent",
+            "legendFormat": "{{cache_type}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 6}
+      },
+      {
+        "id": 10,
+        "title": "Tier Health Status",
+        "type": "table",
+        "targets": [
+          {"expr": "tier_health_status"}
+        ],
+        "gridPos": {"x": 0, "y": 22, "w": 12, "h": 6}
+      },
+      {
+        "id": 11,
+        "title": "Failover Events (last 24h)",
+        "type": "stat",
+        "targets": [
+          {"expr": "sum(increase(tier_failover_total[24h]))"}
+        ],
+        "gridPos": {"x": 12, "y": 22, "w": 6, "h": 6}
+      },
+      {
+        "id": 12,
+        "title": "Error Rate %",
+        "type": "graph",
+        "targets": [
+          {"expr": "rate(sapphire_errors_total[5m]) * 100"}
+        ],
+        "gridPos": {"x": 18, "y": 22, "w": 6, "h": 6}
+      },
+      {
+        "id": 13,
+        "title": "SLO Compliance Dashboard",
+        "type": "table",
+        "targets": [
+          {"expr": "sapphire_slo_compliance_percent"}
+        ],
+        "gridPos": {"x": 0, "y": 28, "w": 24, "h": 6}
+      },
+      {
+        "id": 14,
+        "title": "Query Success Rate by Tier",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sapphire_query_success_rate",
+            "legendFormat": "{{tier}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 34, "w": 12, "h": 6}
+      },
+      {
+        "id": 15,
+        "title": "Cost per Million Queries",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(sapphire_compute_cost_usd_total[1h]) / rate(sapphire_query_total[1h]) * 1000000",
+            "legendFormat": "{{tier}}"
+          }
+        ],
+        "gridPos": {"x": 12, "y": 34, "w": 12, "h": 6}
+      },
+      {
+        "id": 16,
+        "title": "Perceived User Latency P95",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sapphire_perceived_latency_milliseconds)",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 40, "w": 12, "h": 6}
+      },
+      {
+        "id": 17,
+        "title": "User Satisfaction Score",
+        "type": "gauge",
+        "targets": [
+          {"expr": "avg(sapphire_user_satisfaction_score)"}
+        ],
+        "gridPos": {"x": 12, "y": 40, "w": 12, "h": 6}
+      },
+      {
+        "id": 18,
+        "title": "Anomaly Detections (last hour)",
+        "type": "stat",
+        "targets": [
+          {"expr": "sum(increase(anomaly_detections_total[1h]))"}
+        ],
+        "gridPos": {"x": 0, "y": 46, "w": 8, "h": 4}
+      },
+      {
+        "id": 19,
+        "title": "Critical Anomalies",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "anomaly_detections_total{severity=\"critical\"}",
+            "legendFormat": "{{type}}"
+          }
+        ],
+        "gridPos": {"x": 8, "y": 46, "w": 16, "h": 4}
+      },
+      {
+        "id": 20,
+        "title": "Wave 1 vs Wave 2 Latency Comparison",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, wave1_query_latency_milliseconds)",
+            "legendFormat": "Wave 1 P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rust_query_latency_milliseconds)",
+            "legendFormat": "Wave 2 P95"
+          }
+        ],
+        "gridPos": {"x": 0, "y": 50, "w": 24, "h": 8}
+      }
+    ],
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "version": 2
+  }
+}

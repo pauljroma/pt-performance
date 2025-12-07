@@ -1,0 +1,132 @@
+[
+  {
+    "question_id": "TR-001",
+    "category": "tier_routing",
+    "passed": true,
+    "execution_time_ms": 0.01387500000005204,
+    "actual_results": {
+      "tier": "master",
+      "routing_overhead": 0.005916999999966421,
+      "routing_percentage": 0.0,
+      "tier_distribution_pct": {
+        "master": 100.0,
+        "pgvector": 0.0,
+        "minio": 0.0,
+        "athena": 0.0
+      }
+    },
+    "expected_results": {
+      "tier": "master",
+      "max_routing_overhead_ms": 1.0,
+      "fallback_tier": null,
+      "rationale": "Recent data (<7 days) should route to hot tier (Master) for optimal performance"
+    },
+    "pass_criteria_met": true,
+    "error_message": null,
+    "timestamp": "2025-12-06T09:42:05.385407"
+  },
+  {
+    "question_id": "TR-002",
+    "category": "tier_routing",
+    "passed": true,
+    "execution_time_ms": 0.007666999999988988,
+    "actual_results": {
+      "tier": "pgvector",
+      "routing_overhead": 0.0025410000001890864,
+      "routing_percentage": 50.0,
+      "tier_distribution_pct": {
+        "master": 50.0,
+        "pgvector": 50.0,
+        "minio": 0.0,
+        "athena": 0.0
+      }
+    },
+    "expected_results": {
+      "tier": "pgvector",
+      "max_routing_overhead_ms": 1.0,
+      "fallback_tier": "master",
+      "rationale": "Embeddings/similarity queries prioritize PGVector regardless of data age"
+    },
+    "pass_criteria_met": true,
+    "error_message": null,
+    "timestamp": "2025-12-06T09:42:05.385445"
+  },
+  {
+    "question_id": "TR-003",
+    "category": "tier_routing",
+    "passed": true,
+    "execution_time_ms": 0.006334000000052242,
+    "actual_results": {
+      "tier": "minio",
+      "routing_overhead": 0.0023749999999989058,
+      "routing_percentage": 66.66666666666666,
+      "tier_distribution_pct": {
+        "master": 33.33333333333333,
+        "pgvector": 33.33333333333333,
+        "minio": 33.33333333333333,
+        "athena": 0.0
+      }
+    },
+    "expected_results": {
+      "tier": "minio",
+      "max_routing_overhead_ms": 1.0,
+      "fallback_tier": "master",
+      "rationale": "Historical data (7-90 days) routes to cold tier (MinIO) for cost efficiency"
+    },
+    "pass_criteria_met": true,
+    "error_message": null,
+    "timestamp": "2025-12-06T09:42:05.385476"
+  },
+  {
+    "question_id": "TR-004",
+    "category": "tier_routing",
+    "passed": true,
+    "execution_time_ms": 0.005416999999896532,
+    "actual_results": {
+      "tier": "athena",
+      "routing_overhead": 0.0019580000001351294,
+      "routing_percentage": 75.0,
+      "tier_distribution_pct": {
+        "master": 25.0,
+        "pgvector": 25.0,
+        "minio": 25.0,
+        "athena": 25.0
+      }
+    },
+    "expected_results": {
+      "tier": "athena",
+      "max_routing_overhead_ms": 1.0,
+      "fallback_tier": "minio",
+      "rationale": "Archive data (>90 days) routes to Athena for large-scale analytics"
+    },
+    "pass_criteria_met": true,
+    "error_message": null,
+    "timestamp": "2025-12-06T09:42:05.385503"
+  },
+  {
+    "question_id": "TR-005",
+    "category": "tier_routing",
+    "passed": true,
+    "execution_time_ms": 0.00508399999987752,
+    "actual_results": {
+      "tier": "master",
+      "routing_overhead": 0.001958999999995825,
+      "routing_percentage": 60.0,
+      "tier_distribution_pct": {
+        "master": 40.0,
+        "pgvector": 20.0,
+        "minio": 20.0,
+        "athena": 20.0
+      }
+    },
+    "expected_results": {
+      "tier": "master",
+      "max_routing_overhead_ms": 1.0,
+      "fallback_tier": null,
+      "rationale": "Boundary at 7 days: <=7 goes to Master, >7 goes to MinIO"
+    },
+    "pass_criteria_met": true,
+    "error_message": null,
+    "timestamp": "2025-12-06T09:42:05.385528"
+  }
+]
