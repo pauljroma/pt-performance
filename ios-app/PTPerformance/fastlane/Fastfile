@@ -21,7 +21,7 @@ platform :ios do
       scheme: "PTPerformance",
       export_method: "app-store",
       export_team_id: ENV["FASTLANE_TEAM_ID"],
-      xcargs: "DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']}",
+      xcargs: "DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']} -allowProvisioningUpdates",
       export_options: {
         signingStyle: "automatic",
         teamID: ENV["FASTLANE_TEAM_ID"]
