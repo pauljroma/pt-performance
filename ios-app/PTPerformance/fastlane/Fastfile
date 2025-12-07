@@ -21,24 +21,6 @@ platform :ios do
       app_identifier: "Romatechv100"
     )
 
-    # Configure code signing settings to fix Swift package signing issues
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "PTPerformance.xcodeproj",
-      targets: ["PTPerformance"],
-      code_sign_identity: "Apple Distribution",
-      profile_name: "match AppStore Romatechv100",
-      bundle_identifier: "Romatechv100"
-    )
-
-    # Set Swift packages to use automatic signing (they don't support provisioning profiles)
-    update_code_signing_settings(
-      use_automatic_signing: true,
-      path: "PTPerformance.xcodeproj",
-      targets: ["swift-crypto_Crypto", "Supabase"],
-      code_sign_identity: "Apple Development"
-    )
-
     # Increment build number
     increment_build_number(
       xcodeproj: "PTPerformance.xcodeproj"
