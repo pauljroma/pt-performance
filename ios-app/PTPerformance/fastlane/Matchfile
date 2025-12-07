@@ -7,8 +7,8 @@ type("appstore") # The default type, can be: appstore, adhoc, enterprise or deve
 app_identifier(["com.ptperformance.app"])
 username("paul@romatech.com")
 
-# Use App Store Connect API instead of username/password
-api_key_path("~/.appstoreconnect/private_keys/AuthKey_NKWNDTD3DJ.p8")
+# Use App Store Connect API key passed from Fastfile
+# api_key is passed from the Fastfile, not from a local file path
 
 # For all available options run `fastlane match --help`
 # Remove the # in the beginning of the line to enable the other options
