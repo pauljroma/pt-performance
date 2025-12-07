@@ -45,7 +45,8 @@ platform :ios do
         },
         signingStyle: "manual",
         teamID: ENV["FASTLANE_TEAM_ID"]
-      }
+      },
+      xcargs: "DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']}"
     )
 
     # Upload to TestFlight
