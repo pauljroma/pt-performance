@@ -171,6 +171,8 @@
 				<key>CLANG_ENABLE_OBJC_WEAK</key>
 				<string>NO</string>
 				<key>CODE_SIGN_STYLE</key>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>5NNLBL74XR</string>
 				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
@@ -398,6 +400,8 @@
 				<key>CLANG_ENABLE_OBJC_WEAK</key>
 				<string>NO</string>
 				<key>CODE_SIGN_STYLE</key>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>5NNLBL74XR</string>
 				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
@@ -994,6 +998,8 @@
 				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
 				<string>YES</string>
 				<key>CODE_SIGN_STYLE</key>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>5NNLBL74XR</string>
 				<string>Automatic</string>
 				<key>COPY_PHASE_STRIP</key>
 				<string>NO</string>
@@ -1291,6 +1297,8 @@
 				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
 				<string>YES</string>
 				<key>CODE_SIGN_STYLE</key>
+				<key>DEVELOPMENT_TEAM</key>
+				<string>5NNLBL74XR</string>
 				<string>Automatic</string>
 				<key>COPY_PHASE_STRIP</key>
 				<string>NO</string>
