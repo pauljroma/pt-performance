@@ -29,7 +29,9 @@ platform :ios do
           "com.ptperformance.app" => "match AppStore com.ptperformance.app"
         }
       },
-      buildlog_path: "./fastlane/logs"
+      buildlog_path: "./fastlane/logs",
+      xcargs: "-allowProvisioningUpdates",
+      archive_path: "./build/PTPerformance.xcarchive"
     )
 
     # Upload to TestFlight using App Store Connect API
