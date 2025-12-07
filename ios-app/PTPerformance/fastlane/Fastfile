@@ -1,16 +1,14 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Push a new beta build to TestFlight"
+  desc "Push a new beta build to TestFlight (Production Pipeline)"
   lane :beta do
-    # Set up code signing with Match
-    match(
-      type: "appstore",
-      readonly: false,
-      git_url: "https://github.com/pauljroma/apple-certificates.git",
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      app_identifier: "Romatechv100",
-      username: ENV["FASTLANE_USER"]
+    # Setup API Key authentication (works with limited permissions)
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: true
     )
 
     # Increment build number
@@ -18,26 +16,37 @@ platform :ios do
       xcodeproj: "PTPerformance.xcodeproj"
     )
 
-    # Build and sign the app
+    # Build with automatic signing (Xcode will manage provisioning)
     build_app(
       scheme: "PTPerformance",
       export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        provisioningProfiles: {
-          "Romatechv100" => "match AppStore Romatechv100"
-        },
-        signingStyle: "manual",
-        teamID: ENV["FASTLANE_TEAM_ID"]
-      },
-      xcargs: "DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']}"
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']}"
     )
 
-    # Upload to TestFlight
+    # Upload to TestFlight using API Key
     upload_to_testflight(
+      api_key: api_key,
       skip_waiting_for_build_processing: true,
-      distribute_external: false,
-      username: ENV["FASTLANE_USER"]
+      distribute_external: false
+    )
+  end
+
+  desc "Build and upload manually created IPA (Fallback)"
+  lane :upload_ipa do
+    # Setup API Key
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: true
+    )
+
+    # Upload existing IPA
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: "PTPerformance.ipa",
+      skip_waiting_for_build_processing: true,
+      distribute_external: false
     )
   end
 end
