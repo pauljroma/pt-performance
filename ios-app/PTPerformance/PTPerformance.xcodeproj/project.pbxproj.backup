@@ -170,14 +170,8 @@
 				<string>AccentColor</string>
 				<key>CLANG_ENABLE_OBJC_WEAK</key>
 				<string>NO</string>
-				<key>CODE_SIGN_IDENTITY</key>
-				<string>Apple Distribution</string>
 				<key>CODE_SIGN_STYLE</key>
-				<string>Manual</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string>5NNLBL74XR</string>
-				<key>PROVISIONING_PROFILE_SPECIFIER</key>
-				<string>match AppStore com.ptperformance.app</string>
+				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
@@ -403,14 +397,8 @@
 				<string>AccentColor</string>
 				<key>CLANG_ENABLE_OBJC_WEAK</key>
 				<string>NO</string>
-				<key>CODE_SIGN_IDENTITY</key>
-				<string>Apple Distribution</string>
 				<key>CODE_SIGN_STYLE</key>
-				<string>Manual</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string>5NNLBL74XR</string>
-				<key>PROVISIONING_PROFILE_SPECIFIER</key>
-				<string>match AppStore com.ptperformance.app</string>
+				<string>Automatic</string>
 				<key>CURRENT_PROJECT_VERSION</key>
 				<string>1</string>
 				<key>GENERATE_INFOPLIST_FILE</key>
@@ -1005,14 +993,8 @@
 				<string>YES</string>
 				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
 				<string>YES</string>
-				<key>CODE_SIGN_IDENTITY</key>
-				<string>Apple Distribution</string>
 				<key>CODE_SIGN_STYLE</key>
-				<string>Manual</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string>5NNLBL74XR</string>
-				<key>PROVISIONING_PROFILE_SPECIFIER</key>
-				<string>match AppStore com.ptperformance.app</string>
+				<string>Automatic</string>
 				<key>COPY_PHASE_STRIP</key>
 				<string>NO</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
@@ -1308,14 +1290,8 @@
 				<string>YES</string>
 				<key>CLANG_WARN__DUPLICATE_METHOD_MATCH</key>
 				<string>YES</string>
-				<key>CODE_SIGN_IDENTITY</key>
-				<string>Apple Distribution</string>
 				<key>CODE_SIGN_STYLE</key>
-				<string>Manual</string>
-				<key>DEVELOPMENT_TEAM</key>
-				<string>5NNLBL74XR</string>
-				<key>PROVISIONING_PROFILE_SPECIFIER</key>
-				<string>match AppStore com.ptperformance.app</string>
+				<string>Automatic</string>
 				<key>COPY_PHASE_STRIP</key>
 				<string>NO</string>
 				<key>DEBUG_INFORMATION_FORMAT</key>
