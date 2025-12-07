@@ -11,25 +11,31 @@ platform :ios do
       is_key_content_base64: true
     )
 
+    # Set up code signing with Match
+    match(
+      type: "appstore",
+      api_key: api_key,
+      readonly: false
+    )
+
     # Increment build number
     increment_build_number(
       xcodeproj: "PTPerformance.xcodeproj"
     )
 
-    # Archive without signing
-    gym(
+    # Build and sign the app with explicit certificate/profile from Match
+    build_app(
       scheme: "PTPerformance",
-      skip_package_ipa: true,
-      skip_archive: false,
-      xcargs: "CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO"
-    )
-
-    # Export with automatic signing
-    gym(
-      scheme: "PTPerformance",
-      skip_build_archive: true,
       export_method: "app-store",
-      export_team_id: ENV["FASTLANE_TEAM_ID"]
+      xcargs: "CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']} CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='match AppStore Romatechv100'",
+      export_options: {
+        method: "app-store",
+        provisioningProfiles: {
+          "Romatechv100" => "match AppStore Romatechv100"
+        },
+        signingStyle: "manual",
+        teamID: ENV["FASTLANE_TEAM_ID"]
+      }
     )
 
     # Upload to TestFlight
