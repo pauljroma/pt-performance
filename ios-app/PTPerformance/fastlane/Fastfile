@@ -12,7 +12,7 @@ platform :ios do
         signingStyle: "automatic",
         teamID: ENV['FASTLANE_TEAM_ID']
       },
-      xcargs: "-allowProvisioningUpdates",
+      xcargs: "-allowProvisioningUpdates DEVELOPMENT_TEAM=#{ENV['FASTLANE_TEAM_ID']}",
       buildlog_path: "./fastlane/logs"
     )
 
