@@ -11,24 +11,9 @@ platform :ios do
       is_key_content_base64: true
     )
 
-    # Create app in App Store Connect if it doesn't exist
-    produce(
-      username: ENV["APPLE_ID"],
-      app_identifier: "com.ptperformance.app",
-      app_name: "PT Performance",
-      language: "English",
-      app_version: "1.0",
-      sku: "ptperformance-001",
-      skip_itc: false
-    )
-
-    # Increment build number based on TestFlight
+    # Increment build number
     increment_build_number(
-      xcodeproj: "PTPerformance.xcodeproj",
-      build_number: latest_testflight_build_number(
-        api_key: api_key,
-        initial_build_number: 1
-      ) + 1
+      xcodeproj: "PTPerformance.xcodeproj"
     )
 
     # Build the app with automatic signing
