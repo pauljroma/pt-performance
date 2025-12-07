@@ -18,7 +18,7 @@ platform :ios do
       readonly: false,
       git_url: "https://github.com/pauljroma/apple-certificates.git",
       git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"],
-      app_identifier: "com.ptperformance.app"
+      app_identifier: "Romatechv100"
     )
 
     # Configure code signing settings to fix Swift package signing issues
@@ -27,8 +27,8 @@ platform :ios do
       path: "PTPerformance.xcodeproj",
       targets: ["PTPerformance"],
       code_sign_identity: "Apple Distribution",
-      profile_name: "match AppStore com.ptperformance.app",
-      bundle_identifier: "com.ptperformance.app"
+      profile_name: "match AppStore Romatechv100",
+      bundle_identifier: "Romatechv100"
     )
 
     # Set Swift packages to use automatic signing (they don't support provisioning profiles)
@@ -51,7 +51,7 @@ platform :ios do
       export_options: {
         method: "app-store",
         provisioningProfiles: {
-          "com.ptperformance.app" => "match AppStore com.ptperformance.app"
+          "Romatechv100" => "match AppStore Romatechv100"
         },
         signingStyle: "manual",
         teamID: ENV["FASTLANE_TEAM_ID"]
