@@ -1,7 +1,7 @@
 import Foundation
 
 /// Patient model
-struct Patient: Codable, Identifiable {
+struct Patient: Codable, Identifiable, Hashable {
     let id: String
     let therapistId: String
     let firstName: String
@@ -29,6 +29,16 @@ struct Patient: Codable, Identifiable {
 
     var hasHighSeverityFlags: Bool {
         (highSeverityFlagCount ?? 0) > 0
+    }
+
+    // MARK: - Hashable Conformance
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: Patient, rhs: Patient) -> Bool {
+        lhs.id == rhs.id
     }
 
     static let samplePatients: [Patient] = [

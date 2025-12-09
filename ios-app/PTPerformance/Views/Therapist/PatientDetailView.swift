@@ -7,10 +7,15 @@ struct PatientDetailView: View {
     @StateObject private var viewModel: PatientDetailViewModel
     @State private var showProgramViewer = false
     @State private var showAddNote = false
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
         self.patient = patient
         _viewModel = StateObject(wrappedValue: PatientDetailViewModel())
+    }
+
+    var shouldUseSplitView: Bool {
+        DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
     }
 
     var body: some View {
@@ -32,6 +37,20 @@ struct PatientDetailView: View {
                     // High severity alert
                     if viewModel.hasHighSeverityFlags {
                         HighSeverityAlert()
+                    }
+
+                    // Section warning banners for partial loading failures
+                    if let flagsError = viewModel.flagsError {
+                        SectionErrorBanner(message: flagsError)
+                    }
+                    if let painTrendError = viewModel.painTrendError {
+                        SectionErrorBanner(message: painTrendError)
+                    }
+                    if let adherenceError = viewModel.adherenceError {
+                        SectionErrorBanner(message: adherenceError)
+                    }
+                    if let recentSessionsError = viewModel.recentSessionsError {
+                        SectionErrorBanner(message: recentSessionsError)
                     }
 
                     // Flag summary
@@ -81,7 +100,7 @@ struct PatientDetailView: View {
             .padding()
         }
         .navigationTitle(patient.fullName)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(shouldUseSplitView ? .inline : .large)
         .refreshable {
             await viewModel.fetchData(for: patient.id)
         }
@@ -256,6 +275,29 @@ struct FlagRow: View {
         case "MEDIUM": return .orange
         default: return .yellow
         }
+    }
+}
+
+// MARK: - Section Error Banner
+
+struct SectionErrorBanner: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.circle")
+                .foregroundColor(.orange)
+
+            Text(message)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(8)
     }
 }
 

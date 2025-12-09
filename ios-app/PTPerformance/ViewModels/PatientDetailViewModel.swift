@@ -13,6 +13,12 @@ class PatientDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    // Section-specific error tracking for partial loading
+    @Published var flagsError: String?
+    @Published var painTrendError: String?
+    @Published var adherenceError: String?
+    @Published var recentSessionsError: String?
+
     private let supabase: PTSupabaseClient
     private let analyticsService: AnalyticsService
 
@@ -21,29 +27,79 @@ class PatientDetailViewModel: ObservableObject {
         self.analyticsService = AnalyticsService(supabase: supabase)
     }
 
-    /// Fetch all patient detail data
+    /// Fetch all patient detail data with graceful degradation
+    /// Each section loads independently - failures don't block other sections
     func fetchData(for patientId: String) async {
         isLoading = true
         errorMessage = nil
 
+        // Clear previous section errors
+        flagsError = nil
+        painTrendError = nil
+        adherenceError = nil
+        recentSessionsError = nil
+
+        print("📊 [PatientDetail] Starting data fetch for patient: \(patientId)")
+
+        // Fetch each section independently - failures are isolated
+        await fetchFlagsSection(patientId: patientId)
+        await fetchPainTrendSection(patientId: patientId)
+        await fetchAdherenceSection(patientId: patientId)
+        await fetchRecentSessionsSection(patientId: patientId)
+
+        // Check if all sections failed
+        let allFailed = flagsError != nil && painTrendError != nil && adherenceError != nil && recentSessionsError != nil
+        if allFailed {
+            errorMessage = "Unable to load patient data. Please check your connection and try again."
+        }
+
+        isLoading = false
+        print("✅ [PatientDetail] Data fetch complete")
+    }
+
+    // MARK: - Individual Section Fetchers
+
+    private func fetchFlagsSection(patientId: String) async {
         do {
-            // Fetch all data in parallel
-            async let flagsTask = fetchFlags(patientId: patientId)
-            async let painTask = analyticsService.fetchPainTrend(patientId: patientId, days: 14)
-            async let adherenceTask = analyticsService.fetchAdherence(patientId: patientId, days: 30)
-            async let sessionsTask = analyticsService.fetchRecentSessions(patientId: patientId, limit: 5)
-
-            let (f, p, a, s) = try await (flagsTask, painTask, adherenceTask, sessionsTask)
-
-            flags = f
-            painTrend = p
-            adherence = a
-            recentSessions = s
-
-            isLoading = false
+            flags = try await fetchFlags(patientId: patientId)
+            print("✅ [PatientDetail] Loaded \(flags.count) flags")
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            print("❌ [PatientDetail] Flags error: \(error.localizedDescription)")
+            flagsError = "Unable to load flags"
+            flags = []
+        }
+    }
+
+    private func fetchPainTrendSection(patientId: String) async {
+        do {
+            painTrend = try await analyticsService.fetchPainTrend(patientId: patientId, days: 14)
+            print("✅ [PatientDetail] Loaded pain trend (\(painTrend.count) points)")
+        } catch {
+            print("❌ [PatientDetail] Pain trend error: \(error.localizedDescription)")
+            painTrendError = "Unable to load pain trend"
+            painTrend = []
+        }
+    }
+
+    private func fetchAdherenceSection(patientId: String) async {
+        do {
+            adherence = try await analyticsService.fetchAdherence(patientId: patientId, days: 30)
+            print("✅ [PatientDetail] Loaded adherence data")
+        } catch {
+            print("❌ [PatientDetail] Adherence error: \(error.localizedDescription)")
+            adherenceError = "Unable to load adherence"
+            adherence = nil
+        }
+    }
+
+    private func fetchRecentSessionsSection(patientId: String) async {
+        do {
+            recentSessions = try await analyticsService.fetchRecentSessions(patientId: patientId, limit: 5)
+            print("✅ [PatientDetail] Loaded \(recentSessions.count) recent sessions")
+        } catch {
+            print("❌ [PatientDetail] Recent sessions error: \(error.localizedDescription)")
+            recentSessionsError = "Unable to load recent sessions"
+            recentSessions = []
         }
     }
 

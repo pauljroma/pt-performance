@@ -18,25 +18,44 @@ class TodaySessionViewModel: ObservableObject {
         errorMessage = nil
 
         guard let patientId = supabase.userId else {
-            errorMessage = "No patient ID available"
+            errorMessage = "No patient ID available. Please log in again."
             isLoading = false
             return
         }
 
+        print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
+
         do {
             // Option 1: Call backend /today-session endpoint
+            print("📱 [TodaySession] Trying backend API...")
             let response = try await fetchFromBackend(patientId: patientId)
 
             self.session = response.session
             self.exercises = response.exercises
+            print("✅ [TodaySession] Backend API succeeded")
             isLoading = false
-        } catch {
+        } catch let backendError {
             // Fallback to direct Supabase query if backend unavailable
+            print("⚠️ [TodaySession] Backend failed (\(backendError.localizedDescription)), trying Supabase...")
+
             do {
                 try await fetchFromSupabase(patientId: patientId)
+                print("✅ [TodaySession] Supabase fallback succeeded")
                 isLoading = false
-            } catch {
-                errorMessage = "Failed to load today's session: \(error.localizedDescription)"
+            } catch let supabaseError {
+                print("❌ [TodaySession] Both backend and Supabase failed")
+                print("   Backend error: \(backendError.localizedDescription)")
+                print("   Supabase error: \(supabaseError.localizedDescription)")
+
+                errorMessage = """
+                Failed to load today's session.
+
+                Please check:
+                • Your internet connection
+                • That you have an active program assigned
+
+                Error: \(supabaseError.localizedDescription)
+                """
                 isLoading = false
             }
         }
@@ -44,7 +63,7 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch from backend API (/today-session/:patientId)
     private func fetchFromBackend(patientId: String) async throws -> TodaySessionResponse {
-        let backendURL = ProcessInfo.processInfo.environment["BACKEND_URL"] ?? "http://localhost:3000"
+        let backendURL = Config.backendURL
 
         guard let url = URL(string: "\(backendURL)/today-session/\(patientId)") else {
             throw URLError(.badURL)
@@ -63,51 +82,69 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch directly from Supabase (fallback)
     private func fetchFromSupabase(patientId: String) async throws {
-        // Get today's date
-        let today = Date()
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        let todayStr = formatter.string(from: today)
+        print("📱 [TodaySession] Fetching session for patient: \(patientId)")
 
-        // Query sessions for today
-        let sessionsResponse: [Session] = try await supabase.client.database
+        // Query sessions via correct relationship chain: sessions -> phases -> programs
+        // Use the first active session from the patient's active program
+        let sessionsResponse: [Session] = try await supabase.client
             .from("sessions")
             .select("""
                 *,
-                programs!inner(patient_id)
+                phases!inner(
+                    id,
+                    name,
+                    program_id,
+                    programs!inner(
+                        id,
+                        name,
+                        patient_id,
+                        status
+                    )
+                )
             """)
-            .eq("programs.patient_id", value: patientId)
-            .eq("session_date", value: todayStr)
+            .eq("phases.programs.patient_id", value: patientId)
+            .eq("phases.programs.status", value: "active")
+            .order("sequence", ascending: true)
             .limit(1)
             .execute()
             .value
 
         guard let session = sessionsResponse.first else {
-            // No session for today
+            print("⚠️ [TodaySession] No sessions found for patient \(patientId)")
+            // No active sessions found
             self.session = nil
             self.exercises = []
             return
         }
 
+        print("✅ [TodaySession] Found session: \(session.name)")
         self.session = session
 
         // Fetch exercises for this session
-        let exercisesResponse: [Exercise] = try await supabase.client.database
-            .from("session_exercises")
-            .select("""
-                *,
-                exercise_templates!inner(
-                    exercise_name,
-                    movement_pattern,
-                    equipment
-                )
-            """)
-            .eq("session_id", value: session.id)
-            .order("exercise_order")
-            .execute()
-            .value
+        do {
+            let exercisesResponse: [Exercise] = try await supabase.client
+                .from("session_exercises")
+                .select("""
+                    *,
+                    exercise_templates!inner(
+                        id,
+                        name,
+                        category,
+                        body_region
+                    )
+                """)
+                .eq("session_id", value: session.id)
+                .order("sequence", ascending: true)
+                .execute()
+                .value
 
-        self.exercises = exercisesResponse
+            print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
+            self.exercises = exercisesResponse
+        } catch {
+            // If exercise fetch fails, still show session but with empty exercises
+            print("⚠️ [TodaySession] Failed to fetch exercises: \(error.localizedDescription)")
+            self.exercises = []
+        }
     }
 
     /// Refresh data

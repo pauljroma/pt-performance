@@ -18,6 +18,8 @@ class PatientListViewModel: ObservableObject {
     @Published var selectedFlagFilter: FlagFilter = .all
     @Published var selectedSport: String? = nil
 
+    private let supabase = SupabaseClient.shared
+
     enum FlagFilter: String, CaseIterable {
         case all = "All"
         case high = "High Risk"
@@ -47,45 +49,43 @@ class PatientListViewModel: ObservableObject {
     func loadPatients() async {
         isLoading = true
         defer { isLoading = false }
-        
-        // TODO: Load from Supabase
-        /*
+
         do {
-            let response = try await supabase
+            let response: [Patient] = try await supabase.client
                 .from("patients")
                 .select()
                 .execute()
-            
-            patients = try JSONDecoder().decode([Patient].self, from: response.data)
+                .value
+
+            patients = response
+            print("✅ [PatientList] Loaded \(patients.count) patients from Supabase")
         } catch {
-            print("Error loading patients: \(error)")
+            print("❌ [PatientList] Error loading patients: \(error.localizedDescription)")
+            errorMessage = "Failed to load patients: \(error.localizedDescription)"
+            // Fallback to sample data only if query fails
+            patients = Patient.samplePatients
         }
-        */
-        
-        // For demo: use sample data
-        patients = Patient.samplePatients
     }
-    
+
     func loadActiveFlags() async {
-        // TODO: Load from Supabase
-        /*
         do {
-            let response = try await supabase
+            let response: [WorkloadFlag] = try await supabase.client
                 .from("workload_flags")
                 .select()
-                .eq("is_resolved", value: false)
+                .eq("resolved", value: false)
                 .order("severity", ascending: false)
-                .order("timestamp", ascending: false)
+                .order("created_at", ascending: false)
+                .limit(10)
                 .execute()
-            
-            activeFlags = try JSONDecoder().decode([WorkloadFlag].self, from: response.data)
+                .value
+
+            activeFlags = response
+            print("✅ [PatientList] Loaded \(activeFlags.count) active flags from Supabase")
         } catch {
-            print("Error loading flags: \(error)")
+            print("❌ [PatientList] Error loading flags: \(error.localizedDescription)")
+            // Fallback to empty array if query fails
+            activeFlags = []
         }
-        */
-        
-        // For demo: use sample data
-        activeFlags = WorkloadFlag.sampleFlags
     }
     
     func refresh() async {

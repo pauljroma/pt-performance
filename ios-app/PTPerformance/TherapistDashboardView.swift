@@ -9,60 +9,138 @@ import SwiftUI
 
 struct TherapistDashboardView: View {
     @StateObject private var viewModel = PatientListViewModel()
-    @State private var showingPatientDetail: Patient?
-    
+    @State private var selectedPatient: Patient?
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
+    var shouldUseSplitView: Bool {
+        DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
+    }
+
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Active Alerts Section
-                    if !viewModel.activeFlags.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Active Alerts (\(viewModel.activeFlags.count))")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal)
-                            
-                            WorkloadFlagsList(flags: viewModel.activeFlags) { flag in
-                                // Navigate to patient with this flag
-                                if let patient = viewModel.patient(for: flag.patientId) {
-                                    showingPatientDetail = patient
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        .padding(.top)
-                    }
-                    
-                    // Patient List
+        Group {
+            if shouldUseSplitView {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+        }
+        .task {
+            await viewModel.loadPatients()
+            await viewModel.loadActiveFlags()
+        }
+    }
+
+    // MARK: - iPad Split View Layout
+
+    private var iPadLayout: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            patientListContent
+                .navigationTitle("Dashboard")
+                .navigationSplitViewColumnWidth(
+                    min: DeviceHelper.sidebarWidth.min,
+                    ideal: DeviceHelper.sidebarWidth.ideal,
+                    max: DeviceHelper.sidebarWidth.max
+                )
+        } detail: {
+            if let patient = selectedPatient {
+                PatientDetailView(patient: patient)
+            } else {
+                placeholderDetailView
+            }
+        }
+    }
+
+    // MARK: - iPhone Stack Layout
+
+    private var iPhoneLayout: some View {
+        NavigationStack {
+            patientListContent
+                .navigationTitle("Dashboard")
+        }
+    }
+
+    // MARK: - Shared Content
+
+    @ViewBuilder
+    private var patientListContent: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Active Alerts Section
+                if !viewModel.activeFlags.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("My Patients (\(viewModel.patients.count))")
+                        Text("Active Alerts (\(viewModel.activeFlags.count))")
                             .font(.title2)
                             .fontWeight(.bold)
                             .padding(.horizontal)
-                        
-                        ForEach(viewModel.patients) { patient in
+
+                        WorkloadFlagsList(flags: viewModel.activeFlags) { flag in
+                            if let patient = viewModel.patient(for: flag.patientId) {
+                                handlePatientSelection(patient)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.top)
+                }
+
+                // Patient List
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("My Patients (\(viewModel.patients.count))")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+
+                    ForEach(viewModel.patients) { patient in
+                        if shouldUseSplitView {
+                            // iPad: Direct selection
                             PatientCardView(patient: patient)
                                 .padding(.horizontal)
+                                .background(
+                                    selectedPatient?.id == patient.id
+                                        ? Color.blue.opacity(0.1)
+                                        : Color.clear
+                                )
+                                .cornerRadius(12)
                                 .onTapGesture {
-                                    showingPatientDetail = patient
+                                    handlePatientSelection(patient)
                                 }
+                        } else {
+                            // iPhone: Navigation Link
+                            NavigationLink(value: patient) {
+                                PatientCardView(patient: patient)
+                                    .padding(.horizontal)
+                            }
                         }
                     }
                 }
-                .padding(.bottom)
             }
-            .navigationTitle("Dashboard")
-            .refreshable {
-                await viewModel.refresh()
-            }
-            .task {
-                await viewModel.loadPatients()
-                await viewModel.loadActiveFlags()
-            }
-            .sheet(item: $showingPatientDetail) { patient in
+            .padding(.bottom)
+        }
+        .refreshable {
+            await viewModel.refresh()
+        }
+        .navigationDestination(for: Patient.self) { patient in
+            if !shouldUseSplitView {
                 PatientDetailView(patient: patient)
             }
+        }
+    }
+
+    private var placeholderDetailView: some View {
+        ContentUnavailableView(
+            "Select a Patient",
+            systemImage: "person.circle",
+            description: Text("Choose a patient from the list to view their details and progress")
+        )
+    }
+
+    private func handlePatientSelection(_ patient: Patient) {
+        selectedPatient = patient
+
+        // On iPad, ensure detail is visible
+        if shouldUseSplitView {
+            columnVisibility = .doubleColumn
         }
     }
 }
