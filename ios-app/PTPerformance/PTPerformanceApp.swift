@@ -15,4 +15,5 @@ struct PTPerformanceApp: App {
 final class AppState: ObservableObject {
     @Published var isAuthenticated = false
     @Published var userRole: UserRole? = nil   // .patient or .therapist
+    @Published var userId: String? = nil       // Authenticated user ID
 }

@@ -262,6 +262,7 @@ struct ExerciseRow: View {
 /// Exercise detail view placeholder
 struct ExerciseDetailView: View {
     let exercise: Exercise
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         ScrollView {
@@ -291,14 +292,32 @@ struct ExerciseDetailView: View {
 
                 Spacer()
 
-                // Log exercise button (placeholder for ACP-94)
-                NavigationLink(destination: Text("Exercise logging (ACP-94)")) {
+                // Log exercise button - navigates to exercise logging form
+                if let patientId = appState.userId {
+                    NavigationLink(destination: ExerciseLogView(
+                        exercise: exercise,
+                        sessionExerciseId: exercise.id,
+                        patientId: patientId
+                    )) {
+                        Text("Log This Exercise")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                } else {
                     Text("Log This Exercise")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.gray)
                         .foregroundColor(.white)
                         .cornerRadius(12)
+                        .overlay(
+                            Text("Sign in to log exercises")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                        )
                 }
             }
             .padding()

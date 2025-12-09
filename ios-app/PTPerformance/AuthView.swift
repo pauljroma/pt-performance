@@ -128,6 +128,7 @@ struct AuthView: View {
                 if let userRole = supabase.userRole {
                     appState.isAuthenticated = true
                     appState.userRole = userRole
+                    appState.userId = supabase.userId
                 }
                 isLoading = false
             }
@@ -150,6 +151,7 @@ struct AuthView: View {
             await MainActor.run {
                 appState.isAuthenticated = true
                 appState.userRole = .patient
+                appState.userId = supabase.userId
                 isLoading = false
             }
         } catch {
@@ -171,6 +173,7 @@ struct AuthView: View {
             await MainActor.run {
                 appState.isAuthenticated = true
                 appState.userRole = .therapist
+                appState.userId = supabase.userId
                 isLoading = false
             }
         } catch {
