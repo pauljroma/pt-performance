@@ -64,15 +64,27 @@ class TodaySessionViewModel: ObservableObject {
     /// Fetch from backend API (/today-session/:patientId)
     private func fetchFromBackend(patientId: String) async throws -> TodaySessionResponse {
         let backendURL = Config.backendURL
+        print("📱 [TodaySession] Backend URL: \(backendURL)")
 
         guard let url = URL(string: "\(backendURL)/today-session/\(patientId)") else {
+            print("❌ [TodaySession] Invalid backend URL: \(backendURL)")
             throw URLError(.badURL)
         }
 
+        print("📱 [TodaySession] Calling: \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(from: url)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ [TodaySession] No HTTP response")
+            throw URLError(.badServerResponse)
+        }
+
+        print("📱 [TodaySession] Backend response status: \(httpResponse.statusCode)")
+
+        guard httpResponse.statusCode == 200 else {
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("❌ [TodaySession] Backend error response: \(responseString)")
+            }
             throw URLError(.badServerResponse)
         }
 
@@ -83,6 +95,9 @@ class TodaySessionViewModel: ObservableObject {
     /// Fetch directly from Supabase (fallback)
     private func fetchFromSupabase(patientId: String) async throws {
         print("📱 [TodaySession] Fetching session for patient: \(patientId)")
+        print("📱 [TodaySession] Querying sessions table with filters:")
+        print("   - phases.programs.patient_id = \(patientId)")
+        print("   - phases.programs.status = active")
 
         // Query sessions via correct relationship chain: sessions -> phases -> programs
         // Use the first active session from the patient's active program
@@ -109,15 +124,21 @@ class TodaySessionViewModel: ObservableObject {
             .execute()
             .value
 
+        print("📱 [TodaySession] Supabase returned \(sessionsResponse.count) sessions")
+
         guard let session = sessionsResponse.first else {
-            print("⚠️ [TodaySession] No sessions found for patient \(patientId)")
+            print("⚠️ [TodaySession] No sessions found - possible causes:")
+            print("   1. Patient has no active program (check programs table)")
+            print("   2. Active program has no phases (check phases table)")
+            print("   3. Phases have no sessions (check sessions table)")
+            print("   4. Database relationship joins failing (check foreign keys)")
             // No active sessions found
             self.session = nil
             self.exercises = []
             return
         }
 
-        print("✅ [TodaySession] Found session: \(session.name)")
+        print("✅ [TodaySession] Found session: \(session.name) (ID: \(session.id))")
         self.session = session
 
         // Fetch exercises for this session

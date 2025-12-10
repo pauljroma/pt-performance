@@ -46,19 +46,30 @@ class PatientListViewModel: ObservableObject {
         // Filters are computed via filteredPatients
     }
 
-    func loadPatients() async {
+    func loadPatients(therapistId: String? = nil) async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let response: [Patient] = try await supabase.client
+            var query = supabase.client
                 .from("patients")
                 .select()
+
+            // Filter by therapist_id if provided
+            if let therapistId = therapistId {
+                query = query.eq("therapist_id", value: therapistId)
+            }
+
+            let response: [Patient] = try await query
                 .execute()
                 .value
 
             patients = response
-            print("✅ [PatientList] Loaded \(patients.count) patients from Supabase")
+            if let therapistId = therapistId {
+                print("✅ [PatientList] Loaded \(patients.count) patients for therapist \(therapistId)")
+            } else {
+                print("✅ [PatientList] Loaded \(patients.count) patients from Supabase")
+            }
         } catch {
             print("❌ [PatientList] Error loading patients: \(error.localizedDescription)")
             errorMessage = "Failed to load patients: \(error.localizedDescription)"
@@ -67,8 +78,12 @@ class PatientListViewModel: ObservableObject {
         }
     }
 
-    func loadActiveFlags() async {
+    func loadActiveFlags(therapistId: String? = nil) async {
         do {
+            // Note: workload_flags don't have direct therapist_id
+            // They're linked via patient_id -> patients.therapist_id
+            // For now, load all unresolved flags
+            // TODO: Join with patients table to filter by therapist
             let response: [WorkloadFlag] = try await supabase.client
                 .from("workload_flags")
                 .select()
@@ -87,14 +102,14 @@ class PatientListViewModel: ObservableObject {
             activeFlags = []
         }
     }
-    
-    func refresh() async {
-        await loadPatients()
-        await loadActiveFlags()
+
+    func refresh(therapistId: String? = nil) async {
+        await loadPatients(therapistId: therapistId)
+        await loadActiveFlags(therapistId: therapistId)
     }
 
     func fetchPatients(for therapistId: String) async {
-        await loadPatients()
+        await loadPatients(therapistId: therapistId)
     }
 
     func patient(for patientId: UUID) -> Patient? {

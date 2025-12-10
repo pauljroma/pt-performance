@@ -10,16 +10,8 @@ enum Config {
 
     // MARK: - Backend Configuration
 
-    /// Backend API URL - defaults to Supabase functions in production, localhost in DEBUG
-    static let backendURL: String = {
-        #if DEBUG
-        // Development: Use local backend if running
-        return ProcessInfo.processInfo.environment["BACKEND_URL"] ?? "http://localhost:4000"
-        #else
-        // Production: Use Supabase Edge Functions or deployed backend
-        return ProcessInfo.processInfo.environment["BACKEND_URL"] ?? "\(supabaseURL)/functions/v1"
-        #endif
-    }()
+    /// Backend API URL - uses Supabase Edge Functions for all builds
+    static let backendURL: String = ProcessInfo.processInfo.environment["BACKEND_URL"] ?? "\(supabaseURL)/functions/v1"
 
     // MARK: - App Configuration
 

@@ -12,6 +12,7 @@ struct TherapistDashboardView: View {
     @State private var selectedPatient: Patient?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @EnvironmentObject var appState: AppState
 
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
@@ -26,8 +27,14 @@ struct TherapistDashboardView: View {
             }
         }
         .task {
-            await viewModel.loadPatients()
-            await viewModel.loadActiveFlags()
+            if let therapistId = appState.userId {
+                await viewModel.loadPatients(therapistId: therapistId)
+                await viewModel.loadActiveFlags(therapistId: therapistId)
+            } else {
+                // Fallback: load all patients if therapist ID not available
+                await viewModel.loadPatients()
+                await viewModel.loadActiveFlags()
+            }
         }
     }
 
