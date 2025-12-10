@@ -18,7 +18,7 @@ class PatientListViewModel: ObservableObject {
     @Published var selectedFlagFilter: FlagFilter = .all
     @Published var selectedSport: String? = nil
 
-    private let supabase = SupabaseClient.shared
+    private let supabase = PTSupabaseClient.shared
 
     enum FlagFilter: String, CaseIterable {
         case all = "All"
