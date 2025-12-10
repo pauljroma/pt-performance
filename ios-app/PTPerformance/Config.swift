@@ -6,7 +6,7 @@ enum Config {
     // MARK: - Supabase Configuration
 
     static let supabaseURL = "https://rpbxeaxlaoyoqkohytlw.supabase.co"
-    static let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwYnhlYXhsYW95b3Frb2h5dGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMyNDc3MDMsImV4cCI6MjA0ODgyMzcwM30.ecg4DRB_cgq@azx4vcr"
+    static let supabaseAnonKey = "sb_publishable_bvF02gZep-IdSHFNYVro3g_lNY8hfzr"
 
     // MARK: - Backend Configuration
 
