@@ -4,6 +4,7 @@
 # BLOCKS deployment if any critical tests fail
 
 set -e
+set -o pipefail
 
 cd "$(dirname "$0")"
 
@@ -38,13 +39,18 @@ echo "Testing ViewModels, Config, and Helpers..."
 echo ""
 
 # Run unit tests
-if xcodebuild test \
+set +e  # Don't exit on error, we want to check exit code manually
+xcodebuild test \
     -scheme PTPerformance \
-    -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+    -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
     -only-testing:PTPerformanceTests/TodaySessionViewModelTests \
     -only-testing:PTPerformanceTests/PatientListViewModelTests \
     -only-testing:PTPerformanceTests/ConfigTests \
-    | xcpretty --color; then
+    2>&1 | tee /tmp/unit_test_output.log | xcpretty --color
+UNIT_TEST_EXIT_CODE=${PIPESTATUS[0]}
+set -e
+
+if [ $UNIT_TEST_EXIT_CODE -eq 0 ]; then
     echo ""
     echo -e "${GREEN}✅ Unit Tests PASSED${NC}"
     UNIT_TESTS_PASSED=1
@@ -66,11 +72,16 @@ echo "⚠️  WARNING: These tests require valid Supabase credentials"
 echo ""
 
 # Run integration tests
-if xcodebuild test \
+set +e  # Don't exit on error, we want to check exit code manually
+xcodebuild test \
     -scheme PTPerformance \
-    -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+    -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
     -only-testing:PTPerformanceTests/SupabaseIntegrationTests \
-    | xcpretty --color; then
+    2>&1 | tee /tmp/integration_test_output.log | xcpretty --color
+INTEGRATION_TEST_EXIT_CODE=${PIPESTATUS[0]}
+set -e
+
+if [ $INTEGRATION_TEST_EXIT_CODE -eq 0 ]; then
     echo ""
     echo -e "${GREEN}✅ Integration Tests PASSED${NC}"
     INTEGRATION_TESTS_PASSED=1
@@ -97,11 +108,16 @@ echo "Testing patient and therapist user flows..."
 echo ""
 
 # Run UI tests
-if xcodebuild test \
+set +e  # Don't exit on error, we want to check exit code manually
+xcodebuild test \
     -scheme PTPerformance \
-    -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+    -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
     -only-testing:PTPerformanceUITests/PatientFlowUITests \
-    | xcpretty --color; then
+    2>&1 | tee /tmp/ui_test_output.log | xcpretty --color
+UI_TEST_EXIT_CODE=${PIPESTATUS[0]}
+set -e
+
+if [ $UI_TEST_EXIT_CODE -eq 0 ]; then
     echo ""
     echo -e "${GREEN}✅ UI Tests PASSED${NC}"
     UI_TESTS_PASSED=1

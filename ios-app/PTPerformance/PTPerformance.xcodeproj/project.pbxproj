@@ -328,6 +328,9 @@
 				8C23FC26236DC88D1358853F /* PBXTargetDependency */,
 			);
 			name = PTPerformanceUITests;
+			packageProductDependencies = (
+				AA2222222222222222222222 /* Supabase */,
+			);
 			productName = PTPerformanceUITests;
 			productReference = 7902B3EBC8C120F08E43914C /* PTPerformanceUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -346,6 +349,9 @@
 				9B38E111979D4EBB96F234BD /* PBXTargetDependency */,
 			);
 			name = PTPerformanceTests;
+			packageProductDependencies = (
+				AA2222222222222222222222 /* Supabase */,
+			);
 			productName = PTPerformanceTests;
 			productReference = 57A89540A9070BF9C6624971 /* PTPerformanceTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -502,6 +508,7 @@
 		0C22088E25B755565C768F77 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -509,7 +516,10 @@
 		1388A2C3818D003BC85ED900 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PTPerformance.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PTPerformance";
 			};
 			name = Debug;
 		};
@@ -688,6 +698,7 @@
 		D78D69F6979A0095B53C2A55 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -696,7 +707,10 @@
 		FA2A848EBC7CC8C1C8C3AA84 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PTPerformance.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PTPerformance";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
