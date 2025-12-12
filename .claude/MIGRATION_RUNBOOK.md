@@ -85,14 +85,46 @@ mv supabase/migrations/YYYYMMDDHHMMSS_filename.sql supabase/migrations/YYYYMMDDH
 supabase migration list --password "${SUPABASE_PASSWORD}" | grep YYYYMMDDHHMMSS
 ```
 
-### 3c. Schema cache note
+### 3c. PostgREST Schema Cache Refresh (CRITICAL - READ THIS!)
 
-**Important:** PostgREST schema cache takes 30-60 seconds to refresh automatically.
+**⚠️ EXPECTED BEHAVIOR AFTER EVERY MIGRATION:**
 
-If you see "Could not find column in schema cache" errors in the app:
-- Wait 1-2 minutes
-- The cache updates automatically
-- No action needed
+After applying any migration, you WILL see schema cache errors for 30-60 seconds. This is NORMAL.
+
+**What the error looks like:**
+```
+❌ Could not find the 'column_name' column of 'table_name' in the schema cache
+```
+
+**Why this happens:**
+- PostgREST (Supabase's API layer) caches the database schema for performance
+- The cache auto-refreshes every 30-60 seconds
+- New columns/tables exist in the database but not in the API cache yet
+
+**What to do:**
+- ✅ **NOTHING** - Wait 1-2 minutes for automatic refresh
+- ✅ Tell user to wait 1-2 minutes
+- ✅ Or tell user to restart the app to force reconnection
+
+**What NOT to do:**
+- ❌ Do NOT try to "fix" the migration
+- ❌ Do NOT re-apply the migration
+- ❌ Do NOT create schema refresh scripts
+- ❌ Do NOT try to manually refresh via API calls
+- ❌ Do NOT assume the migration failed
+
+**How to verify migration succeeded:**
+```bash
+# Check that migration file is marked as .applied
+ls supabase/migrations/*.applied | tail -3
+
+# If you see the migration with .applied suffix, it's done!
+```
+
+**If error persists after 5 minutes:**
+- Check if migration was actually applied (look for .applied file)
+- Restart the iOS app
+- Check Supabase Dashboard → Database → Tables to confirm schema changes
 
 ---
 
@@ -134,9 +166,13 @@ The following scripts **ALREADY EXIST** - REUSE THEM:
 ## When Things Go Wrong
 
 ### "Could not find column in schema cache"
-→ Expected! Schema cache takes 30-60 seconds to refresh
-→ Wait 1-2 minutes and test again
-→ No action needed
+**THIS IS NOT AN ERROR - THIS IS EXPECTED!**
+
+→ PostgREST schema cache takes 30-60 seconds to refresh after ANY migration
+→ The migration WAS successful, the cache just hasn't updated yet
+→ Wait 1-2 minutes and the error will disappear automatically
+→ **NO ACTION NEEDED** - Do not try to "fix" this
+→ See Step 3c for full details
 
 ### "Remote migration versions not found"
 → Use `supabase migration repair --status applied TIMESTAMP`
