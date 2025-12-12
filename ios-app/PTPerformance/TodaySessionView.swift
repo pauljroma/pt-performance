@@ -5,6 +5,7 @@ struct TodaySessionView: View {
     @StateObject private var viewModel = TodaySessionViewModel()
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var showDebugLogs = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var shouldUseSplitView: Bool {
@@ -18,6 +19,9 @@ struct TodaySessionView: View {
             } else {
                 iPhoneLayout
             }
+        }
+        .sheet(isPresented: $showDebugLogs) {
+            DebugLogView()
         }
         .task {
             await viewModel.fetchTodaySession()
@@ -69,6 +73,13 @@ struct TodaySessionView: View {
             }
         }
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { showDebugLogs = true }) {
+                    Image(systemName: "ant.circle")
+                        .foregroundColor(.orange)
+                }
+            }
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     Task {
@@ -253,9 +264,13 @@ struct ExerciseRow: View {
                 .foregroundColor(.gray)
         }
         .padding()
-        .background(Color.white)
+        .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
     }
 }
 

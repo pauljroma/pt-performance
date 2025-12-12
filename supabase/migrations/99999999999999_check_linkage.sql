@@ -1,0 +1,1 @@
+-- Diagnostic check (already applied, no-op)

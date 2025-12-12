@@ -227,6 +227,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  dotenv
   fastlane (>= 2.220.0)
 
 BUNDLED WITH

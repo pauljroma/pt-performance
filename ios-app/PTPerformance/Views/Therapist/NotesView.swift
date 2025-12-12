@@ -87,19 +87,27 @@ class NotesViewModel: ObservableObject {
     private let service = NotesService()
 
     func fetchNotes(for patientId: String) async {
+        let logger = DebugLogger.shared
+        logger.log("📝 Fetching notes for patient: \(patientId)")
         isLoading = true
         errorMessage = nil
 
         do {
             notes = try await service.fetchNotes(for: patientId)
+            logger.log("✅ Fetched \(notes.count) notes successfully", level: .success)
             isLoading = false
         } catch {
+            logger.log("❌ Failed to fetch notes: \(error.localizedDescription)", level: .error)
             errorMessage = error.localizedDescription
             isLoading = false
         }
     }
 
     func saveNote(_ note: CreateNoteInput) async {
+        let logger = DebugLogger.shared
+        logger.log("📝 Saving note for patient: \(note.patientId)")
+        logger.log("📝 Note type: \(note.noteType), session: \(note.sessionId ?? "nil")")
+
         do {
             let newNote = try await service.saveNote(
                 patientId: note.patientId,
@@ -109,9 +117,15 @@ class NotesViewModel: ObservableObject {
                 createdBy: note.createdBy
             )
 
+            logger.log("✅ Note saved successfully with ID: \(newNote.id)", level: .success)
+            logger.log("📝 Current notes count BEFORE insert: \(notes.count)")
             notes.insert(newNote, at: 0)
+            logger.log("📝 Current notes count AFTER insert: \(notes.count)")
+            logger.log("📝 Closing add note sheet...")
             showAddNoteSheet = false
+            logger.log("✅ Note added to list and sheet closed", level: .success)
         } catch {
+            logger.log("❌ Failed to save note: \(error.localizedDescription)", level: .error)
             errorMessage = error.localizedDescription
         }
     }
@@ -157,7 +171,7 @@ struct NoteCard: View {
 
             // Footer
             HStack {
-                Label(note.createdBy, systemImage: "person.circle")
+                Label(note.createdBy ?? "Unknown", systemImage: "person.circle")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -199,8 +213,8 @@ struct AddNoteSheet: View {
     @State private var sessionId: String? = nil
     @State private var isSaving = false
 
-    // Get current user ID (would come from auth context in real app)
-    @State private var userId: String = "therapist-user-id"
+    // Get therapist ID from auth session
+    @State private var therapistId: String? = nil
 
     let noteTypes = ["assessment", "progress", "clinical", "general"]
 
@@ -251,6 +265,36 @@ struct AddNoteSheet: View {
                     .disabled(noteText.isEmpty || isSaving)
                 }
             }
+            .task {
+                // Fetch therapist ID on appear
+                await fetchTherapistId()
+            }
+        }
+    }
+
+    private func fetchTherapistId() async {
+        do {
+            // Get current user ID from auth
+            let userId = try await PTSupabaseClient.shared.client.auth.session.user.id.uuidString
+
+            // Query therapists table to get therapist ID
+            let response = try await PTSupabaseClient.shared.client
+                .from("therapists")
+                .select("id")
+                .eq("user_id", value: userId)
+                .single()
+                .execute()
+
+            struct TherapistIdResponse: Codable {
+                let id: String
+            }
+
+            let decoder = JSONDecoder()
+            let result = try decoder.decode(TherapistIdResponse.self, from: response.data)
+            therapistId = result.id
+        } catch {
+            // Fallback - nil means database will use default function
+            therapistId = nil
         }
     }
 
@@ -262,7 +306,7 @@ struct AddNoteSheet: View {
             sessionId: sessionId,
             noteType: noteType,
             noteText: noteText,
-            createdBy: userId
+            createdBy: therapistId  // May be nil - database will use default function
         )
 
         Task {

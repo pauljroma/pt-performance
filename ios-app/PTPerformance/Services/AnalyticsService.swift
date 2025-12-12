@@ -105,16 +105,16 @@ class AnalyticsService {
     /// Fetch recent session summaries
     func fetchRecentSessions(patientId: String, limit: Int = 10) async throws -> [SessionSummary] {
         let response = try await supabase.client
-            .from("sessions")
+            .from("vw_patient_sessions")
             .select("""
                 id,
                 session_number,
                 session_date,
                 completed,
-                exercise_count:session_exercises(count)
+                exercise_count
             """)
             .eq("patient_id", value: patientId)
-            .order("session_date", ascending: false)
+            .order("session_number", ascending: false)
             .limit(limit)
             .execute()
 

@@ -1,0 +1,301 @@
+==================================================
+🚀 Starting Local iOS Build
+==================================================
+
+✓ Found .env file
+
+📦 Loading environment variables...
+✓ APP_STORE_CONNECT_API_KEY_ID is set
+✓ APP_STORE_CONNECT_API_ISSUER_ID is set
+✓ APP_STORE_CONNECT_API_KEY_CONTENT is set
+✓ FASTLANE_TEAM_ID is set
+✓ MATCH_PASSWORD is set
+✓ MATCH_GIT_BASIC_AUTHORIZATION is set
+
+==================================================
+🏗️  Building iOS App...
+==================================================
+
+This will take 2-3 minutes on M3 Ultra
+You'll see real-time progress below:
+
+[21:30:26]: [32m------------------------------[0m
+[21:30:26]: [32m--- Step: default_platform ---[0m
+[21:30:26]: [32m------------------------------[0m
+[21:30:26]: [32mDriving the lane 'ios beta' 🚀[0m
+[21:30:26]: [32m---------------------------------------[0m
+[21:30:26]: [32m--- Step: app_store_connect_api_key ---[0m
+[21:30:26]: [32m---------------------------------------[0m
+[21:30:26]: [32m-------------------[0m
+[21:30:26]: [32m--- Step: match ---[0m
+[21:30:26]: [32m-------------------[0m
+[21:30:26]: [32mSuccessfully loaded '/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/fastlane/Matchfile' 📄[0m
+
++-------------------------------------------------------+
+|      Detected Values from './fastlane/Matchfile'      |
++----------------+--------------------------------------+
+| git_url        | https://github.com/pauljroma/apple-  |
+|                | certificates.git                     |
+| storage_mode   | git                                  |
+| type           | appstore                             |
+| app_identifier | ["com.ptperformance.app"]            |
+| username       | paul@romatech.com                    |
++----------------+--------------------------------------+
+
+
++-----------------------------------------------------------------------------+
+|                          [32mSummary for match 2.229.1[0m                          |
++--------------------------------------+--------------------------------------+
+| type                                 | appstore                             |
+| api_key                              | ********                             |
+| readonly                             | false                                |
+| app_identifier                       | ["com.ptperformance.app"]            |
+| generate_apple_certs                 | true                                 |
+| skip_provisioning_profiles           | false                                |
+| username                             | paul@romatech.com                    |
+| team_id                              | 5NNLBL74XR                           |
+| storage_mode                         | git                                  |
+| git_url                              | https://github.com/pauljroma/apple-  |
+|                                      | certificates.git                     |
+| git_branch                           | master                               |
+| shallow_clone                        | false                                |
+| clone_branch_directly                | false                                |
+| git_basic_authorization              | ********                             |
+| skip_google_cloud_account_confirmat  | false                                |
+| ion                                  |                                      |
+| s3_skip_encryption                   | false                                |
+| gitlab_host                          | https://gitlab.com                   |
+| keychain_name                        | login.keychain                       |
+| force                                | false                                |
+| force_for_new_devices                | false                                |
+| include_mac_in_profiles              | false                                |
+| include_all_certificates             | false                                |
+| force_for_new_certificates           | false                                |
+| skip_confirmation                    | false                                |
+| safe_remove_certs                    | false                                |
+| skip_docs                            | false                                |
+| platform                             | ios                                  |
+| derive_catalyst_app_identifier       | false                                |
+| fail_on_name_taken                   | false                                |
+| skip_certificate_matching            | false                                |
+| skip_set_partition_list              | false                                |
+| force_legacy_encryption              | false                                |
+| verbose                              | false                                |
++--------------------------------------+--------------------------------------+
+
+[21:30:26]: Cloning remote git repo...
+[21:30:26]: If cloning the repo takes too long, you can use the `clone_branch_directly` option in match.
+[21:30:27]: Checking out branch master...
+[21:30:27]: [32m🔓  Successfully decrypted certificates repo[0m
+[21:30:27]: Verifying that the certificate and profile are still valid on the Dev Portal...
+[21:30:27]: Creating authorization token for App Store Connect API
+[21:30:27]: Installing certificate...
+
++----------------------------------------------------------------+
+|                     [32mInstalled Certificate[0m                      |
++-------------------+--------------------------------------------+
+| User ID           | 5NNLBL74XR                                 |
+| Common Name       | Apple Distribution: Paul Roma (5NNLBL74XR) |
+| Organisation Unit | 5NNLBL74XR                                 |
+| Organisation      | Paul Roma                                  |
+| Country           | US                                         |
+| Start Datetime    | 2025-12-07 04:16:26 UTC                    |
+| End Datetime      | 2026-12-07 04:16:25 UTC                    |
++-------------------+--------------------------------------------+
+
+[21:30:28]: Installing provisioning profile...
+
++-----------------------------------------------------------------------+
+|                    [32mInstalled Provisioning Profile[0m                     |
++---------------------+------------------------+------------------------+
+| Parameter           | Environment Variable   | Value                  |
++---------------------+------------------------+------------------------+
+| App Identifier      |                        | com.ptperformance.app  |
+| Type                |                        | appstore               |
+| Platform            |                        | ios                    |
+| Profile UUID        | sigh_com.ptperformanc  | 2d91ee67-16dc-4e95-86  |
+|                     | e.app_appstore         | fb-91ef7faa9abb        |
+| Profile Name        | sigh_com.ptperformanc  | match AppStore         |
+|                     | e.app_appstore_profil  | com.ptperformance.app  |
+|                     | e-name                 |                        |
+| Profile Path        | sigh_com.ptperformanc  | /Users/expo/Library/M  |
+|                     | e.app_appstore_profil  | obileDevice/Provision  |
+|                     | e-path                 | ing                    |
+|                     |                        | Profiles/2d91ee67-16d  |
+|                     |                        | c-4e95-86fb-91ef7faa9  |
+|                     |                        | abb.mobileprovision    |
+| Development Team ID | sigh_com.ptperformanc  | 5NNLBL74XR             |
+|                     | e.app_appstore_team-i  |                        |
+|                     | d                      |                        |
+| Certificate Name    | sigh_com.ptperformanc  | Apple Distribution:    |
+|                     | e.app_appstore_certif  | Paul Roma              |
+|                     | icate-name             | (5NNLBL74XR)           |
++---------------------+------------------------+------------------------+
+
+[21:30:28]: [32m[32mAll required keys, certificates and provisioning profiles are installed 🙌[0m
+[21:30:28]: Setting Provisioning Profile type to 'app-store'
+[21:30:28]: [32m-----------------------[0m
+[21:30:28]: [32m--- Step: build_app ---[0m
+[21:30:28]: [32m-----------------------[0m
+[21:30:28]: [33mResolving Swift Package Manager dependencies...[0m
+[21:30:28]: [36m$ xcodebuild -resolvePackageDependencies -scheme PTPerformance -project ./PTPerformance.xcodeproj[0m
+[21:30:32]: ▸ [35mCommand line invocation:[0m
+[21:30:32]: ▸ [35m    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -resolvePackageDependencies -scheme PTPerformance -project ./PTPerformance.xcodeproj[0m
+[21:30:32]: ▸ [35mResolve Package Graph[0m
+[21:30:35]: ▸ [35mResolved source packages:[0m
+[21:30:35]: ▸ [35m  swift-http-types: https://github.com/apple/swift-http-types.git @ 1.5.1[0m
+[21:30:35]: ▸ [35m  Supabase: https://github.com/supabase/supabase-swift.git @ 2.38.0[0m
+[21:30:35]: ▸ [35m  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.5.1[0m
+[21:30:35]: ▸ [35m  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.2.0[0m
+[21:30:35]: ▸ [35m  xctest-dynamic-overlay: https://github.com/pointfreeco/xctest-dynamic-overlay @ 1.8.0[0m
+[21:30:35]: ▸ [35m  swift-concurrency-extras: https://github.com/pointfreeco/swift-concurrency-extras @ 1.3.2[0m
+[21:30:35]: ▸ [35m  swift-clocks: https://github.com/pointfreeco/swift-clocks @ 1.0.6[0m
+[21:30:35]: ▸ [35mresolved source packages: swift-http-types, Supabase, swift-asn1, swift-crypto, xctest-dynamic-overlay, swift-concurrency-extras, swift-clocks[0m
+[21:30:35]: [36m$ xcodebuild -showBuildSettings -scheme PTPerformance -project ./PTPerformance.xcodeproj 2>&1[0m
+[21:30:38]: [33mCommand timed out after 3 seconds on try 1 of 4, trying again with a 6 second timeout...[0m
+[21:30:40]: Detected provisioning profile mapping: {:"com.ptperformance.app"=>"match AppStore com.ptperformance.app"}
+
++-----------------------------------------------------------------------------+
+|                           [32mSummary for gym 2.229.1[0m                           |
++--------------------------------------+--------------------------------------+
+| scheme                               | PTPerformance                        |
+| export_method                        | app-store                            |
+| export_options.method                | app-store                            |
+| export_options.provisioningProfiles  | match AppStore                       |
+| .com.ptperformance.app               | com.ptperformance.app                |
+| buildlog_path                        | ./fastlane/logs                      |
+| xcargs                               | -allowProvisioningUpdates            |
+| archive_path                         | ./build/PTPerformance.xcarchive      |
+| project                              | ./PTPerformance.xcodeproj            |
+| clean                                | false                                |
+| output_directory                     | .                                    |
+| output_name                          | PTPerformance                        |
+| silent                               | false                                |
+| skip_package_ipa                     | false                                |
+| skip_package_pkg                     | false                                |
+| build_path                           | /Users/expo/Library/Developer/Xcode  |
+|                                      | /Archives/2025-12-08                 |
+| result_bundle                        | false                                |
+| destination                          | generic/platform=iOS                 |
+| xcodebuild_formatter                 | xcpretty                             |
+| build_timing_summary                 | false                                |
+| skip_profile_detection               | false                                |
+| xcodebuild_command                   | xcodebuild                           |
+| skip_package_dependencies_resolutio  | false                                |
+| n                                    |                                      |
+| disable_package_automatic_updates    | false                                |
+| use_system_scm                       | false                                |
+| xcode_path                           | /Applications/Xcode.app              |
++--------------------------------------+--------------------------------------+
+
+[21:30:40]: [36m$ set -o pipefail && xcodebuild -scheme PTPerformance -project ./PTPerformance.xcodeproj -destination 'generic/platform=iOS' -archivePath ./build/PTPerformance.xcarchive -allowProvisioningUpdates archive | tee /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/fastlane/logs/PTPerformance-PTPerformance.log | xcpretty[0m
+[21:30:43]: [35m[33m▸[0m [39;1mProcessing[0m empty-swift-crypto_Crypto.plist[0m
+[21:30:43]: [35m[33m▸[0m [39;1mCopying[0m /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-buhishpkiowzqodhxjgqrsblszsq/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/IntermediateBuildFilesPath/UninstalledProducts/iphoneos/swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy[0m
+[21:30:44]: [35m[33m▸[0m [39;1mTouching[0m swift-crypto_Crypto.bundle (in target 'swift-crypto_Crypto' from project 'swift-crypto')[0m
+[21:30:44]: [35m[33m▸[0m [39;1mLinking[0m IssueReportingPackageSupport.o[0m
+[21:30:46]: [35m[33m▸[0m [39;1mLinking[0m Crypto.o[0m
+[21:30:46]: [35m[33m▸[0m [39;1mLinking[0m ConcurrencyExtras.o[0m
+[21:30:46]: [35m[33m▸[0m [39;1mLinking[0m IssueReporting.o[0m
+[21:30:47]: [35m[33m▸[0m [39;1mLinking[0m XCTestDynamicOverlay.o[0m
+[21:30:47]: [35m[33m▸[0m [39;1mLinking[0m HTTPTypes.o[0m
+[21:30:47]: [35m[33m▸[0m [39;1mLinking[0m Clocks.o[0m
+[21:30:48]: [35m[33m▸[0m [39;1mLinking[0m Helpers.o[0m
+[21:30:55]: [35m[33m▸[0m [39;1mLinking[0m Functions.o[0m
+[21:30:55]: [35m[33m▸[0m [39;1mLinking[0m PostgREST.o[0m
+[21:30:55]: [35m[33m▸[0m [39;1mLinking[0m Storage.o[0m
+[21:30:55]: [35m[33m▸[0m [39;1mLinking[0m Realtime.o[0m
+[21:30:55]: [35m[33m▸[0m [39;1mLinking[0m Auth.o[0m
+[21:30:56]: [35m[33m▸[0m [39;1mLinking[0m Supabase.o[0m
+[21:32:19]: [35m[33m▸[0m [39;1mCompiling[0m LaunchScreen.storyboard[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/ViewModels/ProgramEditorViewModel.swift:45:16: [33mvalue 'exerciseId' was defined but never used; consider replacing with boolean test[0m
+[21:32:19]: ▸ [35m        if let exerciseId = exerciseId {[0m
+[21:32:19]: ▸ [35m[36m           ~~~~^~~~~~~~~~~~~[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift:73:69: [33m'database' is deprecated: Direct access to database is deprecated, please use one of the available methods such as, SupabaseClient.from(_:), SupabaseClient.rpc(_:params:), or SupabaseClient.schema(_:).[0m
+[21:32:19]: ▸ [35m        let sessionsResponse: [Session] = try await supabase.client.database[0m
+[21:32:19]: ▸ [35m[36m                                                                    ^[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift:95:71: [33m'database' is deprecated: Direct access to database is deprecated, please use one of the available methods such as, SupabaseClient.from(_:), SupabaseClient.rpc(_:params:), or SupabaseClient.schema(_:).[0m
+[21:32:19]: ▸ [35m        let exercisesResponse: [Exercise] = try await supabase.client.database[0m
+[21:32:19]: ▸ [35m[36m                                                                      ^[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/Views/Patient/ExerciseLogView.swift:53:26: [33m'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.[0m
+[21:32:19]: ▸ [35m                        .onChange(of: actualSets) { newValue in[0m
+[21:32:19]: ▸ [35m[36m                         ^[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/Views/Therapist/NotesView.swift:166:24: [33mvalue 'sessionId' was defined but never used; consider replacing with boolean test[0m
+[21:32:19]: ▸ [35m                if let sessionId = note.sessionId {[0m
+[21:32:19]: ▸ [35m[36m                   ~~~~^~~~~~~~~~~~[0m
+[21:32:19]: ▸ [35m[33m⚠️  [0m/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/Views/Therapist/PatientListView.swift:26:10: [33m'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.[0m
+[21:32:19]: ▸ [35m        .onChange(of: viewModel.searchText) { _ in[0m
+[21:32:19]: ▸ [35m[36m         ^[0m
+[21:32:19]: [35m[33m▸[0m [39;1mLinking[0m PTPerformance[0m
+[21:32:19]: [35m[33m▸[0m [39;1mProcessing[0m Info.plist[0m
+[21:32:20]: [35m[33m▸[0m [39;1mGenerating 'PTPerformance.app.dSYM'[0m
+[21:32:20]: [35m[33m▸[0m [39;1mTouching[0m PTPerformance.app (in target 'PTPerformance' from project 'PTPerformance')[0m
+[21:32:20]: [35m[33m▸[0m [39;1mArchive[0m Succeeded[0m
+[21:32:20]: [32mSuccessfully stored the archive. You can find it in the Xcode Organizer.[0m
+[21:32:20]: [33mGenerated plist file with the following values:[0m
+[21:32:20]: ▸ [35m-----------------------------------------[0m
+[21:32:20]: ▸ [35m{[0m
+[21:32:20]: ▸ [35m  "method": "app-store",[0m
+[21:32:20]: ▸ [35m  "provisioningProfiles": {[0m
+[21:32:20]: ▸ [35m    "com.ptperformance.app": "match AppStore com.ptperformance.app"[0m
+[21:32:20]: ▸ [35m  },[0m
+[21:32:20]: ▸ [35m  "signingStyle": "manual"[0m
+[21:32:20]: ▸ [35m}[0m
+[21:32:20]: ▸ [35m-----------------------------------------[0m
+[21:32:20]: [36m$ /usr/bin/xcrun /Users/expo/.rbenv/versions/3.3.6/lib/ruby/gems/3.3.0/gems/fastlane-2.229.1/gym/lib/assets/wrap_xcodebuild/xcbuild-safe.sh -exportArchive -exportOptionsPlist '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/gym_config20251208-10773-poie0t.plist' -archivePath ./build/PTPerformance.xcarchive -exportPath '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/gym_output20251208-10773-80ayp3' -allowProvisioningUpdates [0m
+[21:32:27]: Compressing 1 dSYM(s)
+[21:32:27]: [36m$ cd '/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/dSYMs' && zip -r '/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/PTPerformance.app.dSYM.zip' *.dSYM[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/Relocations/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/Relocations/aarch64/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/Relocations/aarch64/PTPerformance.yml (deflated 88%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/DWARF/ (stored 0%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Resources/DWARF/PTPerformance (deflated 68%)[0m
+[21:32:28]: ▸ [35mupdating: PTPerformance.app.dSYM/Contents/Info.plist (deflated 52%)[0m
+
+[21:32:28]: [32mSuccessfully exported and compressed dSYM file[0m
+[21:32:28]: [32mSuccessfully exported and signed the ipa file:[0m
+[21:32:28]: /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/PTPerformance.ipa
+[21:32:28]: [32m---------------------------------------[0m
+[21:32:28]: [32m--- Step: app_store_connect_api_key ---[0m
+[21:32:28]: [32m---------------------------------------[0m
+[21:32:28]: [32m----------------------------------[0m
+[21:32:28]: [32m--- Step: upload_to_testflight ---[0m
+[21:32:28]: [32m----------------------------------[0m
+[21:32:28]: Creating authorization token for App Store Connect API
+[21:32:28]: [32mReady to upload new build to TestFlight (App: 6756226704)...[0m
+[21:32:28]: Going to upload updated app to App Store Connect
+[21:32:28]: [32mThis might take a few minutes. Please don't interrupt the script.[0m
+[21:33:35]: [32m--------------------------------------------------------------------[0m
+[21:33:35]: [32mSuccessfully uploaded package to App Store Connect. It might take a few minutes until it's visible online.[0m
+[21:33:35]: [32m--------------------------------------------------------------------[0m
+[21:33:35]: [32mSuccessfully uploaded the new binary to App Store Connect[0m
+[21:33:35]: [33m`skip_waiting_for_build_processing` used and no `changelog` supplied - skipping waiting for build processing[0m
+
++---------------------------------------------+
+|              [32mfastlane summary[0m               |
++------+------------------------+-------------+
+| Step | Action                 | Time (in s) |
++------+------------------------+-------------+
+| 1    | default_platform       | 0           |
+| 2    | app_store_connect_api  | 0           |
+|      | _key                   |             |
+| 3    | match                  | 1           |
+| 4    | build_app              | 119         |
+| 5    | app_store_connect_api  | 0           |
+|      | _key                   |             |
+| 6    | upload_to_testflight   | 67          |
++------+------------------------+-------------+
+
+[21:33:35]: [32mfastlane.tools finished successfully 🎉[0m
+
+==================================================
+✅ Build Complete!
+==================================================
+
+Next steps:
+  1. Check App Store Connect in 5-10 minutes
+  2. Build will appear in TestFlight
+  3. Install TestFlight app on iPad to test
+

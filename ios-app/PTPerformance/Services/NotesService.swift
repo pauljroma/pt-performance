@@ -11,17 +11,54 @@ class NotesService {
 
     /// Fetch notes for a patient
     func fetchNotes(for patientId: String) async throws -> [SessionNote] {
-        let response = try await supabase.client
-            .from("session_notes")
-            .select()
-            .eq("patient_id", value: patientId)
-            .order("created_at", ascending: false)
-            .execute()
+        let logger = DebugLogger.shared
+        logger.log("📝 [NotesService] Fetching notes from Supabase...")
+        logger.log("📝 [NotesService] Patient ID: \(patientId)")
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        do {
+            let response = try await supabase.client
+                .from("session_notes")
+                .select()
+                .eq("patient_id", value: patientId)
+                .order("created_at", ascending: false)
+                .execute()
 
-        return try decoder.decode([SessionNote].self, from: response.data)
+            logger.log("📝 [NotesService] Response size: \(response.data.count) bytes")
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("📝 [NotesService] Raw JSON: \(jsonString)")
+            }
+
+            // Try to decode with explicit decoder
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let notes = try decoder.decode([SessionNote].self, from: response.data)
+
+            logger.log("✅ [NotesService] Decoded \(notes.count) notes", level: .success)
+            return notes
+        } catch let decodingError as DecodingError {
+            logger.log("❌ [NotesService] DECODING ERROR:", level: .error)
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                logger.log("  Type mismatch: Expected \(type)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+                logger.log("  Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .valueNotFound(let type, let context):
+                logger.log("  Value not found: \(type)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .keyNotFound(let key, let context):
+                logger.log("  Key not found: \(key.stringValue)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .dataCorrupted(let context):
+                logger.log("  Data corrupted: \(context.debugDescription)", level: .error)
+            @unknown default:
+                logger.log("  Unknown decoding error: \(decodingError)", level: .error)
+            }
+            throw decodingError
+        } catch {
+            logger.log("❌ [NotesService] OTHER ERROR: \(error)", level: .error)
+            logger.log("  Error type: \(type(of: error))", level: .error)
+            throw error
+        }
     }
 
     /// Create a new note
@@ -30,8 +67,16 @@ class NotesService {
         sessionId: String?,
         noteType: String,
         noteText: String,
-        createdBy: String
+        createdBy: String? = nil
     ) async throws -> SessionNote {
+        let logger = DebugLogger.shared
+
+        logger.log("📝 Creating note...")
+        logger.log("📝 Patient ID: \(patientId)")
+        logger.log("📝 Session ID: \(sessionId ?? "nil")")
+        logger.log("📝 Note Type: \(noteType)")
+        logger.log("📝 Created By: \(createdBy ?? "nil (will use default)")")
+
         let input = CreateNoteInput(
             patientId: patientId,
             sessionId: sessionId,
@@ -40,17 +85,17 @@ class NotesService {
             createdBy: createdBy
         )
 
-        let response = try await supabase.client
+        logger.log("📝 Sending insert request...")
+        let note: SessionNote = try await supabase.client
             .from("session_notes")
             .insert(input)
             .select()
             .single()
             .execute()
+            .value
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        return try decoder.decode(SessionNote.self, from: response.data)
+        logger.log("✅ Note created successfully with ID: \(note.id)", level: .success)
+        return note
     }
 
     /// Delete a note

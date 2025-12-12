@@ -162,7 +162,7 @@ struct SessionDisclosureView: View {
                         .foregroundColor(.secondary)
                 }
 
-                if session.completed {
+                if session.completed == true {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                 }

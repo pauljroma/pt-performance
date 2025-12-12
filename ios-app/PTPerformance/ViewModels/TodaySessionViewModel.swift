@@ -14,35 +14,46 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch today's session for the authenticated patient
     func fetchTodaySession() async {
+        let logger = DebugLogger.shared
         isLoading = true
         errorMessage = nil
 
         guard let patientId = supabase.userId else {
+            logger.log("❌ No patient ID available", level: .error)
             errorMessage = "No patient ID available. Please log in again."
             isLoading = false
             return
         }
 
+        logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
         print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
 
         do {
             // Option 1: Call backend /today-session endpoint
+            logger.log("📱 Trying backend API...")
             print("📱 [TodaySession] Trying backend API...")
             let response = try await fetchFromBackend(patientId: patientId)
 
             self.session = response.session
             self.exercises = response.exercises
+            logger.log("✅ Backend API succeeded - session: \(response.session?.name ?? "nil")", level: .success)
             print("✅ [TodaySession] Backend API succeeded")
             isLoading = false
         } catch let backendError {
             // Fallback to direct Supabase query if backend unavailable
+            logger.log("⚠️ Backend failed, trying Supabase...", level: .warning)
+            logger.log("   Backend error: \(backendError.localizedDescription)", level: .warning)
             print("⚠️ [TodaySession] Backend failed (\(backendError.localizedDescription)), trying Supabase...")
 
             do {
                 try await fetchFromSupabase(patientId: patientId)
+                logger.log("✅ Supabase fallback succeeded", level: .success)
                 print("✅ [TodaySession] Supabase fallback succeeded")
                 isLoading = false
             } catch let supabaseError {
+                logger.log("❌ BOTH backend AND Supabase FAILED", level: .error)
+                logger.log("   Backend error: \(backendError.localizedDescription)", level: .error)
+                logger.log("   Supabase error: \(supabaseError.localizedDescription)", level: .error)
                 print("❌ [TodaySession] Both backend and Supabase failed")
                 print("   Backend error: \(backendError.localizedDescription)")
                 print("   Supabase error: \(supabaseError.localizedDescription)")
@@ -94,6 +105,9 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch directly from Supabase (fallback)
     private func fetchFromSupabase(patientId: String) async throws {
+        let logger = DebugLogger.shared
+        logger.log("📱 Fetching session from Supabase for patient: \(patientId)")
+        logger.log("📱 Query filters: phases.programs.patient_id=\(patientId), status=active")
         print("📱 [TodaySession] Fetching session for patient: \(patientId)")
         print("📱 [TodaySession] Querying sessions table with filters:")
         print("   - phases.programs.patient_id = \(patientId)")
@@ -101,32 +115,48 @@ class TodaySessionViewModel: ObservableObject {
 
         // Query sessions via correct relationship chain: sessions -> phases -> programs
         // Use the first active session from the patient's active program
-        let sessionsResponse: [Session] = try await supabase.client
-            .from("sessions")
-            .select("""
-                *,
-                phases!inner(
-                    id,
-                    name,
-                    program_id,
-                    programs!inner(
+        do {
+            logger.log("📱 Executing Supabase query...")
+            let response = try await supabase.client
+                .from("sessions")
+                .select("""
+                    *,
+                    phases!inner(
                         id,
                         name,
-                        patient_id,
-                        status
+                        program_id,
+                        programs!inner(
+                            id,
+                            name,
+                            patient_id,
+                            status
+                        )
                     )
-                )
-            """)
-            .eq("phases.programs.patient_id", value: patientId)
-            .eq("phases.programs.status", value: "active")
-            .order("sequence", ascending: true)
-            .limit(1)
-            .execute()
-            .value
+                """)
+                .eq("phases.programs.patient_id", value: patientId)
+                .eq("phases.programs.status", value: "active")
+                .order("sequence", ascending: true)
+                .limit(1)
+                .execute()
 
-        print("📱 [TodaySession] Supabase returned \(sessionsResponse.count) sessions")
+            logger.log("📱 Response size: \(response.data.count) bytes")
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("📱 Raw JSON: \(jsonString.prefix(1000))")
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let sessionsResponse = try decoder.decode([Session].self, from: response.data)
+
+            logger.log("📱 Supabase returned \(sessionsResponse.count) sessions")
+            print("📱 [TodaySession] Supabase returned \(sessionsResponse.count) sessions")
 
         guard let session = sessionsResponse.first else {
+            logger.log("⚠️ No sessions found - possible causes:", level: .warning)
+            logger.log("   1. Patient has no active program", level: .warning)
+            logger.log("   2. Active program has no phases", level: .warning)
+            logger.log("   3. Phases have no sessions", level: .warning)
+            logger.log("   4. Database relationship joins failing", level: .warning)
             print("⚠️ [TodaySession] No sessions found - possible causes:")
             print("   1. Patient has no active program (check programs table)")
             print("   2. Active program has no phases (check phases table)")
@@ -138,12 +168,14 @@ class TodaySessionViewModel: ObservableObject {
             return
         }
 
+        logger.log("✅ Found session: \(session.name) (ID: \(session.id))", level: .success)
         print("✅ [TodaySession] Found session: \(session.name) (ID: \(session.id))")
         self.session = session
 
         // Fetch exercises for this session
         do {
-            let exercisesResponse: [Exercise] = try await supabase.client
+            logger.log("📱 Fetching exercises for session \(session.id)...")
+            let response = try await supabase.client
                 .from("session_exercises")
                 .select("""
                     *,
@@ -157,14 +189,65 @@ class TodaySessionViewModel: ObservableObject {
                 .eq("session_id", value: session.id)
                 .order("sequence", ascending: true)
                 .execute()
-                .value
 
+            logger.log("📱 Exercises response size: \(response.data.count) bytes")
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("📱 Exercises JSON: \(jsonString.prefix(500))")
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let exercisesResponse = try decoder.decode([Exercise].self, from: response.data)
+
+            logger.log("✅ Found \(exercisesResponse.count) exercises", level: .success)
             print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
             self.exercises = exercisesResponse
+        } catch let decodingError as DecodingError {
+            logger.log("❌ EXERCISE DECODING ERROR:", level: .error)
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                logger.log("  Type mismatch: Expected \(type)", level: .error)
+                logger.log("  Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .valueNotFound(let type, let context):
+                logger.log("  Value not found: \(type)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .keyNotFound(let key, let context):
+                logger.log("  Key not found: \(key.stringValue)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .dataCorrupted(let context):
+                logger.log("  Data corrupted: \(context.debugDescription)", level: .error)
+            @unknown default:
+                logger.log("  Unknown decoding error: \(decodingError)", level: .error)
+            }
+            // If exercise fetch fails, still show session but with empty exercises
+            logger.log("⚠️ Setting exercises to empty array", level: .warning)
+            print("⚠️ [TodaySession] Failed to fetch exercises: \(decodingError.localizedDescription)")
+            self.exercises = []
         } catch {
             // If exercise fetch fails, still show session but with empty exercises
+            logger.log("⚠️ Failed to fetch exercises: \(error.localizedDescription)", level: .warning)
             print("⚠️ [TodaySession] Failed to fetch exercises: \(error.localizedDescription)")
             self.exercises = []
+        }
+        } catch let decodingError as DecodingError {
+            logger.log("❌ SESSION DECODING ERROR:", level: .error)
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                logger.log("  Type mismatch: Expected \(type)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+                logger.log("  Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .valueNotFound(let type, let context):
+                logger.log("  Value not found: \(type)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .keyNotFound(let key, let context):
+                logger.log("  Key not found: \(key.stringValue)", level: .error)
+                logger.log("  Context: \(context.debugDescription)", level: .error)
+            case .dataCorrupted(let context):
+                logger.log("  Data corrupted: \(context.debugDescription)", level: .error)
+            @unknown default:
+                logger.log("  Unknown decoding error: \(decodingError)", level: .error)
+            }
+            throw decodingError
         }
     }
 

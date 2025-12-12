@@ -58,22 +58,26 @@ CREATE INDEX IF NOT EXISTS idx_agent_logs_errors
 ALTER TABLE agent_logs ENABLE ROW LEVEL SECURITY;
 
 -- Therapists can see logs for their patients
-CREATE POLICY agent_logs_therapist_read ON agent_logs
-  FOR SELECT USING (
-    patient_id IN (
-      SELECT p.id FROM patients p
-      WHERE p.therapist_id IN (
-        SELECT id FROM therapists WHERE user_id = auth.uid()
+DO $$ BEGIN
+  CREATE POLICY agent_logs_therapist_read ON agent_logs
+    FOR SELECT USING (
+      patient_id IN (
+        SELECT p.id FROM patients p
+        WHERE p.therapist_id IN (
+          SELECT id FROM therapists WHERE user_id = auth.uid()
+        )
       )
-    )
-    OR patient_id IS NULL  -- System logs visible to all therapists
-  );
+      OR patient_id IS NULL  -- System logs visible to all therapists
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Service role can write all logs
-CREATE POLICY agent_logs_service_write ON agent_logs
-  FOR ALL USING (
-    auth.role() = 'service_role'
-  );
+DO $$ BEGIN
+  CREATE POLICY agent_logs_service_write ON agent_logs
+    FOR ALL USING (
+      auth.role() = 'service_role'
+    );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================================
 -- HELPER VIEWS

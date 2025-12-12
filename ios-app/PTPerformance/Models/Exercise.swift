@@ -5,31 +5,48 @@ struct Exercise: Codable, Identifiable, Hashable {
     let id: String
     let session_id: String
     let exercise_template_id: String
-    let exercise_order: Int
+    let sequence: Int?
     let prescribed_sets: Int
-    let prescribed_reps_min: Int
-    let prescribed_reps_max: Int
+    let prescribed_reps: String?  // Database has this as string (e.g., "15" or "8-10")
     let prescribed_load: Double?
-    let prescribed_load_unit: String?
-    let rest_seconds: Int?
+    let load_unit: String?  // Database field name
+    let rest_period_seconds: Int?  // Database field name
     let notes: String?
 
     // From exercise_templates (joined data)
-    let exercise_name: String?
-    let movement_pattern: String?
-    let equipment: String?
+    struct ExerciseTemplate: Codable, Hashable {
+        let id: String
+        let name: String
+        let category: String?
+        let body_region: String?
+    }
+    let exercise_templates: ExerciseTemplate?
+
+    // Computed property for exercise order (fallback to 0 if sequence is missing)
+    var exercise_order: Int {
+        return sequence ?? 0
+    }
+
+    // Computed property for exercise name (from joined exercise_templates)
+    var exercise_name: String? {
+        return exercise_templates?.name
+    }
+
+    var movement_pattern: String? {
+        return exercise_templates?.category
+    }
+
+    var equipment: String? {
+        return exercise_templates?.body_region
+    }
 
     // Computed properties
     var repsDisplay: String {
-        if prescribed_reps_min == prescribed_reps_max {
-            return "\(prescribed_reps_min)"
-        } else {
-            return "\(prescribed_reps_min)-\(prescribed_reps_max)"
-        }
+        return prescribed_reps ?? "0"
     }
 
     var loadDisplay: String {
-        if let load = prescribed_load, let unit = prescribed_load_unit {
+        if let load = prescribed_load, let unit = load_unit {
             return "\(Int(load)) \(unit)"
         }
         return "Bodyweight"
@@ -39,68 +56,91 @@ struct Exercise: Codable, Identifiable, Hashable {
         return "\(prescribed_sets) sets"
     }
 
+    var rest_seconds: Int? {
+        return rest_period_seconds
+    }
+
+    var prescribed_load_unit: String? {
+        return load_unit
+    }
+
     static let sampleExercises: [Exercise] = [
         Exercise(
             id: "ex-1",
             session_id: "session-1",
             exercise_template_id: "template-1",
-            exercise_order: 1,
+            sequence: 1,
             prescribed_sets: 3,
-            prescribed_reps_min: 8,
-            prescribed_reps_max: 10,
+            prescribed_reps: "8-10",
             prescribed_load: 135,
-            prescribed_load_unit: "lbs",
-            rest_seconds: 90,
+            load_unit: "lbs",
+            rest_period_seconds: 90,
             notes: nil,
-            exercise_name: "Bench Press",
-            movement_pattern: "push",
-            equipment: "barbell"
+            exercise_templates: ExerciseTemplate(
+                id: "template-1",
+                name: "Bench Press",
+                category: "push",
+                body_region: "upper"
+            )
         ),
         Exercise(
             id: "ex-2",
             session_id: "session-1",
             exercise_template_id: "template-2",
-            exercise_order: 2,
+            sequence: 2,
             prescribed_sets: 3,
-            prescribed_reps_min: 10,
-            prescribed_reps_max: 12,
+            prescribed_reps: "10-12",
             prescribed_load: 185,
-            prescribed_load_unit: "lbs",
-            rest_seconds: 120,
+            load_unit: "lbs",
+            rest_period_seconds: 120,
             notes: nil,
-            exercise_name: "Squat",
-            movement_pattern: "squat",
-            equipment: "barbell"
+            exercise_templates: ExerciseTemplate(
+                id: "template-2",
+                name: "Squat",
+                category: "squat",
+                body_region: "lower"
+            )
         )
     ]
 }
 
 /// Session model from Supabase sessions table
+/// Matches actual database schema: id, phase_id, name, sequence, weekday, notes, created_at
 struct Session: Codable, Identifiable {
     let id: String
-    let program_id: String
     let phase_id: String
-    let session_number: Int
-    let session_date: String?
-    let is_completed: Bool
-    let intensity_rating: Int?
+    let name: String
+    let sequence: Int
+    let weekday: Int?
+    let notes: String?
+    let created_at: Date?
 
     // Exercises for this session (loaded separately or joined)
     var exercises: [Exercise] = []
 
-    var dateDisplay: String {
-        guard let dateStr = session_date,
-              let date = ISO8601DateFormatter().date(from: dateStr) else {
-            return "Today"
-        }
+    enum CodingKeys: String, CodingKey {
+        case id
+        case phase_id
+        case name
+        case sequence
+        case weekday
+        case notes
+        case created_at
+        // exercises is NOT in CodingKeys - will use default value
+    }
 
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
+    var dateDisplay: String {
+        // Use weekday to display day of week
+        if let day = weekday {
+            let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            return days[safe: day] ?? "Day \(sequence)"
+        }
+        return "Session \(sequence)"
     }
 
     var completionStatus: String {
-        return is_completed ? "Completed" : "In Progress"
+        // For now, assume in progress (we can add is_completed field later if needed)
+        return "In Progress"
     }
 }
 

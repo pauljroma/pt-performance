@@ -11,6 +11,7 @@ struct TherapistDashboardView: View {
     @StateObject private var viewModel = PatientListViewModel()
     @State private var selectedPatient: Patient?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var showDebugLogs = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
@@ -25,6 +26,9 @@ struct TherapistDashboardView: View {
             } else {
                 iPhoneLayout
             }
+        }
+        .sheet(isPresented: $showDebugLogs) {
+            DebugLogView()
         }
         .task {
             if let therapistId = appState.userId {
@@ -44,6 +48,14 @@ struct TherapistDashboardView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             patientListContent
                 .navigationTitle("Dashboard")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showDebugLogs = true }) {
+                            Image(systemName: "ant.circle")
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
                 .navigationSplitViewColumnWidth(
                     min: DeviceHelper.sidebarWidth.min,
                     ideal: DeviceHelper.sidebarWidth.ideal,
@@ -64,6 +76,14 @@ struct TherapistDashboardView: View {
         NavigationStack {
             patientListContent
                 .navigationTitle("Dashboard")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: { showDebugLogs = true }) {
+                            Image(systemName: "ant.circle")
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
         }
     }
 

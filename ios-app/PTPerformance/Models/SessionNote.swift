@@ -7,7 +7,7 @@ struct SessionNote: Codable, Identifiable {
     let sessionId: String?
     let noteType: String
     let noteText: String
-    let createdBy: String
+    let createdBy: String?  // Optional - some old notes have null created_by
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -47,7 +47,7 @@ struct CreateNoteInput: Codable {
     let sessionId: String?
     let noteType: String
     let noteText: String
-    let createdBy: String
+    let createdBy: String?  // Optional - database will use default if not provided
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"

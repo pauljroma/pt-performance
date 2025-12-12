@@ -50,6 +50,11 @@ class PatientListViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        let logger = DebugLogger.shared
+
+        logger.log("Starting loadPatients...")
+        logger.log("Therapist ID: \(therapistId ?? "nil")")
+
         do {
             var query = supabase.client
                 .from("patients")
@@ -58,22 +63,65 @@ class PatientListViewModel: ObservableObject {
             // Filter by therapist_id if provided
             if let therapistId = therapistId {
                 query = query.eq("therapist_id", value: therapistId)
+                logger.log("Filtering by therapist_id: \(therapistId)")
             }
 
-            let response: [Patient] = try await query
-                .execute()
-                .value
+            logger.log("Executing query...")
 
-            patients = response
+            // Execute and get response with data
+            let response = try await query.execute()
+
+            // Log raw response data
+            logger.log("Response received", level: .success)
+            logger.log("Response data size: \(response.data.count) bytes")
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("Raw JSON (first 500 chars): \(jsonString.prefix(500))")
+            }
+
+            logger.log("Attempting to decode [Patient] from response data...")
+            // Manually decode using the configured decoder from Supabase client
+            // The decoder should be configured with .iso8601 date strategy
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decodedPatients = try decoder.decode([Patient].self, from: response.data)
+
+            patients = decodedPatients
+            logger.log("Successfully decoded \(patients.count) patients", level: .success)
             if let therapistId = therapistId {
-                print("✅ [PatientList] Loaded \(patients.count) patients for therapist \(therapistId)")
+                logger.log("Loaded \(patients.count) patients for therapist \(therapistId)", level: .success)
             } else {
-                print("✅ [PatientList] Loaded \(patients.count) patients from Supabase")
+                logger.log("Loaded \(patients.count) patients from Supabase", level: .success)
             }
+        } catch let decodingError as DecodingError {
+            logger.log("DECODING ERROR:", level: .error)
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                logger.log("Type mismatch: Expected \(type)", level: .error)
+                logger.log("Context: \(context.debugDescription)", level: .error)
+                logger.log("Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .valueNotFound(let type, let context):
+                logger.log("Value not found: \(type)", level: .error)
+                logger.log("Context: \(context.debugDescription)", level: .error)
+                logger.log("Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .keyNotFound(let key, let context):
+                logger.log("Key not found: \(key.stringValue)", level: .error)
+                logger.log("Context: \(context.debugDescription)", level: .error)
+                logger.log("Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            case .dataCorrupted(let context):
+                logger.log("Data corrupted", level: .error)
+                logger.log("Context: \(context.debugDescription)", level: .error)
+                logger.log("Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
+            @unknown default:
+                logger.log("Unknown decoding error: \(decodingError)", level: .error)
+            }
+            errorMessage = "Decoding error: \(decodingError.localizedDescription)"
+            patients = Patient.samplePatients
         } catch {
-            print("❌ [PatientList] Error loading patients: \(error.localizedDescription)")
+            logger.log("OTHER ERROR:", level: .error)
+            logger.log("Error type: \(type(of: error))", level: .error)
+            logger.log("Error description: \(error.localizedDescription)", level: .error)
+            logger.log("Error: \(error)", level: .error)
             errorMessage = "Failed to load patients: \(error.localizedDescription)"
-            // Fallback to sample data only if query fails
             patients = Patient.samplePatients
         }
     }

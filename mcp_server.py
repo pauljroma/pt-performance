@@ -6,10 +6,16 @@ Provides Linear integration as an MCP server for Claude Code.
 
 import asyncio
 import json
+import logging
 import os
 from typing import Any, Dict, List
 
 from linear_client import LinearClient
+from linear_compression import compress_text, should_compress
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # MCP protocol implementation
 class MCPServer:
@@ -42,6 +48,17 @@ class MCPServer:
                             "enum": ["json", "markdown"],
                             "description": "Output format (json or markdown)",
                             "default": "markdown"
+                        },
+                        "compress": {
+                            "type": "boolean",
+                            "description": "Compress output (reduces tokens for large projects)",
+                            "default": False
+                        },
+                        "compression_level": {
+                            "type": "string",
+                            "enum": ["fast", "balanced", "aggressive"],
+                            "description": "Compression level (default: fast for reads)",
+                            "default": "fast"
                         }
                     }
                 }
@@ -74,6 +91,17 @@ class MCPServer:
                         "issue_id": {
                             "type": "string",
                             "description": "Linear issue ID"
+                        },
+                        "compress": {
+                            "type": "boolean",
+                            "description": "Compress output (useful for issues with many comments)",
+                            "default": False
+                        },
+                        "compression_level": {
+                            "type": "string",
+                            "enum": ["fast", "balanced", "aggressive"],
+                            "description": "Compression level (default: fast)",
+                            "default": "fast"
                         }
                     },
                     "required": ["issue_id"]
@@ -110,6 +138,17 @@ class MCPServer:
                         "comment": {
                             "type": "string",
                             "description": "Comment text (supports markdown)"
+                        },
+                        "compress": {
+                            "type": "boolean",
+                            "description": "Compress comment before posting (use for large handoffs/reports)",
+                            "default": False
+                        },
+                        "compression_level": {
+                            "type": "string",
+                            "enum": ["fast", "balanced", "aggressive"],
+                            "description": "Compression level (default: balanced)",
+                            "default": "balanced"
                         }
                     },
                     "required": ["issue_id", "comment"]
@@ -139,13 +178,31 @@ class MCPServer:
                     team_name = parameters.get("team_name", "Agent-Control-Plane")
                     project_name = parameters.get("project_name", "MVP 1 — PT App & Agent Pilot")
                     format_type = parameters.get("format", "markdown")
+                    compress = parameters.get("compress", False)
+                    compression_level = parameters.get("compression_level", "fast")
 
                     if format_type == "markdown":
                         result = await client.export_plan_markdown(team_name, project_name)
-                        return {"content": [{"type": "text", "text": result}]}
                     else:
-                        result = await client.export_project_plan(team_name, project_name)
-                        return {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]}
+                        result_data = await client.export_project_plan(team_name, project_name)
+                        result = json.dumps(result_data, indent=2)
+
+                    # Apply compression if requested
+                    if compress and await should_compress(result):
+                        try:
+                            compressed_text, metadata = await compress_text(result, compression_level)
+
+                            if metadata.get("status") == "success":
+                                # Add compression header
+                                compression_header = (
+                                    f"*[Compressed {metadata['compression_ratio']:.1f}x: "
+                                    f"{metadata['original_tokens']:,} → {metadata['compressed_tokens']:,} tokens]*\n\n"
+                                )
+                                result = compression_header + compressed_text
+                        except Exception as e:
+                            logger.warning(f"Compression failed, using original: {e}")
+
+                    return {"content": [{"type": "text", "text": result}]}
 
                 elif tool_name == "linear_list_issues":
                     team_name = parameters.get("team_name", "Agent-Control-Plane")
@@ -173,6 +230,9 @@ class MCPServer:
 
                 elif tool_name == "linear_get_issue":
                     issue_id = parameters["issue_id"]
+                    compress = parameters.get("compress", False)
+                    compression_level = parameters.get("compression_level", "fast")
+
                     issue = await client.get_issue_by_id(issue_id)
 
                     if not issue:
@@ -199,6 +259,20 @@ class MCPServer:
                             result += f"**{comment['user']['name']}** - {comment['createdAt']}\n"
                             result += f"{comment['body']}\n\n"
 
+                    # Apply compression if requested
+                    if compress and await should_compress(result):
+                        try:
+                            compressed_text, metadata = await compress_text(result, compression_level)
+
+                            if metadata.get("status") == "success":
+                                # Add compression header
+                                compression_header = (
+                                    f"*[Compressed {metadata['compression_ratio']:.1f}x]*\n\n"
+                                )
+                                result = compression_header + compressed_text
+                        except Exception as e:
+                            logger.warning(f"Compression failed, using original: {e}")
+
                     return {"content": [{"type": "text", "text": result}]}
 
                 elif tool_name == "linear_update_status":
@@ -212,9 +286,37 @@ class MCPServer:
                 elif tool_name == "linear_add_comment":
                     issue_id = parameters["issue_id"]
                     comment_text = parameters["comment"]
+                    compress = parameters.get("compress", False)
+                    compression_level = parameters.get("compression_level", "balanced")
+
+                    # Apply compression if requested
+                    compression_metadata = None
+                    if compress and await should_compress(comment_text):
+                        try:
+                            compressed_text, metadata = await compress_text(comment_text, compression_level)
+                            comment_text = compressed_text
+                            compression_metadata = metadata
+
+                            # Add compression metadata footer
+                            if metadata.get("status") == "success":
+                                footer = (
+                                    f"\n\n---\n"
+                                    f"*Compressed {metadata['compression_ratio']:.1f}x: "
+                                    f"{metadata['original_tokens']:,} → {metadata['compressed_tokens']:,} tokens*"
+                                )
+                                comment_text = comment_text + footer
+                        except Exception as e:
+                            logger.warning(f"Compression failed, using original: {e}")
 
                     comment = await client.add_issue_comment(issue_id, comment_text)
                     result = f"✅ Comment added at {comment['createdAt']}"
+
+                    if compression_metadata and compression_metadata.get("status") == "success":
+                        result += (
+                            f"\n📦 Compression applied: {compression_metadata['compression_ratio']:.1f}x reduction "
+                            f"({compression_metadata['tokens_saved']:,} tokens saved)"
+                        )
+
                     return {"content": [{"type": "text", "text": result}]}
 
                 elif tool_name == "linear_get_workflow_states":

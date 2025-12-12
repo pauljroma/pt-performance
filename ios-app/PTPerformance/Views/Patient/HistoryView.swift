@@ -318,7 +318,7 @@ struct SessionRow: View {
 
             Spacer()
 
-            if session.completed {
+            if session.completed == true {
                 Label("Complete", systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundColor(.green)
