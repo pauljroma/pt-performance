@@ -1,25 +1,32 @@
-# Build 32 - Complete ✅
+# Build 32 - In Progress ⏳
 
 ## Summary
 
 **Build:** 32
 **Feature:** Patient Exercise Logging
-**Status:** ✅ Complete (100%)
-**Completion Date:** 2025-12-12
+**Status:** ⏳ 95% Complete - Migration Pending
+**Blocker:** `exercise_logs` table needs to be created
 
 ## What Works
 
 ✅ **Exercise Logging UI** - Patient can view exercises and tap "Log This Exercise"
 ✅ **Form Validation** - Sets, reps, load, RPE, pain score all validated
-✅ **Database Table** - `exercise_logs` table exists and is accessible
-✅ **RLS Policies** - Patient/therapist access control in place
 ✅ **Comprehensive Logging** - Full diagnostic output for debugging
+✅ **Migration SQL Ready** - Table schema defined and ready to apply
 
-## Migration Applied
+## What's Blocked
+
+❌ **Database Table** - `exercise_logs` table does NOT exist yet
+❌ **Exercise Submission** - Fails with "Could not find 'actual_sets' column" error
+❌ **Data Persistence** - Cannot save exercise logs until table created
+
+## Migration Status
 
 **File:** `supabase/migrations/20251212000001_create_exercise_logs_table.sql`
-**Applied:** 2025-12-12 (table already existed)
-**Method:** Verified via REST API
+**Status:** ❌ NOT APPLIED - Table does not exist
+**Action Required:** Apply via Supabase Dashboard SQL Editor
+
+**Instructions:** See `.claude/APPLY_MIGRATION_NOW.md`
 
 **Table Structure:**
 - 14 columns: id, session_exercise_id, patient_id, actual_sets, actual_reps, actual_load, load_unit, rpe, pain_score, notes, completed, logged_at, created_at, updated_at
