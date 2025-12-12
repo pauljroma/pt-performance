@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnose Patient Data Issue</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .button-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        #sql-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+            max-height: 600px;
+            overflow-y: auto;
+            user-select: all;
+            cursor: text;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnose: Why Patient Data Not Loading</h1>
+        <p class="subtitle">Run this to find out what's missing</p>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Click "Copy SQL" below</li>
+                <li>Paste in <a href="https://supabase.com/dashboard/project/rpbxeaxlaoyoqkohytlw/sql/new" target="_blank">Supabase SQL Editor</a></li>
+                <li>Click Run</li>
+                <li>Look at the results - they'll tell you exactly what's missing</li>
+            </ol>
+        </div>
+
+        <div class="button-group">
+            <button onclick="copyToClipboard()">📋 Copy SQL to Clipboard</button>
+            <button onclick="openSupabase()" style="background: #4CAF50;">🔗 Open Supabase</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="sql-content">-- Diagnostic: Find why patient data isn't loading
+
+-- ============================================================================
+-- 1. CHECK: Does demo patient exist?
+-- ============================================================================
+
+SELECT
+  '1. Demo Patient Check' as check_name,
+  CASE
+    WHEN COUNT(*) > 0 THEN '✅ EXISTS'
+    ELSE '❌ MISSING - Need to seed demo patient'
+  END as status,
+  COUNT(*) as count
+FROM patients
+WHERE email = 'demo-athlete@ptperformance.app';
+
+-- Show demo patient details
+SELECT
+  id,
+  first_name,
+  last_name,
+  email,
+  user_id,
+  therapist_id,
+  CASE
+    WHEN user_id IS NULL THEN '❌ NOT LINKED TO AUTH'
+    ELSE '✅ Linked to auth'
+  END as auth_link_status
+FROM patients
+WHERE email = 'demo-athlete@ptperformance.app';
+
+-- ============================================================================
+-- 2. CHECK: Is demo patient linked to auth user?
+-- ============================================================================
+
+SELECT
+  '2. Auth User Link Check' as check_name,
+  CASE
+    WHEN p.user_id IS NOT NULL THEN '✅ LINKED'
+    ELSE '❌ NOT LINKED - Run link SQL'
+  END as status,
+  p.email as patient_email,
+  p.user_id as patient_user_id,
+  au.id as auth_user_id,
+  au.email as auth_email
+FROM patients p
+LEFT JOIN auth.users au ON p.email = au.email
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- ============================================================================
+-- 3. CHECK: Does demo patient have a program?
+-- ============================================================================
+
+SELECT
+  '3. Program Check' as check_name,
+  CASE
+    WHEN COUNT(*) > 0 THEN '✅ HAS PROGRAM'
+    ELSE '❌ NO PROGRAM - Need to seed program'
+  END as status,
+  COUNT(*) as program_count
+FROM programs pr
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- Show program details
+SELECT
+  pr.id,
+  pr.name,
+  pr.status,
+  pr.patient_id,
+  p.email as patient_email
+FROM programs pr
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- ============================================================================
+-- 4. CHECK: Does program have phases?
+-- ============================================================================
+
+SELECT
+  '4. Phases Check' as check_name,
+  CASE
+    WHEN COUNT(*) > 0 THEN '✅ HAS PHASES'
+    ELSE '❌ NO PHASES - Need to seed phases'
+  END as status,
+  COUNT(*) as phase_count
+FROM phases ph
+JOIN programs pr ON ph.program_id = pr.id
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- ============================================================================
+-- 5. CHECK: Do phases have sessions?
+-- ============================================================================
+
+SELECT
+  '5. Sessions Check' as check_name,
+  CASE
+    WHEN COUNT(*) > 0 THEN '✅ HAS SESSIONS'
+    ELSE '❌ NO SESSIONS - Need to seed sessions'
+  END as status,
+  COUNT(*) as session_count
+FROM sessions s
+JOIN phases ph ON s.phase_id = ph.id
+JOIN programs pr ON ph.program_id = pr.id
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- Show sessions
+SELECT
+  s.id,
+  s.name,
+  s.day_number,
+  ph.name as phase_name,
+  pr.name as program_name
+FROM sessions s
+JOIN phases ph ON s.phase_id = ph.id
+JOIN programs pr ON ph.program_id = pr.id
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app'
+ORDER BY s.day_number
+LIMIT 5;
+
+-- ============================================================================
+-- 6. CHECK: Do sessions have exercises?
+-- ============================================================================
+
+SELECT
+  '6. Session Exercises Check' as check_name,
+  CASE
+    WHEN COUNT(*) > 0 THEN '✅ HAS EXERCISES'
+    ELSE '❌ NO EXERCISES - Need to seed exercises'
+  END as status,
+  COUNT(*) as exercise_count
+FROM session_exercises se
+JOIN sessions s ON se.session_id = s.id
+JOIN phases ph ON s.phase_id = ph.id
+JOIN programs pr ON ph.program_id = pr.id
+JOIN patients p ON pr.patient_id = p.id
+WHERE p.email = 'demo-athlete@ptperformance.app';
+
+-- ============================================================================
+-- 7. CHECK: RLS Policies Active?
+-- ============================================================================
+
+SELECT
+  '7. RLS Policies Check' as check_name,
+  tablename,
+  COUNT(*) as policy_count,
+  CASE
+    WHEN COUNT(*) >= 2 THEN '✅ Has policies'
+    WHEN COUNT(*) = 1 THEN '⚠️ Partial'
+    ELSE '❌ Missing policies'
+  END as status
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN ('phases', 'sessions', 'session_exercises')
+GROUP BY tablename;
+
+-- ============================================================================
+-- 8. SUMMARY: What's Missing?
+-- ============================================================================
+
+SELECT
+  'SUMMARY' as section,
+  'Run queries above to see what is missing' as instruction,
+  'Common issues:' as common_fixes,
+  '1. Patient not linked to auth (user_id is NULL)' as fix_1,
+  '2. No program exists for patient' as fix_2,
+  '3. Program has no phases/sessions/exercises' as fix_3,
+  '4. RLS policies not created' as fix_4;</div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const sqlContent = document.getElementById('sql-content').textContent;
+            navigator.clipboard.writeText(sqlContent).then(function() {
+                const status = document.getElementById('status');
+                status.textContent = '✅ Diagnostic SQL copied! Paste in Supabase and run.';
+                status.className = 'status success show';
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, 5000);
+            }, function(err) {
+                const status = document.getElementById('status');
+                status.textContent = '❌ Copy failed. Select text manually.';
+                status.className = 'status show';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+            });
+        }
+
+        function openSupabase() {
+            window.open('https://supabase.com/dashboard/project/rpbxeaxlaoyoqkohytlw/sql/new', '_blank');
+        }
+
+        document.getElementById('sql-content').addEventListener('click', function() {
+            const range = document.createRange();
+            range.selectNodeContents(this);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        });
+    </script>
+</body>
+</html>

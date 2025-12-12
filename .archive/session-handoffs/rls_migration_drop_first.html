@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RLS Migration SQL - Drop & Recreate</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .instructions ol {
+            margin-bottom: 0;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        .button-group {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:active {
+            background: #0D47A1;
+        }
+        .success {
+            background: #4CAF50;
+        }
+        .success:hover {
+            background: #45a049;
+        }
+        #sql-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+            max-height: 600px;
+            overflow-y: auto;
+            user-select: all;
+            cursor: text;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.show {
+            display: block;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 RLS Migration SQL (Drop & Recreate)</h1>
+        <p class="subtitle">Drops existing policies first, then creates clean RLS policies</p>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Click <strong>"Copy SQL to Clipboard"</strong> button below</li>
+                <li>Open <a href="https://supabase.com/dashboard/project/rpbxeaxlaoyoqkohytlw/sql/new" target="_blank">Supabase SQL Editor</a></li>
+                <li>Click in the editor and press <strong>Cmd+V</strong> (paste)</li>
+                <li>Click <strong>"Run"</strong> or press <strong>Cmd+Enter</strong></li>
+                <li>Wait ~10 seconds for completion</li>
+                <li>Verify: Should see policy counts at bottom</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>✅ Fixed:</strong> This version drops existing policies first, so no "already exists" errors!
+        </div>
+
+        <div class="button-group">
+            <button onclick="copyToClipboard()">📋 Copy SQL to Clipboard</button>
+            <button onclick="openSupabase()" style="background: #4CAF50;">🔗 Open Supabase Dashboard</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="sql-content">-- RLS Migration - Drop & Recreate (No Errors)
+-- Drops all existing policies first, then creates clean ones
+
+-- ============================================================================
+-- 1. ADD MISSING user_id COLUMN TO PATIENTS TABLE
+-- ============================================================================
+
+ALTER TABLE patients
+  ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_patients_user_id
+  ON patients(user_id);
+
+COMMENT ON COLUMN patients.user_id IS
+  'Links patient record to Supabase auth.users for authentication. Required for RLS policies.';
+
+-- ============================================================================
+-- 2. DROP ALL EXISTING POLICIES (No errors if they don't exist)
+-- ============================================================================
+
+-- Patient policies
+DROP POLICY IF EXISTS patients_see_own_phases ON phases;
+DROP POLICY IF EXISTS patients_see_own_sessions ON sessions;
+DROP POLICY IF EXISTS patients_see_own_session_exercises ON session_exercises;
+DROP POLICY IF EXISTS patients_see_own_exercise_logs ON exercise_logs;
+DROP POLICY IF EXISTS patients_see_own_pain_logs ON pain_logs;
+DROP POLICY IF EXISTS patients_see_own_bullpen_logs ON bullpen_logs;
+DROP POLICY IF EXISTS patients_see_own_session_notes ON session_notes;
+DROP POLICY IF EXISTS patients_see_own_body_comp ON body_comp_measurements;
+DROP POLICY IF EXISTS patients_see_own_pain_flags ON pain_flags;
+
+-- Therapist policies
+DROP POLICY IF EXISTS therapists_see_patient_phases ON phases;
+DROP POLICY IF EXISTS therapists_see_patient_sessions ON sessions;
+DROP POLICY IF EXISTS therapists_see_patient_session_exercises ON session_exercises;
+DROP POLICY IF EXISTS therapists_see_patient_exercise_logs ON exercise_logs;
+DROP POLICY IF EXISTS therapists_see_patient_pain_logs ON pain_logs;
+DROP POLICY IF EXISTS therapists_see_patient_bullpen_logs ON bullpen_logs;
+DROP POLICY IF EXISTS therapists_see_patient_session_notes ON session_notes;
+DROP POLICY IF EXISTS therapists_see_patient_body_comp ON body_comp_measurements;
+DROP POLICY IF EXISTS therapists_see_patient_pain_flags ON pain_flags;
+
+-- ============================================================================
+-- 3. CREATE PATIENT READ POLICIES FOR HIERARCHICAL TABLES
+-- ============================================================================
+
+-- Phases (child of programs)
+CREATE POLICY patients_see_own_phases ON phases
+  FOR SELECT USING (
+    program_id IN (
+      SELECT id FROM programs WHERE patient_id IN (
+        SELECT id FROM patients WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Sessions (child of phases)
+CREATE POLICY patients_see_own_sessions ON sessions
+  FOR SELECT USING (
+    phase_id IN (
+      SELECT id FROM phases WHERE program_id IN (
+        SELECT id FROM programs WHERE patient_id IN (
+          SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+      )
+    )
+  );
+
+-- Session Exercises (child of sessions)
+CREATE POLICY patients_see_own_session_exercises ON session_exercises
+  FOR SELECT USING (
+    session_id IN (
+      SELECT id FROM sessions WHERE phase_id IN (
+        SELECT id FROM phases WHERE program_id IN (
+          SELECT id FROM programs WHERE patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+          )
+        )
+      )
+    )
+  );
+
+-- ============================================================================
+-- 4. CREATE PATIENT READ POLICIES FOR DIRECT patient_id REFERENCES
+-- ============================================================================
+
+-- Exercise Logs
+CREATE POLICY patients_see_own_exercise_logs ON exercise_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- Pain Logs
+CREATE POLICY patients_see_own_pain_logs ON pain_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- Bullpen Logs
+CREATE POLICY patients_see_own_bullpen_logs ON bullpen_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- Session Notes
+CREATE POLICY patients_see_own_session_notes ON session_notes
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- Body Comp Measurements
+CREATE POLICY patients_see_own_body_comp ON body_comp_measurements
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- Pain Flags
+CREATE POLICY patients_see_own_pain_flags ON pain_flags
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE user_id = auth.uid()
+    )
+  );
+
+-- ============================================================================
+-- 5. CREATE THERAPIST READ POLICIES (MIRROR PATTERN)
+-- ============================================================================
+
+-- Phases
+CREATE POLICY therapists_see_patient_phases ON phases
+  FOR SELECT USING (
+    program_id IN (
+      SELECT id FROM programs WHERE patient_id IN (
+        SELECT id FROM patients WHERE therapist_id IN (
+          SELECT id FROM therapists WHERE user_id = auth.uid()
+        )
+      )
+    )
+  );
+
+-- Sessions
+CREATE POLICY therapists_see_patient_sessions ON sessions
+  FOR SELECT USING (
+    phase_id IN (
+      SELECT id FROM phases WHERE program_id IN (
+        SELECT id FROM programs WHERE patient_id IN (
+          SELECT id FROM patients WHERE therapist_id IN (
+            SELECT id FROM therapists WHERE user_id = auth.uid()
+          )
+        )
+      )
+    )
+  );
+
+-- Session Exercises
+CREATE POLICY therapists_see_patient_session_exercises ON session_exercises
+  FOR SELECT USING (
+    session_id IN (
+      SELECT id FROM sessions WHERE phase_id IN (
+        SELECT id FROM phases WHERE program_id IN (
+          SELECT id FROM programs WHERE patient_id IN (
+            SELECT id FROM patients WHERE therapist_id IN (
+              SELECT id FROM therapists WHERE user_id = auth.uid()
+            )
+          )
+        )
+      )
+    )
+  );
+
+-- Exercise Logs
+CREATE POLICY therapists_see_patient_exercise_logs ON exercise_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Pain Logs
+CREATE POLICY therapists_see_patient_pain_logs ON pain_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Bullpen Logs
+CREATE POLICY therapists_see_patient_bullpen_logs ON bullpen_logs
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Session Notes
+CREATE POLICY therapists_see_patient_session_notes ON session_notes
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Body Comp
+CREATE POLICY therapists_see_patient_body_comp ON body_comp_measurements
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- Pain Flags
+CREATE POLICY therapists_see_patient_pain_flags ON pain_flags
+  FOR SELECT USING (
+    patient_id IN (
+      SELECT id FROM patients WHERE therapist_id IN (
+        SELECT id FROM therapists WHERE user_id = auth.uid()
+      )
+    )
+  );
+
+-- ============================================================================
+-- 6. LINK PATIENTS TO AUTH USERS
+-- ============================================================================
+
+UPDATE patients p
+SET user_id = au.id
+FROM auth.users au
+WHERE p.email = au.email
+  AND p.user_id IS NULL
+  AND p.email IS NOT NULL;
+
+-- ============================================================================
+-- 7. VERIFICATION
+-- ============================================================================
+
+-- Count policies per table
+SELECT
+  schemaname,
+  tablename,
+  COUNT(*) as policy_count
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'patients', 'programs', 'phases', 'sessions', 'session_exercises',
+    'exercise_logs', 'pain_logs', 'bullpen_logs',
+    'session_notes', 'body_comp_measurements', 'pain_flags'
+  )
+GROUP BY schemaname, tablename
+ORDER BY tablename;
+
+-- Show patient count and linked count
+SELECT
+  COUNT(*) as total_patients,
+  COUNT(user_id) as linked_patients,
+  COUNT(*) - COUNT(user_id) as unlinked_patients
+FROM patients;</div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const sqlContent = document.getElementById('sql-content').textContent;
+            navigator.clipboard.writeText(sqlContent).then(function() {
+                const status = document.getElementById('status');
+                status.textContent = '✅ SQL copied to clipboard! Now paste it in Supabase SQL Editor.';
+                status.className = 'status success show';
+                setTimeout(() => {
+                    status.classList.remove('show');
+                }, 5000);
+            }, function(err) {
+                const status = document.getElementById('status');
+                status.textContent = '❌ Failed to copy. Please select the text manually and copy with Cmd+C.';
+                status.className = 'status show';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+            });
+        }
+
+        function openSupabase() {
+            window.open('https://supabase.com/dashboard/project/rpbxeaxlaoyoqkohytlw/sql/new', '_blank');
+        }
+
+        // Auto-select text when clicking on SQL content
+        document.getElementById('sql-content').addEventListener('click', function() {
+            const range = document.createRange();
+            range.selectNodeContents(this);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        });
+    </script>
+</body>
+</html>
