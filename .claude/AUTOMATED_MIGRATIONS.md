@@ -1,3 +1,13 @@
+# ⚠️ STOP - READ MIGRATION_RUNBOOK.md FIRST
+
+**If you're here because of a migration task:**
+
+→ **Read: `.claude/MIGRATION_RUNBOOK.md`** (Executable checklist - READ FIRST)
+
+This file (AUTOMATED_MIGRATIONS.md) is **REFERENCE ONLY** for understanding why automation doesn't work. The **RUNBOOK** has the executable steps.
+
+---
+
 # Automated Migration Application Workflow
 
 ## Current Status (Build 32) - ✅ RESOLVED

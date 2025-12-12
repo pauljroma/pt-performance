@@ -6,6 +6,9 @@ struct TodaySessionView: View {
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
+    @State private var showSessionSummary = false
+    @State private var isCompletingSession = false
+    @State private var completionError: String?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var shouldUseSplitView: Bool {
@@ -22,6 +25,11 @@ struct TodaySessionView: View {
         }
         .sheet(isPresented: $showDebugLogs) {
             DebugLogView()
+        }
+        .sheet(isPresented: $showSessionSummary) {
+            if let session = viewModel.session {
+                SessionSummaryView(session: session)
+            }
         }
         .task {
             await viewModel.fetchTodaySession()
@@ -133,6 +141,44 @@ struct TodaySessionView: View {
                     }
                 }
 
+                // Build 33: Complete Session Button
+                if let session = viewModel.session, !session.isCompleted {
+                    VStack(spacing: 16) {
+                        Divider()
+                            .padding(.vertical, 8)
+
+                        Button(action: {
+                            Task {
+                                await handleCompleteSession()
+                            }
+                        }) {
+                            HStack {
+                                if isCompletingSession {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                } else {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Complete Session")
+                                }
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isCompletingSession ? Color.gray : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                        .disabled(isCompletingSession || viewModel.exercises.isEmpty)
+
+                        if let error = completionError {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.red)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                }
+
                 Spacer()
             }
             .padding()
@@ -219,6 +265,24 @@ struct TodaySessionView: View {
         // On iPad, ensure detail is visible
         if shouldUseSplitView {
             columnVisibility = .doubleColumn
+        }
+    }
+
+    // MARK: - Build 33: Session Completion
+
+    private func handleCompleteSession() async {
+        isCompletingSession = true
+        completionError = nil
+
+        let result = await viewModel.completeSession()
+
+        switch result {
+        case .success:
+            isCompletingSession = false
+            showSessionSummary = true
+        case .failure(let error):
+            isCompletingSession = false
+            completionError = "Failed to complete session: \(error.localizedDescription)"
         }
     }
 }

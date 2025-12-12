@@ -63,11 +63,25 @@ See `.claude/AUTOMATED_MIGRATIONS.md` for migration workflow.
 4. Build: `cd ios-app/PTPerformance && bundle exec fastlane beta`
 
 ### Documentation
-- `.claude/HOW_TO_APPLY_MIGRATIONS.md` - Standard migration workflow
-- `.claude/AUTOMATED_MIGRATIONS.md` - Automation status and future plans
+
+**Runbooks (Read FIRST for repetitive tasks):**
+- `.claude/MIGRATION_RUNBOOK.md` - **PRIMARY** - Migration execution checklist
+- `.claude/BUILD_RUNBOOK.md` - iOS build & TestFlight deployment
+- `.claude/TROUBLESHOOTING_RUNBOOK.md` - Common errors & solutions
+- `.claude/MIGRATION_SCRIPTS_INVENTORY.md` - Existing scripts catalog
+
+**Reference Documentation:**
+- `.claude/HOW_TO_APPLY_MIGRATIONS.md` - Migration details & manual steps
+- `.claude/AUTOMATED_MIGRATIONS.md` - Automation history (31 builds)
 - `docs/epics/` - Product roadmap (15 epics)
 - `docs/demo/MVP_DEMO_SCRIPT.md` - 5-7 minute demo flow
 - `.outcomes/BUILD32_MIGRATION_REQUIRED.md` - Current blocker details
+
+**Claude Instructions:**
+When encountering these tasks, **read the runbook FIRST** (don't explore/research):
+- "Migration" → Read `.claude/MIGRATION_RUNBOOK.md`
+- "Build" or "TestFlight" → Read `.claude/BUILD_RUNBOOK.md`
+- Error message → Search `.claude/TROUBLESHOOTING_RUNBOOK.md`
 
 ### Archive
 - `.archive/` - Completed work from Builds 3-31 (archived 2025-12-12)

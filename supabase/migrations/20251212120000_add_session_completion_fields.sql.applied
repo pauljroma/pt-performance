@@ -1,0 +1,93 @@
+-- Migration: Add session completion tracking
+-- Build: 33
+-- Date: 2025-12-12
+-- Purpose: Enable patients to complete sessions and track metrics (volume, RPE, pain)
+
+-- ============================================================================
+-- Add Completion Columns to sessions table
+-- ============================================================================
+
+-- Track if session is completed
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS completed BOOLEAN DEFAULT false;
+
+-- Track when session was completed
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+
+-- Track total volume (sets × reps × load summed across all exercises)
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS total_volume NUMERIC(10,2);
+
+-- Track average RPE (Rating of Perceived Exertion) across all exercises
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS avg_rpe NUMERIC(3,1);
+
+-- Track average pain score across all exercises
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS avg_pain NUMERIC(3,1);
+
+-- Track session duration in minutes
+ALTER TABLE sessions
+ADD COLUMN IF NOT EXISTS duration_minutes INT;
+
+-- ============================================================================
+-- Add Index for Completed Sessions
+-- ============================================================================
+
+-- Index for querying completed sessions (for history view in Build 34)
+CREATE INDEX IF NOT EXISTS idx_sessions_completed
+    ON sessions(completed, completed_at DESC)
+    WHERE completed = true;
+
+-- ============================================================================
+-- Comments
+-- ============================================================================
+
+COMMENT ON COLUMN sessions.completed IS 'Whether the patient has completed this session';
+COMMENT ON COLUMN sessions.completed_at IS 'Timestamp when session was marked complete';
+COMMENT ON COLUMN sessions.total_volume IS 'Total volume (sets × reps × load) across all exercises';
+COMMENT ON COLUMN sessions.avg_rpe IS 'Average Rating of Perceived Exertion (0-10) across all exercises';
+COMMENT ON COLUMN sessions.avg_pain IS 'Average pain score (0-10) across all exercises';
+COMMENT ON COLUMN sessions.duration_minutes IS 'Session duration in minutes from first to last exercise log';
+
+-- ============================================================================
+-- Example Usage
+-- ============================================================================
+
+/*
+-- Mark a session as completed with metrics
+UPDATE sessions
+SET
+    completed = true,
+    completed_at = now(),
+    total_volume = 12500.50,  -- Sum of (sets × reps × load) for all exercises
+    avg_rpe = 7.5,             -- Average RPE across all exercises
+    avg_pain = 3.2,            -- Average pain across all exercises
+    duration_minutes = 45      -- Time from first to last exercise
+WHERE id = 'session-uuid';
+
+-- Query all completed sessions for a patient
+SELECT s.*
+FROM sessions s
+JOIN phases ph ON ph.id = s.phase_id
+JOIN programs pr ON pr.id = ph.program_id
+WHERE pr.patient_id = 'patient-uuid'
+AND s.completed = true
+ORDER BY s.completed_at DESC;
+*/
+
+-- ============================================================================
+-- Rollback
+-- ============================================================================
+
+/*
+-- To rollback this migration, run:
+ALTER TABLE sessions DROP COLUMN IF EXISTS completed;
+ALTER TABLE sessions DROP COLUMN IF EXISTS completed_at;
+ALTER TABLE sessions DROP COLUMN IF EXISTS total_volume;
+ALTER TABLE sessions DROP COLUMN IF EXISTS avg_rpe;
+ALTER TABLE sessions DROP COLUMN IF EXISTS avg_pain;
+ALTER TABLE sessions DROP COLUMN IF EXISTS duration_minutes;
+DROP INDEX IF EXISTS idx_sessions_completed;
+*/

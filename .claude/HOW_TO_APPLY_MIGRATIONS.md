@@ -1,3 +1,28 @@
+# ⚠️ STOP - READ MIGRATION_RUNBOOK.md FIRST
+
+**If you're here because of a migration task:**
+
+→ **Read: `.claude/MIGRATION_RUNBOOK.md`** (Executable checklist - READ FIRST)
+
+This file (HOW_TO_APPLY_MIGRATIONS.md) is **REFERENCE ONLY** for detailed manual instructions. The **RUNBOOK** has the executable steps.
+
+---
+
+# Quick Reference Checklist
+
+Use this checklist for every migration:
+
+- [ ] Migration file: `supabase/migrations/YYYYMMDDHHMMSS_*.sql`
+- [ ] Pre-flight: `python3 apply_migration_direct.py`
+- [ ] Application: Open `complete_migration.html` OR use Dashboard SQL Editor
+- [ ] Verification: `python3 refresh_schema_cache.py`
+- [ ] Mark complete: Add `.applied` suffix to filename
+- [ ] Update Linear: "✅ Migration applied, Build X ready"
+
+**Time:** 2-3 minutes per migration
+
+---
+
 # How to Apply Supabase Migrations
 
 ## Problem

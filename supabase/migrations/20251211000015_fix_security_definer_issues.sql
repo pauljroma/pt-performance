@@ -8,8 +8,8 @@
 -- 1. FIX get_current_therapist_id() FUNCTION
 -- ============================================================================
 
--- Drop existing function
-DROP FUNCTION IF EXISTS get_current_therapist_id();
+-- Drop existing function (CASCADE to handle dependencies)
+DROP FUNCTION IF EXISTS get_current_therapist_id() CASCADE;
 
 -- Recreate as SECURITY INVOKER (default - uses caller's permissions)
 -- This is safer as it respects RLS policies

@@ -255,4 +255,149 @@ class TodaySessionViewModel: ObservableObject {
     func refresh() async {
         await fetchTodaySession()
     }
+
+    // MARK: - Build 33: Session Completion
+
+    /// Complete the current session
+    /// Calculates metrics from exercise logs and marks session as complete
+    func completeSession() async -> Result<Session, Error> {
+        guard let session = session else {
+            return .failure(NSError(domain: "TodaySessionViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "No active session"]))
+        }
+
+        guard let patientId = supabase.userId else {
+            return .failure(NSError(domain: "TodaySessionViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "No patient ID"]))
+        }
+
+        let logger = DebugLogger.shared
+        logger.log("🎯 Starting session completion for: \(session.name)")
+
+        do {
+            // Fetch all exercise logs for this session
+            logger.log("📊 Fetching exercise logs to calculate metrics...")
+            let response = try await supabase.client
+                .from("exercise_logs")
+                .select("*")
+                .eq("patient_id", value: patientId)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let exerciseLogs = try decoder.decode([ExerciseLogRecord].self, from: response.data)
+
+            logger.log("📊 Found \(exerciseLogs.count) exercise logs")
+
+            // Calculate metrics
+            let metrics = calculateSessionMetrics(from: exerciseLogs)
+            logger.log("📊 Calculated metrics:")
+            logger.log("   Total volume: \(metrics.totalVolume) lbs")
+            logger.log("   Avg RPE: \(metrics.avgRpe)")
+            logger.log("   Avg Pain: \(metrics.avgPain)")
+            logger.log("   Duration: \(metrics.durationMinutes) min")
+
+            // Update session in database
+            logger.log("💾 Updating session in database...")
+            let updateData: [String: Any] = [
+                "completed": true,
+                "completed_at": ISO8601DateFormatter().string(from: Date()),
+                "total_volume": metrics.totalVolume,
+                "avg_rpe": metrics.avgRpe,
+                "avg_pain": metrics.avgPain,
+                "duration_minutes": metrics.durationMinutes
+            ]
+
+            _ = try await supabase.client
+                .from("sessions")
+                .update(updateData)
+                .eq("id", value: session.id)
+                .execute()
+
+            logger.log("✅ Session marked as complete!", level: .success)
+
+            // Refresh session data
+            await fetchTodaySession()
+
+            guard let updatedSession = self.session else {
+                return .failure(NSError(domain: "TodaySessionViewModel", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch updated session"]))
+            }
+
+            return .success(updatedSession)
+
+        } catch {
+            logger.log("❌ Failed to complete session: \(error.localizedDescription)", level: .error)
+            return .failure(error)
+        }
+    }
+
+    /// Calculate session metrics from exercise logs
+    private func calculateSessionMetrics(from logs: [ExerciseLogRecord]) -> SessionMetrics {
+        guard !logs.isEmpty else {
+            return SessionMetrics(totalVolume: 0, avgRpe: 0, avgPain: 0, durationMinutes: 0)
+        }
+
+        // Calculate total volume: sum of (sets × reps × load) for each exercise
+        let totalVolume = logs.reduce(0.0) { sum, log in
+            let setsCount = Double(log.actual_sets)
+            let repsSum = log.actual_reps.reduce(0, +) // Sum all reps across sets
+            let load = log.actual_load ?? 0
+            let exerciseVolume = (Double(repsSum) * load)  // Total reps × load
+            return sum + exerciseVolume
+        }
+
+        // Calculate average RPE
+        let avgRpe = logs.map { Double($0.rpe) }.reduce(0, +) / Double(logs.count)
+
+        // Calculate average pain
+        let avgPain = logs.map { Double($0.pain_score) }.reduce(0, +) / Double(logs.count)
+
+        // Calculate duration in minutes
+        let sortedLogs = logs.sorted { $0.logged_at < $1.logged_at }
+        var durationMinutes = 0
+        if let firstLog = sortedLogs.first, let lastLog = sortedLogs.last {
+            let duration = lastLog.logged_at.timeIntervalSince(firstLog.logged_at)
+            durationMinutes = max(1, Int(duration / 60))  // At least 1 minute
+        }
+
+        return SessionMetrics(
+            totalVolume: totalVolume,
+            avgRpe: avgRpe,
+            avgPain: avgPain,
+            durationMinutes: durationMinutes
+        )
+    }
+}
+
+// MARK: - Build 33: Supporting Types
+
+/// Session metrics calculated from exercise logs
+struct SessionMetrics {
+    let totalVolume: Double
+    let avgRpe: Double
+    let avgPain: Double
+    let durationMinutes: Int
+}
+
+/// Exercise log record from database (for metrics calculation)
+struct ExerciseLogRecord: Codable {
+    let id: String
+    let session_exercise_id: String
+    let patient_id: String
+    let logged_at: Date
+    let actual_sets: Int
+    let actual_reps: [Int]
+    let actual_load: Double?
+    let rpe: Int
+    let pain_score: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case session_exercise_id
+        case patient_id
+        case logged_at
+        case actual_sets
+        case actual_reps
+        case actual_load
+        case rpe
+        case pain_score
+    }
 }

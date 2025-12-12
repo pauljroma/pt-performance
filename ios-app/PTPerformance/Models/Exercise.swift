@@ -106,6 +106,7 @@ struct Exercise: Codable, Identifiable, Hashable {
 
 /// Session model from Supabase sessions table
 /// Matches actual database schema: id, phase_id, name, sequence, weekday, notes, created_at
+/// Build 33: Added completion tracking fields
 struct Session: Codable, Identifiable {
     let id: String
     let phase_id: String
@@ -114,6 +115,14 @@ struct Session: Codable, Identifiable {
     let weekday: Int?
     let notes: String?
     let created_at: Date?
+
+    // Build 33: Completion tracking
+    let completed: Bool?
+    let completed_at: Date?
+    let total_volume: Double?
+    let avg_rpe: Double?
+    let avg_pain: Double?
+    let duration_minutes: Int?
 
     // Exercises for this session (loaded separately or joined)
     var exercises: [Exercise] = []
@@ -126,6 +135,12 @@ struct Session: Codable, Identifiable {
         case weekday
         case notes
         case created_at
+        case completed
+        case completed_at
+        case total_volume
+        case avg_rpe
+        case avg_pain
+        case duration_minutes
         // exercises is NOT in CodingKeys - will use default value
     }
 
@@ -139,8 +154,14 @@ struct Session: Codable, Identifiable {
     }
 
     var completionStatus: String {
-        // For now, assume in progress (we can add is_completed field later if needed)
+        if completed == true {
+            return "Completed"
+        }
         return "In Progress"
+    }
+
+    var isCompleted: Bool {
+        return completed == true
     }
 }
 
