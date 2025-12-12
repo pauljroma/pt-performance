@@ -297,14 +297,14 @@ class TodaySessionViewModel: ObservableObject {
 
             // Update session in database
             logger.log("💾 Updating session in database...")
-            let updateData: [String: Any] = [
-                "completed": true,
-                "completed_at": ISO8601DateFormatter().string(from: Date()),
-                "total_volume": metrics.totalVolume,
-                "avg_rpe": metrics.avgRpe,
-                "avg_pain": metrics.avgPain,
-                "duration_minutes": metrics.durationMinutes
-            ]
+            let updateData = SessionUpdateData(
+                completed: true,
+                completed_at: ISO8601DateFormatter().string(from: Date()),
+                total_volume: metrics.totalVolume,
+                avg_rpe: metrics.avgRpe,
+                avg_pain: metrics.avgPain,
+                duration_minutes: metrics.durationMinutes
+            )
 
             _ = try await supabase.client
                 .from("sessions")
@@ -368,6 +368,16 @@ class TodaySessionViewModel: ObservableObject {
 }
 
 // MARK: - Build 33: Supporting Types
+
+/// Session update data for completing a session
+struct SessionUpdateData: Codable {
+    let completed: Bool
+    let completed_at: String
+    let total_volume: Double
+    let avg_rpe: Double
+    let avg_pain: Double
+    let duration_minutes: Int
+}
 
 /// Session metrics calculated from exercise logs
 struct SessionMetrics {

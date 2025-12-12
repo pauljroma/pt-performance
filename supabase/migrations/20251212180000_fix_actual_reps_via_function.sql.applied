@@ -1,0 +1,29 @@
+-- Fix actual_reps column type using a function approach
+-- This bypasses some migration issues by using a DO block
+
+DO $$
+BEGIN
+    -- Log start
+    RAISE NOTICE 'Fixing actual_reps column type...';
+
+    -- Drop and recreate the column with correct type
+    BEGIN
+        ALTER TABLE exercise_logs DROP COLUMN IF EXISTS actual_reps;
+        RAISE NOTICE 'Dropped existing actual_reps column';
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Column did not exist or could not be dropped: %', SQLERRM;
+    END;
+
+    -- Add with correct type: integer array
+    BEGIN
+        ALTER TABLE exercise_logs ADD COLUMN actual_reps INT[] NOT NULL DEFAULT '{}';
+        RAISE NOTICE 'Added actual_reps as INT[] array';
+    EXCEPTION WHEN OTHERS THEN
+        RAISE WARNING 'Could not add column: %', SQLERRM;
+    END;
+
+    -- Add comment
+    COMMENT ON COLUMN exercise_logs.actual_reps IS 'Array of reps per set (e.g., [10, 12, 10])';
+
+    RAISE NOTICE 'actual_reps column fix complete!';
+END $$;

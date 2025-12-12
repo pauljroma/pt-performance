@@ -174,9 +174,32 @@ The following scripts **ALREADY EXIST** - REUSE THEM:
 → **NO ACTION NEEDED** - Do not try to "fix" this
 → See Step 3c for full details
 
+### "invalid input syntax for type integer: '[value]'" (Array Type Error)
+**This means column was created with wrong type**
+
+→ A column that should be an array (e.g., `INT[]`) was created as a scalar (e.g., `INT`)
+→ Common with partially-failed migrations
+→ **Fix:** Create migration with DO block to DROP and re-ADD column:
+```sql
+DO $$
+BEGIN
+    ALTER TABLE table_name DROP COLUMN IF EXISTS column_name;
+    ALTER TABLE table_name ADD COLUMN column_name INT[] NOT NULL DEFAULT '{}';
+END $$;
+```
+→ Use DO block (not direct ALTER) to handle errors gracefully
+→ See migration 20251212180000 for example
+
 ### "Remote migration versions not found"
-→ Use `supabase migration repair --status applied TIMESTAMP`
-→ Then retry the push
+**Migration history is out of sync**
+
+→ Use `supabase migration repair --status reverted TIMESTAMP` to mark remote migrations as reverted
+→ Then retry the push with `--include-all`
+→ Example:
+```bash
+SUPABASE_ACCESS_TOKEN="..." supabase migration repair --status reverted 20251212000001 -p "${SUPABASE_PASSWORD}"
+SUPABASE_ACCESS_TOKEN="..." supabase db push -p "${SUPABASE_PASSWORD}" --include-all
+```
 
 ### "Migration file not found"
 → Need to CREATE the migration SQL
