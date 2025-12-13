@@ -16,7 +16,7 @@ enum Config {
     // MARK: - App Configuration
 
     static let appVersion = "1.0"
-    static let buildNumber = "36"
+    static let buildNumber = "40"
 
     // MARK: - Demo Credentials
 
@@ -26,5 +26,13 @@ enum Config {
 
         static let therapistEmail = "demo-pt@ptperformance.app"
         static let therapistPassword = "demo-therapist-2025"
+    }
+
+    // MARK: - WHOOP Integration (Build 40)
+
+    enum WHOOP {
+        // WHOOP API credentials - registered app at https://developer.whoop.com
+        static let clientId = ProcessInfo.processInfo.environment["WHOOP_CLIENT_ID"] ?? "1c0e3e35-1892-4efb-97f8-878be04c3095"
+        static let clientSecret = ProcessInfo.processInfo.environment["WHOOP_CLIENT_SECRET"] ?? "deb077841909f55c5ccaf0be8625d2dc3497e16533909bf5f9030abe17f6c1d5"
     }
 }

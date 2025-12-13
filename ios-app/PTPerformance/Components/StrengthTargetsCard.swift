@@ -145,17 +145,19 @@ struct StrengthTargetsCard_Previews: PreviewProvider {
             id: UUID().uuidString,
             session_id: UUID().uuidString,
             exercise_template_id: UUID().uuidString,
-            exercise_order: 1,
+            sequence: 1,
             prescribed_sets: 3,
-            prescribed_reps_min: 8,
-            prescribed_reps_max: 10,
+            prescribed_reps: "8-10",
             prescribed_load: 135,
-            prescribed_load_unit: "lbs",
-            rest_seconds: 90,
+            load_unit: "lbs",
+            rest_period_seconds: 90,
             notes: nil,
-            exercise_name: "Bench Press",
-            movement_pattern: "push",
-            equipment: "barbell"
+            exercise_templates: Exercise.ExerciseTemplate(
+                id: UUID().uuidString,
+                name: "Bench Press",
+                category: "push",
+                body_region: "upper"
+            )
         )
     }
 

@@ -35,11 +35,22 @@ ls -1 supabase/migrations/ | tail -10
 
 **PRIMARY METHOD** (Use Supabase CLI - credentials in .env):
 
+**CRITICAL:** Supabase CLI requires TWO credentials:
+1. **Access Token** - for Management API authentication
+2. **Database Password** - for PostgreSQL access
+
 ```bash
 cd /Users/expo/Code/expo/clients/linear-bootstrap
 source .env
-supabase db push --password "${SUPABASE_PASSWORD}" --include-all
+
+# Set access token (required for CLI to work)
+export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+
+# Apply migrations (uses both token and password)
+supabase db push -p "${SUPABASE_PASSWORD}" --include-all
 ```
+
+**Token Location:** `~/.supabase/access-token` or set via environment variable
 
 **When prompted "Do you want to push these migrations?", type `Y`**
 
@@ -50,11 +61,14 @@ If you see error: "Remote migration versions not found in local migrations direc
 **Solution:** Mark conflicting migrations as applied in remote history:
 
 ```bash
+# Set access token first
+export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+
 # For each migration that's causing conflicts:
-supabase migration repair --status applied YYYYMMDDHHMMSS --password "${SUPABASE_PASSWORD}"
+supabase migration repair --status applied YYYYMMDDHHMMSS -p "${SUPABASE_PASSWORD}"
 
 # Then retry the push:
-supabase db push --password "${SUPABASE_PASSWORD}" --include-all
+supabase db push -p "${SUPABASE_PASSWORD}" --include-all
 ```
 
 ### 2c. Success indicators
@@ -197,8 +211,26 @@ END $$;
 → Then retry the push with `--include-all`
 → Example:
 ```bash
-SUPABASE_ACCESS_TOKEN="..." supabase migration repair --status reverted 20251212000001 -p "${SUPABASE_PASSWORD}"
-SUPABASE_ACCESS_TOKEN="..." supabase db push -p "${SUPABASE_PASSWORD}" --include-all
+export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+supabase migration repair --status reverted 20251212000001 -p "${SUPABASE_PASSWORD}"
+supabase db push -p "${SUPABASE_PASSWORD}" --include-all
+```
+
+### "401 Unauthorized" Error
+**Access token is missing or invalid**
+
+→ This means SUPABASE_ACCESS_TOKEN is not set
+→ The Supabase CLI needs the access token for Management API authentication
+→ Example:
+```bash
+# Set the access token
+export SUPABASE_ACCESS_TOKEN="sbp_9d60dd93d30bd9f1dc7adce99fd8ec3e02dfc6a8"
+
+# Verify it's set
+echo $SUPABASE_ACCESS_TOKEN
+
+# Then retry your command
+supabase db push -p "${SUPABASE_PASSWORD}" --include-all
 ```
 
 ### "Migration file not found"
@@ -213,11 +245,38 @@ SUPABASE_ACCESS_TOKEN="..." supabase db push -p "${SUPABASE_PASSWORD}" --include
 
 ## For Reference Only
 
-**Why This Workflow?**
+**Build History:**
+- **Build 34 (Dec 2024):** 3 migrations applied successfully with access token
+  - Discovered: SUPABASE_ACCESS_TOKEN required (not just password)
+  - Fully automated via deploy_testflight.sh script
+  - Pattern: RLS policies use `patients.user_id = auth.uid()`
+  - Pattern: DO blocks for safe schema changes (DROP COLUMN IF EXISTS)
+  - Total time: ~30 seconds for all 3 migrations
 - **Build 33 (Dec 2024):** CLI method works! Uses credentials from .env
 - Supabase CLI `db push` command applies migrations directly
 - `migration repair` handles history conflicts
-- Takes 30 seconds total (automated)
+
+**Common Migration Patterns (Build 34):**
+
+```sql
+-- Pattern 1: Safe column type changes with DO block
+DO $$
+BEGIN
+    ALTER TABLE table_name DROP COLUMN IF EXISTS column_name;
+    ALTER TABLE table_name ADD COLUMN column_name INT[] NOT NULL DEFAULT '{}';
+END $$;
+
+-- Pattern 2: RLS policies for patient data
+CREATE POLICY "Patients can insert their own exercise logs"
+ON exercise_logs FOR INSERT
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM patients
+        WHERE patients.id = exercise_logs.patient_id
+        AND patients.user_id = auth.uid()
+    )
+);
+```
 
 **Previous Workflow (Deprecated):**
 - 31 builds tried direct psql - all failed due to network/auth
@@ -228,6 +287,8 @@ SUPABASE_ACCESS_TOKEN="..." supabase db push -p "${SUPABASE_PASSWORD}" --include
 - `.claude/MIGRATION_SCRIPTS_INVENTORY.md` - All available scripts
 - `.claude/HOW_TO_APPLY_MIGRATIONS.md` - Detailed manual instructions (deprecated)
 - `.claude/AUTOMATED_MIGRATIONS.md` - Why psql doesn't work
+- `TESTFLIGHT_DEPLOYMENT_README.md` - Full build and deployment process
+- `deploy_testflight.sh` - Automated deployment script (handles migrations + build + upload)
 
 ---
 

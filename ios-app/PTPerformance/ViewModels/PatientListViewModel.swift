@@ -127,25 +127,47 @@ class PatientListViewModel: ObservableObject {
     }
 
     func loadActiveFlags(therapistId: String? = nil) async {
-        do {
-            // Note: workload_flags don't have direct therapist_id
-            // They're linked via patient_id -> patients.therapist_id
-            // For now, load all unresolved flags
-            // TODO: Join with patients table to filter by therapist
-            let response: [WorkloadFlag] = try await supabase.client
-                .from("workload_flags")
-                .select()
-                .eq("resolved", value: false)
-                .order("severity", ascending: false)
-                .order("created_at", ascending: false)
-                .limit(10)
-                .execute()
-                .value
+        let logger = DebugLogger.shared
 
-            activeFlags = response
-            print("✅ [PatientList] Loaded \(activeFlags.count) active flags from Supabase")
+        do {
+            // Filter workload flags by therapist through patient relationship
+            if let therapistId = therapistId {
+                logger.log("Loading workload flags for therapist \(therapistId)", level: .diagnostic)
+
+                // Query with join to filter by therapist_id
+                let response = try await supabase.client
+                    .from("workload_flags")
+                    .select("*, patient:patients!inner(therapist_id)")
+                    .eq("resolved", value: false)
+                    .eq("patient.therapist_id", value: therapistId)
+                    .order("severity", ascending: false)
+                    .order("created_at", ascending: false)
+                    .limit(10)
+                    .execute()
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                activeFlags = try decoder.decode([WorkloadFlag].self, from: response.data)
+
+                logger.log("✅ Loaded \(activeFlags.count) active flags for therapist", level: .success)
+            } else {
+                // Load all unresolved flags if no therapist specified
+                logger.log("Loading all workload flags", level: .diagnostic)
+                let response: [WorkloadFlag] = try await supabase.client
+                    .from("workload_flags")
+                    .select()
+                    .eq("resolved", value: false)
+                    .order("severity", ascending: false)
+                    .order("created_at", ascending: false)
+                    .limit(10)
+                    .execute()
+                    .value
+
+                activeFlags = response
+                logger.log("✅ Loaded \(activeFlags.count) active flags", level: .success)
+            }
         } catch {
-            print("❌ [PatientList] Error loading flags: \(error.localizedDescription)")
+            logger.log("❌ Error loading flags: \(error.localizedDescription)", level: .error)
             // Fallback to empty array if query fails
             activeFlags = []
         }

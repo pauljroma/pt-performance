@@ -292,17 +292,19 @@ struct ExerciseLogView_Previews: PreviewProvider {
                 id: "1",
                 session_id: "session-1",
                 exercise_template_id: "template-1",
-                exercise_order: 1,
+                sequence: 1,
                 prescribed_sets: 3,
-                prescribed_reps_min: 10,
-                prescribed_reps_max: 10,
+                prescribed_reps: "10",
                 prescribed_load: 185,
-                prescribed_load_unit: "lbs",
-                rest_seconds: 120,
+                load_unit: "lbs",
+                rest_period_seconds: 120,
                 notes: nil,
-                exercise_name: "Back Squat",
-                movement_pattern: "squat",
-                equipment: "barbell"
+                exercise_templates: Exercise.ExerciseTemplate(
+                    id: "template-1",
+                    name: "Back Squat",
+                    category: "squat",
+                    body_region: "lower"
+                )
             ),
             sessionExerciseId: "se-1",
             patientId: "patient-1"

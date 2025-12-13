@@ -47,6 +47,61 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         let maxPainLevel: Int
         let minAdherencePercent: Double
     }
+
+    struct ProtocolPhaseConstraints: Codable, Hashable {
+        let maxPainLevel: Int
+        let requiredExerciseTypes: [String]
+        let prohibitedExercises: [String]
+        let minAdherencePercent: Double
+        let maxIntensityPercent: Int
+        let rpeRange: ClosedRange<Int>
+
+        enum CodingKeys: String, CodingKey {
+            case maxPainLevel
+            case requiredExerciseTypes
+            case prohibitedExercises
+            case minAdherencePercent
+            case maxIntensityPercent
+            case rpeRange
+        }
+
+        init(maxPainLevel: Int, requiredExerciseTypes: [String], prohibitedExercises: [String], minAdherencePercent: Double, maxIntensityPercent: Int, rpeRange: ClosedRange<Int>) {
+            self.maxPainLevel = maxPainLevel
+            self.requiredExerciseTypes = requiredExerciseTypes
+            self.prohibitedExercises = prohibitedExercises
+            self.minAdherencePercent = minAdherencePercent
+            self.maxIntensityPercent = maxIntensityPercent
+            self.rpeRange = rpeRange
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            maxPainLevel = try container.decode(Int.self, forKey: .maxPainLevel)
+            requiredExerciseTypes = try container.decode([String].self, forKey: .requiredExerciseTypes)
+            prohibitedExercises = try container.decode([String].self, forKey: .prohibitedExercises)
+            minAdherencePercent = try container.decode(Double.self, forKey: .minAdherencePercent)
+            maxIntensityPercent = try container.decode(Int.self, forKey: .maxIntensityPercent)
+
+            // Decode rpeRange as array and convert to ClosedRange
+            let rangeArray = try container.decode([Int].self, forKey: .rpeRange)
+            guard rangeArray.count == 2 else {
+                throw DecodingError.dataCorruptedError(forKey: .rpeRange, in: container, debugDescription: "rpeRange must have exactly 2 elements")
+            }
+            rpeRange = rangeArray[0]...rangeArray[1]
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(maxPainLevel, forKey: .maxPainLevel)
+            try container.encode(requiredExerciseTypes, forKey: .requiredExerciseTypes)
+            try container.encode(prohibitedExercises, forKey: .prohibitedExercises)
+            try container.encode(minAdherencePercent, forKey: .minAdherencePercent)
+            try container.encode(maxIntensityPercent, forKey: .maxIntensityPercent)
+
+            // Encode rpeRange as array
+            try container.encode([rpeRange.lowerBound, rpeRange.upperBound], forKey: .rpeRange)
+        }
+    }
     
     // Sample protocols for testing
     static let throwingOnRamp = TherapyProtocol(
@@ -232,11 +287,131 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         ),
         createdAt: Date()
     )
-    
+
+    static let winterLift = TherapyProtocol(
+        id: UUID(),
+        name: "Winter Lift 3x/week",
+        description: "12-week progressive strength building program with 3 training days per week. Focuses on compound lifts, hypertrophy, and work capacity.",
+        category: .strengthBuilding,
+        durationWeeks: 12,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Foundation",
+                order: 1,
+                durationWeeks: 4,
+                goals: [
+                    "Build base strength",
+                    "Establish movement patterns",
+                    "Develop work capacity"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "unilateral",
+                    "core",
+                    "accessory"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Max 75% intensity",
+                    "RPE 6-7 for primary lifts",
+                    "Focus on form over load"
+                ],
+                progressionCriteria: [
+                    "Complete ≥90% of prescribed sessions",
+                    "RPE within target range (6-7) for final week",
+                    "No pain > 3/10",
+                    "Proper form on primary lifts"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Build",
+                order: 2,
+                durationWeeks: 4,
+                goals: [
+                    "Increase load capacity",
+                    "Improve time under tension",
+                    "Develop strength endurance"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "unilateral",
+                    "core",
+                    "plyometric",
+                    "accessory"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Max 88% intensity",
+                    "RPE 7-9 for primary lifts",
+                    "Progressive overload on primary movements"
+                ],
+                progressionCriteria: [
+                    "Complete ≥90% of prescribed sessions",
+                    "RPE within target range (7-9) for primary lifts",
+                    "No pain > 3/10",
+                    "Progressive overload on primary lifts"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 3: Intensify",
+                order: 3,
+                durationWeeks: 4,
+                goals: [
+                    "Peak strength development",
+                    "Explosive power",
+                    "Work capacity maintenance"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "unilateral",
+                    "core",
+                    "plyometric",
+                    "explosive",
+                    "accessory"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Max 92% intensity",
+                    "RPE 8-9 for primary lifts",
+                    "Monitor bar speed and power output"
+                ],
+                progressionCriteria: [
+                    "Complete ≥90% of prescribed sessions",
+                    "RPE within target range (8-9) for primary lifts",
+                    "No pain > 2/10",
+                    "Maintain or improve bar speed"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 3,
+            maxPhases: 3,
+            canSkipPhases: false,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "compound_lower",
+                "compound_upper",
+                "unilateral",
+                "core"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 3,
+            minAdherencePercent: 0.85
+        ),
+        createdAt: Date()
+    )
+
     // Sample data for picker/testing
     static let sampleProtocols = [
         throwingOnRamp,
         shoulderRehab,
-        strengthFoundation
+        strengthFoundation,
+        winterLift
     ]
 }

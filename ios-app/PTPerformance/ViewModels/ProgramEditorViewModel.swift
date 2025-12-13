@@ -12,7 +12,7 @@ import SwiftUI
 class ProgramEditorViewModel: ObservableObject {
     let patientId: UUID
     let exerciseId: UUID?
-    
+
     @Published var selectedExercise: Exercise?
     @Published var estimatedRM: Double?
     @Published var sets: Int = 3 {
@@ -25,12 +25,18 @@ class ProgramEditorViewModel: ObservableObject {
     @Published var targetRPE: Int = 7
     @Published var instructions: String = ""
     @Published var availableExercises: [Exercise] = []
-    
+    @Published var isLoading = false
+    @Published var isSaving = false
+    @Published var error: String?
+
     private let rmCalculator = RMCalculator()
-    
-    init(patientId: UUID, exerciseId: UUID?) {
+    private let supabase: PTSupabaseClient
+    private let logger = DebugLogger.shared
+
+    init(patientId: UUID, exerciseId: UUID?, supabase: PTSupabaseClient = .shared) {
         self.patientId = patientId
         self.exerciseId = exerciseId
+        self.supabase = supabase
     }
     
     var canSave: Bool {
@@ -38,26 +44,65 @@ class ProgramEditorViewModel: ObservableObject {
     }
     
     func loadData() async {
-        // Load available exercises
-        availableExercises = Exercise.sampleExercises
-        
-        // If editing existing, load it
-        if let exerciseId = exerciseId {
-            // TODO: Load from Supabase
+        isLoading = true
+        error = nil
+
+        do {
+            // Load available exercises from database
+            logger.log("📥 Loading available exercises", level: .diagnostic)
+            let response = try await supabase.client
+                .from("exercises")
+                .select()
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            availableExercises = try decoder.decode([Exercise].self, from: response.data)
+
+            logger.log("✅ Loaded \(availableExercises.count) exercises", level: .success)
+
+            // If editing existing exercise, load it
+            if let exerciseId = exerciseId {
+                logger.log("📥 Loading exercise \(exerciseId)", level: .diagnostic)
+                let exerciseResponse = try await supabase.client
+                    .from("program_exercises")
+                    .select()
+                    .eq("id", value: exerciseId.uuidString)
+                    .single()
+                    .execute()
+
+                let programExercise = try decoder.decode(ProgramExercise.self, from: exerciseResponse.data)
+
+                // Find matching exercise in available exercises
+                selectedExercise = availableExercises.first { $0.id == programExercise.exerciseId }
+                sets = programExercise.sets ?? 3
+                reps = programExercise.reps ?? 10
+                targetRPE = programExercise.targetRPE ?? 7
+                instructions = programExercise.instructions ?? ""
+
+                logger.log("✅ Loaded exercise data", level: .success)
+            }
+
+            // Load patient history for selected exercise
+            if let exercise = selectedExercise {
+                await loadPatientHistory(for: exercise)
+            }
+
+        } catch {
+            logger.log("❌ Error loading data: \(error)", level: .error)
+            self.error = error.localizedDescription
+            // Fallback to sample data
+            availableExercises = Exercise.sampleExercises
         }
-        
-        // Load patient history for selected exercise
-        if let exercise = selectedExercise {
-            await loadPatientHistory(for: exercise)
-        }
+
+        isLoading = false
     }
     
     func loadPatientHistory(for exercise: Exercise) async {
-        // Fetch patient's exercise history from Supabase
-        // TODO: Implement Supabase query
-        /*
+        logger.log("📥 Loading patient history for \(exercise.exercise_name ?? "exercise")", level: .diagnostic)
+
         do {
-            let response = try await supabase
+            let response = try await supabase.client
                 .from("exercise_logs")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
@@ -65,21 +110,27 @@ class ProgramEditorViewModel: ObservableObject {
                 .order("created_at", ascending: false)
                 .limit(10)
                 .execute()
-            
-            let logs = try JSONDecoder().decode([ExerciseLog].self, from: response.data)
-            
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let logs = try decoder.decode([ExerciseLog].self, from: response.data)
+
             if !logs.isEmpty {
+                // Calculate estimated 1RM from recent logs
                 estimatedRM = rmCalculator.estimate1RM(from: logs)
+                logger.log("✅ Estimated 1RM: \(estimatedRM ?? 0) lbs", level: .success)
+                updateRecommendedWeight()
+            } else {
+                logger.log("ℹ️ No history found, using default estimated RM", level: .info)
+                estimatedRM = 185.0
                 updateRecommendedWeight()
             }
         } catch {
-            print("Error loading history: \(error)")
+            logger.log("❌ Error loading history: \(error)", level: .error)
+            // Fallback to default estimated RM
+            estimatedRM = 185.0
+            updateRecommendedWeight()
         }
-        */
-        
-        // For demo: use sample estimated RM
-        estimatedRM = 185.0
-        updateRecommendedWeight()
     }
     
     func updateRecommendedWeight() {
@@ -99,33 +150,106 @@ class ProgramEditorViewModel: ObservableObject {
         }
     }
     
-    func saveExercise() async {
-        guard let exercise = selectedExercise else { return }
-
-        print("Saving exercise: \(exercise.exercise_name ?? "Unknown")")
-        print("Sets: \(sets), Reps: \(reps), Weight: \(recommendedWeight) lbs")
-        print("Target RPE: \(targetRPE)")
-        
-        // TODO: Save to Supabase
-        /*
-        do {
-            let exerciseData: [String: Any] = [
-                "exercise_id": exercise.id.uuidString,
-                "patient_id": patientId.uuidString,
-                "sets": sets,
-                "reps": reps,
-                "weight": recommendedWeight,
-                "target_rpe": targetRPE,
-                "instructions": instructions
-            ]
-            
-            let response = try await supabase
-                .from("program_exercises")
-                .insert(exerciseData)
-                .execute()
-        } catch {
-            print("Error saving: \(error)")
+    func saveExercise() async throws {
+        guard let exercise = selectedExercise else {
+            throw ProgramEditorError.noExerciseSelected
         }
-        */
+
+        isSaving = true
+        error = nil
+
+        logger.log("💾 Saving exercise: \(exercise.exercise_name ?? "Unknown")", level: .diagnostic)
+        logger.log("   Sets: \(sets), Reps: \(reps), Weight: \(recommendedWeight) lbs, RPE: \(targetRPE)", level: .diagnostic)
+
+        do {
+            let exerciseData = SaveExerciseInput(
+                exerciseId: exercise.id.uuidString,
+                patientId: patientId.uuidString,
+                sets: sets,
+                reps: reps,
+                weight: recommendedWeight,
+                targetRPE: targetRPE,
+                instructions: instructions.isEmpty ? nil : instructions
+            )
+
+            if let existingId = exerciseId {
+                // Update existing exercise
+                logger.log("🔄 Updating existing program exercise", level: .diagnostic)
+                try await supabase.client
+                    .from("program_exercises")
+                    .update(exerciseData)
+                    .eq("id", value: existingId.uuidString)
+                    .execute()
+
+                logger.log("✅ Exercise updated successfully", level: .success)
+            } else {
+                // Insert new exercise
+                logger.log("➕ Inserting new program exercise", level: .diagnostic)
+                try await supabase.client
+                    .from("program_exercises")
+                    .insert(exerciseData)
+                    .execute()
+
+                logger.log("✅ Exercise saved successfully", level: .success)
+            }
+
+            isSaving = false
+        } catch {
+            logger.log("❌ Error saving exercise: \(error)", level: .error)
+            self.error = error.localizedDescription
+            isSaving = false
+            throw error
+        }
+    }
+}
+
+// MARK: - Supporting Types
+
+enum ProgramEditorError: LocalizedError {
+    case noExerciseSelected
+
+    var errorDescription: String? {
+        switch self {
+        case .noExerciseSelected:
+            return "Please select an exercise before saving"
+        }
+    }
+}
+
+struct SaveExerciseInput: Codable {
+    let exerciseId: String
+    let patientId: String
+    let sets: Int
+    let reps: Int
+    let weight: Double
+    let targetRPE: Int
+    let instructions: String?
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseId = "exercise_id"
+        case patientId = "patient_id"
+        case sets
+        case reps
+        case weight
+        case targetRPE = "target_rpe"
+        case instructions
+    }
+}
+
+struct ProgramExercise: Codable {
+    let id: UUID
+    let exerciseId: UUID
+    let sets: Int?
+    let reps: Int?
+    let targetRPE: Int?
+    let instructions: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case exerciseId = "exercise_id"
+        case sets
+        case reps
+        case targetRPE = "target_rpe"
+        case instructions
     }
 }

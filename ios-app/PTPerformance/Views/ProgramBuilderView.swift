@@ -61,11 +61,16 @@ struct ProgramBuilderView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
                         Task {
-                            await viewModel.createProgram(patientId: patientId)
-                            dismiss()
+                            do {
+                                _ = try await viewModel.createProgram(patientId: patientId?.uuidString)
+                                dismiss()
+                            } catch {
+                                // Error already logged by viewModel
+                                print("Failed to create program: \(error)")
+                            }
                         }
                     }
-                    .disabled(!viewModel.isValid)
+                    .disabled(!viewModel.isValid || viewModel.isCreating)
                 }
             }
             .task {

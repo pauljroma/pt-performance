@@ -19,6 +19,14 @@ class ProgramBuilderViewModel: ObservableObject {
     @Published var phases: [ProgramPhase] = []
     @Published var availableProtocols: [TherapyProtocol] = []
     @Published var validationError: String?
+    @Published var isCreating = false
+    @Published var createError: String?
+
+    private let supabase: PTSupabaseClient
+
+    init(supabase: PTSupabaseClient = .shared) {
+        self.supabase = supabase
+    }
     
     var isValid: Bool {
         guard !programName.isEmpty else {
@@ -98,35 +106,104 @@ class ProgramBuilderViewModel: ObservableObject {
         }
     }
     
-    func createProgram(patientId: UUID?) async {
-        // In production, save to Supabase:
-        // 1. Create program record
-        // 2. Create phase records
-        // 3. If patientId provided, assign to patient
-        
-        print("Creating program: \(programName)")
-        print("Protocol: \(selectedProtocol?.name ?? "Custom")")
-        print("Phases: \(phases.count)")
-        
-        // TODO: Implement Supabase save
-        /*
+    func createProgram(patientId: String?, targetLevel: String = "Intermediate") async throws -> String {
+        let logger = DebugLogger.shared
+        isCreating = true
+        createError = nil
+
+        logger.log("📝 Creating program: \(programName)", level: .diagnostic)
+
         do {
-            let programData: [String: Any] = [
-                "name": programName,
-                "protocol_id": selectedProtocol?.id.uuidString,
-                "patient_id": patientId?.uuidString,
-                "created_at": Date().ISO8601Format()
-            ]
-            
-            let response = try await supabase
+            // Calculate total duration
+            let totalWeeks = phases.reduce(0) { $0 + $1.durationWeeks }
+
+            // Step 1: Create program record
+            let programInput = CreateProgramInput(
+                patientId: patientId,
+                name: programName,
+                targetLevel: targetLevel,
+                durationWeeks: totalWeeks
+            )
+
+            logger.log("📝 Inserting program into programs table...", level: .diagnostic)
+
+            let programResponse = try await supabase.client
                 .from("programs")
-                .insert(programData)
+                .insert(programInput)
+                .select()
+                .single()
                 .execute()
-            
-            // Save phases...
+
+            logger.log("✅ Program created successfully", level: .success)
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let program = try decoder.decode(Program.self, from: programResponse.data)
+
+            logger.log("✅ Program ID: \(program.id)", level: .success)
+
+            // Step 2: Create phase records
+            for (index, phase) in phases.enumerated() {
+                let phaseInput = CreatePhaseInput(
+                    programId: program.id,
+                    phaseNumber: index + 1,
+                    name: phase.name,
+                    durationWeeks: phase.durationWeeks,
+                    goals: nil
+                )
+
+                logger.log("📝 Creating phase \(index + 1): \(phase.name)", level: .diagnostic)
+
+                try await supabase.client
+                    .from("phases")
+                    .insert(phaseInput)
+                    .execute()
+
+                logger.log("✅ Phase \(index + 1) created", level: .success)
+            }
+
+            logger.log("✅ Program creation complete!", level: .success)
+            isCreating = false
+
+            return program.id
+
         } catch {
-            print("Error creating program: \(error)")
+            logger.log("❌ Error creating program: \(error)", level: .error)
+            createError = error.localizedDescription
+            isCreating = false
+            throw error
         }
-        */
+    }
+}
+
+// MARK: - Input Models for Supabase
+
+struct CreateProgramInput: Codable {
+    let patientId: String?
+    let name: String
+    let targetLevel: String
+    let durationWeeks: Int
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case name
+        case targetLevel = "target_level"
+        case durationWeeks = "duration_weeks"
+    }
+}
+
+struct CreatePhaseInput: Codable {
+    let programId: String
+    let phaseNumber: Int
+    let name: String
+    let durationWeeks: Int?
+    let goals: String?
+
+    enum CodingKeys: String, CodingKey {
+        case programId = "program_id"
+        case phaseNumber = "phase_number"
+        case name
+        case durationWeeks = "duration_weeks"
+        case goals
     }
 }

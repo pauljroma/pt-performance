@@ -287,6 +287,39 @@ class LinearClient:
         data = await self.query(mutation, {"issueId": issue_id, "description": description})
         return data["issueUpdate"]["issue"]
 
+    async def create_issue(self, team_id: str, title: str, description: str = "",
+                          labels: List[str] = None, priority: int = 0,
+                          project_id: str = None, parent_id: str = None,
+                          estimate: int = None) -> Dict:
+        """Create a new issue in a team."""
+        mutation = """
+        mutation CreateIssue($teamId: String!, $title: String!, $description: String, $labelIds: [String!], $priority: Int, $projectId: String, $parentId: String, $estimate: Int) {
+            issueCreate(input: {teamId: $teamId, title: $title, description: $description, labelIds: $labelIds, priority: $priority, projectId: $projectId, parentId: $parentId, estimate: $estimate}) {
+                success
+                issue {
+                    id
+                    identifier
+                    title
+                    url
+                }
+            }
+        }
+        """
+
+        variables = {
+            "teamId": team_id,
+            "title": title,
+            "description": description,
+            "labelIds": labels or [],
+            "priority": priority,
+            "projectId": project_id,
+            "parentId": parent_id,
+            "estimate": estimate
+        }
+
+        data = await self.query(mutation, variables)
+        return data["issueCreate"]["issue"]
+
     # ==================== PLAN EXPORT ====================
 
     async def export_project_plan(self, team_name: str, project_name: str) -> Dict:
@@ -376,13 +409,16 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Linear Client - Query and manage Linear workspace")
-    parser.add_argument("command", choices=["export-json", "export-md", "list-issues", "update-status", "add-comment"])
+    parser.add_argument("command", choices=["export-json", "export-md", "list-issues", "update-status", "add-comment", "create-issue"])
     parser.add_argument("--team", default="Agent-Control-Plane", help="Team name")
     parser.add_argument("--project", default="MVP 1 — PT App & Agent Pilot", help="Project name")
     parser.add_argument("--issue-id", help="Issue ID for update/comment operations")
     parser.add_argument("--state-id", help="State ID for status update")
     parser.add_argument("--comment", help="Comment text")
     parser.add_argument("--output", help="Output file path (optional)")
+    parser.add_argument("--title", help="Issue title for create-issue")
+    parser.add_argument("--description", help="Issue description for create-issue")
+    parser.add_argument("--priority", type=int, default=0, help="Priority (0=none, 1=urgent, 2=high, 3=medium, 4=low)")
 
     args = parser.parse_args()
 
@@ -450,6 +486,27 @@ async def main():
 
             comment = await client.add_issue_comment(args.issue_id, args.comment)
             print(f"✅ Comment added at {comment['createdAt']}")
+
+        elif args.command == "create-issue":
+            if not args.title:
+                print("❌ --title required for create-issue")
+                sys.exit(1)
+
+            # Get team
+            team = await client.get_team_by_name(args.team)
+            if not team:
+                print(f"❌ Team '{args.team}' not found")
+                sys.exit(1)
+
+            issue = await client.create_issue(
+                team_id=team["id"],
+                title=args.title,
+                description=args.description or "",
+                priority=args.priority
+            )
+            print(f"✅ Issue created: {issue['identifier']}")
+            print(f"   Title: {issue['title']}")
+            print(f"   URL: {issue['url']}")
 
 
 if __name__ == "__main__":
