@@ -16,7 +16,7 @@ enum Config {
     // MARK: - App Configuration
 
     static let appVersion = "1.0"
-    static let buildNumber = "34"
+    static let buildNumber = "36"
 
     // MARK: - Demo Credentials
 

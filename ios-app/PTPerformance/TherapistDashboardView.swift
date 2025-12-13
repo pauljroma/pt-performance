@@ -145,7 +145,12 @@ struct TherapistDashboardView: View {
             .padding(.bottom)
         }
         .refreshable {
-            await viewModel.refresh()
+            if let therapistId = appState.userId {
+                await viewModel.refresh(therapistId: therapistId)
+            } else {
+                // If no therapist ID, refresh without filtering (fallback for edge cases)
+                await viewModel.refresh()
+            }
         }
         .navigationDestination(for: Patient.self) { patient in
             if !shouldUseSplitView {

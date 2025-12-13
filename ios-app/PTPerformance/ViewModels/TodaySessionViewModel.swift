@@ -29,6 +29,35 @@ class TodaySessionViewModel: ObservableObject {
         print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
 
         do {
+            // Fetch directly from Supabase (backend API not deployed yet)
+            logger.log("📱 Fetching from Supabase...")
+            print("📱 [TodaySession] Fetching from Supabase...")
+            try await fetchFromSupabase(patientId: patientId)
+            logger.log("✅ Supabase fetch succeeded", level: .success)
+            print("✅ [TodaySession] Supabase fetch succeeded")
+            isLoading = false
+        } catch let error {
+            logger.log("❌ Supabase fetch failed", level: .error)
+            logger.log("   Error: \(error.localizedDescription)", level: .error)
+            print("❌ [TodaySession] Supabase fetch failed")
+            print("   Error: \(error.localizedDescription)")
+
+            errorMessage = """
+            Failed to load today's session.
+
+            Please check:
+            • Your internet connection
+            • That you have an active program assigned
+
+            Error: \(error.localizedDescription)
+            """
+            isLoading = false
+        }
+
+        // NOTE: Backend API with Edge Functions not yet deployed
+        // To enable backend API, uncomment the code below and comment out the Supabase-only code above:
+        /*
+        do {
             // Option 1: Call backend /today-session endpoint
             logger.log("📱 Trying backend API...")
             print("📱 [TodaySession] Trying backend API...")
@@ -70,6 +99,7 @@ class TodaySessionViewModel: ObservableObject {
                 isLoading = false
             }
         }
+        */
     }
 
     /// Fetch from backend API (/today-session/:patientId)
