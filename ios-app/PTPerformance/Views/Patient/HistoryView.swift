@@ -19,6 +19,9 @@ struct HistoryView: View {
                             await viewModel.refresh(for: patientId)
                         }
                     }
+                } else if viewModel.isEmpty {
+                    // Empty state when no data is available
+                    EmptyHistoryView()
                 } else {
                     // Summary cards
                     if let stats = viewModel.summaryStats {
@@ -28,6 +31,12 @@ struct HistoryView: View {
                     // Pain trend chart
                     if !viewModel.painTrend.isEmpty {
                         PainTrendSection(dataPoints: viewModel.painTrend)
+                    } else if viewModel.summaryStats != nil {
+                        EmptyDataSection(
+                            title: "No Pain Data Yet",
+                            message: "Complete sessions and log pain scores to see your pain trend over time",
+                            icon: "chart.line.uptrend.xyaxis"
+                        )
                     }
 
                     // Adherence card
@@ -38,6 +47,12 @@ struct HistoryView: View {
                     // Recent sessions list
                     if !viewModel.recentSessions.isEmpty {
                         RecentSessionsSection(sessions: viewModel.recentSessions)
+                    } else if viewModel.summaryStats != nil {
+                        EmptyDataSection(
+                            title: "No Sessions Yet",
+                            message: "Your completed sessions will appear here",
+                            icon: "calendar.badge.clock"
+                        )
                     }
                 }
             }
@@ -360,6 +375,45 @@ struct ErrorView: View {
             .buttonStyle(.bordered)
         }
         .padding()
+    }
+}
+
+// MARK: - Empty States
+
+struct EmptyHistoryView: View {
+    var body: some View {
+        ContentUnavailableView {
+            Label("No History Yet", systemImage: "clock.badge.questionmark")
+        } description: {
+            Text("Complete your first session to start tracking your progress and recovery")
+        }
+        .padding()
+    }
+}
+
+struct EmptyDataSection: View {
+    let title: String
+    let message: String
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+
+            Text(title)
+                .font(.headline)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
     }
 }
 

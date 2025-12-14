@@ -114,15 +114,17 @@ class PatientListViewModel: ObservableObject {
             @unknown default:
                 logger.log("Unknown decoding error: \(decodingError)", level: .error)
             }
-            errorMessage = "Decoding error: \(decodingError.localizedDescription)"
-            patients = Patient.samplePatients
+            errorMessage = "Failed to load patients. Please check your internet connection and try again."
+            patients = []  // SECURITY: Never fall back to sample data - show empty list on error
+            logger.log("⚠️ Set patients to empty array due to decoding error (security)", level: .error)
         } catch {
             logger.log("OTHER ERROR:", level: .error)
             logger.log("Error type: \(type(of: error))", level: .error)
             logger.log("Error description: \(error.localizedDescription)", level: .error)
             logger.log("Error: \(error)", level: .error)
             errorMessage = "Failed to load patients: \(error.localizedDescription)"
-            patients = Patient.samplePatients
+            patients = []  // SECURITY: Never fall back to sample data - show empty list on error
+            logger.log("⚠️ Set patients to empty array due to error (security)", level: .error)
         }
     }
 

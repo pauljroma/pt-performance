@@ -35,9 +35,10 @@ struct TherapistDashboardView: View {
                 await viewModel.loadPatients(therapistId: therapistId)
                 await viewModel.loadActiveFlags(therapistId: therapistId)
             } else {
-                // Fallback: load all patients if therapist ID not available
-                await viewModel.loadPatients()
-                await viewModel.loadActiveFlags()
+                // SECURITY: Do NOT load patients without therapist ID
+                // This prevents unauthorized access to patient data
+                viewModel.errorMessage = "Unable to identify therapist. Please sign in again."
+                DebugLogger.shared.log("⚠️ SECURITY: Cannot load patients - no therapist ID", level: .error)
             }
         }
     }
@@ -148,8 +149,10 @@ struct TherapistDashboardView: View {
             if let therapistId = appState.userId {
                 await viewModel.refresh(therapistId: therapistId)
             } else {
-                // If no therapist ID, refresh without filtering (fallback for edge cases)
-                await viewModel.refresh()
+                // SECURITY: Do NOT refresh without therapist ID
+                // This prevents unauthorized access to patient data
+                viewModel.errorMessage = "Unable to identify therapist. Please sign in again."
+                DebugLogger.shared.log("⚠️ SECURITY: Cannot refresh patients - no therapist ID", level: .error)
             }
         }
         .navigationDestination(for: Patient.self) { patient in

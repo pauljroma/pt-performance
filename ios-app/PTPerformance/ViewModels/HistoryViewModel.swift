@@ -14,6 +14,14 @@ class HistoryViewModel: ObservableObject {
 
     private let analyticsService: AnalyticsService
 
+    /// Check if history is completely empty
+    var isEmpty: Bool {
+        summaryStats == nil &&
+        painTrend.isEmpty &&
+        adherence == nil &&
+        recentSessions.isEmpty
+    }
+
     init(analyticsService: AnalyticsService = AnalyticsService()) {
         self.analyticsService = analyticsService
     }
