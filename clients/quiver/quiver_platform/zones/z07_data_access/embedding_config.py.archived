@@ -1,0 +1,227 @@
+"""
+Centralized Embedding Configuration - PGVECTOR v6.0 PRODUCTION
+
+This module provides centralized configuration for all embedding spaces used in Sapphire v3.
+ALL embeddings are now stored in PostgreSQL with pgvector extension (NO FILE-BASED EMBEDDINGS).
+
+Purpose:
+- Single source of truth for pgvector embedding table configuration
+- Type-safe configuration via dataclasses
+- Production-grade PostgreSQL-based embeddings only
+- Zero file dependencies
+
+Architecture:
+- EmbeddingSpaceConfig: Type-safe dataclass for pgvector space configuration
+- PRODUCTION_EMBEDDINGS: Master registry of all pgvector embedding tables
+- Database-first architecture (no file fallbacks)
+
+Version: 6.0 (PGVECTOR PRODUCTION)
+Date: 2025-12-03
+Changes:
+- REMOVED: All 11 legacy file-based embeddings
+- ADDED: PostgreSQL pgvector v6.0 table references
+- REMOVED: file_path, format, entity_count fields
+- ADDED: table_name, database connection fields
+- REMOVED: Neo4j property mappings (database-first architecture)
+"""
+
+from typing import Dict, Literal, Optional
+from dataclasses import dataclass
+
+
+@dataclass
+class EmbeddingSpaceConfig:
+    """
+    Configuration for a single pgvector embedding space.
+
+    Attributes:
+        name: Unique identifier for the space (e.g., "ens_gene_64d_v6_0")
+        type: Entity type - 'gene' or 'drug'
+        dimensions: Embedding dimensionality (16, 64, or 256)
+        table_name: PostgreSQL table name containing embeddings
+        entity_column: Column name for entity identifiers (gene_symbol, drug_name, etc.)
+        embedding_column: Column name for vector embeddings (default: 'embedding')
+        description: Human-readable description of the embedding space
+        database: Database name (default: 'sapphire_database')
+        host: Database host (default: 'localhost')
+        port: Database port (default: 5435)
+        status: Space status - 'active', 'degraded', 'unavailable'
+        degradation_reason: If status='degraded', brief explanation
+    """
+    name: str
+    type: Literal['gene', 'drug']
+    dimensions: int
+    table_name: str
+    entity_column: str
+    embedding_column: str = 'embedding'
+    description: str = ''
+    database: str = 'sapphire_database'
+    host: str = 'localhost'
+    port: int = 5435
+    status: Literal['active', 'degraded', 'unavailable'] = 'active'
+    degradation_reason: Optional[str] = None
+
+
+# PRODUCTION_EMBEDDINGS - Master Registry (PGVECTOR v6.0)
+# Single source of truth for all embedding space configuration
+PRODUCTION_EMBEDDINGS: Dict[str, EmbeddingSpaceConfig] = {
+
+    # ============================================================================
+    # GENE EMBEDDINGS (4 spaces)
+    # ============================================================================
+
+    "ens_gene_64d_v6_0": EmbeddingSpaceConfig(
+        name="ens_gene_64d_v6_0",
+        type='gene',
+        dimensions=64,
+        table_name='ens_gene_64d_v6_0',
+        entity_column='gene_symbol',
+        embedding_column='embedding',
+        description='ENS Gene Embeddings v6.0 - Primary 64D gene space (PostgreSQL)',
+        status='active'
+    ),
+
+    "dipole_ens_emb_64d_v6_0": EmbeddingSpaceConfig(
+        name="dipole_ens_emb_64d_v6_0",
+        type='gene',
+        dimensions=64,
+        table_name='dipole_ens_emb_64d_v6_0',
+        entity_column='gene_symbol',
+        embedding_column='embedding',
+        description='Dipole ENS Gene Embeddings v6.0 - Gene-gene cross-modal fusion (PostgreSQL)',
+        status='active'
+    ),
+
+    "tripole_ens_emb_64d_v6_0": EmbeddingSpaceConfig(
+        name="tripole_ens_emb_64d_v6_0",
+        type='gene',
+        dimensions=64,
+        table_name='tripole_ens_emb_64d_v6_0',
+        entity_column='gene_symbol',
+        embedding_column='embedding',
+        description='Tripole ENS Gene Embeddings v6.0 - Three-way gene fusion (PostgreSQL)',
+        status='active'
+    ),
+
+    "quadpole_ens_emb_64d_v6_0": EmbeddingSpaceConfig(
+        name="quadpole_ens_emb_64d_v6_0",
+        type='gene',
+        dimensions=64,
+        table_name='quadpole_ens_emb_64d_v6_0',
+        entity_column='gene_symbol',
+        embedding_column='embedding',
+        description='Quadpole ENS Gene Embeddings v6.0 - Four-way gene fusion (PostgreSQL)',
+        status='active'
+    ),
+
+    # ============================================================================
+    # DRUG EMBEDDINGS (2 spaces)
+    # ============================================================================
+
+    "drug_chemical_v6_0_256d": EmbeddingSpaceConfig(
+        name="drug_chemical_v6_0_256d",
+        type='drug',
+        dimensions=256,
+        table_name='drug_chemical_v6_0_256d',
+        entity_column='drug_name',
+        embedding_column='embedding',
+        description='Drug Chemical Embeddings v6.0 - Primary 256D drug space (PostgreSQL)',
+        status='active'
+    ),
+
+    "modex_ep_unified_16d_v6_0": EmbeddingSpaceConfig(
+        name="modex_ep_unified_16d_v6_0",
+        type='drug',
+        dimensions=16,
+        table_name='modex_ep_unified_16d_v6_0',
+        entity_column='drug_name',
+        embedding_column='embedding',
+        description='MODEX EP Unified 16D v6.0 - Drug-gene rescue matching space (PostgreSQL)',
+        status='active'
+    ),
+}
+
+
+def get_spaces_by_type(space_type: Literal['gene', 'drug']) -> Dict[str, EmbeddingSpaceConfig]:
+    """Get all embedding spaces of a specific type."""
+    return {
+        space_name: config
+        for space_name, config in PRODUCTION_EMBEDDINGS.items()
+        if config.type == space_type
+    }
+
+
+def get_available_spaces() -> Dict[str, EmbeddingSpaceConfig]:
+    """Get all embedding spaces that are available (active status)."""
+    return {
+        space_name: config
+        for space_name, config in PRODUCTION_EMBEDDINGS.items()
+        if config.status == 'active'
+    }
+
+
+def get_connection_config(space_name: str) -> Dict[str, any]:
+    """
+    Get PostgreSQL connection configuration for a specific embedding space.
+
+    Args:
+        space_name: Name of the embedding space
+
+    Returns:
+        Dictionary with connection parameters (host, port, database, table_name)
+    """
+    if space_name not in PRODUCTION_EMBEDDINGS:
+        raise ValueError(f"Unknown embedding space: {space_name}")
+
+    config = PRODUCTION_EMBEDDINGS[space_name]
+
+    return {
+        'host': config.host,
+        'port': config.port,
+        'database': config.database,
+        'table_name': config.table_name,
+        'entity_column': config.entity_column,
+        'embedding_column': config.embedding_column
+    }
+
+
+def print_config_summary():
+    """Print configuration summary for verification."""
+    print("=" * 80)
+    print("EMBEDDING CONFIGURATION SUMMARY - PGVECTOR v6.0")
+    print("=" * 80)
+    print(f"\nTotal Spaces: {len(PRODUCTION_EMBEDDINGS)}")
+
+    gene_spaces = get_spaces_by_type('gene')
+    drug_spaces = get_spaces_by_type('drug')
+    available_spaces = get_available_spaces()
+
+    print(f"Gene Spaces: {len(gene_spaces)}")
+    print(f"Drug Spaces: {len(drug_spaces)}")
+    print(f"Available (active): {len(available_spaces)}")
+    print(f"Storage Backend: PostgreSQL with pgvector extension")
+    print(f"File-based embeddings: 0 (ALL REMOVED)")
+
+    print("\n" + "=" * 80)
+    print("AVAILABLE EMBEDDING SPACES (Active/PostgreSQL)")
+    print("=" * 80)
+    for space_name in sorted(available_spaces.keys()):
+        config = available_spaces[space_name]
+        print(f"  {config.name:35s} ({config.dimensions:3d}D, {config.type:4s}, table={config.table_name})")
+
+    print("\n" + "=" * 80)
+    print("LEGACY FILE-BASED EMBEDDINGS REMOVED (11 total):")
+    print("=" * 80)
+    legacy_spaces = [
+        "ENS_v3_1", "MODEX_Gene_v1_0", "MODEX_Gene_16D_v2_0", "Transcript_v1_Gene",
+        "PCA_v4_7", "PLATINUM_QNVS_v2_0", "DFP_PhaseII_v1_0", "DFP_PhaseII_16D_v1_0",
+        "Transcript_v1_Drug", "ENS_v3_1_Drug", "PLATINUM_Similarity_v1_0"
+    ]
+    for i, legacy_name in enumerate(legacy_spaces, 1):
+        print(f"  {i:2d}. {legacy_name}")
+
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    print_config_summary()

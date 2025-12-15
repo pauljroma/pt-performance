@@ -1,0 +1,432 @@
+"""
+Vector Antipodal Tool - Drug Rescue Candidate Discovery
+
+ARCHITECTURE DECISION LOG:
+v4.2 (current): Multi-space Neo4j support (MODEX_16D + EP + Transcript)
+  - MODEX_16D space: Uses PREDICTS_RESCUE_MODEX_16D edges (1.8M predictions, NEW)
+    * 16D MODEX gene embeddings (18,364 genes)
+    * DFP Phase 2 drug embeddings (1,964 drugs)
+    * Relationship: PREDICTS_RESCUE_MODEX_16D (Drug→Gene)
+    * Top-100 rescue candidates per gene
+  - EP space: Uses PREDICTS_RESCUE_EP edges (1.61M dose-specific predictions)
+  - Transcript space: Uses SIMILAR_CROSS_SPACE edges (52K precomputed)
+  - Handles case-insensitive gene matching ("kncq2" → "KCNQ2")
+  - Returns antipodal (opposite) similarities for rescue scoring
+  - Supports dose-level filtering for EP predictions
+
+v4.1: Multi-space Neo4j support (EP + Transcript)
+v4.0: Neo4j-based with SIMILAR_CROSS_SPACE edges
+v3.0 (deprecated): File-based parquet with EmbeddingService
+
+Pattern: Wraps Neo4j similarity queries for rescue scoring
+Reference: transcriptomic_rescue.py for Neo4j pattern
+"""
+
+from typing import Dict, Any
+import os
+from neo4j import GraphDatabase
+
+# Import harmonization utilities (Stream 1: Foundation)
+try:
+    from tool_utils import validate_tool_input, format_validation_response, harmonize_gene_id, validate_input, normalize_gene_symbol
+    HARMONIZATION_AVAILABLE = True
+    VALIDATION_AVAILABLE = True
+except ImportError:
+    HARMONIZATION_AVAILABLE = False
+
+# Claude Tool Definition (Anthropic format)
+TOOL_DEFINITION = {
+    "name": "vector_antipodal",
+    "description": """Find drug rescue candidates using cross-space antipodal (opposite) embedding similarity.
+
+Drug rescue is defined as compounds with embeddings most opposite to a gene's embedding,
+indicating potential to reverse gene dysfunction.
+
+**THREE EMBEDDING SPACES AVAILABLE:**
+1. MODEX_16D - NEW, RECOMMENDED
+   - 1.8M high-quality rescue predictions (49K loaded to Neo4j)
+   - 16D MODEX gene embeddings (18,364 genes)
+   - DFP Phase 2 drug embeddings (1,964 drugs)
+   - Relationship: PREDICTS_RESCUE_MODEX_16D (Drug→Gene)
+   - Best for: High-quality predictions, validated rescue scores
+   - Example: TSC2 → Fosaprepitant (0.555), 2,588 candidates
+
+2. EP (Experimental Phenotype) - Legacy, comprehensive
+   - 1.61M dose-specific rescue predictions
+   - MODEX gene embeddings (18K genes, phenotypic)
+   - PCA drug embeddings (14K drugs, 5 doses avg)
+   - Relationship: PREDICTS_RESCUE_EP (Drug→Gene)
+   - Best for: Dose-specific rescue, broad drug coverage
+
+3. Transcript (Legacy)
+   - 52K precomputed cross-space edges
+   - Transcript v1 gene embeddings
+   - PCA drug embeddings
+   - Relationship: SIMILAR_CROSS_SPACE (Gene←Drug)
+   - Best for: Quick queries, backward compatibility
+
+Examples:
+- "What drugs rescue TSC2?" → Uses MODEX_16D (default, highest quality)
+- "Find MODEX_16D rescue for SCN1A" → Explicit MODEX_16D selection
+- "Rescue candidates for TSC2 using EP space" → Legacy EP space
+- "Rescue candidates for kncq2 using Transcript space" → Legacy Transcript space
+
+Key metrics:
+- rescue_score: 0-1 scale (1 = perfect antipodal, 0 = same direction)
+- antipodal_distance: Original cosine similarity (-1 = perfect rescue)
+- dose_index: Dose identifier (EP only, 0=base dose)
+- embedding_space: Which space was queried
+
+Data Coverage:
+- MODEX_16D: 18,364 genes × 1,964 drugs = 1.8M predictions (top-100/gene in Neo4j)
+- EP: 18,368 genes × 14,246 drug doses = 1.61M predictions
+- Transcript: 18,611 genes × 6,075 drugs = 52K edges
+""",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "gene": {
+                "type": "string",
+                "description": "Gene identifier in any format: HGNC symbol (TP53), Entrez ID (7157), or UniProt ID (P04637). Case-insensitive for symbols. Examples: TSC2, 7273, SCN1A, KCNQ2, kncq2, BRCA1"
+            },
+            "embedding_space": {
+                "type": "string",
+                "enum": ["MODEX_16D", "EP", "Transcript", "auto"],
+                "description": "Embedding space for rescue prediction. 'MODEX_16D' (default, recommended): 1.8M high-quality predictions with validated rescue scores. 'EP' (legacy): 1.61M dose-specific predictions. 'Transcript' (legacy): 52K cross-space edges. 'auto': chooses MODEX_16D. Default: 'auto'",
+                "default": "auto"
+            },
+            "top_k": {
+                "type": "integer",
+                "description": "Number of top rescue candidates to return (1-200). Default: 10",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 200
+            },
+            "min_score": {
+                "type": "number",
+                "description": "Minimum rescue score threshold (0-1). Default: 0.5",
+                "default": 0.5,
+                "minimum": 0.0,
+                "maximum": 1.0
+            },
+            "dose_index": {
+                "type": "integer",
+                "description": "Filter by specific dose index (EP only). 0=base dose, 1-9=higher doses. Omit for all doses. Default: None (all doses)",
+                "default": None,
+                "minimum": 0,
+                "maximum": 9
+            }
+        },
+        "required": ["gene"]
+    }
+}
+
+
+async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
+
+    # Stream 1.2: Input validation
+    if VALIDATION_AVAILABLE:
+        validation_errors = validate_tool_input(tool_input, TOOL_DEFINITION["input_schema"], "vector_antipodal")
+        if validation_errors:
+            return format_validation_response("vector_antipodal", validation_errors)
+    """
+    Execute vector_antipodal tool - find drug rescue candidates using Neo4j.
+
+    Args:
+        tool_input: Dict with keys:
+            - gene (str): Gene symbol (case-insensitive)
+            - top_k (int, optional): Number of results (default: 10)
+            - min_score (float, optional): Minimum score threshold (default: 0.5)
+
+    Returns:
+        Dict with keys:
+            - success (bool): Whether operation succeeded
+            - gene (str): Normalized gene symbol used
+            - rescue_candidates (List[Dict]): Ranked rescue drugs
+            - count (int): Number of results
+            - data_source (str): Data provenance
+            - latency (str): Performance metric
+            - error (str, optional): Error message if failed
+
+    Example:
+        >>> await execute({"gene": "TSC2", "top_k": 5})
+        {
+            "success": True,
+            "gene": "TSC2",
+            "rescue_candidates": [
+                {
+                    "drug": "Sirolimus",
+                    "rescue_score": 0.726,
+                    "antipodal_distance": -0.452,
+                    "similarity_source": "MODEX-PCA cross-space"
+                },
+                ...
+            ],
+            "count": 5,
+            "data_source": "Neo4j SIMILAR_CROSS_SPACE edges",
+            "latency": "<100ms"
+        }
+    """
+    try:
+        # Get parameters with defaults
+        gene = tool_input.get("gene", "").strip()
+        embedding_space = tool_input.get("embedding_space", "auto")
+        top_k = tool_input.get("top_k", 10)
+        min_score = tool_input.get("min_score", 0.5)
+        dose_index = tool_input.get("dose_index", None)
+
+        # Auto-select embedding space (default to MODEX_16D)
+        if embedding_space == "auto":
+            embedding_space = "MODEX_16D"
+
+        # Validate parameters
+        if not gene or not isinstance(gene, str):
+            return {
+                "success": False,
+                "error": "Gene parameter must be a non-empty string",
+                "hint": "Examples: TSC2, SCN1A, KCNQ2, BRCA1, or Entrez ID 7157"
+            }
+
+        # STREAM 1: Identifier harmonization
+        # If user provided Entrez/UniProt ID, convert to HGNC symbol
+        if HARMONIZATION_AVAILABLE:
+            # Try harmonization (handles Entrez IDs, UniProt IDs, etc.)
+            harmonized = harmonize_gene_id(gene)
+            if harmonized["success"] and harmonized["hgnc_symbol"]:
+                gene_normalized = harmonized["hgnc_symbol"]
+                harmonization_note = f"Harmonized {harmonized['id_type_detected']} → HGNC"
+            else:
+                # Fall back to original input (might be a gene symbol)
+                gene_normalized = normalize_gene_symbol(gene)
+                harmonization_note = None
+        else:
+            # No harmonization available, use original input
+            gene_normalized = gene.upper().strip()
+            harmonization_note = None
+
+        if embedding_space not in ["MODEX_16D", "EP", "Transcript"]:
+            return {
+                "success": False,
+                "error": f"embedding_space must be 'MODEX_16D', 'EP', or 'Transcript', got '{embedding_space}'"
+            }
+
+        if not (1 <= top_k <= 200):
+            return {
+                "success": False,
+                "error": f"top_k must be between 1 and 200, got {top_k}"
+            }
+
+        if not (0.0 <= min_score <= 1.0):
+            return {
+                "success": False,
+                "error": f"min_score must be between 0.0 and 1.0, got {min_score}"
+            }
+
+        if dose_index is not None and not (0 <= dose_index <= 9):
+            return {
+                "success": False,
+                "error": f"dose_index must be between 0 and 9, got {dose_index}"
+            }
+
+        # Connect to Neo4j
+        uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
+        user = os.getenv('NEO4J_USER', 'neo4j')
+        password = os.getenv('NEO4J_PASSWORD', '')
+        database = os.getenv('NEO4J_DATABASE', 'neo4j')
+
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+
+        with driver.session(database=database) as session:
+            # First, find the gene (case-insensitive)
+            # Use harmonized/normalized symbol if available
+            gene_query = '''
+                MATCH (g:Gene)
+                WHERE toLower(g.symbol) = toLower($gene_symbol) OR toLower(g.name) = toLower($gene_symbol)
+                RETURN g.symbol as symbol
+                LIMIT 1
+            '''
+
+            gene_result = session.run(gene_query, gene_symbol=gene_normalized)
+            gene_record = gene_result.single()
+
+            if not gene_record:
+                return {
+                    "success": False,
+                    "error": f"Gene not found in Neo4j: {gene}",
+                    "gene": gene,
+                    "hint": "Gene not found. Try checking spelling or using standard gene symbols.",
+                    "available_genes": "18,611 genes with MODEX embeddings in Neo4j",
+                    "examples": ["TSC2", "SCN1A", "KCNQ2", "BRCA1", "TP53", "STXBP1"]
+                }
+
+            normalized_gene = gene_record['symbol']
+
+            # Query for antipodal rescue candidates based on embedding space
+            if embedding_space == "MODEX_16D":
+                # MODEX_16D space: Use PREDICTS_RESCUE_MODEX_16D edges (Drug→Gene direction)
+                # These are precomputed rescue predictions using 16D MODEX embeddings
+                rescue_query = '''
+                    MATCH (d:Drug)-[r:PREDICTS_RESCUE_MODEX_16D]->(g:Gene {symbol: $gene_symbol})
+                    WHERE r.rescue_score IS NOT NULL
+                    WITH d, r.rescue_score as rescue_score,
+                         r.raw_similarity as antipodal_distance,
+                         r.rank as rank,
+                         r.source as similarity_source
+                    WHERE rescue_score >= $min_score
+                    RETURN d.name as drug_name,
+                           rescue_score,
+                           antipodal_distance,
+                           null as dose,
+                           rank,
+                           COALESCE(similarity_source, 'MODEX_16D') as similarity_source
+                    ORDER BY rescue_score DESC
+                    LIMIT $top_k
+                '''
+
+                query_params = {
+                    "gene_symbol": normalized_gene,
+                    "min_score": min_score,
+                    "top_k": top_k
+                }
+
+                result = session.run(rescue_query, **query_params)
+
+            elif embedding_space == "EP":
+                # EP space: Use PREDICTS_RESCUE_EP edges (Drug→Gene direction)
+                # These are precomputed dose-specific rescue predictions
+                dose_filter = ""
+                if dose_index is not None:
+                    dose_filter = "AND r.dose_index = $dose_index"
+
+                rescue_query = f'''
+                    MATCH (d:Drug)-[r:PREDICTS_RESCUE_EP]->(g:Gene {{symbol: $gene_symbol}})
+                    WHERE r.rescue_score IS NOT NULL {dose_filter}
+                    WITH d, r.rescue_score as rescue_score,
+                         r.raw_similarity as antipodal_distance,
+                         r.dose_index as dose,
+                         r.rank as rank,
+                         r.source as similarity_source
+                    WHERE rescue_score >= $min_score
+                    RETURN d.name as drug_name,
+                           rescue_score,
+                           antipodal_distance,
+                           dose,
+                           rank,
+                           COALESCE(similarity_source, 'EP (MODEX-PCA)') as similarity_source
+                    ORDER BY rescue_score DESC
+                    LIMIT $top_k
+                '''
+
+                query_params = {
+                    "gene_symbol": normalized_gene,
+                    "min_score": min_score,
+                    "top_k": top_k
+                }
+                if dose_index is not None:
+                    query_params["dose_index"] = dose_index
+
+                result = session.run(rescue_query, **query_params)
+
+            else:
+                # Transcript space: Use SIMILAR_CROSS_SPACE edges (Gene←Drug direction)
+                # Legacy precomputed cross-space similarities
+                rescue_query = '''
+                    MATCH (g:Gene {symbol: $gene_symbol})<-[r:SIMILAR_CROSS_SPACE]-(d:Drug)
+                    WHERE r.similarity < 0
+                    WITH d, r.similarity as antipodal_distance,
+                         abs(r.similarity) as rescue_score,
+                         r.source as similarity_source
+                    WHERE rescue_score >= $min_score
+                    RETURN d.name as drug_name,
+                           rescue_score,
+                           antipodal_distance,
+                           null as dose,
+                           null as rank,
+                           COALESCE(similarity_source, 'Transcript (cross-space)') as similarity_source
+                    ORDER BY rescue_score DESC
+                    LIMIT $top_k
+                '''
+
+                result = session.run(rescue_query,
+                    gene_symbol=normalized_gene,
+                    min_score=min_score,
+                    top_k=top_k
+                )
+
+            # Format results
+            rescue_candidates = []
+            for record in result:
+                candidate = {
+                    "drug": record['drug_name'],
+                    "rescue_score": round(record['rescue_score'], 3),
+                    "antipodal_distance": round(record['antipodal_distance'], 3),
+                    "similarity_source": record['similarity_source']
+                }
+
+                # Add space-specific fields
+                if embedding_space == "MODEX_16D":
+                    if record['rank'] is not None:
+                        candidate["rank"] = int(record['rank'])
+                elif embedding_space == "EP":
+                    if record['dose'] is not None:
+                        candidate["dose_index"] = int(record['dose'])
+                    if record['rank'] is not None:
+                        candidate["rank"] = int(record['rank'])
+
+                rescue_candidates.append(candidate)
+
+            driver.close()
+
+            # Determine data source description
+            if embedding_space == "MODEX_16D":
+                data_source_desc = "Neo4j PREDICTS_RESCUE_MODEX_16D edges (1.8M predictions, 16D MODEX)"
+            elif embedding_space == "EP":
+                data_source_desc = "Neo4j PREDICTS_RESCUE_EP edges (1.61M dose-specific)"
+                if dose_index is not None:
+                    data_source_desc += f" filtered to dose={dose_index}"
+            else:
+                data_source_desc = "Neo4j SIMILAR_CROSS_SPACE edges (52K precomputed)"
+
+            # Determine latency based on space
+            if embedding_space == "MODEX_16D":
+                latency = "<50ms"
+            elif embedding_space == "EP":
+                latency = "<50ms"
+            else:
+                latency = "<100ms"
+
+            result_dict = {
+                "success": True,
+                "gene": normalized_gene,
+                "gene_input": gene,
+                "embedding_space": embedding_space,
+                "rescue_candidates": rescue_candidates,
+                "count": len(rescue_candidates),
+                "data_source": data_source_desc,
+                "latency": latency,
+                "query_params": {
+                    "top_k": top_k,
+                    "min_score": min_score,
+                    "embedding_space": embedding_space,
+                    "dose_index": dose_index
+                }
+            }
+
+            # Add harmonization note if applicable
+            if harmonization_note:
+                result_dict["harmonization"] = harmonization_note
+
+            return result_dict
+
+    except Exception as e:
+        # Unexpected error
+        return {
+            "success": False,
+            "error": f"Unexpected error: {str(e)}",
+            "gene": tool_input.get("gene", "unknown"),
+            "error_type": type(e).__name__
+        }
+
+
+# Export tool for registration
+__all__ = ["TOOL_DEFINITION", "execute"]

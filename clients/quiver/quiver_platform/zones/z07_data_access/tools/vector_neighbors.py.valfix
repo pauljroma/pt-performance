@@ -1,0 +1,745 @@
+"""
+Vector Neighbors Tool - Gene/Drug K-Nearest Neighbors Similarity
+
+ARCHITECTURE DECISION LOG:
+v1.0 (current): Pure agentic with atomic tools
+  - This tool provides Claude with similarity search capabilities
+  - Handles case-insensitive gene/drug name matching with fuzzy matching
+  - Returns K-nearest neighbors with similarity scores (0-1)
+  - Supports both gene-to-gene and drug-to-drug similarity search
+
+Pattern: Wraps EmbeddingService.find_similar_genes() and cross-space similarity
+Reference: /Users/expo/Code/expo/clients/quiver/quiver_platform/zones/z07_data_access/embedding_service.py:275-339
+"""
+
+import sys
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+
+# Add path for embedding service
+project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Import harmonization utilities (Stream 1: Foundation)
+try:
+    from tool_utils import validate_tool_input, format_validation_response, harmonize_gene_id, harmonize_drug_id, normalize_gene_symbol
+    HARMONIZATION_AVAILABLE = True
+except ImportError:
+    HARMONIZATION_AVAILABLE = False
+
+# Try absolute import first, fallback to relative
+try:
+    from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver import (
+        get_drug_name_resolver,
+    )
+    from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import (
+        get_embedding_service,
+    )
+except ModuleNotFoundError:
+    # For direct test execution, use relative import
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from drug_name_resolver import get_drug_name_resolver
+    from embedding_service import get_embedding_service
+
+
+# Claude Tool Definition (Anthropic format)
+TOOL_DEFINITION = {
+    "name": "vector_neighbors",
+    "description": """Find K-nearest neighbors (similar genes or drugs) using embedding similarity across multiple spaces.
+
+Performs fast vector similarity search to find entities most similar to a query entity.
+Uses cosine similarity on normalized embeddings across 9 production embedding spaces.
+
+**EXPANSIVE THINKING MODE:**
+For comprehensive analysis, use different embedding spaces to get complementary perspectives:
+- Gene spaces: ENS_v3_1 (Grade A+, 64D), MODEX_Gene_v1_0 (co-expression, 32D), Transcript_v1_Gene (L1000, 32D)
+- Drug spaces: Transcript_v1_Drug (473K LINCS!), PCA_v4_7 (14K clinical), PLATINUM (high-confidence)
+
+Examples:
+- "What genes are similar to TP53?" → Use ENS_v3_1 for Grade A+ results
+- "Find drugs like aspirin" → Use Transcript_v1_Drug for maximum 473K compound coverage
+- "Gene neighbors for TSC2 across all spaces" → Query multiple spaces for diverse perspectives
+- "Top 20 LINCS compounds similar to sirolimus" → Use Transcript_v1_Drug (473K compounds)
+
+Key metrics:
+- similarity_score: 0-1 scale (1 = identical, 0.9+ = highly similar)
+- entity_name: Standardized name of similar entity
+- entity_type: Type of entity (gene or drug)
+- embedding_space: Which space was queried
+- metadata: Additional attributes (norm, tier, hit_rate, etc.)
+
+Data Coverage by Space:
+Genes: ENS_v3_1 (18K, 64D), MODEX_Gene_v1_0 (18K, 32D), Transcript_v1_Gene (12K, 32D)
+Drugs: Transcript_v1_Drug (473K, 32D), PCA_v4_7 (14K, 32D), PLATINUM_QNVS_v2_0 (3K, 16D)
+""",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "entity": {
+                "type": "string",
+                "description": "Entity identifier in any format. Genes: HGNC symbol (TP53), Entrez ID (7157), UniProt ID. Drugs: Drug name, ChEMBL ID, RxNorm ID, LINCS ID. Case-insensitive with fuzzy matching and auto-harmonization.",
+            },
+            "entity_type": {
+                "type": "string",
+                "enum": ["gene", "drug", "auto"],
+                "description": "Type of entity: 'gene' for gene symbols, 'drug' for compounds, or 'auto' to detect automatically. Default: 'auto'",
+                "default": "auto",
+            },
+            "embedding_space": {
+                "type": "string",
+                "description": "Embedding space to search (optional). Default: 'auto' (best for entity type). For EXPANSIVE THINKING: use ENS_v3_1 for genes (Grade A+), Transcript_v1_Drug for drugs (473K compounds). Gene spaces: ENS_v3_1, MODEX_Gene_v1_0, Transcript_v1_Gene. Drug spaces: Transcript_v1_Drug, PCA_v4_7, PLATINUM_QNVS_v2_0, PLATINUM_Similarity_v1_0, DFP_PhaseII_v1_0, ENS_v3_1_Drug",
+                "default": "auto",
+                "enum": [
+                    "auto",
+                    "ENS_v3_1",
+                    "MODEX_Gene_v1_0",
+                    "Transcript_v1_Gene",
+                    "PCA_v4_7",
+                    "Transcript_v1_Drug",
+                    "PLATINUM_QNVS_v2_0",
+                    "PLATINUM_Similarity_v1_0",
+                    "DFP_PhaseII_v1_0",
+                    "ENS_v3_1_Drug",
+                ],
+            },
+            "top_k": {
+                "type": "integer",
+                "description": "Number of nearest neighbors to return (1-200). Default: 10",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 200,
+            },
+            "min_similarity": {
+                "type": "number",
+                "description": "Minimum similarity threshold (0-1). Excludes low-similarity results. Default: 0.85",
+                "default": 0.85,
+                "minimum": 0.0,
+                "maximum": 1.0,
+            },
+        },
+        "required": ["entity"],
+    },
+}
+
+
+async def execute(tool_input: dict[str, Any]) -> dict[str, Any]:
+
+    # Stream 1.2: Input validation
+    if VALIDATION_AVAILABLE:
+        validation_errors = validate_tool_input(tool_input, TOOL_DEFINITION["input_schema"], "vector_neighbors")
+        if validation_errors:
+            return format_validation_response("vector_neighbors", validation_errors)
+    """
+    Execute vector_neighbors tool - find K-nearest neighbors by similarity.
+
+    This is a thin wrapper around EmbeddingService methods that:
+    - Performs fuzzy entity name matching (case-insensitive)
+    - Computes cosine similarity on normalized embeddings
+    - Returns top-K most similar entities with scores
+
+    Args:
+        tool_input: Dict with keys:
+            - entity (str): Gene symbol or drug name (case-insensitive, fuzzy matched)
+            - entity_type (str): "gene" or "drug"
+            - top_k (int, optional): Number of results (default: 10, max: 200)
+            - min_similarity (float, optional): Minimum score threshold (default: 0.85)
+
+    Returns:
+        Dict with keys:
+            - success (bool): Whether operation succeeded
+            - entity (str): Normalized entity name used for query
+            - entity_input (str): Original input entity name
+            - entity_type (str): Type of entity searched
+            - neighbors (List[Dict]): K-nearest neighbors ranked by similarity
+            - count (int): Number of results returned
+            - data_source (str): Data provenance
+            - latency (str): Performance metric
+            - error (str, optional): Error message if failed
+
+    Example:
+        >>> await execute({"entity": "tp53", "entity_type": "gene", "top_k": 5})
+        {
+            "success": True,
+            "entity": "TP53",
+            "entity_input": "tp53",
+            "entity_type": "gene",
+            "neighbors": [
+                {
+                    "entity_name": "TP53BP1",
+                    "similarity_score": 0.92,
+                    "tier": 1,
+                    "metadata": {
+                        "index": 4521,
+                        "norm": 1.0,
+                        "entity_type": "gene",
+                        "hit_rate": 0.85
+                    }
+                },
+                ...
+            ],
+            "count": 5,
+            "data_source": "Direct parquet (MODEX 32D for genes / PCA 32D for drugs)",
+            "latency": "<5ms"
+        }
+    """
+    try:
+        # Get parameters with defaults
+        entity = tool_input["entity"]
+        entity_type = tool_input.get("entity_type", "auto")
+        embedding_space = tool_input.get("embedding_space", "auto")
+        top_k = tool_input.get("top_k", 10)
+        min_similarity = tool_input.get("min_similarity", 0.85)
+
+        # Validate parameters
+        if not entity or not isinstance(entity, str):
+            return {
+                "success": False,
+                "error": "Entity parameter must be a non-empty string",
+                "hint": "Examples for genes: TP53, 7157 (Entrez), BRCA1. Examples for drugs: aspirin, CHEMBL25, paracetamol",
+            }
+
+        # STREAM 1: Identifier harmonization
+        harmonization_note = None
+        entity_normalized = entity
+
+        if HARMONIZATION_AVAILABLE:
+            # Try harmonization for genes first (if entity_type is gene or auto)
+            if entity_type in ["gene", "auto"]:
+                harmonized = harmonize_gene_id(entity)
+                if harmonized["success"] and harmonized["hgnc_symbol"]:
+                    entity_normalized = harmonized["hgnc_symbol"]
+                    harmonization_note = f"Gene harmonized: {harmonized['id_type_detected']} → HGNC"
+                    entity_type = "gene"  # Lock in type
+
+            # If not a gene, try drug harmonization
+            if not harmonization_note and entity_type in ["drug", "auto"]:
+                harmonized_drug = harmonize_drug_id(entity)
+                if harmonized_drug["success"] and harmonized_drug.get("drug_name"):
+                    entity_normalized = harmonized_drug.get("drug_name", entity)
+                    harmonization_note = f"Drug harmonized: {harmonized_drug['id_type_detected']}"
+                    entity_type = "drug"  # Lock in type
+
+        # Auto-detect entity type if needed
+        if entity_type == "auto":
+            # Try to detect by checking if entity exists in gene or drug embeddings
+            embedding_service = get_embedding_service()
+            if embedding_service and embedding_service.gene_df is not None:
+                # Check genes first (common case)
+                gene_df = embedding_service.gene_df
+                gene_names_upper = [
+                    str(g).upper()
+                    for g in gene_df["entity_name"].values
+                    if g is not None
+                ]
+                if entity.upper() in gene_names_upper:
+                    entity_type = "gene"
+                elif embedding_service.drug_df is not None:
+                    # Check drugs
+                    drug_df = embedding_service.drug_df
+                    drug_names_upper = [
+                        str(d).upper()
+                        for d in drug_df["entity_name"].values
+                        if d is not None
+                    ]
+                    if entity.upper() in drug_names_upper:
+                        entity_type = "drug"
+                    else:
+                        # Default to gene if not found (most queries are for genes)
+                        entity_type = "gene"
+                else:
+                    entity_type = "gene"
+            else:
+                # No embedding service, default to gene
+                entity_type = "gene"
+
+        if entity_type not in ["gene", "drug"]:
+            return {
+                "success": False,
+                "error": f"entity_type must be 'gene' or 'drug', got '{entity_type}'",
+                "hint": "Use entity_type='gene' for gene symbols or entity_type='drug' for compounds",
+            }
+
+        if not (1 <= top_k <= 200):
+            return {
+                "success": False,
+                "error": f"top_k must be between 1 and 200, got {top_k}",
+            }
+
+        if not (0.0 <= min_similarity <= 1.0):
+            return {
+                "success": False,
+                "error": f"min_similarity must be between 0.0 and 1.0, got {min_similarity}",
+            }
+
+        # Sapphire v3.2: Multi-space embedding support
+        # Determine which embedding space to use (auto-selection or explicit)
+        if embedding_space == "auto":
+            # Auto-select BEST space for entity type (expansive thinking mode)
+            if entity_type == "gene":
+                selected_space = (
+                    "ENS_v3_1"  # Grade A+ gene embeddings (64D, 18K genes) 🚀
+                )
+            else:
+                selected_space = (
+                    "Transcript_v1_Drug"  # MAXIMUM COVERAGE: 473K LINCS compounds! 🚀
+                )
+        else:
+            selected_space = embedding_space
+
+        # Validate space matches entity type
+        gene_spaces = ["ENS_v3_1", "MODEX_Gene_v1_0", "Transcript_v1_Gene"]
+        drug_spaces = [
+            "PCA_v4_7",
+            "Transcript_v1_Drug",
+            "PLATINUM_QNVS_v2_0",
+            "PLATINUM_Similarity_v1_0",
+            "DFP_PhaseII_v1_0",
+            "ENS_v3_1_Drug",
+        ]
+
+        if entity_type == "gene" and selected_space not in gene_spaces:
+            return {
+                "success": False,
+                "error": f"Invalid gene embedding space: {selected_space}",
+                "hint": f"Valid gene spaces: {', '.join(gene_spaces)}",
+            }
+        elif entity_type == "drug" and selected_space not in drug_spaces:
+            return {
+                "success": False,
+                "error": f"Invalid drug embedding space: {selected_space}",
+                "hint": f"Valid drug spaces: {', '.join(drug_spaces)}",
+            }
+
+        # Get embedding service
+        embedding_service = get_embedding_service()
+        if embedding_service is None:
+            return {
+                "success": False,
+                "error": "Embedding service not available",
+                "hint": "Check that embedding data files are present",
+            }
+
+        # Load embeddings from selected space (BACKWARD COMPAT: default spaces use cached df)
+        if entity_type == "gene":
+            if selected_space == "MODEX_Gene_v1_0":
+                # Backward compatibility: use cached gene_df (MODEX default)
+                df = embedding_service.gene_df
+                entity_names = df["entity_name"].values
+                embedding_cols = embedding_service._gene_embedding_cols
+            else:
+                # Load from specific space (ENS_v3_1 or Transcript_v1_Gene)
+                space_data = embedding_service.load_gene_space(selected_space)
+                entity_names = space_data["entity_names"]
+                embeddings = space_data["embeddings"]
+                # Create temporary dataframe for compatibility
+                import pandas as pd
+
+                df = pd.DataFrame(
+                    {
+                        "entity_name": entity_names,
+                        **{
+                            f"emb_{i}": embeddings[:, i]
+                            for i in range(embeddings.shape[1])
+                        },
+                    }
+                )
+                embedding_cols = [f"emb_{i}" for i in range(embeddings.shape[1])]
+        else:
+            if selected_space == "PCA_v4_7":
+                # Backward compatibility: use cached drug_df (PCA default)
+                df = embedding_service.drug_df
+                if "entity_name" in df.columns:
+                    entity_names = df["entity_name"].values
+                else:
+                    entity_names = df.index.astype(str).values
+                embedding_cols = embedding_service._drug_embedding_cols
+            else:
+                # Load from specific drug space (Transcript_v1_Drug, PLATINUM, etc.)
+                space_data = embedding_service.load_drug_space(selected_space)
+                entity_names = space_data["entity_names"]
+                embeddings = space_data["embeddings"]
+                # Create temporary dataframe for compatibility
+                import pandas as pd
+
+                df = pd.DataFrame(
+                    {
+                        "entity_name": entity_names,
+                        **{
+                            f"emb_{i}": embeddings[:, i]
+                            for i in range(embeddings.shape[1])
+                        },
+                    }
+                )
+                embedding_cols = [f"emb_{i}" for i in range(embeddings.shape[1])]
+
+        # Try exact match first (fastest) - use harmonized entity if available
+        search_entity = entity_normalized if entity_normalized else entity
+        if search_entity in entity_names:
+            normalized_entity = search_entity
+        else:
+            # Try case-insensitive match
+            entity_upper = search_entity.upper()
+            matches = [e for e in entity_names if str(e).upper() == entity_upper]
+
+            if matches:
+                normalized_entity = matches[0]  # Use first match
+            else:
+                # Fuzzy match using Levenshtein distance for typos
+                from difflib import get_close_matches
+
+                # get_close_matches returns closest matches based on sequence similarity
+                close_matches = get_close_matches(
+                    search_entity.upper(),  # Normalize to uppercase
+                    [
+                        str(e).upper() for e in entity_names
+                    ],  # Search in uppercase entity names
+                    n=1,  # Return top match
+                    cutoff=0.8,  # 80% similarity threshold
+                )
+
+                if close_matches:
+                    # Find original entity name with correct casing
+                    matched_upper = close_matches[0]
+                    normalized_entity = next(
+                        e for e in entity_names if str(e).upper() == matched_upper
+                    )
+                else:
+                    # No fuzzy match found
+                    return {
+                        "success": False,
+                        "error": f"Entity not found in embeddings: {entity}",
+                        "entity": entity,
+                        "entity_type": entity_type,
+                        "hint": "Entity not found. Try checking spelling or using standard names.",
+                        "available_count": f"{len(entity_names):,} entities in {entity_type} database",
+                        "examples": ["TP53", "BRCA1", "SCN1A"]
+                        if entity_type == "gene"
+                        else ["aspirin", "paracetamol"],
+                    }
+
+        # Perform similarity search based on entity type (Sapphire v3.2: multi-space support)
+        if entity_type == "gene":
+            # Use custom gene similarity search with dynamic space
+            try:
+                results = _find_similar_genes(
+                    df=df,
+                    embedding_cols=embedding_cols,
+                    gene=normalized_entity,
+                    top_k=top_k,
+                    min_similarity=min_similarity,
+                )
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "entity": entity,
+                    "entity_type": entity_type,
+                    "embedding_space": selected_space,
+                }
+        else:
+            # Implement drug similarity search with dynamic space
+            try:
+                results = _find_similar_drugs(
+                    df=df,
+                    embedding_cols=embedding_cols,
+                    drug=normalized_entity,
+                    top_k=top_k,
+                    min_similarity=min_similarity,
+                    drug_name_resolver=get_drug_name_resolver(),
+                )
+            except ValueError as e:
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "entity": entity,
+                    "entity_type": entity_type,
+                    "embedding_space": selected_space,
+                }
+
+        # Format results for Claude (Sapphire v3.1: with commercial names for drugs)
+        neighbors = []
+        for result in results:
+            neighbor_data = {
+                "similarity_score": round(result.similarity_score, 3),
+                "tier": result.tier,
+                "metadata": result.metadata,
+            }
+
+            # For drugs, show commercial name as PRIMARY field
+            if entity_type == "drug":
+                commercial_name = result.metadata.get(
+                    "commercial_name", result.gene_name
+                )
+                neighbor_data["drug"] = (
+                    commercial_name  # v3.1: PRIMARY field - use this for display
+                )
+                neighbor_data["chembl_id"] = result.metadata.get("chembl_id", "")
+                neighbor_data["screening_id"] = (
+                    result.gene_name
+                )  # QS ID for traceability (internal)
+                neighbor_data["name_source"] = result.metadata.get(
+                    "name_source", "none"
+                )
+            else:
+                # For genes, use 'gene' as primary field
+                neighbor_data["gene"] = result.gene_name
+
+            neighbors.append(neighbor_data)
+
+        # Get space config for metadata
+        from clients.quiver.quiver_platform.zones.z07_data_access.embedding_config import (
+            PRODUCTION_EMBEDDINGS,
+        )
+
+        space_config = PRODUCTION_EMBEDDINGS.get(selected_space)
+        if space_config:
+            dimensions = space_config.dimensions
+            entity_count = space_config.entity_count
+        else:
+            dimensions = "unknown"
+            entity_count = len(entity_names)
+
+        result_dict = {
+            "success": True,
+            "entity": normalized_entity,  # Return normalized entity name that was actually used
+            "entity_input": entity,  # Show original input for reference
+            "entity_type": entity_type,
+            "embedding_space": selected_space,  # v3.2: Show which space was queried
+            "neighbors": neighbors,
+            "count": len(neighbors),
+            "data_source": f"{selected_space} ({dimensions}D, {entity_count:,} {entity_type}s)",
+            "latency": "<5ms" if entity_count < 100000 else "<50ms",
+            "query_params": {
+                "top_k": top_k,
+                "min_similarity": min_similarity,
+                "embedding_space": selected_space,
+            },
+        }
+
+        # Add harmonization note if applicable
+        if harmonization_note:
+            result_dict["harmonization"] = harmonization_note
+
+        return result_dict
+
+    except ValueError as e:
+        # Entity not found in embeddings
+        error_msg = str(e)
+        return {
+            "success": False,
+            "error": error_msg,
+            "entity": tool_input.get("entity", "unknown"),
+            "entity_type": tool_input.get("entity_type", "unknown"),
+            "hint": "Entity not found in embedding database. Check spelling or try entity name variations.",
+        }
+
+    except Exception as e:
+        # Unexpected error
+        return {
+            "success": False,
+            "error": f"Unexpected error: {e!s}",
+            "entity": tool_input.get("entity", "unknown"),
+            "entity_type": tool_input.get("entity_type", "unknown"),
+            "error_type": type(e).__name__,
+        }
+
+
+def _find_similar_genes(
+    df,
+    embedding_cols: list[str],
+    gene: str,
+    top_k: int = 10,
+    min_similarity: float = 0.85,
+):
+    """
+    Find genes most similar to the query gene (Sapphire v3.2: multi-space support).
+
+    Implements similarity search using cosine similarity on normalized embeddings.
+
+    Args:
+        df: DataFrame containing gene embeddings (from any gene space)
+        embedding_cols: List of column names for embedding dimensions
+        gene: Query gene symbol
+        top_k: Number of results to return
+        min_similarity: Minimum similarity threshold (0-1)
+
+    Returns:
+        List of GeneResult objects, sorted by similarity (descending)
+    """
+    try:
+        from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import (
+            GeneResult,
+        )
+    except ModuleNotFoundError:
+        from embedding_service import GeneResult
+
+    # Find query gene in dataframe
+    gene_row = df[df["entity_name"] == gene]
+    if gene_row.empty:
+        raise ValueError(f"Gene not found in embeddings: {gene}")
+
+    # Get query gene embedding
+    gene_emb = gene_row[embedding_cols].values[0].astype(np.float32)
+
+    # Normalize query embedding
+    gene_emb_norm = gene_emb / (np.linalg.norm(gene_emb) + 1e-8)
+
+    # Get all gene embeddings from dataframe
+    gene_embeddings = df[embedding_cols].values.astype(np.float32)
+
+    # Normalize gene embeddings
+    gene_norms = np.linalg.norm(gene_embeddings, axis=1, keepdims=True) + 1e-8
+    gene_embeddings_norm = gene_embeddings / gene_norms
+
+    # Compute cosine similarities
+    similarities = gene_embeddings_norm @ gene_emb_norm
+
+    # Build gene index from dataframe
+    gene_index = {row["entity_name"]: idx for idx, row in df.iterrows()}
+
+    # Filter by minimum similarity (exclude self)
+    query_idx = gene_index[gene]
+    valid_mask = (similarities >= min_similarity) & (
+        np.arange(len(similarities)) != query_idx
+    )
+    valid_indices = np.where(valid_mask)[0]
+
+    # Sort by similarity (descending)
+    sorted_indices = valid_indices[np.argsort(-similarities[valid_indices])]
+
+    # Take top K
+    top_indices = sorted_indices[:top_k]
+
+    # Build results
+    results = []
+    for idx in top_indices:
+        gene_row = df.iloc[idx]
+
+        result = GeneResult(
+            gene_name=gene_row["entity_name"],
+            similarity_score=float(similarities[idx]),
+            tier=gene_row.get("best_hit_tier"),
+            metadata={
+                "index": int(idx),
+                "norm": float(gene_norms[idx][0]),
+                "entity_type": gene_row.get("entity_type"),
+                "hit_rate": gene_row.get("hit_rate"),
+            },
+        )
+        results.append(result)
+
+    return results
+
+
+def _find_similar_drugs(
+    df,
+    embedding_cols: list[str],
+    drug: str,
+    top_k: int = 10,
+    min_similarity: float = 0.85,
+    drug_name_resolver=None,
+):
+    """
+    Find drugs most similar to the query drug (Sapphire v3.2: multi-space support).
+
+    Mirrors find_similar_genes() implementation for drugs.
+
+    Args:
+        df: DataFrame containing drug embeddings (from any drug space)
+        embedding_cols: List of column names for embedding dimensions
+        drug: Query drug name
+        top_k: Number of results to return
+        min_similarity: Minimum similarity threshold (0-1)
+        drug_name_resolver: DrugNameResolver instance for commercial names
+
+    Returns:
+        List of GeneResult objects (reused dataclass for compatibility)
+    """
+    try:
+        from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import (
+            GeneResult,
+        )
+    except ModuleNotFoundError:
+        from embedding_service import GeneResult
+
+    # Find query drug in dataframe
+    drug_row = df[df["entity_name"] == drug]
+    if drug_row.empty:
+        raise ValueError(f"Drug not found in embeddings: {drug}")
+
+    # Get query drug embedding
+    drug_emb = drug_row[embedding_cols].values[0].astype(np.float32)
+
+    # Normalize query embedding
+    drug_emb_norm = drug_emb / (np.linalg.norm(drug_emb) + 1e-8)
+
+    # Get all drug embeddings from dataframe
+    drug_embeddings = df[embedding_cols].values.astype(np.float32)
+
+    # Normalize drug embeddings
+    drug_norms = np.linalg.norm(drug_embeddings, axis=1, keepdims=True) + 1e-8
+    drug_embeddings_norm = drug_embeddings / drug_norms
+
+    # Compute cosine similarities
+    similarities = drug_embeddings_norm @ drug_emb_norm
+
+    # Build drug index from dataframe
+    drug_index = {row["entity_name"]: idx for idx, row in df.iterrows()}
+
+    # Filter by minimum similarity (exclude self)
+    query_idx = drug_index[drug]
+    valid_mask = (similarities >= min_similarity) & (
+        np.arange(len(similarities)) != query_idx
+    )
+    valid_indices = np.where(valid_mask)[0]
+
+    # Sort by similarity (descending)
+    sorted_indices = valid_indices[np.argsort(-similarities[valid_indices])]
+
+    # Take top K
+    top_indices = sorted_indices[:top_k]
+
+    # Build results using GeneResult dataclass (reuse for compatibility)
+    # Sapphire v3.1: Resolve commercial names for all drug results
+    results = []
+    for idx in top_indices:
+        drug_row_result = df.iloc[idx]
+
+        # Use entity_name if available, otherwise use index
+        drug_id = drug_row_result.get("entity_name", f"DRUG_{idx}")
+
+        # Resolve commercial name (Sapphire v3.1 feature)
+        if drug_name_resolver:
+            name_info = drug_name_resolver.resolve(drug_id)
+            commercial_name = name_info["commercial_name"]
+            chembl_id = name_info.get("chembl_id", "")
+            name_source = name_info.get("source", "none")
+        else:
+            commercial_name = drug_id
+            chembl_id = ""
+            name_source = "none"
+
+        result = GeneResult(
+            gene_name=drug_id,  # Keep QS ID for internal consistency
+            similarity_score=float(similarities[idx]),
+            tier=drug_row_result.get("best_hit_tier")
+            if "best_hit_tier" in drug_row_result.index
+            else drug_row_result.get("data_tier"),
+            metadata={
+                "index": int(idx),
+                "norm": float(drug_norms[idx][0]),
+                "entity_type": drug_row_result.get("entity_type", "drug"),
+                "commercial_name": commercial_name,  # v3.1: Commercial name
+                "chembl_id": chembl_id,
+                "name_source": name_source,
+            },
+        )
+        results.append(result)
+
+    return results
+
+
+# Export tool for registration
+__all__ = ["TOOL_DEFINITION", "execute"]

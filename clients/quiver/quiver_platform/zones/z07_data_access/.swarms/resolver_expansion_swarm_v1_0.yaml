@@ -1,0 +1,454 @@
+# Resolver Expansion Swarm v1.0
+# ===============================
+# Purpose: Add 7 new resolvers to meta_layer for MOA expansion
+# Pattern: Follow BaseResolver inheritance from meta_layer/base_resolver.py
+# Target: Enable multi-modal drug prediction with 75-90% coverage
+# Date: 2025-12-01
+
+swarm_name: "Resolver Expansion for MOA Prediction"
+version: "1.0.0"
+zone: "z07_data_access"
+base_path: "meta_layer/resolvers"
+
+# Execution Configuration
+execution:
+  mode: "parallel"
+  max_concurrent_agents: 5
+  checkpoint_validation: true
+  rollback_on_failure: true
+
+# Success Criteria
+success_metrics:
+  test_coverage: 100%
+  resolver_latency_ms: 10
+  cache_hit_rate: 0.90
+  error_rate: 0.01
+
+# Phase 1: Enhanced Gene/Protein Resolution (Priority 1 - MOA Critical)
+# ======================================================================
+phase_1:
+  name: "Gene/Protein Resolution Enhancement"
+  duration_estimate: "3 hours"
+  parallelization: 2
+  agents:
+    - id: "agent_1_gene_resolver"
+      name: "Enhanced GeneNameResolver"
+      priority: "CRITICAL"
+      description: "Upgrade target_resolver.py with full HGNC cache integration"
+
+      tasks:
+        - task: "Load HGNC cache (9,886 genes with UniProt mappings)"
+          file: "/Users/expo/Code/expo/clients/quiver/data/Nov 26 Data/mappings/hgnc_cache.csv"
+
+        - task: "Load STRING gene map (19,275 proteins)"
+          file: "/Users/expo/Code/expo/clients/quiver/data/Nov 26 Data/mappings/string_gene_map.csv"
+
+        - task: "Implement bidirectional resolution"
+          methods:
+            - "resolve(gene_symbol) -> {hgnc_symbol, entrez_id, ensembl_id, uniprot_id}"
+            - "resolve_by_entrez(entrez_id) -> hgnc_symbol"
+            - "resolve_by_ensembl(ensembl_id) -> hgnc_symbol"
+            - "resolve_by_uniprot(uniprot_id) -> hgnc_symbol"
+            - "bulk_resolve(gene_list) -> dict"
+
+        - task: "Add multi-tier cascade"
+          sources:
+            - "HGNC cache (primary - 9,886 genes)"
+            - "STRING gene map (secondary - 19,275)"
+            - "Neo4j Gene nodes (fallback)"
+
+        - task: "Implement LRU caching (20K entries)"
+
+        - task: "Add comprehensive tests"
+          test_cases:
+            - "Test exact match (TP53 -> ENSG00000141510)"
+            - "Test reverse lookup (P04637 -> TP53)"
+            - "Test alias resolution (P53 -> TP53)"
+            - "Test performance (<10ms)"
+            - "Test cache efficiency (>90% hit rate)"
+
+      output_file: "meta_layer/resolvers/gene_name_resolver.py"
+      test_file: "meta_layer/tests/test_gene_name_resolver.py"
+
+      success_criteria:
+        - "95%+ gene normalization accuracy"
+        - "<10ms latency"
+        - "9,886+ genes covered"
+        - "100% test coverage"
+
+    - id: "agent_2_protein_resolver"
+      name: "ProteinResolver"
+      priority: "HIGH"
+      description: "Build UniProt/STRING protein resolution"
+
+      tasks:
+        - task: "Load STRING gene map for protein mappings"
+
+        - task: "Implement UniProt REST API fallback"
+
+        - task: "Add PPI network queries"
+          methods:
+            - "resolve(uniprot_id) -> {protein_name, gene_symbol, string_id, pdb_ids}"
+            - "resolve_by_string(string_id) -> uniprot_id"
+            - "resolve_by_gene_symbol(gene) -> List[uniprot_id]"
+            - "get_interaction_partners(uniprot_id, min_score) -> List[partner]"
+
+        - task: "Implement Neo4j STRING_INTERACTS fallback"
+
+        - task: "Add comprehensive tests"
+
+      output_file: "meta_layer/resolvers/protein_resolver.py"
+      test_file: "meta_layer/tests/test_protein_resolver.py"
+
+      success_criteria:
+        - "90%+ protein resolution accuracy"
+        - "<10ms latency"
+        - "100% test coverage"
+
+# Phase 2: Pathway and Disease Resolution (Priority 2-3)
+# ========================================================
+phase_2:
+  name: "Pathway and Disease Resolution"
+  duration_estimate: "4 hours"
+  parallelization: 2
+  depends_on: ["phase_1"]
+
+  agents:
+    - id: "agent_3_pathway_resolver"
+      name: "PathwayResolver"
+      priority: "HIGH"
+      description: "Build Reactome/KEGG pathway resolution"
+
+      tasks:
+        - task: "Implement Reactome pathway data loading"
+          note: "2,712 pathways, 11,186 genes"
+
+        - task: "Add KEGG pathway REST API integration"
+
+        - task: "Build pathway member gene mapping"
+          methods:
+            - "resolve(pathway_id) -> {pathway_name, database, member_genes, gene_count}"
+            - "pathways_for_gene(gene_symbol) -> List[pathway]"
+            - "drugs_targeting_pathway(pathway_id) -> List[drug]"
+
+        - task: "Implement Neo4j Pathway node fallback"
+
+        - task: "Add comprehensive tests"
+
+      output_file: "meta_layer/resolvers/pathway_resolver.py"
+      test_file: "meta_layer/tests/test_pathway_resolver.py"
+
+      success_criteria:
+        - "2,712+ Reactome pathways covered"
+        - "<10ms latency"
+        - "100% test coverage"
+
+    - id: "agent_4_disease_resolver"
+      name: "DiseaseResolver"
+      priority: "MEDIUM"
+      description: "Build disease ontology resolution"
+
+      tasks:
+        - task: "Implement Disease Ontology loading"
+
+        - task: "Add MeSH and ICD-10 mappings"
+
+        - task: "Build gene-disease associations"
+          methods:
+            - "resolve(disease_id) -> {disease_name, mesh_id, icd10_codes, associated_genes}"
+            - "diseases_for_gene(gene_symbol) -> List[disease]"
+            - "diseases_for_drug(chembl_id) -> List[disease]"
+            - "drugs_for_disease(disease_id) -> List[drug]"
+
+        - task: "Add OpenTargets API fallback"
+
+        - task: "Add comprehensive tests"
+
+      output_file: "meta_layer/resolvers/disease_resolver.py"
+      test_file: "meta_layer/tests/test_disease_resolver.py"
+
+      success_criteria:
+        - "90%+ disease resolution accuracy"
+        - "<10ms latency"
+        - "100% test coverage"
+
+# Phase 3: Cell Line and Tissue Resolution (Priority 4)
+# =======================================================
+phase_3:
+  name: "Cell Line and Tissue Resolution"
+  duration_estimate: "3 hours"
+  parallelization: 2
+  depends_on: ["phase_2"]
+
+  agents:
+    - id: "agent_5_cellline_resolver"
+      name: "CellLineResolver"
+      priority: "MEDIUM"
+      description: "Build cell line identifier resolution"
+
+      tasks:
+        - task: "Implement Cellosaurus cell line data loading"
+          note: "Comprehensive cell line database"
+
+        - task: "Add ATCC catalog mappings"
+
+        - task: "Build cell line metadata resolution"
+          methods:
+            - "resolve(cell_line_id) -> {cell_line_name, species, tissue, disease, synonyms}"
+            - "resolve_by_name(cell_line_name) -> cell_line_id"
+            - "cell_lines_for_tissue(tissue) -> List[cell_line]"
+            - "cell_lines_for_disease(disease) -> List[cell_line]"
+
+        - task: "Add comprehensive tests"
+
+      output_file: "meta_layer/resolvers/cellline_resolver.py"
+      test_file: "meta_layer/tests/test_cellline_resolver.py"
+
+      success_criteria:
+        - "95%+ cell line resolution accuracy"
+        - "<10ms latency"
+        - "100% test coverage"
+
+    - id: "agent_6_tissue_resolver"
+      name: "TissueResolver"
+      priority: "MEDIUM"
+      description: "Build tissue/organ identifier resolution"
+
+      tasks:
+        - task: "Implement UBERON ontology loading"
+          note: "Unified anatomy ontology"
+
+        - task: "Add BTO (BRENDA Tissue Ontology) mappings"
+
+        - task: "Build tissue hierarchy resolution"
+          methods:
+            - "resolve(tissue_id) -> {tissue_name, parent_tissue, child_tissues, synonyms}"
+            - "resolve_by_name(tissue_name) -> tissue_id"
+            - "tissues_for_gene(gene_symbol) -> List[tissue]"
+            - "genes_expressed_in_tissue(tissue_id) -> List[gene]"
+
+        - task: "Add comprehensive tests"
+
+      output_file: "meta_layer/resolvers/tissue_resolver.py"
+      test_file: "meta_layer/tests/test_tissue_resolver.py"
+
+      success_criteria:
+        - "90%+ tissue resolution accuracy"
+        - "<10ms latency"
+        - "100% test coverage"
+
+# Phase 4: Chemical Structure Resolution (Priority 1 for MOA)
+# ============================================================
+phase_4:
+  name: "Chemical Structure Resolution"
+  duration_estimate: "4 hours"
+  parallelization: 1
+  depends_on: ["phase_1"]
+
+  agents:
+    - id: "agent_7_chemical_resolver"
+      name: "ChemicalResolver"
+      priority: "CRITICAL"
+      description: "Build SMILES/InChI chemical structure resolution with RDKit"
+
+      tasks:
+        - task: "Implement SMILES parsing with RDKit"
+          dependencies: ["rdkit"]
+
+        - task: "Add InChI/InChIKey conversion"
+
+        - task: "Build Tanimoto similarity calculator"
+          methods:
+            - "resolve(smiles) -> {canonical_smiles, inchi, inchi_key, molecular_weight}"
+            - "resolve_by_inchi(inchi) -> canonical_smiles"
+            - "calculate_similarity(smiles1, smiles2) -> tanimoto_score"
+            - "find_similar_structures(smiles, min_tanimoto) -> List[similar_drug]"
+            - "generate_morgan_fingerprint(smiles) -> fingerprint"
+
+        - task: "Integrate with Neo4j Drug.smiles property"
+
+        - task: "Add PubChem REST API fallback"
+
+        - task: "Add comprehensive tests"
+          test_cases:
+            - "Test SMILES validation"
+            - "Test InChI conversion"
+            - "Test Tanimoto similarity (Caffeine vs Theophylline ~0.8)"
+            - "Test performance (<10ms)"
+
+      output_file: "meta_layer/resolvers/chemical_resolver.py"
+      test_file: "meta_layer/tests/test_chemical_resolver.py"
+
+      success_criteria:
+        - "100% SMILES parsing accuracy"
+        - "Tanimoto similarity matches literature"
+        - "<10ms latency"
+        - "100% test coverage"
+
+# Phase 5: Integration and Testing
+# =================================
+phase_5:
+  name: "Integration and Validation"
+  duration_estimate: "2 hours"
+  parallelization: 2
+  depends_on: ["phase_3", "phase_4"]
+
+  agents:
+    - id: "agent_8_integration"
+      name: "Resolver Integration"
+      priority: "HIGH"
+      description: "Integrate all resolvers with MOA expansion service"
+
+      tasks:
+        - task: "Update meta_layer/__init__.py with new resolver exports"
+
+        - task: "Update resolver_factory.py with new resolver types"
+
+        - task: "Integrate GeneNameResolver with MOA expansion service"
+          file: "moa_expansion_service.py"
+
+        - task: "Integrate ChemicalResolver with BBB prediction pipeline"
+
+        - task: "Add end-to-end integration tests"
+
+      success_criteria:
+        - "All resolvers accessible via factory"
+        - "MOA expansion uses new resolvers"
+        - "Integration tests pass"
+
+    - id: "agent_9_validation"
+      name: "MOA Coverage Validation"
+      priority: "CRITICAL"
+      description: "Validate MOA expansion coverage improvement"
+
+      tasks:
+        - task: "Run BBB prediction on 20 test drugs"
+
+        - task: "Measure coverage improvement"
+          baseline: "5% (1/20 neighbors)"
+          target: "75-90% (15-18/20 neighbors)"
+
+        - task: "Generate validation report"
+          metrics:
+            - "Direct match rate"
+            - "MOA expansion coverage"
+            - "Chemical similarity coverage"
+            - "Combined coverage"
+            - "Average confidence scores"
+
+        - task: "Document resolver usage patterns"
+
+      output_file: "RESOLVER_EXPANSION_VALIDATION_REPORT.md"
+
+      success_criteria:
+        - "75%+ total coverage achieved"
+        - "All resolvers performing <10ms"
+        - "Validation report complete"
+
+# Phase 6: Documentation and Cleanup
+# ===================================
+phase_6:
+  name: "Documentation and Cleanup"
+  duration_estimate: "1 hour"
+  parallelization: 1
+  depends_on: ["phase_5"]
+
+  agents:
+    - id: "agent_10_docs"
+      name: "Documentation Generator"
+      priority: "MEDIUM"
+      description: "Generate comprehensive resolver documentation"
+
+      tasks:
+        - task: "Update meta_layer/README.md with new resolvers"
+
+        - task: "Generate API reference for each resolver"
+
+        - task: "Create usage examples"
+          examples:
+            - "Basic gene resolution"
+            - "MOA expansion workflow"
+            - "Chemical similarity search"
+            - "Multi-resolver chaining"
+
+        - task: "Document data sources and quality"
+
+        - task: "Create RESOLVER_EXPANSION_COMPLETE.md summary"
+
+      output_files:
+        - "meta_layer/docs/RESOLVER_API_REFERENCE.md"
+        - "meta_layer/docs/RESOLVER_USAGE_GUIDE.md"
+        - "RESOLVER_EXPANSION_COMPLETE.md"
+
+# Deliverables Summary
+# ====================
+deliverables:
+  code_files: 7
+  test_files: 7
+  documentation_files: 3
+
+  resolvers:
+    - name: "GeneNameResolver"
+      file: "meta_layer/resolvers/gene_name_resolver.py"
+      priority: "CRITICAL"
+      coverage: "9,886+ genes"
+
+    - name: "ProteinResolver"
+      file: "meta_layer/resolvers/protein_resolver.py"
+      priority: "HIGH"
+      coverage: "19,275+ proteins"
+
+    - name: "PathwayResolver"
+      file: "meta_layer/resolvers/pathway_resolver.py"
+      priority: "HIGH"
+      coverage: "2,712+ pathways"
+
+    - name: "DiseaseResolver"
+      file: "meta_layer/resolvers/disease_resolver.py"
+      priority: "MEDIUM"
+      coverage: "Disease ontologies"
+
+    - name: "CellLineResolver"
+      file: "meta_layer/resolvers/cellline_resolver.py"
+      priority: "MEDIUM"
+      coverage: "Cellosaurus database"
+
+    - name: "TissueResolver"
+      file: "meta_layer/resolvers/tissue_resolver.py"
+      priority: "MEDIUM"
+      coverage: "UBERON ontology"
+
+    - name: "ChemicalResolver"
+      file: "meta_layer/resolvers/chemical_resolver.py"
+      priority: "CRITICAL"
+      coverage: "SMILES/InChI structures"
+
+# Expected Impact
+# ===============
+impact:
+  baseline_coverage: "5% (1/20 K-NN neighbors)"
+  target_coverage: "75-90% (15-18/20 neighbors)"
+  improvement: "+70-85%"
+
+  coverage_breakdown:
+    direct_match: "5%"
+    moa_expansion: "+40-50% (via GeneNameResolver + PathwayResolver)"
+    chemical_similarity: "+30-40% (via ChemicalResolver)"
+    combined: "75-90%"
+
+  performance:
+    resolver_latency: "<10ms per query"
+    cache_hit_rate: ">90%"
+    end_to_end_query: "<100ms"
+
+# Execution Command
+# =================
+# python -m swarm.orchestrator .swarms/resolver_expansion_swarm_v1_0.yaml
+
+# Timeline
+# ========
+total_duration: "17 hours agent-time"
+wall_time_estimate: "6-8 hours (with parallelization)"
+phases: 6
+agents: 10
+parallel_max: 5

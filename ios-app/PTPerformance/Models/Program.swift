@@ -8,6 +8,7 @@ struct Program: Codable, Identifiable {
     let targetLevel: String
     let durationWeeks: Int
     let createdAt: Date
+    let status: String?  // Optional - may be "active", "completed", "paused", etc.
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -16,6 +17,7 @@ struct Program: Codable, Identifiable {
         case targetLevel = "target_level"
         case durationWeeks = "duration_weeks"
         case createdAt = "created_at"
+        case status
     }
 }
 

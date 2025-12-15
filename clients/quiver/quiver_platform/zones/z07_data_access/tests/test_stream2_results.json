@@ -1,0 +1,704 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 6,
+    "failed": 6,
+    "errors": 0
+  },
+  "results": {
+    "mechanistic_explainer": [
+      {
+        "test": "Rapamycin \u2192 Tuberous Sclerosis",
+        "status": "FAIL",
+        "elapsed_ms": 162111.8359565735,
+        "reason": "confidence should be >0.7, got 0.66",
+        "result": {
+          "success": true,
+          "drug": "Rapamycin",
+          "disease": "tuberous sclerosis",
+          "gene_filter": null,
+          "mechanisms": [
+            {
+              "mechanism_type": "indirect",
+              "narrative": "Rapamycin targets FK506 binding protein 4. FK506 binding protein 4 encodes FK506 binding protein 4. FK506 binding protein 4 in pathway Estrogen-dependent gene expression. Estrogen-dependent gene expression associated with tuberous sclerosis.",
+              "path": [
+                {
+                  "entity": "Rapamycin",
+                  "type": "Drug",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Gene",
+                  "relationship": "ENCODES"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Protein",
+                  "relationship": "IN_PATHWAY"
+                },
+                {
+                  "entity": "Estrogen-dependent gene expression",
+                  "type": "Pathway",
+                  "relationship": "ASSOCIATED_WITH"
+                },
+                {
+                  "entity": "tuberous sclerosis",
+                  "type": "Disease"
+                }
+              ],
+              "confidence": 0.6500000000000001,
+              "evidence": [
+                "DisGeNET",
+                "copied_from_SIROLIMUS",
+                "inferred_from_gene_encodes",
+                "relinked_from_efo"
+              ],
+              "path_length": 4
+            },
+            {
+              "mechanism_type": "indirect",
+              "narrative": "Rapamycin targets FK506 binding protein 4. FK506 binding protein 4 encodes FK506 binding protein 4. FK506 binding protein 4 in pathway Unknown Pathway. Unknown Pathway associated with tuberous sclerosis.",
+              "path": [
+                {
+                  "entity": "Rapamycin",
+                  "type": "Drug",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Gene",
+                  "relationship": "ENCODES"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Protein",
+                  "relationship": "IN_PATHWAY"
+                },
+                {
+                  "entity": "Unknown Pathway",
+                  "type": "Pathway",
+                  "relationship": "ASSOCIATED_WITH"
+                },
+                {
+                  "entity": "tuberous sclerosis",
+                  "type": "Disease"
+                }
+              ],
+              "confidence": 0.6500000000000001,
+              "evidence": [
+                "DisGeNET",
+                "copied_from_SIROLIMUS",
+                "inferred_from_gene_encodes",
+                "relinked_from_efo"
+              ],
+              "path_length": 4
+            },
+            {
+              "mechanism_type": "indirect",
+              "narrative": "Rapamycin targets FK506 binding protein 4. FK506 binding protein 4 encodes FK506 binding protein 4. FK506 binding protein 4 in pathway Potential therapeutics for SARS. Potential therapeutics for SARS associated with tuberous sclerosis.",
+              "path": [
+                {
+                  "entity": "Rapamycin",
+                  "type": "Drug",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Gene",
+                  "relationship": "ENCODES"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Protein",
+                  "relationship": "IN_PATHWAY"
+                },
+                {
+                  "entity": "Potential therapeutics for SARS",
+                  "type": "Pathway",
+                  "relationship": "ASSOCIATED_WITH"
+                },
+                {
+                  "entity": "tuberous sclerosis",
+                  "type": "Disease"
+                }
+              ],
+              "confidence": 0.6500000000000001,
+              "evidence": [
+                "DisGeNET",
+                "copied_from_SIROLIMUS",
+                "inferred_from_gene_encodes",
+                "relinked_from_efo"
+              ],
+              "path_length": 4
+            },
+            {
+              "mechanism_type": "indirect",
+              "narrative": "Rapamycin targets FK506 binding protein 4. FK506 binding protein 4 encodes FK506 binding protein 4. FK506 binding protein 4 in pathway Cellular responses to stress. Cellular responses to stress associated with tuberous sclerosis.",
+              "path": [
+                {
+                  "entity": "Rapamycin",
+                  "type": "Drug",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Gene",
+                  "relationship": "ENCODES"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Protein",
+                  "relationship": "IN_PATHWAY"
+                },
+                {
+                  "entity": "Cellular responses to stress",
+                  "type": "Pathway",
+                  "relationship": "ASSOCIATED_WITH"
+                },
+                {
+                  "entity": "tuberous sclerosis",
+                  "type": "Disease"
+                }
+              ],
+              "confidence": 0.6500000000000001,
+              "evidence": [
+                "DisGeNET",
+                "copied_from_SIROLIMUS",
+                "inferred_from_gene_encodes",
+                "relinked_from_efo"
+              ],
+              "path_length": 4
+            },
+            {
+              "mechanism_type": "indirect",
+              "narrative": "Rapamycin targets FK506 binding protein 4. FK506 binding protein 4 targets CYCLOSPORINE. CYCLOSPORINE participates in Bile secretion - Homo sapiens (human). Bile secretion - Homo sapiens (human) associated with tuberous sclerosis.",
+              "path": [
+                {
+                  "entity": "Rapamycin",
+                  "type": "Drug",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "FK506 binding protein 4",
+                  "type": "Gene",
+                  "relationship": "TARGETS"
+                },
+                {
+                  "entity": "CYCLOSPORINE",
+                  "type": "MeasuredDrug",
+                  "relationship": "PARTICIPATES_IN"
+                },
+                {
+                  "entity": "Bile secretion - Homo sapiens (human)",
+                  "type": "Pathway",
+                  "relationship": "ASSOCIATED_WITH"
+                },
+                {
+                  "entity": "tuberous sclerosis",
+                  "type": "Disease"
+                }
+              ],
+              "confidence": 0.7000000000000001,
+              "evidence": [
+                "ChEMBL_v34",
+                "DisGeNET",
+                "KEGG",
+                "copied_from_SIROLIMUS",
+                "curated",
+                "relinked_from_efo"
+              ],
+              "path_length": 4
+            }
+          ],
+          "mechanism_count": 5,
+          "rescue_predictions": [],
+          "rescue_count": 0,
+          "summary": "Rapamycin treats tuberous sclerosis through 5 mechanism(s): indirect.",
+          "confidence": 0.66,
+          "data_sources": [
+            "ChEMBL_v34",
+            "DisGeNET",
+            "KEGG",
+            "Neo4j graph database",
+            "copied_from_SIROLIMUS",
+            "curated",
+            "inferred_from_gene_encodes",
+            "relinked_from_efo"
+          ],
+          "query_params": {
+            "drug": "Rapamycin",
+            "disease": "Tuberous Sclerosis",
+            "gene": null,
+            "max_depth": 4,
+            "include_rescue": true,
+            "explanation_style": "detailed",
+            "min_confidence": 0.5
+          }
+        }
+      },
+      {
+        "test": "Fenfluramine \u2192 Dravet Syndrome",
+        "status": "FAIL",
+        "elapsed_ms": 31434.595823287964,
+        "reason": "mechanism_count should be >0.0, got 0",
+        "result": {
+          "success": true,
+          "drug": "NORDEXFENFLURAMINE",
+          "disease": "Dravet syndrome",
+          "gene_filter": "SCN1A",
+          "mechanisms": [],
+          "mechanism_count": 0,
+          "rescue_predictions": [],
+          "rescue_count": 0,
+          "summary": "No mechanisms found connecting NORDEXFENFLURAMINE to Dravet syndrome.",
+          "confidence": 0.0,
+          "data_sources": [
+            "Neo4j graph database"
+          ],
+          "query_params": {
+            "drug": "Fenfluramine",
+            "disease": "Dravet Syndrome",
+            "gene": "SCN1A",
+            "max_depth": 4,
+            "include_rescue": true,
+            "explanation_style": "detailed",
+            "min_confidence": 0.5
+          }
+        }
+      },
+      {
+        "test": "Aspirin \u2192 Cardiovascular Disease",
+        "status": "FAIL",
+        "elapsed_ms": 37278.419971466064,
+        "reason": "mechanism_count should be >0.0, got 0",
+        "result": {
+          "success": true,
+          "drug": "ASPIRIN",
+          "disease": "atherosclerotic cardiovascular disease",
+          "gene_filter": null,
+          "mechanisms": [],
+          "mechanism_count": 0,
+          "rescue_predictions": [],
+          "rescue_count": 0,
+          "summary": "No mechanisms found connecting ASPIRIN to atherosclerotic cardiovascular disease.",
+          "confidence": 0.0,
+          "data_sources": [
+            "Neo4j graph database"
+          ],
+          "query_params": {
+            "drug": "Aspirin",
+            "disease": "Cardiovascular Disease",
+            "gene": null,
+            "max_depth": 4,
+            "include_rescue": true,
+            "explanation_style": "summary",
+            "min_confidence": 0.5
+          }
+        }
+      },
+      {
+        "test": "Invalid drug (not found)",
+        "status": "PASS",
+        "elapsed_ms": 1097.7239608764648,
+        "result": {
+          "success": false,
+          "error": "Drug not found in Neo4j: NonExistentDrug12345",
+          "drug": "NonExistentDrug12345",
+          "hint": "Check spelling or use ChEMBL ID. Examples: Rapamycin, Fenfluramine, CHEMBL415"
+        }
+      }
+    ],
+    "causal_inference": [
+      {
+        "test": "SCN1A \u2192 Dravet Syndrome (strong causal)",
+        "status": "FAIL",
+        "elapsed_ms": 6655.706882476807,
+        "reason": "causal_strength should be >0.7, got 0.681",
+        "result": {
+          "success": true,
+          "cause": "SCN1A",
+          "cause_type": "Gene",
+          "effect": "Dravet syndrome",
+          "effect_type": "Disease",
+          "causal_strength": 0.681,
+          "causal_direction": "forward",
+          "bradford_hill_criteria": {
+            "strength": {
+              "met": false,
+              "score": 0,
+              "evidence": "Association strength: 0.00"
+            },
+            "consistency": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Association observed in multiple contexts"
+            },
+            "specificity": {
+              "met": true,
+              "score": 1.0,
+              "evidence": "Cause associated with 1 effect(s)"
+            },
+            "temporality": {
+              "met": true,
+              "score": 1.0,
+              "evidence": "Gene present from birth, precedes disease onset"
+            },
+            "dose_response": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Mutation severity correlates with phenotype severity (typical for genetic disorders)"
+            },
+            "plausibility": {
+              "met": true,
+              "score": 0.6,
+              "evidence": "1 mechanistic pathway(s) identified"
+            },
+            "coherence": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Relationship coherent with biological knowledge"
+            },
+            "experiment": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Animal models support causal role"
+            },
+            "analogy": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Similar entities show analogous causal relationships"
+            }
+          },
+          "criteria_met": 8,
+          "evidence_summary": "Causal relationship assessment: SCN1A \u2192 Dravet syndrome. Overall causal strength: 0.681 (PROBABLE). Bradford Hill criteria met: 8/9.   \u2713 Consistency: Association observed in multiple contexts.   \u2713 Specificity: Cause associated with 1 effect(s).   \u2713 Temporality: Gene present from birth, precedes disease onset.   \u2713 Dose_response: Mutation severity correlates with phenotype severity (typical for genetic disorders).   \u2713 Plausibility: 1 mechanistic pathway(s) identified.   \u2713 Coherence: Relationship coherent with biological knowledge.   \u2713 Experiment: Animal models support causal role.   \u2713 Analogy: Similar entities show analogous causal relationships.",
+          "confounders": [
+            "SCN1A"
+          ],
+          "confidence_interval": [
+            0.65,
+            0.71
+          ],
+          "recommendation": "PROBABLE CAUSAL (8/9 criteria): Good evidence for causality. Further validation recommended before clinical application. Mendelian randomization supports causal inference.",
+          "query_params": {
+            "cause": "SCN1A",
+            "effect": "Dravet Syndrome",
+            "causal_direction": "forward",
+            "include_mendelian_randomization": true,
+            "min_causal_strength": 0.4
+          },
+          "mendelian_randomization": {
+            "method": "Mendelian Randomization",
+            "instrumental_variables": "Genetic variants in gene",
+            "causal_estimate": 0.85,
+            "confidence_interval": [
+              0.72,
+              0.98
+            ],
+            "p_value": 0.003,
+            "interpretation": "Genetic evidence supports causal role"
+          }
+        }
+      },
+      {
+        "test": "Aspirin \u2192 Cardiovascular Disease (probable causal)",
+        "status": "FAIL",
+        "elapsed_ms": 5101.068735122681,
+        "reason": "Expected keyword 'RCT' not found in result",
+        "result": {
+          "success": true,
+          "cause": "ASPIRIN",
+          "cause_type": "Drug",
+          "effect": "cardiovascular disease",
+          "effect_type": "Disease",
+          "causal_strength": 0.661,
+          "causal_direction": "forward",
+          "bradford_hill_criteria": {
+            "strength": {
+              "met": false,
+              "score": 0.3,
+              "evidence": "No association found"
+            },
+            "consistency": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Association observed in multiple contexts"
+            },
+            "specificity": {
+              "met": true,
+              "score": 0.8,
+              "evidence": "Cause associated with 0 effect(s)"
+            },
+            "temporality": {
+              "met": true,
+              "score": 0.9,
+              "evidence": "Drug exposure precedes clinical outcomes"
+            },
+            "dose_response": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Dose-response relationship observed in clinical trials"
+            },
+            "plausibility": {
+              "met": false,
+              "score": 0.3,
+              "evidence": "No clear mechanistic pathway identified"
+            },
+            "coherence": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Relationship coherent with biological knowledge"
+            },
+            "experiment": {
+              "met": true,
+              "score": 0.85,
+              "evidence": "Supported by randomized controlled trials"
+            },
+            "analogy": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Similar entities show analogous causal relationships"
+            }
+          },
+          "criteria_met": 7,
+          "evidence_summary": "Causal relationship assessment: ASPIRIN \u2192 cardiovascular disease. Overall causal strength: 0.661 (PROBABLE). Bradford Hill criteria met: 7/9.   \u2713 Consistency: Association observed in multiple contexts.   \u2713 Specificity: Cause associated with 0 effect(s).   \u2713 Temporality: Drug exposure precedes clinical outcomes.   \u2713 Dose_response: Dose-response relationship observed in clinical trials.   \u2713 Coherence: Relationship coherent with biological knowledge.   \u2713 Experiment: Supported by randomized controlled trials.   \u2713 Analogy: Similar entities show analogous causal relationships.",
+          "confounders": [],
+          "confidence_interval": [
+            0.6,
+            0.73
+          ],
+          "recommendation": "PROBABLE CAUSAL (7/9 criteria): Good evidence for causality. Further validation recommended before clinical application.",
+          "query_params": {
+            "cause": "Aspirin",
+            "effect": "Cardiovascular Disease",
+            "causal_direction": "forward",
+            "include_mendelian_randomization": true,
+            "min_causal_strength": 0.4
+          }
+        }
+      },
+      {
+        "test": "BRCA1 \u2192 Breast Cancer (strong causal)",
+        "status": "FAIL",
+        "elapsed_ms": 255952.23712921143,
+        "reason": "causal_strength should be >0.7, got 0.65",
+        "result": {
+          "success": true,
+          "cause": "BRCA1",
+          "cause_type": "Gene",
+          "effect": "breast cancer",
+          "effect_type": "Disease",
+          "causal_strength": 0.65,
+          "causal_direction": "forward",
+          "bradford_hill_criteria": {
+            "strength": {
+              "met": false,
+              "score": 0.3,
+              "evidence": "No association found"
+            },
+            "consistency": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Association observed in multiple contexts"
+            },
+            "specificity": {
+              "met": false,
+              "score": 0.5,
+              "evidence": "Cause associated with 5 effect(s)"
+            },
+            "temporality": {
+              "met": true,
+              "score": 1.0,
+              "evidence": "Gene present from birth, precedes disease onset"
+            },
+            "dose_response": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Mutation severity correlates with phenotype severity (typical for genetic disorders)"
+            },
+            "plausibility": {
+              "met": false,
+              "score": 0.3,
+              "evidence": "No clear mechanistic pathway identified"
+            },
+            "coherence": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Relationship coherent with biological knowledge"
+            },
+            "experiment": {
+              "met": true,
+              "score": 0.75,
+              "evidence": "Animal models support causal role"
+            },
+            "analogy": {
+              "met": true,
+              "score": 0.7,
+              "evidence": "Similar entities show analogous causal relationships"
+            }
+          },
+          "criteria_met": 6,
+          "evidence_summary": "Causal relationship assessment: BRCA1 \u2192 breast cancer. Overall causal strength: 0.650 (PROBABLE). Bradford Hill criteria met: 6/9.   \u2713 Consistency: Association observed in multiple contexts.   \u2713 Temporality: Gene present from birth, precedes disease onset.   \u2713 Dose_response: Mutation severity correlates with phenotype severity (typical for genetic disorders).   \u2713 Coherence: Relationship coherent with biological knowledge.   \u2713 Experiment: Animal models support causal role.   \u2713 Analogy: Similar entities show analogous causal relationships.",
+          "confounders": [],
+          "confidence_interval": [
+            0.55,
+            0.75
+          ],
+          "recommendation": "PROBABLE CAUSAL (6/9 criteria): Good evidence for causality. Further validation recommended before clinical application. Mendelian randomization supports causal inference.",
+          "query_params": {
+            "cause": "BRCA1",
+            "effect": "Breast Cancer",
+            "causal_direction": "forward",
+            "include_mendelian_randomization": true,
+            "min_causal_strength": 0.4
+          },
+          "mendelian_randomization": {
+            "method": "Mendelian Randomization",
+            "instrumental_variables": "Genetic variants in gene",
+            "causal_estimate": 0.85,
+            "confidence_interval": [
+              0.72,
+              0.98
+            ],
+            "p_value": 0.003,
+            "interpretation": "Genetic evidence supports causal role"
+          }
+        }
+      },
+      {
+        "test": "Invalid cause (not found)",
+        "status": "PASS",
+        "elapsed_ms": 2321.7720985412598,
+        "result": {
+          "success": false,
+          "error": "Cause entity not found in Neo4j: NonExistentGene12345",
+          "cause": "NonExistentGene12345",
+          "hint": "Check spelling or use standard identifiers"
+        }
+      }
+    ],
+    "uncertainty_estimation": [
+      {
+        "test": "High confidence prediction",
+        "status": "PASS",
+        "elapsed_ms": 0.02384185791015625,
+        "result": {
+          "success": true,
+          "prediction_type": "rescue_score",
+          "point_estimate": 0.85,
+          "confidence_interval": [
+            0.834,
+            0.866
+          ],
+          "uncertainty_width": 0.032,
+          "epistemic_uncertainty": 0.386,
+          "aleatoric_uncertainty": 0.016,
+          "reliability_score": 0.747,
+          "uncertainty_sources": [
+            "Model assumptions (embedding space)",
+            "Embedding model assumptions"
+          ],
+          "recommendation": "HIGH CONFIDENCE: Narrow CI (width=0.03), sensitive to assumptions. Prediction reliable for clinical consideration.",
+          "query_params": {
+            "prediction_type": "rescue_score",
+            "entity1": "Fenfluramine",
+            "entity2": "SCN1A",
+            "method": "all",
+            "confidence_level": 0.95
+          },
+          "credible_interval": [
+            0.843,
+            0.857
+          ],
+          "sensitivity_analysis": {
+            "min_score": 0.68,
+            "max_score": 1.0,
+            "range": 0.32,
+            "robust": false,
+            "interpretation": "Prediction sensitive to assumptions - use caution"
+          }
+        }
+      },
+      {
+        "test": "Moderate confidence prediction",
+        "status": "PASS",
+        "elapsed_ms": 0.009059906005859375,
+        "result": {
+          "success": true,
+          "prediction_type": "similarity_score",
+          "point_estimate": 0.65,
+          "confidence_interval": [
+            0.608,
+            0.692
+          ],
+          "uncertainty_width": 0.084,
+          "epistemic_uncertainty": 0.536,
+          "aleatoric_uncertainty": 0.042,
+          "reliability_score": 0.625,
+          "uncertainty_sources": [
+            "Model assumptions (embedding space)",
+            "Limited replication (n=2 studies)"
+          ],
+          "recommendation": "MEDIUM CONFIDENCE: Narrow CI (width=0.08). Prediction useful but requires validation.",
+          "query_params": {
+            "prediction_type": "similarity_score",
+            "entity1": null,
+            "entity2": null,
+            "method": "bootstrap",
+            "confidence_level": 0.95
+          }
+        }
+      },
+      {
+        "test": "Low confidence prediction",
+        "status": "PASS",
+        "elapsed_ms": 0.014066696166992188,
+        "result": {
+          "success": true,
+          "prediction_type": "custom",
+          "point_estimate": 0.45,
+          "confidence_interval": [
+            0.43,
+            0.47
+          ],
+          "uncertainty_width": 0.04,
+          "epistemic_uncertainty": 0.74,
+          "aleatoric_uncertainty": 0.02,
+          "reliability_score": 0.688,
+          "uncertainty_sources": [
+            "Limited sample size (N=100)",
+            "Limited replication (n=1 studies)"
+          ],
+          "recommendation": "MEDIUM CONFIDENCE: Narrow CI (width=0.04), robust to assumptions. Prediction useful but requires validation.",
+          "query_params": {
+            "prediction_type": "custom",
+            "entity1": null,
+            "entity2": null,
+            "method": "all",
+            "confidence_level": 0.95
+          },
+          "credible_interval": [
+            0.355,
+            0.547
+          ],
+          "sensitivity_analysis": {
+            "min_score": 0.36,
+            "max_score": 0.54,
+            "range": 0.18,
+            "robust": true,
+            "interpretation": "Prediction robust to assumption changes"
+          }
+        }
+      },
+      {
+        "test": "Invalid point estimate",
+        "status": "PASS",
+        "elapsed_ms": 0.00095367431640625,
+        "result": {
+          "success": false,
+          "error": "point_estimate must be between 0.0 and 1.0, got 1.5"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,2402 @@
+[
+  {
+    "query_id": "ee45ba6d-82dd-49b7-8c41-6d7d13c5e969",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 3,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.562,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465737",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 1,
+      "result_size": 3,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "b1204947-bcba-4bfa-a402-0c002b38a3e1",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.537,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465754",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 3,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1c4aa5e6-2a35-45ce-8027-af50c3376fba",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.044,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465769",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 1,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "42633eaa-25db-4021-8b65-bce2ba649fd5",
+    "query_type": "name_resolution",
+    "entity_type": "pathway",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.197,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465783",
+    "features": {
+      "tool_name": "pathway_resolver",
+      "param_count": 2,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "af3be2e5-35e0-4df4-b900-de0d11304589",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 3,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.191,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465797",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 3,
+      "result_size": 3,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "c8896c7f-7e9b-4c6f-a685-9780f6645f07",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.391,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465810",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 4,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "391f4938-add8-410e-a585-d7f7ddabba3f",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.744,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465822",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 2,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "47d6321c-b4be-409c-9a6f-1348000e968c",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 40,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 9.804,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465834",
+    "features": {
+      "tool_name": "vector_neighbors",
+      "param_count": 5,
+      "result_size": 40,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "12ed2b7e-e9dd-47b4-8386-06b037f10e82",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 51,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 640.047,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465847",
+    "features": {
+      "tool_name": "graph_properties",
+      "param_count": 1,
+      "result_size": 51,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "7967aca6-705f-4d1f-9229-814dd370e625",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.515,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465859",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 4,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1bac9bf8-239e-4347-a9d5-6238cb691fe0",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 21,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 53.064,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465871",
+    "features": {
+      "tool_name": "vector_antipodal",
+      "param_count": 1,
+      "result_size": 21,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "b9ba9276-4873-45dd-9626-0247ba17de9a",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.958,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465882",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 2,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "a0c3fe7b-301a-4993-870c-3e7585df7cca",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 3,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.588,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465894",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 3,
+      "result_size": 3,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "0db5cd99-d837-49f3-b464-3b9924923ff6",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 415,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 9837.298,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465907",
+    "features": {
+      "tool_name": "read_parquet_filter",
+      "param_count": 3,
+      "result_size": 415,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "e8425ebd-76a3-412c-9c6c-2d8d18dd25af",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.464,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465919",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 2,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3492521e-7c37-4cae-81db-36a01efcb3d8",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 46,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 25.581,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465931",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 3,
+      "result_size": 46,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "410affa6-47d7-4fe5-af41-c9ca2f2b3081",
+    "query_type": "metadata_lookup",
+    "entity_type": "gene",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.577,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465943",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 2,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "ae2f26bd-96cd-4b2e-aabf-787ccdf611e5",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 192,
+    "complexity_score": 0.7,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 4013.864,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465955",
+    "features": {
+      "tool_name": "scientist_reports",
+      "param_count": 5,
+      "result_size": 192,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "bf5ebdbf-2eaa-428c-b030-6a56efd7980c",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 19,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 51.863,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465967",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 3,
+      "result_size": 19,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "e96bef30-fa90-4bfa-aff8-9c458b3abdde",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.049,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465979",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 2,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "76991261-df84-4303-b3c6-3d1582d612b7",
+    "query_type": "embedding_similarity",
+    "entity_type": "pathway",
+    "entity_count": 21,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 45.903,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.465991",
+    "features": {
+      "tool_name": "vector_neighbors",
+      "param_count": 3,
+      "result_size": 21,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "35c9a64e-b72c-4b8a-921e-cb4b02a58ae6",
+    "query_type": "graph_traversal",
+    "entity_type": "drug",
+    "entity_count": 65,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 433.535,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466003",
+    "features": {
+      "tool_name": "graph_neighbors",
+      "param_count": 3,
+      "result_size": 65,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "7e171728-e74c-4094-9ce8-5f153ab5c5a0",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 3,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.726,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466015",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 5,
+      "result_size": 3,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "eb62d322-e33d-403e-a8d5-636d194bce72",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 9,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 14.624,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466027",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 1,
+      "result_size": 9,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "67301f2c-5e8a-452a-9d66-2b7931606c57",
+    "query_type": "metadata_lookup",
+    "entity_type": "gene",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.805,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466039",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 3,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "d01e21fe-2f40-4d5f-a128-131f360a87fe",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 34,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 259.487,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466051",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 5,
+      "result_size": 34,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "f73fb0ef-dc2c-4cec-a67a-50fedbb81b15",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 54,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 609.713,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466063",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 1,
+      "result_size": 54,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "dc4fb333-6b03-4373-aef2-d49ad75a23b6",
+    "query_type": "name_resolution",
+    "entity_type": "pathway",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.407,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466074",
+    "features": {
+      "tool_name": "pathway_resolver",
+      "param_count": 2,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "d607e97b-f005-4dd4-ade4-16309202431f",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 17,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 15.685,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466086",
+    "features": {
+      "tool_name": "transcriptomic_rescue",
+      "param_count": 5,
+      "result_size": 17,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "78035b3f-b678-4a0b-a81c-eb458db1da9e",
+    "query_type": "graph_path",
+    "entity_type": "drug",
+    "entity_count": 60,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 382.031,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466098",
+    "features": {
+      "tool_name": "graph_path",
+      "param_count": 4,
+      "result_size": 60,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "c66039cb-a68a-4710-83f5-1de9d4cf35a0",
+    "query_type": "embedding_similarity",
+    "entity_type": "gene",
+    "entity_count": 50,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 16.585,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466110",
+    "features": {
+      "tool_name": "vector_neighbors",
+      "param_count": 5,
+      "result_size": 50,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "04c317ba-e222-4667-8cce-8b7b92c6eadb",
+    "query_type": "graph_traversal",
+    "entity_type": "gene",
+    "entity_count": 91,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 330.372,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466122",
+    "features": {
+      "tool_name": "graph_neighbors",
+      "param_count": 1,
+      "result_size": 91,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "049f8411-0f13-4cb4-a472-89cd32ecfd1a",
+    "query_type": "metadata_lookup",
+    "entity_type": "gene",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.854,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466134",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 1,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "43e82313-6876-48e7-9f7b-1389b64820ea",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 15,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 43.911,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466146",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 1,
+      "result_size": 15,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "803d0de6-28dd-4a49-84a0-8872baf4247f",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 16,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 31.526,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466158",
+    "features": {
+      "tool_name": "drug_lookalikes",
+      "param_count": 4,
+      "result_size": 16,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6e900a9f-3f94-4a4d-b517-5eb1c288b489",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 35,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 522.46,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466170",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 1,
+      "result_size": 35,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "da854d75-142d-4a52-adda-3e3b44b49e0f",
+    "query_type": "name_resolution",
+    "entity_type": "pathway",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.962,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466182",
+    "features": {
+      "tool_name": "pathway_resolver",
+      "param_count": 3,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "bad1d8b0-86f0-497a-b633-1b0293e02033",
+    "query_type": "graph_traversal",
+    "entity_type": "gene",
+    "entity_count": 15,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 515.548,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466194",
+    "features": {
+      "tool_name": "mechanistic_explainer",
+      "param_count": 2,
+      "result_size": 15,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "704b0049-c349-480a-b444-152d5204327c",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 11,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 20.98,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466206",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 3,
+      "result_size": 11,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "72af01fd-a99b-48e0-a3a9-7c83b2ad0042",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 49,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 45.22,
+    "success": false,
+    "timestamp": "2025-12-06T23:17:41.466218",
+    "features": {
+      "tool_name": "fusion_discovery_drug",
+      "param_count": 2,
+      "result_size": 49,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "ece4ebb3-75f2-4625-8a5c-e8f63d8ed4aa",
+    "query_type": "analytical",
+    "entity_type": "pathway",
+    "entity_count": 78,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 4604.761,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466230",
+    "features": {
+      "tool_name": "biomarker_discovery",
+      "param_count": 2,
+      "result_size": 78,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "5c18fb64-af36-4ff0-882b-745887cdecb6",
+    "query_type": "graph_traversal",
+    "entity_type": "pathway",
+    "entity_count": 11,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 198.031,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466243",
+    "features": {
+      "tool_name": "mechanistic_explainer",
+      "param_count": 5,
+      "result_size": 11,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "0d1417d6-3604-4151-b0e9-60dfe410f75a",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.426,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466254",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 5,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "9cd3987f-7ca9-4227-8747-bdbc023d3f2e",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 22,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 46.132,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466266",
+    "features": {
+      "tool_name": "demeo_drug_rescue",
+      "param_count": 2,
+      "result_size": 22,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "4cd7ff85-c9cd-4f83-a8e3-46e64dabbe95",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 10,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 28.342,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466277",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 4,
+      "result_size": 10,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "42f94fe5-ca38-48bd-ab76-781b18074170",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 6,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 33.616,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466289",
+    "features": {
+      "tool_name": "query_drug_drug_similarity",
+      "param_count": 2,
+      "result_size": 6,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "de5c7030-1476-47ad-98cb-c59e0adf51e5",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 45,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 39.903,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466301",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 5,
+      "result_size": 45,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "f0e32863-a61c-4374-ba29-1fb99acaf32b",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 24,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 42.563,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466313",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 5,
+      "result_size": 24,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "37599205-53d2-45bf-8218-cf85d67a1eee",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 14,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 14.344,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466324",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 1,
+      "result_size": 14,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "aee158ed-b51c-4054-a1b7-94a385010e42",
+    "query_type": "embedding_similarity",
+    "entity_type": "pathway",
+    "entity_count": 40,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 42.758,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466336",
+    "features": {
+      "tool_name": "vector_neighbors",
+      "param_count": 4,
+      "result_size": 40,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1bb2c0e7-c775-4c78-a720-a4ce42b101b5",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.804,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466348",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 5,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "bf610e44-2670-4579-a8d5-fb87c8fef029",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.64,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466360",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 1,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "891e8414-25e9-4d33-b995-492427587fa1",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 5,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 6.269,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466372",
+    "features": {
+      "tool_name": "vector_antipodal",
+      "param_count": 3,
+      "result_size": 5,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "e0c92946-9d41-4141-88a7-461a4e199958",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.627,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466384",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 1,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6e92a41c-e61d-46d7-addf-c328177b1aa4",
+    "query_type": "analytical",
+    "entity_type": "drug",
+    "entity_count": 87,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 3240.448,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466396",
+    "features": {
+      "tool_name": "biomarker_discovery",
+      "param_count": 1,
+      "result_size": 87,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "b899cd03-0570-48b8-9e92-ca18eeec5b3a",
+    "query_type": "embedding_similarity",
+    "entity_type": "pathway",
+    "entity_count": 38,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 18.504,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466408",
+    "features": {
+      "tool_name": "vector_similarity",
+      "param_count": 1,
+      "result_size": 38,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "41340b76-5b0b-4ed3-8dda-d2961d5e9e70",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.922,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466420",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 4,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "ee7579d3-de80-4fc5-b0f6-6a267ac6f312",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 50,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 43.666,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466432",
+    "features": {
+      "tool_name": "transcriptomic_rescue",
+      "param_count": 3,
+      "result_size": 50,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "d2e73794-124f-475d-b5f0-d83aa9aeb2d7",
+    "query_type": "graph_traversal",
+    "entity_type": "pathway",
+    "entity_count": 43,
+    "complexity_score": 0.7000000000000001,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 575.549,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466444",
+    "features": {
+      "tool_name": "graph_subgraph",
+      "param_count": 2,
+      "result_size": 43,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3a2a56fe-5469-4719-8e7a-84e49af5074d",
+    "query_type": "name_resolution",
+    "entity_type": "pathway",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.834,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466455",
+    "features": {
+      "tool_name": "pathway_resolver",
+      "param_count": 2,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "98968360-7291-4a1b-958e-358fcd45682c",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.725,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466467",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 5,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "7a5de4a3-ddc9-494e-b32c-6de544a06dc1",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.657,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466478",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 5,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "2d32e998-a036-4b47-af03-ac3dd99c5ea2",
+    "query_type": "name_resolution",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.865,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466490",
+    "features": {
+      "tool_name": "pathway_resolver",
+      "param_count": 3,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "ca538448-1b73-454c-a057-15ce57afa12e",
+    "query_type": "graph_traversal",
+    "entity_type": "drug",
+    "entity_count": 60,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 241.06,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466502",
+    "features": {
+      "tool_name": "mechanistic_explainer",
+      "param_count": 4,
+      "result_size": 60,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6bfe6493-e20c-409f-bd27-137fedcc1779",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 29,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 25.764,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466514",
+    "features": {
+      "tool_name": "vector_antipodal",
+      "param_count": 1,
+      "result_size": 29,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "a4d1cb33-4822-4ecc-9663-e9bcd443c4d3",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 50,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 50.302,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466526",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 2,
+      "result_size": 50,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "4ffeacac-1be9-447d-b34c-1afac2d8009c",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.385,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466538",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 4,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6b3a227a-7040-46e5-94ad-fefccb607df1",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 53,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 628.245,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466549",
+    "features": {
+      "tool_name": "graph_properties",
+      "param_count": 1,
+      "result_size": 53,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "a6b67bb5-dd85-47a2-9a05-fb8883b5def6",
+    "query_type": "analytical",
+    "entity_type": "gene",
+    "entity_count": 308,
+    "complexity_score": 0.7,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 15647.94,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466561",
+    "features": {
+      "tool_name": "session_analytics",
+      "param_count": 3,
+      "result_size": 308,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3159aa5b-a1cb-4546-b867-35f4e425d6a7",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 74,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 268.433,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466573",
+    "features": {
+      "tool_name": "execute_cypher",
+      "param_count": 5,
+      "result_size": 74,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "d07aa9e5-2afd-4537-9a33-c990e5ae2305",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.928,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466584",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 4,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "4618b287-441b-48f5-8de8-6eada3501f9a",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 2.022,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466596",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 5,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "9a7b9399-a552-4a52-9eb1-22e096159ed9",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 50,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 23.466,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466608",
+    "features": {
+      "tool_name": "query_gene_gene_similarity",
+      "param_count": 3,
+      "result_size": 50,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "43d635d6-175a-448d-be65-b351affd037f",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 27,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 53.015,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466620",
+    "features": {
+      "tool_name": "query_drug_drug_similarity",
+      "param_count": 1,
+      "result_size": 27,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "b39b4d86-6cb7-4e78-b31b-8886b8c24905",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 57,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 412.025,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466631",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 4,
+      "result_size": 57,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3e52a40b-1ed7-442a-9c47-f42af5c97cf6",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 2,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.29,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466643",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 5,
+      "result_size": 2,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "8f2cb740-14cf-46b4-8f8b-37bde2955a02",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 40,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 22.757,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466655",
+    "features": {
+      "tool_name": "query_drug_drug_similarity",
+      "param_count": 3,
+      "result_size": 40,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "bbb744a2-5841-46ca-beac-59942e9cdebd",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 54,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 372.411,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466667",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 1,
+      "result_size": 54,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "85339697-db92-4727-872c-e8f3a229c472",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 57,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 158.186,
+    "success": false,
+    "timestamp": "2025-12-06T23:17:41.466679",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 2,
+      "result_size": 57,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "0918ef94-a0dc-485e-a94e-b08ed6f139f1",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 32,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 7.801,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466691",
+    "features": {
+      "tool_name": "fusion_discovery_gene",
+      "param_count": 5,
+      "result_size": 32,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3b1ecd39-835c-4fbd-a1bb-0eae057f332f",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.888,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466702",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 2,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3430817d-1d5b-4226-b3b2-e41e7f464245",
+    "query_type": "graph_path",
+    "entity_type": "gene",
+    "entity_count": 99,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 819.195,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466714",
+    "features": {
+      "tool_name": "graph_path",
+      "param_count": 5,
+      "result_size": 99,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1d90abbb-5242-44ee-803a-d586388de6fb",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 279,
+    "complexity_score": 0.7,
+    "data_sources": [
+      "parquet"
+    ],
+    "actual_tier": 4,
+    "execution_time_ms": 12382.731,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466726",
+    "features": {
+      "tool_name": "scientist_reports",
+      "param_count": 1,
+      "result_size": 279,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": true,
+      "category": "analytics"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6f3155fd-5fd0-4933-a4c1-80a884311364",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 68,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 594.173,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466738",
+    "features": {
+      "tool_name": "execute_cypher",
+      "param_count": 2,
+      "result_size": 68,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "72356603-f2b4-493f-b0c2-2d92a472f6e4",
+    "query_type": "unknown",
+    "entity_type": "gene",
+    "entity_count": 42,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 10.131,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466750",
+    "features": {
+      "tool_name": "vector_antipodal",
+      "param_count": 3,
+      "result_size": 42,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "20f5092b-d027-4584-b3bb-a755de471420",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 3,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.042,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466761",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 3,
+      "result_size": 3,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "c61a6605-0dcb-43d5-8050-d7df8d9207fa",
+    "query_type": "embedding_similarity",
+    "entity_type": "gene",
+    "entity_count": 50,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 26.837,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466773",
+    "features": {
+      "tool_name": "vector_similarity",
+      "param_count": 3,
+      "result_size": 50,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "08f93d2b-cb1d-4299-b48a-3fd43ae89e44",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.033,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466785",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 3,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "2a131611-f53c-4c72-a8e7-03b2c2c60d78",
+    "query_type": "name_resolution",
+    "entity_type": "drug",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.222,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466796",
+    "features": {
+      "tool_name": "drug_name_resolver",
+      "param_count": 2,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "154e7c6f-b680-4751-9a00-a3e029704b4a",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 4,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.13,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466808",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 4,
+      "result_size": 4,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "b9b9b474-4547-4071-9a14-4c2628b097e6",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 39,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 13.858,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466820",
+    "features": {
+      "tool_name": "transcriptomic_rescue",
+      "param_count": 4,
+      "result_size": 39,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "88433c66-5372-4d7b-b57a-32356711a242",
+    "query_type": "metadata_lookup",
+    "entity_type": "drug",
+    "entity_count": 5,
+    "complexity_score": 0.30000000000000004,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.651,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466831",
+    "features": {
+      "tool_name": "entity_metadata",
+      "param_count": 4,
+      "result_size": 5,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "798ebd51-bfc7-44d9-b32f-14568e061136",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 30,
+    "complexity_score": 0.5,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 14.191,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466843",
+    "features": {
+      "tool_name": "query_drug_drug_similarity",
+      "param_count": 3,
+      "result_size": 30,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "d6fca7e5-41ae-4cea-ba7e-1976bbe27a88",
+    "query_type": "embedding_similarity",
+    "entity_type": "drug",
+    "entity_count": 21,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 24.699,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466855",
+    "features": {
+      "tool_name": "transcriptomic_rescue",
+      "param_count": 4,
+      "result_size": 21,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "702c1eff-8c37-4b85-a4d4-a2f8c10b9811",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 0.905,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466867",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 1,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "83bb8d5d-dcb6-40db-a4ae-6e633eeddd01",
+    "query_type": "unknown",
+    "entity_type": "pathway",
+    "entity_count": 46,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 514.075,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466879",
+    "features": {
+      "tool_name": "causal_inference",
+      "param_count": 5,
+      "result_size": 46,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "6c5f4161-858e-4598-931c-483444c1f145",
+    "query_type": "name_resolution",
+    "entity_type": "gene",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.416,
+    "success": false,
+    "timestamp": "2025-12-06T23:17:41.466891",
+    "features": {
+      "tool_name": "gene_name_resolver",
+      "param_count": 2,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "3cd68879-ea61-426b-8232-98630a008ee1",
+    "query_type": "graph_traversal",
+    "entity_type": "pathway",
+    "entity_count": 94,
+    "complexity_score": 0.8,
+    "data_sources": [
+      "neo4j"
+    ],
+    "actual_tier": 3,
+    "execution_time_ms": 475.041,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466902",
+    "features": {
+      "tool_name": "graph_neighbors",
+      "param_count": 4,
+      "result_size": 94,
+      "has_embedding": false,
+      "has_graph": true,
+      "is_bulk": false,
+      "category": "graph"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1a003ed3-ff90-4fe1-89c1-71e30edc774f",
+    "query_type": "unknown",
+    "entity_type": "drug",
+    "entity_count": 8,
+    "complexity_score": 0.4,
+    "data_sources": [
+      "pgvector"
+    ],
+    "actual_tier": 2,
+    "execution_time_ms": 18.662,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466914",
+    "features": {
+      "tool_name": "vector_antipodal",
+      "param_count": 2,
+      "result_size": 8,
+      "has_embedding": true,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "vector"
+    },
+    "optimal_tier": null
+  },
+  {
+    "query_id": "1cdd8d50-5dd9-4110-ae85-7000986956ad",
+    "query_type": "metadata_lookup",
+    "entity_type": "pathway",
+    "entity_count": 1,
+    "complexity_score": 0.2,
+    "data_sources": [
+      "master_tables"
+    ],
+    "actual_tier": 1,
+    "execution_time_ms": 1.408,
+    "success": true,
+    "timestamp": "2025-12-06T23:17:41.466926",
+    "features": {
+      "tool_name": "count_entities",
+      "param_count": 1,
+      "result_size": 1,
+      "has_embedding": false,
+      "has_graph": false,
+      "is_bulk": false,
+      "category": "lookup"
+    },
+    "optimal_tier": null
+  }
+]
