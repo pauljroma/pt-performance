@@ -151,11 +151,11 @@ async def execute(params: Dict[str, Any]) -> Dict[str, Any]:
         cursor = conn.cursor()
 
         # Get entity embedding (case-insensitive exact match)
-        # SCHEMA FIX: Base tables have no 'metadata' column (only id, embedding, version, created_at)
+        # SCHEMA FIX: Base tables use 'entity_name' column, not 'id'
         cursor.execute(f"""
-            SELECT id, embedding
+            SELECT entity_name, embedding
             FROM {table_name}
-            WHERE LOWER(id) = LOWER(%s)
+            WHERE LOWER(entity_name) = LOWER(%s)
             LIMIT 1
         """, (entity_name,))
 
@@ -164,9 +164,9 @@ async def execute(params: Dict[str, Any]) -> Dict[str, Any]:
         if not result:
             # Try fuzzy match
             cursor.execute(f"""
-                SELECT id, embedding
+                SELECT entity_name, embedding
                 FROM {table_name}
-                WHERE LOWER(id) LIKE LOWER(%s)
+                WHERE LOWER(entity_name) LIKE LOWER(%s)
                 LIMIT 1
             """, (f"%{entity_name}%",))
 

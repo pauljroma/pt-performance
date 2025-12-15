@@ -41,9 +41,9 @@ project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import resolvers
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
-from clients.quiver.quiver_platform.zones.z07_data_access.gene_name_resolver_v3 import GeneNameResolverV3 as GeneNameResolver
-from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers.disease_resolver import DiseaseResolver
+from zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
+from zones.z07_data_access.gene_name_resolver_v3 import GeneNameResolverV3 as GeneNameResolver
+from zones.z07_data_access.meta_layer.resolvers.disease_resolver import DiseaseResolver
 
 # Database configuration
 DB_URL = "postgresql://postgres:temppass123@localhost:5435/sapphire_database"

@@ -114,54 +114,54 @@ try:
     #
     # registry = ComponentRegistry()
     # registry.register_component({
-        "name": "demeo_framework",
-        "version": __version__,
-        "type": "drug_rescue_framework",
-        "zone": "z07_data_access",
-        "capabilities": [
-            "rescue_ranking",
-            "disease_signature",
-            "mechanism_discovery",
-            "explainable_ai",
-            "active_learning",
-            "bayesian_fusion",
-            "multimodal_consensus"
-        ],
-        "dependencies": [
-            "unified_query_layer",
-            "metagraph_pgvector_registration",
-            "neo4j_client"
-        ],
-        "tools_integrated": [
-            "vector_antipodal",
-            "bbb_permeability",
-            "adme_tox_predictor",
-            "mechanistic_explainer",
-            "clinical_trial_intelligence",
-            "drug_interactions"
-        ],
-        "metadata": {
-            "pillars": 4,
-            "tools_count": 6,
-            "embedding_spaces": ["MODEX", "ENS", "LINCS"],
-            "metagraph_nodes": [
-                "LearnedRescuePattern",
-                "DiseaseSignature",
-                "MechanismCluster"
-            ],
-            "default_weights": {
-                "modex": 0.50,
-                "ens": 0.30,
-                "lincs": 0.20
-            },
-            "benchmarks": {
-                "cycle0_known_drug_detection": "≥70%",
-                "cycle1_confidence_improvement": "+10-15%",
-                "hit_rate_uplift": "20-30×"
-            }
-        }
-    })
-    print(f"✅ DeMeo Framework v{__version__} registered in Component Registry")
+    #     "name": "demeo_framework",
+    #     "version": __version__,
+    #     "type": "drug_rescue_framework",
+    #     "zone": "z07_data_access",
+    #     "capabilities": [
+    #         "rescue_ranking",
+    #         "disease_signature",
+    #         "mechanism_discovery",
+    #         "explainable_ai",
+    #         "active_learning",
+    #         "bayesian_fusion",
+    #         "multimodal_consensus"
+    #     ],
+    #     "dependencies": [
+    #         "unified_query_layer",
+    #         "metagraph_pgvector_registration",
+    #         "neo4j_client"
+    #     ],
+    #     "tools_integrated": [
+    #         "vector_antipodal",
+    #         "bbb_permeability",
+    #         "adme_tox_predictor",
+    #         "mechanistic_explainer",
+    #         "clinical_trial_intelligence",
+    #         "drug_interactions"
+    #     ],
+    #     "metadata": {
+    #         "pillars": 4,
+    #         "tools_count": 6,
+    #         "embedding_spaces": ["MODEX", "ENS", "LINCS"],
+    #         "metagraph_nodes": [
+    #             "LearnedRescuePattern",
+    #             "DiseaseSignature",
+    #             "MechanismCluster"
+    #         ],
+    #         "default_weights": {
+    #             "modex": 0.50,
+    #             "ens": 0.30,
+    #             "lincs": 0.20
+    #         },
+    #         "benchmarks": {
+    #             "cycle0_known_drug_detection": "≥70%",
+    #             "cycle1_confidence_improvement": "+10-15%",
+    #             "hit_rate_uplift": "20-30×"
+    #         }
+    #     }
+    # })
+    # print(f"✅ DeMeo Framework v{__version__} registered in Component Registry")
 
 except ImportError:
     # Component registration is optional during development

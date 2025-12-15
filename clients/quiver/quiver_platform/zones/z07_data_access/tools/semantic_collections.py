@@ -105,7 +105,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # Import ChromaDB provider
         try:
-            from clients.quiver.quiver_platform.zones.z08_persist.providers.chroma_provider import get_chroma_client
+            from zones.z08_persist.providers.chroma_provider import get_chroma_client
         except ImportError:
             return {
                 "success": False,

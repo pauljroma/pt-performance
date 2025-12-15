@@ -42,9 +42,9 @@ from pathlib import Path
 project_root = Path(__file__).parents[3]
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z10c_utility.identifiers.drug_harmonizer import DrugHarmonizer
-from clients.quiver.quiver_platform.zones.z10c_utility.identifiers.gene_harmonizer import GeneHarmonizer
-from clients.quiver.quiver_platform.zones.z10c_utility.utils import validation
+from zones.z10c_utility.identifiers.drug_harmonizer import DrugHarmonizer
+from zones.z10c_utility.identifiers.gene_harmonizer import GeneHarmonizer
+from zones.z10c_utility.utils import validation
 
 logger = logging.getLogger(__name__)
 

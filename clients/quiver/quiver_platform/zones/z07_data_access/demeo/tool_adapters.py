@@ -21,37 +21,37 @@ from typing import Dict, Any
 import logging
 import asyncio
 
-from clients.quiver.quiver_platform.zones.z07_data_access.demeo.bayesian_fusion import ToolPrediction
+from zones.z07_data_access.demeo.bayesian_fusion import ToolPrediction
 
 # Import existing Sapphire tools
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.bbb_permeability import (
+from zones.z07_data_access.tools.bbb_permeability import (
     execute as bbb_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.adme_tox_predictor import (
+from zones.z07_data_access.tools.adme_tox_predictor import (
     execute as adme_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.clinical_trial_intelligence import (
+from zones.z07_data_access.tools.clinical_trial_intelligence import (
     execute as clinical_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_interactions import (
+from zones.z07_data_access.tools.drug_interactions import (
     execute as interactions_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.mechanistic_explainer import (
+from zones.z07_data_access.tools.mechanistic_explainer import (
     execute as mech_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_antipodal import (
+from zones.z07_data_access.tools.vector_antipodal import (
     execute as antipodal_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.transcriptomic_rescue import (
+from zones.z07_data_access.tools.transcriptomic_rescue import (
     execute as transcriptomic_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.target_validation_scorer import (
+from zones.z07_data_access.tools.target_validation_scorer import (
     execute as target_validation_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.literature_evidence import (
+from zones.z07_data_access.tools.literature_evidence import (
     execute as literature_execute
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.rescue_combinations import (
+from zones.z07_data_access.tools.rescue_combinations import (
     execute as combinations_execute
 )
 

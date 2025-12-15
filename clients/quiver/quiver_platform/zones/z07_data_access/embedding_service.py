@@ -40,7 +40,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 # Import DrugNameResolver for commercial name resolution
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver import get_drug_name_resolver
+from zones.z07_data_access.drug_name_resolver import get_drug_name_resolver
 
 
 @dataclass
@@ -695,7 +695,7 @@ class EmbeddingService:
         if self._gene_df is None:
             try:
                 # v6.0: Load from PGVector instead of parquet
-                from clients.quiver.quiver_platform.zones.z07_data_access.pgvector_service import get_pgvector_service
+                from zones.z07_data_access.pgvector_service import get_pgvector_service
                 import psycopg2
                 from psycopg2.extras import RealDictCursor
 
@@ -765,7 +765,7 @@ class EmbeddingService:
         if self._drug_df is None:
             try:
                 # v6.0: Load from PGVector instead of parquet
-                from clients.quiver.quiver_platform.zones.z07_data_access.pgvector_service import get_pgvector_service
+                from zones.z07_data_access.pgvector_service import get_pgvector_service
                 import psycopg2
                 from psycopg2.extras import RealDictCursor
 

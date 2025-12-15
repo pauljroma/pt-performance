@@ -32,7 +32,7 @@ sys.path.insert(0, str(project_root))
 
 # Import entity tracker (REUSE)
 try:
-    from clients.quiver.quiver_platform.zones.z07_data_access.tools.entity_connection_tracker import (
+    from zones.z07_data_access.tools.entity_connection_tracker import (
         check_postgres_presence,
         check_neo4j_presence,
         check_chromadb_presence

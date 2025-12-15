@@ -166,10 +166,10 @@ async def _resolve_entity(entity_name: str, entity_type: str) -> tuple[str, floa
     try:
         # Import resolvers dynamically
         if entity_type == "drug":
-            from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers.drug_name_resolver import DrugNameResolver
+            from zones.z07_data_access.meta_layer.resolvers.drug_name_resolver import DrugNameResolver
             resolver = DrugNameResolver()
         elif entity_type == "gene":
-            from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers.gene_name_resolver import GeneNameResolver
+            from zones.z07_data_access.meta_layer.resolvers.gene_name_resolver import GeneNameResolver
             resolver = GeneNameResolver()
         else:
             # No resolver for this type, return as-is

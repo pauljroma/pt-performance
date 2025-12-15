@@ -10,7 +10,7 @@ All code should now import from the canonical location:
 """
 
 # Redirect to canonical location using full import path
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver import (
+from zones.z07_data_access.drug_name_resolver import (
     DrugNameResolverV21,
     DrugNameResolver,  # Alias
     get_drug_name_resolver_v21,

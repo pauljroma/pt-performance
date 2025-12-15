@@ -34,7 +34,7 @@ sys.path.insert(0, str(project_root))
 import psycopg2
 import os
 # MIGRATED to v3.0 (2025-12-05): Master resolution tables (60x faster)
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
+from zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
 
 
 # Claude Tool Definition (Anthropic format)

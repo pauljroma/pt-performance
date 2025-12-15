@@ -17,7 +17,7 @@ Zone: z07_data_access/demeo
 from typing import List, Dict, Any, Optional
 import logging
 
-from clients.quiver.quiver_platform.zones.z07_data_access.postgres_connection import get_connection
+from zones.z07_data_access.postgres_connection import get_connection
 
 logger = logging.getLogger(__name__)
 

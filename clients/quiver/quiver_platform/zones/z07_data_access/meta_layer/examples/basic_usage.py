@@ -24,7 +24,7 @@ def example_1_fuzzy_matching():
     print("Example 1: Fuzzy Entity Matching")
     print("="*60)
 
-    from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers import (
+    from zones.z07_data_access.meta_layer.resolvers import (
         get_fuzzy_entity_matcher
     )
 
@@ -54,7 +54,7 @@ def example_2_intent_classification():
     print("Example 2: Intent Classification")
     print("="*60)
 
-    from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.classifiers import (
+    from zones.z07_data_access.meta_layer.classifiers import (
         get_intent_classifier
     )
 
@@ -83,7 +83,7 @@ def example_3_drug_name_resolution():
     print("Example 3: Drug Name Resolution")
     print("="*60)
 
-    from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers import (
+    from zones.z07_data_access.meta_layer.resolvers import (
         get_drug_name_resolver
     )
 
@@ -111,7 +111,7 @@ def example_4_complete_pipeline():
     print("Example 4: Complete Pipeline")
     print("="*60)
 
-    from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer import (
+    from zones.z07_data_access.meta_layer import (
         get_meta_layer_pipeline
     )
 
@@ -164,7 +164,7 @@ def example_5_stats():
     print("Example 5: Resolver Statistics")
     print("="*60)
 
-    from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer import (
+    from zones.z07_data_access.meta_layer import (
         get_meta_layer_pipeline
     )
 

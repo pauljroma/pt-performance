@@ -33,7 +33,7 @@ from psycopg2.extras import RealDictCursor
 project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z07_data_access.config import config
+from zones.z07_data_access.config import config
 
 logger = logging.getLogger(__name__)
 

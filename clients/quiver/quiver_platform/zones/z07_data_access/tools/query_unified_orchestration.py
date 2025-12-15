@@ -323,7 +323,7 @@ async def _discover_execution_plan(query_analysis: Dict[str, Any], intent: str) 
     Returns:
         List of execution steps with metagraph-selected spaces
     """
-    from clients.quiver.quiver_platform.zones.z07_data_access.unified_query_layer import get_unified_query_layer
+    from zones.z07_data_access.unified_query_layer import get_unified_query_layer
 
     uql = get_unified_query_layer()
 

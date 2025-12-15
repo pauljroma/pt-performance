@@ -22,7 +22,7 @@ import sys
 project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import get_embedding_service as get_embedding_service
+from zones.z07_data_access.embedding_service import get_embedding_service as get_embedding_service
 
 
 
@@ -176,7 +176,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         # Count graph entities (from Neo4j)
         if entity_type in ["disease", "pathway", "protein", "relationship", "all"]:
             try:
-                from clients.quiver.quiver_platform.zones.z08_persist.providers.neo4j_graph_provider import get_graph_provider
+                from zones.z08_persist.providers.neo4j_graph_provider import get_graph_provider
 
                 graph_provider = get_graph_provider()
                 if graph_provider:
@@ -223,7 +223,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         # Count literature (from ChromaDB)
         if entity_type in ["literature", "all"]:
             try:
-                from clients.quiver.quiver_platform.zones.z08_persist.providers.chroma_provider import get_chroma_client
+                from zones.z08_persist.providers.chroma_provider import get_chroma_client
 
                 chroma_client = get_chroma_client()
                 if chroma_client:

@@ -26,7 +26,7 @@ import numpy as np
 project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import get_embedding_service
+from zones.z07_data_access.embedding_service import get_embedding_service
 
 
 

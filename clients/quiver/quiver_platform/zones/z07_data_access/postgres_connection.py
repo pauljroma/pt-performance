@@ -55,19 +55,19 @@ class PostgresConnectionPool:
             except Exception as e:
                 print(f"⚠️  Failed to initialize 'rescue' pool: {e}")
 
-            # Initialize expo database pool
+            # Initialize sapphire_database pool (PGVector v6.0)
             try:
                 self.expo_pool = await asyncpg.create_pool(
                     host=host,
                     port=port,
                     user=user,
                     password=password,
-                    database="expo",
+                    database="sapphire_database",
                     min_size=2,
                     max_size=10,
                     command_timeout=60
                 )
-                print("✅ PostgreSQL 'expo' pool initialized")
+                print("✅ PostgreSQL 'sapphire_database' pool initialized")
             except Exception as e:
                 print(f"⚠️  Failed to initialize 'expo' pool: {e}")
 

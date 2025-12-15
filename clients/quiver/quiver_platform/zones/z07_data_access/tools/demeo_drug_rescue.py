@@ -37,7 +37,7 @@ else:
     logger.warning(f".env not found at {env_path}")
 
 # MIGRATED to v3.0 (2025-12-05): Master resolution tables (60x faster)
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
+from zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
 
 
 def _create_fusion_scored_drug(candidate: Dict[str, Any], drug_name_resolver=None) -> Dict[str, Any]:
@@ -194,21 +194,21 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         # Import DeMeo modules with full path
-        from clients.quiver.quiver_platform.zones.z07_data_access.demeo.unified_adapter import get_demeo_unified_adapter
-        from clients.quiver.quiver_platform.zones.z07_data_access.demeo.metagraph_client import (
+        from zones.z07_data_access.demeo.unified_adapter import get_demeo_unified_adapter
+        from zones.z07_data_access.demeo.metagraph_client import (
             get_demeo_metagraph_client,
             LearnedRescuePattern
         )
-        from clients.quiver.quiver_platform.zones.z07_data_access.demeo.multimodal_consensus import (
+        from zones.z07_data_access.demeo.multimodal_consensus import (
             compute_consensus,
             DEFAULT_MULTIMODAL_WEIGHTS
         )
-        from clients.quiver.quiver_platform.zones.z07_data_access.demeo.bayesian_fusion import (
+        from zones.z07_data_access.demeo.bayesian_fusion import (
             fuse_tool_predictions,
             ToolPrediction,
             DEFAULT_TOOL_WEIGHTS
         )
-        from clients.quiver.quiver_platform.zones.z07_data_access.unified_query_layer import get_unified_query_layer
+        from zones.z07_data_access.unified_query_layer import get_unified_query_layer
         from neo4j import GraphDatabase
 
     except ImportError as e:
@@ -327,7 +327,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
         # Execute Bayesian fusion with REAL TOOL PREDICTIONS (DeMeo v3.0)
         # Import tool adapter for 6 Sapphire tools
-        from clients.quiver.quiver_platform.zones.z07_data_access.demeo.tool_adapters import get_all_tool_predictions
+        from zones.z07_data_access.demeo.tool_adapters import get_all_tool_predictions
         import numpy as np
 
         # v6.0 FUSION INTEGRATION: Query gene auxiliary fusions for drug candidates
@@ -360,7 +360,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         # OPTIMIZATION #3: Use connection pooling (2x speedup)
         # Reuse connections instead of creating new ones
         try:
-            from clients.quiver.quiver_platform.zones.z07_data_access.db_connection_pool import get_pgvector_connection
+            from zones.z07_data_access.db_connection_pool import get_pgvector_connection
             conn = get_pgvector_connection()
             using_pool = True
             logger.debug("✅ Using connection pool")
@@ -684,13 +684,13 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         # Enrich drug candidates with ChEMBL/DrugBank metadata (SMILES, mechanisms, etc.)
         # Use v2 with graceful handling of missing drugs table
         try:
-            from clients.quiver.quiver_platform.zones.z07_data_access.demeo.drug_metadata_enrichment_v2 import (
+            from zones.z07_data_access.demeo.drug_metadata_enrichment_v2 import (
                 enrich_drug_metadata,
                 apply_metadata_to_candidates
             )
         except ImportError:
             # Fallback to v1 if v2 not available
-            from clients.quiver.quiver_platform.zones.z07_data_access.demeo.drug_metadata_enrichment import (
+            from zones.z07_data_access.demeo.drug_metadata_enrichment import (
                 enrich_drug_metadata,
                 apply_metadata_to_candidates
             )
@@ -712,8 +712,8 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         tool_scoring_available = False
         if enable_tool_scoring:
             try:
-                from clients.quiver.quiver_platform.zones.z07_data_access.demeo.tool_adapters import get_all_tool_predictions
-                from clients.quiver.quiver_platform.zones.z07_data_access.demeo.bayesian_fusion import (
+                from zones.z07_data_access.demeo.tool_adapters import get_all_tool_predictions
+                from zones.z07_data_access.demeo.bayesian_fusion import (
                     fuse_tool_predictions,
                     DEFAULT_TOOL_WEIGHTS
                 )

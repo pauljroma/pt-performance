@@ -40,7 +40,7 @@ try:
 except ImportError:
     # Fallback for different import contexts
     try:
-        from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers import get_drug_name_resolver
+        from zones.z07_data_access.meta_layer.resolvers import get_drug_name_resolver
     except ImportError:
         # If resolver not available, use a dummy function
         def get_drug_name_resolver():

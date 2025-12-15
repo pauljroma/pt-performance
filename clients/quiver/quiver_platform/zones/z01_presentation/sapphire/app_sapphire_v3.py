@@ -106,409 +106,410 @@ sys.path.insert(0, str(skills_path))
 from dotenv import load_dotenv
 
 # Import Phase 1-3 Agents (Sapphire v3.24+)
-from quiver_platform.zones.z03a_cognitive.agents.intelligence_orchestrator import IntelligenceOrchestrator
-from quiver_platform.zones.z05_ml.agents.drug_repurposing import DrugRepurposingAgent
-from quiver_platform.zones.z05_ml.agents.target_discovery import TargetDiscoveryAgent
-from quiver_platform.zones.z05_ml.agents.safety_prediction import SafetyPredictionAgent
-from quiver_platform.zones.z05_ml.agents.pathway_analysis import PathwayAnalysisAgent
+# NOTE: Agent imports temporarily disabled - modules not yet restored
+# from zones.z03a_cognitive.agents.intelligence_orchestrator import IntelligenceOrchestrator
+# from zones.z05_ml.agents.drug_repurposing import DrugRepurposingAgent
+# from zones.z05_ml.agents.target_discovery import TargetDiscoveryAgent
+# from zones.z05_ml.agents.safety_prediction import SafetyPredictionAgent
+# from zones.z05_ml.agents.pathway_analysis import PathwayAnalysisAgent
 
-from clients.quiver.quiver_platform.zones.z07_data_access.litellm_anthropic_bridge import (
+from zones.z07_data_access.litellm_anthropic_bridge import (
     get_litellm_client,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.metrics import (
+from zones.z07_data_access.metrics import (
     get_metrics,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.available_spaces import (
+from zones.z07_data_access.tools.available_spaces import (
     TOOL_DEFINITION as available_spaces_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.available_spaces import (
+from zones.z07_data_access.tools.available_spaces import (
     execute as available_spaces_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.count_entities import (
+from zones.z07_data_access.tools.count_entities import (
     TOOL_DEFINITION as count_entities_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.count_entities import (
+from zones.z07_data_access.tools.count_entities import (
     execute as count_entities_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_combinations_synergy import (
+from zones.z07_data_access.tools.drug_combinations_synergy import (
     TOOL_DEFINITION as drug_combinations_synergy_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_combinations_synergy import (
+from zones.z07_data_access.tools.drug_combinations_synergy import (
     execute as drug_combinations_synergy_exec,
 )
 
 # Sapphire v3.1: Drug combination tools (4)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_interactions import (
+from zones.z07_data_access.tools.drug_interactions import (
     TOOL_DEFINITION as drug_interactions_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_interactions import (
+from zones.z07_data_access.tools.drug_interactions import (
     execute as drug_interactions_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_lookalikes import (
+from zones.z07_data_access.tools.drug_lookalikes import (
     TOOL_DEFINITION as drug_lookalikes_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_lookalikes import (
+from zones.z07_data_access.tools.drug_lookalikes import (
     execute as drug_lookalikes_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_properties_detail import (
+from zones.z07_data_access.tools.drug_properties_detail import (
     TOOL_DEFINITION as drug_properties_detail_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_properties_detail import (
+from zones.z07_data_access.tools.drug_properties_detail import (
     execute as drug_properties_detail_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.entity_metadata import (
+from zones.z07_data_access.tools.entity_metadata import (
     TOOL_DEFINITION as entity_metadata_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.entity_metadata import (
+from zones.z07_data_access.tools.entity_metadata import (
     execute as entity_metadata_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.execute_cypher import (
+from zones.z07_data_access.tools.execute_cypher import (
     TOOL_DEFINITION as execute_cypher_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.execute_cypher import (
+from zones.z07_data_access.tools.execute_cypher import (
     execute as execute_cypher_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_neighbors import (
+from zones.z07_data_access.tools.graph_neighbors import (
     TOOL_DEFINITION as graph_neighbors_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_neighbors import (
+from zones.z07_data_access.tools.graph_neighbors import (
     execute as graph_neighbors_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_path import (
+from zones.z07_data_access.tools.graph_path import (
     TOOL_DEFINITION as graph_path_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_path import (
+from zones.z07_data_access.tools.graph_path import (
     execute as graph_path_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_properties import (
+from zones.z07_data_access.tools.graph_properties import (
     TOOL_DEFINITION as graph_properties_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_properties import (
+from zones.z07_data_access.tools.graph_properties import (
     execute as graph_properties_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_subgraph import (
+from zones.z07_data_access.tools.graph_subgraph import (
     TOOL_DEFINITION as graph_subgraph_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.graph_subgraph import (
+from zones.z07_data_access.tools.graph_subgraph import (
     execute as graph_subgraph_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.lincs_expression_detail import (
+from zones.z07_data_access.tools.lincs_expression_detail import (
     TOOL_DEFINITION as lincs_expression_detail_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.lincs_expression_detail import (
+from zones.z07_data_access.tools.lincs_expression_detail import (
     execute as lincs_expression_detail_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.provenance_discovery import (
+from zones.z07_data_access.tools.provenance_discovery import (
     TOOL_DEFINITION as provenance_discovery_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.provenance_discovery import (
+from zones.z07_data_access.tools.provenance_discovery import (
     execute as provenance_discovery_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.read_parquet_filter import (
+from zones.z07_data_access.tools.read_parquet_filter import (
     TOOL_DEFINITION as read_parquet_filter_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.read_parquet_filter import (
+from zones.z07_data_access.tools.read_parquet_filter import (
     execute as read_parquet_filter_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.rescue_combinations import (
+from zones.z07_data_access.tools.rescue_combinations import (
     TOOL_DEFINITION as rescue_combinations_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.rescue_combinations import (
+from zones.z07_data_access.tools.rescue_combinations import (
     execute as rescue_combinations_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.semantic_collections import (
+from zones.z07_data_access.tools.semantic_collections import (
     TOOL_DEFINITION as semantic_collections_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.semantic_collections import (
+from zones.z07_data_access.tools.semantic_collections import (
     execute as semantic_collections_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.semantic_search import (
+from zones.z07_data_access.tools.semantic_search import (
     TOOL_DEFINITION as semantic_search_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.semantic_search import (
+from zones.z07_data_access.tools.semantic_search import (
     execute as semantic_search_exec,
 )
 
 # Sapphire v3.3: Reporting & PostgreSQL Detail Tools
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.session_analytics import (
+from zones.z07_data_access.tools.session_analytics import (
     TOOL_DEFINITION as session_analytics_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.session_analytics import (
+from zones.z07_data_access.tools.session_analytics import (
     execute as session_analytics_exec,
 )
 
 # Sapphire v3.2: Transcriptomic rescue scoring (Agent 12 validated)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.transcriptomic_rescue import (
+from zones.z07_data_access.tools.transcriptomic_rescue import (
     TOOL_DEFINITION as transcriptomic_rescue_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.transcriptomic_rescue import (
+from zones.z07_data_access.tools.transcriptomic_rescue import (
     execute as transcriptomic_rescue_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_antipodal import (
+from zones.z07_data_access.tools.vector_antipodal import (
     TOOL_DEFINITION as vector_antipodal_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_antipodal import (
+from zones.z07_data_access.tools.vector_antipodal import (
     execute as vector_antipodal_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_dimensions import (
+from zones.z07_data_access.tools.vector_dimensions import (
     TOOL_DEFINITION as vector_dimensions_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_dimensions import (
+from zones.z07_data_access.tools.vector_dimensions import (
     execute as vector_dimensions_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_neighbors import (
+from zones.z07_data_access.tools.vector_neighbors import (
     TOOL_DEFINITION as vector_neighbors_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_neighbors import (
+from zones.z07_data_access.tools.vector_neighbors import (
     execute as vector_neighbors_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_similarity import (
+from zones.z07_data_access.tools.vector_similarity import (
     TOOL_DEFINITION as vector_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.vector_similarity import (
+from zones.z07_data_access.tools.vector_similarity import (
     execute as vector_similarity_exec,
 )
 
 # Sapphire v3.8: Service Integration Tools (3)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.literature_search_agent import (
+from zones.z07_data_access.tools.literature_search_agent import (
     TOOL_DEFINITION as literature_search_agent_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.literature_search_agent import (
+from zones.z07_data_access.tools.literature_search_agent import (
     execute as literature_search_agent_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.biomarker_discovery import (
+from zones.z07_data_access.tools.biomarker_discovery import (
     TOOL_DEFINITION as biomarker_discovery_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.biomarker_discovery import (
+from zones.z07_data_access.tools.biomarker_discovery import (
     execute as biomarker_discovery_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.literature_evidence import (
+from zones.z07_data_access.tools.literature_evidence import (
     TOOL_DEFINITION as literature_evidence_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.literature_evidence import (
+from zones.z07_data_access.tools.literature_evidence import (
     execute as literature_evidence_exec,
 )
 
 # Sapphire v3.12: CNS Safety Tools (2) - RE-ENABLED in v3.14
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.bbb_permeability import (
+from zones.z07_data_access.tools.bbb_permeability import (
     TOOL_DEFINITION as bbb_permeability_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.bbb_permeability import (
+from zones.z07_data_access.tools.bbb_permeability import (
     execute as bbb_permeability_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.adme_tox_predictor import (
+from zones.z07_data_access.tools.adme_tox_predictor import (
     TOOL_DEFINITION as adme_tox_predictor_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.adme_tox_predictor import (
+from zones.z07_data_access.tools.adme_tox_predictor import (
     execute as adme_tox_predictor_exec,
 )
 
 # Sapphire v3.13: Three-Tier Query Pathway System (3)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_direct_run import (
+from zones.z07_data_access.tools.query_direct_run import (
     TOOL_DEFINITION as query_direct_run_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_direct_run import (
+from zones.z07_data_access.tools.query_direct_run import (
     execute as query_direct_run_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_atomic_fusion import (
+from zones.z07_data_access.tools.query_atomic_fusion import (
     TOOL_DEFINITION as query_atomic_fusion_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_atomic_fusion import (
+from zones.z07_data_access.tools.query_atomic_fusion import (
     execute as query_atomic_fusion_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_unified_orchestration import (
+from zones.z07_data_access.tools.query_unified_orchestration import (
     TOOL_DEFINITION as query_unified_orchestration_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_unified_orchestration import (
+from zones.z07_data_access.tools.query_unified_orchestration import (
     execute as query_unified_orchestration_exec,
 )
 
 # Sapphire v3.14: Advanced Analytical Tools (3) - NEW
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.causal_inference import (
+from zones.z07_data_access.tools.causal_inference import (
     TOOL_DEFINITION as causal_inference_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.causal_inference import (
+from zones.z07_data_access.tools.causal_inference import (
     execute as causal_inference_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.mechanistic_explainer import (
+from zones.z07_data_access.tools.mechanistic_explainer import (
     TOOL_DEFINITION as mechanistic_explainer_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.mechanistic_explainer import (
+from zones.z07_data_access.tools.mechanistic_explainer import (
     execute as mechanistic_explainer_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.uncertainty_estimation import (
+from zones.z07_data_access.tools.uncertainty_estimation import (
     TOOL_DEFINITION as uncertainty_estimation_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.uncertainty_estimation import (
+from zones.z07_data_access.tools.uncertainty_estimation import (
     execute as uncertainty_estimation_exec,
 )
 
 # Sapphire v3.15: Strategic Intelligence Tools (3)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.clinical_trial_intelligence import (
+from zones.z07_data_access.tools.clinical_trial_intelligence import (
     TOOL_DEFINITION as clinical_trial_intelligence_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.clinical_trial_intelligence import (
+from zones.z07_data_access.tools.clinical_trial_intelligence import (
     execute as clinical_trial_intelligence_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.target_validation_scorer import (
+from zones.z07_data_access.tools.target_validation_scorer import (
     TOOL_DEFINITION as target_validation_scorer_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.target_validation_scorer import (
+from zones.z07_data_access.tools.target_validation_scorer import (
     execute as target_validation_scorer_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_repurposing_ranker import (
+from zones.z07_data_access.tools.drug_repurposing_ranker import (
     TOOL_DEFINITION as drug_repurposing_ranker_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.drug_repurposing_ranker import (
+from zones.z07_data_access.tools.drug_repurposing_ranker import (
     execute as drug_repurposing_ranker_exec,
 )
 
 # Sapphire v3.16: Scientist Reports (2) - NEW
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.scientist_reports import (
+from zones.z07_data_access.tools.scientist_reports import (
     TOOL_DEFINITION as scientist_report_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.scientist_reports import (
+from zones.z07_data_access.tools.scientist_reports import (
     execute as scientist_report_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.scientist_reports import (
+from zones.z07_data_access.tools.scientist_reports import (
     BATCH_TOOL_DEFINITION as batch_scientist_reports_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.scientist_reports import (
+from zones.z07_data_access.tools.scientist_reports import (
     execute_batch as batch_scientist_reports_exec,
 )
 
 # Sapphire v3.17: DeMeo v2.0 Drug Rescue (1) - NEW
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.demeo_drug_rescue import (
+from zones.z07_data_access.tools.demeo_drug_rescue import (
     TOOL_DEFINITION as demeo_drug_rescue_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.demeo_drug_rescue import (
+from zones.z07_data_access.tools.demeo_drug_rescue import (
     execute as demeo_drug_rescue_exec,
 )
 
 # Sapphire v3.18: Intent Classifier (1) - NEW
-from clients.quiver.quiver_platform.zones.z07_data_access.intent_classifier import (
+from zones.z07_data_access.intent_classifier import (
     TOOL_DEFINITION as intent_classifier_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.intent_classifier import (
+from zones.z07_data_access.intent_classifier import (
     execute as intent_classifier_exec,
 )
 
 # Sapphire v3.22: Fusion Discovery Tools (4) - NEW
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.fusion_discovery_drug import (
+from zones.z07_data_access.tools.fusion_discovery_drug import (
     TOOL_DEFINITION as fusion_discovery_drug_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.fusion_discovery_drug import (
+from zones.z07_data_access.tools.fusion_discovery_drug import (
     execute as fusion_discovery_drug_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.fusion_discovery_gene import (
+from zones.z07_data_access.tools.fusion_discovery_gene import (
     TOOL_DEFINITION as fusion_discovery_gene_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.fusion_discovery_gene import (
+from zones.z07_data_access.tools.fusion_discovery_gene import (
     execute as fusion_discovery_gene_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.entity_connection_tracker import (
+from zones.z07_data_access.tools.entity_connection_tracker import (
     TOOL_DEFINITION as entity_connection_tracker_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.entity_connection_tracker import (
+from zones.z07_data_access.tools.entity_connection_tracker import (
     execute as entity_connection_tracker_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.signal_tracking_dashboard import (
+from zones.z07_data_access.tools.signal_tracking_dashboard import (
     TOOL_DEFINITION as signal_tracking_dashboard_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.signal_tracking_dashboard import (
+from zones.z07_data_access.tools.signal_tracking_dashboard import (
     execute as signal_tracking_dashboard_exec,
 )
 
 # Sapphire v3.23: Atomic Fusion Table Wrappers (14) - NEW
 # Drug Auxiliary Fusion (5)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_adr_similarity import (
+from zones.z07_data_access.tools.query_drug_adr_similarity import (
     TOOL_DEFINITION as query_drug_adr_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_adr_similarity import (
+from zones.z07_data_access.tools.query_drug_adr_similarity import (
     execute as query_drug_adr_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_celltype_similarity import (
+from zones.z07_data_access.tools.query_drug_celltype_similarity import (
     TOOL_DEFINITION as query_drug_celltype_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_celltype_similarity import (
+from zones.z07_data_access.tools.query_drug_celltype_similarity import (
     execute as query_drug_celltype_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_dgp_similarity import (
+from zones.z07_data_access.tools.query_drug_dgp_similarity import (
     TOOL_DEFINITION as query_drug_dgp_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_dgp_similarity import (
+from zones.z07_data_access.tools.query_drug_dgp_similarity import (
     execute as query_drug_dgp_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_ep_similarity import (
+from zones.z07_data_access.tools.query_drug_ep_similarity import (
     TOOL_DEFINITION as query_drug_ep_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_ep_similarity import (
+from zones.z07_data_access.tools.query_drug_ep_similarity import (
     execute as query_drug_ep_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_mop_similarity import (
+from zones.z07_data_access.tools.query_drug_mop_similarity import (
     TOOL_DEFINITION as query_drug_mop_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_mop_similarity import (
+from zones.z07_data_access.tools.query_drug_mop_similarity import (
     execute as query_drug_mop_similarity_exec,
 )
 
 # Gene Auxiliary Fusion (5)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_celltype_similarity import (
+from zones.z07_data_access.tools.query_gene_celltype_similarity import (
     TOOL_DEFINITION as query_gene_celltype_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_celltype_similarity import (
+from zones.z07_data_access.tools.query_gene_celltype_similarity import (
     execute as query_gene_celltype_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_dgp_similarity import (
+from zones.z07_data_access.tools.query_gene_dgp_similarity import (
     TOOL_DEFINITION as query_gene_dgp_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_dgp_similarity import (
+from zones.z07_data_access.tools.query_gene_dgp_similarity import (
     execute as query_gene_dgp_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_ep_similarity import (
+from zones.z07_data_access.tools.query_gene_ep_similarity import (
     TOOL_DEFINITION as query_gene_ep_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_ep_similarity import (
+from zones.z07_data_access.tools.query_gene_ep_similarity import (
     execute as query_gene_ep_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_mop_similarity import (
+from zones.z07_data_access.tools.query_gene_mop_similarity import (
     TOOL_DEFINITION as query_gene_mop_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_mop_similarity import (
+from zones.z07_data_access.tools.query_gene_mop_similarity import (
     execute as query_gene_mop_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_syndrome_similarity import (
+from zones.z07_data_access.tools.query_gene_syndrome_similarity import (
     TOOL_DEFINITION as query_gene_syndrome_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_syndrome_similarity import (
+from zones.z07_data_access.tools.query_gene_syndrome_similarity import (
     execute as query_gene_syndrome_similarity_exec,
 )
 
 # Cross-Modal Fusion (2)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_gene_similarity import (
+from zones.z07_data_access.tools.query_drug_gene_similarity import (
     TOOL_DEFINITION as query_drug_gene_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_gene_similarity import (
+from zones.z07_data_access.tools.query_drug_gene_similarity import (
     execute as query_drug_gene_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_gene_ep_similarity import (
+from zones.z07_data_access.tools.query_drug_gene_ep_similarity import (
     TOOL_DEFINITION as query_drug_gene_ep_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_gene_ep_similarity import (
+from zones.z07_data_access.tools.query_drug_gene_ep_similarity import (
     execute as query_drug_gene_ep_similarity_exec,
 )
 
 # Same-Modal Fusion (2)
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_drug_similarity import (
+from zones.z07_data_access.tools.query_drug_drug_similarity import (
     TOOL_DEFINITION as query_drug_drug_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_drug_drug_similarity import (
+from zones.z07_data_access.tools.query_drug_drug_similarity import (
     execute as query_drug_drug_similarity_exec,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_gene_similarity import (
+from zones.z07_data_access.tools.query_gene_gene_similarity import (
     TOOL_DEFINITION as query_gene_gene_similarity_def,
 )
-from clients.quiver.quiver_platform.zones.z07_data_access.tools.query_gene_gene_similarity import (
+from zones.z07_data_access.tools.query_gene_gene_similarity import (
     execute as query_gene_gene_similarity_exec,
 )
 
@@ -542,7 +543,7 @@ os.environ["CHROMADB_HOST"] = os.getenv("CHROMADB_HOST", "localhost")
 os.environ["CHROMADB_PORT"] = "8004"  # Force correct external port
 
 # Startup validation - validate Neo4j and embedding configuration
-from clients.quiver.quiver_platform.zones.z07_data_access.config_validator import (
+from zones.z07_data_access.config_validator import (
     ConfigValidator,
 )
 

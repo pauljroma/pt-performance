@@ -44,10 +44,10 @@ project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import atomic tools
-from clients.quiver.quiver_platform.zones.z07_data_access.tools import vector_antipodal
-from clients.quiver.quiver_platform.zones.z07_data_access.tools import drug_interactions
-from clients.quiver.quiver_platform.zones.z07_data_access.tools import drug_lookalikes
-from clients.quiver.quiver_platform.zones.z07_data_access.tools import drug_combinations_synergy
+from zones.z07_data_access.tools import vector_antipodal
+from zones.z07_data_access.tools import drug_interactions
+from zones.z07_data_access.tools import drug_lookalikes
+from zones.z07_data_access.tools import drug_combinations_synergy
 
 
 # Claude Tool Definition (Anthropic format)

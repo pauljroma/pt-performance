@@ -165,24 +165,20 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
                 "hint": "Example: MATCH (g:Gene) RETURN g.name LIMIT 10"
             }
 
-        # Import Neo4j provider
+        # Import Neo4j driver
         try:
-            from clients.quiver.quiver_platform.zones.z08_persist.providers.neo4j_graph_provider import get_graph_provider
+            from neo4j import GraphDatabase
         except ImportError:
             return {
                 "success": False,
-                "error": "Neo4j graph provider not available",
-                "hint": "Check that Neo4j dependencies are installed"
+                "error": "neo4j driver not installed. Run: pip install neo4j"
             }
 
-        # Get graph provider
-        graph_provider = get_graph_provider()
-        if graph_provider is None:
-            return {
-                "success": False,
-                "error": "Neo4j graph provider not initialized",
-                "hint": "Check that Neo4j is running and accessible"
-            }
+        # Get Neo4j connection details
+        import os
+        neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        neo4j_user = os.getenv("NEO4J_USER", "neo4j")
+        neo4j_password = os.getenv("NEO4J_PASSWORD", "testpassword123")
 
         # Add LIMIT if not present (safety)
         if "LIMIT" not in query_upper:
@@ -193,7 +189,16 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         start_time = time.time()
 
         try:
-            results = graph_provider.execute_read(query, parameters or {})
+            driver = GraphDatabase.driver(
+                neo4j_uri,
+                auth=(neo4j_user, neo4j_password)
+            )
+
+            with driver.session() as session:
+                result = session.run(query, parameters or {})
+                results = [dict(record) for record in result]
+
+            driver.close()
         except Exception as e:
             return {
                 "success": False,
@@ -206,19 +211,8 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         end_time = time.time()
         latency_ms = int((end_time - start_time) * 1000)
 
-        # Format results
-        formatted_results = []
-        if results:
-            for row in results[:limit]:  # Enforce limit
-                # Convert Neo4j objects to dicts
-                formatted_row = {}
-                for key, value in row.items():
-                    if hasattr(value, '__dict__'):
-                        # Neo4j node/relationship - convert to dict
-                        formatted_row[key] = dict(value)
-                    else:
-                        formatted_row[key] = value
-                formatted_results.append(formatted_row)
+        # Enforce limit on results
+        formatted_results = results[:limit] if results else []
 
         return {
             "success": True,

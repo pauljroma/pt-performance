@@ -59,8 +59,8 @@ logger = logging.getLogger(__name__)
 project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers.gene_name_resolver import GeneNameResolver
-from clients.quiver.quiver_platform.zones.z07_data_access.meta_layer.resolvers.disease_resolver import DiseaseResolver
+from zones.z07_data_access.meta_layer.resolvers.gene_name_resolver import GeneNameResolver
+from zones.z07_data_access.meta_layer.resolvers.disease_resolver import DiseaseResolver
 
 
 # Claude Tool Definition (Anthropic format)

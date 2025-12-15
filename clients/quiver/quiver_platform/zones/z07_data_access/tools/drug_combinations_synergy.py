@@ -41,9 +41,9 @@ except ImportError:
 project_root = Path(__file__).parent.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from clients.quiver.quiver_platform.zones.z07_data_access.embedding_service import get_embedding_service as get_embedding_service
+from zones.z07_data_access.embedding_service import get_embedding_service as get_embedding_service
 # MIGRATED to v3.0 (2025-12-05): Master resolution tables (60x faster)
-from clients.quiver.quiver_platform.zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
+from zones.z07_data_access.drug_name_resolver_v3 import get_drug_name_resolver_v3 as get_drug_name_resolver
 
 
 # Claude Tool Definition (Anthropic format)
