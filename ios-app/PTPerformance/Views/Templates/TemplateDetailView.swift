@@ -1,0 +1,499 @@
+//
+//  TemplateDetailView.swift
+//  PTPerformance
+//
+//  Created by Build 46 Swarm Agent 2
+//  Preview template before assignment to patient
+//
+
+import SwiftUI
+
+struct TemplateDetailView: View {
+
+    let template: WorkoutTemplate
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var phases: [TemplatePhaseDetail] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var expandedPhaseIds: Set<String> = []
+    @State private var showingAssignSheet = false
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Header
+                    templateHeader
+
+                    // Statistics
+                    statisticsSection
+
+                    // Description
+                    if let description = template.description {
+                        descriptionSection(description)
+                    }
+
+                    // Tags
+                    if !template.tags.isEmpty {
+                        tagsSection
+                    }
+
+                    Divider()
+
+                    // Phases and Sessions
+                    if isLoading && phases.isEmpty {
+                        ProgressView("Loading template details...")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                    } else if !phases.isEmpty {
+                        phasesSection
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Template Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingAssignSheet = true }) {
+                        Label("Assign", systemImage: "person.badge.plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAssignSheet) {
+                AssignTemplateSheet(template: template)
+            }
+            .onAppear {
+                Task {
+                    await loadTemplateDetails()
+                }
+            }
+        }
+    }
+
+    // MARK: - Template Header
+
+    private var templateHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Category and difficulty
+            HStack(spacing: 8) {
+                CategoryBadge(category: template.category)
+
+                if let difficulty = template.difficultyLevel {
+                    DifficultyBadge(difficulty: difficulty)
+                }
+
+                if template.isPopular {
+                    PopularBadge()
+                }
+
+                Spacer()
+            }
+
+            // Template name
+            Text(template.name)
+                .font(.title)
+                .fontWeight(.bold)
+
+            // Duration
+            HStack {
+                Image(systemName: "calendar")
+                    .font(.caption)
+
+                Text(template.durationDescription)
+                    .font(.subheadline)
+            }
+            .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - Statistics Section
+
+    private var statisticsSection: some View {
+        HStack(spacing: 0) {
+            StatisticBox(
+                value: "\(phases.count)",
+                label: "Phases",
+                icon: "list.bullet"
+            )
+
+            Divider()
+
+            StatisticBox(
+                value: "\(totalSessions)",
+                label: "Sessions",
+                icon: "calendar.badge.clock"
+            )
+
+            Divider()
+
+            StatisticBox(
+                value: "\(totalExercises)",
+                label: "Exercises",
+                icon: "figure.strengthtraining.traditional"
+            )
+
+            Divider()
+
+            StatisticBox(
+                value: "\(template.usageCount)",
+                label: "Uses",
+                icon: "person.2.fill"
+            )
+        }
+        .frame(height: 80)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Description Section
+
+    private func descriptionSection(_ description: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Description", systemImage: "text.alignleft")
+                .font(.headline)
+
+            Text(description)
+                .font(.body)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - Tags Section
+
+    private var tagsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Tags", systemImage: "tag.fill")
+                .font(.headline)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(template.tags, id: \.self) { tag in
+                        Text(tag)
+                            .font(.subheadline)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Phases Section
+
+    private var phasesSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Program Structure", systemImage: "list.bullet.rectangle")
+                .font(.headline)
+
+            ForEach(Array(phases.enumerated()), id: \.element.id) { index, phaseDetail in
+                PhaseDetailCard(
+                    phaseDetail: phaseDetail,
+                    phaseNumber: index + 1,
+                    isExpanded: expandedPhaseIds.contains(phaseDetail.id),
+                    onToggle: {
+                        if expandedPhaseIds.contains(phaseDetail.id) {
+                            expandedPhaseIds.remove(phaseDetail.id)
+                        } else {
+                            expandedPhaseIds.insert(phaseDetail.id)
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var totalSessions: Int {
+        phases.reduce(0) { $0 + $1.sessions.count }
+    }
+
+    private var totalExercises: Int {
+        phases.reduce(0) { total, phase in
+            total + phase.sessions.reduce(0) { $0 + $1.exerciseCount }
+        }
+    }
+
+    // MARK: - Actions
+
+    private func loadTemplateDetails() async {
+        isLoading = true
+        errorMessage = nil
+
+        // TODO: Replace with actual API call via TemplatesService
+        // Simulate API delay
+        try? await Task.sleep(nanoseconds: 500_000_000)
+
+        // Mock data for preview
+        phases = [
+            TemplatePhaseDetail(
+                phase: .sample,
+                sessions: [.sample]
+            )
+        ]
+
+        // Expand first phase by default
+        if let firstPhase = phases.first {
+            expandedPhaseIds.insert(firstPhase.id)
+        }
+
+        isLoading = false
+    }
+}
+
+// MARK: - Statistic Box
+
+struct StatisticBox: View {
+    let value: String
+    let label: String
+    let icon: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.blue)
+
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Phase Detail Card
+
+struct PhaseDetailCard: View {
+    let phaseDetail: TemplatePhaseDetail
+    let phaseNumber: Int
+    let isExpanded: Bool
+    let onToggle: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Phase header
+            Button(action: onToggle) {
+                HStack {
+                    // Phase number badge
+                    Text("\(phaseNumber)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(phaseDetail.phase.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        HStack {
+                            if let duration = phaseDetail.phase.durationWeeks {
+                                Label("\(duration)w", systemImage: "calendar")
+                            }
+
+                            Label("\(phaseDetail.sessions.count) sessions", systemImage: "list.bullet")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            // Phase description
+            if let description = phaseDetail.phase.description {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            // Sessions list (when expanded)
+            if isExpanded {
+                Divider()
+
+                ForEach(Array(phaseDetail.sessions.enumerated()), id: \.element.id) { index, session in
+                    SessionDetailRow(session: session, sessionNumber: index + 1)
+
+                    if index < phaseDetail.sessions.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+    }
+}
+
+// MARK: - Session Detail Row
+
+struct SessionDetailRow: View {
+    let session: TemplateSession
+    let sessionNumber: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Session \(sessionNumber)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Label("\(session.estimatedDuration) min", systemImage: "clock")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Text(session.name)
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            if let description = session.description {
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Exercises summary
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(Array(session.exercises.prefix(3).enumerated()), id: \.offset) { index, exercise in
+                    HStack(spacing: 8) {
+                        Text("\(index + 1).")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 20, alignment: .leading)
+
+                        Text(exercise.exerciseId) // TODO: Fetch exercise name
+                            .font(.caption)
+
+                        Spacer()
+
+                        Text(exercise.setsRepsDisplay)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                if session.exercises.count > 3 {
+                    Text("+\(session.exercises.count - 3) more exercises")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.leading, 28)
+                }
+            }
+            .padding(.top, 4)
+
+            if let notes = session.notes {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+
+                    Text(notes)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(8)
+                .background(Color.blue.opacity(0.05))
+                .cornerRadius(6)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Assign Template Sheet
+
+struct AssignTemplateSheet: View {
+    let template: WorkoutTemplate
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedPatient: Patient?
+    @State private var programName: String = ""
+    @State private var startDate = Date()
+    @State private var isAssigning = false
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Patient") {
+                    // TODO: Patient picker
+                    Text("Patient selection coming soon")
+                        .foregroundColor(.secondary)
+                }
+
+                Section("Program Details") {
+                    TextField("Program Name", text: $programName)
+
+                    DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                }
+
+                Section {
+                    Button(action: assignTemplate) {
+                        if isAssigning {
+                            ProgressView()
+                        } else {
+                            Text("Assign Template")
+                        }
+                    }
+                    .disabled(selectedPatient == nil || programName.isEmpty || isAssigning)
+                }
+            }
+            .navigationTitle("Assign Template")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func assignTemplate() {
+        isAssigning = true
+
+        // TODO: Call TemplatesService to create program from template
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            isAssigning = false
+            dismiss()
+        }
+    }
+}
+
+// MARK: - Preview
+
+struct TemplateDetailView_Previews: PreviewProvider {
+    static var previews: some View {
+        TemplateDetailView(template: .sample)
+    }
+}

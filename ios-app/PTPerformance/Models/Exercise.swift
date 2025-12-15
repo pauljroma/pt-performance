@@ -19,6 +19,48 @@ struct Exercise: Codable, Identifiable, Hashable {
         let name: String
         let category: String?
         let body_region: String?
+
+        // Build 46: Video support
+        let videoUrl: String?
+        let videoThumbnailUrl: String?
+        let videoDuration: Int? // Duration in seconds
+        let formCues: [FormCue]?
+
+        enum CodingKeys: String, CodingKey {
+            case id, name, category
+            case body_region
+            case videoUrl = "video_url"
+            case videoThumbnailUrl = "video_thumbnail_url"
+            case videoDuration = "video_duration"
+            case formCues = "form_cues"
+        }
+
+        struct FormCue: Codable, Hashable {
+            let cue: String
+            let timestamp: Int? // Seconds into video
+
+            var displayTime: String? {
+                guard let ts = timestamp else { return nil }
+                let minutes = ts / 60
+                let seconds = ts % 60
+                return String(format: "%d:%02d", minutes, seconds)
+            }
+        }
+
+        var hasVideo: Bool {
+            videoUrl != nil
+        }
+
+        var videoDurationDisplay: String? {
+            guard let duration = videoDuration else { return nil }
+            let minutes = duration / 60
+            let seconds = duration % 60
+            if minutes > 0 {
+                return String(format: "%d:%02d", minutes, seconds)
+            } else {
+                return "\(seconds)s"
+            }
+        }
     }
     let exercise_templates: ExerciseTemplate?
 
