@@ -1,100 +1,215 @@
 import SwiftUI
 
-/// Session Summary View - Build 33
-/// Shows metrics after completing a session: total volume, avg RPE, avg pain, duration
+/// Session Summary View - Build 60: Enhanced with PRs and motivational messages
+/// Shows metrics after completing a session: exercises, volume, duration, PRs, compliance
 struct SessionSummaryView: View {
     let session: Session
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = SessionSummaryViewModel()
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Success Header
-                    VStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 64))
-                            .foregroundColor(.green)
-
-                        Text("Session Complete!")
-                            .font(.title)
-                            .bold()
-
-                        Text(session.name)
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-
-                        if let completedAt = session.completed_at {
-                            Text(formatDate(completedAt))
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+            ZStack {
+                if viewModel.isLoading {
+                    ProgressView("Calculating stats...")
+                } else if let error = viewModel.errorMessage {
+                    ErrorStateView.genericError(message: error) {
+                        Task {
+                            if let patientId = appState.userId {
+                                await viewModel.calculateSummary(for: session, patientId: patientId)
+                            }
                         }
                     }
-                    .padding(.top, 32)
-
-                    // Metrics Cards
-                    VStack(spacing: 16) {
-                        if let volume = session.total_volume, volume > 0 {
-                            MetricCard(
-                                title: "Total Volume",
-                                value: formatVolume(volume),
-                                icon: "scalemass.fill",
-                                color: .blue
-                            )
-                        }
-
-                        if let rpe = session.avg_rpe {
-                            MetricCard(
-                                title: "Average RPE",
-                                value: formatScore(rpe),
-                                subtitle: "out of 10",
-                                icon: "bolt.fill",
-                                color: rpeColor(rpe)
-                            )
-                        }
-
-                        if let pain = session.avg_pain {
-                            MetricCard(
-                                title: "Average Pain",
-                                value: formatScore(pain),
-                                subtitle: "out of 10",
-                                icon: "hand.raised.fill",
-                                color: painColor(pain)
-                            )
-                        }
-
-                        if let duration = session.duration_minutes, duration > 0 {
-                            MetricCard(
-                                title: "Duration",
-                                value: "\(duration) min",
-                                icon: "clock.fill",
-                                color: .purple
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    // Done Button
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Text("Done")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-
-                    Spacer()
+                } else {
+                    summaryContent
                 }
             }
             .navigationTitle("Summary")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                if let patientId = appState.userId {
+                    await viewModel.calculateSummary(for: session, patientId: patientId)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private var summaryContent: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Success Header
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundColor(.green)
+
+                    Text("Session Complete!")
+                        .font(.title)
+                        .bold()
+
+                    Text(session.name)
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+
+                    if let completedAt = session.completed_at {
+                        Text(formatDate(completedAt))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // Motivational Message
+                    if let summary = viewModel.summary {
+                        Text(summary.motivationalMessage)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                    }
+                }
+                .padding(.top, 32)
+
+                // Stats Grid
+                if let summary = viewModel.summary {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 16) {
+                        StatCard(
+                            title: "Exercises",
+                            value: "\(summary.exercisesCompleted)",
+                            icon: "list.bullet",
+                            color: .blue
+                        )
+
+                        StatCard(
+                            title: "PRs",
+                            value: "\(summary.prCount)",
+                            icon: "star.fill",
+                            color: summary.prCount > 0 ? .yellow : .gray
+                        )
+
+                        StatCard(
+                            title: "Volume",
+                            value: summary.volumeFormatted,
+                            icon: "scalemass.fill",
+                            color: .purple
+                        )
+
+                        StatCard(
+                            title: "Duration",
+                            value: summary.durationFormatted,
+                            icon: "clock.fill",
+                            color: .orange
+                        )
+                    }
+                    .padding(.horizontal)
+
+                    // Compliance Score
+                    VStack(spacing: 12) {
+                        Text("Compliance Score")
+                            .font(.headline)
+
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 15)
+                                .frame(width: 120, height: 120)
+
+                            Circle()
+                                .trim(from: 0, to: summary.complianceScore / 100)
+                                .stroke(complianceColor(summary.complianceScore), lineWidth: 15)
+                                .frame(width: 120, height: 120)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeInOut, value: summary.complianceScore)
+
+                            VStack(spacing: 4) {
+                                Text(summary.complianceFormatted)
+                                    .font(.title)
+                                    .bold()
+                                    .foregroundColor(complianceColor(summary.complianceScore))
+
+                                Text("achieved")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 16)
+                }
+
+                // Legacy metrics (if calculated server-side)
+                if viewModel.summary == nil {
+                    legacyMetricsView
+                }
+
+                // Done Button
+                Button(action: {
+                    dismiss()
+                }) {
+                    Text("Done")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal)
+                .padding(.top, 16)
+
+                Spacer()
+            }
+        }
+    }
+
+    // Legacy metrics view (Build 33 format)
+    @ViewBuilder
+    private var legacyMetricsView: some View {
+        VStack(spacing: 16) {
+            if let volume = session.total_volume, volume > 0 {
+                MetricCard(
+                    title: "Total Volume",
+                    value: formatVolume(volume),
+                    icon: "scalemass.fill",
+                    color: .blue
+                )
+            }
+
+            if let rpe = session.avg_rpe {
+                MetricCard(
+                    title: "Average RPE",
+                    value: formatScore(rpe),
+                    subtitle: "out of 10",
+                    icon: "bolt.fill",
+                    color: rpeColor(rpe)
+                )
+            }
+
+            if let pain = session.avg_pain {
+                MetricCard(
+                    title: "Average Pain",
+                    value: formatScore(pain),
+                    subtitle: "out of 10",
+                    icon: "hand.raised.fill",
+                    color: painColor(pain)
+                )
+            }
+
+            if let duration = session.duration_minutes, duration > 0 {
+                MetricCard(
+                    title: "Duration",
+                    value: "\(duration) min",
+                    icon: "clock.fill",
+                    color: .purple
+                )
+            }
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Formatting Helpers
@@ -143,6 +258,49 @@ struct SessionSummaryView: View {
         default:
             return .red
         }
+    }
+
+    private func complianceColor(_ compliance: Double) -> Color {
+        switch compliance {
+        case 95...:
+            return .green
+        case 80..<95:
+            return .blue
+        case 60..<80:
+            return .yellow
+        default:
+            return .orange
+        }
+    }
+}
+
+// MARK: - Stat Card Component (Build 60)
+// Made private to avoid conflict with Analytics chart StatCard views
+
+private struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+
+            Text(value)
+                .font(.title2)
+                .bold()
+
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
     }
 }
 

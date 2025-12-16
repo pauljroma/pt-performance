@@ -2,7 +2,15 @@
 //  ProgramEditorViewModel.swift
 //  PTPerformance
 //
-//  ViewModel for exercise editing with strength calculations
+//  Build 60: ViewModel for program editing with CRUD operations (ACP-114)
+//
+//  RLS (Row Level Security) Notes:
+//  - All database operations rely on Supabase RLS policies to enforce therapist ownership
+//  - Programs table: UPDATE/DELETE filtered by therapist_id (only therapist who created can modify)
+//  - Phases table: Cascades from program ownership via program_id foreign key
+//  - Sessions table: Cascades from phase ownership via phase_id foreign key
+//  - Session_exercises table: Cascades from session ownership via session_id foreign key
+//  - NO additional therapist_id checks needed in client code - RLS handles authorization
 //
 
 import Foundation
@@ -718,8 +726,350 @@ class ProgramEditorViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Phase CRUD Methods
+
+    /// Add a new phase to the current program
+    /// - Parameter phase: The phase to add
+    func addPhase(phase: Phase) async throws {
+        guard let program = program else {
+            throw ProgramEditorError.noProgramLoaded
+        }
+
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("➕ Adding new phase: \(phase.name)", level: .diagnostic)
+
+        do {
+            let phaseInput = CreatePhaseInput(
+                programId: program.id,
+                phaseNumber: phase.phaseNumber,
+                name: phase.name.trimmingCharacters(in: .whitespacesAndNewlines),
+                durationWeeks: phase.durationWeeks,
+                goals: phase.goals
+            )
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            let response = try await supabase.client
+                .from("phases")
+                .insert(phaseInput)
+                .select()
+                .single()
+                .execute()
+
+            let newPhase = try decoder.decode(Phase.self, from: response.data)
+            phases.append(newPhase)
+
+            logger.log("✅ Phase added successfully", level: .success)
+            successMessage = "Phase added successfully"
+        } catch {
+            logger.log("❌ Failed to add phase: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    /// Delete a phase and all associated sessions and exercises
+    /// - Parameter phaseId: The ID of the phase to delete
+    func deletePhase(phaseId: String) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("🗑️ Deleting phase \(phaseId)", level: .diagnostic)
+
+        do {
+            try await supabase.client
+                .from("phases")
+                .delete()
+                .eq("id", value: phaseId)
+                .execute()
+
+            phases.removeAll { $0.id == phaseId }
+
+            logger.log("✅ Phase deleted successfully", level: .success)
+            successMessage = "Phase deleted successfully"
+        } catch {
+            logger.log("❌ Failed to delete phase: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    // MARK: - Session CRUD Methods
+
+    /// Add a new session to a phase
+    /// - Parameters:
+    ///   - phaseId: The ID of the phase to add the session to
+    ///   - sessionName: The name of the new session
+    ///   - sequence: The sequence number for ordering
+    func addSession(phaseId: String, sessionName: String, sequence: Int) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("➕ Adding new session: \(sessionName)", level: .diagnostic)
+
+        do {
+            let sessionInput = CreateSessionInput(
+                phaseId: phaseId,
+                name: sessionName.trimmingCharacters(in: .whitespacesAndNewlines),
+                sequence: sequence,
+                weekday: nil,
+                notes: nil
+            )
+
+            try await supabase.client
+                .from("sessions")
+                .insert(sessionInput)
+                .execute()
+
+            logger.log("✅ Session added successfully", level: .success)
+            successMessage = "Session added successfully"
+        } catch {
+            logger.log("❌ Failed to add session: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    /// Update a session
+    /// - Parameters:
+    ///   - sessionId: The ID of the session to update
+    ///   - name: Updated session name
+    ///   - weekday: Updated weekday (optional)
+    ///   - notes: Updated notes (optional)
+    func updateSession(sessionId: String, name: String, weekday: Int?, notes: String?) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("💾 Updating session: \(name)", level: .diagnostic)
+
+        do {
+            let updateInput = UpdateSessionInput(
+                name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                weekday: weekday,
+                notes: notes
+            )
+
+            try await supabase.client
+                .from("sessions")
+                .update(updateInput)
+                .eq("id", value: sessionId)
+                .execute()
+
+            logger.log("✅ Session updated successfully", level: .success)
+            successMessage = "Session updated successfully"
+        } catch {
+            logger.log("❌ Failed to update session: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    /// Delete a session and all associated exercises
+    /// - Parameter sessionId: The ID of the session to delete
+    func deleteSession(sessionId: String) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("🗑️ Deleting session \(sessionId)", level: .diagnostic)
+
+        do {
+            try await supabase.client
+                .from("sessions")
+                .delete()
+                .eq("id", value: sessionId)
+                .execute()
+
+            logger.log("✅ Session deleted successfully", level: .success)
+            successMessage = "Session deleted successfully"
+        } catch {
+            logger.log("❌ Failed to delete session: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    // MARK: - Exercise CRUD Methods
+
+    /// Add a new exercise to a session
+    /// - Parameters:
+    ///   - sessionId: The ID of the session to add the exercise to
+    ///   - exerciseTemplateId: The ID of the exercise template
+    ///   - sequence: The sequence number for ordering
+    ///   - sets: Number of sets
+    ///   - reps: Number of reps
+    ///   - load: Load amount (optional)
+    ///   - loadUnit: Load unit (e.g., "lbs", "kg")
+    ///   - restPeriod: Rest period in seconds (optional)
+    ///   - notes: Exercise notes (optional)
+    func addExercise(
+        sessionId: String,
+        exerciseTemplateId: String,
+        sequence: Int,
+        sets: Int = 3,
+        reps: String = "10",
+        load: Double? = nil,
+        loadUnit: String = "lbs",
+        restPeriod: Int? = 90,
+        notes: String? = nil
+    ) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("➕ Adding new exercise to session", level: .diagnostic)
+
+        do {
+            let exerciseInput = SaveExerciseInput(
+                sessionId: sessionId,
+                exerciseTemplateId: exerciseTemplateId,
+                prescribedSets: sets,
+                prescribedReps: reps,
+                prescribedLoad: load,
+                loadUnit: loadUnit,
+                restPeriodSeconds: restPeriod,
+                notes: notes,
+                sequence: sequence
+            )
+
+            try await supabase.client
+                .from("session_exercises")
+                .insert(exerciseInput)
+                .execute()
+
+            logger.log("✅ Exercise added successfully", level: .success)
+            successMessage = "Exercise added successfully"
+        } catch {
+            logger.log("❌ Failed to add exercise: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    /// Update an existing exercise
+    /// - Parameters:
+    ///   - exerciseId: The ID of the exercise to update
+    ///   - sets: Number of sets
+    ///   - reps: Number of reps
+    ///   - load: Load amount (optional)
+    ///   - loadUnit: Load unit (e.g., "lbs", "kg")
+    ///   - restPeriod: Rest period in seconds (optional)
+    ///   - notes: Exercise notes (optional)
+    func updateExercise(
+        exerciseId: String,
+        sets: Int,
+        reps: String,
+        load: Double?,
+        loadUnit: String?,
+        restPeriod: Int?,
+        notes: String?
+    ) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("💾 Updating exercise", level: .diagnostic)
+
+        do {
+            let updateInput = UpdateExerciseInput(
+                prescribedSets: sets,
+                prescribedReps: reps,
+                prescribedLoad: load,
+                loadUnit: loadUnit,
+                restPeriodSeconds: restPeriod,
+                notes: notes
+            )
+
+            try await supabase.client
+                .from("session_exercises")
+                .update(updateInput)
+                .eq("id", value: exerciseId)
+                .execute()
+
+            logger.log("✅ Exercise updated successfully", level: .success)
+            successMessage = "Exercise updated successfully"
+        } catch {
+            logger.log("❌ Failed to update exercise: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
+    /// Delete an exercise from a session
+    /// - Parameter exerciseId: The ID of the exercise to delete
+    func deleteExercise(exerciseId: String) async throws {
+        isSubmitting = true
+        isSaving = true
+        error = nil
+        defer {
+            isSubmitting = false
+            isSaving = false
+        }
+
+        logger.log("🗑️ Deleting exercise \(exerciseId)", level: .diagnostic)
+
+        do {
+            try await supabase.client
+                .from("session_exercises")
+                .delete()
+                .eq("id", value: exerciseId)
+                .execute()
+
+            logger.log("✅ Exercise deleted successfully", level: .success)
+            successMessage = "Exercise deleted successfully"
+        } catch {
+            logger.log("❌ Failed to delete exercise: \(error)", level: .error)
+            let userFriendlyError = translateError(error)
+            self.error = userFriendlyError
+            throw ProgramEditorError.databaseError(message: userFriendlyError)
+        }
+    }
+
     /// Delete a program and all associated data (phases, sessions, exercises)
     /// Database cascading deletes should handle child records automatically
+    /// RLS policies ensure only the owning therapist can delete the program
     /// - Parameter programId: The ID of the program to delete
     func deleteProgram(programId: String) async throws {
         // Prevent double-submission
@@ -743,9 +1093,11 @@ class ProgramEditorViewModel: ObservableObject {
         }
 
         logger.log("🗑️ Deleting program \(programId)", level: .diagnostic)
+        logger.log("   RLS will enforce therapist ownership - only owner can delete", level: .diagnostic)
 
         do {
             // Delete the program - cascade should handle phases, sessions, and exercises
+            // RLS policy will prevent deletion if current user is not the owning therapist
             do {
                 try await supabase.client
                     .from("programs")

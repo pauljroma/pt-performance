@@ -55,17 +55,23 @@ class PatientListViewModel: ObservableObject {
         logger.log("Starting loadPatients...")
         logger.log("Therapist ID: \(therapistId ?? "nil")")
 
+        // SECURITY: Enforce therapist_id filter to prevent HIPAA violations
+        // Therapists must ONLY see their assigned patients
+        guard let therapistId = therapistId else {
+            logger.log("❌ SECURITY VIOLATION: loadPatients called without therapist_id", level: .error)
+            errorMessage = "Security Error: Therapist ID is required to view patients"
+            patients = []  // SECURITY: Never show patients without proper authorization
+            return
+        }
+
         do {
-            var query = supabase.client
+            // SECURITY: Always filter by therapist_id - no exceptions
+            let query = supabase.client
                 .from("patients")
                 .select()
+                .eq("therapist_id", value: therapistId)  // HIPAA compliance filter
 
-            // Filter by therapist_id if provided
-            if let therapistId = therapistId {
-                query = query.eq("therapist_id", value: therapistId)
-                logger.log("Filtering by therapist_id: \(therapistId)")
-            }
-
+            logger.log("Filtering by therapist_id: \(therapistId)")
             logger.log("Executing query...")
 
             // Execute and get response with data
@@ -87,11 +93,7 @@ class PatientListViewModel: ObservableObject {
 
             patients = decodedPatients
             logger.log("Successfully decoded \(patients.count) patients", level: .success)
-            if let therapistId = therapistId {
-                logger.log("Loaded \(patients.count) patients for therapist \(therapistId)", level: .success)
-            } else {
-                logger.log("Loaded \(patients.count) patients from Supabase", level: .success)
-            }
+            logger.log("✅ Loaded \(patients.count) patients for therapist \(therapistId) (HIPAA compliant)", level: .success)
         } catch let decodingError as DecodingError {
             logger.log("DECODING ERROR:", level: .error)
             switch decodingError {
@@ -140,7 +142,7 @@ class PatientListViewModel: ObservableObject {
                 let response = try await supabase.client
                     .from("workload_flags")
                     .select("*, patient:patients!inner(therapist_id)")
-                    .eq("resolved", value: false)
+                    .eq("is_resolved", value: false)
                     .eq("patient.therapist_id", value: therapistId)
                     .order("severity", ascending: false)
                     .order("created_at", ascending: false)
@@ -148,17 +150,24 @@ class PatientListViewModel: ObservableObject {
                     .execute()
 
                 let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase  // WorkloadFlag has no explicit CodingKeys
                 decoder.dateDecodingStrategy = .iso8601
-                activeFlags = try decoder.decode([WorkloadFlag].self, from: response.data)
 
-                logger.log("✅ Loaded \(activeFlags.count) active flags for therapist", level: .success)
+                // Handle empty array or missing data gracefully
+                if response.data.isEmpty || String(data: response.data, encoding: .utf8) == "[]" {
+                    activeFlags = []
+                    logger.log("No workload flags found for therapist", level: .diagnostic)
+                } else {
+                    activeFlags = try decoder.decode([WorkloadFlag].self, from: response.data)
+                    logger.log("✅ Loaded \(activeFlags.count) active flags for therapist", level: .success)
+                }
             } else {
                 // Load all unresolved flags if no therapist specified
                 logger.log("Loading all workload flags", level: .diagnostic)
                 let response: [WorkloadFlag] = try await supabase.client
                     .from("workload_flags")
                     .select()
-                    .eq("resolved", value: false)
+                    .eq("is_resolved", value: false)
                     .order("severity", ascending: false)
                     .order("created_at", ascending: false)
                     .limit(10)

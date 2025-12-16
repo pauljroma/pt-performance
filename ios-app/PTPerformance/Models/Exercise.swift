@@ -14,7 +14,7 @@ struct Exercise: Codable, Identifiable, Hashable {
     let notes: String?
 
     // From exercise_templates (joined data)
-    struct ExerciseTemplate: Codable, Hashable {
+    struct ExerciseTemplate: Codable, Hashable, Identifiable {
         let id: String
         let name: String
         let category: String?

@@ -62,6 +62,23 @@ struct AuthView: View {
 
                 Button(action: {
                     Task {
+                        await signInAsNicRoma()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "dumbbell.fill")
+                        Text("Sign in as Nic Roma")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.purple)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .disabled(isLoading)
+
+                Button(action: {
+                    Task {
                         await signInAsDemoTherapist()
                     }
                 }) {
@@ -157,6 +174,28 @@ struct AuthView: View {
         } catch {
             await MainActor.run {
                 errorMessage = "Demo patient sign in failed: \(error.localizedDescription)"
+                isLoading = false
+            }
+        }
+    }
+
+    private func signInAsNicRoma() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            try await supabase.signInAsNicRoma()
+
+            // Update app state
+            await MainActor.run {
+                appState.isAuthenticated = true
+                appState.userRole = .patient
+                appState.userId = supabase.userId
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = "Nic Roma sign in failed: \(error.localizedDescription)"
                 isLoading = false
             }
         }

@@ -5,6 +5,10 @@ struct TherapistProgramsView: View {
     @State private var selectedProgram: ProgramListItem?
     @State private var showProgramViewer = false
     @State private var showProgramBuilder = false
+    @State private var showProgramManager = false
+    @State private var editingProgramId: String?
+    @State private var editingPatientId: UUID?
+    @State private var showEditor = false
 
     var body: some View {
         NavigationStack {
@@ -41,10 +45,20 @@ struct TherapistProgramsView: View {
             .navigationTitle("Programs")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showProgramBuilder = true
+                    Menu {
+                        Button {
+                            showProgramBuilder = true
+                        } label: {
+                            Label("Create Program", systemImage: "plus.circle")
+                        }
+
+                        Button {
+                            showProgramManager = true
+                        } label: {
+                            Label("Manage Programs", systemImage: "pencil.circle")
+                        }
                     } label: {
-                        Image(systemName: "plus")
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -61,6 +75,19 @@ struct TherapistProgramsView: View {
             } content: {
                 ProgramBuilderView(patientId: nil)
             }
+            .sheet(isPresented: $showProgramManager) {
+                ProgramManagerView()
+            }
+            .sheet(isPresented: $showEditor) {
+                // Refresh programs list when editor is dismissed
+                Task {
+                    await viewModel.loadPrograms()
+                }
+            } content: {
+                if let programId = editingProgramId, let patientId = editingPatientId {
+                    ProgramEditorView(programId: programId, patientId: patientId)
+                }
+            }
             .task {
                 await viewModel.loadPrograms()
             }
@@ -73,10 +100,27 @@ struct TherapistProgramsView: View {
     private var programsList: some View {
         List(viewModel.programs) { program in
             ProgramListCard(program: program)
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        // Navigate to editor
+                        if let patientId = UUID(uuidString: program.patientId) {
+                            showProgramEditor(programId: program.id, patientId: patientId)
+                        }
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    .tint(.blue)
+                }
                 .onTapGesture {
                     selectedProgram = program
                 }
         }
+    }
+
+    private func showProgramEditor(programId: String, patientId: UUID) {
+        editingProgramId = programId
+        editingPatientId = patientId
+        showEditor = true
     }
 }
 

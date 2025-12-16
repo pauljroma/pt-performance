@@ -1,0 +1,254 @@
+//
+//  SessionEditorView.swift
+//  PTPerformance
+//
+//  Build 50: Edit session details and exercises
+//
+
+import SwiftUI
+
+struct SessionEditorDetailView: View {
+    @ObservedObject var viewModel: ProgramEditorViewModel
+    let session: Session
+    let phaseName: String
+    @State private var exercises: [Exercise] = []
+    @State private var isLoading = false
+    @State private var error: String?
+
+    var body: some View {
+        Group {
+            if isLoading {
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Loading exercises...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else if let error = error {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.largeTitle)
+                        .foregroundColor(.orange)
+                    Text(error)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Try Again") {
+                        Task {
+                            await loadExercises()
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+            } else {
+                List {
+                    Section("Session Info") {
+                        LabeledContent("Session", value: session.name)
+                        LabeledContent("Phase", value: phaseName)
+                        if let weekday = session.weekday {
+                            LabeledContent("Day", value: String(weekday))
+                        }
+                    }
+
+                    Section {
+                        if exercises.isEmpty {
+                            HStack {
+                                Spacer()
+                                VStack(spacing: 12) {
+                                    Image(systemName: "dumbbell")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.secondary)
+                                    Text("No exercises in this session")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 24)
+                                Spacer()
+                            }
+                        } else {
+                            ForEach(exercises.sorted(by: { ($0.sequence ?? 0) < ($1.sequence ?? 0) })) { exercise in
+                                SessionExerciseRow(exercise: exercise)
+                            }
+                        }
+                    } header: {
+                        Text("Exercises (\(exercises.count))")
+                    }
+
+                    if let notes = session.notes, !notes.isEmpty {
+                        Section("Session Notes") {
+                            Text(notes)
+                                .font(.subheadline)
+                        }
+                    }
+                }
+                .listStyle(.insetGrouped)
+            }
+        }
+        .navigationTitle("Session Details")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await loadExercises()
+        }
+    }
+
+    private func loadExercises() async {
+        let logger = DebugLogger.shared
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        do {
+            logger.log("💪 Loading exercises for session: \(session.name)")
+
+            let decoder = JSONDecoder()
+            // NOTE: Exercise model uses snake_case properties directly, do NOT use .convertFromSnakeCase
+            // ExerciseTemplate nested struct has explicit CodingKeys
+            decoder.dateDecodingStrategy = .iso8601
+
+            // Load exercises with joined exercise_templates
+            let result = try await PTSupabaseClient.shared.client
+                .from("session_exercises")
+                .select("""
+                    *,
+                    exercise_templates (
+                        id,
+                        name,
+                        category,
+                        body_region,
+                        video_url,
+                        video_thumbnail_url,
+                        video_duration,
+                        form_cues
+                    )
+                """)
+                .eq("session_id", value: session.id)
+                .order("sequence")
+                .execute()
+
+            logger.log("   Response size: \(result.data.count) bytes")
+
+            // Handle empty response gracefully
+            if result.data.isEmpty || String(data: result.data, encoding: .utf8) == "[]" {
+                exercises = []
+                logger.log("   No exercises found for this session")
+            } else {
+                exercises = try decoder.decode([Exercise].self, from: result.data)
+                logger.log("✅ Loaded \(exercises.count) exercises", level: .success)
+            }
+        } catch {
+            self.error = "Failed to load exercises: \(error.localizedDescription)"
+            logger.log("❌ Failed to load exercises: \(error.localizedDescription)", level: .error)
+            logger.log("Error details: \(error)", level: .error)
+        }
+    }
+}
+
+struct SessionExerciseRow: View {
+    let exercise: Exercise
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(exercise.exercise_name ?? "Unknown Exercise")
+                    .font(.headline)
+                Spacer()
+                if exercise.exercise_templates?.hasVideo == true {
+                    Image(systemName: "play.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            // Sets and Reps
+            HStack(spacing: 12) {
+                Label(
+                    "\(exercise.prescribed_sets) sets",
+                    systemImage: "repeat"
+                )
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+                if let reps = exercise.prescribed_reps {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Label(
+                        "\(reps) reps",
+                        systemImage: "number"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                if let load = exercise.prescribed_load, let unit = exercise.load_unit {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Label(
+                        "\(Int(load)) \(unit)",
+                        systemImage: "scalemass"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                if let rest = exercise.rest_period_seconds {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Label(
+                        "\(rest)s rest",
+                        systemImage: "clock"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+            }
+
+            // Category and body region
+            if let category = exercise.exercise_templates?.category,
+               let bodyRegion = exercise.exercise_templates?.body_region {
+                Text("\(category.capitalized) • \(bodyRegion.capitalized)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            // Notes
+            if let notes = exercise.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+#Preview {
+    NavigationView {
+        SessionEditorDetailView(
+            viewModel: ProgramEditorViewModel(
+                patientId: UUID(),
+                exerciseId: nil
+            ),
+            session: Session(
+                id: UUID().uuidString,
+                phase_id: UUID().uuidString,
+                name: "Day 1: Upper Body",
+                sequence: 1,
+                weekday: 1,
+                notes: "Focus on controlled tempo",
+                created_at: Date(),
+                completed: false,
+                completed_at: nil,
+                total_volume: nil,
+                avg_rpe: nil,
+                avg_pain: nil,
+                duration_minutes: nil
+            ),
+            phaseName: "Foundation Phase"
+        )
+    }
+}

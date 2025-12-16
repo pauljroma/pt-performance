@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Created by Build 46 Swarm Agent 3
+//  Updated by Build 49 with modular chart components
 //  Main analytics dashboard with volume, strength, and consistency charts
 //
 
@@ -11,58 +12,70 @@ import Charts
 
 struct ProgressChartsView: View {
 
-    @State private var selectedPeriod: TimePeriod = .month
-    @State private var volumeData: VolumeChartData?
-    @State private var consistencyData: ConsistencyChartData?
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-
-    private let patientId: String
-
-    init(patientId: String) {
-        self.patientId = patientId
-    }
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = AnalyticsViewModel()
+    @State private var selectedExerciseId: String? = nil
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Time period selector
-                    periodPicker
+                    if let patientId = appState.userId {
+                        // Time period selector
+                        periodPicker
 
-                    if isLoading && volumeData == nil {
-                        ProgressView("Loading analytics...")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    } else if let error = errorMessage {
-                        errorView(error)
+                        if viewModel.isLoading && viewModel.isEmpty {
+                            ProgressView("Loading analytics...")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        } else if viewModel.isEmpty {
+                            emptyState
+                        } else {
+                            // Summary cards
+                            summaryCards
+
+                            // Volume chart
+                            if let data = viewModel.volumeData {
+                                VolumeChartView(data: data)
+                                    .padding(.horizontal)
+                            } else if let error = viewModel.volumeError {
+                                sectionErrorView("Volume", error: error) {
+                                    Task {
+                                        await viewModel.loadVolumeData(for: patientId)
+                                    }
+                                }
+                            }
+
+                            // Consistency chart
+                            if let data = viewModel.consistencyData {
+                                ConsistencyChartView(data: data)
+                                    .padding(.horizontal)
+                            } else if let error = viewModel.consistencyError {
+                                sectionErrorView("Consistency", error: error) {
+                                    Task {
+                                        await viewModel.loadConsistencyData(for: patientId)
+                                    }
+                                }
+                            }
+
+                            // Strength chart (with exercise selector)
+                            strengthChartSection(patientId: patientId)
+                        }
                     } else {
-                        // Summary cards
-                        summaryCards
-
-                        // Volume chart
-                        if let data = volumeData {
-                            VolumeChartCard(data: data)
-                        }
-
-                        // Consistency chart
-                        if let data = consistencyData {
-                            ConsistencyChartCard(data: data)
-                        }
-
-                        // Strength chart (for top exercise)
-                        strengthChartSection
+                        notSignedInView
                     }
                 }
                 .padding()
             }
             .navigationTitle("Progress")
             .refreshable {
-                await loadAnalytics()
+                if let patientId = appState.userId {
+                    await viewModel.refresh(for: patientId)
+                }
             }
-            .onAppear {
-                Task {
-                    await loadAnalytics()
+            .task {
+                if let patientId = appState.userId {
+                    await viewModel.loadAnalytics(for: patientId)
                 }
             }
         }
@@ -71,15 +84,17 @@ struct ProgressChartsView: View {
     // MARK: - Period Picker
 
     private var periodPicker: some View {
-        Picker("Time Period", selection: $selectedPeriod) {
+        Picker("Time Period", selection: $viewModel.selectedPeriod) {
             ForEach(TimePeriod.allCases, id: \.self) { period in
                 Text(period.displayName).tag(period)
             }
         }
         .pickerStyle(SegmentedPickerStyle())
-        .onChange(of: selectedPeriod) { _, _ in
+        .onChange(of: viewModel.selectedPeriod) { _, _ in
             Task {
-                await loadAnalytics()
+                if let patientId = appState.userId {
+                    await viewModel.periodChanged(for: patientId)
+                }
             }
         }
     }
@@ -89,18 +104,18 @@ struct ProgressChartsView: View {
     private var summaryCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             // Total volume
-            if let volume = volumeData {
+            if let volume = viewModel.volumeData {
                 SummaryCard(
                     title: "Total Volume",
                     value: volume.formattedTotal,
-                    subtitle: selectedPeriod.displayName,
+                    subtitle: viewModel.selectedPeriod.displayName,
                     icon: "scalemass.fill",
                     color: .blue
                 )
             }
 
             // Completion rate
-            if let consistency = consistencyData {
+            if let consistency = viewModel.consistencyData {
                 SummaryCard(
                     title: "Completion Rate",
                     value: consistency.formattedCompletionRate,
@@ -111,7 +126,7 @@ struct ProgressChartsView: View {
             }
 
             // Current streak
-            if let consistency = consistencyData, consistency.currentStreak > 0 {
+            if let consistency = viewModel.consistencyData, consistency.currentStreak > 0 {
                 SummaryCard(
                     title: "Current Streak",
                     value: "\(consistency.currentStreak)",
@@ -122,7 +137,7 @@ struct ProgressChartsView: View {
             }
 
             // Peak volume
-            if let volume = volumeData, let peakDate = volume.peakDate {
+            if let volume = viewModel.volumeData, let peakDate = volume.peakDate {
                 SummaryCard(
                     title: "Peak Week",
                     value: String(format: "%.0f lbs", volume.peakVolume),
@@ -136,77 +151,107 @@ struct ProgressChartsView: View {
 
     // MARK: - Strength Chart Section
 
-    private var strengthChartSection: some View {
+    private func strengthChartSection(patientId: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Strength Progress")
-                .font(.headline)
-                .padding(.horizontal)
-
-            Text("Select an exercise to view strength progression")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-
-            // TODO: Exercise selector and chart
+            if let data = viewModel.strengthData {
+                StrengthChartView(data: data)
+                    .padding(.horizontal)
+            } else if viewModel.isLoadingStrength {
+                ProgressView("Loading strength data...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if let error = viewModel.strengthError {
+                sectionErrorView("Strength", error: error) {
+                    if let exerciseId = selectedExerciseId {
+                        Task {
+                            await viewModel.loadStrengthData(for: patientId, exerciseId: exerciseId)
+                        }
+                    }
+                }
+            } else {
+                StrengthEmptyState()
+                    .padding(.horizontal)
+            }
         }
     }
 
-    // MARK: - Error View
+    // MARK: - Empty State
 
-    private func errorView(_ message: String) -> some View {
+    private var emptyState: some View {
         VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundColor(.orange)
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 64))
+                .foregroundColor(.secondary.opacity(0.3))
 
-            Text("Unable to Load Analytics")
-                .font(.headline)
+            Text("No Analytics Data")
+                .font(.title3)
+                .fontWeight(.semibold)
 
-            Text(message)
+            Text("Complete workouts to see your progress analytics")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
+    // MARK: - Not Signed In View
+
+    private var notSignedInView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "person.crop.circle.badge.exclamationmark")
+                .font(.system(size: 64))
+                .foregroundColor(.orange.opacity(0.5))
+
+            Text("Sign In Required")
+                .font(.title3)
+                .fontWeight(.semibold)
+
+            Text("Sign in to view your progress analytics")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
+    // MARK: - Section Error View
+
+    private func sectionErrorView(_ section: String, error: String, retry: @escaping () -> Void) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.title2)
+                .foregroundColor(.orange)
+
+            Text("Unable to Load \(section) Data")
+                .font(.headline)
+
+            Text(error)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
 
             Button("Try Again") {
-                Task {
-                    await loadAnalytics()
-                }
+                retry()
             }
             .buttonStyle(.bordered)
+            .controlSize(.small)
         }
         .frame(maxWidth: .infinity)
         .padding()
-    }
-
-    // MARK: - Actions
-
-    private func loadAnalytics() async {
-        isLoading = true
-        errorMessage = nil
-
-        do {
-            async let volume = AnalyticsService.shared.calculateVolumeData(
-                for: patientId,
-                period: selectedPeriod
-            )
-            async let consistency = AnalyticsService.shared.calculateConsistencyData(
-                for: patientId,
-                period: selectedPeriod
-            )
-
-            (volumeData, consistencyData) = try await (volume, consistency)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-
-        isLoading = false
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+        .padding(.horizontal)
     }
 }
 
 // MARK: - Summary Card
 
-struct SummaryCard: View {
+private struct SummaryCard: View {
     let title: String
     let value: String
     let subtitle: String
@@ -362,6 +407,11 @@ struct ConsistencyChartCard: View {
 
 struct ProgressChartsView_Previews: PreviewProvider {
     static var previews: some View {
-        ProgressChartsView(patientId: "test-patient-id")
+        let appState = AppState()
+        appState.userId = "test-patient-id"
+        appState.isAuthenticated = true
+
+        return ProgressChartsView()
+            .environmentObject(appState)
     }
 }

@@ -106,6 +106,15 @@ class PTSupabaseClient: ObservableObject {
         try await signIn(email: email, password: password)
     }
 
+    /// Sign in as Nic Roma (demo patient with Winter Lift program)
+    func signInAsNicRoma() async throws {
+        // Nic Roma credentials
+        let email = "nic-demo@ptperformance.app"
+        let password = "demo-patient-2025"
+
+        try await signIn(email: email, password: password)
+    }
+
     /// Fetch user role from database (patient or therapist)
     private func fetchUserRole(userId: String) async {
         // Get user email from auth session

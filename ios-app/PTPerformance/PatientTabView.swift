@@ -12,6 +12,11 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
+
+            ProgressChartsView()
+                .tabItem {
+                    Label("Analytics", systemImage: "chart.bar.fill")
+                }
         }
     }
 }

@@ -11,10 +11,11 @@ struct HistoryView: View {
         ScrollView {
             VStack(spacing: 24) {
                 if viewModel.isLoading {
-                    ProgressView("Loading history...")
-                        .padding()
+                    // Build 60: Skeleton loading states
+                    HistoryLoadingView()
                 } else if let error = viewModel.errorMessage {
-                    ErrorView(message: error) {
+                    // Build 60: Enhanced error view
+                    ErrorStateView.genericError(message: error) {
                         Task {
                             await viewModel.refresh(for: patientId)
                         }
@@ -121,7 +122,7 @@ struct SummaryCardsView: View {
     }
 }
 
-struct SummaryCard: View {
+private struct SummaryCard: View {
     let title: String
     let value: String
     let icon: String
@@ -417,13 +418,172 @@ struct EmptyDataSection: View {
     }
 }
 
+// MARK: - History Loading View (Build 60)
+
+struct HistoryLoadingView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            // Summary cards skeleton
+            VStack(spacing: 16) {
+                Text("Summary")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                HStack(spacing: 16) {
+                    ForEach(0..<3) { _ in
+                        SkeletonSummaryCard()
+                    }
+                }
+            }
+            .padding()
+
+            // Pain trend skeleton
+            ChartLoadingView()
+
+            // Adherence skeleton
+            SkeletonAdherenceCard()
+                .padding()
+
+            // Recent sessions skeleton
+            VStack(spacing: 12) {
+                Text("Recent Sessions")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                ForEach(0..<3) { _ in
+                    SkeletonSessionRow()
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+struct SkeletonSummaryCard: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 40, height: 40)
+                .shimmer(isAnimating: isAnimating)
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 20)
+                .shimmer(isAnimating: isAnimating)
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 60, height: 12)
+                .shimmer(isAnimating: isAnimating)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+struct SkeletonAdherenceCard: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Adherence")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 32) {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 150, height: 150)
+                    .shimmer(isAnimating: isAnimating)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(0..<3) { _ in
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 16)
+                            .shimmer(isAnimating: isAnimating)
+                    }
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+        }
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+struct SkeletonSessionRow: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 120, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 12)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            Spacer()
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 80, height: 16)
+                .shimmer(isAnimating: isAnimating)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
 struct HistoryView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
-            HistoryView(patientId: "patient-1")
+        Group {
+            NavigationView {
+                HistoryView(patientId: "patient-1")
+            }
+            .previewDisplayName("History View")
+
+            HistoryLoadingView()
+                .previewDisplayName("Loading State")
         }
     }
 }
