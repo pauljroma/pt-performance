@@ -9,9 +9,13 @@ struct ProgramBuilderView: View {
     @StateObject private var viewModel = ProgramBuilderViewModel()
     @Environment(\.dismiss) private var dismiss
     let patientId: UUID?
-    
+
+    init(patientId: UUID? = nil) {
+        self.patientId = patientId
+    }
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Program Details") {
                     TextField("Program Name", text: $viewModel.programName)
@@ -24,14 +28,18 @@ struct ProgramBuilderView: View {
                 }
                 
                 Section {
-                    ForEach(viewModel.phases) { phase in
-                        PhaseRowView(
-                            phase: phase,
-                            constraints: viewModel.selectedProtocol?.constraints
-                        )
+                    ForEach(Array(viewModel.phases.enumerated()), id: \.element.id) { index, phase in
+                        NavigationLink {
+                            PhaseDetailView(phase: $viewModel.phases[index])
+                        } label: {
+                            PhaseRowView(
+                                phase: phase,
+                                constraints: viewModel.selectedProtocol?.constraints
+                            )
+                        }
                     }
                     .onDelete(perform: viewModel.deletePhase)
-                    
+
                     Button(action: viewModel.addPhase) {
                         Label("Add Phase", systemImage: "plus.circle.fill")
                     }
@@ -61,20 +69,26 @@ struct ProgramBuilderView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
                         Task {
+                            let logger = DebugLogger.shared
+                            logger.log("📝 Creating program: \(viewModel.programName)")
                             do {
                                 _ = try await viewModel.createProgram(patientId: patientId?.uuidString)
+                                logger.log("✅ Program created successfully", level: .success)
                                 dismiss()
                             } catch {
-                                // Error already logged by viewModel
-                                print("Failed to create program: \(error)")
+                                logger.log("❌ Failed to create program: \(error.localizedDescription)", level: .error)
+                                logger.log("Error details: \(error)", level: .error)
                             }
                         }
                     }
                     .disabled(!viewModel.isValid || viewModel.isCreating)
                 }
             }
-            .task {
-                await viewModel.loadProtocols()
+            .onAppear {
+                // Load protocols asynchronously without blocking sheet presentation
+                Task {
+                    await viewModel.loadProtocols()
+                }
             }
         }
     }
