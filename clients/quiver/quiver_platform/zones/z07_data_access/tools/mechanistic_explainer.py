@@ -145,6 +145,9 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     """
     Execute mechanistic_explainer tool - explain drug-disease mechanisms.
 
+    RECURSION PROTECTION: This function is protected against infinite recursion
+    via sys.setrecursionlimit guard.
+
     Args:
         tool_input: Dict with keys:
             - drug (str): Drug name or identifier
@@ -215,6 +218,11 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         )
         if validation_errors:
             return format_validation_response("mechanistic_explainer", validation_errors)
+
+    # Set recursion limit to prevent infinite loops (default is 1000)
+    import sys
+    old_recursion_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(200)  # Lower limit to catch recursion bugs faster
 
     try:
         # Get parameters with defaults
@@ -373,6 +381,19 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
                     }
                 }
 
+        except RecursionError as e:
+            logger.error(f"Recursion error in Neo4j query: {str(e)}")
+            if driver:
+                driver.close()
+            sys.setrecursionlimit(old_recursion_limit)
+            return {
+                "success": False,
+                "error": "Recursion limit exceeded during graph traversal",
+                "drug": drug,
+                "disease": disease,
+                "error_type": "recursion_error",
+                "hint": "This may indicate circular references in the knowledge graph"
+            }
         except Exception as e:
             logger.error(f"Neo4j query error: {str(e)}")
             return {
@@ -386,8 +407,19 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
         finally:
             if driver:
                 driver.close()
+            sys.setrecursionlimit(old_recursion_limit)
 
+    except RecursionError as e:
+        sys.setrecursionlimit(old_recursion_limit)
+        logger.error(f"Recursion error in mechanistic_explainer: {str(e)}")
+        return {
+            "success": False,
+            "error": "Tool execution failed due to recursion limit",
+            "error_type": "recursion_error",
+            "hint": "Try with a simpler query or contact support"
+        }
     except Exception as e:
+        sys.setrecursionlimit(old_recursion_limit)
         logger.error(f"Unexpected error in mechanistic_explainer: {str(e)}")
         return {
             "success": False,
@@ -678,10 +710,14 @@ def _build_narrative(
     nodes: List[Dict],
     relationships: List[Dict],
     mechanism_type: str,
-    explanation_style: str
+    explanation_style: str,
+    _recursion_depth: int = 0
 ) -> str:
     """
     Build human-readable mechanistic narrative.
+
+    Args (internal):
+        _recursion_depth: Internal counter to prevent infinite recursion
 
     Args:
         nodes: List of nodes in path
@@ -692,6 +728,12 @@ def _build_narrative(
     Returns:
         Human-readable narrative string
     """
+    # Recursion guard to prevent infinite loops
+    MAX_RECURSION_DEPTH = 50
+    if _recursion_depth >= MAX_RECURSION_DEPTH:
+        logger.error(f"Maximum recursion depth ({MAX_RECURSION_DEPTH}) exceeded in _build_narrative")
+        return "Unable to generate narrative (complexity limit exceeded)"
+
     if explanation_style == "pathways_only":
         # Extract pathway names only
         pathways = [n["entity"] for n in nodes if n["type"] == "Pathway"]

@@ -761,6 +761,9 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     """
     Execute BBB permeability prediction
 
+    RECURSION PROTECTION: This function is protected against infinite recursion
+    via sys.setrecursionlimit guard.
+
     Args:
         tool_input: Dictionary with keys:
             - drug_name (str, required): Drug name or CHEMBL ID
@@ -770,22 +773,44 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dictionary with BBB assessment results
     """
-    global _bbb_tool_instance
+    # Set recursion limit to prevent infinite loops
+    import sys
+    old_recursion_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(200)  # Lower limit to catch recursion bugs faster
 
-    # Initialize tool instance if needed (singleton pattern)
-    if _bbb_tool_instance is None:
-        _bbb_tool_instance = BBBPermeabilityTool()
+    try:
+        global _bbb_tool_instance
 
-    # Extract parameters
-    drug_name = tool_input.get("drug_name")
-    k = tool_input.get("k", 20)
-    use_cns_enrichment = tool_input.get("use_cns_enrichment", True)
+        # Initialize tool instance if needed (singleton pattern)
+        if _bbb_tool_instance is None:
+            _bbb_tool_instance = BBBPermeabilityTool()
 
-    # Execute BBB assessment
-    result = await _bbb_tool_instance.assess_bbb_permeability(
-        drug_name=drug_name,
-        k=k,
-        use_cns_enrichment=use_cns_enrichment
-    )
+        # Extract parameters
+        drug_name = tool_input.get("drug_name")
+        k = tool_input.get("k", 20)
+        use_cns_enrichment = tool_input.get("use_cns_enrichment", True)
 
-    return result
+        # Execute BBB assessment
+        result = await _bbb_tool_instance.assess_bbb_permeability(
+            drug_name=drug_name,
+            k=k,
+            use_cns_enrichment=use_cns_enrichment
+        )
+
+        return result
+
+    except RecursionError as e:
+        sys.setrecursionlimit(old_recursion_limit)
+        logger.error(f"Recursion error in bbb_permeability: {str(e)}")
+        return {
+            "success": False,
+            "error": "Tool execution failed due to recursion limit",
+            "error_type": "recursion_error",
+            "hint": "Try with a simpler query or contact support"
+        }
+    except Exception as e:
+        sys.setrecursionlimit(old_recursion_limit)
+        logger.error(f"Error in bbb_permeability: {str(e)}")
+        raise
+    finally:
+        sys.setrecursionlimit(old_recursion_limit)
