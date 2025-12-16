@@ -69,8 +69,7 @@ class AnalyticsService {
     static let shared = AnalyticsService()
 
     private let supabase: PTSupabaseClient
-    // TODO: Uncomment once ErrorLogger.swift is added to Xcode project target
-    // private let errorLogger = ErrorLogger.shared
+    private let errorLogger = ErrorLogger.shared
 
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
@@ -149,8 +148,7 @@ class AnalyticsService {
     }
 
     // MARK: - Build 46 Analytics (Volume, Strength, Consistency)
-
-    // TODO: Add ChartData.swift to Xcode project target to enable these methods
+    // TODO: Add helper methods (fetchExerciseLogs, groupByWeek, calculateOneRepMax) and models (ScheduledSession) to enable these methods
     /*
     /// Calculate volume data for a time period
     func calculateVolumeData(
@@ -307,48 +305,6 @@ class AnalyticsService {
             currentStreak: currentStreak,
             longestStreak: longestStreak
         )
-    }
-
-    // MARK: - Helper Methods
-
-    private func fetchExerciseLogs(
-        patientId: String,
-        exerciseId: String? = nil,
-        startDate: Date?
-    ) async throws -> [ExerciseLog] {
-        var query = supabase.client
-            .from("exercise_logs")
-            .select("*, exercise:exercises(*)")
-            .eq("patient_id", value: patientId)
-
-        if let exerciseId = exerciseId {
-            query = query.eq("exercise_id", value: exerciseId)
-        }
-
-        if let startDate = startDate {
-            query = query.gte("created_at", value: startDate.iso8601String)
-        }
-
-        query = query.order("created_at", ascending: true)
-
-        let logs: [ExerciseLog] = try await query.execute().value
-        return logs
-    }
-
-    private func groupByWeek(logs: [ExerciseLog]) -> [[ExerciseLog]] {
-        let grouped = Dictionary(grouping: logs) { log in
-            Calendar.current.dateInterval(of: .weekOfYear, for: log.createdAt)?.start ?? log.createdAt
-        }
-
-        return grouped.values.map { Array($0) }
-    }
-
-    private func calculateOneRepMax(weight: Double, reps: Int) -> Double {
-        if reps == 1 {
-            return weight
-        }
-        // Epley formula: 1RM = weight × (1 + reps/30)
-        return weight * (1 + Double(reps) / 30.0)
     }
 
     private func calculateCurrentStreak(from dataPoints: [ConsistencyDataPoint]) -> Int {

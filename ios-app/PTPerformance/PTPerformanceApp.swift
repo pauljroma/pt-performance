@@ -47,8 +47,6 @@ struct PTPerformanceApp: App {
         }
         */
 
-        // TODO: Uncomment once ErrorLogger.swift and PerformanceMonitor.swift are added to Xcode project
-        /*
         // Track app launch performance
         PerformanceMonitor.shared.trackAppLaunch()
 
@@ -62,7 +60,6 @@ struct PTPerformanceApp: App {
                 "os_version": UIDevice.current.systemVersion
             ]
         )
-        */
     }
 
     var body: some Scene {
@@ -70,8 +67,7 @@ struct PTPerformanceApp: App {
             RootView()
                 .environmentObject(appState)
                 .onAppear {
-                    // TODO: Uncomment once PerformanceMonitor.swift is added to Xcode project
-                    // PerformanceMonitor.shared.finishAppLaunch()
+                    PerformanceMonitor.shared.finishAppLaunch()
                 }
         }
     }
@@ -96,8 +92,6 @@ final class AppState: ObservableObject {
 
     /// Update Sentry user context when authentication state changes
     private func updateUserContext() {
-        // TODO: Uncomment once ErrorLogger.swift is added to Xcode project
-        /*
         if isAuthenticated, let userId = userId {
             // Set user context for error tracking
             ErrorLogger.shared.setUser(
@@ -117,7 +111,6 @@ final class AppState: ObservableObject {
             // Clear user context on logout
             ErrorLogger.shared.clearUser()
         }
-        */
     }
 }
 

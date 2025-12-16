@@ -52,7 +52,7 @@ class ErrorLogger {
 
     /// Clear user context (e.g., on logout)
     func clearUser() {
-        logger.info("User context cleared: userId=\(currentUserId ?? "none")")
+        logger.info("User context cleared: userId=\(self.currentUserId ?? "none")")
 
         self.currentUserId = nil
         self.currentUserType = nil
