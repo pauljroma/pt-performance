@@ -577,7 +577,10 @@ class ProgramEditorViewModel: ObservableObject {
                         videoUrl: nil,
                         videoThumbnailUrl: nil,
                         videoDuration: nil,
-                        formCues: nil
+                        formCues: nil,
+                        techniqueCues: nil,
+                        commonMistakes: nil,
+                        safetyNotes: nil
                     )
                 )
             }

@@ -69,7 +69,7 @@ struct CueSection: View {
 
                 // Cues list
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(cues.enumerated()), id: \.offset) { index, cue in
+                    ForEach(cues.indices, id: \.self) { index in
                         HStack(alignment: .top, spacing: 10) {
                             // Bullet point
                             Circle()
@@ -78,7 +78,7 @@ struct CueSection: View {
                                 .padding(.top, 7)
 
                             // Cue text
-                            Text(cue)
+                            Text(cues[index])
                                 .font(.body)
                                 .foregroundColor(.primary)
                                 .fixedSize(horizontal: false, vertical: true)

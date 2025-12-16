@@ -195,16 +195,16 @@ struct TemplateDetailView: View {
             Label("Program Structure", systemImage: "list.bullet.rectangle")
                 .font(.headline)
 
-            ForEach(Array(phases.enumerated()), id: \.element.id) { index, phaseDetail in
+            ForEach(phases.indices, id: \.self) { index in
                 PhaseDetailCard(
-                    phaseDetail: phaseDetail,
+                    phaseDetail: phases[index],
                     phaseNumber: index + 1,
-                    isExpanded: expandedPhaseIds.contains(phaseDetail.id),
+                    isExpanded: expandedPhaseIds.contains(phases[index].id),
                     onToggle: {
-                        if expandedPhaseIds.contains(phaseDetail.id) {
-                            expandedPhaseIds.remove(phaseDetail.id)
+                        if expandedPhaseIds.contains(phases[index].id) {
+                            expandedPhaseIds.remove(phases[index].id)
                         } else {
-                            expandedPhaseIds.insert(phaseDetail.id)
+                            expandedPhaseIds.insert(phases[index].id)
                         }
                     }
                 )
@@ -332,8 +332,8 @@ struct PhaseDetailCard: View {
             if isExpanded {
                 Divider()
 
-                ForEach(Array(phaseDetail.sessions.enumerated()), id: \.element.id) { index, session in
-                    SessionDetailRow(session: session, sessionNumber: index + 1)
+                ForEach(phaseDetail.sessions.indices, id: \.self) { index in
+                    SessionDetailRow(session: phaseDetail.sessions[index], sessionNumber: index + 1)
 
                     if index < phaseDetail.sessions.count - 1 {
                         Divider()
@@ -381,19 +381,19 @@ struct SessionDetailRow: View {
 
             // Exercises summary
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(session.exercises.prefix(3).enumerated()), id: \.offset) { index, exercise in
+                ForEach(0..<min(3, session.exercises.count), id: \.self) { index in
                     HStack(spacing: 8) {
                         Text("\(index + 1).")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .frame(width: 20, alignment: .leading)
 
-                        Text(exercise.exerciseId) // TODO: Fetch exercise name
+                        Text(session.exercises[index].exerciseId) // TODO: Fetch exercise name
                             .font(.caption)
 
                         Spacer()
 
-                        Text(exercise.setsRepsDisplay)
+                        Text(session.exercises[index].setsRepsDisplay)
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.blue)

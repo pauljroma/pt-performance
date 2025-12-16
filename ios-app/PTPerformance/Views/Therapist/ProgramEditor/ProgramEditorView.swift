@@ -128,14 +128,14 @@ struct ProgramEditorView: View {
                         Spacer()
                     }
                 } else {
-                    ForEach(Array(viewModel.phases.enumerated()), id: \.element.id) { index, phase in
+                    ForEach(viewModel.phases.indices, id: \.self) { index in
                         NavigationLink {
                             EditPhaseView(
                                 viewModel: viewModel,
                                 phaseIndex: index
                             )
                         } label: {
-                            EditorPhaseRowView(phase: phase)
+                            EditorPhaseRowView(phase: viewModel.phases[index])
                         }
                     }
                     .onDelete(perform: deletePhase)

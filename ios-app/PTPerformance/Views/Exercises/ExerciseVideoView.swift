@@ -103,10 +103,10 @@ struct ExerciseVideoView: View {
                 }
             }
 
-            ForEach(Array(cues.enumerated()), id: \.offset) { index, cue in
+            ForEach(cues.indices, id: \.self) { index in
                 HStack(alignment: .top, spacing: 12) {
                     // Timestamp or number
-                    if let displayTime = cue.displayTime {
+                    if let displayTime = cues[index].displayTime {
                         Text(displayTime)
                             .font(.caption)
                             .fontWeight(.semibold)
@@ -121,7 +121,7 @@ struct ExerciseVideoView: View {
                     }
 
                     // Cue text
-                    Text(cue.cue)
+                    Text(cues[index].cue)
                         .font(.subheadline)
 
                     Spacer()
