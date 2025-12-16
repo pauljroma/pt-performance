@@ -9,6 +9,10 @@ struct AuthView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
 
+    // Validation state
+    @State private var emailValidation: ValidationResult?
+    @State private var passwordValidation: ValidationResult?
+
     var body: some View {
         VStack(spacing: 24) {
             // Header
@@ -25,20 +29,72 @@ struct AuthView: View {
 
             // Email & Password Login (Hidden for demo)
             if false {  // Set to true to enable manual login
-                TextField("Email", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
+                VStack(spacing: 12) {
+                    // Email field with validation
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Email", text: $email)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .accessibilityLabel("Email")
+                            .accessibilityHint("Enter your email address")
+                            .onChange(of: email) { newValue in
+                                if !newValue.isEmpty {
+                                    emailValidation = ValidationHelpers.validateEmail(newValue)
+                                } else {
+                                    emailValidation = nil
+                                }
+                            }
 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                Button("Sign In") {
-                    Task {
-                        await signIn()
+                        if let errorMessage = emailValidation?.errorMessage, !email.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.caption)
+                                Text(errorMessage)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.red)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Error: \(errorMessage)")
+                        }
                     }
+
+                    // Password field with validation
+                    VStack(alignment: .leading, spacing: 4) {
+                        SecureField("Password", text: $password)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .accessibilityLabel("Password")
+                            .accessibilityHint("Enter your password, at least 8 characters with 1 uppercase letter and 1 number")
+                            .onChange(of: password) { newValue in
+                                if !newValue.isEmpty {
+                                    passwordValidation = ValidationHelpers.validatePassword(newValue)
+                                } else {
+                                    passwordValidation = nil
+                                }
+                            }
+
+                        if let errorMessage = passwordValidation?.errorMessage, !password.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.caption)
+                                Text(errorMessage)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.red)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Error: \(errorMessage)")
+                        }
+                    }
+
+                    Button("Sign In") {
+                        Task {
+                            await signIn()
+                        }
+                    }
+                    .disabled(!isFormValid || isLoading)
+                    .accessibilityLabel("Sign In")
+                    .accessibilityHint(isFormValid ? "Sign in with your credentials" : "Complete all fields correctly to sign in")
                 }
-                .disabled(email.isEmpty || password.isEmpty || isLoading)
             }
 
             // Demo User Buttons
@@ -59,6 +115,8 @@ struct AuthView: View {
                     .cornerRadius(10)
                 }
                 .disabled(isLoading)
+                .accessibilityLabel("Sign in as Demo Patient")
+                .accessibilityHint("Quick sign in to view patient features")
 
                 Button(action: {
                     Task {
@@ -76,6 +134,8 @@ struct AuthView: View {
                     .cornerRadius(10)
                 }
                 .disabled(isLoading)
+                .accessibilityLabel("Sign in as Nic Roma")
+                .accessibilityHint("Quick sign in to view Nic Roma's training program")
 
                 Button(action: {
                     Task {
@@ -93,6 +153,8 @@ struct AuthView: View {
                     .cornerRadius(10)
                 }
                 .disabled(isLoading)
+                .accessibilityLabel("Sign in as Demo Therapist")
+                .accessibilityHint("Quick sign in to view therapist features and manage patients")
             }
 
             // Loading Indicator
@@ -129,6 +191,17 @@ struct AuthView: View {
             .padding()
         }
         .padding()
+    }
+
+    // MARK: - Validation
+
+    private var isFormValid: Bool {
+        guard !email.isEmpty && !password.isEmpty else {
+            return false
+        }
+        let emailValid = emailValidation?.isValid ?? false
+        let passwordValid = passwordValidation?.isValid ?? false
+        return emailValid && passwordValid
     }
 
     // MARK: - Authentication Methods

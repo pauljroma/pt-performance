@@ -26,6 +26,11 @@ struct Exercise: Codable, Identifiable, Hashable {
         let videoDuration: Int? // Duration in seconds
         let formCues: [FormCue]?
 
+        // Build 61: Technique guide support
+        let techniqueCues: TechniqueCues?
+        let commonMistakes: String?
+        let safetyNotes: String?
+
         enum CodingKeys: String, CodingKey {
             case id, name, category
             case body_region
@@ -33,6 +38,9 @@ struct Exercise: Codable, Identifiable, Hashable {
             case videoThumbnailUrl = "video_thumbnail_url"
             case videoDuration = "video_duration"
             case formCues = "form_cues"
+            case techniqueCues = "technique_cues"
+            case commonMistakes = "common_mistakes"
+            case safetyNotes = "safety_notes"
         }
 
         struct FormCue: Codable, Hashable {
@@ -60,6 +68,19 @@ struct Exercise: Codable, Identifiable, Hashable {
             } else {
                 return "\(seconds)s"
             }
+        }
+    }
+
+    // Build 61: Technique cues structure
+    struct TechniqueCues: Codable, Hashable {
+        let setup: [String]
+        let execution: [String]
+        let breathing: [String]
+
+        init(setup: [String] = [], execution: [String] = [], breathing: [String] = []) {
+            self.setup = setup
+            self.execution = execution
+            self.breathing = breathing
         }
     }
     let exercise_templates: ExerciseTemplate?
@@ -126,7 +147,10 @@ struct Exercise: Codable, Identifiable, Hashable {
                 videoUrl: nil,
                 videoThumbnailUrl: nil,
                 videoDuration: nil,
-                formCues: nil
+                formCues: nil,
+                techniqueCues: nil,
+                commonMistakes: nil,
+                safetyNotes: nil
             )
         ),
         Exercise(
@@ -148,7 +172,10 @@ struct Exercise: Codable, Identifiable, Hashable {
                 videoUrl: nil,
                 videoThumbnailUrl: nil,
                 videoDuration: nil,
-                formCues: nil
+                formCues: nil,
+                techniqueCues: nil,
+                commonMistakes: nil,
+                safetyNotes: nil
             )
         )
     ]

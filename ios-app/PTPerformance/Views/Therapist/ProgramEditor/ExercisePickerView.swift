@@ -207,6 +207,7 @@ struct ExercisePickerView: View {
 
 struct ExercisePickerRow: View {
     let exercise: Exercise
+    @State private var showTechniqueGuide = false
 
     var body: some View {
         HStack {
@@ -236,12 +237,25 @@ struct ExercisePickerRow: View {
 
             Spacer()
 
+            // Technique guide button
+            Button {
+                showTechniqueGuide = true
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+
             Image(systemName: "plus.circle.fill")
                 .font(.title3)
                 .foregroundColor(.blue)
         }
         .contentShape(Rectangle())
         .padding(.vertical, 4)
+        .sheet(isPresented: $showTechniqueGuide) {
+            ExerciseTechniqueView(exercise: exercise)
+        }
     }
 }
 

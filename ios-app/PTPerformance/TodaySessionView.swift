@@ -89,14 +89,18 @@ struct TodaySessionView: View {
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    Task {
-                        await viewModel.refresh()
+                HStack(spacing: 12) {
+                    ContextualHelpButton(articleId: "starting-workout")
+
+                    Button(action: {
+                        Task {
+                            await viewModel.refresh()
+                        }
+                    }) {
+                        Image(systemName: "arrow.clockwise")
                     }
-                }) {
-                    Image(systemName: "arrow.clockwise")
+                    .disabled(viewModel.isLoading)
                 }
-                .disabled(viewModel.isLoading)
             }
         }
     }

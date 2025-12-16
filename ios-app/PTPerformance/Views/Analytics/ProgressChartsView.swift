@@ -68,6 +68,11 @@ struct ProgressChartsView: View {
                 .padding()
             }
             .navigationTitle("Progress")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    ContextualHelpButton(articleId: "understanding-progress")
+                }
+            }
             .refreshable {
                 if let patientId = appState.userId {
                     await viewModel.refresh(for: patientId)

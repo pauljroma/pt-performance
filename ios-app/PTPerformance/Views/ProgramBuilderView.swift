@@ -43,16 +43,42 @@ struct ProgramBuilderFormView: View {
     let patientId: UUID?
     let dismiss: DismissAction
 
+    // Validation state
+    @State private var programNameValidation: ValidationResult?
+
     var body: some View {
         Form {
             Section("Program Details") {
-                TextField("Program Name", text: $viewModel.programName)
-                    .textInputAutocapitalization(.words)
+                // Program name with validation
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Program Name", text: $viewModel.programName)
+                        .textInputAutocapitalization(.words)
+                        .accessibilityLabel("Program Name")
+                        .accessibilityHint("Enter a name for the program between 3 and 100 characters")
+                        .onChange(of: viewModel.programName) { newValue in
+                            programNameValidation = ValidationHelpers.validateProgramName(newValue)
+                        }
+
+                    // Show validation error if present
+                    if let errorMessage = programNameValidation?.errorMessage, !viewModel.programName.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                            Text(errorMessage)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.red)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Error: \(errorMessage)")
+                    }
+                }
 
                 ProtocolSelector(
                     selectedProtocol: $viewModel.selectedProtocol,
                     protocols: viewModel.availableProtocols
                 )
+                .accessibilityLabel("Protocol Selector")
+                .accessibilityHint("Choose a therapy protocol for this program")
             }
 
             Section {
@@ -65,6 +91,8 @@ struct ProgramBuilderFormView: View {
                             constraints: viewModel.selectedProtocol?.constraints
                         )
                     }
+                    .accessibilityLabel("Phase \(index + 1): \(phase.name)")
+                    .accessibilityHint("Edit this phase")
                 }
                 .onDelete(perform: viewModel.deletePhase)
 
@@ -72,6 +100,8 @@ struct ProgramBuilderFormView: View {
                     Label("Add Phase", systemImage: "plus.circle.fill")
                 }
                 .disabled(!viewModel.canAddPhase)
+                .accessibilityLabel("Add Phase")
+                .accessibilityHint(viewModel.canAddPhase ? "Add a new phase to the program" : "Maximum phases reached")
             } header: {
                 Text("Phases (\(viewModel.phases.count))")
             }
@@ -90,8 +120,17 @@ struct ProgramBuilderFormView: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel") {
+                    dismiss()
+                }
+                .accessibilityLabel("Cancel")
+                .accessibilityHint("Discard program and return")
             }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                ContextualHelpButton(articleId: "creating-first-program")
+            }
+
             ToolbarItem(placement: .confirmationAction) {
                 Button("Create") {
                     Task {
@@ -107,9 +146,21 @@ struct ProgramBuilderFormView: View {
                         }
                     }
                 }
-                .disabled(!viewModel.isValid || viewModel.isCreating)
+                .disabled(!isProgramValid || viewModel.isCreating)
+                .accessibilityLabel("Create Program")
+                .accessibilityHint(isProgramValid ? "Create the program with current details" : "Complete all required fields to create program")
             }
         }
+    }
+
+    // MARK: - Validation
+
+    private var isProgramValid: Bool {
+        // Check program name validation
+        let nameValid = programNameValidation?.isValid ?? false
+
+        // Check view model validation
+        return nameValid && viewModel.isValid && !viewModel.isCreating
     }
 }
 

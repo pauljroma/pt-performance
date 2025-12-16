@@ -44,6 +44,10 @@ struct TherapistProgramsView: View {
             }
             .navigationTitle("Programs")
             .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    ContextualHelpButton(articleId: nil)
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button {

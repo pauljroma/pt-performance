@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// View for logging exercise performance details
+/// View for logging exercise performance details with validation and accessibility
 struct ExerciseLogView: View {
     let exercise: Exercise
     let sessionExerciseId: String
@@ -18,18 +18,23 @@ struct ExerciseLogView: View {
     @State private var painScore: Double = 0.0
     @State private var notes: String = ""
 
+    // Validation state
+    @State private var weightValidation: ValidationResult?
+    @State private var repsValidations: [ValidationResult?] = []
+
     // UI state
     @State private var isSubmitting = false
     @State private var showSuccess = false
     @State private var errorMessage: String?
     @State private var showError = false
+    @State private var showTechniqueGuide = false
 
     var body: some View {
         NavigationView {
             Form {
                 // Exercise header
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text(exercise.exercise_name ?? "Exercise")
                             .font(.headline)
 
@@ -44,12 +49,30 @@ struct ExerciseLogView: View {
                         }
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+
+                        // View Technique button
+                        Button {
+                            showTechniqueGuide = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "info.circle.fill")
+                                Text("View Technique Guide")
+                                    .fontWeight(.medium)
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                        }
+                        .accessibilityLabel("View Technique Guide")
+                        .accessibilityHint("Open guide with exercise instructions and form tips")
                     }
                 }
 
                 // Sets completed
                 Section(header: Text("Sets Completed")) {
                     Stepper("Sets: \(actualSets)", value: $actualSets, in: 1...10)
+                        .accessibilityLabel("Sets completed")
+                        .accessibilityValue("\(actualSets) sets")
+                        .accessibilityHint("Adjust number of sets completed")
                         .onChange(of: actualSets) { newValue in
                             // Adjust reps array
                             if repsPerSet.count < newValue {
@@ -57,46 +80,98 @@ struct ExerciseLogView: View {
                             } else if repsPerSet.count > newValue {
                                 repsPerSet = Array(repsPerSet.prefix(newValue))
                             }
+                            // Adjust validation array
+                            if repsValidations.count < newValue {
+                                repsValidations.append(contentsOf: Array(repeating: nil, count: newValue - repsValidations.count))
+                            } else if repsValidations.count > newValue {
+                                repsValidations = Array(repsValidations.prefix(newValue))
+                            }
                         }
                 }
 
-                // Reps per set
+                // Reps per set with validation
                 Section(header: Text("Reps Per Set")) {
                     ForEach(0..<actualSets, id: \.self) { index in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text("Set \(index + 1)")
+                                Spacer()
+                                TextField("Reps", value: Binding(
+                                    get: { repsPerSet[safe: index] ?? 0 },
+                                    set: { newValue in
+                                        if index < repsPerSet.count {
+                                            repsPerSet[index] = newValue
+                                            validateReps(at: index, value: newValue)
+                                        }
+                                    }
+                                ), format: .number)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                                .accessibilityLabel("Set \(index + 1) reps")
+                                .accessibilityHint("Enter number of reps completed for set \(index + 1)")
+                            }
+
+                            // Show validation error if present
+                            if let validation = repsValidations[safe: index],
+                               let errorMessage = validation?.errorMessage,
+                               (repsPerSet[safe: index] ?? 0) > 0 {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.caption2)
+                                    Text(errorMessage)
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(.red)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("Error: \(errorMessage)")
+                            }
+                        }
+                    }
+                }
+
+                // Load with validation
+                Section(header: Text("Weight Used")) {
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("Set \(index + 1)")
-                            Spacer()
-                            TextField("Reps", value: Binding(
-                                get: { repsPerSet[safe: index] ?? 0 },
-                                set: { newValue in
-                                    if index < repsPerSet.count {
-                                        repsPerSet[index] = newValue
+                            TextField("Load", text: $actualLoad)
+                                .keyboardType(.decimalPad)
+                                .accessibilityLabel("Weight used")
+                                .accessibilityHint("Enter the weight you used for this exercise")
+                                .onChange(of: actualLoad) { newValue in
+                                    if !newValue.isEmpty {
+                                        weightValidation = ValidationHelpers.validateExerciseWeight(newValue)
+                                    } else {
+                                        weightValidation = nil
                                     }
                                 }
-                            ), format: .number)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
+
+                            Picker("Unit", selection: $loadUnit) {
+                                Text("lbs").tag("lbs")
+                                Text("kg").tag("kg")
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 120)
+                            .accessibilityLabel("Weight unit")
+                            .accessibilityHint("Select pounds or kilograms")
+                        }
+
+                        // Show validation error if present
+                        if let errorMessage = weightValidation?.errorMessage, !actualLoad.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.caption)
+                                Text(errorMessage)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.red)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Error: \(errorMessage)")
                         }
                     }
                 }
 
-                // Load
-                Section(header: Text("Weight Used")) {
-                    HStack {
-                        TextField("Load", text: $actualLoad)
-                            .keyboardType(.decimalPad)
-
-                        Picker("Unit", selection: $loadUnit) {
-                            Text("lbs").tag("lbs")
-                            Text("kg").tag("kg")
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 120)
-                    }
-                }
-
-                // RPE slider
+                // RPE slider with accessibility
                 Section(header: Text("Rating of Perceived Exertion (RPE)")) {
                     VStack(alignment: .leading) {
                         HStack {
@@ -110,10 +185,13 @@ struct ExerciseLogView: View {
 
                         Slider(value: $rpe, in: 0...10, step: 1)
                             .accentColor(rpeColor(Int(rpe)))
+                            .accessibilityLabel("Rating of Perceived Exertion")
+                            .accessibilityValue("\(Int(rpe)) out of 10, \(rpeDescription(Int(rpe)))")
+                            .accessibilityHint("Adjust slider to rate how hard the exercise felt")
                     }
                 }
 
-                // Pain slider
+                // Pain slider with accessibility
                 Section(header: Text("Pain Level")) {
                     VStack(alignment: .leading) {
                         HStack {
@@ -127,22 +205,29 @@ struct ExerciseLogView: View {
 
                         Slider(value: $painScore, in: 0...10, step: 1)
                             .accentColor(painColor(Int(painScore)))
+                            .accessibilityLabel("Pain Level")
+                            .accessibilityValue("\(Int(painScore)) out of 10, \(painDescription(Int(painScore)))")
+                            .accessibilityHint("Adjust slider to rate pain experienced during exercise")
 
                         if Int(painScore) > 5 {
-                            Label("⚠️ Pain above 5 - Therapist will be notified", systemImage: "exclamationmark.triangle.fill")
+                            Label("Pain above 5 - Therapist will be notified", systemImage: "exclamationmark.triangle.fill")
                                 .font(.caption)
                                 .foregroundColor(.orange)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("Warning: High pain level. Your therapist will be notified.")
                         }
                     }
                 }
 
-                // Notes
+                // Notes with accessibility
                 Section(header: Text("Notes (Optional)")) {
                     TextEditor(text: $notes)
                         .frame(height: 80)
+                        .accessibilityLabel("Notes")
+                        .accessibilityHint("Enter any additional notes about this exercise")
                 }
 
-                // Submit button
+                // Submit button with validation check
                 Section {
                     Button(action: submitLog) {
                         if isSubmitting {
@@ -163,6 +248,8 @@ struct ExerciseLogView: View {
                         }
                     }
                     .disabled(isSubmitting || !isValidInput)
+                    .accessibilityLabel("Submit Exercise")
+                    .accessibilityHint(isValidInput ? "Submit your exercise log" : "Complete all required fields correctly to submit")
                 }
             }
             .navigationTitle("Log Exercise")
@@ -172,6 +259,8 @@ struct ExerciseLogView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Discard changes and return")
                 }
             }
             .alert("Exercise Logged", isPresented: $showSuccess) {
@@ -186,12 +275,50 @@ struct ExerciseLogView: View {
             } message: {
                 Text(errorMessage ?? "Failed to submit exercise log")
             }
+            .onAppear {
+                // Initialize validation arrays
+                repsValidations = Array(repeating: nil, count: actualSets)
+            }
         }
     }
 
+    // MARK: - Validation
+
     private var isValidInput: Bool {
-        actualSets > 0 && !repsPerSet.isEmpty && repsPerSet.allSatisfy { $0 > 0 }
+        // Check basic requirements
+        guard actualSets > 0 && !repsPerSet.isEmpty && repsPerSet.allSatisfy({ $0 > 0 }) else {
+            return false
+        }
+
+        // Check weight validation if weight is provided
+        if !actualLoad.isEmpty {
+            guard weightValidation?.isValid ?? false else {
+                return false
+            }
+        }
+
+        // Check reps validations
+        for validation in repsValidations {
+            if let result = validation, !result.isValid {
+                return false
+            }
+        }
+
+        // RPE and pain are sliders so always valid
+        return true
     }
+
+    private func validateReps(at index: Int, value: Int) {
+        // Ensure array is large enough
+        while repsValidations.count <= index {
+            repsValidations.append(nil)
+        }
+
+        // Validate the reps value
+        repsValidations[index] = ValidationHelpers.validateExerciseReps(String(value))
+    }
+
+    // MARK: - Submit
 
     private func submitLog() {
         guard isValidInput else { return }
@@ -307,7 +434,10 @@ struct ExerciseLogView_Previews: PreviewProvider {
                     videoUrl: nil,
                     videoThumbnailUrl: nil,
                     videoDuration: nil,
-                    formCues: nil
+                    formCues: nil,
+                    techniqueCues: nil,
+                    commonMistakes: nil,
+                    safetyNotes: nil
                 )
             ),
             sessionExerciseId: "se-1",
