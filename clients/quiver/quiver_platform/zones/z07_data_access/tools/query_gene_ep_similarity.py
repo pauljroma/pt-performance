@@ -38,17 +38,24 @@ TOOL_DEFINITION = {
 - Epilepsy genetics: "Genes with similar seizure-related EP profiles"
 - Cardiac genetics: "Genes with similar cardiac action potential effects"
 
-**Similarity Score:**
+**Similarity Score (0.0-1.0):**
 - 1.0 = Identical EP profile
 - 0.9+ = Highly similar ion channel effects
 - 0.7-0.9 = Moderately similar EP mechanisms
 - <0.7 = Low EP overlap
 
+**Default threshold: 0.7** (moderate similarity filter)
+
+**Interpreting Results:**
+- 0 results at 0.7 threshold = Gene has unique EP profile (scientifically meaningful!)
+- To explore weak EP overlaps, lower min_similarity to 0.2-0.5
+- Genes with novel ion channel mechanisms often return 0 results - this indicates uniqueness
+
 **Data:** 918,400 pre-computed pairs (18,368 genes × 50 top neighbors)
 
 **Examples:**
-- query_gene_ep_similarity(gene="SCN1A", top_k=10) → Na+ channel genes
-- query_gene_ep_similarity(gene="KCNQ2", top_k=20) → K+ channel genes
+- query_gene_ep_similarity(gene="SCN1A", top_k=10) → Na+ channel genes (if strong overlap exists)
+- query_gene_ep_similarity(gene="KCNQ2", top_k=20, min_similarity=0.2) → Weak EP overlaps
 
 Performance: ~1-5ms per query""",
     "input_schema": {

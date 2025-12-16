@@ -40,17 +40,24 @@ TOOL_DEFINITION = {
 - Diagnostic support: "Find candidate genes for patient with Angelman-like phenotype"
 - Comorbidity analysis: "Genes causing epilepsy + autism syndromes"
 
-**Similarity Score:**
+**Similarity Score (0.0-1.0):**
 - 1.0 = Identical syndrome associations
 - 0.9+ = Highly similar clinical syndromes
 - 0.7-0.9 = Moderately similar syndrome features
 - <0.7 = Low syndrome overlap
 
+**Default threshold: 0.7** (moderate similarity filter)
+
+**Interpreting Results:**
+- 0 results at 0.7 threshold = Gene causes unique syndrome presentation (scientifically meaningful!)
+- To explore genes with weak syndrome overlap, lower min_similarity to 0.2-0.5
+- Novel syndrome genes often return 0 results - this highlights their clinical uniqueness
+
 **Data:** 918,400 pre-computed pairs (18,368 genes × 50 top neighbors)
 
 **Examples:**
-- query_gene_syndrome_similarity(gene="SCN1A", top_k=10) → Dravet-like syndrome genes
-- query_gene_syndrome_similarity(gene="TSC2", top_k=20) → Tuberous sclerosis-like genes
+- query_gene_syndrome_similarity(gene="SCN1A", top_k=10) → Dravet-like syndrome genes (if strong overlap)
+- query_gene_syndrome_similarity(gene="TSC2", top_k=20, min_similarity=0.3) → Weakly related syndromes
 - query_gene_syndrome_similarity(gene="STXBP1", top_k=15) → DEE-like syndrome genes
 
 Performance: ~1-5ms per query""",

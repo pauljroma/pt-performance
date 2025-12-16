@@ -52,10 +52,14 @@ def _create_fusion_scored_drug(candidate: Dict[str, Any], drug_name_resolver=Non
         Drug result dict with fusion-based consensus score
     """
     # Resolve drug name if resolver provided
-    drug_id = candidate["drug_name"]
+    drug_id = candidate.get("drug_name") or candidate.get("drug") or candidate.get("entity2_id")
+    if not drug_id:
+        logger.warning(f"No drug_id found in candidate: {candidate}")
+        drug_id = "UNKNOWN"
+
     commercial_name = drug_id  # Default to ID if no resolver
 
-    if drug_name_resolver:
+    if drug_name_resolver and drug_id != "UNKNOWN":
         # Add QS prefix if not present (fusion tables store IDs without prefix)
         lookup_id = drug_id if drug_id.startswith('QS') else f'QS{drug_id}'
         name_info = drug_name_resolver.resolve(lookup_id)
@@ -132,8 +136,8 @@ Returns top-ranked drugs with consensus scores, confidence levels, tool contribu
             },
             "fast_mode": {
                 "type": "boolean",
-                "description": "Use fast mode (fusion scores only, skip tool validation). Set true for ~1s query time. Default: false (full Bayesian fusion).",
-                "default": False
+                "description": "Use fast mode (fusion scores only, skip tool validation). Set true for ~1s query time. Default: true for production performance.",
+                "default": True
             },
             "scored_limit": {
                 "type": "integer",
@@ -265,6 +269,9 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
                 for pattern in cached_patterns:
                     # Resolve drug name in case cached pattern has raw ID
                     drug_value = pattern.drug
+                    if not drug_value:
+                        logger.warning(f"Cached pattern has no drug value, skipping: {pattern}")
+                        continue
                     # Add QS prefix if not present (fusion tables store IDs without prefix)
                     lookup_id = drug_value if drug_value.startswith('QS') else f'QS{drug_value}'
                     name_info = drug_name_resolver.resolve(lookup_id)
@@ -359,219 +366,230 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
         # OPTIMIZATION #3: Use connection pooling (2x speedup)
         # Reuse connections instead of creating new ones
+        conn = None
+        cursor = None
         try:
-            from zones.z07_data_access.db_connection_pool import get_pgvector_connection
-            conn = get_pgvector_connection()
-            using_pool = True
-            logger.debug("✅ Using connection pool")
-        except Exception as e:
-            logger.debug(f"Connection pool not available, using direct connection: {e}")
-            conn = psycopg2.connect(**pgvector_config)
-            using_pool = False
+            try:
+                from zones.z07_data_access.db_connection_pool import get_pgvector_connection
+                conn = get_pgvector_connection()
+                using_pool = True
+                logger.debug("✅ Using connection pool")
+            except Exception as e:
+                logger.debug(f"Connection pool not available, using direct connection: {e}")
+                conn = psycopg2.connect(**pgvector_config)
+                using_pool = False
 
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # OPTIMIZATION: UNION query for all fusion tables (2-3x speedup)
-        # Single batched query instead of sequential loop
-        similar_genes_consensus = {}
-        drug_candidates_raw = {}
-
-        try:
-            # BATCHED UNION QUERY: Combine all fusion table queries into one
-            # This is 2-3x faster than sequential queries
-            # Use subqueries with LIMIT, then UNION them
-            cursor.execute("""
-                SELECT * FROM (
-                    SELECT 'dgp' as source, entity2_id, similarity_score, 'gene' as entity_type, 0.30 as weight
-                    FROM g_aux_dgp_topk_v6_0
-                    WHERE entity1_id = %s
-                    ORDER BY similarity_score DESC
-                    LIMIT 50
-                ) AS dgp_results
-
-                UNION ALL
-
-                SELECT * FROM (
-                    SELECT 'cto' as source, entity2_id, similarity_score, 'drug' as entity_type, 0.20 as weight
-                    FROM g_aux_cto_topk_v6_0
-                    WHERE entity1_id = %s
-                    ORDER BY similarity_score DESC
-                    LIMIT 50
-                ) AS cto_results
-
-                UNION ALL
-
-                SELECT * FROM (
-                    SELECT 'ep_drug' as source, entity2_id, similarity_score, 'drug' as entity_type, 0.35 as weight
-                    FROM g_aux_ep_drug_topk_v6_0
-                    WHERE entity1_id = %s
-                    ORDER BY similarity_score DESC
-                    LIMIT 50
-                ) AS ep_results
-            """, (gene, gene, gene))
-
-            # Process all results from single query
-            all_results = cursor.fetchall()
-            logger.info(f"✅ UNION query returned {len(all_results)} fusion results in single query")
-
-            for row in all_results:
-                entity2_id = row['entity2_id']
-                score = float(row['similarity_score'])
-                entity_type = row['entity_type']
-                weight = float(row['weight'])
-                source = row['source']
-
-                if entity_type == 'gene':
-                    # Gene-to-gene fusion: collect similar genes for later drug lookup
-                    if entity2_id not in similar_genes_consensus:
-                        similar_genes_consensus[entity2_id] = {
-                            'weighted_score': 0.0,
-                            'fusion_count': 0,
-                            'fusion_sources': []
-                        }
-
-                    similar_genes_consensus[entity2_id]['weighted_score'] += score * weight
-                    similar_genes_consensus[entity2_id]['fusion_count'] += 1
-                    similar_genes_consensus[entity2_id]['fusion_sources'].append(f'g_aux_{source}_topk_v6_0')
-
-                elif entity_type == 'drug':
-                    # Gene-to-drug fusion: use entity2_id directly as drug candidates
-                    drug_id = entity2_id
-                    weighted_score = score * weight
-
-                    if drug_id not in drug_candidates_raw:
-                        drug_candidates_raw[drug_id] = {
-                            'drug_name': drug_id,
-                            'drugbank_id': drug_id,
-                            'smiles': None,
-                            'mechanism': 'Unknown',
-                            'approval_status': 'Unknown',
-                            'prior_evidence': weighted_score,
-                            'evidence_types': [f'g_aux_{source}_topk_v6_0'],
-                            'similar_genes': []
-                        }
-                    else:
-                        # Accumulate evidence from multiple direct fusion tables
-                        drug_candidates_raw[drug_id]['prior_evidence'] += weighted_score
-                        drug_candidates_raw[drug_id]['evidence_types'].append(f'g_aux_{source}_topk_v6_0')
-
-        except Exception as e:
-            logger.error(f"❌ UNION fusion query failed: {e}")
-            logger.warning("Falling back to sequential queries...")
-
-            # Fallback to old sequential approach if UNION fails
-            for fusion_table, config in fusion_tables.items():
-                entity_type = config['type']
-                weight = config['weight']
-
-                if entity_type == 'skip':
-                    continue
-
-                try:
-                    cursor.execute(f"""
-                        SELECT entity2_id, similarity_score
-                        FROM {fusion_table}
+            # OPTIMIZATION: UNION query for all fusion tables (2-3x speedup)
+            # Single batched query instead of sequential loop
+            similar_genes_consensus = {}
+            drug_candidates_raw = {}
+            try:
+                # BATCHED UNION QUERY: Combine all fusion table queries into one
+                # This is 2-3x faster than sequential queries
+                # Use subqueries with LIMIT, then UNION them
+                cursor.execute("""
+                    SELECT * FROM (
+                        SELECT 'dgp' as source, entity2_id, similarity_score, 'gene' as entity_type, 0.30 as weight
+                        FROM g_aux_dgp_topk_v6_0
                         WHERE entity1_id = %s
                         ORDER BY similarity_score DESC
                         LIMIT 50
-                    """, (gene,))
+                    ) AS dgp_results
 
-                    results = cursor.fetchall()
+                    UNION ALL
 
-                    for row in results:
-                        entity2_id = row['entity2_id']
-                        score = float(row['similarity_score'])
+                    SELECT * FROM (
+                        SELECT 'cto' as source, entity2_id, similarity_score, 'drug' as entity_type, 0.20 as weight
+                        FROM g_aux_cto_topk_v6_0
+                        WHERE entity1_id = %s
+                        ORDER BY similarity_score DESC
+                        LIMIT 50
+                    ) AS cto_results
 
-                        if entity_type == 'gene':
-                            if entity2_id not in similar_genes_consensus:
-                                similar_genes_consensus[entity2_id] = {
-                                    'weighted_score': 0.0,
-                                    'fusion_count': 0,
-                                    'fusion_sources': []
-                                }
-                            similar_genes_consensus[entity2_id]['weighted_score'] += score * weight
-                            similar_genes_consensus[entity2_id]['fusion_count'] += 1
-                            similar_genes_consensus[entity2_id]['fusion_sources'].append(fusion_table)
+                    UNION ALL
 
-                        elif entity_type == 'drug':
-                            drug_id = entity2_id
-                            weighted_score = score * weight
+                    SELECT * FROM (
+                        SELECT 'ep_drug' as source, entity2_id, similarity_score, 'drug' as entity_type, 0.35 as weight
+                        FROM g_aux_ep_drug_topk_v6_0
+                        WHERE entity1_id = %s
+                        ORDER BY similarity_score DESC
+                        LIMIT 50
+                    ) AS ep_results
+                """, (gene, gene, gene))
 
-                            if drug_id not in drug_candidates_raw:
-                                drug_candidates_raw[drug_id] = {
-                                    'drug_name': drug_id,
-                                    'drugbank_id': drug_id,
-                                    'smiles': None,
-                                    'mechanism': 'Unknown',
-                                    'approval_status': 'Unknown',
-                                    'prior_evidence': weighted_score,
-                                    'evidence_types': [fusion_table],
-                                    'similar_genes': []
-                                }
-                            else:
-                                drug_candidates_raw[drug_id]['prior_evidence'] += weighted_score
-                                drug_candidates_raw[drug_id]['evidence_types'].append(fusion_table)
+                # Process all results from single query
+                all_results = cursor.fetchall()
+                logger.info(f"✅ UNION query returned {len(all_results)} fusion results in single query")
 
-                except Exception as inner_e:
-                    logger.warning(f"Sequential fusion query failed for {fusion_table}: {inner_e}")
+                for row in all_results:
+                    entity2_id = row['entity2_id']
+                    score = float(row['similarity_score'])
+                    entity_type = row['entity_type']
+                    weight = float(row['weight'])
+                    source = row['source']
 
-        # Now query cross-modal fusion (d_g_chem_ens_topk_v6_0) to get drugs for similar genes
-        # Get top 20 similar genes by consensus score
-        top_similar_genes = sorted(
-            similar_genes_consensus.items(),
-            key=lambda x: x[1]['weighted_score'],
-            reverse=True
-        )[:20]
+                    if entity_type == 'gene':
+                        # Gene-to-gene fusion: collect similar genes for later drug lookup
+                        if entity2_id not in similar_genes_consensus:
+                            similar_genes_consensus[entity2_id] = {
+                                'weighted_score': 0.0,
+                                'fusion_count': 0,
+                                'fusion_sources': []
+                            }
 
-        logger.info(f"Found {len(similar_genes_consensus)} similar genes from dgp table, using top {len(top_similar_genes)} for drug lookup")
+                        similar_genes_consensus[entity2_id]['weighted_score'] += score * weight
+                        similar_genes_consensus[entity2_id]['fusion_count'] += 1
+                        similar_genes_consensus[entity2_id]['fusion_sources'].append(f'g_aux_{source}_topk_v6_0')
 
-        for similar_gene, gene_data in top_similar_genes:
-            try:
-                # Query drugs that are similar to this gene via cross-modal fusion
-                cursor.execute("""
-                    SELECT
-                        entity1_id as drug_id,
-                        similarity_score
-                    FROM d_g_chem_ens_topk_v6_0
-                    WHERE entity2_id = %s
-                    ORDER BY similarity_score DESC
-                    LIMIT 10
-                """, (similar_gene,))
+                    elif entity_type == 'drug':
+                        # Gene-to-drug fusion: use entity2_id directly as drug candidates
+                        drug_id = entity2_id
+                        weighted_score = score * weight
 
-                drug_results = cursor.fetchall()
-
-                for row in drug_results:
-                    drug_id = row['drug_id']
-                    drug_gene_similarity = float(row['similarity_score'])
-
-                    # Combined score: gene consensus × drug-gene similarity
-                    combined_score = gene_data['weighted_score'] * drug_gene_similarity
-
-                    if drug_id not in drug_candidates_raw:
-                        drug_candidates_raw[drug_id] = {
-                            'drug_name': drug_id,
-                            'drugbank_id': drug_id,
-                            'smiles': None,
-                            'mechanism': 'Unknown',
-                            'approval_status': 'Unknown',
-                            'prior_evidence': combined_score,
-                            'evidence_types': gene_data['fusion_sources'],
-                            'similar_genes': []
-                        }
-                    else:
-                        # Accumulate evidence from gene-based lookup
-                        drug_candidates_raw[drug_id]['prior_evidence'] += combined_score
-                        drug_candidates_raw[drug_id]['evidence_types'].extend(gene_data['fusion_sources'])
-
-                    drug_candidates_raw[drug_id]['similar_genes'].append({
-                        'gene': similar_gene,
-                        'similarity': drug_gene_similarity
-                    })
+                        if drug_id not in drug_candidates_raw:
+                            drug_candidates_raw[drug_id] = {
+                                'drug_name': drug_id,
+                                'drugbank_id': drug_id,
+                                'smiles': None,
+                                'mechanism': 'Unknown',
+                                'approval_status': 'Unknown',
+                                'prior_evidence': weighted_score,
+                                'evidence_types': [f'g_aux_{source}_topk_v6_0'],
+                                'similar_genes': []
+                            }
+                        else:
+                            # Accumulate evidence from multiple direct fusion tables
+                            drug_candidates_raw[drug_id]['prior_evidence'] += weighted_score
+                            drug_candidates_raw[drug_id]['evidence_types'].append(f'g_aux_{source}_topk_v6_0')
 
             except Exception as e:
-                logger.warning(f"Drug query failed for gene {similar_gene}: {e}")
+                logger.error(f"❌ UNION fusion query failed: {e}")
+                logger.warning("Falling back to sequential queries...")
 
-        conn.close()
+                # Fallback to old sequential approach if UNION fails
+                for fusion_table, config in fusion_tables.items():
+                    entity_type = config['type']
+                    weight = config['weight']
+
+                    if entity_type == 'skip':
+                        continue
+
+                    try:
+                        cursor.execute(f"""
+                            SELECT entity2_id, similarity_score
+                            FROM {fusion_table}
+                            WHERE entity1_id = %s
+                            ORDER BY similarity_score DESC
+                            LIMIT 50
+                        """, (gene,))
+
+                        results = cursor.fetchall()
+
+                        for row in results:
+                            entity2_id = row['entity2_id']
+                            score = float(row['similarity_score'])
+
+                            if entity_type == 'gene':
+                                if entity2_id not in similar_genes_consensus:
+                                    similar_genes_consensus[entity2_id] = {
+                                        'weighted_score': 0.0,
+                                        'fusion_count': 0,
+                                        'fusion_sources': []
+                                    }
+                                similar_genes_consensus[entity2_id]['weighted_score'] += score * weight
+                                similar_genes_consensus[entity2_id]['fusion_count'] += 1
+                                similar_genes_consensus[entity2_id]['fusion_sources'].append(fusion_table)
+
+                            elif entity_type == 'drug':
+                                drug_id = entity2_id
+                                weighted_score = score * weight
+
+                                if drug_id not in drug_candidates_raw:
+                                    drug_candidates_raw[drug_id] = {
+                                        'drug_name': drug_id,
+                                        'drugbank_id': drug_id,
+                                        'smiles': None,
+                                        'mechanism': 'Unknown',
+                                        'approval_status': 'Unknown',
+                                        'prior_evidence': weighted_score,
+                                        'evidence_types': [fusion_table],
+                                        'similar_genes': []
+                                    }
+                                else:
+                                    drug_candidates_raw[drug_id]['prior_evidence'] += weighted_score
+                                    drug_candidates_raw[drug_id]['evidence_types'].append(fusion_table)
+
+                    except Exception as inner_e:
+                        logger.warning(f"Sequential fusion query failed for {fusion_table}: {inner_e}")
+
+            # Now query cross-modal fusion (d_g_chem_ens_topk_v6_0) to get drugs for similar genes
+            # Get top 20 similar genes by consensus score
+            top_similar_genes = sorted(
+                similar_genes_consensus.items(),
+                key=lambda x: x[1]['weighted_score'],
+                reverse=True
+            )[:20]
+
+            logger.info(f"Found {len(similar_genes_consensus)} similar genes from dgp table, using top {len(top_similar_genes)} for drug lookup")
+
+            for similar_gene, gene_data in top_similar_genes:
+                try:
+                    # Query drugs that are similar to this gene via cross-modal fusion
+                    cursor.execute("""
+                        SELECT
+                            entity1_id as drug_id,
+                            similarity_score
+                        FROM d_g_chem_ens_topk_v6_0
+                        WHERE entity2_id = %s
+                        ORDER BY similarity_score DESC
+                        LIMIT 10
+                    """, (similar_gene,))
+
+                    drug_results = cursor.fetchall()
+
+                    for row in drug_results:
+                        drug_id = row['drug_id']
+                        drug_gene_similarity = float(row['similarity_score'])
+
+                        # Combined score: gene consensus × drug-gene similarity
+                        combined_score = gene_data['weighted_score'] * drug_gene_similarity
+
+                        if drug_id not in drug_candidates_raw:
+                            drug_candidates_raw[drug_id] = {
+                                'drug_name': drug_id,
+                                'drugbank_id': drug_id,
+                                'smiles': None,
+                                'mechanism': 'Unknown',
+                                'approval_status': 'Unknown',
+                                'prior_evidence': combined_score,
+                                'evidence_types': gene_data['fusion_sources'],
+                                'similar_genes': []
+                            }
+                        else:
+                            # Accumulate evidence from gene-based lookup
+                            drug_candidates_raw[drug_id]['prior_evidence'] += combined_score
+                            drug_candidates_raw[drug_id]['evidence_types'].extend(gene_data['fusion_sources'])
+
+                        drug_candidates_raw[drug_id]['similar_genes'].append({
+                            'gene': similar_gene,
+                            'similarity': drug_gene_similarity
+                        })
+
+                except Exception as e:
+                    logger.warning(f"Drug query failed for gene {similar_gene}: {e}")
+
+        finally:
+            # CRITICAL: Always close database connection
+            try:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+                    logger.debug("✅ Database connection closed")
+            except Exception as close_error:
+                logger.warning(f"Error closing connection: {close_error}")
 
         # Convert to list and sort by prior evidence
         drug_candidates = sorted(
@@ -612,7 +630,10 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
             drugs = []
             for candidate in drug_candidates[:top_k]:
                 # Resolve drug commercial name
-                drug_id = candidate["drug_name"]
+                drug_id = candidate.get("drug_name")
+                if not drug_id:
+                    logger.warning(f"Candidate missing drug_name, skipping: {candidate}")
+                    continue
                 # Add QS prefix if not present (fusion tables store IDs without prefix)
                 lookup_id = drug_id if drug_id.startswith('QS') else f'QS{drug_id}'
                 name_info = drug_name_resolver.resolve(lookup_id)
@@ -734,7 +755,10 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
                 """Score a single drug with all 6 tools + Bayesian fusion"""
                 try:
                     # Resolve drug commercial name
-                    drug_id = candidate["drug_name"]
+                    drug_id = candidate.get("drug_name")
+                    if not drug_id:
+                        logger.warning(f"Candidate missing drug_name in scoring, using fallback: {candidate}")
+                        return _create_fusion_scored_drug(candidate, drug_name_resolver)
                     # Add QS prefix if not present (fusion tables store IDs without prefix)
                     lookup_id = drug_id if drug_id.startswith('QS') else f'QS{drug_id}'
                     name_info = drug_name_resolver.resolve(lookup_id)

@@ -28,7 +28,7 @@ import psycopg2
 
 TOOL_DEFINITION = {
     "name": "query_gene_dgp_similarity",
-    "description": """Find genes in similar disease-gene-protein networks using pre-computed fusion table.
+    "description": """Find genes in similar disease-gene-protein (DGP) networks using pre-computed fusion table.
 
 **Performance:** 1-5ms queries using g_aux_dgp_topk_v6_0 fusion table
 
@@ -38,17 +38,24 @@ TOOL_DEFINITION = {
 - Target validation: "Genes in similar druggable disease networks"
 - Comorbidity analysis: "Genes shared across related disease pathways"
 
-**Similarity Score:**
+**Similarity Score (0.0-1.0):**
 - 1.0 = Identical DGP network role
 - 0.9+ = Highly similar disease pathways
 - 0.7-0.9 = Moderately similar gene-protein networks
 - <0.7 = Low pathway overlap
 
+**Default threshold: 0.7** (moderate similarity filter)
+
+**Interpreting Results:**
+- 0 results at 0.7 threshold = Gene has unique functional role with low pathway overlap (scientifically meaningful!)
+- To explore weak overlaps, lower min_similarity to 0.2-0.5
+- Example: SCN1A (sodium channel) returns 0 results at 0.7 - this indicates functional uniqueness, not missing data
+
 **Data:** 918,400 pre-computed pairs (18,368 genes × 50 top neighbors)
 
 **Examples:**
-- query_gene_dgp_similarity(gene="TSC2", top_k=10) → mTOR pathway genes
-- query_gene_dgp_similarity(gene="SCN1A", top_k=20) → Epilepsy pathway genes
+- query_gene_dgp_similarity(gene="TSC2", top_k=10) → mTOR pathway genes (strong overlap)
+- query_gene_dgp_similarity(gene="SCN1A", top_k=20, min_similarity=0.2) → Weak pathway overlaps
 
 Performance: ~1-5ms per query""",
     "input_schema": {

@@ -88,17 +88,24 @@ import chainlit as cl
 # Add project root to path - IMPORTANT: Use .resolve() to get absolute path
 _file_path = Path(__file__).resolve()
 project_root = _file_path.parent
-sys.path.insert(0, str(project_root))
+
+# Add quiver_platform root (3 levels up: sapphire -> z01_presentation -> zones -> quiver_platform)
+# THIS MUST BE FIRST to avoid conflicts with /Users/expo/Code/expo/zones
+quiver_platform_root = _file_path.parent.parent.parent.parent
+sys.path.insert(0, str(quiver_platform_root))
+
+# Add project root after quiver_platform
+sys.path.insert(1, str(project_root))
 
 # Add quiver root and expo root (parent of 'clients') to path
-quiver_root = _file_path.parent.parent.parent.parent.parent
+quiver_root = quiver_platform_root.parent
 expo_root = quiver_root.parent.parent  # Go up to /Users/expo/Code/expo (parent of 'clients')
-sys.path.insert(0, str(quiver_root))
-sys.path.insert(0, str(expo_root))
+sys.path.append(str(quiver_root))  # Use append instead of insert to put it at the end
+sys.path.append(str(expo_root))     # Use append instead of insert to put it at the end
 
 # Add .claude/skills to path for Sapphire Scientist skill
 skills_path = quiver_root / ".claude" / "skills"
-sys.path.insert(0, str(skills_path))
+sys.path.insert(2, str(skills_path))  # After quiver_platform and project_root
 
 # Import LiteLLM-Anthropic bridge for compression and cost tracking
 # Import all 15 tools
@@ -850,7 +857,8 @@ async def execute_tool(tool_name: str, tool_input: dict[str, Any]) -> dict[str, 
         # Add timeout to prevent tools from hanging indefinitely
         # Default: 45 seconds - balance between slow operations and UX
         # Can be overridden per-tool if needed
-        TOOL_TIMEOUT = 45.0
+        # demeo_drug_rescue gets 120s due to Bayesian fusion complexity
+        TOOL_TIMEOUT = 120.0 if tool_name == "demeo_drug_rescue" else 45.0
 
         try:
             result = await asyncio.wait_for(executor(tool_input), timeout=TOOL_TIMEOUT)

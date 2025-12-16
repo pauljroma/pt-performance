@@ -151,17 +151,18 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         # Get parameters with defaults
-        entity = tool_input["entity"]
+        entity = tool_input.get("entity", "").strip()
         entity_type = tool_input.get("entity_type", "auto")
         include_embedding = tool_input.get("include_embedding", True)
         include_graph = tool_input.get("include_graph", True)
 
         # Validate parameters
-        if not entity or not isinstance(entity, str):
+        if not entity or not isinstance(entity, str) or len(entity) == 0:
             return {
                 "success": False,
                 "error": "Entity parameter must be a non-empty string",
-                "hint": "Examples: TSC2, KCNQ2, Rapamycin, kncq2"
+                "hint": "Examples: TSC2, KCNQ2, Rapamycin, kncq2",
+                "received": repr(tool_input.get("entity"))
             }
 
         valid_types = ["gene", "drug", "disease", "pathway", "protein", "auto"]
@@ -181,7 +182,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
         # Get PGVector service (v6.0 embeddings)
         try:
-            pgvector_service = get_pgvector_embedding_service()
+            pgvector_service = get_embedding_service()
         except Exception as e:
             # If PGVector not available, skip embedding checks
             pgvector_service = None
@@ -193,13 +194,13 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
             gene_result = None
 
             # Try direct match first
-            gene_result = pgvector_service.get_gene_embedding(entity, use_unified=False)
+            gene_result = pgvector_service.get_gene_embedding(entity)
             if gene_result is not None:
                 matched_gene = entity
             else:
                 # Try case variations
                 for variant in [entity.upper(), entity.lower(), entity.title()]:
-                    gene_result = pgvector_service.get_gene_embedding(variant, use_unified=False)
+                    gene_result = pgvector_service.get_gene_embedding(variant)
                     if gene_result is not None:
                         matched_gene = variant
                         break
@@ -242,7 +243,7 @@ async def execute(tool_input: Dict[str, Any]) -> Dict[str, Any]:
 
             # Try drug_chemical_v6_0_256d table (256D drug embeddings)
             for drug_id in potential_ids:
-                drug_result = pgvector_service.get_drug_embedding(drug_id, use_unified=False)
+                drug_result = pgvector_service.get_drug_embedding(drug_id)
                 if drug_result is not None:
                     matched_drug = drug_id
                     break
