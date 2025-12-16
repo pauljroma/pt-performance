@@ -685,7 +685,10 @@ TOOL_REGISTRY = {
     "biomarker_discovery": (biomarker_discovery_def, biomarker_discovery_exec),
     "literature_evidence": (literature_evidence_def, literature_evidence_exec),
     # Sapphire v3.12: CNS Safety Tools (2) - RE-ENABLED in v3.14
-    "bbb_permeability": (bbb_permeability_def, bbb_permeability_exec),
+    # TEMPORARILY DISABLED: Recursion bug causes system lockup (2025-12-15)
+    # TODO: Fix recursion depth issue in bbb_permeability tool
+    # See: .outcomes/SAPPHIRE_V323_BAYESIAN_TOOLS_BUG_2025-12-15.md
+    # "bbb_permeability": (bbb_permeability_def, bbb_permeability_exec),
     "adme_tox_predictor": (adme_tox_predictor_def, adme_tox_predictor_exec),
     # Sapphire v3.13: Three-Tier Query Pathway System (3)
     "query_direct_run": (query_direct_run_def, query_direct_run_exec),
@@ -693,7 +696,10 @@ TOOL_REGISTRY = {
     "query_unified_orchestration": (query_unified_orchestration_def, query_unified_orchestration_exec),
     # Sapphire v3.14: Advanced Analytical Tools (3)
     "causal_inference": (causal_inference_def, causal_inference_exec),
-    "mechanistic_explainer": (mechanistic_explainer_def, mechanistic_explainer_exec),
+    # TEMPORARILY DISABLED: Recursion bug causes system lockup (2025-12-15)
+    # TODO: Fix recursion depth issue in mechanistic_explainer tool
+    # See: .outcomes/SAPPHIRE_V323_BAYESIAN_TOOLS_BUG_2025-12-15.md
+    # "mechanistic_explainer": (mechanistic_explainer_def, mechanistic_explainer_exec),
     "uncertainty_estimation": (uncertainty_estimation_def, uncertainty_estimation_exec),
     # Sapphire v3.15: Strategic Intelligence Tools (3) - NEW
     "clinical_trial_intelligence": (clinical_trial_intelligence_def, clinical_trial_intelligence_exec),
