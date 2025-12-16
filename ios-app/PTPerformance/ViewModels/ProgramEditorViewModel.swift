@@ -565,7 +565,11 @@ class ProgramEditorViewModel: ObservableObject {
                         id: template.id,
                         name: template.name,
                         category: template.category,
-                        body_region: template.bodyRegion
+                        body_region: template.bodyRegion,
+                        videoUrl: nil,
+                        videoThumbnailUrl: nil,
+                        videoDuration: nil,
+                        formCues: nil
                     )
                 )
             }

@@ -69,7 +69,8 @@ class AnalyticsService {
     static let shared = AnalyticsService()
 
     private let supabase: PTSupabaseClient
-    private let errorLogger = ErrorLogger.shared
+    // TODO: Uncomment once ErrorLogger.swift is added to Xcode project target
+    // private let errorLogger = ErrorLogger.shared
 
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
@@ -149,6 +150,8 @@ class AnalyticsService {
 
     // MARK: - Build 46 Analytics (Volume, Strength, Consistency)
 
+    // TODO: Add ChartData.swift to Xcode project target to enable these methods
+    /*
     /// Calculate volume data for a time period
     func calculateVolumeData(
         for patientId: String,
@@ -375,6 +378,7 @@ class AnalyticsService {
 
         return longestStreak
     }
+    */
 }
 
 // MARK: - Analytics Error

@@ -122,7 +122,11 @@ struct Exercise: Codable, Identifiable, Hashable {
                 id: "template-1",
                 name: "Bench Press",
                 category: "push",
-                body_region: "upper"
+                body_region: "upper",
+                videoUrl: nil,
+                videoThumbnailUrl: nil,
+                videoDuration: nil,
+                formCues: nil
             )
         ),
         Exercise(
@@ -140,7 +144,11 @@ struct Exercise: Codable, Identifiable, Hashable {
                 id: "template-2",
                 name: "Squat",
                 category: "squat",
-                body_region: "lower"
+                body_region: "lower",
+                videoUrl: nil,
+                videoThumbnailUrl: nil,
+                videoDuration: nil,
+                formCues: nil
             )
         )
     ]

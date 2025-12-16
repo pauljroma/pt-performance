@@ -60,8 +60,12 @@ struct ProgramEditorView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
-                            await viewModel.saveExercise()
-                            dismiss()
+                            do {
+                                try await viewModel.saveExercise()
+                                dismiss()
+                            } catch {
+                                print("Error saving exercise: \(error)")
+                            }
                         }
                     }
                     .disabled(!viewModel.canSave)

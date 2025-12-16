@@ -156,7 +156,11 @@ struct StrengthTargetsCard_Previews: PreviewProvider {
                 id: UUID().uuidString,
                 name: "Bench Press",
                 category: "push",
-                body_region: "upper"
+                body_region: "upper",
+                videoUrl: nil,
+                videoThumbnailUrl: nil,
+                videoDuration: nil,
+                formCues: nil
             )
         )
     }

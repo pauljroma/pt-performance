@@ -1,21 +1,124 @@
 import SwiftUI
+// TODO: Add Sentry package dependency via Xcode for error monitoring
+// import Sentry
 
 @main
 struct PTPerformanceApp: App {
     @StateObject private var appState = AppState()
 
+    init() {
+        // TODO: Re-enable Sentry initialization once package is added
+        /*
+        // Initialize Sentry for error monitoring and performance tracking
+        SentrySDK.start { options in
+            // Get DSN from environment or configuration
+            // For now, this should be set via build configuration
+            #if DEBUG
+            options.dsn = "" // Leave empty for debug builds
+            options.debug = true
+            options.environment = "development"
+            #else
+            // Production DSN should be injected via build configuration
+            options.dsn = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
+            options.environment = "production"
+            #endif
+
+            // Enable performance monitoring
+            options.tracesSampleRate = 1.0 // Capture 100% of transactions for monitoring
+
+            // Enable automatic breadcrumbs
+            options.enableAutoSessionTracking = true
+            options.enableAutoBreadcrumbTracking = true
+
+            // Attach stack traces to all messages
+            options.attachStacktrace = true
+
+            // Set release version
+            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                options.releaseName = "\(version) (\(build))"
+            }
+
+            // Filter out sensitive data
+            options.beforeSend = { event in
+                // Remove any sensitive data from event
+                return event
+            }
+        }
+        */
+
+        // TODO: Uncomment once ErrorLogger.swift and PerformanceMonitor.swift are added to Xcode project
+        /*
+        // Track app launch performance
+        PerformanceMonitor.shared.trackAppLaunch()
+
+        // Log app startup
+        ErrorLogger.shared.logUserAction(
+            action: "app_launched",
+            properties: [
+                "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+                "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
+                "device": UIDevice.current.model,
+                "os_version": UIDevice.current.systemVersion
+            ]
+        )
+        */
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .onAppear {
+                    // TODO: Uncomment once PerformanceMonitor.swift is added to Xcode project
+                    // PerformanceMonitor.shared.finishAppLaunch()
+                }
         }
     }
 }
 
 final class AppState: ObservableObject {
-    @Published var isAuthenticated = false
-    @Published var userRole: UserRole? = nil   // .patient or .therapist
-    @Published var userId: String? = nil       // Authenticated user ID
+    @Published var isAuthenticated = false {
+        didSet {
+            updateUserContext()
+        }
+    }
+    @Published var userRole: UserRole? = nil {
+        didSet {
+            updateUserContext()
+        }
+    }
+    @Published var userId: String? = nil {
+        didSet {
+            updateUserContext()
+        }
+    }
+
+    /// Update Sentry user context when authentication state changes
+    private func updateUserContext() {
+        // TODO: Uncomment once ErrorLogger.swift is added to Xcode project
+        /*
+        if isAuthenticated, let userId = userId {
+            // Set user context for error tracking
+            ErrorLogger.shared.setUser(
+                userId: userId,
+                email: nil, // Don't track email for privacy
+                userType: userRole?.rawValue ?? "unknown"
+            )
+
+            // Log authentication event
+            ErrorLogger.shared.logUserAction(
+                action: "user_authenticated",
+                properties: [
+                    "user_role": userRole?.rawValue ?? "unknown"
+                ]
+            )
+        } else {
+            // Clear user context on logout
+            ErrorLogger.shared.clearUser()
+        }
+        */
+    }
 }
 
 // MARK: - Debug Logger for On-Screen Diagnostics

@@ -292,17 +292,17 @@ class ProgramBuilderViewModel: ObservableObject {
                     for (exerciseIndex, exercise) in session.exercises.enumerated() {
                         let exerciseInput = CreateSessionExerciseInput(
                             sessionId: sessionResponse.id,
-                            exerciseTemplateId: exercise.exerciseTemplateId,
+                            exerciseTemplateId: exercise.exercise_template_id,
                             sequence: exerciseIndex + 1,
-                            targetSets: exercise.sets,
-                            targetReps: exercise.reps,
-                            targetLoad: exercise.load,
-                            loadUnit: exercise.loadUnit,
-                            restPeriodSeconds: exercise.restSeconds,
+                            targetSets: exercise.prescribed_sets,
+                            targetReps: exercise.prescribed_reps ?? "10",
+                            targetLoad: exercise.prescribed_load,
+                            loadUnit: exercise.load_unit,
+                            restPeriodSeconds: exercise.rest_period_seconds,
                             notes: exercise.notes
                         )
 
-                        logger.log("📝 Creating exercise \(exerciseIndex + 1): \(exercise.name ?? "Unknown")", level: .diagnostic)
+                        logger.log("📝 Creating exercise \(exerciseIndex + 1): \(exercise.exercise_templates?.name ?? "Unknown")", level: .diagnostic)
 
                         do {
                             try await supabase.client

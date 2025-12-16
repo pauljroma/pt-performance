@@ -303,7 +303,11 @@ struct ExerciseLogView_Previews: PreviewProvider {
                     id: "template-1",
                     name: "Back Squat",
                     category: "squat",
-                    body_region: "lower"
+                    body_region: "lower",
+                    videoUrl: nil,
+                    videoThumbnailUrl: nil,
+                    videoDuration: nil,
+                    formCues: nil
                 )
             ),
             sessionExerciseId: "se-1",
