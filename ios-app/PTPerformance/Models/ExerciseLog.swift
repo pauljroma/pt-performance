@@ -57,3 +57,46 @@ struct CreateExerciseLogInput: Codable {
         case completed
     }
 }
+
+// MARK: - Analytics Helpers
+
+extension ExerciseLog {
+    /// Weight for analytics (maps to actualLoad)
+    var weight: Double? {
+        actualLoad
+    }
+
+    /// Reps for analytics (average of all sets)
+    var reps: Int? {
+        guard !actualReps.isEmpty else { return nil }
+        let total = actualReps.reduce(0, +)
+        return total / actualReps.count
+    }
+
+    /// Sets for analytics (maps to actualSets)
+    var sets: Int {
+        actualSets
+    }
+
+    /// Created date for analytics (maps to loggedAt)
+    var createdAt: Date {
+        loggedAt
+    }
+
+    /// Exercise ID for analytics
+    var exerciseId: String? {
+        sessionExerciseId
+    }
+
+    /// Optional exercise reference (populated by join queries)
+    /// Note: Returns nil - exercise name will be fetched from database when needed
+    var exercise: ExerciseReference? {
+        nil
+    }
+}
+
+/// Simplified exercise reference for analytics (avoids conflict with main Exercise model)
+struct ExerciseReference: Codable {
+    let id: String
+    let name: String
+}

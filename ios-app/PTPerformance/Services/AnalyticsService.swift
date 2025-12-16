@@ -147,9 +147,69 @@ class AnalyticsService {
         )
     }
 
+    // MARK: - Helper Methods for Build 46 Analytics
+
+    /// Fetch exercise logs from database with optional filters
+    private func fetchExerciseLogs(
+        patientId: String,
+        exerciseId: String? = nil,
+        startDate: Date
+    ) async throws -> [ExerciseLog] {
+        // Build query conditionally
+        let response: Data
+
+        if let exerciseId = exerciseId {
+            let result = try await supabase.client
+                .from("exercise_logs")
+                .select()
+                .eq("patient_id", value: patientId)
+                .eq("session_exercise_id", value: exerciseId)
+                .gte("logged_at", value: startDate.iso8601String)
+                .order("logged_at", ascending: true)
+                .execute()
+            response = result.data
+        } else {
+            let result = try await supabase.client
+                .from("exercise_logs")
+                .select()
+                .eq("patient_id", value: patientId)
+                .gte("logged_at", value: startDate.iso8601String)
+                .order("logged_at", ascending: true)
+                .execute()
+            response = result.data
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let logs = try decoder.decode([ExerciseLog].self, from: response)
+        return logs
+    }
+
+    /// Group exercise logs by week
+    private func groupByWeek(logs: [ExerciseLog]) -> [[ExerciseLog]] {
+        var weeklyLogs: [Date: [ExerciseLog]] = [:]
+
+        for log in logs {
+            let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: log.createdAt)?.start ?? log.createdAt
+            weeklyLogs[weekStart, default: []].append(log)
+        }
+
+        return weeklyLogs
+            .sorted { $0.key < $1.key }
+            .map { $0.value }
+    }
+
+    /// Calculate estimated one-rep max using Epley formula
+    private func calculateOneRepMax(weight: Double, reps: Int) -> Double {
+        // Epley formula: 1RM = weight × (1 + reps/30)
+        // For reps = 1, this returns the weight itself
+        guard reps > 0 else { return weight }
+        return weight * (1 + Double(reps) / 30.0)
+    }
+
     // MARK: - Build 46 Analytics (Volume, Strength, Consistency)
-    // TODO: Add helper methods (fetchExerciseLogs, groupByWeek, calculateOneRepMax) and models (ScheduledSession) to enable these methods
-    /*
+
     /// Calculate volume data for a time period
     func calculateVolumeData(
         for patientId: String,
@@ -167,7 +227,7 @@ class AnalyticsService {
                 let totalVolume = weekLogs.reduce(0.0) { total, log in
                     let weight = log.weight ?? 0
                     let reps = log.reps ?? 0
-                    let sets = log.sets ?? 1
+                    let sets = log.sets
                     return total + (weight * Double(reps) * Double(sets))
                 }
 
@@ -253,13 +313,17 @@ class AnalyticsService {
         let startDate = period.startDate
 
         // Fetch scheduled sessions
-        let scheduledSessions: [ScheduledSession] = try await supabase.client
+        let response = try await supabase.client
             .from("scheduled_sessions")
             .select()
             .eq("patient_id", value: patientId)
             .gte("scheduled_date", value: startDate.iso8601String)
             .execute()
-            .value
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let scheduledSessions = try decoder.decode([ScheduledSession].self, from: response.data)
 
         // Group by week
         var weeklyData: [Date: (scheduled: Int, completed: Int)] = [:]
@@ -269,7 +333,7 @@ class AnalyticsService {
 
             var data = weeklyData[weekStart] ?? (scheduled: 0, completed: 0)
             data.scheduled += 1
-            if session.status == .completed {
+            if session.status == ScheduledSession.ScheduleStatus.completed {
                 data.completed += 1
             }
             weeklyData[weekStart] = data
@@ -334,7 +398,6 @@ class AnalyticsService {
 
         return longestStreak
     }
-    */
 }
 
 // MARK: - Analytics Error

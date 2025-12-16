@@ -58,6 +58,7 @@
 		D2176E3445E811B6C78AEB19 /* Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2D4F4A42C4CA0EE0CD1EA8 /* Program.swift */; };
 		D870C5D71D79CAD7FFFCD6A8 /* PatientHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDD64A1859E82343693B5C3 /* PatientHistoryView.swift */; };
 		E18A330E79DA0683AA8A1434 /* StrengthTargetsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816965BAE78972A40B18CB2A /* StrengthTargetsCard.swift */; };
+		E2307DF6763BBB26A6991617 /* ScheduledSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF728BD9042D051B5C97C2BF /* ScheduledSession.swift */; };
 		E5AEFB7945076DD32208EB7E /* Protocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7EFF2F37D2E1CEF59CB1828 /* Protocol.swift */; };
 		E5D0A9386B4201E884642156 /* ProtocolSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2E66B09656C5C7F105B522 /* ProtocolSelector.swift */; };
 		E8F1EE6C3F4E93B61493B7D4 /* ProgramBuilderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C731539D09D56302ACAFBD /* ProgramBuilderViewModel.swift */; };
@@ -123,7 +124,6 @@
 		8F66BBFDBDFCD9201A6268B6 /* PerformanceMonitor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PerformanceMonitor.swift; path = Services/PerformanceMonitor.swift; sourceTree = "<group>"; };
 		93D1AB6320C0DF2F0AA9318D /* ProgramEditorViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramEditorViewModel.swift; path = ViewModels/ProgramEditorViewModel.swift; sourceTree = "<group>"; };
 		9B74830762F9924242B7E48F /* WorkloadFlagBanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkloadFlagBanner.swift; path = Components/WorkloadFlagBanner.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6789012345678 /* SessionSummaryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionSummaryView.swift; path = Views/Patient/SessionSummaryView.swift; sourceTree = "<group>"; };
 		A42F1BC33B4A97F336E28544 /* HistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HistoryView.swift; path = Views/Patient/HistoryView.swift; sourceTree = "<group>"; };
 		A794EEDE3A21803B787A0126 /* TodaySessionViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodaySessionViewModelTests.swift; path = Tests/Unit/TodaySessionViewModelTests.swift; sourceTree = "<group>"; };
 		A7EFF2F37D2E1CEF59CB1828 /* Protocol.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Protocol.swift; path = Models/Protocol.swift; sourceTree = "<group>"; };
@@ -134,6 +134,7 @@
 		BBDB48928DA610B484950710 /* PTPerformanceApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PTPerformanceApp.swift; sourceTree = "<group>"; };
 		BCF8ED0D86F3B9A564796FE9 /* ExerciseLogService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseLogService.swift; path = Services/ExerciseLogService.swift; sourceTree = "<group>"; };
 		BDEBBA60714ABABB61A3AE99 /* PatientFlowUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientFlowUITests.swift; path = Tests/UI/PatientFlowUITests.swift; sourceTree = "<group>"; };
+		BF728BD9042D051B5C97C2BF /* ScheduledSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ScheduledSession.swift; path = Models/ScheduledSession.swift; sourceTree = "<group>"; };
 		D72109F3A342C783B9FF3651 /* TherapistDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TherapistDashboardView.swift; sourceTree = "<group>"; };
 		E24B70464F2A6C5EF78437FF /* PatientFlag.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientFlag.swift; path = Models/PatientFlag.swift; sourceTree = "<group>"; };
 		E4F203BAB56648899B1DCD85 /* PatientTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PatientTabView.swift; sourceTree = "<group>"; };
@@ -298,6 +299,7 @@
 			isa = PBXGroup;
 			children = (
 				2FDF50654E063338CD3931AF /* ChartData.swift */,
+				BF728BD9042D051B5C97C2BF /* ScheduledSession.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -522,6 +524,7 @@
 				931EDC0BC7BC20F9B6B80AFC /* ErrorLogger.swift in Sources */,
 				F5F5EF187089D13DFFC79E05 /* PerformanceMonitor.swift in Sources */,
 				39C37593F88C20E07AE18F5B /* ChartData.swift in Sources */,
+				E2307DF6763BBB26A6991617 /* ScheduledSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
