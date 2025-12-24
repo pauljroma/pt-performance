@@ -1,0 +1,172 @@
+name: "Linear-Driven Multi-Repo Coordination Swarm"
+description: "Pull issues from Linear, coordinate work across repos (linear-bootstrap, ios-app, quiver)"
+created: "2025-12-23"
+
+# Execution metadata
+execution:
+  type: "sequential_with_parallel_tracks"
+  estimated_duration: "2-4 hours"
+  estimated_cost: "$15-$30"
+  requires_linear_api: true
+  multi_repo: true
+
+# Pre-flight checks
+prerequisites:
+  - "LINEAR_API_KEY configured"
+  - "SUPABASE_URL configured"
+  - "SUPABASE_KEY configured"
+  - "Access to ../../../ios-app/"
+  - "Access to ../../../clients/quiver/"
+
+# Phase 1: Discovery - Pull work from Linear
+phases:
+  - phase: 1
+    name: "Linear Discovery & Triage"
+    agents:
+      - id: 1
+        name: "Linear Issues Sync Agent"
+        track: "discovery"
+        deliverables:
+          - "Sync all Linear issues via tools/scripts/sync.sh linear"
+          - "Filter issues by state (Todo, In Progress, Backlog)"
+          - "Identify issues by repo (linear-bootstrap, ios-app, quiver)"
+          - "Create .swarms/sessions/{session_id}/linear_issues.json"
+        dependencies: []
+        success_criteria:
+          - "All active issues downloaded"
+          - "Issues categorized by repo"
+          - "JSON file created with issue details"
+
+      - id: 2
+        name: "Work Distribution Agent"
+        track: "discovery"
+        deliverables:
+          - "Read linear_issues.json"
+          - "Group issues by repository and priority"
+          - "Identify cross-repo dependencies"
+          - "Create work assignments for Phase 2"
+        dependencies: [1]
+        success_criteria:
+          - "Issues grouped by repo"
+          - "Dependencies mapped"
+          - "Work assignments created"
+
+  # Phase 2: Parallel Execution by Repo
+  - phase: 2
+    name: "Multi-Repo Execution"
+    agents:
+      - id: 3
+        name: "Linear-Bootstrap Work Agent"
+        track: "linear-bootstrap"
+        deliverables:
+          - "Execute linear-bootstrap issues from Linear"
+          - "Deploy content if needed (tools/scripts/deploy.sh content)"
+          - "Update Linear issue status via scripts/linear/update_status.py"
+        dependencies: [2]
+        success_criteria:
+          - "All linear-bootstrap issues completed"
+          - "Linear statuses updated"
+
+      - id: 4
+        name: "iOS App Work Agent"
+        track: "ios-app"
+        deliverables:
+          - "Execute ios-app issues from Linear"
+          - "Coordinate via scripts/orchestration/trigger_ios_build.sh"
+          - "Update Linear issue status"
+        dependencies: [2]
+        collision_zone: "low"  # Different repo
+        can_run_parallel_with: [3, 5]
+        success_criteria:
+          - "All ios-app issues completed"
+          - "Linear statuses updated"
+
+      - id: 5
+        name: "Quiver Platform Work Agent"
+        track: "quiver"
+        deliverables:
+          - "Execute quiver platform issues from Linear"
+          - "Coordinate backend changes"
+          - "Update Linear issue status"
+        dependencies: [2]
+        collision_zone: "low"  # Different repo
+        can_run_parallel_with: [3, 4]
+        success_criteria:
+          - "All quiver issues completed"
+          - "Linear statuses updated"
+
+  # Phase 3: Integration & Validation
+  - phase: 3
+    name: "Cross-Repo Integration"
+    agents:
+      - id: 6
+        name: "Integration Testing Agent"
+        track: "validation"
+        deliverables:
+          - "Test linear-bootstrap → Supabase → iOS app flow"
+          - "Validate cross-repo changes work together"
+          - "Run tools/scripts/test.sh --full"
+        dependencies: [3, 4, 5]
+        success_criteria:
+          - "All integration tests pass"
+          - "No regressions"
+
+      - id: 7
+        name: "Linear Status Sync Agent"
+        track: "reporting"
+        deliverables:
+          - "Update all Linear issues to 'Done'"
+          - "Create Linear comment with deployment details"
+          - "Generate outcome report"
+        dependencies: [6]
+        success_criteria:
+          - "All Linear issues updated"
+          - "Outcome report created in .outcomes/2025-12/"
+
+# Outcome tracking
+outcomes:
+  session_dir: ".swarms/sessions/{session_id}/"
+  files_to_create:
+    - "linear_issues.json"              # Downloaded from Linear
+    - "work_distribution.json"          # Work assignments by repo
+    - "execution_log.md"                # What was done
+    - "linear_updates.json"             # Status updates made
+  final_report: ".outcomes/2025-12/LINEAR_COORDINATION_{date}.md"
+
+# Multi-repo coordination
+repositories:
+  linear-bootstrap:
+    path: "."
+    primary: true
+    role: "Orchestration & Content"
+
+  ios-app:
+    path: "../../../ios-app/PTPerformance"
+    role: "Mobile Application"
+    coordination_via: "scripts/orchestration/trigger_ios_build.sh"
+
+  quiver:
+    path: "../../../expo/clients/quiver/quiver_platform"
+    role: "Backend Intelligence Platform (Sapphire)"
+    coordination_via: "Direct agent coordination"
+    zones:
+      - "z07_data_access (tier routing)"
+      - "z03a_cognitive (intelligent agents)"
+      - "z01_presentation/sapphire (Chainlit UI)"
+
+# Collision management
+collision_rules:
+  zero_collision:
+    - "Different repos (linear-bootstrap, ios-app, quiver)"
+    - "Different content categories"
+
+  low_collision:
+    - "Same repo, different modules"
+
+  medium_collision:
+    - "Shared Supabase schema changes"
+    - "Coordinate via migrations"
+
+  high_collision:
+    - "Same file in same repo"
+    - "Must be sequential"
