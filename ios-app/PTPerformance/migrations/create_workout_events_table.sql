@@ -1,0 +1,303 @@
+-- Migration: Create workout_events table for LoggingService
+-- BUILD_72A Agent 8
+-- Created: 2025-12-20
+
+-- Create workout_events table
+CREATE TABLE IF NOT EXISTS workout_events (
+    -- Primary key
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Event classification
+    event_type TEXT NOT NULL CHECK (event_type IN (
+        'block_completed',
+        'pain_reported',
+        'readiness_check_in',
+        'session_started',
+        'session_completed',
+        'exercise_started',
+        'exercise_completed',
+        'workload_flagged'
+    )),
+
+    -- References
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    session_id UUID REFERENCES scheduled_sessions(id) ON DELETE SET NULL,
+    exercise_id UUID REFERENCES exercises(id) ON DELETE SET NULL,
+
+    -- Event details
+    block_number INTEGER CHECK (block_number > 0),
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    metadata JSONB,
+
+    -- Audit fields
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for common queries
+
+-- Most common: query by patient
+CREATE INDEX IF NOT EXISTS idx_workout_events_patient_id
+ON workout_events(patient_id);
+
+-- Query by session
+CREATE INDEX IF NOT EXISTS idx_workout_events_session_id
+ON workout_events(session_id)
+WHERE session_id IS NOT NULL;
+
+-- Query by event type
+CREATE INDEX IF NOT EXISTS idx_workout_events_event_type
+ON workout_events(event_type);
+
+-- Query by timestamp (for analytics)
+CREATE INDEX IF NOT EXISTS idx_workout_events_timestamp
+ON workout_events(timestamp DESC);
+
+-- Composite index for patient + timestamp (common pattern)
+CREATE INDEX IF NOT EXISTS idx_workout_events_patient_timestamp
+ON workout_events(patient_id, timestamp DESC);
+
+-- Composite index for session + block (workout tracking)
+CREATE INDEX IF NOT EXISTS idx_workout_events_session_block
+ON workout_events(session_id, block_number)
+WHERE session_id IS NOT NULL AND block_number IS NOT NULL;
+
+-- GIN index for metadata queries (if needed)
+CREATE INDEX IF NOT EXISTS idx_workout_events_metadata
+ON workout_events USING GIN (metadata);
+
+-- Row Level Security (RLS)
+
+-- Enable RLS
+ALTER TABLE workout_events ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Patients can view their own events
+CREATE POLICY workout_events_select_own
+ON workout_events
+FOR SELECT
+USING (
+    patient_id = auth.uid()::uuid
+);
+
+-- Policy: Patients can insert their own events
+CREATE POLICY workout_events_insert_own
+ON workout_events
+FOR INSERT
+WITH CHECK (
+    patient_id = auth.uid()::uuid
+);
+
+-- Policy: Therapists can view events for their patients
+CREATE POLICY workout_events_select_therapist
+ON workout_events
+FOR SELECT
+USING (
+    EXISTS (
+        SELECT 1
+        FROM patients p
+        WHERE p.id = workout_events.patient_id
+        AND p.therapist_id = auth.uid()::uuid
+    )
+);
+
+-- Policy: Therapists can insert events for their patients (for manual entry)
+CREATE POLICY workout_events_insert_therapist
+ON workout_events
+FOR INSERT
+WITH CHECK (
+    EXISTS (
+        SELECT 1
+        FROM patients p
+        WHERE p.id = workout_events.patient_id
+        AND p.therapist_id = auth.uid()::uuid
+    )
+);
+
+-- Policy: System/admin can do everything
+CREATE POLICY workout_events_admin_all
+ON workout_events
+FOR ALL
+USING (
+    EXISTS (
+        SELECT 1
+        FROM profiles
+        WHERE id = auth.uid()::uuid
+        AND role = 'admin'
+    )
+);
+
+-- Comments for documentation
+COMMENT ON TABLE workout_events IS 'Stores all workout-related events emitted by the iOS app via LoggingService';
+COMMENT ON COLUMN workout_events.id IS 'Unique event identifier (matches iOS UUID)';
+COMMENT ON COLUMN workout_events.event_type IS 'Type of event (block_completed, pain_reported, etc.)';
+COMMENT ON COLUMN workout_events.patient_id IS 'Patient who triggered the event';
+COMMENT ON COLUMN workout_events.session_id IS 'Associated session (nullable for non-session events)';
+COMMENT ON COLUMN workout_events.exercise_id IS 'Associated exercise (nullable)';
+COMMENT ON COLUMN workout_events.block_number IS 'Block number for block_completed events';
+COMMENT ON COLUMN workout_events.timestamp IS 'When the event occurred (client timestamp)';
+COMMENT ON COLUMN workout_events.metadata IS 'Additional event-specific data as JSON';
+COMMENT ON COLUMN workout_events.created_at IS 'When the event was inserted into database';
+
+-- Analytics Views
+
+-- View: Daily event counts by patient
+CREATE OR REPLACE VIEW workout_events_daily_summary AS
+SELECT
+    patient_id,
+    DATE(timestamp) as event_date,
+    event_type,
+    COUNT(*) as event_count,
+    MIN(timestamp) as first_event,
+    MAX(timestamp) as last_event
+FROM workout_events
+GROUP BY patient_id, DATE(timestamp), event_type
+ORDER BY event_date DESC, patient_id;
+
+COMMENT ON VIEW workout_events_daily_summary IS 'Daily summary of events per patient and event type';
+
+-- View: Session event timeline
+CREATE OR REPLACE VIEW session_event_timeline AS
+SELECT
+    we.session_id,
+    we.patient_id,
+    ss.scheduled_for,
+    we.event_type,
+    we.timestamp,
+    we.block_number,
+    we.metadata,
+    EXTRACT(EPOCH FROM (we.timestamp - ss.scheduled_for)) as seconds_from_scheduled
+FROM workout_events we
+JOIN scheduled_sessions ss ON ss.id = we.session_id
+WHERE we.session_id IS NOT NULL
+ORDER BY we.session_id, we.timestamp;
+
+COMMENT ON VIEW session_event_timeline IS 'Timeline of all events for each session';
+
+-- View: Pain report summary
+CREATE OR REPLACE VIEW pain_reports_summary AS
+SELECT
+    patient_id,
+    session_id,
+    timestamp,
+    (metadata->>'pain_level')::integer as pain_level,
+    metadata->>'location' as location,
+    metadata->>'notes' as notes
+FROM workout_events
+WHERE event_type = 'pain_reported'
+ORDER BY timestamp DESC;
+
+COMMENT ON VIEW pain_reports_summary IS 'Summary of all pain reports with extracted metadata';
+
+-- View: Readiness check-in history
+CREATE OR REPLACE VIEW readiness_checkin_history AS
+SELECT
+    patient_id,
+    timestamp,
+    (metadata->>'readiness_score')::numeric as readiness_score,
+    (metadata->>'hrv')::numeric as hrv,
+    (metadata->>'sleep_hours')::numeric as sleep_hours,
+    metadata->>'data_source' as data_source,
+    metadata
+FROM workout_events
+WHERE event_type = 'readiness_check_in'
+ORDER BY patient_id, timestamp DESC;
+
+COMMENT ON VIEW readiness_checkin_history IS 'History of daily readiness check-ins with parsed values';
+
+-- Functions for analytics
+
+-- Function: Get event count for patient in date range
+CREATE OR REPLACE FUNCTION get_patient_event_count(
+    p_patient_id UUID,
+    p_start_date TIMESTAMPTZ,
+    p_end_date TIMESTAMPTZ,
+    p_event_type TEXT DEFAULT NULL
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    IF p_event_type IS NULL THEN
+        RETURN (
+            SELECT COUNT(*)
+            FROM workout_events
+            WHERE patient_id = p_patient_id
+            AND timestamp BETWEEN p_start_date AND p_end_date
+        );
+    ELSE
+        RETURN (
+            SELECT COUNT(*)
+            FROM workout_events
+            WHERE patient_id = p_patient_id
+            AND event_type = p_event_type
+            AND timestamp BETWEEN p_start_date AND p_end_date
+        );
+    END IF;
+END;
+$$;
+
+COMMENT ON FUNCTION get_patient_event_count IS 'Get count of events for a patient in a date range, optionally filtered by event type';
+
+-- Function: Get session completion metrics
+CREATE OR REPLACE FUNCTION get_session_completion_metrics(
+    p_session_id UUID
+)
+RETURNS TABLE (
+    total_blocks INTEGER,
+    blocks_completed INTEGER,
+    completion_percentage NUMERIC,
+    duration_seconds INTEGER,
+    pain_reports INTEGER
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        -- Get total blocks from session
+        (SELECT COUNT(DISTINCT block_number) FROM session_exercises WHERE session_id = p_session_id)::INTEGER as total_blocks,
+        -- Get completed blocks
+        (SELECT COUNT(DISTINCT block_number) FROM workout_events WHERE session_id = p_session_id AND event_type = 'block_completed')::INTEGER as blocks_completed,
+        -- Calculate percentage
+        CASE
+            WHEN (SELECT COUNT(DISTINCT block_number) FROM session_exercises WHERE session_id = p_session_id) > 0 THEN
+                ((SELECT COUNT(DISTINCT block_number) FROM workout_events WHERE session_id = p_session_id AND event_type = 'block_completed')::NUMERIC /
+                 (SELECT COUNT(DISTINCT block_number) FROM session_exercises WHERE session_id = p_session_id)::NUMERIC * 100)
+            ELSE 0
+        END as completion_percentage,
+        -- Calculate duration
+        EXTRACT(EPOCH FROM (
+            (SELECT MAX(timestamp) FROM workout_events WHERE session_id = p_session_id) -
+            (SELECT MIN(timestamp) FROM workout_events WHERE session_id = p_session_id)
+        ))::INTEGER as duration_seconds,
+        -- Count pain reports
+        (SELECT COUNT(*) FROM workout_events WHERE session_id = p_session_id AND event_type = 'pain_reported')::INTEGER as pain_reports;
+END;
+$$;
+
+COMMENT ON FUNCTION get_session_completion_metrics IS 'Get completion metrics for a session including blocks completed, duration, and pain reports';
+
+-- Grant permissions
+
+-- Grant SELECT on views to authenticated users
+GRANT SELECT ON workout_events_daily_summary TO authenticated;
+GRANT SELECT ON session_event_timeline TO authenticated;
+GRANT SELECT ON pain_reports_summary TO authenticated;
+GRANT SELECT ON readiness_checkin_history TO authenticated;
+
+-- Grant EXECUTE on functions to authenticated users
+GRANT EXECUTE ON FUNCTION get_patient_event_count TO authenticated;
+GRANT EXECUTE ON FUNCTION get_session_completion_metrics TO authenticated;
+
+-- Success message
+DO $$
+BEGIN
+    RAISE NOTICE 'Successfully created workout_events table with:';
+    RAISE NOTICE '- Table: workout_events';
+    RAISE NOTICE '- Indexes: 7 indexes for optimal query performance';
+    RAISE NOTICE '- RLS Policies: 5 policies for patient and therapist access';
+    RAISE NOTICE '- Views: 4 analytics views';
+    RAISE NOTICE '- Functions: 2 analytics functions';
+    RAISE NOTICE 'BUILD_72A Agent 8 migration complete!';
+END $$;

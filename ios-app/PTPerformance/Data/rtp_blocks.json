@@ -1,0 +1,1713 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-20",
+  "blocks": [
+    {
+      "id": "rtp_knee_tier0",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 0,
+      "title": "Knee RTP - Tier 0: Early Protection",
+      "description": "Immediate post-surgical or acute injury phase. Focus on pain/swelling management, ROM restoration, and quad activation.",
+      "entry_criteria": [
+        "Post-op day 0-14 or acute injury <2 weeks",
+        "Medical clearance for gentle ROM",
+        "No signs of infection or DVT"
+      ],
+      "exit_criteria": [
+        "Knee ROM: 0-90° pain-free",
+        "Quad set with visible VMO contraction",
+        "Swelling controlled (<2cm girth difference)",
+        "Able to SLR without lag"
+      ],
+      "exercises": [
+        {
+          "name": "Quad Sets",
+          "sets": "3-4",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "5s hold",
+          "rest": "30s",
+          "notes": "VMO activation emphasis, towel under knee"
+        },
+        {
+          "name": "Ankle Pumps",
+          "sets": "3",
+          "reps": "20-30",
+          "load": "Bodyweight",
+          "tempo": "Continuous",
+          "rest": "30s",
+          "notes": "DVT prophylaxis, reduce swelling"
+        },
+        {
+          "name": "Passive Knee Extension (Prone Hang)",
+          "sets": "3",
+          "reps": "5-10 min",
+          "load": "Gravity",
+          "tempo": "Static",
+          "rest": "N/A",
+          "notes": "Achieve full extension ASAP"
+        },
+        {
+          "name": "Heel Slides (Supine)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "Slow, controlled",
+          "rest": "30s",
+          "notes": "Progress ROM gradually, pain <3/10"
+        },
+        {
+          "name": "Straight Leg Raise (SLR)",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Bodyweight",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "No lag, quad contracted throughout"
+        }
+      ],
+      "evidence": [
+        "Shelbourne KD, et al. Accelerated rehabilitation after anterior cruciate ligament reconstruction. Am J Sports Med. 1990;18(3):292-299.",
+        "van Melick N, et al. Evidence-based clinical practice update: practice guidelines for anterior cruciate ligament rehabilitation based on a systematic review and multidisciplinary consensus. Br J Sports Med. 2016;50(24):1506-1515."
+      ],
+      "precautions": [
+        "Monitor for signs of infection (fever, redness, warmth)",
+        "Avoid forced ROM - let pain guide",
+        "Ice 15-20 min after exercises",
+        "Elevate leg frequently to control swelling"
+      ],
+      "progressions": [
+        "Increase ROM target by 10° per week",
+        "Progress to active-assisted ROM",
+        "Add resistance once SLR without lag achieved"
+      ]
+    },
+    {
+      "id": "rtp_knee_tier1",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 1,
+      "title": "Knee RTP - Tier 1: ROM & Strength Foundation",
+      "description": "Restore full ROM, develop basic strength, normalize gait. Weeks 2-6 post-op or equivalent injury stage.",
+      "entry_criteria": [
+        "Tier 0 criteria met",
+        "ROM: 0-90° achieved",
+        "SLR without lag",
+        "Minimal swelling"
+      ],
+      "exit_criteria": [
+        "ROM: 0-120° (match uninvolved side)",
+        "Quad strength >60% of uninvolved",
+        "Normal gait pattern without assistive device",
+        "Single-leg stance >30s"
+      ],
+      "exercises": [
+        {
+          "name": "Mini Squats (0-60°)",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Bodyweight",
+          "tempo": "3010",
+          "rest": "60s",
+          "notes": "Focus on knee tracking over toes"
+        },
+        {
+          "name": "Leg Press",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light (30-50% uninvolved)",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Limit ROM to 0-90° initially"
+        },
+        {
+          "name": "Hamstring Curls (Prone)",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light",
+          "tempo": "3012",
+          "rest": "60s",
+          "notes": "Avoid full flexion if painful"
+        },
+        {
+          "name": "Step-Ups (4-6 inch)",
+          "sets": "3",
+          "reps": "10-12 each leg",
+          "load": "Bodyweight",
+          "tempo": "2010",
+          "rest": "60s",
+          "notes": "Eccentric control on descent"
+        },
+        {
+          "name": "Wall Slides",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Bodyweight",
+          "tempo": "3s hold at bottom",
+          "rest": "60s",
+          "notes": "Build quad endurance and ROM"
+        },
+        {
+          "name": "Stationary Bike (No Resistance)",
+          "sets": "1",
+          "reps": "10-20 min",
+          "load": "Zero resistance",
+          "tempo": "Comfortable cadence",
+          "rest": "N/A",
+          "notes": "ROM and cardiovascular maintenance"
+        }
+      ],
+      "evidence": [
+        "Adams D, et al. Current concepts for anterior cruciate ligament reconstruction. Am J Sports Med. 2012;40(10):2343-2356.",
+        "Myer GD, et al. Rehabilitation after anterior cruciate ligament reconstruction: criteria-based progression through the return-to-sport phase. J Orthop Sports Phys Ther. 2006;36(6):385-402."
+      ],
+      "precautions": [
+        "Avoid impact or pivoting activities",
+        "Monitor for swelling after each session",
+        "No deep squats (>90° flexion) yet",
+        "Maintain quad/hamstring co-contraction awareness"
+      ],
+      "progressions": [
+        "Increase load 5-10% when reps achieved pain-free",
+        "Progress step height 2 inches",
+        "Add balance/proprioception exercises"
+      ]
+    },
+    {
+      "id": "rtp_knee_tier2",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 2,
+      "title": "Knee RTP - Tier 2: Strength & Neuromuscular Control",
+      "description": "Develop strength >80% of uninvolved limb, introduce controlled dynamic movements. Weeks 6-12 post-op.",
+      "entry_criteria": [
+        "Tier 1 criteria met",
+        "Full ROM (0-135°)",
+        "Quad strength >60% uninvolved",
+        "No gait deviations"
+      ],
+      "exit_criteria": [
+        "Quad strength >80% uninvolved (isokinetic or dynamometry)",
+        "Hamstring strength >80% uninvolved",
+        "Single-leg squat depth >60° with good form",
+        "Y-Balance Test >90% composite"
+      ],
+      "exercises": [
+        {
+          "name": "Bulgarian Split Squat",
+          "sets": "3",
+          "reps": "8-12 each leg",
+          "load": "Bodyweight to light DBs",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Address strength asymmetries"
+        },
+        {
+          "name": "Single-Leg Leg Press",
+          "sets": "3",
+          "reps": "10-12 each leg",
+          "load": "Moderate",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Build unilateral strength"
+        },
+        {
+          "name": "Romanian Deadlift (RDL)",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Light-moderate",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Hamstring and posterior chain"
+        },
+        {
+          "name": "Lateral Step-Downs",
+          "sets": "3",
+          "reps": "10-12 each leg",
+          "load": "Bodyweight",
+          "tempo": "3s eccentric",
+          "rest": "60s",
+          "notes": "Eccentric quad control, knee valgus prevention"
+        },
+        {
+          "name": "Single-Leg Balance on Unstable Surface",
+          "sets": "3",
+          "reps": "30-60s each leg",
+          "load": "Bodyweight",
+          "tempo": "Static to dynamic",
+          "rest": "60s",
+          "notes": "Proprioception and neuromuscular control"
+        },
+        {
+          "name": "Forward/Backward Walking Lunges",
+          "sets": "3",
+          "reps": "10-12 each leg",
+          "load": "Bodyweight to light DBs",
+          "tempo": "Controlled",
+          "rest": "90s",
+          "notes": "Dynamic stability and strength"
+        }
+      ],
+      "evidence": [
+        "Hewett TE, et al. Biomechanical measures of neuromuscular control and valgus loading of the knee predict anterior cruciate ligament injury risk in female athletes. Am J Sports Med. 2005;33(4):492-501.",
+        "Paterno MV, et al. Biomechanical measures during landing and postural stability predict second anterior cruciate ligament injury after reconstruction and return to sport. Am J Sports Med. 2010;38(10):1968-1978."
+      ],
+      "precautions": [
+        "Monitor for knee valgus during single-leg tasks",
+        "Avoid ballistic movements or jumping",
+        "Control swelling - ice as needed",
+        "Maintain form over load progression"
+      ],
+      "progressions": [
+        "Increase external load by 5-10% weekly",
+        "Progress to unstable surface variations",
+        "Begin low-level plyometric preparation"
+      ]
+    },
+    {
+      "id": "rtp_knee_tier3",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 3,
+      "title": "Knee RTP - Tier 3: Power & Plyometric Introduction",
+      "description": "Introduce jumping, landing mechanics, and power development. Weeks 12-16 post-op.",
+      "entry_criteria": [
+        "Tier 2 criteria met",
+        "Quad/hamstring strength >80% uninvolved",
+        "Single-leg squat good form",
+        "No pain or swelling with Tier 2 exercises"
+      ],
+      "exit_criteria": [
+        "Strength >90% uninvolved (quad and hamstring)",
+        "Single-leg hop test >90% LSI (Limb Symmetry Index)",
+        "Drop vertical jump with good landing mechanics",
+        "No pain or swelling with plyometrics"
+      ],
+      "exercises": [
+        {
+          "name": "Double-Leg Box Jumps (Low Height)",
+          "sets": "3-4",
+          "reps": "6-8",
+          "load": "Bodyweight",
+          "tempo": "Explosive up, controlled land",
+          "rest": "2 min",
+          "notes": "12-18 inch box, focus on landing mechanics"
+        },
+        {
+          "name": "Lateral Bounds (Small Distance)",
+          "sets": "3",
+          "reps": "6-8 each side",
+          "load": "Bodyweight",
+          "tempo": "Controlled",
+          "rest": "90s",
+          "notes": "Stick landing 2-3s, assess knee valgus"
+        },
+        {
+          "name": "Single-Leg Hops (Forward)",
+          "sets": "3",
+          "reps": "5-6 each leg",
+          "load": "Bodyweight",
+          "tempo": "Controlled",
+          "rest": "2 min",
+          "notes": "Small hops, emphasize landing quality"
+        },
+        {
+          "name": "Deceleration Training (Drop and Hold)",
+          "sets": "3",
+          "reps": "6-8",
+          "load": "Bodyweight",
+          "tempo": "3s hold at landing",
+          "rest": "90s",
+          "notes": "Step off 12-18 inch box, absorb and freeze"
+        },
+        {
+          "name": "Skater Jumps",
+          "sets": "3",
+          "reps": "8-10 each side",
+          "load": "Bodyweight",
+          "tempo": "Controlled lateral power",
+          "rest": "90s",
+          "notes": "Lateral power and stability"
+        },
+        {
+          "name": "Trap Bar Jumps (Light Load)",
+          "sets": "3-4",
+          "reps": "4-6",
+          "load": "20-30% 1RM deadlift",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Power development with external load"
+        }
+      ],
+      "evidence": [
+        "Myer GD, et al. The effects of plyometric versus dynamic stabilization and balance training on lower extremity biomechanics. Am J Sports Med. 2006;34(3):445-455.",
+        "Paterno MV, et al. Incidence of second ACL injuries 2 years after primary reconstruction and return to sport. Am J Sports Med. 2014;42(7):1567-1573."
+      ],
+      "precautions": [
+        "Start with double-leg before single-leg plyometrics",
+        "Emphasize landing quality over height/distance",
+        "Monitor for knee valgus, asymmetry",
+        "Ice after sessions if any swelling"
+      ],
+      "progressions": [
+        "Increase box height 2-4 inches as tolerated",
+        "Progress to reactive plyometrics",
+        "Add multidirectional movements"
+      ]
+    },
+    {
+      "id": "rtp_knee_tier4",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 4,
+      "title": "Knee RTP - Tier 4: Advanced Plyometrics & Agility",
+      "description": "High-level plyometrics, change of direction, sport-specific movements. Weeks 16-20 post-op.",
+      "entry_criteria": [
+        "Tier 3 criteria met",
+        "Strength >90% uninvolved",
+        "Single-leg hop tests >90% LSI",
+        "Good plyometric landing mechanics"
+      ],
+      "exit_criteria": [
+        "All hop tests >95% LSI",
+        "Reactive strength index >2.0",
+        "T-test agility <11s (or sport-specific standard)",
+        "No pain, swelling, or apprehension with cutting"
+      ],
+      "exercises": [
+        {
+          "name": "Depth Jumps",
+          "sets": "3-4",
+          "reps": "5-6",
+          "load": "Bodyweight",
+          "tempo": "Minimal ground contact",
+          "rest": "3 min",
+          "notes": "12-24 inch box, reactive strength development"
+        },
+        {
+          "name": "Single-Leg Bounds (Continuous)",
+          "sets": "3",
+          "reps": "6-8 bounds each leg",
+          "load": "Bodyweight",
+          "tempo": "Continuous",
+          "rest": "2 min",
+          "notes": "Distance and reactive power"
+        },
+        {
+          "name": "90° Cuts (Deceleration Emphasis)",
+          "sets": "4-6",
+          "reps": "4-6 each direction",
+          "load": "Bodyweight",
+          "tempo": "Controlled to sport speed",
+          "rest": "90s",
+          "notes": "Progress speed as mechanics maintained"
+        },
+        {
+          "name": "Figure-8 Runs",
+          "sets": "3-4",
+          "reps": "3-4 reps",
+          "load": "Bodyweight",
+          "tempo": "Moderate to high speed",
+          "rest": "2 min",
+          "notes": "Multidirectional agility"
+        },
+        {
+          "name": "Lateral Hurdle Hops (Continuous)",
+          "sets": "3",
+          "reps": "8-10 each side",
+          "load": "Bodyweight",
+          "tempo": "Continuous, rhythmic",
+          "rest": "2 min",
+          "notes": "Lateral reactive power"
+        },
+        {
+          "name": "T-Test or 5-10-5 Shuttle",
+          "sets": "3-4",
+          "reps": "Timed runs",
+          "load": "Bodyweight",
+          "tempo": "Maximal effort",
+          "rest": "3 min",
+          "notes": "Measure agility performance"
+        }
+      ],
+      "evidence": [
+        "Kyritsis P, et al. Likelihood of ACL graft rupture: not meeting six clinical discharge criteria before return to sport is associated with a four times greater risk of rupture. Br J Sports Med. 2016;50(15):946-951.",
+        "Webster KE, et al. What is the evidence for and validity of return-to-sport testing after anterior cruciate ligament reconstruction surgery? A systematic review and meta-analysis. Sports Med. 2019;49(6):917-929."
+      ],
+      "precautions": [
+        "Monitor for fatigue-related form breakdown",
+        "Gradually increase cutting speed and angles",
+        "Continue strength maintenance work",
+        "Psychological readiness assessment needed"
+      ],
+      "progressions": [
+        "Progress from controlled to reactive drills",
+        "Add sport-specific movement patterns",
+        "Increase volume and intensity toward sport demands"
+      ]
+    },
+    {
+      "id": "rtp_knee_tier5",
+      "type": "rtp",
+      "category": "knee",
+      "tier": 5,
+      "title": "Knee RTP - Tier 5: Return to Sport Integration",
+      "description": "Full sport integration, match demands, psychological readiness. Weeks 20+ post-op (typically 9-12 months).",
+      "entry_criteria": [
+        "Tier 4 criteria met",
+        "All hop tests >95% LSI",
+        "Strength >95% uninvolved",
+        "Medical clearance for full sport",
+        "Psychological readiness (ACL-RSI >56)"
+      ],
+      "exit_criteria": [
+        "Full participation in sport without restriction",
+        "No pain or swelling",
+        "Confidence in injured limb",
+        "Performance at pre-injury level"
+      ],
+      "exercises": [
+        {
+          "name": "Sport-Specific Drills (Progressive)",
+          "sets": "Variable",
+          "reps": "Sport-specific volume",
+          "load": "Game-like intensity",
+          "tempo": "Sport-specific",
+          "rest": "As needed",
+          "notes": "Gradually increase intensity and volume"
+        },
+        {
+          "name": "Small-Sided Games",
+          "sets": "2-4",
+          "reps": "5-10 min",
+          "load": "N/A",
+          "tempo": "Game speed",
+          "rest": "As needed",
+          "notes": "Controlled competitive environment"
+        },
+        {
+          "name": "Full Practice Participation",
+          "sets": "N/A",
+          "reps": "Progressive volume",
+          "load": "N/A",
+          "tempo": "Full speed",
+          "rest": "As needed",
+          "notes": "Monitor workload and recovery"
+        },
+        {
+          "name": "Position-Specific Training",
+          "sets": "Variable",
+          "reps": "Sport-specific",
+          "load": "Game-like",
+          "tempo": "Sport-specific",
+          "rest": "As needed",
+          "notes": "Replicate exact sport demands"
+        }
+      ],
+      "maintenance_exercises": [
+        "Continue strength training 2-3x/week",
+        "Neuromuscular warm-up before all activities",
+        "Plyometric maintenance 1-2x/week",
+        "Monitor for fatigue and adjust volume"
+      ],
+      "evidence": [
+        "Grindem H, et al. Simple decision rules can reduce reinjury risk by 84% after ACL reconstruction. Br J Sports Med. 2016;50(13):804-808.",
+        "Ardern CL, et al. Psychological aspects of anterior cruciate ligament injuries. Oper Tech Sports Med. 2016;24(1):77-83."
+      ],
+      "precautions": [
+        "Gradual return - no full games immediately",
+        "Monitor for late-stage swelling or fatigue",
+        "Maintain injury prevention exercises long-term",
+        "Regular strength/hop testing first year"
+      ],
+      "progressions": [
+        "Increase practice participation 25% per week",
+        "Progress from non-contact to full-contact",
+        "Return to competition when all criteria met"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier0",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 0,
+      "title": "Shoulder RTP - Tier 0: Early Protection",
+      "description": "Immediate post-surgical phase or acute injury. Focus on protection, pain control, and passive ROM.",
+      "entry_criteria": [
+        "Post-op day 0-14 or acute injury <2 weeks",
+        "Medical clearance for gentle ROM",
+        "Appropriate immobilization (if prescribed)"
+      ],
+      "exit_criteria": [
+        "Passive ROM: forward flexion >90°, ER >20° at side",
+        "Pain controlled <3/10",
+        "No active inflammation",
+        "Scapular muscle activation present"
+      ],
+      "exercises": [
+        {
+          "name": "Pendulum Exercises",
+          "sets": "3-4",
+          "reps": "20-30 circles each direction",
+          "load": "Gravity",
+          "tempo": "Gentle, passive",
+          "rest": "N/A",
+          "notes": "Relax shoulder, allow gravity to mobilize"
+        },
+        {
+          "name": "Passive Flexion (Supine with Dowel)",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Uninvolved arm assist",
+          "tempo": "Slow, gentle",
+          "rest": "30s",
+          "notes": "Progress ROM gradually, pain <3/10"
+        },
+        {
+          "name": "Passive External Rotation (ER) at Side",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Uninvolved arm or stick assist",
+          "tempo": "Slow",
+          "rest": "30s",
+          "notes": "Critical for capsular mobility"
+        },
+        {
+          "name": "Scapular Squeezes",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "5s hold",
+          "rest": "30s",
+          "notes": "Maintain scapular muscle activation"
+        },
+        {
+          "name": "Elbow/Grip Exercises",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light",
+          "tempo": "Controlled",
+          "rest": "30s",
+          "notes": "Maintain distal strength, prevent atrophy"
+        }
+      ],
+      "evidence": [
+        "Wilk KE, et al. Rehabilitation of the overhead throwing athlete. J Orthop Sports Phys Ther. 1993;18(2):433-441.",
+        "Ellenbecker TS, et al. Rehabilitation of shoulder impingement syndrome and rotator cuff injuries. Clin Sports Med. 2003;22(4):703-733."
+      ],
+      "precautions": [
+        "Respect post-surgical precautions (e.g., no ER >30° for labral repair)",
+        "No active ROM yet if contraindicated",
+        "Ice after exercises",
+        "Monitor for increased pain or swelling"
+      ],
+      "progressions": [
+        "Increase ROM target by 10° per week",
+        "Progress to active-assisted ROM",
+        "Begin isometrics once pain controlled"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier1",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 1,
+      "title": "Shoulder RTP - Tier 1: ROM & Isometric Strength",
+      "description": "Restore ROM, initiate strengthening with isometrics, scapular stabilization. Weeks 2-6 post-op.",
+      "entry_criteria": [
+        "Tier 0 criteria met",
+        "Passive ROM: flexion >90°, ER >20°",
+        "Pain controlled",
+        "Medical clearance for isometrics"
+      ],
+      "exit_criteria": [
+        "Full passive ROM (match uninvolved)",
+        "Active ROM: flexion >120°, ER >45°",
+        "Scapular dyskinesia improved",
+        "Pain-free isometric contractions"
+      ],
+      "exercises": [
+        {
+          "name": "Active-Assisted ROM (All Planes)",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Stick or band assist",
+          "tempo": "Controlled",
+          "rest": "30s",
+          "notes": "Flexion, abduction, ER, IR - full available ROM"
+        },
+        {
+          "name": "Isometric Shoulder Flexion",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Submaximal",
+          "tempo": "6s hold",
+          "rest": "60s",
+          "notes": "Multiple angles (0°, 45°, 90°)"
+        },
+        {
+          "name": "Isometric Shoulder ER/IR",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Submaximal",
+          "tempo": "6s hold",
+          "rest": "60s",
+          "notes": "At side and 90° abduction (if cleared)"
+        },
+        {
+          "name": "Scapular Clock Exercises",
+          "sets": "2-3",
+          "reps": "8-10 each position",
+          "load": "Bodyweight (prone on table)",
+          "tempo": "2s hold each position",
+          "rest": "60s",
+          "notes": "12 o'clock, 2, 10, etc. - scapular control"
+        },
+        {
+          "name": "Wall Slides (Scapular Plane)",
+          "sets": "3",
+          "reps": "10-15",
+          "load": "Bodyweight",
+          "tempo": "Slow, controlled",
+          "rest": "45s",
+          "notes": "Serratus activation, ROM improvement"
+        },
+        {
+          "name": "Prone I-Y-T",
+          "sets": "2-3",
+          "reps": "8-10 each position",
+          "load": "Bodyweight to 1-2 lb",
+          "tempo": "2s hold at top",
+          "rest": "60s",
+          "notes": "Scapular stabilization, light load only"
+        }
+      ],
+      "evidence": [
+        "Ellenbecker TS, et al. Rehabilitation of shoulder impingement syndrome and rotator cuff injuries. Clin Sports Med. 2003;22(4):703-733.",
+        "Reinold MM, et al. Current concepts in the evaluation and treatment of the shoulder in overhead throwing athletes, part 2. Sports Health. 2010;2(2):101-115."
+      ],
+      "precautions": [
+        "No ballistic movements",
+        "Respect surgical precautions for ROM limits",
+        "Monitor for shoulder impingement signs",
+        "Maintain proper scapular position during all exercises"
+      ],
+      "progressions": [
+        "Progress from isometric to isotonic when pain-free",
+        "Increase ROM gradually toward full",
+        "Begin light resistance band work"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier2",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 2,
+      "title": "Shoulder RTP - Tier 2: Strengthening & Neuromuscular Control",
+      "description": "Develop rotator cuff and scapular strength, normalize shoulder biomechanics. Weeks 6-12 post-op.",
+      "entry_criteria": [
+        "Tier 1 criteria met",
+        "Full passive ROM",
+        "Active ROM near full",
+        "Scapular control improving"
+      ],
+      "exit_criteria": [
+        "Rotator cuff strength >60% uninvolved",
+        "ER/IR ratio 0.65-0.75",
+        "Full active ROM pain-free",
+        "Modified dynamic stability tests passed"
+      ],
+      "exercises": [
+        {
+          "name": "Side-Lying External Rotation",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light DB (3-8 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Infraspinatus/teres minor strengthening"
+        },
+        {
+          "name": "Internal Rotation (Standing)",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light band or cable",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Subscapularis strengthening"
+        },
+        {
+          "name": "Scaption (Scapular Plane Raise)",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Light DB (3-5 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Supraspinatus, deltoid - thumbs up position"
+        },
+        {
+          "name": "Prone Rows on Incline Bench",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light-moderate DB",
+          "tempo": "2012",
+          "rest": "90s",
+          "notes": "Scapular retraction, rhomboid/mid-trap strength"
+        },
+        {
+          "name": "PNF D1/D2 Patterns with Band",
+          "sets": "3",
+          "reps": "10-12 each pattern",
+          "load": "Light-moderate band",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Functional movement patterns"
+        },
+        {
+          "name": "Rhythmic Stabilization Drills",
+          "sets": "3",
+          "reps": "30-45s",
+          "load": "Manual resistance or ball on wall",
+          "tempo": "Dynamic holds",
+          "rest": "60s",
+          "notes": "Neuromuscular control, co-contraction"
+        }
+      ],
+      "evidence": [
+        "Kibler WB, et al. Clinical implications of scapular dyskinesis in shoulder injury. Br J Sports Med. 2012;46(8):542-547.",
+        "Wilk KE, et al. Current concepts: the stabilizing structures of the glenohumeral joint. J Orthop Sports Phys Ther. 1997;25(6):364-379."
+      ],
+      "precautions": [
+        "Monitor for shoulder impingement during overhead activities",
+        "Maintain scapular stability during all exercises",
+        "No overhead throwing yet",
+        "Avoid heavy loads - focus on form and control"
+      ],
+      "progressions": [
+        "Increase load 1-2 lb when reps achieved",
+        "Progress to unstable surface variations",
+        "Begin plyometric ball tosses (light)"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier3",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 3,
+      "title": "Shoulder RTP - Tier 3: Advanced Strengthening & Power",
+      "description": "Develop strength >80% uninvolved, introduce plyometrics, begin throwing prep. Weeks 12-16 post-op.",
+      "entry_criteria": [
+        "Tier 2 criteria met",
+        "Rotator cuff strength >60% uninvolved",
+        "Full ROM pain-free",
+        "Good scapular control"
+      ],
+      "exit_criteria": [
+        "Rotator cuff strength >80% uninvolved",
+        "ER/IR ratio optimal (0.66-0.75)",
+        "Plyometric drills pain-free",
+        "Total rotational ROM >180° (overhead athletes)"
+      ],
+      "exercises": [
+        {
+          "name": "External Rotation at 90° Abduction",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Moderate (5-10 lb)",
+          "tempo": "2012",
+          "rest": "90s",
+          "notes": "Throwing position strengthening"
+        },
+        {
+          "name": "Prone Horizontal Abduction (Full Can)",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light-moderate DB",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Posterior shoulder and scapular strength"
+        },
+        {
+          "name": "Med Ball Chest Pass",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "4-8 lb ball",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Power development, anterior shoulder"
+        },
+        {
+          "name": "Plyometric Ball Dribbles (Wall)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light med ball (2-4 lb)",
+          "tempo": "Continuous, rhythmic",
+          "rest": "60s",
+          "notes": "Reactive shoulder stabilization"
+        },
+        {
+          "name": "Push-Up Plus",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Bodyweight",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Serratus anterior, scapular protraction"
+        },
+        {
+          "name": "Cable Column (Standing)",
+          "sets": "3",
+          "reps": "10-12 each arm",
+          "load": "Moderate",
+          "tempo": "2010",
+          "rest": "90s",
+          "notes": "Functional pressing pattern, core integration"
+        }
+      ],
+      "evidence": [
+        "Reinold MM, et al. Effect of a 6-week weighted baseball throwing program on pitch velocity, pitching arm biomechanics, and arm strength. Sports Health. 2018;10(4):327-333.",
+        "Wilk KE, et al. Correlation of glenohumeral internal rotation deficit and total rotational motion to shoulder injuries in professional baseball pitchers. Am J Sports Med. 2011;39(2):329-335."
+      ],
+      "precautions": [
+        "Monitor for GIRD (glenohumeral internal rotation deficit)",
+        "Assess for scapular dyskinesia during dynamic tasks",
+        "No max effort throwing yet",
+        "Continue posterior shoulder mobility work"
+      ],
+      "progressions": [
+        "Increase plyometric ball weight and intensity",
+        "Progress to throwing program (if overhead athlete)",
+        "Add sport-specific movement patterns"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier4",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 4,
+      "title": "Shoulder RTP - Tier 4: Throwing Program & Sport Prep",
+      "description": "Interval throwing program, sport-specific activities, advanced power. Weeks 16-20 post-op (overhead athletes).",
+      "entry_criteria": [
+        "Tier 3 criteria met",
+        "Strength >80% uninvolved",
+        "GIRD <20° (overhead athletes)",
+        "Medical clearance for throwing"
+      ],
+      "exit_criteria": [
+        "Strength >90% uninvolved",
+        "Completed interval throwing program pain-free",
+        "Sport-specific performance tests passed",
+        "No pain or fatigue with throwing"
+      ],
+      "exercises": [
+        {
+          "name": "Interval Throwing Program (Phase 1)",
+          "sets": "N/A",
+          "reps": "Progressive throw count",
+          "load": "45-60 ft initially",
+          "tempo": "Gradual progression",
+          "rest": "Between throws",
+          "notes": "Structured progression per protocol (e.g., Wilk)"
+        },
+        {
+          "name": "Long Toss (Compression Phase)",
+          "sets": "N/A",
+          "reps": "Progressive distance",
+          "load": "60-120 ft",
+          "tempo": "Controlled effort",
+          "rest": "Between throws",
+          "notes": "Build arm strength, monitor mechanics"
+        },
+        {
+          "name": "Plyoball Program (Advanced)",
+          "sets": "2-3",
+          "reps": "5-8 each drill",
+          "load": "Variable weights (2-32 oz)",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Velocity development, arm care"
+        },
+        {
+          "name": "Med Ball Slam (Overhead)",
+          "sets": "3",
+          "reps": "8-10",
+          "load": "8-15 lb",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Overhead power development"
+        },
+        {
+          "name": "Landmine Press (Single-Arm)",
+          "sets": "3",
+          "reps": "8-12 each arm",
+          "load": "Moderate-heavy",
+          "tempo": "2010",
+          "rest": "90s",
+          "notes": "Scapular plane strength, functional pressing"
+        },
+        {
+          "name": "Javelin Toss (Light Implement)",
+          "sets": "2-3",
+          "reps": "6-8",
+          "load": "Light javelin or ball",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Overhead power, throwing mechanics"
+        }
+      ],
+      "evidence": [
+        "Axe MJ, et al. The effect of a training program on the progression of throwing velocity in youth baseball pitchers. J Sports Med Phys Fitness. 2016;56(6):765-771.",
+        "Reinold MM, et al. Current concepts in the evaluation and treatment of the shoulder in overhead throwing athletes, part 2. Sports Health. 2010;2(2):101-115."
+      ],
+      "precautions": [
+        "Follow structured throwing program - no skipping phases",
+        "Monitor arm fatigue ratings daily",
+        "Continue shoulder maintenance exercises",
+        "Ice after throwing sessions"
+      ],
+      "progressions": [
+        "Advance throwing program per protocol",
+        "Increase distance and intensity gradually",
+        "Progress to bullpen work (pitchers) or position-specific drills"
+      ]
+    },
+    {
+      "id": "rtp_shoulder_tier5",
+      "type": "rtp",
+      "category": "shoulder",
+      "tier": 5,
+      "title": "Shoulder RTP - Tier 5: Return to Sport",
+      "description": "Full sport participation, competition readiness, performance optimization. Typically 6-9 months post-op.",
+      "entry_criteria": [
+        "Tier 4 criteria met",
+        "Completed throwing program",
+        "Strength >90% uninvolved",
+        "Medical clearance for full sport",
+        "No pain or apprehension"
+      ],
+      "exit_criteria": [
+        "Full participation without restriction",
+        "Performance at pre-injury level",
+        "No pain or functional limitations",
+        "Successful return to competition"
+      ],
+      "exercises": [
+        {
+          "name": "Sport-Specific Throwing/Serving",
+          "sets": "Progressive",
+          "reps": "Sport-specific volume",
+          "load": "Game intensity",
+          "tempo": "Sport-specific",
+          "rest": "As needed",
+          "notes": "Full bullpen, batting practice, serving, etc."
+        },
+        {
+          "name": "Simulated Game Situations",
+          "sets": "Variable",
+          "reps": "Sport-specific",
+          "load": "Game-like",
+          "tempo": "Full speed",
+          "rest": "As needed",
+          "notes": "Prepare for competition demands"
+        },
+        {
+          "name": "Full Practice Participation",
+          "sets": "N/A",
+          "reps": "Progressive volume",
+          "load": "N/A",
+          "tempo": "Full speed",
+          "rest": "As needed",
+          "notes": "Monitor workload and recovery"
+        }
+      ],
+      "maintenance_exercises": [
+        "Rotator cuff strengthening 3x/week",
+        "Scapular stabilization exercises",
+        "Posterior shoulder stretching daily",
+        "Arm care routine pre/post throwing"
+      ],
+      "evidence": [
+        "Wilk KE, et al. Rehabilitation of the overhead throwing athlete. J Orthop Sports Phys Ther. 1993;18(2):433-441.",
+        "Manske RC, et al. Functional performance testing for power and return to sports. Sports Health. 2013;5(3):244-250."
+      ],
+      "precautions": [
+        "Continue arm care routine long-term",
+        "Monitor throwing volume and recovery",
+        "Watch for GIRD or strength deficits",
+        "Regular strength testing first year"
+      ],
+      "progressions": [
+        "Increase competition participation gradually",
+        "Progress from limited innings/sets to full workload",
+        "Optimize performance with continued strength work"
+      ]
+    },
+    {
+      "id": "rtp_elbow_tier0",
+      "type": "rtp",
+      "category": "elbow",
+      "tier": 0,
+      "title": "Elbow RTP - Tier 0: Early Protection",
+      "description": "Immediate post-surgical phase (e.g., UCL reconstruction). Focus on protection, ROM restoration, and grip strength.",
+      "entry_criteria": [
+        "Post-op day 0-14",
+        "Medical clearance for gentle ROM",
+        "Brace in place (if prescribed)"
+      ],
+      "exit_criteria": [
+        "Elbow ROM: 30-100° pain-free",
+        "Grip strength >50% uninvolved",
+        "No pain with gentle ROM",
+        "Minimal swelling"
+      ],
+      "exercises": [
+        {
+          "name": "Passive/Active-Assisted Elbow Flexion/Extension",
+          "sets": "4-5",
+          "reps": "15-20",
+          "load": "Uninvolved hand assist",
+          "tempo": "Gentle, slow",
+          "rest": "30s",
+          "notes": "Progress ROM within brace limits"
+        },
+        {
+          "name": "Wrist ROM (All Planes)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "Controlled",
+          "rest": "30s",
+          "notes": "Maintain wrist mobility"
+        },
+        {
+          "name": "Grip Exercises (Light)",
+          "sets": "3-4",
+          "reps": "15-20",
+          "load": "Soft ball or putty",
+          "tempo": "Submaximal effort",
+          "rest": "30s",
+          "notes": "Prevent forearm atrophy"
+        },
+        {
+          "name": "Shoulder Isometrics",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Submaximal",
+          "tempo": "5-6s hold",
+          "rest": "60s",
+          "notes": "Maintain shoulder strength, protect elbow"
+        },
+        {
+          "name": "Scapular Squeezes",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "5s hold",
+          "rest": "30s",
+          "notes": "Scapular activation and posture"
+        }
+      ],
+      "evidence": [
+        "Wilk KE, et al. Rehabilitation following elbow surgery in the throwing athlete. Oper Tech Sports Med. 1996;4(2):114-132.",
+        "Cain EL, et al. Outcome of ulnar collateral ligament reconstruction of the elbow in 1281 athletes. Am J Sports Med. 2010;38(12):2426-2434."
+      ],
+      "precautions": [
+        "Respect brace ROM limits strictly",
+        "No valgus stress to elbow",
+        "No lifting with operative arm",
+        "Monitor for neurovascular symptoms"
+      ],
+      "progressions": [
+        "Increase ROM by 5-10° per week as cleared",
+        "Progress to active ROM when brace removed",
+        "Begin light isometrics when pain-free"
+      ]
+    },
+    {
+      "id": "rtp_elbow_tier1",
+      "type": "rtp",
+      "category": "elbow",
+      "tier": 1,
+      "title": "Elbow RTP - Tier 1: Strengthening & Full ROM",
+      "description": "Restore full ROM, develop elbow and forearm strength. Weeks 6-12 post-op (UCL reconstruction).",
+      "entry_criteria": [
+        "Tier 0 criteria met",
+        "Elbow ROM 30-100°",
+        "Grip strength >50% uninvolved",
+        "Brace discontinued (per protocol)"
+      ],
+      "exit_criteria": [
+        "Full elbow ROM (0-145°)",
+        "Grip strength >80% uninvolved",
+        "Forearm strength >60% uninvolved",
+        "Pain-free strengthening exercises"
+      ],
+      "exercises": [
+        {
+          "name": "Elbow Flexion/Extension (Isotonic)",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light DB (2-5 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Progress load slowly"
+        },
+        {
+          "name": "Wrist Curls (Flexors)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light DB (3-8 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Forearm support, full ROM"
+        },
+        {
+          "name": "Reverse Wrist Curls (Extensors)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light DB (2-5 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Address imbalance"
+        },
+        {
+          "name": "Pronation/Supination with Hammer",
+          "sets": "3",
+          "reps": "12-15 each direction",
+          "load": "Light hammer or DB",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Forearm rotation strength"
+        },
+        {
+          "name": "Eccentric Wrist Extensions",
+          "sets": "2-3",
+          "reps": "10-12",
+          "load": "Light",
+          "tempo": "4-5s eccentric",
+          "rest": "60s",
+          "notes": "Tendon health, prevent tendinopathy"
+        },
+        {
+          "name": "Shoulder Strengthening (Continued)",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light-moderate",
+          "tempo": "Controlled",
+          "rest": "60-90s",
+          "notes": "Maintain shoulder strength, kinetic chain"
+        }
+      ],
+      "evidence": [
+        "Ellenbecker TS, et al. Rehabilitation of the elbow following arthroscopy. Clin Sports Med. 2010;29(4):697-724.",
+        "Wilk KE, et al. Rehabilitation following elbow surgery in the throwing athlete. Oper Tech Sports Med. 1996;4(2):114-132."
+      ],
+      "precautions": [
+        "No valgus stress activities yet",
+        "Avoid heavy lifting or impact",
+        "Monitor for pain - adjust load accordingly",
+        "Ice after exercises if swelling present"
+      ],
+      "progressions": [
+        "Increase load 1-2 lb per week when reps achieved",
+        "Progress to plyometric ball toss (light)",
+        "Begin interval throwing prep exercises"
+      ]
+    },
+    {
+      "id": "rtp_elbow_tier2",
+      "type": "rtp",
+      "category": "elbow",
+      "tier": 2,
+      "title": "Elbow RTP - Tier 2: Advanced Strengthening & Throwing Prep",
+      "description": "Develop strength >80% uninvolved, initiate throwing program. Weeks 12-20 post-op (UCL reconstruction).",
+      "entry_criteria": [
+        "Tier 1 criteria met",
+        "Full ROM pain-free",
+        "Grip strength >80% uninvolved",
+        "Medical clearance for throwing"
+      ],
+      "exit_criteria": [
+        "Elbow/forearm strength >90% uninvolved",
+        "Plyometric exercises pain-free",
+        "Interval throwing Phase 1 completed",
+        "No pain or swelling with throwing"
+      ],
+      "exercises": [
+        {
+          "name": "Eccentric Elbow Flexion/Extension",
+          "sets": "3",
+          "reps": "8-10",
+          "load": "Moderate (120-130% concentric)",
+          "tempo": "4-5s eccentric",
+          "rest": "90s",
+          "notes": "Use concentric assist, emphasize eccentric"
+        },
+        {
+          "name": "Wrist Roller",
+          "sets": "2-3",
+          "reps": "2-3 rolls up/down",
+          "load": "5-15 lb",
+          "tempo": "Controlled",
+          "rest": "2 min",
+          "notes": "Forearm endurance and strength"
+        },
+        {
+          "name": "Heavy Grippers",
+          "sets": "3-4",
+          "reps": "10-15",
+          "load": "Heavy resistance",
+          "tempo": "2s hold at peak",
+          "rest": "90s",
+          "notes": "Maximal grip strength"
+        },
+        {
+          "name": "Plyometric Ball Tosses (2-Hand)",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "2-4 lb ball",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Build dynamic elbow stability"
+        },
+        {
+          "name": "Interval Throwing Program (Phase 1)",
+          "sets": "N/A",
+          "reps": "Progressive protocol",
+          "load": "45-60 ft initially",
+          "tempo": "Controlled",
+          "rest": "Between throws",
+          "notes": "Structured progression per Wilk protocol"
+        },
+        {
+          "name": "Valgus Stress Drills (Protected)",
+          "sets": "2-3",
+          "reps": "10-15",
+          "load": "Light band resistance",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Gradually expose UCL to controlled stress"
+        }
+      ],
+      "evidence": [
+        "Reinold MM, et al. Current concepts in the evaluation and treatment of the shoulder in overhead throwing athletes, part 2. Sports Health. 2010;2(2):101-115.",
+        "Wilk KE, et al. Rehabilitation of the overhead throwing athlete. J Orthop Sports Phys Ther. 1993;18(2):433-441."
+      ],
+      "precautions": [
+        "Follow throwing program strictly - no shortcuts",
+        "Monitor arm fatigue ratings daily",
+        "No max effort throwing yet",
+        "Continue elbow/forearm strengthening throughout"
+      ],
+      "progressions": [
+        "Advance throwing program per protocol phases",
+        "Increase plyoball weight and intensity",
+        "Progress to long toss when cleared"
+      ]
+    },
+    {
+      "id": "rtp_elbow_tier3",
+      "type": "rtp",
+      "category": "elbow",
+      "tier": 3,
+      "title": "Elbow RTP - Tier 3: Return to Sport",
+      "description": "Complete throwing progression, return to competition. Weeks 20+ post-op (typically 12+ months for UCL).",
+      "entry_criteria": [
+        "Tier 2 criteria met",
+        "Strength >90% uninvolved",
+        "Interval throwing Phase 2 completed",
+        "Medical clearance for full throwing"
+      ],
+      "exit_criteria": [
+        "Full throwing program completed pain-free",
+        "Return to bullpen/mound (pitchers) or position play",
+        "Performance at pre-injury level",
+        "No pain or functional limitations"
+      ],
+      "exercises": [
+        {
+          "name": "Long Toss Program (Full)",
+          "sets": "N/A",
+          "reps": "Progressive distance",
+          "load": "180-300+ ft",
+          "tempo": "Sport-specific",
+          "rest": "Between throws",
+          "notes": "Peak arm strength and conditioning"
+        },
+        {
+          "name": "Bullpen/Mound Work (Pitchers)",
+          "sets": "Progressive",
+          "reps": "Pitch count progression",
+          "load": "Game intensity",
+          "tempo": "Full arsenal",
+          "rest": "Per protocol",
+          "notes": "Structured return per protocol"
+        },
+        {
+          "name": "Position-Specific Throwing",
+          "sets": "Variable",
+          "reps": "Sport-specific volume",
+          "load": "Game intensity",
+          "tempo": "Full speed",
+          "rest": "As needed",
+          "notes": "Replicate game demands"
+        },
+        {
+          "name": "Simulated Game Situations",
+          "sets": "Variable",
+          "reps": "Sport-specific",
+          "load": "Game-like",
+          "tempo": "Full speed",
+          "rest": "As needed",
+          "notes": "Prepare for competition"
+        }
+      ],
+      "maintenance_exercises": [
+        "Forearm strengthening 3x/week year-round",
+        "Eccentric wrist work 2x/week",
+        "Shoulder/scapular strengthening maintenance",
+        "Continue throwing program structure in-season"
+      ],
+      "evidence": [
+        "Cain EL, et al. Outcome of ulnar collateral ligament reconstruction of the elbow in 1281 athletes. Am J Sports Med. 2010;38(12):2426-2434.",
+        "Wilk KE, et al. Rehabilitation following elbow surgery in the throwing athlete. Oper Tech Sports Med. 1996;4(2):114-132."
+      ],
+      "precautions": [
+        "Monitor throwing volume carefully first season",
+        "Continue arm care routine indefinitely",
+        "Watch for early fatigue signs",
+        "Regular strength testing first 2 years"
+      ],
+      "progressions": [
+        "Gradual return to competition (not full workload immediately)",
+        "Progress from non-save situations to high-leverage (pitchers)",
+        "Monitor performance and adjust volume as needed"
+      ]
+    },
+    {
+      "id": "rtp_trunk_tier0",
+      "type": "rtp",
+      "category": "trunk",
+      "tier": 0,
+      "title": "Trunk/Core - Tier 0: Foundation",
+      "description": "Basic core stability, anti-movement patterns. Foundation for all athletes.",
+      "entry_criteria": [
+        "No acute low back pain",
+        "Able to perform pelvic tilts",
+        "Medical clearance if post-injury"
+      ],
+      "exit_criteria": [
+        "Plank hold >60s",
+        "Side plank >45s each side",
+        "Dead bug 15 reps perfect form",
+        "No low back pain with exercises"
+      ],
+      "exercises": [
+        {
+          "name": "Pelvic Tilts (Supine)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Bodyweight",
+          "tempo": "Controlled",
+          "rest": "30s",
+          "notes": "Neutral spine awareness"
+        },
+        {
+          "name": "Dead Bug",
+          "sets": "3",
+          "reps": "10-12",
+          "load": "Bodyweight",
+          "tempo": "Slow, controlled",
+          "rest": "60s",
+          "notes": "Anti-extension, maintain low back contact"
+        },
+        {
+          "name": "Bird Dog",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Bodyweight",
+          "tempo": "2s hold at extension",
+          "rest": "45s",
+          "notes": "Contralateral stability"
+        },
+        {
+          "name": "Plank (Front)",
+          "sets": "3",
+          "reps": "30-60s hold",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "60s",
+          "notes": "Anti-extension, neutral spine"
+        },
+        {
+          "name": "Side Plank",
+          "sets": "3",
+          "reps": "30-45s each side",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "60s",
+          "notes": "Anti-lateral flexion"
+        }
+      ],
+      "evidence": [
+        "McGill SM, et al. Endurance times for low back stabilization exercises. Arch Phys Med Rehabil. 1999;80(8):941-944.",
+        "McGill SM. Low back stability: from formal description to issues for performance and rehabilitation. Exerc Sport Sci Rev. 2001;29(1):26-31."
+      ],
+      "precautions": [
+        "Maintain neutral spine throughout",
+        "No breath-holding - breathe continuously",
+        "Stop if low back pain increases",
+        "Quality over duration"
+      ],
+      "progressions": [
+        "Increase hold times before adding external load",
+        "Progress to dynamic variations",
+        "Add anti-rotation exercises"
+      ]
+    },
+    {
+      "id": "rtp_trunk_tier1",
+      "type": "rtp",
+      "category": "trunk",
+      "tier": 1,
+      "title": "Trunk/Core - Tier 1: Anti-Rotation",
+      "description": "Develop anti-rotation strength and dynamic stability. Essential for rotational athletes.",
+      "entry_criteria": [
+        "Tier 0 criteria met",
+        "Plank >60s, side plank >45s",
+        "No pain with static holds"
+      ],
+      "exit_criteria": [
+        "Pallof press at bodyweight resistance",
+        "Plank >90s, side plank >60s",
+        "Copenhagen plank 30s each side",
+        "Pain-free rotational movements"
+      ],
+      "exercises": [
+        {
+          "name": "Pallof Press",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Moderate cable resistance",
+          "tempo": "2s hold at extension",
+          "rest": "60s",
+          "notes": "Primary anti-rotation exercise"
+        },
+        {
+          "name": "Pallof Press with Rotation",
+          "sets": "3",
+          "reps": "8-10 each side",
+          "load": "Light-moderate",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Dynamic anti-rotation"
+        },
+        {
+          "name": "Side Plank with Hip Abduction",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Bodyweight to banded",
+          "tempo": "2s hold at top",
+          "rest": "60s",
+          "notes": "Anti-lateral flexion + hip stability"
+        },
+        {
+          "name": "Copenhagen Plank",
+          "sets": "3",
+          "reps": "20-30s each side",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "90s",
+          "notes": "Adductor and lateral core strength"
+        },
+        {
+          "name": "Half-Kneeling Cable Chop",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Moderate cable",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Rotational control and strength"
+        }
+      ],
+      "evidence": [
+        "Hibbs AE, et al. Optimizing performance by improving core stability and core strength. Sports Med. 2008;38(12):995-1008.",
+        "Kibler WB, et al. The role of core stability in athletic function. Sports Med. 2006;36(3):189-198."
+      ],
+      "precautions": [
+        "Maintain proper alignment during all exercises",
+        "No excessive spinal rotation under load initially",
+        "Control movement quality over resistance",
+        "Breathe continuously"
+      ],
+      "progressions": [
+        "Increase resistance gradually",
+        "Progress to unstable surface variations",
+        "Add explosive rotational power work"
+      ]
+    },
+    {
+      "id": "rtp_trunk_tier2",
+      "type": "rtp",
+      "category": "trunk",
+      "tier": 2,
+      "title": "Trunk/Core - Tier 2: Dynamic Strength",
+      "description": "Advanced core strength, loaded carries, dynamic stability. For high-level athletes.",
+      "entry_criteria": [
+        "Tier 1 criteria met",
+        "Pallof press at bodyweight resistance",
+        "Copenhagen plank >30s"
+      ],
+      "exit_criteria": [
+        "Farmer carry 1.5x BW per hand x 40m",
+        "Turkish get-up with 50% BW KB",
+        "Plank variations >2 min",
+        "Ab rollout from feet"
+      ],
+      "exercises": [
+        {
+          "name": "Farmer Carries (Heavy)",
+          "sets": "4",
+          "reps": "40m",
+          "load": "1.25-1.5x BW per hand",
+          "tempo": "Controlled walk",
+          "rest": "2 min",
+          "notes": "Total body stability, grip strength"
+        },
+        {
+          "name": "Suitcase Carry",
+          "sets": "3",
+          "reps": "40m each side",
+          "load": "Heavy (1.0-1.5x BW)",
+          "tempo": "Controlled walk",
+          "rest": "90s",
+          "notes": "Anti-lateral flexion under load"
+        },
+        {
+          "name": "Turkish Get-Up",
+          "sets": "3",
+          "reps": "3-5 each side",
+          "load": "Moderate-heavy KB",
+          "tempo": "Slow, controlled",
+          "rest": "2 min",
+          "notes": "Total body stability and coordination"
+        },
+        {
+          "name": "Ab Rollout (from Knees → Feet)",
+          "sets": "3",
+          "reps": "8-12",
+          "load": "Bodyweight",
+          "tempo": "3s eccentric",
+          "rest": "90s",
+          "notes": "Anti-extension under dynamic load"
+        },
+        {
+          "name": "Landmine Rotations",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Moderate-heavy",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Rotational power development"
+        }
+      ],
+      "evidence": [
+        "McGill SM, et al. Endurance times for low back stabilization exercises. Arch Phys Med Rehabil. 1999;80(8):941-944.",
+        "Willardson JM. Core stability training: applications to sports conditioning programs. J Strength Cond Res. 2007;21(3):979-985."
+      ],
+      "precautions": [
+        "Master form before increasing load significantly",
+        "Maintain neutral spine during carries",
+        "No spinal flexion under heavy load",
+        "Quality over quantity"
+      ],
+      "progressions": [
+        "Increase carry load by 10-20 lb when distance maintained",
+        "Progress ab rollout from knees to feet",
+        "Add explosive/plyometric core work"
+      ]
+    },
+    {
+      "id": "rtp_trunk_tier3",
+      "type": "rtp",
+      "category": "trunk",
+      "tier": 3,
+      "title": "Trunk/Core - Tier 3: Power & Sport Integration",
+      "description": "Explosive rotational power, sport-specific core demands. Elite athlete preparation.",
+      "entry_criteria": [
+        "Tier 2 criteria met",
+        "Farmer carry >1.5x BW",
+        "Turkish get-up proficient"
+      ],
+      "exit_criteria": [
+        "Med ball rotational throw >90th percentile",
+        "Sport-specific core power output optimized",
+        "No core stability deficits under fatigue",
+        "Performance metrics at pre-injury level"
+      ],
+      "exercises": [
+        {
+          "name": "Med Ball Rotational Slam",
+          "sets": "3-4",
+          "reps": "6-8 each side",
+          "load": "10-20 lb ball",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Max rotational power output"
+        },
+        {
+          "name": "Med Ball Scoop Toss",
+          "sets": "3",
+          "reps": "6-8",
+          "load": "10-15 lb ball",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Hip-driven rotational power"
+        },
+        {
+          "name": "Landmine Single-Arm Press (Anti-Rotation)",
+          "sets": "3",
+          "reps": "8-10 each arm",
+          "load": "Heavy",
+          "tempo": "Explosive press",
+          "rest": "90s",
+          "notes": "Resist rotation under pressing load"
+        },
+        {
+          "name": "Cable Chop/Lift Variations (Fast)",
+          "sets": "3",
+          "reps": "8-10 each side",
+          "load": "Moderate-heavy",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Speed-strength rotational patterns"
+        },
+        {
+          "name": "Sport-Specific Core Integration",
+          "sets": "Variable",
+          "reps": "Sport-specific",
+          "load": "Variable",
+          "tempo": "Game speed",
+          "rest": "As needed",
+          "notes": "Throwing, hitting, kicking with core emphasis"
+        }
+      ],
+      "evidence": [
+        "Szymanski DJ, et al. Effect of torso rotational strength on angular hip, angular shoulder, and linear bat velocities of high school baseball players. J Strength Cond Res. 2009;23(6):1681-1687.",
+        "Tse MA, et al. Effect of strength training on sport performance: a meta-analysis. Med Sci Sports Exerc. 2005;37(10):1667-1673."
+      ],
+      "precautions": [
+        "Ensure adequate warm-up before explosive work",
+        "Monitor for fatigue - maintain quality",
+        "Continue maintenance of stability exercises",
+        "Integrate with sport-specific demands"
+      ],
+      "progressions": [
+        "Increase implement weight for power exercises",
+        "Add reactive/chaotic elements to training",
+        "Optimize power output through velocity tracking"
+      ]
+    }
+  ]
+}

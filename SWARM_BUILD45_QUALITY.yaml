@@ -1,0 +1,663 @@
+name: "Build 45 - Critical Quality & Testing Infrastructure"
+version: "1.0"
+created: "2025-12-15"
+status: "ready"
+
+metadata:
+  project: "PT Performance App"
+  build_number: 45
+  focus: "Quality Infrastructure & Bug Prevention"
+  priority: "critical"
+  estimated_effort: "8-12 days"
+  team_size: "3-4 agents"
+
+objectives:
+  primary: "Prevent production bugs through automated validation and testing"
+  secondary: "Improve security with RLS verification"
+  success_criteria:
+    - "Zero schema mismatches in future builds"
+    - "80%+ integration test coverage"
+    - "All RLS policies verified and tested"
+    - "Migration testing automated"
+    - "Error reporting integrated"
+
+context:
+  current_state: |
+    Build 44 deployed successfully but revealed critical gaps:
+    - 5 schema mismatches between iOS and database (caught in production)
+    - Security vulnerability: therapists could see all patients
+    - No automated testing of database<->iOS integration
+    - Migrations tested manually with edge cases missed
+    - No crash/error reporting in production
+
+  pain_points:
+    - "Schema bugs only found after TestFlight upload"
+    - "Manual schema comparison is error-prone"
+    - "RLS policies not systematically tested"
+    - "No visibility into production errors"
+    - "Migration rollbacks not documented"
+
+  constraints:
+    - "Must not break existing Build 44 functionality"
+    - "Changes must be backward compatible"
+    - "New tests must run in CI/CD pipeline"
+    - "Schema validation must be fast (<30 seconds)"
+
+agents:
+  - id: "agent1"
+    name: "Schema Validation Engineer"
+    role: "Build automated schema validation system"
+    responsibilities:
+      - "Create Python script to compare Swift models vs database schema"
+      - "Detect column name, type, and nullability mismatches"
+      - "Generate detailed diff reports"
+      - "Integrate into CI/CD pipeline"
+      - "Add pre-commit hook for local validation"
+
+    deliverables:
+      - name: "Schema Validation Script"
+        path: "scripts/validate_ios_schema.py"
+        description: "Compares Swift CodingKeys against Supabase schema"
+        acceptance_criteria:
+          - "Detects missing columns in database"
+          - "Detects missing properties in Swift models"
+          - "Detects type mismatches (String vs Int, etc.)"
+          - "Detects nullability mismatches"
+          - "Detects enum value mismatches"
+          - "Generates human-readable diff report"
+          - "Exits with error code if mismatches found"
+
+      - name: "GitHub Actions Workflow"
+        path: ".github/workflows/schema-validation.yml"
+        description: "Runs schema validation on every PR"
+        acceptance_criteria:
+          - "Runs on every pull request"
+          - "Runs on main branch commits"
+          - "Fails build if mismatches detected"
+          - "Posts validation report as PR comment"
+          - "Completes in <30 seconds"
+
+      - name: "Pre-Commit Hook"
+        path: ".git/hooks/pre-commit"
+        description: "Local validation before commit"
+        acceptance_criteria:
+          - "Runs automatically on git commit"
+          - "Fast validation (<10 seconds)"
+          - "Skippable with --no-verify flag"
+          - "Clear error messages"
+
+      - name: "Documentation"
+        path: "docs/SCHEMA_VALIDATION.md"
+        description: "How to use and maintain schema validation"
+        acceptance_criteria:
+          - "Setup instructions"
+          - "Usage examples"
+          - "Troubleshooting guide"
+          - "How to add new models"
+
+    dependencies: []
+    estimated_effort: "2-3 days"
+
+  - id: "agent2"
+    name: "Integration Testing Engineer"
+    role: "Build comprehensive integration test suite"
+    responsibilities:
+      - "Create E2E tests for database decoding"
+      - "Test all Swift models against real database"
+      - "Create test data fixtures"
+      - "Set up test database environment"
+      - "Integrate tests into CI/CD"
+
+    deliverables:
+      - name: "Database Decoding Tests"
+        path: "Tests/Integration/DatabaseDecodingTests.swift"
+        description: "Tests that verify iOS models can decode database records"
+        test_coverage:
+          - "Patient model decoding"
+          - "Program hierarchy decoding (4 levels)"
+          - "WorkloadFlag decoding with enum conversion"
+          - "ExerciseLog decoding with ISO8601 dates"
+          - "SessionNote decoding"
+          - "DailyReadiness decoding"
+        acceptance_criteria:
+          - "All models have decode tests"
+          - "Tests use real database connection"
+          - "Tests verify all fields present and correct type"
+          - "Tests cover null handling"
+          - "Tests cover enum conversions"
+          - "80%+ code coverage for models"
+
+      - name: "Full User Flow Tests"
+        path: "Tests/Integration/FullUserFlowTests.swift"
+        description: "E2E tests for complete user journeys"
+        test_scenarios:
+          - name: "Therapist Dashboard Load"
+            steps:
+              - "Authenticate as therapist"
+              - "Load patient list"
+              - "Verify patients filtered by therapist_id"
+              - "Load workload flags"
+              - "Verify flag severity and types"
+
+          - name: "Patient Detail Load"
+            steps:
+              - "Select patient from list"
+              - "Load patient detail view"
+              - "Load patient's programs"
+              - "Load program phases, sessions, exercises"
+              - "Verify complete hierarchy"
+
+          - name: "Exercise Logging"
+            steps:
+              - "Authenticate as patient"
+              - "Load today's session"
+              - "Log exercise performance"
+              - "Verify data saved correctly"
+              - "Verify can retrieve logged data"
+
+          - name: "Program Creation"
+            steps:
+              - "Authenticate as therapist"
+              - "Create new program"
+              - "Add phases, sessions, exercises"
+              - "Save to database"
+              - "Verify saved correctly"
+              - "Verify can load created program"
+        acceptance_criteria:
+          - "All 4 user flows have tests"
+          - "Tests run against staging database"
+          - "Tests clean up test data after run"
+          - "Tests pass consistently (no flakiness)"
+          - "Test run time <2 minutes"
+
+      - name: "Test Fixtures"
+        path: "Tests/Fixtures/TestData.swift"
+        description: "Reusable test data for all tests"
+        acceptance_criteria:
+          - "Fixtures for all model types"
+          - "Fixtures cover edge cases (nulls, empty arrays)"
+          - "Fixtures are deterministic (same data each run)"
+          - "Easy to create new fixtures"
+
+      - name: "Test Database Setup"
+        path: "scripts/setup_test_database.sh"
+        description: "Script to set up test database environment"
+        acceptance_criteria:
+          - "Creates isolated test database"
+          - "Applies all migrations"
+          - "Seeds minimal test data"
+          - "Resets database between test runs"
+
+      - name: "CI Integration"
+        path: ".github/workflows/integration-tests.yml"
+        description: "Run integration tests in CI"
+        acceptance_criteria:
+          - "Runs on every PR"
+          - "Uses test database (not production)"
+          - "Reports test failures clearly"
+          - "Uploads test coverage report"
+
+    dependencies:
+      - "agent1" # Needs schema validation to pass first
+    estimated_effort: "3-4 days"
+
+  - id: "agent3"
+    name: "Migration Testing Engineer"
+    role: "Build migration testing and rollback system"
+    responsibilities:
+      - "Create migration testing workflow"
+      - "Set up test database cloning"
+      - "Document rollback procedures"
+      - "Create migration verification script"
+      - "Test all existing migrations"
+
+    deliverables:
+      - name: "Migration Test Script"
+        path: "scripts/test_migration.sh"
+        description: "Tests migration against clone of production database"
+        workflow:
+          - "Clone production schema to test database"
+          - "Apply migration to test database"
+          - "Run schema validation script"
+          - "Run integration tests against test database"
+          - "Verify no data loss"
+          - "Generate migration report"
+        acceptance_criteria:
+          - "Detects schema breaking changes"
+          - "Detects data migration errors"
+          - "Verifies iOS app works after migration"
+          - "Generates rollback SQL"
+          - "Completes in <5 minutes"
+
+      - name: "Database Cloning Script"
+        path: "scripts/clone_prod_schema.sh"
+        description: "Creates test database identical to production"
+        acceptance_criteria:
+          - "Clones schema (not data) from production"
+          - "Anonymizes any copied data (HIPAA compliance)"
+          - "Creates isolated test database"
+          - "Fast (<1 minute)"
+
+      - name: "Migration Rollback Template"
+        path: "supabase/migrations/ROLLBACK_TEMPLATE.md"
+        description: "Template for documenting migration rollbacks"
+        sections:
+          - "Migration ID and description"
+          - "Forward migration SQL"
+          - "Rollback SQL"
+          - "Testing checklist"
+          - "Risks and considerations"
+          - "Manual steps (if any)"
+        acceptance_criteria:
+          - "All future migrations include rollback"
+          - "Template is easy to fill out"
+          - "Rollback SQL is tested"
+
+      - name: "Migration Verification Script"
+        path: "scripts/verify_migration.py"
+        description: "Verifies migration was applied correctly"
+        checks:
+          - "All expected columns exist"
+          - "All expected constraints exist"
+          - "All expected indexes exist"
+          - "No unexpected schema changes"
+          - "Data integrity maintained"
+        acceptance_criteria:
+          - "Detects failed migrations"
+          - "Detects partial migrations"
+          - "Verifies RLS policies applied"
+          - "Generates verification report"
+
+      - name: "Existing Migration Tests"
+        path: "tests/migrations/"
+        description: "Tests for all existing migrations"
+        coverage:
+          - "20251214150000_fix_schema_issues.sql"
+          - "20251214160000_fix_workload_flags_schema.sql"
+          - "20251214170000_fix_resolved_and_duration.sql"
+          - "All other existing migrations"
+        acceptance_criteria:
+          - "Each migration has test file"
+          - "Tests verify migration succeeds"
+          - "Tests verify rollback succeeds"
+          - "Tests verify data integrity"
+
+    dependencies:
+      - "agent1" # Needs schema validation script
+      - "agent2" # Needs integration tests
+    estimated_effort: "2-3 days"
+
+  - id: "agent4"
+    name: "RLS Security Engineer"
+    role: "Verify and test RLS policies"
+    responsibilities:
+      - "Create RLS policy tests"
+      - "Test therapist data isolation"
+      - "Test patient data isolation"
+      - "Verify all tables have RLS enabled"
+      - "Document RLS policy design"
+
+    deliverables:
+      - name: "RLS Isolation Tests"
+        path: "supabase/tests/rls_isolation_tests.sql"
+        description: "SQL tests that verify RLS policies work correctly"
+        test_scenarios:
+          - name: "Therapist Cannot See Other Therapist's Patients"
+            test: |
+              -- As Therapist A (00000000-0000-0000-0000-000000000100)
+              SELECT COUNT(*) FROM patients
+              WHERE therapist_id != auth.uid();
+              -- Expected: 0 rows
+
+          - name: "Therapist Cannot Update Other Therapist's Programs"
+            test: |
+              -- As Therapist A, try to update Therapist B's program
+              UPDATE programs SET name = 'Hacked'
+              WHERE therapist_id != auth.uid();
+              -- Expected: 0 rows affected
+
+          - name: "Patient Cannot See Other Patient's Exercise Logs"
+            test: |
+              -- As Patient A, try to query Patient B's logs
+              SELECT COUNT(*) FROM exercise_logs
+              WHERE patient_id != auth.uid();
+              -- Expected: 0 rows
+
+          - name: "Patient Cannot Modify Other Patient's Data"
+            test: |
+              -- As Patient A, try to update Patient B's data
+              UPDATE exercise_logs SET reps = 999
+              WHERE patient_id != auth.uid();
+              -- Expected: 0 rows affected
+
+          - name: "Anonymous User Cannot Access Any Data"
+            test: |
+              -- As anonymous (no auth)
+              SELECT COUNT(*) FROM patients;
+              -- Expected: 0 rows or error
+
+        acceptance_criteria:
+          - "All test scenarios pass"
+          - "Tests cover all sensitive tables"
+          - "Tests verify both SELECT and UPDATE isolation"
+          - "Tests run automatically in CI"
+          - "Zero data leakage detected"
+
+      - name: "RLS Verification Script"
+        path: "scripts/verify_rls_policies.py"
+        description: "Python script to verify RLS policies are correctly configured"
+        checks:
+          - "All tables have RLS enabled"
+          - "All tables have SELECT policy"
+          - "All tables have INSERT policy (where applicable)"
+          - "All tables have UPDATE policy (where applicable)"
+          - "All tables have DELETE policy (where applicable)"
+          - "No policies use 'true' (allow all)"
+          - "Policies use auth.uid() correctly"
+        acceptance_criteria:
+          - "Detects tables without RLS"
+          - "Detects overly permissive policies"
+          - "Verifies policy logic"
+          - "Generates security report"
+
+      - name: "RLS Policy Documentation"
+        path: "docs/RLS_POLICIES.md"
+        description: "Documentation of all RLS policies and their purpose"
+        sections:
+          - "RLS Overview and Architecture"
+          - "Policy Design Principles"
+          - "Table-by-Table Policy Documentation"
+          - "Testing RLS Policies"
+          - "Common Pitfalls and Solutions"
+        acceptance_criteria:
+          - "All tables documented"
+          - "Policy SQL included"
+          - "Security rationale explained"
+          - "Examples provided"
+
+      - name: "Security Audit Report"
+        path: ".outcomes/BUILD_45_SECURITY_AUDIT.md"
+        description: "Report of security audit findings and fixes"
+        contents:
+          - "Tables audited"
+          - "Vulnerabilities found"
+          - "Vulnerabilities fixed"
+          - "Test results"
+          - "Recommendations"
+        acceptance_criteria:
+          - "All security issues documented"
+          - "All issues have fix status"
+          - "Recommendations prioritized"
+
+    dependencies:
+      - "agent2" # May need integration tests to verify RLS
+    estimated_effort: "2 days"
+
+  - id: "agent5"
+    name: "Error Monitoring Engineer"
+    role: "Integrate error reporting and monitoring"
+    responsibilities:
+      - "Integrate Sentry or similar crash reporting"
+      - "Set up error logging"
+      - "Configure performance monitoring"
+      - "Create monitoring dashboard"
+      - "Document error handling best practices"
+
+    deliverables:
+      - name: "Sentry Integration"
+        path: "ios-app/PTPerformance/PTPerformanceApp.swift"
+        description: "Sentry SDK integration for crash and error reporting"
+        configuration:
+          - "Initialize Sentry on app launch"
+          - "Capture crashes automatically"
+          - "Capture network errors"
+          - "Capture database errors"
+          - "Set user context (anonymous ID)"
+          - "Set environment (dev/staging/prod)"
+        acceptance_criteria:
+          - "Crashes reported to Sentry"
+          - "Error breadcrumbs captured"
+          - "Performance metrics tracked"
+          - "User privacy preserved (no PII)"
+          - "Sentry DSN in environment variable"
+
+      - name: "Custom Error Logging"
+        path: "ios-app/PTPerformance/Utils/ErrorLogger.swift"
+        description: "Wrapper for logging non-fatal errors"
+        methods:
+          - "log(error:context:) - Log error with context"
+          - "logNetworkError(request:response:error:)"
+          - "logDatabaseError(query:error:)"
+          - "logValidationError(field:value:error:)"
+        acceptance_criteria:
+          - "All error types covered"
+          - "Automatic context capture"
+          - "Errors sent to Sentry"
+          - "Local logging for debugging"
+
+      - name: "Performance Monitoring"
+        path: "ios-app/PTPerformance/Utils/PerformanceMonitor.swift"
+        description: "Track app performance metrics"
+        metrics:
+          - "App launch time"
+          - "View load time"
+          - "Database query time"
+          - "Network request time"
+          - "Memory usage"
+        acceptance_criteria:
+          - "Metrics sent to Sentry"
+          - "Slow operations flagged"
+          - "Automatic transaction tracking"
+          - "Custom instrumentation support"
+
+      - name: "Monitoring Dashboard Setup"
+        path: "docs/MONITORING_DASHBOARD.md"
+        description: "Guide to setting up and using monitoring dashboard"
+        dashboards:
+          - "Crashes dashboard"
+          - "Errors dashboard"
+          - "Performance dashboard"
+          - "User sessions dashboard"
+        acceptance_criteria:
+          - "Dashboards configured in Sentry"
+          - "Alerts set up for critical errors"
+          - "Weekly digest emails configured"
+          - "Team has access"
+
+      - name: "Error Handling Best Practices"
+        path: "docs/ERROR_HANDLING.md"
+        description: "Guidelines for error handling in the app"
+        topics:
+          - "When to throw vs when to return Result"
+          - "How to log errors"
+          - "User-facing error messages"
+          - "Error recovery strategies"
+          - "Testing error handling"
+        acceptance_criteria:
+          - "Clear guidelines"
+          - "Code examples"
+          - "Anti-patterns documented"
+          - "Team reviewed and approved"
+
+    dependencies: []
+    estimated_effort: "1-2 days"
+
+execution_plan:
+  phase1:
+    name: "Foundation & Setup"
+    duration: "Days 1-3"
+    agents: ["agent1", "agent5"]
+    parallel: true
+    goals:
+      - "Schema validation script working"
+      - "Error reporting integrated"
+
+    deliverables:
+      - "scripts/validate_ios_schema.py"
+      - "Sentry integration complete"
+      - "Basic error logging working"
+
+  phase2:
+    name: "Testing Infrastructure"
+    duration: "Days 4-7"
+    agents: ["agent2", "agent4"]
+    parallel: true
+    goals:
+      - "Integration tests passing"
+      - "RLS policies verified"
+
+    deliverables:
+      - "Tests/Integration/DatabaseDecodingTests.swift"
+      - "Tests/Integration/FullUserFlowTests.swift"
+      - "supabase/tests/rls_isolation_tests.sql"
+      - "RLS security audit complete"
+
+  phase3:
+    name: "Migration Testing & CI Integration"
+    duration: "Days 8-10"
+    agents: ["agent3"]
+    depends_on: ["phase1", "phase2"]
+    goals:
+      - "Migration testing automated"
+      - "All tests in CI/CD pipeline"
+
+    deliverables:
+      - "scripts/test_migration.sh"
+      - "All GitHub Actions workflows"
+      - "Pre-commit hooks installed"
+
+  phase4:
+    name: "Documentation & Validation"
+    duration: "Days 11-12"
+    agents: ["agent1", "agent2", "agent3", "agent4", "agent5"]
+    parallel: true
+    goals:
+      - "All documentation complete"
+      - "All tests passing"
+      - "Build 45 ready for TestFlight"
+
+    deliverables:
+      - "All documentation files"
+      - "BUILD_45_COMPLETION_REPORT.md"
+      - "TestFlight upload successful"
+
+validation:
+  pre_deployment:
+    - "All unit tests pass (100%)"
+    - "All integration tests pass (100%)"
+    - "Schema validation passes"
+    - "RLS tests pass (zero data leakage)"
+    - "Migration tests pass"
+    - "Code coverage ≥80%"
+    - "No critical Sentry errors"
+
+  post_deployment:
+    - "Build 45 uploaded to TestFlight"
+    - "Smoke tests pass on TestFlight"
+    - "No schema errors in logs"
+    - "Sentry receiving error reports"
+    - "Performance metrics within acceptable range"
+
+success_metrics:
+  code_quality:
+    - "80%+ test coverage"
+    - "Zero schema mismatches"
+    - "Zero RLS vulnerabilities"
+    - "All migrations have rollback"
+
+  automation:
+    - "Schema validation in CI: 100%"
+    - "Integration tests in CI: 100%"
+    - "Migration testing automated: 100%"
+    - "Error reporting automated: 100%"
+
+  observability:
+    - "Crash rate visible in Sentry"
+    - "Error rate tracked"
+    - "Performance metrics tracked"
+    - "Alerts configured"
+
+risks:
+  - risk: "Integration tests may be flaky"
+    mitigation: "Use deterministic test data, retry logic, isolated test database"
+    severity: "medium"
+
+  - risk: "Schema validation may have false positives"
+    mitigation: "Thorough testing, whitelist for intentional differences"
+    severity: "low"
+
+  - risk: "Migration testing may slow down development"
+    mitigation: "Optimize test database setup, run in parallel"
+    severity: "low"
+
+  - risk: "Sentry costs may be high"
+    mitigation: "Configure sampling, filter noisy errors, use budget alerts"
+    severity: "low"
+
+  - risk: "RLS changes may break existing functionality"
+    mitigation: "Test thoroughly, deploy to staging first, have rollback plan"
+    severity: "high"
+
+dependencies:
+  external:
+    - name: "Sentry Account"
+      status: "needed"
+      action: "Create Sentry account for PT Performance project"
+
+    - name: "Test Database"
+      status: "needed"
+      action: "Set up isolated test database in Supabase"
+
+    - name: "GitHub Actions Minutes"
+      status: "check"
+      action: "Verify enough CI/CD minutes for increased testing"
+
+  internal:
+    - name: "Supabase Schema Access"
+      status: "available"
+      action: "Ensure scripts can query information_schema"
+
+    - name: "Swift Model Access"
+      status: "available"
+      action: "Models in ios-app/PTPerformance/Models/"
+
+rollback_plan:
+  if_critical_bug:
+    - "Revert to Build 44 in TestFlight"
+    - "Disable new GitHub Actions workflows"
+    - "Investigate issue in separate branch"
+    - "Fix and re-test before re-deploying"
+
+  if_performance_regression:
+    - "Disable performance monitoring temporarily"
+    - "Identify slow operations"
+    - "Optimize or remove"
+    - "Re-enable monitoring"
+
+  if_test_failures:
+    - "Do not deploy to TestFlight"
+    - "Fix failing tests"
+    - "Verify fix"
+    - "Re-run full test suite"
+
+communication:
+  daily_standups:
+    - "Each agent reports progress"
+    - "Blockers discussed"
+    - "Next day plans shared"
+
+  completion_report:
+    - "Final report in .outcomes/BUILD_45_COMPLETION_REPORT.md"
+    - "Test results summary"
+    - "Metrics achieved"
+    - "Known issues"
+    - "Next steps for Build 46"
+
+handoff:
+  to_build_46:
+    - "All tests passing and in CI"
+    - "Documentation complete"
+    - "Schema validation enforced"
+    - "RLS policies verified"
+    - "Error monitoring active"
+    - "Ready to build UX improvements"

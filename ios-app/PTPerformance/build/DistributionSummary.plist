@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PTPerformance.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>36</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>AEBE31838AB890206E806C6FE072C79BE8E3AA61</string>
+				<key>dateExpires</key>
+				<string>12/6/26</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>5NNLBL74XR.com.ptperformance.app</string>
+				<key>beta-reports-active</key>
+				<true/>
+				<key>com.apple.developer.team-identifier</key>
+				<string>5NNLBL74XR</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>PTPerformance.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>4414e4fc-3cdb-49ba-9b06-758a7c3d09a9</string>
+				<key>dateExpires</key>
+				<string>12/12/26</string>
+				<key>name</key>
+				<string>iOS Team Store Provisioning Profile: com.ptperformance.app</string>
+			</dict>
+			<key>symbols</key>
+			<true/>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>5NNLBL74XR</string>
+				<key>name</key>
+				<string></string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

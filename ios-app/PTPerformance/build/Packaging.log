@@ -1,0 +1,166 @@
+2025-12-13 01:08:55 +0000 [MT] Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0x8b96fd800; archive(resolved)="<IDEArchive: 0x8bc0534f0>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team(resolved)="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	Chain (15, self inclusive):
+	<IDEDistributionProcessingPipelineContext: 0x8b96fd800; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionProcessingPipelineContext: 0x8b96fd500; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc107200; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106d00; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106a80; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106800; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106580; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106300; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc106080; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc105400; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc105180; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc104c80; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="<IDEProvisioningBasicTeam: 0x8b96911c0; teamID='5NNLBL74XR', teamName='(null)'>">
+	<IDEDistributionContext: 0x8bc104a00; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="(null)">
+	<IDEDistributionContext: 0x8bc104280; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="<IDEDistributionMethodiOSAppStoreDistribution: 0x8bc184320>", team="(null)">
+	<IDEDistributionContext: 0x1046539b0; archive = "<IDEArchive: 0x8bc0534f0>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0x8b96fd800>
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionCreateDestRootStep
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionCopyItemStep
+2025-12-13 01:08:55 +0000 [MT] Running /usr/bin/ditto '-V' '/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root/Payload/PTPerformance.app'
+2025-12-13 01:08:55 +0000  >>> Copying /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app 
+2025-12-13 01:08:55 +0000  copying file ./_CodeSignature/CodeResources ... 
+2025-12-13 01:08:55 +0000  4167 bytes for ./_CodeSignature/CodeResources
+2025-12-13 01:08:55 +0000  copying file ./AppIcon60x60@2x.png ... 
+2025-12-13 01:08:55 +0000  840 bytes for ./AppIcon60x60@2x.png
+2025-12-13 01:08:55 +0000  copying file ./swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy ... 
+2025-12-13 01:08:55 +0000  398 bytes for ./swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy
+2025-12-13 01:08:55 +0000  copying file ./swift-crypto_Crypto.bundle/Info.plist ... 
+2025-12-13 01:08:55 +0000  682 bytes for ./swift-crypto_Crypto.bundle/Info.plist
+2025-12-13 01:08:55 +0000  copying file ./Assets.car ... 
+2025-12-13 01:08:55 +0000  53848 bytes for ./Assets.car
+2025-12-13 01:08:55 +0000  copying file ./AppIcon76x76@2x~ipad.png ... 
+2025-12-13 01:08:55 +0000  1095 bytes for ./AppIcon76x76@2x~ipad.png
+2025-12-13 01:08:55 +0000  copying file ./LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib ... 
+2025-12-13 01:08:55 +0000  2665 bytes for ./LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib
+2025-12-13 01:08:55 +0000  copying file ./LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib ... 
+2025-12-13 01:08:55 +0000  924 bytes for ./LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib
+2025-12-13 01:08:55 +0000  copying file ./LaunchScreen.storyboardc/Info.plist ... 
+2025-12-13 01:08:55 +0000  258 bytes for ./LaunchScreen.storyboardc/Info.plist
+2025-12-13 01:08:55 +0000  copying file ./PTPerformance ... 
+2025-12-13 01:08:55 +0000  3617248 bytes for ./PTPerformance
+2025-12-13 01:08:55 +0000  copying file ./embedded.mobileprovision ... 
+2025-12-13 01:08:55 +0000  12165 bytes for ./embedded.mobileprovision
+2025-12-13 01:08:55 +0000  copying file ./Info.plist ... 
+2025-12-13 01:08:55 +0000  1642 bytes for ./Info.plist
+2025-12-13 01:08:55 +0000  copying file ./PkgInfo ... 
+2025-12-13 01:08:55 +0000  8 bytes for ./PkgInfo
+2025-12-13 01:08:55 +0000 [MT] /usr/bin/ditto exited with 0
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionEmbedProfileStep
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionInfoPlistStep
+2025-12-13 01:08:55 +0000 [MT] Skipping setting DTXcodeBuildDistribution because toolsBuildVersionName was nil.
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionItemRemovalStep
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionAppThinningPlistStep
+2025-12-13 01:08:55 +0000 [MT] Skipping step: IDEDistributionAppThinningPlistStep because it said so
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionSymbolsStep
+2025-12-13 01:08:55 +0000 [MT] Writing /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Symbols/E13D11D3-96E1-38B0-9C8D-6EDF9D7DA01F.symbols
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionCopyAppleProvidedContentStep
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionAppThinningStep
+2025-12-13 01:08:55 +0000 [MT] Skipping step: IDEDistributionAppThinningStep because it said so
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionArchThinningStep
+2025-12-13 01:08:55 +0000 [MT] Archs to thin for item /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app are []
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionODRStep
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionStripXattrsStep
+2025-12-13 01:08:55 +0000 [MT] Skipping stripping extended attributes because the codesign step will strip them.
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionCodesignStep
+2025-12-13 01:08:55 +0000 [MT] Entitlements for <IDEDistributionItem: 0x8b9592520; bundleID='com.ptperformance.app', path='<DVTFilePath:0x8bc053560:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x8b95922e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x8b94a2f40; name='Apple Distribution: Paul Roma (5NNLBL74XR)', hash='AEBE31838AB890206E806C6FE072C79BE8E3AA61', serialNumber='6E4428701ED1CBE793993BFBD05C8F85', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2025-12-07 04:16:26 +0000''>', entitlements='{
+    "application-identifier" = "5NNLBL74XR.com.ptperformance.app";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = 5NNLBL74XR;
+    "get-task-allow" = 0;
+}', teamID='5NNLBL74XR', identifier='com.ptperformance.app', executablePath='<DVTFilePath:0x8b9591bc0:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app/PTPerformance'>', hardenedRuntime='0'>'>: {
+    "application-identifier" = "5NNLBL74XR.com.ptperformance.app";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = 5NNLBL74XR;
+    "get-task-allow" = 0;
+}
+2025-12-13 01:08:55 +0000 [MT] Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2025-12-13 01:08:55 +0000 [MT] Entitlements for <IDEDistributionItem: 0x8b9592520; bundleID='com.ptperformance.app', path='<DVTFilePath:0x8bc053560:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x8b95922e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x8b94a30c0; name='Apple Distribution: Paul Roma (5NNLBL74XR)', hash='AEBE31838AB890206E806C6FE072C79BE8E3AA61', serialNumber='6E4428701ED1CBE793993BFBD05C8F85', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2025-12-07 04:16:26 +0000''>', entitlements='{
+    "application-identifier" = "5NNLBL74XR.com.ptperformance.app";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = 5NNLBL74XR;
+    "get-task-allow" = 0;
+}', teamID='5NNLBL74XR', identifier='com.ptperformance.app', executablePath='<DVTFilePath:0x8b9591bc0:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app/PTPerformance'>', hardenedRuntime='0'>'> are: {
+    "application-identifier" = "5NNLBL74XR.com.ptperformance.app";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = 5NNLBL74XR;
+    "get-task-allow" = 0;
+}
+2025-12-13 01:08:55 +0000 [MT] Writing entitlements for <IDEDistributionItem: 0x8b9592520; bundleID='com.ptperformance.app', path='<DVTFilePath:0x8bc053560:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0x8b95922e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0x8b94a30c0; name='Apple Distribution: Paul Roma (5NNLBL74XR)', hash='AEBE31838AB890206E806C6FE072C79BE8E3AA61', serialNumber='6E4428701ED1CBE793993BFBD05C8F85', certificateKinds='(
+    "1.2.840.113635.100.6.1.7",
+    "1.2.840.113635.100.6.1.4"
+), issueDate='2025-12-07 04:16:26 +0000''>', entitlements='{
+    "application-identifier" = "5NNLBL74XR.com.ptperformance.app";
+    "beta-reports-active" = 1;
+    "com.apple.developer.team-identifier" = 5NNLBL74XR;
+    "get-task-allow" = 0;
+}', teamID='5NNLBL74XR', identifier='com.ptperformance.app', executablePath='<DVTFilePath:0x8b9591bc0:'/Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance/build/PTPerformance.xcarchive/Products/Applications/PTPerformance.app/PTPerformance'>', hardenedRuntime='0'>'> to: /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/entitlements~~~784PAz
+2025-12-13 01:08:55 +0000 [MT] invoking codesign: <NSConcreteTask: 0x8bd4682d0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    AEBE31838AB890206E806C6FE072C79BE8E3AA61,
+    "--entitlements",
+    "/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/entitlements~~~784PAz",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root/Payload/PTPerformance.app"
+)'>
+2025-12-13 01:08:55 +0000 [MT] codesign output: /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root/Payload/PTPerformance.app: replacing existing signature
+/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root/Payload/PTPerformance.app: signed app bundle with Mach-O thin (arm64) [com.ptperformance.app]
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionZipODRItemStep
+2025-12-13 01:08:55 +0000 [MT] Skipping step: IDEDistributionZipODRItemStep because it said so
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionCreateIPAStep
+2025-12-13 01:08:55 +0000 [MT] Running /usr/bin/rsync '-8aPhhE' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Symbols' '--link-dest' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root'
+2025-12-13 01:08:55 +0000  Symbols/
+._Symbols
+            163 170%    3.12MB/s   00:00:00 (xfer#1, to-check=0/4)
+2025-12-13 01:08:55 +0000  Symbols/E13D11D3-96E1-38B0-9C8D-6EDF9D7DA01F.symbols
+Symbols/._E13D11D3-96E1-38B0-9C8D-6EDF9D7DA01F.symbols
+            163   0%   26.04KB/s   00:00:00 (xfer#2, to-check=2/4)
+2025-12-13 01:08:55 +0000 [MT] /usr/bin/rsync exited with 0
+2025-12-13 01:08:55 +0000 [MT] Running /usr/bin/ditto '-V' '-c' '-k' '--norsrc' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root' '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Packages/PTPerformance.ipa'
+2025-12-13 01:08:55 +0000  >>> Copying /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root 
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/_CodeSignature/CodeResources ... 
+2025-12-13 01:08:55 +0000  4167 bytes for ./Payload/PTPerformance.app/_CodeSignature/CodeResources
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/AppIcon60x60@2x.png ... 
+2025-12-13 01:08:55 +0000  840 bytes for ./Payload/PTPerformance.app/AppIcon60x60@2x.png
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy ... 
+2025-12-13 01:08:55 +0000  398 bytes for ./Payload/PTPerformance.app/swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/swift-crypto_Crypto.bundle/Info.plist ... 
+2025-12-13 01:08:55 +0000  682 bytes for ./Payload/PTPerformance.app/swift-crypto_Crypto.bundle/Info.plist
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/Assets.car ... 
+2025-12-13 01:08:55 +0000  53848 bytes for ./Payload/PTPerformance.app/Assets.car
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/AppIcon76x76@2x~ipad.png ... 
+2025-12-13 01:08:55 +0000  1095 bytes for ./Payload/PTPerformance.app/AppIcon76x76@2x~ipad.png
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib ... 
+2025-12-13 01:08:55 +0000  2665 bytes for ./Payload/PTPerformance.app/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib ... 
+2025-12-13 01:08:55 +0000  924 bytes for ./Payload/PTPerformance.app/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/LaunchScreen.storyboardc/Info.plist ... 
+2025-12-13 01:08:55 +0000  258 bytes for ./Payload/PTPerformance.app/LaunchScreen.storyboardc/Info.plist
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/PTPerformance ... 
+2025-12-13 01:08:55 +0000  3617248 bytes for ./Payload/PTPerformance.app/PTPerformance
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/embedded.mobileprovision ... 
+2025-12-13 01:08:55 +0000  14274 bytes for ./Payload/PTPerformance.app/embedded.mobileprovision
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/Info.plist ... 
+2025-12-13 01:08:55 +0000  1642 bytes for ./Payload/PTPerformance.app/Info.plist
+2025-12-13 01:08:55 +0000  copying file ./Payload/PTPerformance.app/PkgInfo ... 
+2025-12-13 01:08:55 +0000  8 bytes for ./Payload/PTPerformance.app/PkgInfo
+2025-12-13 01:08:55 +0000  copying file ./Symbols/E13D11D3-96E1-38B0-9C8D-6EDF9D7DA01F.symbols ... 
+2025-12-13 01:08:55 +0000  7862372 bytes for ./Symbols/E13D11D3-96E1-38B0-9C8D-6EDF9D7DA01F.symbols
+2025-12-13 01:08:55 +0000 [MT] /usr/bin/ditto exited with 0
+2025-12-13 01:08:55 +0000 [MT] Processing step: IDEDistributionAppStoreInformationStep
+2025-12-13 01:08:56 +0000 [MT] Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2025-12-13 01:08:56 +0000 [MT] Processing step: IDEDistributionGenerateProcessedDistributionItems
+2025-12-13 01:08:56 +0000 [MT] IDEDistributionItem init <DVTFilePath:0x8bc338b60:'/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/XcodeDistPipeline.~~~2k0fGd/Root/Payload/PTPerformance.app'>
+2025-12-13 01:08:56 +0000 [MT] Processing step: IDEDistributionCreateManifestStep
+2025-12-13 01:08:56 +0000 [MT] Skipping step: IDEDistributionCreateManifestStep because it said so

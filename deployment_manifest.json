@@ -1,0 +1,1925 @@
+{
+  "deployment_date": "2025-12-20T23:44:18.820623",
+  "total_articles": 189,
+  "categories": {
+    "arm-care": {
+      "count": 24,
+      "articles": [
+        {
+          "title": "01 J Band Routine",
+          "slug": "01-j-band-routine",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Long Toss Programs",
+          "slug": "02-long-toss-programs",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Pitcher Maintenance",
+          "slug": "03-pitcher-maintenance",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Ucl Health",
+          "slug": "04-ucl-health",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Weighted Ball Programs",
+          "slug": "05-weighted-ball-programs",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Shoulder Strengthening",
+          "slug": "06-shoulder-strengthening",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Pitch Count Management",
+          "slug": "07-pitch-count-management",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Year Round Throwing",
+          "slug": "08-year-round-throwing",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Arm Fatigue Signs",
+          "slug": "09-arm-fatigue-signs",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Return To Throwing",
+          "slug": "10-return-to-throwing",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Arm Action Efficiency: Short vs Long Arm Path",
+          "slug": "arm-action-efficiency",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "pitching",
+            "arm-action",
+            "mechanics",
+            "velocity",
+            "injury-prevention",
+            "high-school"
+          ]
+        },
+        {
+          "title": "Command Development: Hitting Your Spots",
+          "slug": "command-development",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "pitching",
+            "command",
+            "control",
+            "mechanics",
+            "high-school",
+            "college",
+            "professional"
+          ]
+        },
+        {
+          "title": "Delivery Drills: Building Mechanical Consistency",
+          "slug": "delivery-drills-consistency",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "pitching",
+            "drills",
+            "mechanics",
+            "training",
+            "youth",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Follow-Through Mechanics: Deceleration Phase",
+          "slug": "follow-through-mechanics",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "pitching",
+            "injury-prevention",
+            "mechanics",
+            "arm-care",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Hand Break Timing: When to Separate the Ball",
+          "slug": "hand-break-timing",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "pitching",
+            "mechanics",
+            "timing",
+            "arm-action",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Leg Lift Mechanics: Creating Momentum",
+          "slug": "leg-lift-mechanics",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "pitching",
+            "lower-body",
+            "mechanics",
+            "velocity",
+            "youth",
+            "high-school"
+          ]
+        },
+        {
+          "title": "Maximum Distance Protocols: How Far to Throw",
+          "slug": "maximum-distance-protocols",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "long-toss",
+            "distance",
+            "protocols",
+            "biomechanics",
+            "baseball"
+          ]
+        },
+        {
+          "title": "Pitch Design: Using Biomechanics to Shape Pitches",
+          "slug": "pitch-design-biomechanics",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "pitching",
+            "pitch-design",
+            "biomechanics",
+            "spin-axis",
+            "college",
+            "professional"
+          ]
+        },
+        {
+          "title": "Pitching Delivery Phases: Breaking Down the Motion",
+          "slug": "pitching-delivery-phases",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "pitching",
+            "biomechanics",
+            "mechanics",
+            "youth",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Release Point Consistency: Repeating Your Slot",
+          "slug": "release-point-consistency",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "pitching",
+            "command",
+            "mechanics",
+            "consistency",
+            "college",
+            "professional"
+          ]
+        },
+        {
+          "title": "Stride Direction: Staying On Line to Home",
+          "slug": "stride-direction-pitching",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "pitching",
+            "mechanics",
+            "lower-body",
+            "injury-prevention",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Velocity Development: Mechanical Efficiency",
+          "slug": "velocity-development-mechanics",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "pitching",
+            "velocity",
+            "mechanics",
+            "kinetic-chain",
+            "high-school",
+            "college"
+          ]
+        },
+        {
+          "title": "Video Analysis for Pitchers: What to Look For",
+          "slug": "video-analysis-pitchers",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "pitching",
+            "video-analysis",
+            "mechanics",
+            "technology",
+            "college",
+            "professional"
+          ]
+        },
+        {
+          "title": "Wind-Up vs Stretch: Mechanics Differences",
+          "slug": "windup-vs-stretch",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "pitching",
+            "mechanics",
+            "delivery",
+            "high-school",
+            "college",
+            "professional"
+          ]
+        }
+      ]
+    },
+    "hitting": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "01 Rotational Power Bat Speed",
+          "slug": "01-rotational-power-bat-speed",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Vision Training Tracking",
+          "slug": "02-vision-training-tracking",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Launch Angle Exit Velocity",
+          "slug": "03-launch-angle-exit-velocity",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Hand Eye Coordination Drills",
+          "slug": "04-hand-eye-coordination-drills",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Core Training Anti Rotation",
+          "slug": "05-core-training-anti-rotation",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Barrel Accuracy Consistency",
+          "slug": "06-barrel-accuracy-consistency",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Timing Mechanisms",
+          "slug": "07-timing-mechanisms",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Approach Adjustment Video Analysis",
+          "slug": "08-approach-adjustment-video-analysis",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Cage Work Game Transfer",
+          "slug": "09-cage-work-game-transfer",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Grip Strength Bat Control",
+          "slug": "10-grip-strength-bat-control",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    },
+    "injury-prevention": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "Acl Injury Prevention",
+          "slug": "acl-injury-prevention",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Ankle Sprains",
+          "slug": "ankle-sprains",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Concussion Protocol",
+          "slug": "concussion-protocol",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Elbow Pain",
+          "slug": "elbow-pain",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Hamstring Strains",
+          "slug": "hamstring-strains",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Heat Illness Prevention",
+          "slug": "heat-illness-prevention",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Lower Back Pain",
+          "slug": "lower-back-pain",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Oblique Injuries",
+          "slug": "oblique-injuries",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Overuse Vs Acute Injuries",
+          "slug": "overuse-vs-acute-injuries",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Wrist Injuries",
+          "slug": "wrist-injuries",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    },
+    "mental": {
+      "count": 23,
+      "articles": [
+        {
+          "title": "01 Pre Pitch Routine",
+          "slug": "01-pre-pitch-routine",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Visualization Techniques",
+          "slug": "02-visualization-techniques",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Managing Slumps",
+          "slug": "03-managing-slumps",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Focus Training",
+          "slug": "04-focus-training",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Breathing Techniques",
+          "slug": "05-breathing-techniques",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Confidence After Errors",
+          "slug": "06-confidence-after-errors",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Self Talk",
+          "slug": "07-self-talk",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Pre Game Anxiety",
+          "slug": "08-pre-game-anxiety",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Flow State",
+          "slug": "09-flow-state",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Mental Recovery Between Innings",
+          "slug": "10-mental-recovery-between-innings",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Arousal Regulation: Psyching Up and Calming Down",
+          "slug": "arousal-regulation",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "arousal",
+            "activation",
+            "anxiety",
+            "energy-management",
+            "performance"
+          ]
+        },
+        {
+          "title": "Attentional Focus: Internal vs External Cues",
+          "slug": "attentional-focus-baseball",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "attention",
+            "focus",
+            "external-cues",
+            "internal-cues",
+            "motor-learning"
+          ]
+        },
+        {
+          "title": "Concentration Training: Staying Locked In",
+          "slug": "concentration-training",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "concentration",
+            "focus",
+            "attention",
+            "mental-training",
+            "performance"
+          ]
+        },
+        {
+          "title": "Goal Setting for Baseball: SMART Goals That Work",
+          "slug": "goal-setting-baseball",
+          "difficulty": "beginner",
+          "reading_time": 8,
+          "tags": [
+            "goal-setting",
+            "SMART-goals",
+            "motivation",
+            "performance-planning",
+            "achievement"
+          ]
+        },
+        {
+          "title": "Imagery Training: Creating Vivid Mental Pictures",
+          "slug": "imagery-training-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "imagery",
+            "visualization",
+            "mental-skills",
+            "cognitive-training",
+            "performance"
+          ]
+        },
+        {
+          "title": "Mental Practice Schedules: How Often to Visualize",
+          "slug": "mental-practice-schedules",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "visualization",
+            "mental-practice",
+            "training-schedule",
+            "frequency",
+            "planning"
+          ]
+        },
+        {
+          "title": "Mental Recovery: Psychological Rest Between Games",
+          "slug": "mental-recovery-athletes",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "recovery",
+            "mental-fatigue",
+            "rest",
+            "regeneration",
+            "burnout-prevention"
+          ]
+        },
+        {
+          "title": "Mental Reps: Practicing Without Physical Training",
+          "slug": "mental-reps-visualization",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "visualization",
+            "mental-practice",
+            "skill-development",
+            "cognitive-training",
+            "baseball"
+          ]
+        },
+        {
+          "title": "Mental Toughness: Resilience Under Pressure",
+          "slug": "mental-toughness-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "mental-toughness",
+            "resilience",
+            "pressure",
+            "adversity",
+            "baseball"
+          ]
+        },
+        {
+          "title": "Mindfulness for Athletes: Present-Moment Awareness",
+          "slug": "mindfulness-baseball-athletes",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "mindfulness",
+            "present-moment",
+            "awareness",
+            "meditation",
+            "focus"
+          ]
+        },
+        {
+          "title": "Pre-Performance Routines: Consistency and Control",
+          "slug": "pre-performance-routines",
+          "difficulty": "beginner",
+          "reading_time": 8,
+          "tags": [
+            "pre-performance",
+            "routines",
+            "consistency",
+            "focus",
+            "mental-preparation"
+          ]
+        },
+        {
+          "title": "Process Goals vs Outcome Goals: What to Focus On",
+          "slug": "process-vs-outcome-goals",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "goal-setting",
+            "process-goals",
+            "outcome-goals",
+            "focus",
+            "performance"
+          ]
+        },
+        {
+          "title": "Self-Efficacy: Building Belief in Your Abilities",
+          "slug": "self-efficacy-athletes",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "self-efficacy",
+            "confidence",
+            "belief",
+            "Bandura",
+            "performance"
+          ]
+        }
+      ]
+    },
+    "mobility": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "01 Resistance Band Shoulder Series",
+          "slug": "01-resistance-band-shoulder-series",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Hip Mobility Pitchers Stride",
+          "slug": "02-hip-mobility-pitchers-stride",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Thoracic Spine Rotation",
+          "slug": "03-thoracic-spine-rotation",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Ankle Mobility Pitching",
+          "slug": "04-ankle-mobility-pitching",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Band Walks Hip Stability",
+          "slug": "05-band-walks-hip-stability",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Scapular Mobility Control",
+          "slug": "06-scapular-mobility-control",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Pre Throwing Dynamic Warmup",
+          "slug": "07-pre-throwing-dynamic-warmup",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Lower Body Mobility Hitting",
+          "slug": "08-lower-body-mobility-hitting",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Foam Rolling Vs Stretching",
+          "slug": "09-foam-rolling-vs-stretching",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Mobility Screening Limitations",
+          "slug": "10-mobility-screening-limitations",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    },
+    "nutrition": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "01 Pre Game Nutrition",
+          "slug": "01-pre-game-nutrition",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Post Workout Recovery Meals",
+          "slug": "02-post-workout-recovery-meals",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Hydration Strategy",
+          "slug": "03-hydration-strategy",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Protein Timing Pitchers Vs Position Players",
+          "slug": "04-protein-timing-pitchers-vs-position-players",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Tournament Nutrition Doubleheaders",
+          "slug": "05-tournament-nutrition-doubleheaders",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Weight Gain For Pitchers",
+          "slug": "06-weight-gain-for-pitchers",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Cutting Weight Safely During Season",
+          "slug": "07-cutting-weight-safely-during-season",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Supplement Guide",
+          "slug": "08-supplement-guide",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Game Day Snacks",
+          "slug": "09-game-day-snacks",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Late Night Games Nutrition",
+          "slug": "10-late-night-games-nutrition",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    },
+    "recovery": {
+      "count": 16,
+      "articles": [
+        {
+          "title": "01 Sleep Pitchers Arm Recovery",
+          "slug": "01-sleep-pitchers-arm-recovery",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Optimal Sleep Duration Performance",
+          "slug": "02-optimal-sleep-duration-performance",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Napping Strategy Doubleheaders",
+          "slug": "03-napping-strategy-doubleheaders",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Travel Recovery Bus Lag",
+          "slug": "04-travel-recovery-bus-lag",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Sleep Hygiene Late Night Games",
+          "slug": "05-sleep-hygiene-late-night-games",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Rem Sleep Hitting Performance",
+          "slug": "06-rem-sleep-hitting-performance",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Pitcher Sleep Protocol Between Starts",
+          "slug": "07-pitcher-sleep-protocol-between-starts",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Off Day Active Vs Passive Rest",
+          "slug": "08-off-day-active-vs-passive-rest",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Cold Plunge Ice Bath Science",
+          "slug": "09-cold-plunge-ice-bath-science",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Compression Gear Recovery Evidence",
+          "slug": "10-compression-gear-recovery-evidence",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Active Recovery: Light Training for Adaptation",
+          "slug": "active-recovery-methods",
+          "difficulty": "beginner",
+          "reading_time": 5,
+          "tags": [
+            "active-recovery",
+            "recovery-methods",
+            "training-adaptation",
+            "lactate-clearance"
+          ]
+        },
+        {
+          "title": "HRV Monitoring: Heart Rate Variability for Recovery",
+          "slug": "hrv-monitoring-recovery",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": [
+            "HRV",
+            "heart-rate-variability",
+            "recovery-monitoring",
+            "autonomic-nervous-system"
+          ]
+        },
+        {
+          "title": "Nutrition Timing: Fueling Recovery Windows",
+          "slug": "nutrition-timing-recovery",
+          "difficulty": "beginner",
+          "reading_time": 5,
+          "tags": [
+            "nutrition",
+            "nutrition-timing",
+            "recovery-nutrition",
+            "protein",
+            "carbohydrates"
+          ]
+        },
+        {
+          "title": "Overtraining Prevention: Recognizing Warning Signs",
+          "slug": "overtraining-prevention",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": [
+            "overtraining",
+            "overtraining-syndrome",
+            "prevention",
+            "warning-signs",
+            "recovery"
+          ]
+        },
+        {
+          "title": "Sleep Tracking: Using Data to Optimize Recovery",
+          "slug": "sleep-tracking-optimization",
+          "difficulty": "beginner",
+          "reading_time": 5,
+          "tags": [
+            "sleep",
+            "sleep-tracking",
+            "recovery-optimization",
+            "performance"
+          ]
+        },
+        {
+          "title": "Supercompensation: Training Stress and Adaptation",
+          "slug": "supercompensation-training",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": [
+            "supercompensation",
+            "training-adaptation",
+            "recovery-science",
+            "periodization"
+          ]
+        }
+      ]
+    },
+    "speed": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "01 60 Yard Dash Sprint Mechanics",
+          "slug": "01-60-yard-dash-sprint-mechanics",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 First Step Quickness Stealing Bases",
+          "slug": "02-first-step-quickness-stealing-bases",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Lateral Agility For Infielders",
+          "slug": "03-lateral-agility-for-infielders",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Acceleration Vs Top Speed",
+          "slug": "04-acceleration-vs-top-speed",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Plyometric Training Explosive Movements",
+          "slug": "05-plyometric-training-explosive-movements",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Change Of Direction Cone Drills",
+          "slug": "06-change-of-direction-cone-drills",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Speed Endurance Base Running",
+          "slug": "07-speed-endurance-base-running",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Deceleration Training Injury Prevention",
+          "slug": "08-deceleration-training-injury-prevention",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Sprint Technique Arm Action Posture",
+          "slug": "09-sprint-technique-arm-action-posture",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Speed Testing Tracking Progress",
+          "slug": "10-speed-testing-tracking-progress",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    },
+    "training": {
+      "count": 66,
+      "articles": [
+        {
+          "title": "01 Off Season Strength Mobility",
+          "slug": "01-off-season-strength-mobility",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 In Season Lifting Frequency",
+          "slug": "02-in-season-lifting-frequency",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Preseason Ramp Protocol",
+          "slug": "03-preseason-ramp-protocol",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Deload Weeks Guide",
+          "slug": "04-deload-weeks-guide",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Training Age Youth To College",
+          "slug": "05-training-age-youth-to-college",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Pitcher Vs Position Player Training",
+          "slug": "06-pitcher-vs-position-player-training",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Velocity Development Longterm",
+          "slug": "07-velocity-development-longterm",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Tournament Season Recovery",
+          "slug": "08-tournament-season-recovery",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Youth Pitcher Strength Safety",
+          "slug": "09-youth-pitcher-strength-safety",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 High School To College Transition",
+          "slug": "10-high-school-to-college-transition",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "Accommodating Resistance: Chains and Bands for Variable Load",
+          "slug": "accommodating-resistance",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "power",
+            "strength",
+            "equipment",
+            "advanced",
+            "biomechanics"
+          ]
+        },
+        {
+          "title": "Arm Slot Biomechanics: Finding Your Natural Release",
+          "slug": "arm-slot-biomechanics",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "arm-slot",
+            "mechanics",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Auto-Regulation: Listening to Your Body",
+          "slug": "auto-regulation-training",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "autoregulation",
+            "RPE",
+            "RIR",
+            "flexibility",
+            "recovery",
+            "readiness"
+          ]
+        },
+        {
+          "title": "Exercise Selection for Baseball Athletes: What Works Best",
+          "slug": "baseball-exercise-selection",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "exercise-selection",
+            "rotational-power",
+            "baseball-specific",
+            "programming"
+          ]
+        },
+        {
+          "title": "Bat Path Analysis: Understanding Swing Plane",
+          "slug": "bat-path-analysis",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "biomechanics",
+            "hitting",
+            "bat-speed",
+            "swing-mechanics",
+            "technology"
+          ]
+        },
+        {
+          "title": "Between-Game Routines: Doubleheader Management",
+          "slug": "between-game-routines",
+          "difficulty": "intermediate",
+          "reading_time": 6,
+          "tags": [
+            "doubleheader",
+            "recovery",
+            "nutrition",
+            "energy-management",
+            "tournament"
+          ]
+        },
+        {
+          "title": "Bullpen Preparation: Reliever Warm-Up Strategy",
+          "slug": "bullpen-preparation-relievers",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "pitching",
+            "bullpen",
+            "relievers",
+            "warmup",
+            "arm-care"
+          ]
+        },
+        {
+          "title": "Center of Mass Control: Balance in Movement",
+          "slug": "center-of-mass-control",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "hitting",
+            "balance",
+            "movement-quality"
+          ]
+        },
+        {
+          "title": "Cluster Sets: Rest-Pause Training for Power",
+          "slug": "cluster-sets-power",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "power",
+            "strength",
+            "velocity",
+            "advanced",
+            "programming"
+          ]
+        },
+        {
+          "title": "Compound vs Isolation Exercises for Baseball",
+          "slug": "compound-vs-isolation",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "compound",
+            "isolation",
+            "exercise-selection",
+            "programming",
+            "efficiency"
+          ]
+        },
+        {
+          "title": "Core Anti-Rotation Work: Cable and Band Exercises",
+          "slug": "core-anti-rotation",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "core",
+            "anti-rotation",
+            "stability",
+            "injury-prevention",
+            "pitching"
+          ]
+        },
+        {
+          "title": "Deadlift for Baseball Athletes: Trap Bar vs Conventional",
+          "slug": "deadlift-baseball-athletes",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "strength",
+            "posterior-chain",
+            "power",
+            "pitcher",
+            "off-season"
+          ]
+        },
+        {
+          "title": "Eccentric Training: Controlling the Lowering Phase",
+          "slug": "eccentric-training",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "eccentric",
+            "strength",
+            "injury-prevention",
+            "hamstring",
+            "control"
+          ]
+        },
+        {
+          "title": "French Contrast Training: Advanced Power Development",
+          "slug": "french-contrast-training",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "power",
+            "explosive-strength",
+            "rotational",
+            "advanced",
+            "off-season"
+          ]
+        },
+        {
+          "title": "Game-Day Nutrition: Timing and Food Selection",
+          "slug": "game-day-nutrition-timing",
+          "difficulty": "beginner",
+          "reading_time": 8,
+          "tags": [
+            "nutrition",
+            "hydration",
+            "performance",
+            "recovery",
+            "game-prep"
+          ]
+        },
+        {
+          "title": "Grip Strength Training: Forearm and Hand Work",
+          "slug": "grip-strength-training",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "grip-strength",
+            "forearm",
+            "hand-strength",
+            "pitching",
+            "hitting"
+          ]
+        },
+        {
+          "title": "Ground Reaction Forces: Generating Power from the Ground",
+          "slug": "ground-reaction-forces",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "hitting",
+            "power",
+            "velocity"
+          ]
+        },
+        {
+          "title": "Hip-Shoulder Separation: Creating Torque",
+          "slug": "hip-shoulder-separation",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "velocity",
+            "core",
+            "rotation"
+          ]
+        },
+        {
+          "title": "In-Game Adjustments: Reading and Reacting",
+          "slug": "in-game-adjustments",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "strategy",
+            "adjustments",
+            "tactics",
+            "game-management",
+            "decision-making"
+          ]
+        },
+        {
+          "title": "Isometric Training: Building Strength at Specific Angles",
+          "slug": "isometric-training",
+          "difficulty": "advanced",
+          "reading_time": 6,
+          "tags": [
+            "isometric",
+            "angle-specific",
+            "strength",
+            "rehabilitation",
+            "pitching"
+          ]
+        },
+        {
+          "title": "Kinetic Chain: How Energy Transfers in Baseball",
+          "slug": "kinetic-chain-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "hitting",
+            "velocity",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Lead Leg Blocking: Redirecting Energy",
+          "slug": "lead-leg-blocking",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "velocity",
+            "mechanics",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Med Ball Training: Explosive Rotational Power",
+          "slug": "med-ball-training",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "power",
+            "rotational-power",
+            "med-ball",
+            "hitting",
+            "pitching"
+          ]
+        },
+        {
+          "title": "Mental Preparation: Pre-Game Focus Routine",
+          "slug": "mental-preparation-pre-game",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "mental-game",
+            "focus",
+            "visualization",
+            "psychology",
+            "routine"
+          ]
+        },
+        {
+          "title": "Movement Screening: FMS and Y-Balance for Baseball",
+          "slug": "movement-screening-baseball",
+          "difficulty": "advanced",
+          "reading_time": 9,
+          "tags": [
+            "biomechanics",
+            "injury-prevention",
+            "assessment",
+            "movement-quality",
+            "screening"
+          ]
+        },
+        {
+          "title": "Olympic Lifts for Power: Clean and Snatch Variations",
+          "slug": "olympic-lifts-baseball",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "power",
+            "explosive-strength",
+            "olympic-lifting",
+            "velocity",
+            "off-season"
+          ]
+        },
+        {
+          "title": "Training Frequency: How Often Should You Lift",
+          "slug": "optimal-training-frequency",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "frequency",
+            "recovery",
+            "programming",
+            "weekly-volume",
+            "adaptation"
+          ]
+        },
+        {
+          "title": "Pelvic Rotation: Generating Rotational Power",
+          "slug": "pelvic-rotation-power",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "hitting",
+            "velocity",
+            "core-strength"
+          ]
+        },
+        {
+          "title": "Physical Activation: Getting Your Body Ready",
+          "slug": "physical-activation-pre-game",
+          "difficulty": "beginner",
+          "reading_time": 8,
+          "tags": [
+            "warmup",
+            "activation",
+            "dynamic-stretching",
+            "injury-prevention",
+            "mobility"
+          ]
+        },
+        {
+          "title": "Plyometric Progressions: Building Elastic Strength",
+          "slug": "plyometric-progressions",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "plyometrics",
+            "power",
+            "speed",
+            "jumping",
+            "explosive-strength"
+          ]
+        },
+        {
+          "title": "Post-Activation Potentiation: Priming for Performance",
+          "slug": "post-activation-potentiation",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "power",
+            "performance",
+            "warm-up",
+            "priming",
+            "advanced"
+          ]
+        },
+        {
+          "title": "Post-Game Recovery: Immediate Actions After Games",
+          "slug": "post-game-recovery-immediate",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "recovery",
+            "cool-down",
+            "nutrition",
+            "hydration",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Posterior Chain Development: Glutes and Hamstrings",
+          "slug": "posterior-chain-development",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "posterior-chain",
+            "hamstrings",
+            "glutes",
+            "injury-prevention",
+            "power"
+          ]
+        },
+        {
+          "title": "Pre-Game Timeline: 3 Hours to First Pitch",
+          "slug": "pre-game-timeline",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "pre-game",
+            "routine",
+            "warmup",
+            "game-prep",
+            "professional"
+          ]
+        },
+        {
+          "title": "Progressive Overload for Baseball: Building Strength Over Time",
+          "slug": "progressive-overload-baseball",
+          "difficulty": "beginner",
+          "reading_time": 8,
+          "tags": [
+            "strength-training",
+            "progressive-overload",
+            "off-season",
+            "periodization",
+            "muscle-growth"
+          ]
+        },
+        {
+          "title": "Recovery Between Training Sessions: How Much Time",
+          "slug": "recovery-between-sessions",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "recovery",
+            "muscle-protein-synthesis",
+            "adaptation",
+            "overtraining",
+            "periodization"
+          ]
+        },
+        {
+          "title": "Rest Periods Between Sets: Science-Based Guidelines",
+          "slug": "rest-periods-strength-training",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "rest-periods",
+            "recovery",
+            "strength",
+            "hypertrophy",
+            "power"
+          ]
+        },
+        {
+          "title": "Scapular Rhythm: Shoulder Blade Movement",
+          "slug": "scapular-rhythm",
+          "difficulty": "advanced",
+          "reading_time": 8,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "shoulder-health",
+            "arm-care",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Scouting Reports: How to Use Opponent Data",
+          "slug": "scouting-reports-usage",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "scouting",
+            "strategy",
+            "analytics",
+            "opponent-analysis",
+            "game-planning"
+          ]
+        },
+        {
+          "title": "Single-Leg Strength: Lunges, Step-Ups, and Split Squats",
+          "slug": "single-leg-strength",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "single-leg",
+            "unilateral",
+            "lunges",
+            "split-squats",
+            "balance"
+          ]
+        },
+        {
+          "title": "Squat Variations for Baseball: Back, Front, and Split",
+          "slug": "squat-variations-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "strength",
+            "lower-body",
+            "power",
+            "pitcher",
+            "position-player"
+          ]
+        },
+        {
+          "title": "Stride Length and Mechanics: Pitching Biomechanics",
+          "slug": "stride-length-mechanics",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "mechanics",
+            "velocity",
+            "injury-prevention"
+          ]
+        },
+        {
+          "title": "Tempo Training: Controlling Speed of Movement",
+          "slug": "tempo-training-baseball",
+          "difficulty": "advanced",
+          "reading_time": 7,
+          "tags": [
+            "tempo",
+            "eccentric",
+            "concentric",
+            "time-under-tension",
+            "control"
+          ]
+        },
+        {
+          "title": "Training Logs: Tracking Progress Effectively",
+          "slug": "training-logs-tracking",
+          "difficulty": "beginner",
+          "reading_time": 7,
+          "tags": [
+            "tracking",
+            "progress",
+            "data",
+            "adherence",
+            "accountability",
+            "progressive-overload"
+          ]
+        },
+        {
+          "title": "Training Split Options: Full Body vs Upper/Lower",
+          "slug": "training-split-options",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "training-splits",
+            "programming",
+            "full-body",
+            "upper-lower",
+            "periodization"
+          ]
+        },
+        {
+          "title": "Training to Failure: When It Helps, When It Hurts",
+          "slug": "training-to-failure",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "failure",
+            "hypertrophy",
+            "strength",
+            "fatigue-management",
+            "RIR"
+          ]
+        },
+        {
+          "title": "Training Volume vs Intensity: Finding Your Balance",
+          "slug": "training-volume-vs-intensity",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "volume",
+            "intensity",
+            "programming",
+            "in-season",
+            "recovery"
+          ]
+        },
+        {
+          "title": "Transfer of Training: Making Gym Work Count on the Field",
+          "slug": "transfer-of-training",
+          "difficulty": "advanced",
+          "reading_time": 9,
+          "tags": [
+            "performance",
+            "specificity",
+            "programming",
+            "advanced",
+            "application"
+          ]
+        },
+        {
+          "title": "Travel Preparation: Road Game Logistics",
+          "slug": "travel-preparation-road-games",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "travel",
+            "road-games",
+            "logistics",
+            "equipment",
+            "organization"
+          ]
+        },
+        {
+          "title": "Triple Extension: Power Position in Throwing",
+          "slug": "triple-extension-throwing",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "biomechanics",
+            "pitching",
+            "velocity",
+            "power",
+            "lower-body"
+          ]
+        },
+        {
+          "title": "Unilateral Training: Why Single-Leg Work Matters",
+          "slug": "unilateral-training-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "unilateral",
+            "single-leg",
+            "injury-prevention",
+            "asymmetry",
+            "balance"
+          ]
+        },
+        {
+          "title": "Upper Body Pulling: Rows, Pull-ups, and Face Pulls",
+          "slug": "upper-body-pulling",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "upper-body",
+            "pulling",
+            "rows",
+            "pull-ups",
+            "shoulder-health"
+          ]
+        },
+        {
+          "title": "Upper Body Pushing: Bench, Overhead, and Landmine",
+          "slug": "upper-body-pushing",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "upper-body",
+            "pushing",
+            "bench-press",
+            "overhead-press",
+            "strength"
+          ]
+        },
+        {
+          "title": "Velocity-Based Training: Using Bar Speed for Optimal Power",
+          "slug": "velocity-based-training",
+          "difficulty": "advanced",
+          "reading_time": 9,
+          "tags": [
+            "power",
+            "velocity",
+            "technology",
+            "monitoring",
+            "advanced"
+          ]
+        },
+        {
+          "title": "Video Analysis: Same-Day Adjustments",
+          "slug": "video-analysis-adjustments",
+          "difficulty": "intermediate",
+          "reading_time": 7,
+          "tags": [
+            "video-analysis",
+            "adjustments",
+            "mechanics",
+            "technology",
+            "game-prep"
+          ]
+        },
+        {
+          "title": "Weather Adaptations: Hot, Cold, Rain, and Wind",
+          "slug": "weather-adaptations-baseball",
+          "difficulty": "intermediate",
+          "reading_time": 8,
+          "tags": [
+            "weather",
+            "environment",
+            "strategy",
+            "adaptation",
+            "game-conditions"
+          ]
+        }
+      ]
+    },
+    "warmup": {
+      "count": 10,
+      "articles": [
+        {
+          "title": "01 Complete Baseball Warmup 15 Minute Protocol",
+          "slug": "01-complete-baseball-warmup-15-minute-protocol",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "02 Activation Exercises Before Throwing",
+          "slug": "02-activation-exercises-before-throwing",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "03 Dynamic Vs Static Stretching When To Use Each",
+          "slug": "03-dynamic-vs-static-stretching-when-to-use-each",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "04 Position Specific Warmups Pitcher Vs Position Player",
+          "slug": "04-position-specific-warmups-pitcher-vs-position-player",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "05 Game Day Warmup Timeline 2 Hours To First Pitch",
+          "slug": "05-game-day-warmup-timeline-2-hours-to-first-pitch",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "06 Cold Weather Warmup Adjustments",
+          "slug": "06-cold-weather-warmup-adjustments",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "07 Bullpen Warmup Routine Relief Pitchers",
+          "slug": "07-bullpen-warmup-routine-relief-pitchers",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "08 Pre Hitting Warmup In The Cage",
+          "slug": "08-pre-hitting-warmup-in-the-cage",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "09 Nerve Flossing For Baseball Players",
+          "slug": "09-nerve-flossing-for-baseball-players",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        },
+        {
+          "title": "10 Mental Warmup Focus And Visualization",
+          "slug": "10-mental-warmup-focus-and-visualization",
+          "difficulty": "intermediate",
+          "reading_time": 5,
+          "tags": []
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,402 @@
+name: Agent-Optimized Architecture Rollout
+description: |
+  Transform linear-bootstrap into an agent-optimized orchestration client
+  with < 10-second orientation time and 100-agent parallelism capability.
+
+  Implements the complete 4-week rollout plan in parallel execution.
+
+build_number: INFRA-001
+target_directory: /Users/expo/Code/expo/clients/linear-bootstrap/
+estimated_duration: 4-6 hours with parallel execution
+
+rehydration:
+  - Read docs/architecture/repo-map.md (already created)
+  - Read docs/architecture/boundaries.md (already created)
+  - Read ROLLOUT_PLAN.md for context
+  - All agents use tools/scripts/ wrappers only
+
+agents:
+  # ============================================================================
+  # TRACK 1: Documentation & Runbooks (5 agents - zero collision)
+  # ============================================================================
+
+  - id: 1
+    name: Runbook Migration Agent
+    track: documentation
+    deliverables:
+      - Move .claude/LINEAR_RUNBOOK.md to docs/runbooks/linear-sync.md
+      - Move .claude/BUILD_RUNBOOK.md to docs/runbooks/build.md
+      - Move .claude/QC_RUNBOOK.md to docs/runbooks/validation.md
+      - Create redirects in .claude/ files pointing to new locations
+      - Update all internal links
+    tasks:
+      - "Migrate LINEAR_RUNBOOK to docs/runbooks/linear-sync.md"
+      - "Migrate BUILD_RUNBOOK to docs/runbooks/build.md"
+      - "Migrate QC_RUNBOOK to docs/runbooks/validation.md"
+      - "Create redirect stubs in .claude/ pointing to new docs/"
+
+  - id: 2
+    name: Setup Runbook Creator
+    track: documentation
+    deliverables:
+      - Create docs/runbooks/setup.md (complete environment setup guide)
+      - Create docs/runbooks/troubleshooting.md (common issues and solutions)
+      - Update docs/runbooks/index.md with new runbooks
+    tasks:
+      - "Create setup.md with bootstrap instructions"
+      - "Create troubleshooting.md with common error solutions"
+      - "Update runbook index with all new runbooks"
+    template_sections:
+      setup:
+        - Prerequisites (Python 3, .env)
+        - Clone and bootstrap steps
+        - Dependency installation
+        - Environment validation
+        - First deployment test
+      troubleshooting:
+        - Content deployment failures (7 scenarios)
+        - Environment configuration errors
+        - Swarm execution problems
+        - Linear sync issues
+        - iOS coordination errors
+
+  - id: 3
+    name: Architecture Documentation Agent
+    track: documentation
+    deliverables:
+      - Create docs/architecture/overview.md (system architecture)
+      - Create docs/architecture/decisions/ directory
+      - Create ADR 001: Canonical Wrappers
+      - Create ADR 002: Swarm Coordination
+      - Create ADR 003: Content System JSONB
+    tasks:
+      - "Create architecture overview with system diagram"
+      - "Create ADR 001 explaining canonical wrapper pattern"
+      - "Create ADR 002 explaining swarm coordination approach"
+      - "Create ADR 003 documenting JSONB content system decision"
+
+  - id: 4
+    name: Outcomes Organization Agent
+    track: documentation
+    deliverables:
+      - Create .outcomes/README.md
+      - Reorganize .outcomes/ by date (2025-12/)
+      - Create .outcomes/templates/ directory
+      - Create outcome templates (deployment-report.md, swarm-summary.md)
+      - Move existing outcomes to dated directories
+    tasks:
+      - "Create .outcomes/README.md explaining outcome system"
+      - "Create .outcomes/2025-12/ and move December outcomes"
+      - "Create outcome templates for future use"
+      - "Update repo-map.md to reflect new .outcomes/ structure"
+
+  - id: 5
+    name: README Update Agent
+    track: documentation
+    deliverables:
+      - Update root README.md to reference new docs/
+      - Create CHANGELOG.md entry for architecture change
+      - Update all existing documentation references to new paths
+    tasks:
+      - "Update README.md to point to docs/index.md"
+      - "Add CHANGELOG entry for architecture rollout"
+      - "Search and update all old doc path references"
+
+  # ============================================================================
+  # TRACK 2: Scripts & Tools (4 agents - low collision)
+  # ============================================================================
+
+  - id: 6
+    name: Canonical Wrappers Agent
+    track: scripts
+    deliverables:
+      - Create tools/scripts/test.sh
+      - Create tools/scripts/sync.sh
+      - Create tools/scripts/bootstrap.sh
+      - Make all scripts executable
+      - Test all wrappers work correctly
+    tasks:
+      - "Create test.sh wrapper (quick, full, module modes)"
+      - "Create sync.sh wrapper (linear, manifest targets)"
+      - "Create bootstrap.sh (environment setup automation)"
+      - "chmod +x all tools/scripts/*.sh"
+      - "Test each wrapper with dry-run"
+    script_templates:
+      test_sh:
+        - "--quick mode: fast tests only"
+        - "--full mode: all tests"
+        - "--module {name}: specific module"
+      sync_sh:
+        - "linear: sync with Linear API"
+        - "manifest: update deployment manifest"
+      bootstrap_sh:
+        - "Check dependencies (Python 3, git)"
+        - "Copy .env.template to .env if needed"
+        - "Prompt for Supabase credentials"
+        - "Run validation checks"
+
+  - id: 7
+    name: Python Tools Agent
+    track: scripts
+    deliverables:
+      - Create tools/python/ directory
+      - Create tools/python/validate_articles.py
+      - Create tools/python/build.sh
+      - Create tools/python/test.sh
+      - Create tools/python/lint.sh
+    tasks:
+      - "Create tools/python/ directory structure"
+      - "Move article validation logic to validate_articles.py"
+      - "Create Python-specific build.sh helper"
+      - "Create Python test runner wrapper"
+      - "Create Python linter wrapper"
+
+  - id: 8
+    name: Orchestration Scripts Agent
+    track: scripts
+    deliverables:
+      - Create scripts/orchestration/ directory
+      - Create scripts/orchestration/trigger_ios_build.sh
+      - Create scripts/orchestration/apply_migration.sh
+      - Create scripts/orchestration/deploy_to_testflight.sh
+      - Document coordination patterns in each script
+    tasks:
+      - "Create orchestration directory"
+      - "Create iOS build trigger (coordinates with ../../ios-app/)"
+      - "Create migration applier (coordinates with ../../supabase/)"
+      - "Create TestFlight deployer with safety checks"
+      - "Add clear documentation headers to each script"
+    coordination_notes:
+      - "Scripts coordinate with external systems but don't contain them"
+      - "Each script checks if target system exists before executing"
+      - "Clear error messages if coordination fails"
+
+  - id: 9
+    name: Linear Integration Agent
+    track: scripts
+    deliverables:
+      - Create scripts/linear/ directory
+      - Create scripts/linear/sync_issues.py
+      - Create scripts/linear/create_epic.py
+      - Create scripts/linear/update_status.py
+      - Create scripts/linear/README.md
+    tasks:
+      - "Create Linear integration directory"
+      - "Create issue sync script (fetch and update)"
+      - "Create epic creation script"
+      - "Create status update script"
+      - "Document Linear API usage patterns"
+
+  # ============================================================================
+  # TRACK 3: Swarm Infrastructure (3 agents - zero collision)
+  # ============================================================================
+
+  - id: 10
+    name: Swarm Organization Agent
+    track: swarms
+    deliverables:
+      - Create .swarms/configs/content/ directory
+      - Create .swarms/configs/ios/ directory
+      - Create .swarms/configs/infrastructure/ directory
+      - Move existing swarm configs to appropriate categories
+      - Update .swarms/README.md with new structure
+    tasks:
+      - "Create category directories under .swarms/configs/"
+      - "Move CONTENT_100_BASEBALL_ARTICLES.yaml to configs/content/"
+      - "Move BUILD_*.yaml files to configs/ios/"
+      - "Move infrastructure swarms to configs/infrastructure/"
+      - "Update README with new organization"
+
+  - id: 11
+    name: Swarm Automation Agent
+    track: swarms
+    deliverables:
+      - Create .swarms/bin/ directory
+      - Create .swarms/bin/rehydrate.sh
+      - Create .swarms/bin/validate.sh
+      - Create .swarms/bin/archive.sh
+      - Make all bin scripts executable
+    tasks:
+      - "Create .swarms/bin/ directory"
+      - "Create rehydrate.sh (restore session context)"
+      - "Create validate.sh (check YAML syntax and structure)"
+      - "Create archive.sh (compress completed sessions)"
+      - "chmod +x all .swarms/bin/*.sh"
+    script_specs:
+      rehydrate_sh:
+        - "Load session state from .swarms/sessions/{id}/"
+        - "Read handoff document"
+        - "Display context to agent"
+      validate_sh:
+        - "Check YAML syntax with Python"
+        - "Verify required fields (name, agents, deliverables)"
+        - "Check referenced paths exist"
+        - "Report validation results"
+      archive_sh:
+        - "Move completed session to archive"
+        - "Compress artifacts"
+        - "Update session index"
+
+  - id: 12
+    name: Swarm Context Templates Agent
+    track: swarms
+    deliverables:
+      - Create .swarms/context/ directory
+      - Create .swarms/context/COMMANDER.md
+      - Create .swarms/context/WORKER.md
+      - Update all swarm configs to reference context templates
+    tasks:
+      - "Create context directory"
+      - "Create COMMANDER.md template (coordination agent context)"
+      - "Create WORKER.md template (execution agent context)"
+      - "Update 3 example swarm configs with context references"
+    context_templates:
+      commander:
+        - "Role: Task assignment and coordination"
+        - "Responsibilities: Load balancing, collision detection"
+        - "Orientation: Read repo-map.md, boundaries.md"
+        - "Tools: Swarm configs, session management"
+      worker:
+        - "Role: Execute assigned tasks independently"
+        - "Responsibilities: Complete deliverables, report progress"
+        - "Orientation: Read repo-map.md, task-specific runbook"
+        - "Tools: Canonical wrappers (deploy.sh, validate.sh)"
+
+  # ============================================================================
+  # TRACK 4: Configuration & Structure (2 agents - low collision)
+  # ============================================================================
+
+  - id: 13
+    name: Config Directory Agent
+    track: configuration
+    deliverables:
+      - Create config/ directory
+      - Create config/environments/ directory
+      - Create config/environments/{dev,staging,prod}.env.template
+      - Create config/linear/project-config.json
+      - Create config/content/article-schema.json
+    tasks:
+      - "Create config directory structure"
+      - "Create environment templates for dev, staging, prod"
+      - "Create Linear project configuration template"
+      - "Create JSON schema for article validation"
+      - "Document config structure in repo-map.md"
+
+  - id: 14
+    name: Tests Directory Agent
+    track: configuration
+    deliverables:
+      - Create tests/ directory
+      - Create tests/unit/ directory
+      - Create tests/integration/ directory
+      - Create tests/fixtures/ directory
+      - Create sample test files to show structure
+    tasks:
+      - "Create test directory structure"
+      - "Create tests/unit/test_article_loader.py (stub)"
+      - "Create tests/integration/test_content_deployment.py (stub)"
+      - "Create tests/fixtures/ with sample data"
+      - "Update repo-map.md with test structure"
+
+  # ============================================================================
+  # TRACK 5: Validation & Testing (2 agents - sequential)
+  # ============================================================================
+
+  - id: 15
+    name: Structure Validation Agent
+    track: validation
+    depends_on: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    deliverables:
+      - Validate all new files exist
+      - Validate all scripts are executable
+      - Validate all links in docs/ work
+      - Create validation report
+    tasks:
+      - "Check all documented files exist"
+      - "Verify all .sh files are executable"
+      - "Test all markdown links resolve"
+      - "Generate structure validation report"
+    validation_checks:
+      - "docs/architecture/*.md exist"
+      - "docs/runbooks/*.md exist"
+      - "tools/scripts/*.sh exist and executable"
+      - ".swarms/bin/*.sh exist and executable"
+      - "config/*/ directories exist"
+
+  - id: 16
+    name: End-to-End Test Agent
+    track: validation
+    depends_on: [15]
+    deliverables:
+      - Test canonical wrappers work
+      - Test swarm validation script
+      - Measure agent orientation time
+      - Create final rollout report
+      - Update ROLLOUT_PLAN.md with completion status
+    tasks:
+      - "Run tools/scripts/validate.sh all"
+      - "Run tools/scripts/deploy.sh content (dry-run)"
+      - "Run .swarms/bin/validate.sh on all configs"
+      - "Spawn fresh agent and measure orientation time"
+      - "Create completion report in .outcomes/"
+    success_criteria:
+      - "All validations pass"
+      - "All wrappers execute without errors"
+      - "Swarm configs validate successfully"
+      - "Agent orientation time < 10 seconds"
+      - "Repo-map.md answers all common questions"
+
+coordination:
+  - All agents read docs/architecture/repo-map.md for orientation
+  - All agents read docs/architecture/boundaries.md for collision avoidance
+  - All agents use tools/scripts/ wrappers for operations
+  - Agents 1-14 can run fully in parallel (zero/low collision zones)
+  - Agent 15 waits for 1-14 (validation must happen after creation)
+  - Agent 16 waits for 15 (testing must happen after validation)
+  - All agents create outcome reports in .outcomes/2025-12/
+  - All agents update ROLLOUT_PLAN.md progress
+
+quality_standards:
+  - All scripts include clear documentation headers
+  - All runbooks follow the template in docs/runbooks/index.md
+  - All paths use absolute references from repo root
+  - All error messages are actionable
+  - All commands tested before documentation
+  - All ADRs follow standard format
+
+deliverables:
+  # Documentation
+  - Complete docs/ hierarchy with all runbooks
+  - Architecture overview and ADRs
+  - Updated repo-map.md with all new paths
+  - Migrated .claude/ runbooks to docs/runbooks/
+
+  # Scripts & Tools
+  - Complete tools/scripts/ canonical wrappers
+  - Python helper scripts in tools/python/
+  - Orchestration scripts in scripts/orchestration/
+  - Linear integration in scripts/linear/
+
+  # Swarm Infrastructure
+  - Organized .swarms/configs/ by category
+  - Automation scripts in .swarms/bin/
+  - Context templates in .swarms/context/
+
+  # Configuration
+  - config/ directory with all templates
+  - tests/ directory structure
+
+  # Validation
+  - All structure validated
+  - All scripts tested
+  - Agent orientation time measured
+  - Final completion report
+
+expected_outcomes:
+  - Agents orient in < 10 seconds (repo-map.md)
+  - 100-agent parallelism enabled (boundaries.md)
+  - Zero command invention (canonical wrappers)
+  - Standard rehydration process (.swarms/context/)
+  - Single source of truth (docs/architecture/)
+
+estimate_tokens: 2M total (16 agents × 125k average)

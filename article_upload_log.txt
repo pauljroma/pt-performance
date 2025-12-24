@@ -1,0 +1,171 @@
+======================================================================
+📚 Loading Articles into Flexible Content System
+======================================================================
+
+🔗 Supabase: https://rpbxeaxlaoyoqkohytlw.supabase.co
+📂 Articles: docs/help-articles/baseball
+
+📝 Getting content type ID for 'article'...
+✅ Content type ID: 7c5441ae-c954-47ad-8b87-b48db702a774
+
+📂 Scanning articles...
+✅ Found 135 articles
+
+📊 Breakdown:
+   arm-care: 10 articles
+   hitting: 10 articles
+   injury-prevention: 10 articles
+   mental: 16 articles
+   mobility: 10 articles
+   nutrition: 10 articles
+   recovery: 10 articles
+   speed: 10 articles
+   training: 39 articles
+   warmup: 10 articles
+
+🚀 Inserting 135 articles...
+   ❌ 05 Weighted Ball Programs: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-weighted-ball-programs) already exists.'}
+   ❌ 07 Pitch Count Management: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-pitch-count-management) already exists.'}
+   ❌ 06 Shoulder Strengthening: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-shoulder-strengthening) already exists.'}
+   ❌ 03 Pitcher Maintenance: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-pitcher-maintenance) already exists.'}
+   ❌ 10 Return To Throwing: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-return-to-throwing) already exists.'}
+   ❌ 08 Year Round Throwing: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-year-round-throwing) already exists.'}
+   ❌ 01 J Band Routine: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-j-band-routine) already exists.'}
+   ❌ 09 Arm Fatigue Signs: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-arm-fatigue-signs) already exists.'}
+   ❌ 02 Long Toss Programs: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-long-toss-programs) already exists.'}
+   ❌ 04 Ucl Health: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-ucl-health) already exists.'}
+   ❌ 10 Speed Testing Tracking Progress: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-speed-testing-tracking-progress) already exists.'}
+   ❌ 01 60 Yard Dash Sprint Mechanics: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-60-yard-dash-sprint-mechanics) already exists.'}
+   ❌ 07 Speed Endurance Base Running: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-speed-endurance-base-running) already exists.'}
+   ❌ 02 First Step Quickness Stealing Bases: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-first-step-quickness-stealing-bases) already exists.'}
+   ❌ 03 Lateral Agility For Infielders: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-lateral-agility-for-infielders) already exists.'}
+   ❌ 06 Change Of Direction Cone Drills: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-change-of-direction-cone-drills) already exists.'}
+   ❌ 04 Acceleration Vs Top Speed: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-acceleration-vs-top-speed) already exists.'}
+   ❌ 05 Plyometric Training Explosive Movements: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-plyometric-training-explosive-movements) already exists.'}
+   ❌ 08 Deceleration Training Injury Prevention: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-deceleration-training-injury-prevention) already exists.'}
+   ❌ 09 Sprint Technique Arm Action Posture: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-sprint-technique-arm-action-posture) already exists.'}
+   ❌ 09 Cold Plunge Ice Bath Science: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-cold-plunge-ice-bath-science) already exists.'}
+   ❌ 02 Optimal Sleep Duration Performance: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-optimal-sleep-duration-performance) already exists.'}
+   ❌ 10 Compression Gear Recovery Evidence: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-compression-gear-recovery-evidence) already exists.'}
+   ❌ 04 Travel Recovery Bus Lag: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-travel-recovery-bus-lag) already exists.'}
+   ❌ 08 Off Day Active Vs Passive Rest: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-off-day-active-vs-passive-rest) already exists.'}
+   ❌ 07 Pitcher Sleep Protocol Between Starts: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-pitcher-sleep-protocol-between-starts) already exists.'}
+   ❌ 05 Sleep Hygiene Late Night Games: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-sleep-hygiene-late-night-games) already exists.'}
+   ❌ 06 Rem Sleep Hitting Performance: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-rem-sleep-hitting-performance) already exists.'}
+   ❌ 03 Napping Strategy Doubleheaders: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-napping-strategy-doubleheaders) already exists.'}
+   ❌ 01 Sleep Pitchers Arm Recovery: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-sleep-pitchers-arm-recovery) already exists.'}
+   ✅ Cluster Sets: Rest-Pause Training for Power
+   ✅ Training Volume vs Intensity: Finding Your Balance
+   ✅ Olympic Lifts for Power: Clean and Snatch Variations
+   ❌ 09 Youth Pitcher Strength Safety: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-youth-pitcher-strength-safety) already exists.'}
+   ❌ 05 Training Age Youth To College: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-training-age-youth-to-college) already exists.'}
+   ✅ Bat Path Analysis: Understanding Swing Plane
+   ✅ Stride Length and Mechanics: Pitching Biomechanics
+   ✅ Training Frequency: How Often Should You Lift
+   ❌ 10 High School To College Transition: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-high-school-to-college-transition) already exists.'}
+   ✅ French Contrast Training: Advanced Power Development
+   ✅ Transfer of Training: Making Gym Work Count on the Field
+   ✅ Progressive Overload for Baseball: Building Strength Over Time
+   ❌ 02 In Season Lifting Frequency: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-in-season-lifting-frequency) already exists.'}
+   ✅ Plyometric Progressions: Building Elastic Strength
+   ✅ Exercise Selection for Baseball Athletes: What Works Best
+   ✅ Med Ball Training: Explosive Rotational Power
+   ✅ Post-Activation Potentiation: Priming for Performance
+   ❌ 04 Deload Weeks Guide: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-deload-weeks-guide) already exists.'}
+   ✅ Squat Variations for Baseball: Back, Front, and Split
+   ✅ Hip-Shoulder Separation: Creating Torque
+   ✅ Deadlift for Baseball Athletes: Trap Bar vs Conventional
+   ✅ Unilateral Training: Why Single-Leg Work Matters
+   ❌ 07 Velocity Development Longterm: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-velocity-development-longterm) already exists.'}
+   ✅ Accommodating Resistance: Chains and Bands for Variable Load
+   ✅ Ground Reaction Forces: Generating Power from the Ground
+   ✅ Arm Slot Biomechanics: Finding Your Natural Release
+   ❌ 01 Off Season Strength Mobility: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-off-season-strength-mobility) already exists.'}
+   ❌ 06 Pitcher Vs Position Player Training: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-pitcher-vs-position-player-training) already exists.'}
+   ✅ Kinetic Chain: How Energy Transfers in Baseball
+   ✅ Velocity-Based Training: Using Bar Speed for Optimal Power
+   ✅ Posterior Chain Development: Glutes and Hamstrings
+   ✅ Center of Mass Control: Balance in Movement
+   ❌ 08 Tournament Season Recovery: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-tournament-season-recovery) already exists.'}
+   ❌ 03 Preseason Ramp Protocol: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-preseason-ramp-protocol) already exists.'}
+   ✅ Imagery Training: Creating Vivid Mental Pictures
+   ✅ Process Goals vs Outcome Goals: What to Focus On
+   ❌ 02 Visualization Techniques: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-visualization-techniques) already exists.'}
+   ❌ 08 Pre Game Anxiety: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-pre-game-anxiety) already exists.'}
+   ✅ Pre-Performance Routines: Consistency and Control
+   ✅ Mental Practice Schedules: How Often to Visualize
+   ✅ Mental Reps: Practicing Without Physical Training
+   ❌ 09 Flow State: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-flow-state) already exists.'}
+   ✅ Goal Setting for Baseball: SMART Goals That Work
+   ❌ 06 Confidence After Errors: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-confidence-after-errors) already exists.'}
+   ❌ 05 Breathing Techniques: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-breathing-techniques) already exists.'}
+   ❌ 04 Focus Training: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-focus-training) already exists.'}
+   ❌ 10 Mental Recovery Between Innings: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-mental-recovery-between-innings) already exists.'}
+   ❌ 01 Pre Pitch Routine: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-pre-pitch-routine) already exists.'}
+   ❌ 03 Managing Slumps: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-managing-slumps) already exists.'}
+   ❌ 07 Self Talk: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-self-talk) already exists.'}
+   ❌ 07 Pre Throwing Dynamic Warmup: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-pre-throwing-dynamic-warmup) already exists.'}
+   ❌ 10 Mobility Screening Limitations: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-mobility-screening-limitations) already exists.'}
+   ❌ 06 Scapular Mobility Control: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-scapular-mobility-control) already exists.'}
+   ❌ 08 Lower Body Mobility Hitting: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-lower-body-mobility-hitting) already exists.'}
+   ❌ 09 Foam Rolling Vs Stretching: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-foam-rolling-vs-stretching) already exists.'}
+   ❌ 02 Hip Mobility Pitchers Stride: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-hip-mobility-pitchers-stride) already exists.'}
+   ❌ 01 Resistance Band Shoulder Series: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-resistance-band-shoulder-series) already exists.'}
+   ❌ 05 Band Walks Hip Stability: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-band-walks-hip-stability) already exists.'}
+   ❌ 04 Ankle Mobility Pitching: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-ankle-mobility-pitching) already exists.'}
+   ❌ 03 Thoracic Spine Rotation: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-thoracic-spine-rotation) already exists.'}
+   ❌ 06 Barrel Accuracy Consistency: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-barrel-accuracy-consistency) already exists.'}
+   ❌ 07 Timing Mechanisms: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-timing-mechanisms) already exists.'}
+   ❌ 02 Vision Training Tracking: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-vision-training-tracking) already exists.'}
+   ❌ 05 Core Training Anti Rotation: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-core-training-anti-rotation) already exists.'}
+   ❌ 03 Launch Angle Exit Velocity: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-launch-angle-exit-velocity) already exists.'}
+   ❌ 10 Grip Strength Bat Control: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-grip-strength-bat-control) already exists.'}
+   ❌ 08 Approach Adjustment Video Analysis: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-approach-adjustment-video-analysis) already exists.'}
+   ❌ 09 Cage Work Game Transfer: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-cage-work-game-transfer) already exists.'}
+   ❌ 04 Hand Eye Coordination Drills: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-hand-eye-coordination-drills) already exists.'}
+   ❌ 01 Rotational Power Bat Speed: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-rotational-power-bat-speed) already exists.'}
+   ❌ 01 Pre Game Nutrition: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-pre-game-nutrition) already exists.'}
+   ❌ 07 Cutting Weight Safely During Season: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-cutting-weight-safely-during-season) already exists.'}
+   ❌ 06 Weight Gain For Pitchers: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-weight-gain-for-pitchers) already exists.'}
+   ❌ 08 Supplement Guide: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-supplement-guide) already exists.'}
+   ❌ 09 Game Day Snacks: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-game-day-snacks) already exists.'}
+   ❌ 05 Tournament Nutrition Doubleheaders: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-tournament-nutrition-doubleheaders) already exists.'}
+   ❌ 10 Late Night Games Nutrition: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-late-night-games-nutrition) already exists.'}
+   ❌ 04 Protein Timing Pitchers Vs Position Players: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-protein-timing-pitchers-vs-position-players) already exists.'}
+   ❌ 03 Hydration Strategy: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-hydration-strategy) already exists.'}
+   ❌ 02 Post Workout Recovery Meals: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-post-workout-recovery-meals) already exists.'}
+   ✅ Video Analysis: Same-Day Adjustments
+   ✅ Scouting Reports: How to Use Opponent Data
+   ✅ Mental Preparation: Pre-Game Focus Routine
+   ✅ Game-Day Nutrition: Timing and Food Selection
+   ✅ Pre-Game Timeline: 3 Hours to First Pitch
+   ❌ 08 Pre Hitting Warmup In The Cage: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(08-pre-hitting-warmup-in-the-cage) already exists.'}
+   ❌ 03 Dynamic Vs Static Stretching When To Use Each: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(03-dynamic-vs-static-stretching-when-to-use-each) already exists.'}
+   ❌ 10 Mental Warmup Focus And Visualization: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(10-mental-warmup-focus-and-visualization) already exists.'}
+   ❌ 05 Game Day Warmup Timeline 2 Hours To First Pitch: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(05-game-day-warmup-timeline-2-hours-to-first-pitch) already exists.'}
+   ❌ 04 Position Specific Warmups Pitcher Vs Position Player: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(04-position-specific-warmups-pitcher-vs-position-player) already exists.'}
+   ❌ 09 Nerve Flossing For Baseball Players: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(09-nerve-flossing-for-baseball-players) already exists.'}
+   ❌ 02 Activation Exercises Before Throwing: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(02-activation-exercises-before-throwing) already exists.'}
+   ❌ 07 Bullpen Warmup Routine Relief Pitchers: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(07-bullpen-warmup-routine-relief-pitchers) already exists.'}
+   ❌ 01 Complete Baseball Warmup 15 Minute Protocol: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(01-complete-baseball-warmup-15-minute-protocol) already exists.'}
+   ❌ 06 Cold Weather Warmup Adjustments: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(06-cold-weather-warmup-adjustments) already exists.'}
+   ❌ Heat Illness Prevention: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(heat-illness-prevention) already exists.'}
+   ❌ Overuse Vs Acute Injuries: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(overuse-vs-acute-injuries) already exists.'}
+   ❌ Wrist Injuries: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(wrist-injuries) already exists.'}
+   ❌ Concussion Protocol: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(concussion-protocol) already exists.'}
+   ❌ Elbow Pain: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(elbow-pain) already exists.'}
+   ❌ Acl Injury Prevention: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(acl-injury-prevention) already exists.'}
+   ❌ Hamstring Strains: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(hamstring-strains) already exists.'}
+   ❌ Oblique Injuries: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(oblique-injuries) already exists.'}
+   ❌ Ankle Sprains: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(ankle-sprains) already exists.'}
+   ❌ Lower Back Pain: {'message': 'duplicate key value violates unique constraint "content_items_slug_key"', 'code': '23505', 'hint': None, 'details': 'Key (slug)=(lower-back-pain) already exists.'}
+
+======================================================================
+✅ Inserted: 35
+❌ Errors: 100
+======================================================================
+
+🎉 Articles are live!
+
+Test search:
+  SELECT * FROM search_content('pitching velocity', 'article');

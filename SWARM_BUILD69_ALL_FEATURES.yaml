@@ -1,0 +1,487 @@
+name: "Build 69 - Complete Feature Set (Builds 63-66 + Infrastructure)"
+version: "1.0"
+date: "2025-12-19"
+build_number: 69
+previous_build: 68
+
+mission: |
+  Execute all 79 issues from Builds 63-66 plus Infrastructure in a single coordinated swarm.
+  Deliver a production-ready Build 69 with video library, safety alerts, scheduled sessions,
+  readiness adjustment, and full platform hardening.
+
+success_criteria:
+  - All 79 Linear issues (ACP-164 to ACP-242) marked Done
+  - Zero regressions from Build 68
+  - All features tested and validated
+  - Build 69 deployed to TestFlight
+  - Complete documentation and handoff
+
+total_estimated_effort: "200-250 hours"
+parallel_execution_time: "25-30 hours with 25 agents"
+
+linear_integration:
+  team_id: "5296cff8-9c53-4cb3-9df3-ccb83601805e"
+  team_key: "ACP"
+  base_url: "https://linear.app/x2machines/issue/"
+  issue_range: "ACP-164 to ACP-242"
+  update_frequency: "After each major milestone"
+
+agents:
+  # ============================================================================
+  # BUILD 63: VIDEO INTELLIGENCE (5 Agents)
+  # ============================================================================
+
+  - id: 1
+    name: "Video Intelligence - iOS Lead"
+    focus: "iOS video player implementation"
+    linear_issues: ["ACP-164", "ACP-165", "ACP-166", "ACP-167"]
+    deliverables:
+      - "VideoPlayerView.swift (enhanced for real URLs)"
+      - "Video thumbnail caching system"
+      - "Video download tests with real files"
+      - "Error state handling UI"
+    estimated_hours: 10
+    dependencies: []
+
+  - id: 2
+    name: "Video Intelligence - iOS Performance"
+    focus: "Video preloading and quality optimization"
+    linear_issues: ["ACP-168", "ACP-169"]
+    deliverables:
+      - "Video preloading system"
+      - "Video quality selection UI"
+    estimated_hours: 8
+    dependencies: [1]
+
+  - id: 3
+    name: "Video Intelligence - Backend"
+    focus: "Supabase Storage and thumbnail generation"
+    linear_issues: ["ACP-170", "ACP-171", "ACP-172", "ACP-173"]
+    deliverables:
+      - "Supabase Storage bucket 'exercise-videos'"
+      - "Bucket RLS policies"
+      - "Thumbnail generation Edge Function"
+      - "Video URL validation migration"
+    estimated_hours: 8
+    dependencies: []
+
+  - id: 4
+    name: "Video Intelligence - Content"
+    focus: "Video content sourcing and upload"
+    linear_issues: ["ACP-174", "ACP-175", "ACP-176", "ACP-177", "ACP-178"]
+    deliverables:
+      - "50+ exercise videos sourced/recorded"
+      - "All videos uploaded to Supabase Storage"
+      - "Thumbnails generated"
+      - "exercise_templates table updated"
+      - "Video metadata CSV"
+    estimated_hours: 20
+    dependencies: [3]
+
+  - id: 5
+    name: "Video Intelligence - QA"
+    focus: "Video feature testing"
+    linear_issues: ["ACP-179", "ACP-180", "ACP-181"]
+    deliverables:
+      - "Video playback tests"
+      - "Offline download tests"
+      - "Video URL validation tests"
+    estimated_hours: 6
+    dependencies: [1, 2, 3, 4]
+
+  # ============================================================================
+  # BUILD 64: SAFETY & AUDIT (4 Agents)
+  # ============================================================================
+
+  - id: 6
+    name: "Safety - iOS Lead"
+    focus: "Workload flags UI implementation"
+    linear_issues: ["ACP-182", "ACP-183", "ACP-184", "ACP-185"]
+    deliverables:
+      - "WorkloadFlagsView.swift"
+      - "WorkloadFlag model + ViewModel"
+      - "Flag resolution workflow"
+      - "Flag badges in PatientListView"
+    estimated_hours: 10
+    dependencies: []
+
+  - id: 7
+    name: "Safety - iOS Notifications"
+    focus: "Flag notifications and filtering"
+    linear_issues: ["ACP-186", "ACP-187"]
+    deliverables:
+      - "Flag notification handling"
+      - "Flag filtering and sorting UI"
+    estimated_hours: 6
+    dependencies: [6]
+
+  - id: 8
+    name: "Safety - Backend"
+    focus: "Workload flag detection algorithms"
+    linear_issues: ["ACP-188", "ACP-189", "ACP-190", "ACP-191", "ACP-192"]
+    deliverables:
+      - "Workload flag generation Edge Function"
+      - "Spike detection algorithm"
+      - "ACR (Acute:Chronic Ratio) calculation"
+      - "Monotony detection algorithm"
+      - "Auto-generation cron job"
+    estimated_hours: 12
+    dependencies: []
+
+  - id: 9
+    name: "Safety - Notifications & QA"
+    focus: "Push notifications and testing"
+    linear_issues: ["ACP-193", "ACP-194", "ACP-195", "ACP-196"]
+    deliverables:
+      - "APNs certificates setup"
+      - "Push notification service"
+      - "Workload flag tests"
+      - "Notification delivery tests"
+    estimated_hours: 10
+    dependencies: [6, 7, 8]
+
+  # ============================================================================
+  # BUILD 65: SCHEDULED SESSIONS (3 Agents)
+  # ============================================================================
+
+  - id: 10
+    name: "Sessions - iOS Calendar"
+    focus: "Calendar view and scheduling UI"
+    linear_issues: ["ACP-197", "ACP-198", "ACP-199", "ACP-202"]
+    deliverables:
+      - "ScheduledSessionsView.swift"
+      - "ScheduledSession model + ViewModel"
+      - "Drag-to-reschedule functionality"
+      - "Calendar view toggle"
+    estimated_hours: 10
+    dependencies: []
+
+  - id: 11
+    name: "Sessions - iOS Features"
+    focus: "Session reminders and completion"
+    linear_issues: ["ACP-200", "ACP-201", "ACP-203"]
+    deliverables:
+      - "Session reminder notifications"
+      - "Scheduled vs completed display"
+      - "Session completion from calendar"
+    estimated_hours: 8
+    dependencies: [10]
+
+  - id: 12
+    name: "Sessions - Backend & QA"
+    focus: "Backend automation and testing"
+    linear_issues: ["ACP-204", "ACP-205", "ACP-206", "ACP-207", "ACP-208"]
+    deliverables:
+      - "Scheduled sessions auto-generation"
+      - "Session rescheduling RLS policies"
+      - "Reminder notification cron job"
+      - "Calendar view tests"
+      - "Reminder notification tests"
+    estimated_hours: 10
+    dependencies: [10, 11]
+
+  # ============================================================================
+  # BUILD 66: READINESS ADJUSTMENT (4 Agents)
+  # ============================================================================
+
+  - id: 13
+    name: "Readiness - iOS UI"
+    focus: "Readiness adjustment interface"
+    linear_issues: ["ACP-209", "ACP-210", "ACP-211", "ACP-214"]
+    deliverables:
+      - "ReadinessAdjustmentView.swift"
+      - "ReadinessAdjustment model + ViewModel"
+      - "Adjustment preview UI"
+      - "Readiness band indicator"
+    estimated_hours: 10
+    dependencies: []
+
+  - id: 14
+    name: "Readiness - iOS Advanced"
+    focus: "Practitioner controls and history"
+    linear_issues: ["ACP-212", "ACP-213"]
+    deliverables:
+      - "Practitioner lock/override toggle"
+      - "Adjustment history display"
+    estimated_hours: 6
+    dependencies: [13]
+
+  - id: 15
+    name: "Readiness - Backend"
+    focus: "Adjustment algorithm and database"
+    linear_issues: ["ACP-215", "ACP-216", "ACP-217", "ACP-218", "ACP-219"]
+    deliverables:
+      - "readiness_adjustments table"
+      - "Adjustment algorithm implementation"
+      - "Adjustment Edge Function"
+      - "Adjustment audit log"
+      - "Practitioner override RLS policies"
+    estimated_hours: 12
+    dependencies: []
+
+  - id: 16
+    name: "Readiness - AI & QA"
+    focus: "AI explanations and testing"
+    linear_issues: ["ACP-220", "ACP-221", "ACP-222", "ACP-223", "ACP-224"]
+    deliverables:
+      - "AI Assistant readiness explanations"
+      - "'Why was my workout adjusted?' prompt"
+      - "Adjustment safety guardrails"
+      - "Readiness adjustment tests"
+      - "Practitioner override workflow tests"
+    estimated_hours: 10
+    dependencies: [13, 14, 15]
+
+  # ============================================================================
+  # INFRASTRUCTURE: TESTING (2 Agents)
+  # ============================================================================
+
+  - id: 17
+    name: "Testing - Unit & E2E"
+    focus: "Comprehensive test coverage"
+    linear_issues: ["ACP-225", "ACP-226", "ACP-227"]
+    deliverables:
+      - "Expanded unit test coverage (≥80%)"
+      - "E2E tests for critical flows"
+      - "Test data seeding script"
+    estimated_hours: 12
+    dependencies: []
+
+  - id: 18
+    name: "Testing - Performance & Visual"
+    focus: "Performance and visual regression testing"
+    linear_issues: ["ACP-228", "ACP-229", "ACP-230"]
+    deliverables:
+      - "Performance benchmarks"
+      - "Test coverage report automation"
+      - "Visual regression tests"
+    estimated_hours: 10
+    dependencies: [17]
+
+  # ============================================================================
+  # INFRASTRUCTURE: DEVOPS (2 Agents)
+  # ============================================================================
+
+  - id: 19
+    name: "DevOps - CI/CD"
+    focus: "GitHub Actions and automation"
+    linear_issues: ["ACP-231", "ACP-232"]
+    deliverables:
+      - "GitHub Actions CI/CD pipeline"
+      - "Automated TestFlight upload"
+    estimated_hours: 8
+    dependencies: []
+
+  - id: 20
+    name: "DevOps - Infrastructure"
+    focus: "Monitoring and environments"
+    linear_issues: ["ACP-233", "ACP-234", "ACP-235"]
+    deliverables:
+      - "Sentry error tracking setup"
+      - "Staging environment"
+      - "Deployment rollback procedure"
+    estimated_hours: 8
+    dependencies: [19]
+
+  # ============================================================================
+  # INFRASTRUCTURE: COMPLIANCE (1 Agent)
+  # ============================================================================
+
+  - id: 21
+    name: "Compliance - HIPAA"
+    focus: "Audit logging and compliance"
+    linear_issues: ["ACP-236", "ACP-237", "ACP-238", "ACP-239"]
+    deliverables:
+      - "audit_logs table"
+      - "User activity logging"
+      - "Data export API"
+      - "HIPAA compliance checklist"
+    estimated_hours: 10
+    dependencies: []
+
+  # ============================================================================
+  # INFRASTRUCTURE: PERFORMANCE (1 Agent)
+  # ============================================================================
+
+  - id: 22
+    name: "Performance - Optimization"
+    focus: "Database and caching optimization"
+    linear_issues: ["ACP-240", "ACP-241", "ACP-242"]
+    deliverables:
+      - "Optimized database queries"
+      - "Response caching implementation"
+      - "CDN setup for videos"
+    estimated_hours: 8
+    dependencies: [3, 4]
+
+  # ============================================================================
+  # INTEGRATION & DEPLOYMENT (3 Agents)
+  # ============================================================================
+
+  - id: 23
+    name: "Integration - iOS"
+    focus: "Xcode project integration"
+    linear_issues: []
+    deliverables:
+      - "All Swift files added to Xcode project"
+      - "Build phases configured"
+      - "No compilation errors"
+      - "Code signing configured"
+    estimated_hours: 6
+    dependencies: [1, 2, 6, 7, 10, 11, 13, 14]
+
+  - id: 24
+    name: "Integration - Backend"
+    focus: "Database migrations and Edge Functions"
+    linear_issues: []
+    deliverables:
+      - "All migrations applied successfully"
+      - "All Edge Functions deployed"
+      - "RLS policies verified"
+      - "No migration conflicts"
+    estimated_hours: 6
+    dependencies: [3, 8, 12, 15, 21]
+
+  - id: 25
+    name: "Swarm Coordinator & Deployment"
+    focus: "Overall coordination and final deployment"
+    linear_issues: []
+    deliverables:
+      - "Build 69 completion report"
+      - "All Linear issues updated to Done"
+      - "TestFlight deployment"
+      - "Release notes"
+      - "Handoff documentation"
+    estimated_hours: 8
+    dependencies: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+
+# ============================================================================
+# EXECUTION PHASES
+# ============================================================================
+
+execution_phases:
+  - phase: 1
+    name: "Foundation & Backend Setup"
+    duration: "Hours 1-8"
+    agents: [3, 8, 15, 21, 22]
+    description: "Backend infrastructure, databases, Edge Functions"
+
+  - phase: 2
+    name: "iOS Core Features"
+    duration: "Hours 5-15"
+    agents: [1, 2, 6, 7, 10, 11, 13, 14]
+    description: "iOS UI components and view models"
+
+  - phase: 3
+    name: "Content & Testing"
+    duration: "Hours 10-20"
+    agents: [4, 5, 9, 16, 17, 18]
+    description: "Video content, QA, and testing"
+
+  - phase: 4
+    name: "DevOps & Infrastructure"
+    duration: "Hours 15-23"
+    agents: [19, 20]
+    description: "CI/CD, monitoring, staging"
+
+  - phase: 5
+    name: "Integration & Deployment"
+    duration: "Hours 20-28"
+    agents: [23, 24, 25]
+    description: "Final integration and TestFlight deployment"
+
+# ============================================================================
+# SUCCESS METRICS
+# ============================================================================
+
+success_metrics:
+  code_quality:
+    - "Zero compilation errors"
+    - "Zero Swift warnings"
+    - "Test coverage ≥80%"
+    - "All RLS policies tested"
+
+  functionality:
+    - "All 79 issues complete"
+    - "Video library fully functional"
+    - "Safety alerts working"
+    - "Scheduled sessions operational"
+    - "Readiness adjustment accurate"
+
+  performance:
+    - "Video load time <2 seconds"
+    - "App launch time <3 seconds"
+    - "Database queries <100ms"
+    - "Zero memory leaks"
+
+  deployment:
+    - "Build 69 on TestFlight"
+    - "All migrations applied"
+    - "Sentry monitoring active"
+    - "Documentation complete"
+
+# ============================================================================
+# RISK MITIGATION
+# ============================================================================
+
+risks:
+  - risk: "Video content acquisition takes longer than expected"
+    mitigation: "Use placeholder videos initially, update later"
+    owner: "Agent 4"
+
+  - risk: "APNs certificate setup delays"
+    mitigation: "Work on other features in parallel"
+    owner: "Agent 9"
+
+  - risk: "Xcode project integration conflicts"
+    mitigation: "Agent 23 coordinates early with iOS agents"
+    owner: "Agent 23"
+
+  - risk: "Migration conflicts between agents"
+    mitigation: "Agent 24 reviews all migrations before applying"
+    owner: "Agent 24"
+
+# ============================================================================
+# DELIVERABLES
+# ============================================================================
+
+final_deliverables:
+  ios_app:
+    - "Build 69 IPA file"
+    - "All new Swift files in Xcode project"
+    - "Updated Info.plist (build 69)"
+    - "Code signing complete"
+
+  backend:
+    - "15+ new database migrations"
+    - "10+ Edge Functions deployed"
+    - "All RLS policies updated"
+    - "Supabase Storage bucket configured"
+
+  testing:
+    - "80%+ test coverage"
+    - "All integration tests passing"
+    - "Performance benchmarks documented"
+    - "QA sign-off report"
+
+  documentation:
+    - "BUILD69_COMPLETION_REPORT.md"
+    - "BUILD69_RELEASE_NOTES.md"
+    - "API documentation updates"
+    - "User-facing feature documentation"
+
+  linear:
+    - "All 79 issues marked Done"
+    - "Build 69 epic completed"
+    - "Build 70 planning initiated"
+
+# ============================================================================
+# COMMUNICATION PROTOCOL
+# ============================================================================
+
+communication:
+  standup_frequency: "Every 4 hours"
+  blocker_escalation: "Immediate to Coordinator (Agent 25)"
+  linear_updates: "After each deliverable completion"
+  code_review: "Required for all iOS and Backend agents"
+  documentation: "Continuous updates to shared docs"

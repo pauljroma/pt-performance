@@ -1,0 +1,1310 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-20",
+  "blocks": [
+    {
+      "id": "baseball_rotation_power",
+      "type": "baseball",
+      "category": "power",
+      "title": "Rotation Power",
+      "description": "Develop rotational power through medicine ball throws and explosive rotational movements. Essential for bat speed and throwing velocity.",
+      "entry_criteria": [
+        "Pain-free trunk rotation",
+        "Adequate hip mobility (>45° internal rotation)",
+        "Stable base strength established"
+      ],
+      "exit_criteria": [
+        "Rotational power output >85% baseline",
+        "Symmetrical power production L/R",
+        "Pain-free execution at max effort"
+      ],
+      "exercises": [
+        {
+          "name": "Med Ball Scoop Toss",
+          "sets": "3-4",
+          "reps": "6-8",
+          "load": "6-10 lb",
+          "tempo": "Explosive",
+          "rest": "90-120s",
+          "notes": "Focus on hip-driven rotation"
+        },
+        {
+          "name": "Med Ball Rotational Throw (Wall)",
+          "sets": "3-4",
+          "reps": "6-8 each side",
+          "load": "8-12 lb",
+          "tempo": "Explosive",
+          "rest": "90-120s",
+          "notes": "Maintain stable base, initiate from hips"
+        },
+        {
+          "name": "Med Ball Overhead Rotational Slam",
+          "sets": "3",
+          "reps": "5-6 each side",
+          "load": "10-15 lb",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Full kinetic chain expression"
+        },
+        {
+          "name": "Cable Chop Pattern (High to Low)",
+          "sets": "3",
+          "reps": "8-10 each side",
+          "load": "Moderate",
+          "tempo": "Controlled explosive",
+          "rest": "60s",
+          "notes": "Anti-rotation stabilization component"
+        }
+      ],
+      "evidence": [
+        "Szymanski DJ, et al. Effect of torso rotational strength on angular hip, angular shoulder, and linear bat velocities of high school baseball players. J Strength Cond Res. 2009;23(6):1681-1687.",
+        "Palmer TG, et al. Effects of a rotational power development program on power, vertical jump, and bat swing velocity in collegiate baseball players. J Strength Cond Res. 2021;35(7):1815-1821."
+      ],
+      "progressions": [
+        "Increase load 2-3 lb when maintaining velocity",
+        "Increase volume by 1 set per week",
+        "Progress to asymmetrical stance patterns"
+      ]
+    },
+    {
+      "id": "baseball_acceleration",
+      "type": "baseball",
+      "category": "speed",
+      "title": "Acceleration",
+      "description": "Develop explosive acceleration for base running, fielding reactions, and first-step quickness.",
+      "entry_criteria": [
+        "Pain-free sprint mechanics",
+        "Adequate ankle dorsiflexion (>10°)",
+        "Hip extension strength >3.0 N/kg"
+      ],
+      "exit_criteria": [
+        "10-yard sprint time <1.8s",
+        "Reactive strength index >2.0",
+        "Asymmetry <10% L/R"
+      ],
+      "exercises": [
+        {
+          "name": "Box Jumps",
+          "sets": "4-5",
+          "reps": "3-5",
+          "load": "Bodyweight",
+          "tempo": "Explosive landing",
+          "rest": "2-3 min",
+          "notes": "Focus on minimal ground contact time"
+        },
+        {
+          "name": "Broad Jumps",
+          "sets": "4",
+          "reps": "4-6",
+          "load": "Bodyweight",
+          "tempo": "Explosive",
+          "rest": "2 min",
+          "notes": "Measure distance, track progress"
+        },
+        {
+          "name": "Resisted Sprint Starts (Sled)",
+          "sets": "6-8",
+          "reps": "10 yards",
+          "load": "10-15% BW",
+          "tempo": "Max effort",
+          "rest": "2-3 min",
+          "notes": "Focus on horizontal force production"
+        },
+        {
+          "name": "Wall Drill Sprint Starts",
+          "sets": "4-6",
+          "reps": "3-4 each leg",
+          "load": "Bodyweight",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Emphasize proper sprint mechanics"
+        },
+        {
+          "name": "Lateral Bounds",
+          "sets": "3",
+          "reps": "6-8 each side",
+          "load": "Bodyweight",
+          "tempo": "Explosive",
+          "rest": "90s",
+          "notes": "Develop lateral acceleration for fielding"
+        }
+      ],
+      "evidence": [
+        "Lockie RG, et al. Effects of resisted sled towing on sprint kinematics in field-sport athletes. J Strength Cond Res. 2003;17(4):760-767.",
+        "Kawamori N, et al. Peak force and rate of force development during isometric and dynamic mid-thigh clean pulls performed at various intensities. J Strength Cond Res. 2006;20(3):483-491."
+      ],
+      "progressions": [
+        "Increase sled load by 5% when sprint quality maintained",
+        "Progress box height 2-4 inches",
+        "Add reactive components (e.g., partner signal starts)"
+      ]
+    },
+    {
+      "id": "baseball_deceleration",
+      "type": "baseball",
+      "category": "injury_prevention",
+      "title": "Deceleration",
+      "description": "Build eccentric strength and deceleration capacity to protect shoulders, elbows, and lower body during throwing and running.",
+      "entry_criteria": [
+        "Pain-free eccentric contractions",
+        "Adequate hamstring flexibility (>80° SLR)",
+        "No acute muscle strains"
+      ],
+      "exit_criteria": [
+        "Eccentric strength ratio >0.8 (ecc/conc)",
+        "Nordic curl capacity >3 reps controlled",
+        "Pain-free deceleration patterns"
+      ],
+      "exercises": [
+        {
+          "name": "Nordic Hamstring Curls",
+          "sets": "3-4",
+          "reps": "4-6",
+          "load": "Bodyweight + band assist",
+          "tempo": "5s eccentric",
+          "rest": "2-3 min",
+          "notes": "Primary hamstring strain prevention"
+        },
+        {
+          "name": "Eccentric Single-Leg RDL",
+          "sets": "3",
+          "reps": "6-8 each leg",
+          "load": "120-130% concentric load",
+          "tempo": "4-5s eccentric",
+          "rest": "90s",
+          "notes": "Use concentric assist with both legs"
+        },
+        {
+          "name": "Eccentric Shoulder External Rotation",
+          "sets": "3",
+          "reps": "8-10 each arm",
+          "load": "Light resistance",
+          "tempo": "5s eccentric",
+          "rest": "60s",
+          "notes": "Throwing arm deceleration capacity"
+        },
+        {
+          "name": "Eccentric Wrist Flexion/Extension",
+          "sets": "2-3",
+          "reps": "10-12",
+          "load": "Light dumbbell",
+          "tempo": "4s eccentric",
+          "rest": "60s",
+          "notes": "Elbow protection during throwing"
+        },
+        {
+          "name": "Deceleration Drops (Box)",
+          "sets": "3-4",
+          "reps": "4-6",
+          "load": "Bodyweight",
+          "tempo": "Absorb and hold 3s",
+          "rest": "2 min",
+          "notes": "Develop landing mechanics"
+        }
+      ],
+      "evidence": [
+        "van Dyk N, et al. Including the Nordic hamstring exercise in injury prevention programmes halves the rate of hamstring injuries. Br J Sports Med. 2019;53(21):1362-1370.",
+        "Ishøi L, et al. Effects of the Nordic hamstring exercise on sprint capacity in male football players. J Sports Sci. 2018;36(14):1663-1672."
+      ],
+      "progressions": [
+        "Reduce band assistance on Nordic curls",
+        "Increase eccentric load by 5-10% when controlled",
+        "Progress to single-leg deceleration patterns"
+      ]
+    },
+    {
+      "id": "baseball_posterior_chain",
+      "type": "baseball",
+      "category": "strength",
+      "title": "Posterior Chain",
+      "description": "Develop hip, glute, and hamstring strength for power generation, injury prevention, and throwing velocity.",
+      "entry_criteria": [
+        "Pain-free hip hinge pattern",
+        "Hip extension strength >2.5 N/kg",
+        "No low back pain with loaded hinging"
+      ],
+      "exit_criteria": [
+        "RDL load >1.5x bodyweight",
+        "Hip thrust load >2.0x bodyweight",
+        "GHR 3x8 controlled"
+      ],
+      "exercises": [
+        {
+          "name": "Romanian Deadlift (RDL)",
+          "sets": "4",
+          "reps": "6-8",
+          "load": "70-85% 1RM",
+          "tempo": "3010",
+          "rest": "2-3 min",
+          "notes": "Maintain neutral spine, feel hamstring stretch"
+        },
+        {
+          "name": "Glute-Ham Raise (GHR)",
+          "sets": "3-4",
+          "reps": "6-10",
+          "load": "Bodyweight to weighted",
+          "tempo": "Controlled",
+          "rest": "2 min",
+          "notes": "Full ROM, controlled eccentric"
+        },
+        {
+          "name": "Barbell Hip Thrust",
+          "sets": "4",
+          "reps": "8-12",
+          "load": "Heavy (1.5-2.5x BW)",
+          "tempo": "2012",
+          "rest": "2-3 min",
+          "notes": "Full hip extension, posterior pelvic tilt"
+        },
+        {
+          "name": "Single-Leg RDL",
+          "sets": "3",
+          "reps": "8-10 each leg",
+          "load": "Moderate (KB or DB)",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Balance and unilateral strength"
+        },
+        {
+          "name": "Pull-Through",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Moderate cable",
+          "tempo": "2010",
+          "rest": "90s",
+          "notes": "Hip hinge pattern reinforcement"
+        }
+      ],
+      "evidence": [
+        "Contreras B, et al. Effects of a six-week hip thrust vs. front squat resistance training program on performance in adolescent males. J Strength Cond Res. 2017;31(4):999-1008.",
+        "Delextrat A, et al. Effects of a typical in-season week on strength jump and sprint performances in national-level female basketball players. J Sports Med Phys Fitness. 2012;52(2):128-136."
+      ],
+      "progressions": [
+        "Increase load 5-10 lb per week when form maintained",
+        "Progress to single-leg variations",
+        "Add accommodating resistance (bands/chains)"
+      ]
+    },
+    {
+      "id": "baseball_shoulder_health",
+      "type": "baseball",
+      "category": "injury_prevention",
+      "title": "Shoulder Health",
+      "description": "Comprehensive rotator cuff and scapular stabilization program for throwing athletes. Critical for arm health and longevity.",
+      "entry_criteria": [
+        "Full shoulder ROM (esp. ER/IR)",
+        "GIRD <20° (throwing arm)",
+        "Pain-free shoulder function"
+      ],
+      "exit_criteria": [
+        "ER/IR strength ratio 0.65-0.75",
+        "Scapular dyskinesia corrected",
+        "Total ROM >180° (ER+IR)"
+      ],
+      "exercises": [
+        {
+          "name": "Side-Lying External Rotation",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light (3-8 lb)",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Infraspinatus/teres minor isolation"
+        },
+        {
+          "name": "Cuban Rotation",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Light DB (5-10 lb)",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Scapular plane, full ROM"
+        },
+        {
+          "name": "Band Pull-Aparts",
+          "sets": "3",
+          "reps": "20-25",
+          "load": "Light band",
+          "tempo": "2012",
+          "rest": "45s",
+          "notes": "Scapular retraction, upper back strength"
+        },
+        {
+          "name": "Prone I-Y-T",
+          "sets": "2-3",
+          "reps": "10-12 each position",
+          "load": "Light (2-5 lb) or bodyweight",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Scapular stabilization complex"
+        },
+        {
+          "name": "Sleeper Stretch",
+          "sets": "3",
+          "reps": "30-60s hold",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "30s",
+          "notes": "Address GIRD, posterior capsule mobility"
+        },
+        {
+          "name": "Serratus Wall Slides",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Bodyweight",
+          "tempo": "Slow, controlled",
+          "rest": "45s",
+          "notes": "Scapular upward rotation, serratus activation"
+        }
+      ],
+      "evidence": [
+        "Wilk KE, et al. Correlation of glenohumeral internal rotation deficit and total rotational motion to shoulder injuries in professional baseball pitchers. Am J Sports Med. 2011;39(2):329-335.",
+        "Bailey LB, et al. Mechanisms of shoulder range of motion deficits in asymptomatic baseball players. Am J Sports Med. 2015;43(11):2783-2793."
+      ],
+      "progressions": [
+        "Increase reps before increasing load",
+        "Progress to rhythmic stabilization drills",
+        "Integrate with throwing program timing"
+      ]
+    },
+    {
+      "id": "baseball_elbow_forearm",
+      "type": "baseball",
+      "category": "injury_prevention",
+      "title": "Elbow/Forearm",
+      "description": "Strengthen wrist flexors, extensors, and forearm musculature to protect elbow during throwing. UCL stress reduction.",
+      "entry_criteria": [
+        "Pain-free wrist/elbow ROM",
+        "No medial elbow tenderness",
+        "Grip strength >40 kg"
+      ],
+      "exit_criteria": [
+        "Grip strength >50 kg",
+        "Wrist flexor/extensor ratio 1.0-1.2",
+        "Pain-free at max grip effort"
+      ],
+      "exercises": [
+        {
+          "name": "Wrist Curls (Flexors)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light-moderate DB",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Forearm supported, full ROM"
+        },
+        {
+          "name": "Reverse Wrist Curls (Extensors)",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light DB",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Address imbalance, prevent tendinopathy"
+        },
+        {
+          "name": "Pronation/Supination with Hammer",
+          "sets": "3",
+          "reps": "12-15 each direction",
+          "load": "Light hammer or weight",
+          "tempo": "Controlled",
+          "rest": "60s",
+          "notes": "Forearm rotation strength"
+        },
+        {
+          "name": "Hand Gripper Work",
+          "sets": "3-4",
+          "reps": "10-15 squeezes",
+          "load": "Heavy resistance",
+          "tempo": "2s hold at peak",
+          "rest": "90s",
+          "notes": "Overall grip and forearm strength"
+        },
+        {
+          "name": "Wrist Roller",
+          "sets": "2-3",
+          "reps": "2-3 rolls up/down",
+          "load": "5-15 lb",
+          "tempo": "Controlled",
+          "rest": "2 min",
+          "notes": "Eccentric and concentric forearm endurance"
+        },
+        {
+          "name": "Eccentric Wrist Extensions",
+          "sets": "2-3",
+          "reps": "10-12",
+          "load": "Light-moderate",
+          "tempo": "4-5s eccentric",
+          "rest": "60s",
+          "notes": "Tendon health, golfer's/tennis elbow prevention"
+        }
+      ],
+      "evidence": [
+        "Ellenbecker TS, et al. Muscular activation during shoulder exercises in patients with glenohumeral instability. J Sport Rehabil. 2009;18(1):87-117.",
+        "Wright RW, et al. Ulnar collateral ligament reconstruction in baseball pitchers. Am J Sports Med. 2006;34(10):1621-1632."
+      ],
+      "progressions": [
+        "Increase load 2-5 lb when maintaining reps",
+        "Progress to single-arm carries for grip endurance",
+        "Add throwing-specific loaded patterns"
+      ]
+    },
+    {
+      "id": "baseball_trunk_stability",
+      "type": "baseball",
+      "category": "strength",
+      "title": "Trunk Stability",
+      "description": "Anti-rotation, anti-extension, and anti-lateral flexion core work. Essential for power transfer and back health.",
+      "entry_criteria": [
+        "Pain-free trunk movement all planes",
+        "Plank hold >60s",
+        "No spinal pathology"
+      ],
+      "exit_criteria": [
+        "Pallof press at body weight resistance",
+        "Dead bug 3x15 perfect form",
+        "Side plank >90s each side"
+      ],
+      "exercises": [
+        {
+          "name": "Pallof Press",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Moderate cable resistance",
+          "tempo": "2s hold at extension",
+          "rest": "60s",
+          "notes": "Primary anti-rotation exercise"
+        },
+        {
+          "name": "Dead Bug",
+          "sets": "3",
+          "reps": "12-15",
+          "load": "Bodyweight to banded",
+          "tempo": "Slow, controlled",
+          "rest": "60s",
+          "notes": "Anti-extension, maintain low back contact"
+        },
+        {
+          "name": "Bird Dog",
+          "sets": "3",
+          "reps": "10-12 each side",
+          "load": "Bodyweight",
+          "tempo": "2s hold at extension",
+          "rest": "45s",
+          "notes": "Contralateral stability pattern"
+        },
+        {
+          "name": "Side Plank with Hip Abduction",
+          "sets": "3",
+          "reps": "45-60s hold or 10-12 reps",
+          "load": "Bodyweight to banded",
+          "tempo": "Static or dynamic",
+          "rest": "60s",
+          "notes": "Anti-lateral flexion, hip stabilization"
+        },
+        {
+          "name": "Copenhagen Plank",
+          "sets": "3",
+          "reps": "20-30s hold each side",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "90s",
+          "notes": "Adductor and lateral core strength"
+        },
+        {
+          "name": "Hollow Body Hold",
+          "sets": "3",
+          "reps": "30-45s",
+          "load": "Bodyweight",
+          "tempo": "Static",
+          "rest": "60s",
+          "notes": "Anti-extension, full anterior chain"
+        }
+      ],
+      "evidence": [
+        "McGill SM, et al. Endurance times for low back stabilization exercises. Arch Phys Med Rehabil. 1999;80(8):941-944.",
+        "Hibbs AE, et al. Optimizing performance by improving core stability and core strength. Sports Med. 2008;38(12):995-1008."
+      ],
+      "progressions": [
+        "Increase hold times before adding external load",
+        "Progress to unstable surfaces (physioball, BOSU)",
+        "Integrate rotational power after stability mastered"
+      ]
+    },
+    {
+      "id": "baseball_lower_body_power",
+      "type": "baseball",
+      "category": "power",
+      "title": "Lower Body Power",
+      "description": "Explosive lower body power development for throwing velocity, bat speed, and base running.",
+      "entry_criteria": [
+        "Squat depth to parallel pain-free",
+        "Jump landing mechanics competent",
+        "Base strength: squat >1.5x BW"
+      ],
+      "exit_criteria": [
+        "Vertical jump >28 inches",
+        "Broad jump >8 feet",
+        "Trap bar jump velocity >2.0 m/s"
+      ],
+      "exercises": [
+        {
+          "name": "Trap Bar Jumps",
+          "sets": "4-5",
+          "reps": "3-5",
+          "load": "20-40% 1RM trap bar DL",
+          "tempo": "Explosive",
+          "rest": "2-3 min",
+          "notes": "Measure bar velocity, optimize load"
+        },
+        {
+          "name": "Box Jumps (Reactive)",
+          "sets": "4",
+          "reps": "4-6",
+          "load": "Bodyweight",
+          "tempo": "Minimal ground contact",
+          "rest": "2 min",
+          "notes": "Focus on reactive strength"
+        },
+        {
+          "name": "Bounding Series",
+          "sets": "3-4",
+          "reps": "6-8 bounds",
+          "load": "Bodyweight",
+          "tempo": "Explosive",
+          "rest": "2-3 min",
+          "notes": "Single-leg, alternate leg, double-leg variations"
+        },
+        {
+          "name": "Depth Jumps",
+          "sets": "3-4",
+          "reps": "4-6",
+          "load": "12-18 inch box",
+          "tempo": "Reactive",
+          "rest": "3 min",
+          "notes": "Plyometric emphasis, minimal ground contact"
+        },
+        {
+          "name": "Single-Leg Hurdle Hops",
+          "sets": "3",
+          "reps": "5-6 each leg",
+          "load": "Bodyweight",
+          "tempo": "Continuous, rhythmic",
+          "rest": "2 min",
+          "notes": "Unilateral power and coordination"
+        }
+      ],
+      "evidence": [
+        "Suchomel TJ, et al. The importance of muscular strength: training considerations. Sports Med. 2018;48(4):765-785.",
+        "Newton RU, et al. Determination of optimal loading for jump squats. J Strength Cond Res. 2010;24(1):103-112."
+      ],
+      "progressions": [
+        "Increase load 5-10 lb on trap bar jumps when velocity maintained",
+        "Progress box height 2-4 inches",
+        "Add reactive/chaotic elements (coach signal, partner reactive)"
+      ]
+    },
+    {
+      "id": "baseball_upper_body_strength",
+      "type": "baseball",
+      "category": "strength",
+      "title": "Upper Body Strength",
+      "description": "Balanced upper body strength for throwing power, bat speed, and injury resilience. Emphasis on horizontal pulling.",
+      "entry_criteria": [
+        "Pain-free pressing and pulling",
+        "Shoulder ER/IR ratio >0.65",
+        "Push/pull ratio >0.8"
+      ],
+      "exit_criteria": [
+        "Bench press >1.25x BW",
+        "Weighted chin-up >25% BW added",
+        "DB row >50% BW per hand"
+      ],
+      "exercises": [
+        {
+          "name": "Bench Press",
+          "sets": "4",
+          "reps": "6-8",
+          "load": "75-85% 1RM",
+          "tempo": "3010",
+          "rest": "2-3 min",
+          "notes": "Control eccentric, explosive concentric"
+        },
+        {
+          "name": "Bent-Over Barbell Row",
+          "sets": "4",
+          "reps": "6-8",
+          "load": "75-85% 1RM",
+          "tempo": "3012",
+          "rest": "2-3 min",
+          "notes": "Horizontal pull emphasis, retract scapulae"
+        },
+        {
+          "name": "Overhead Press (DB or BB)",
+          "sets": "3-4",
+          "reps": "6-10",
+          "load": "Moderate-heavy",
+          "tempo": "3010",
+          "rest": "2 min",
+          "notes": "Strict form, no excessive lumbar extension"
+        },
+        {
+          "name": "Weighted Chin-Ups",
+          "sets": "4",
+          "reps": "6-10",
+          "load": "Added weight as tolerated",
+          "tempo": "3010",
+          "rest": "2-3 min",
+          "notes": "Full ROM, control eccentric"
+        },
+        {
+          "name": "Single-Arm DB Row",
+          "sets": "3",
+          "reps": "8-12 each arm",
+          "load": "Heavy DB",
+          "tempo": "3012",
+          "rest": "90s",
+          "notes": "Anti-rotation component, unilateral strength"
+        },
+        {
+          "name": "Face Pulls",
+          "sets": "3",
+          "reps": "15-20",
+          "load": "Light-moderate cable",
+          "tempo": "2012",
+          "rest": "60s",
+          "notes": "Posterior shoulder, upper back health"
+        }
+      ],
+      "evidence": [
+        "Saeterbakken AH, et al. The effects of bench press variations in competitive athletes on muscle activity and performance. J Hum Kinet. 2017;57:61-71.",
+        "Lehman GJ, et al. Shoulder muscle EMG activity during push up variations on and off a Swiss ball. Dyn Med. 2006;5:7."
+      ],
+      "progressions": [
+        "Increase load 5-10 lb per week when form maintained",
+        "Progress to single-arm pressing variations",
+        "Add accommodating resistance (bands/chains) for advanced athletes"
+      ]
+    },
+    {
+      "id": "baseball_lower_body_strength",
+      "type": "baseball",
+      "category": "strength",
+      "title": "Lower Body Strength",
+      "description": "Foundational lower body strength for power production, deceleration, and injury prevention.",
+      "entry_criteria": [
+        "Pain-free squat pattern to parallel",
+        "Pain-free hip hinge pattern",
+        "Adequate ankle mobility (>10° dorsiflexion)"
+      ],
+      "exit_criteria": [
+        "Back squat >1.75x BW",
+        "Trap bar deadlift >2.0x BW",
+        "Bulgarian split squat >50% BW per hand"
+      ],
+      "exercises": [
+        {
+          "name": "Back Squat",
+          "sets": "4",
+          "reps": "6-8",
+          "load": "75-85% 1RM",
+          "tempo": "3010",
+          "rest": "3 min",
+          "notes": "Depth to parallel minimum, neutral spine"
+        },
+        {
+          "name": "Trap Bar Deadlift",
+          "sets": "4",
+          "reps": "5-6",
+          "load": "80-90% 1RM",
+          "tempo": "3010",
+          "rest": "3 min",
+          "notes": "Hip hinge pattern, explosive intent"
+        },
+        {
+          "name": "Bulgarian Split Squat",
+          "sets": "3",
+          "reps": "8-10 each leg",
+          "load": "Heavy DBs",
+          "tempo": "3010",
+          "rest": "90s",
+          "notes": "Address asymmetries, single-leg strength"
+        },
+        {
+          "name": "Walking Lunges",
+          "sets": "3",
+          "reps": "10-12 each leg",
+          "load": "Moderate DBs or BB",
+          "tempo": "Controlled",
+          "rest": "90s",
+          "notes": "Dynamic stability, functional strength"
+        },
+        {
+          "name": "Step-Ups",
+          "sets": "3",
+          "reps": "8-10 each leg",
+          "load": "Moderate-heavy DBs",
+          "tempo": "2010",
+          "rest": "90s",
+          "notes": "16-20 inch box, drive through heel"
+        }
+      ],
+      "evidence": [
+        "Bloomquist K, et al. Effect of range of motion in heavy load squatting on muscle and tendon adaptations. Eur J Appl Physiol. 2013;113(8):2133-2142.",
+        "Camara KD, et al. An examination of muscle activation and power characteristics while performing the deadlift exercise with straight and hexagonal barbells. J Strength Cond Res. 2016;30(5):1183-1188."
+      ],
+      "progressions": [
+        "Increase load 5-10 lb per week when form maintained",
+        "Progress to pause squats for rate of force development",
+        "Add accommodating resistance for advanced athletes"
+      ]
+    },
+    {
+      "id": "baseball_bullpen",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Bullpen",
+      "description": "Structured bullpen throwing sessions for pitchers. Track pitch count, mix, intent, and command quality.",
+      "entry_criteria": [
+        "Completed appropriate warm-up protocol",
+        "No arm pain or stiffness",
+        "Adequate recovery since last throw session"
+      ],
+      "exit_criteria": [
+        "Target pitch count completed",
+        "Command quality >70% strikes",
+        "No pain during or after session"
+      ],
+      "exercises": [
+        {
+          "name": "Fastball (Primary)",
+          "sets": "N/A",
+          "reps": "Variable pitch count",
+          "load": "60-100% effort",
+          "tempo": "N/A",
+          "rest": "Between pitches/innings",
+          "notes": "Track velocity, command, and feel"
+        },
+        {
+          "name": "Secondary Pitches (Breaking/Off-Speed)",
+          "sets": "N/A",
+          "reps": "Variable pitch count",
+          "load": "70-95% effort",
+          "tempo": "N/A",
+          "rest": "Between pitches",
+          "notes": "Track command, shape, and sequencing"
+        },
+        {
+          "name": "Simulated At-Bats",
+          "sets": "3-6 batters",
+          "reps": "Full counts",
+          "load": "Game intent",
+          "tempo": "N/A",
+          "rest": "Between batters",
+          "notes": "Pitch mix, situational work"
+        }
+      ],
+      "tracking_metrics": [
+        "Total pitch count",
+        "Pitch type distribution (%)",
+        "Strike percentage",
+        "Fastball velocity (avg/peak)",
+        "Arm rating (1-10 scale)",
+        "Command rating (1-10 scale)",
+        "Recovery time needed"
+      ],
+      "evidence": [
+        "Fleisig GS, et al. Prevention of elbow injuries in youth baseball pitchers. Curr Sports Med Rep. 2011;10(5):250-254.",
+        "Whiteside D, et al. Ball speed and release consistency predict pitching success in Major League Baseball. J Strength Cond Res. 2016;30(7):1787-1795."
+      ],
+      "progressions": [
+        "Increase pitch count by 5-10 per session",
+        "Progress intensity (effort %) as arm strengthens",
+        "Add game-simulation elements"
+      ]
+    },
+    {
+      "id": "baseball_long_toss",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Long Toss",
+      "description": "Progressive long toss program for arm strength, extension, and health. Essential component of throwing programs.",
+      "entry_criteria": [
+        "No arm pain at short toss distances",
+        "Adequate shoulder ROM",
+        "Appropriate warm-up completed"
+      ],
+      "exit_criteria": [
+        "Target distance achieved pain-free",
+        "Ball flight quality maintained",
+        "No increase in arm soreness"
+      ],
+      "exercises": [
+        {
+          "name": "Compression Phase (60-90 ft)",
+          "sets": "N/A",
+          "reps": "10-15 throws",
+          "load": "50-70% effort",
+          "tempo": "N/A",
+          "rest": "Between throws",
+          "notes": "Establish rhythm, warm up arm"
+        },
+        {
+          "name": "Pull-Down Phase (90-180 ft)",
+          "sets": "N/A",
+          "reps": "15-20 throws",
+          "load": "70-85% effort",
+          "tempo": "N/A",
+          "rest": "Between throws",
+          "notes": "Progressive distance increase, maintain mechanics"
+        },
+        {
+          "name": "Max Distance (180-300+ ft)",
+          "sets": "N/A",
+          "reps": "10-15 throws",
+          "load": "85-95% effort",
+          "tempo": "N/A",
+          "rest": "Between throws",
+          "notes": "Peak distance for session, monitor ball flight"
+        },
+        {
+          "name": "Recovery Phase (180-60 ft)",
+          "sets": "N/A",
+          "reps": "15-20 throws",
+          "load": "Decreasing effort",
+          "tempo": "N/A",
+          "rest": "Between throws",
+          "notes": "Progressive distance reduction, cool down"
+        }
+      ],
+      "tracking_metrics": [
+        "Max distance achieved",
+        "Total throw count",
+        "Effort level (%)",
+        "Arm rating pre/post (1-10)",
+        "Ball flight quality",
+        "Recovery time needed"
+      ],
+      "evidence": [
+        "Reinold MM, et al. Current concepts in the evaluation and treatment of the shoulder in overhead throwing athletes, part 2. Sports Health. 2010;2(2):101-115.",
+        "Axe MJ, et al. The effect of a training program on the progression of throwing velocity in youth baseball pitchers. J Sports Med Phys Fitness. 2016;56(6):765-771."
+      ],
+      "progressions": [
+        "Increase max distance by 10-20 ft per week",
+        "Increase effort % gradually as arm adapts",
+        "Progress to on-mound work after long toss"
+      ]
+    },
+    {
+      "id": "baseball_plyoball",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Plyoball Program",
+      "description": "Weighted ball program using plyoballs (underweight to overweight) for velocity development and arm care.",
+      "entry_criteria": [
+        "Age >14 years",
+        "No current arm pain",
+        "Adequate shoulder strength and mobility"
+      ],
+      "exit_criteria": [
+        "Program completed without pain",
+        "Velocity improvement measured",
+        "Maintained arm health"
+      ],
+      "exercises": [
+        {
+          "name": "Plyoball Rollins",
+          "sets": "2-3",
+          "reps": "5-8 each arm",
+          "load": "2 lb plyoball",
+          "tempo": "Explosive",
+          "rest": "60s",
+          "notes": "Pivot drill, rotational mechanics"
+        },
+        {
+          "name": "Plyoball Rebounds (Wall)",
+          "sets": "2-3",
+          "reps": "8-10 each arm",
+          "load": "1 lb plyoball",
+          "tempo": "Reactive",
+          "rest": "60s",
+          "notes": "Deceleration and re-acceleration"
+        },
+        {
+          "name": "Plyoball Pull-Downs (High Cuff)",
+          "sets": "2",
+          "reps": "5-6 each arm",
+          "load": "14-21 oz balls (overweight)",
+          "tempo": "Max effort",
+          "rest": "90s",
+          "notes": "Arm speed development, proper mechanics critical"
+        },
+        {
+          "name": "Plyoball Releases (Underweight)",
+          "sets": "2",
+          "reps": "5-6 each arm",
+          "load": "2-4 oz balls",
+          "tempo": "Max effort",
+          "rest": "90s",
+          "notes": "Overspeed training, maintain mechanics"
+        },
+        {
+          "name": "Standard Weight Throws",
+          "sets": "2",
+          "reps": "8-10",
+          "load": "5 oz regulation ball",
+          "tempo": "Game-like",
+          "rest": "60s",
+          "notes": "Return to regulation weight, solidify pattern"
+        }
+      ],
+      "tracking_metrics": [
+        "Ball weight used",
+        "Velocity by weight (radar gun)",
+        "Total throw count",
+        "Arm rating post-session",
+        "Mechanics quality"
+      ],
+      "evidence": [
+        "Slenker NR, et al. Biomechanics of the overhead throwing motion. Athl Train Sports Health Care. 2014;6(3):108-116.",
+        "Reinold MM, et al. Effect of a 6-week weighted baseball throwing program on pitch velocity, pitching arm biomechanics, and arm strength. Sports Health. 2018;10(4):327-333."
+      ],
+      "progressions": [
+        "Increase weight range as tolerance improves",
+        "Add throws per session gradually (max 30 total)",
+        "Monitor velocity changes and arm health closely"
+      ]
+    },
+    {
+      "id": "baseball_pulldown",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Pulldown Program",
+      "description": "High-intent, short-distance throwing program for velocity development. Complements plyoball and long toss.",
+      "entry_criteria": [
+        "No arm pain",
+        "Completed warm-up protocol",
+        "Adequate arm strength base"
+      ],
+      "exit_criteria": [
+        "Target throw count completed",
+        "Intent maintained throughout",
+        "No increase in arm soreness"
+      ],
+      "exercises": [
+        {
+          "name": "Crow Hop Pulldowns",
+          "sets": "2-3",
+          "reps": "6-8",
+          "load": "Regulation ball (5 oz)",
+          "tempo": "Max intent",
+          "rest": "2 min between sets",
+          "notes": "Short distance (60-90 ft), focus on arm speed"
+        },
+        {
+          "name": "Run-and-Gun Pulldowns",
+          "sets": "2",
+          "reps": "5-6",
+          "load": "Regulation ball",
+          "tempo": "Max intent",
+          "rest": "2-3 min",
+          "notes": "Momentum into throw, explosive release"
+        },
+        {
+          "name": "Rocker Pulldowns",
+          "sets": "2",
+          "reps": "6-8",
+          "load": "Regulation ball",
+          "tempo": "Max intent",
+          "rest": "2 min",
+          "notes": "Pitching-specific mechanics, high effort"
+        }
+      ],
+      "tracking_metrics": [
+        "Throw count",
+        "Peak velocity",
+        "Intent/effort rating (1-10)",
+        "Arm rating post-session",
+        "Recovery needed"
+      ],
+      "evidence": [
+        "Fleisig GS, et al. Biomechanical comparison of baseball pitching and long-toss. Sports Biomech. 2011;10(2):79-85.",
+        "Whiteside D, et al. Ball speed and release consistency predict pitching success in Major League Baseball. J Strength Cond Res. 2016;30(7):1787-1795."
+      ],
+      "progressions": [
+        "Increase throw count by 2-3 per week (max 25 total)",
+        "Monitor velocity trends over weeks",
+        "Cycle intensity with overall throwing volume"
+      ]
+    },
+    {
+      "id": "baseball_hitting_tee",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Hitting - Tee",
+      "description": "Tee work for swing mechanics, barrel control, and contact quality. Foundation of hitting development.",
+      "entry_criteria": [
+        "No upper body pain",
+        "Adequate hip and thoracic mobility",
+        "Proper tee setup"
+      ],
+      "exit_criteria": [
+        "Target swing count completed",
+        "Consistent barrel contact",
+        "No increase in fatigue/pain"
+      ],
+      "exercises": [
+        {
+          "name": "Inside Zone Tee Work",
+          "sets": "3-4",
+          "reps": "10-15 swings",
+          "load": "N/A",
+          "tempo": "Controlled",
+          "rest": "Between sets",
+          "notes": "Hands inside ball, quick to contact"
+        },
+        {
+          "name": "Middle Zone Tee Work",
+          "sets": "3-4",
+          "reps": "10-15 swings",
+          "load": "N/A",
+          "tempo": "Controlled",
+          "rest": "Between sets",
+          "notes": "Barrel on plane, optimal contact"
+        },
+        {
+          "name": "Outside Zone Tee Work",
+          "sets": "3-4",
+          "reps": "10-15 swings",
+          "load": "N/A",
+          "tempo": "Controlled",
+          "rest": "Between sets",
+          "notes": "Let ball travel, opposite field approach"
+        },
+        {
+          "name": "High/Low Tee Work",
+          "sets": "2-3",
+          "reps": "8-10 swings each",
+          "load": "N/A",
+          "tempo": "Controlled",
+          "rest": "Between sets",
+          "notes": "Barrel control through zone variations"
+        }
+      ],
+      "tracking_metrics": [
+        "Total swing count",
+        "Contact quality rating (1-10)",
+        "Swing focus/intent",
+        "Video review notes",
+        "Exit velocity (if measured)"
+      ],
+      "evidence": [
+        "DeRenne C, et al. Effects of weighted bat implement training on bat swing velocity. J Strength Cond Res. 2008;22(3):773-779.",
+        "Szymanski DJ, et al. Effect of torso rotational strength on angular hip, angular shoulder, and linear bat velocities of high school baseball players. J Strength Cond Res. 2009;23(6):1681-1687."
+      ],
+      "progressions": [
+        "Increase swing volume gradually (max 100-150/session)",
+        "Progress to variable tee heights/locations",
+        "Integrate with timing and live hitting work"
+      ]
+    },
+    {
+      "id": "baseball_hitting_bp",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Hitting - BP",
+      "description": "Batting practice rounds with live pitching or machine. Timing, pitch recognition, and swing quality.",
+      "entry_criteria": [
+        "Completed appropriate warm-up",
+        "No upper body pain",
+        "Tee work foundation established"
+      ],
+      "exit_criteria": [
+        "Target round count completed",
+        "Contact quality maintained",
+        "No fatigue-related mechanics breakdown"
+      ],
+      "exercises": [
+        {
+          "name": "Fastball BP Rounds",
+          "sets": "3-5 rounds",
+          "reps": "8-12 swings per round",
+          "load": "N/A",
+          "tempo": "Game-like timing",
+          "rest": "Between rounds",
+          "notes": "Focus on timing, barrel control, contact quality"
+        },
+        {
+          "name": "Off-Speed BP Rounds",
+          "sets": "2-3 rounds",
+          "reps": "8-10 swings per round",
+          "load": "N/A",
+          "tempo": "Adjusted timing",
+          "rest": "Between rounds",
+          "notes": "Recognition and adjustment, stay back"
+        },
+        {
+          "name": "Mixed Pitch BP",
+          "sets": "2-3 rounds",
+          "reps": "10-12 swings per round",
+          "load": "N/A",
+          "tempo": "Reactive",
+          "rest": "Between rounds",
+          "notes": "Game simulation, pitch recognition"
+        }
+      ],
+      "tracking_metrics": [
+        "Total swing count",
+        "Pitch type distribution",
+        "Contact quality rating",
+        "Hard hit percentage",
+        "Exit velocity (avg/peak)",
+        "Launch angle distribution"
+      ],
+      "evidence": [
+        "Fortenbaugh D, et al. Baseball pitching biomechanics in relation to injury risk and performance. Sports Health. 2009;1(4):314-320.",
+        "Nathan AM. Characterizing the performance of baseball bats. Am J Phys. 2003;71(2):134-143."
+      ],
+      "progressions": [
+        "Increase round count and pitch diversity",
+        "Progress to higher velocity BP",
+        "Add game-situation scenarios"
+      ]
+    },
+    {
+      "id": "baseball_hitting_live_abs",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Hitting - Live ABs",
+      "description": "Live at-bats in scrimmages or games. Full pitch recognition, situational hitting, game application.",
+      "entry_criteria": [
+        "BP work foundation established",
+        "Adequate recovery since last game",
+        "No injury limitations"
+      ],
+      "exit_criteria": [
+        "Target AB count completed",
+        "Competitive approach maintained",
+        "Quality swings on hittable pitches"
+      ],
+      "exercises": [
+        {
+          "name": "Scrimmage At-Bats",
+          "sets": "N/A",
+          "reps": "3-6 ABs",
+          "load": "N/A",
+          "tempo": "Game speed",
+          "rest": "Between ABs",
+          "notes": "Full count work, pitch recognition, situational hitting"
+        },
+        {
+          "name": "Simulated Game At-Bats",
+          "sets": "N/A",
+          "reps": "4-8 ABs",
+          "load": "N/A",
+          "tempo": "Game speed",
+          "rest": "Between ABs",
+          "notes": "Pitcher working full arsenal, game scenarios"
+        }
+      ],
+      "tracking_metrics": [
+        "At-bats",
+        "Hits/Contact outcomes",
+        "Contact quality (hard hit %)",
+        "Pitch type seen/swung at",
+        "Exit velocity",
+        "Launch angle",
+        "Swing decisions (chase rate, zone contact %)"
+      ],
+      "evidence": [
+        "Fortenbaugh D, et al. Baseball pitching biomechanics in relation to injury risk and performance. Sports Health. 2009;1(4):314-320.",
+        "Gray R. Behavior of college baseball players in a virtual batting task. J Exp Psychol Hum Percept Perform. 2002;28(5):1131-1148."
+      ],
+      "progressions": [
+        "Progress from scrimmage to game ABs",
+        "Increase at-bat volume with season progression",
+        "Track performance metrics over time"
+      ]
+    },
+    {
+      "id": "baseball_vision_handeye",
+      "type": "baseball",
+      "category": "skill",
+      "title": "Vision/Hand-Eye",
+      "description": "Vision training and hand-eye coordination drills for pitch recognition, tracking, and reaction time.",
+      "entry_criteria": [
+        "No vision impairment",
+        "Baseline testing completed",
+        "Appropriate equipment available"
+      ],
+      "exit_criteria": [
+        "Improved reaction time metrics",
+        "Enhanced pitch recognition",
+        "Measurable tracking improvement"
+      ],
+      "exercises": [
+        {
+          "name": "Pitch Recognition App Work",
+          "sets": "2-3",
+          "reps": "10-15 min",
+          "load": "N/A",
+          "tempo": "Variable",
+          "rest": "Between sets",
+          "notes": "Digital platform for pitch ID, spin recognition"
+        },
+        {
+          "name": "Reaction Ball Drills",
+          "sets": "3-4",
+          "reps": "20-30 catches",
+          "load": "Reaction ball",
+          "tempo": "Reactive",
+          "rest": "60s",
+          "notes": "Hand-eye coordination, unpredictable bounces"
+        },
+        {
+          "name": "Tracking Drills (String/Ball)",
+          "sets": "2-3",
+          "reps": "10-15 reps",
+          "load": "N/A",
+          "tempo": "Smooth tracking",
+          "rest": "60s",
+          "notes": "Eye tracking, depth perception"
+        },
+        {
+          "name": "Strobe Glasses Training",
+          "sets": "2",
+          "reps": "5-10 min",
+          "load": "N/A",
+          "tempo": "Variable",
+          "rest": "Between sets",
+          "notes": "Visual processing under constraint"
+        },
+        {
+          "name": "Colored Ball BP",
+          "sets": "2-3 rounds",
+          "reps": "8-10 swings",
+          "load": "N/A",
+          "tempo": "Game-like",
+          "rest": "Between rounds",
+          "notes": "Call color on pitched ball, hit opposite way"
+        }
+      ],
+      "tracking_metrics": [
+        "Drill type and duration",
+        "Accuracy/success rate",
+        "Reaction time (ms)",
+        "Recognition accuracy (%)",
+        "Subjective difficulty rating"
+      ],
+      "evidence": [
+        "Clark JF, et al. An exploratory study of perceptual-cognitive function in baseball batters. Res Q Exerc Sport. 2012;83(1):14-21.",
+        "Fadde PJ. Interactive video training of perceptual decision-making in the sport of baseball. Technol Instr Cogn Learn. 2006;4:265-285."
+      ],
+      "progressions": [
+        "Increase difficulty/speed of drills",
+        "Add reaction time constraints",
+        "Progress to game-speed application"
+      ]
+    }
+  ]
+}

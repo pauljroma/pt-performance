@@ -1,0 +1,38 @@
+[
+  {
+    "id": "getting-started-app",
+    "title": "Getting Started with PT Performance",
+    "category": "Getting Started",
+    "content": "# Welcome to PT Performance\n\nPT Performance is your comprehensive platform for managing rehabilitation programs and tracking your recovery progress.\n\n## Key Features\n\n### For Patients\n- **Daily Readiness Check**: Log how you're feeling each day to help optimize your training\n- **Exercise Programs**: Access your personalized exercise programs with video demonstrations\n- **Session Scheduling**: View and manage your upcoming therapy sessions\n- **Progress Tracking**: Monitor your strength gains and adherence over time\n\n### For Therapists\n- **Patient Management**: View and manage all your patients in one place\n- **Program Builder**: Create custom exercise programs tailored to each patient\n- **Readiness Monitoring**: Track patient readiness and adjust programs accordingly\n- **Analytics**: Review patient progress with comprehensive analytics\n\n## Getting Started\n\n1. **Log In**: Use your email and password to access your account\n2. **Complete Your Profile**: Add any relevant health information\n3. **Review Your Program**: Check out your assigned exercises and upcoming sessions\n4. **Start Training**: Follow your program and log your sessions\n\n## Need Help?\n\nBrowse our help articles by category or use the search function to find specific topics.",
+    "tags": ["onboarding", "introduction", "basics", "overview"],
+    "related_article_ids": ["using-readiness", "understanding-programs"],
+    "last_updated": "2025-12-20"
+  },
+  {
+    "id": "using-readiness",
+    "title": "How to Use Daily Readiness Check-In",
+    "category": "Readiness",
+    "content": "# Daily Readiness Check-In\n\nThe Daily Readiness Check-In helps you and your therapist understand how you're feeling and adjust your training accordingly.\n\n## What is Readiness?\n\nReadiness is a measure of how prepared your body is for training. It considers:\n- **Pain Levels**: Current pain or discomfort\n- **Sleep Quality**: How well you slept\n- **Energy Levels**: Overall fatigue or energy\n- **Stress**: Mental and physical stress\n\n## How to Complete Your Check-In\n\n1. **Access the Check-In**: Tap the \"Today\" tab and look for \"Daily Check-In\"\n2. **Rate Your Status**: Use the sliders to rate different aspects of your readiness\n3. **Add Notes**: Include any specific concerns or observations\n4. **Submit**: Your therapist will review and may adjust your program\n\n## Readiness Bands\n\n- **Green (High)**: You're ready for your full program\n- **Yellow (Moderate)**: Some adjustments may be needed\n- **Red (Low)**: Significant modifications recommended\n\n## When to Check In\n\nComplete your check-in:\n- Every morning before training\n- Before each scheduled session\n- Whenever you experience significant changes in how you feel\n\n## Tips for Accuracy\n\n- Be honest about how you feel\n- Don't push through severe pain\n- Note any changes in symptoms\n- Communicate with your therapist about concerns",
+    "tags": ["readiness", "check-in", "daily", "pain", "recovery"],
+    "related_article_ids": ["getting-started-app", "understanding-pain-scale"],
+    "last_updated": "2025-12-20"
+  },
+  {
+    "id": "understanding-programs",
+    "title": "Understanding Your Exercise Program",
+    "category": "Programs",
+    "content": "# Understanding Your Exercise Program\n\nYour exercise program is custom-designed by your therapist to help you reach your recovery goals.\n\n## Program Structure\n\n### Sessions\nYour program is organized into sessions, typically 2-4 per week. Each session contains:\n- Warm-up exercises\n- Main strength/mobility work\n- Cool-down activities\n\n### Exercise Details\nEach exercise includes:\n- **Sets & Reps**: How many times to perform the exercise\n- **Load**: Weight or resistance to use\n- **Rest Period**: How long to rest between sets\n- **Video Demo**: Proper technique demonstration\n- **Notes**: Special instructions from your therapist\n\n## Following Your Program\n\n### Before Your Session\n1. Complete your daily readiness check-in\n2. Review the exercises in your session\n3. Watch video demonstrations for new exercises\n4. Gather any equipment you'll need\n\n### During Your Session\n1. Start with the warm-up\n2. Follow the prescribed sets, reps, and loads\n3. Take appropriate rest periods\n4. Log each exercise as you complete it\n5. Note any difficulties or pain\n\n### After Your Session\n1. Complete the session summary\n2. Rate your overall effort and pain\n3. Add any notes for your therapist\n\n## Program Adjustments\n\nYour therapist may adjust your program based on:\n- Your readiness scores\n- Progress and performance\n- Feedback and symptoms\n- Phase advancement\n\n## Exercise Modifications\n\nIf an exercise causes pain or difficulty:\n1. Stop the exercise immediately\n2. Log the issue in your session notes\n3. Contact your therapist\n4. Don't substitute exercises without approval\n\n## Progression\n\nAs you improve, your program will advance through:\n- Increased load/resistance\n- More challenging exercises\n- Higher volume (sets/reps)\n- Reduced rest periods",
+    "tags": ["program", "exercises", "sessions", "progression", "training"],
+    "related_article_ids": ["getting-started-app", "logging-exercises"],
+    "last_updated": "2025-12-20"
+  },
+  {
+    "id": "logging-exercises",
+    "title": "How to Log Your Exercise Sessions",
+    "category": "Exercises",
+    "content": "# Logging Your Exercise Sessions\n\nAccurate logging helps your therapist track your progress and make informed decisions about your program.\n\n## Starting a Session\n\n1. **Navigate to Today**: Tap the \"Today\" tab\n2. **Select Your Session**: Tap on the scheduled session\n3. **Complete Check-In**: If you haven't already, complete your readiness check-in\n4. **Begin**: Tap \"Start Session\" when you're ready\n\n## Logging Exercises\n\n### For Each Exercise\n\n1. **Review the Exercise**: Check sets, reps, and load prescribed\n2. **Watch the Video**: Review proper technique if needed\n3. **Perform the Exercise**: Complete the prescribed work\n4. **Log Your Sets**: Tap each set to log:\n   - Reps completed\n   - Load used\n   - RPE (Rate of Perceived Exertion)\n   - Any modifications made\n\n### Quick Logging\n\n- Swipe right to mark a set as completed with prescribed values\n- Swipe left to skip a set and note why\n- Tap \"Same as Prescribed\" to quickly log matching values\n\n## Session Notes\n\nAdd notes about:\n- How exercises felt\n- Any pain or discomfort experienced\n- Equipment limitations\n- Questions for your therapist\n\n## Completing Your Session\n\n1. **Finish All Exercises**: Work through your entire program\n2. **Session Summary**: Review what you completed\n3. **Overall Rating**: Rate your session:\n   - Pain level (0-10)\n   - Difficulty (1-10)\n   - Completion (% of prescribed work)\n4. **Submit**: Save your session data\n\n## What If I Can't Complete Everything?\n\nThat's okay! Log what you did complete and note why you stopped:\n- Time constraints\n- Fatigue\n- Pain or discomfort\n- Equipment issues\n\n## Tips for Accurate Logging\n\n- Log in real-time during your session\n- Be honest about loads and reps\n- Note any modifications you made\n- Report pain immediately\n- Save your session when complete\n\n## Reviewing Past Sessions\n\nAccess your history to:\n- Review previous performance\n- Track load progression\n- Identify patterns\n- Share with your therapist",
+    "tags": ["logging", "exercises", "sessions", "tracking", "recording"],
+    "related_article_ids": ["understanding-programs", "using-readiness"],
+    "last_updated": "2025-12-20"
+  }
+]
