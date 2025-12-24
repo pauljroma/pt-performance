@@ -1,0 +1,213 @@
+name: "Build 77: AI Helper MVP Swarm"
+description: "Multi-agent parallel implementation of AI Helper foundation for PT Performance"
+build: 77
+date: "2025-12-24"
+total_agents: 8
+
+strategy: "Parallel execution with dependency awareness"
+
+overview: |
+  Foundation for AI-Driven Program Intelligence (EPIC-01: ACP-492).
+  Build 77 delivers MVP AI helper features while Build 81 adds full intelligence layer.
+
+  Features:
+  - AI Chat Assistant for patients (exercise questions, form guidance)
+  - AI Exercise Substitution Engine (injury-aware alternatives)
+  - AI Safety Checker (contraindication detection)
+  - Foundation models and services for Build 81 expansion
+
+architecture:
+  backend: "Supabase Edge Functions + OpenAI/Anthropic API"
+  frontend: "iOS SwiftUI"
+  database: "Supabase PostgreSQL"
+  ai_provider: "OpenAI GPT-4 (chat) + Claude (safety analysis)"
+
+phases:
+  - phase: 1
+    name: "Foundation & Backend (Parallel)"
+    agents:
+      - id: "agent-1"
+        name: "Database Schema Agent"
+        task: "Create AI helper database tables"
+        deliverables:
+          - "migration: ai_chat_sessions table"
+          - "migration: ai_chat_messages table"
+          - "migration: ai_exercise_substitutions table"
+          - "migration: ai_safety_checks table"
+        duration: "30min"
+
+      - id: "agent-2"
+        name: "AI Service Agent (OpenAI Integration)"
+        task: "Create OpenAI integration service"
+        deliverables:
+          - "edge_function: ai-chat-completion"
+          - "edge_function: ai-exercise-substitution"
+          - "Prompt engineering for PT context"
+        duration: "45min"
+
+      - id: "agent-3"
+        name: "AI Safety Agent (Claude Integration)"
+        task: "Create safety checker with Claude"
+        deliverables:
+          - "edge_function: ai-safety-check"
+          - "Contraindication detection logic"
+          - "Injury-aware filtering"
+        duration: "45min"
+
+  - phase: 2
+    name: "iOS Frontend (Parallel)"
+    dependencies: ["phase-1"]
+    agents:
+      - id: "agent-4"
+        name: "AI Chat UI Agent"
+        task: "Build AI chat interface"
+        deliverables:
+          - "Views/AI/AIChatView.swift"
+          - "Views/AI/AIChatBubble.swift"
+          - "ViewModels/AIChatViewModel.swift"
+        duration: "60min"
+
+      - id: "agent-5"
+        name: "Exercise Substitution UI Agent"
+        task: "Build exercise swap UI with AI suggestions"
+        deliverables:
+          - "Views/AI/AISubstitutionSheet.swift"
+          - "Services/AISubstitutionService.swift"
+        duration: "45min"
+
+      - id: "agent-6"
+        name: "AI Safety UI Agent"
+        task: "Build safety warnings UI"
+        deliverables:
+          - "Views/AI/AISafetyAlert.swift"
+          - "Services/AISafetyService.swift"
+          - "Real-time contraindication checks"
+        duration: "45min"
+
+  - phase: 3
+    name: "Integration & Configuration (Parallel)"
+    dependencies: ["phase-2"]
+    agents:
+      - id: "agent-7"
+        name: "Integration Agent"
+        task: "Wire AI features into existing views"
+        deliverables:
+          - "Add AI chat button to TodaySessionView"
+          - "Add AI swap button to ExerciseLogView"
+          - "Add safety checks to program editor"
+        duration: "30min"
+
+      - id: "agent-8"
+        name: "Configuration & Testing Agent"
+        task: "Configure AI services and create tests"
+        deliverables:
+          - "Config.swift: OpenAI/Anthropic API keys"
+          - "Unit tests for AI services"
+          - "Integration tests for chat flow"
+          - ".env.template updates"
+        duration: "30min"
+
+features:
+  ai_chat:
+    description: "Patient can chat with AI about their program"
+    examples:
+      - "How do I do a goblet squat?"
+      - "Why was I assigned this exercise?"
+      - "Can I skip today's session?"
+    model: "GPT-4-turbo"
+    context: "Patient profile, current program, exercise library"
+
+  ai_substitution:
+    description: "AI suggests alternative exercises based on equipment/injury"
+    examples:
+      - "Barbell squat → Goblet squat (no barbell)"
+      - "Running → Swimming (knee injury)"
+    model: "GPT-4-turbo"
+    context: "Exercise database, patient injuries, available equipment"
+
+  ai_safety:
+    description: "AI checks for contraindications in real-time"
+    examples:
+      - "Patient with shoulder injury assigned overhead press → WARNING"
+      - "High volume + low recovery score → CAUTION"
+    model: "Claude Sonnet"
+    context: "Patient injuries, WHOOP recovery, exercise biomechanics"
+
+database_schema:
+  ai_chat_sessions:
+    columns:
+      - "id UUID PRIMARY KEY"
+      - "athlete_id UUID REFERENCES athletes"
+      - "started_at TIMESTAMPTZ"
+      - "ended_at TIMESTAMPTZ"
+      - "message_count INTEGER"
+
+  ai_chat_messages:
+    columns:
+      - "id UUID PRIMARY KEY"
+      - "session_id UUID REFERENCES ai_chat_sessions"
+      - "role TEXT (user|assistant|system)"
+      - "content TEXT"
+      - "tokens_used INTEGER"
+      - "created_at TIMESTAMPTZ"
+
+  ai_exercise_substitutions:
+    columns:
+      - "id UUID PRIMARY KEY"
+      - "athlete_id UUID"
+      - "original_exercise_id UUID"
+      - "suggested_exercise_id UUID"
+      - "reason TEXT"
+      - "ai_confidence DECIMAL"
+      - "accepted BOOLEAN"
+      - "created_at TIMESTAMPTZ"
+
+  ai_safety_checks:
+    columns:
+      - "id UUID PRIMARY KEY"
+      - "athlete_id UUID"
+      - "exercise_id UUID"
+      - "warning_level TEXT (info|caution|warning|danger)"
+      - "reason TEXT"
+      - "ai_analysis JSONB"
+      - "dismissed BOOLEAN"
+      - "created_at TIMESTAMPTZ"
+
+api_integration:
+  openai:
+    model: "gpt-4-turbo-preview"
+    max_tokens: 500
+    temperature: 0.7
+    system_prompt: |
+      You are a knowledgeable physical therapy assistant helping patients
+      understand their rehabilitation program. Always prioritize safety and
+      defer to the prescribing PT for medical questions.
+
+  anthropic:
+    model: "claude-3-5-sonnet-20241022"
+    max_tokens: 1000
+    temperature: 0.3
+    system_prompt: |
+      You are a medical safety analyzer. Identify contraindications between
+      prescribed exercises and patient injury history. Be conservative and
+      flag any potential risks.
+
+cost_estimate:
+  agents: 8
+  total_time: "4-5 hours (parallel execution: ~2 hours wall time)"
+  ai_api_cost: "$50-100/month (estimated usage)"
+  complexity: "Medium-High"
+
+success_criteria:
+  - "✅ AI chat functional with PT context awareness"
+  - "✅ Exercise substitution suggestions accurate (80%+ PT approval)"
+  - "✅ Safety checks catch known contraindications (100%)"
+  - "✅ Response time < 3 seconds for all AI operations"
+  - "✅ All tests passing"
+  - "✅ Deployed to TestFlight"
+
+next_builds:
+  build_78: "AI Program Review (PT feedback on AI suggestions)"
+  build_79: "AI Learning Loop (improve from PT edits)"
+  build_80: "AI Evidence Citations (research backing for exercises)"
+  build_81: "Full AI Program Intelligence Layer (EPIC-01)"

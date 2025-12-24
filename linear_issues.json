@@ -7,11 +7,11 @@
     "priority": 2,
     "estimate": null,
     "createdAt": "2025-12-24T03:08:18.375Z",
-    "updatedAt": "2025-12-24T03:08:18.375Z",
+    "updatedAt": "2025-12-24T05:07:37.574Z",
     "completedAt": null,
     "state": {
-      "name": "Todo",
-      "type": "unstarted"
+      "name": "In Progress",
+      "type": "started"
     },
     "assignee": null,
     "team": {
@@ -40,11 +40,11 @@
     "priority": 2,
     "estimate": null,
     "createdAt": "2025-12-24T03:08:18.062Z",
-    "updatedAt": "2025-12-24T03:08:18.062Z",
+    "updatedAt": "2025-12-24T05:07:37.080Z",
     "completedAt": null,
     "state": {
-      "name": "Todo",
-      "type": "unstarted"
+      "name": "In Progress",
+      "type": "started"
     },
     "assignee": null,
     "team": {
@@ -73,11 +73,11 @@
     "priority": 1,
     "estimate": null,
     "createdAt": "2025-12-24T03:08:17.729Z",
-    "updatedAt": "2025-12-24T03:08:17.729Z",
+    "updatedAt": "2025-12-24T05:07:36.618Z",
     "completedAt": null,
     "state": {
-      "name": "Todo",
-      "type": "unstarted"
+      "name": "In Progress",
+      "type": "started"
     },
     "assignee": null,
     "team": {
@@ -106,11 +106,11 @@
     "priority": 1,
     "estimate": null,
     "createdAt": "2025-12-24T03:08:17.394Z",
-    "updatedAt": "2025-12-24T03:08:17.394Z",
+    "updatedAt": "2025-12-24T05:07:36.028Z",
     "completedAt": null,
     "state": {
-      "name": "Todo",
-      "type": "unstarted"
+      "name": "In Progress",
+      "type": "started"
     },
     "assignee": null,
     "team": {
@@ -139,11 +139,11 @@
     "priority": 1,
     "estimate": null,
     "createdAt": "2025-12-24T03:08:16.561Z",
-    "updatedAt": "2025-12-24T03:08:16.561Z",
+    "updatedAt": "2025-12-24T05:07:35.264Z",
     "completedAt": null,
     "state": {
-      "name": "Todo",
-      "type": "unstarted"
+      "name": "In Progress",
+      "type": "started"
     },
     "assignee": null,
     "team": {
