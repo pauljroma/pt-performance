@@ -1,7 +1,21 @@
 # WHOOP API Integration Specification
 
+⚠️ **DEPRECATED - INCORRECT ARCHITECTURE**
+
+This spec incorrectly references Quiver (drug discovery platform) as the backend.
+The actual PT Performance backend is **Supabase Edge Functions**, not Quiver.
+
+**Implemented as:**
+- `supabase/functions/whoop-oauth-callback/` - OAuth code exchange
+- `supabase/functions/whoop-sync-recovery/` - Recovery data sync
+- `supabase/migrations/20251224000001_create_whoop_tables.sql` - Database schema
+
+**See instead:** `IOS_WHOOP_INTEGRATION_SPEC.md` for the correct implementation.
+
+---
+
 **Issue:** ACP-465 - Design WHOOP API integration architecture
-**Platform:** Quiver (Backend Intelligence Platform)
+**Platform:** ~~Quiver (Backend Intelligence Platform)~~ **Supabase Edge Functions**
 **Date:** 2025-12-24
 **Build:** 76
 

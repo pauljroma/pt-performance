@@ -7,7 +7,7 @@
 **Platform:** iOS (PTPerformance app)
 **Date:** 2025-12-24
 **Build:** 76
-**Dependencies:** Quiver WHOOP API (ACP-465)
+**Dependencies:** Supabase Edge Functions (whoop-oauth-callback, whoop-sync-recovery)
 
 ---
 
@@ -580,7 +580,7 @@ struct FeatureRow: View {
 
 ## Deployment Steps
 
-1. Wait for Quiver WHOOP API completion (ACP-465)
+1. ✅ Supabase Edge Functions deployed (whoop-oauth-callback, whoop-sync-recovery)
 2. Implement WHOOPService.swift
 3. Create WHOOP models
 4. Build WHOOP UI components

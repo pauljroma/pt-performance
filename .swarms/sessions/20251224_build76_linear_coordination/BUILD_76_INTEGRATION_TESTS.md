@@ -2,7 +2,7 @@
 
 **Build:** 76 - WHOOP Integration
 **Date:** 2025-12-24
-**Scope:** Cross-repo integration testing (Quiver + iOS + Supabase)
+**Scope:** Integration testing (iOS + Supabase Edge Functions)
 
 ---
 
@@ -16,11 +16,11 @@
 
 ---
 
-## 1. Quiver Backend Tests
+## 1. Supabase Edge Function Tests
 
-### Unit Tests
+### Edge Function Tests
 
-**File:** `quiver_platform/zones/z09_integration/whoop/tests/test_whoop_client.py`
+**File:** `supabase/functions/whoop-sync-recovery/test.ts`
 
 ```python
 import pytest
