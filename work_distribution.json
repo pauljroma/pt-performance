@@ -1,0 +1,322 @@
+{
+  "linear-bootstrap": {
+    "count": 4,
+    "issues": [
+      {
+        "id": "ACP-463",
+        "title": "ACP-387: Implement mental performance analytics and insights",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-461",
+        "title": "ACP-385: Create post-competition recovery protocol (mental)",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-458",
+        "title": "ACP-382: Create visualization and mental rehearsal system",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-457",
+        "title": "ACP-381: Implement breathing protocol library (box, 4-7-8, Wim Hof)",
+        "state": "Todo",
+        "priority": 2
+      }
+    ]
+  },
+  "ios-app": {
+    "count": 22,
+    "issues": [
+      {
+        "id": "ACP-506",
+        "title": "Fix: Debug logging not working (Build 74)",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-505",
+        "title": "Fix: Tabata/EMOM timer not accessible from UI (Build 74)",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-504",
+        "title": "Fix: Program creation crashes app (Watchdog timeout 0x8BADF00D) (Build 74)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-503",
+        "title": "Fix: Articles not loading in Help/Learn sections (Build 74)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-502",
+        "title": "[CRITICAL] Build 74 - Multiple Production Blockers",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-495",
+        "title": "EPIC-04: Parity - Program Builder & Periodization",
+        "state": "Backlog",
+        "priority": 2
+      },
+      {
+        "id": "ACP-491",
+        "title": "ACP-415: Build 90 Integration Testing + Deployment",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-488",
+        "title": "ACP-412: Build mode-specific settings and preferences",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-485",
+        "title": "ACP-409: Build mode-specific onboarding flows",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-482",
+        "title": "ACP-406: Build Performance Mode UI (readiness-first, elite-focused)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-481",
+        "title": "ACP-405: Build Strength Mode UI (PR-focused, volume-driven)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-480",
+        "title": "ACP-404: Build Rehab Mode UI (pain-first, safety-focused)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-478",
+        "title": "ACP-402: Build 89 Integration Testing + Deployment",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-477",
+        "title": "ACP-401: Build wearable data preference system (choose primary device)",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-474",
+        "title": "ACP-398: Build Apple Watch HealthKit integration (workouts, HRV, sleep)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-471",
+        "title": "ACP-395: Build 88 Integration Testing + Deployment",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-470",
+        "title": "ACP-394: Build WHOOP-driven auto-adjustment integration",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-467",
+        "title": "ACP-391: Build WHOOP strain \u2192 session volume correlation",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-464",
+        "title": "ACP-388: Build 87 Integration Testing + Deployment",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-462",
+        "title": "ACP-386: Build focus and attention training (pre-technical work)",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-460",
+        "title": "ACP-384: Implement pre-competition mental routine builder",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-459",
+        "title": "ACP-383: Build music-based arousal modulation (playlist integration)",
+        "state": "Todo",
+        "priority": 3
+      }
+    ]
+  },
+  "quiver": {
+    "count": 6,
+    "issues": [
+      {
+        "id": "ACP-475",
+        "title": "ACP-399: Create unified recovery score (multi-wearable fusion)",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-472",
+        "title": "ACP-396: Design multi-wearable integration architecture (Oura, Apple Watch)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-469",
+        "title": "ACP-393: Implement WHOOP HRV trend analysis + alerts",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-468",
+        "title": "ACP-392: Create WHOOP sleep data auto-import + visualization",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-466",
+        "title": "ACP-390: Implement WHOOP recovery score \u2192 readiness band mapping",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-465",
+        "title": "ACP-389: Design WHOOP API integration architecture",
+        "state": "Todo",
+        "priority": 1
+      }
+    ]
+  },
+  "uncategorized": {
+    "count": 18,
+    "issues": [
+      {
+        "id": "ACP-501",
+        "title": "EPIC-10: Video Intelligence & Form Analysis",
+        "state": "Backlog",
+        "priority": 4
+      },
+      {
+        "id": "ACP-500",
+        "title": "EPIC-09: Collaboration & Communication Hub",
+        "state": "Backlog",
+        "priority": 3
+      },
+      {
+        "id": "ACP-499",
+        "title": "EPIC-08: Analytics & Predictive Intelligence",
+        "state": "Backlog",
+        "priority": 3
+      },
+      {
+        "id": "ACP-498",
+        "title": "EPIC-07: Pain Interpretation & Safety System",
+        "state": "Backlog",
+        "priority": 1
+      },
+      {
+        "id": "ACP-497",
+        "title": "EPIC-06: Intelligent Exercise Library",
+        "state": "Backlog",
+        "priority": 2
+      },
+      {
+        "id": "ACP-496",
+        "title": "EPIC-05: Parity - Athlete Assignment & Delivery",
+        "state": "Backlog",
+        "priority": 2
+      },
+      {
+        "id": "ACP-494",
+        "title": "EPIC-03: Readiness & Auto-Regulation Engine",
+        "state": "Backlog",
+        "priority": 1
+      },
+      {
+        "id": "ACP-493",
+        "title": "EPIC-02: Return-to-Play Intelligence",
+        "state": "Backlog",
+        "priority": 1
+      },
+      {
+        "id": "ACP-492",
+        "title": "EPIC-01: AI-Driven Program Intelligence Layer",
+        "state": "Backlog",
+        "priority": 1
+      },
+      {
+        "id": "ACP-490",
+        "title": "ACP-414: Create mode switching admin panel (PT-controlled)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-489",
+        "title": "ACP-413: Implement mode-specific visual themes and branding",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-487",
+        "title": "ACP-411: Create mode-specific notification strategies",
+        "state": "Todo",
+        "priority": 3
+      },
+      {
+        "id": "ACP-486",
+        "title": "ACP-410: Implement mode-specific analytics dashboards",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-484",
+        "title": "ACP-408: Create mode transition workflows (Rehab \u2192 Strength \u2192 Performance)",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-483",
+        "title": "ACP-407: Implement mode-specific feature visibility logic",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-479",
+        "title": "ACP-403: Design Performance OS mode architecture (3 modes)",
+        "state": "Todo",
+        "priority": 1
+      },
+      {
+        "id": "ACP-476",
+        "title": "ACP-400: Implement Apple Watch workout auto-import",
+        "state": "Todo",
+        "priority": 2
+      },
+      {
+        "id": "ACP-473",
+        "title": "ACP-397: Implement Oura API integration (recovery, sleep, HRV)",
+        "state": "Todo",
+        "priority": 1
+      }
+    ]
+  }
+}

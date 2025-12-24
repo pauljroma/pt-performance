@@ -1,0 +1,1292 @@
+[
+  {
+    "id": "4370ba04-3a15-47f6-817a-e282b06b7f30",
+    "identifier": "ACP-506",
+    "title": "Fix: Debug logging not working (Build 74)",
+    "description": "## Problem\n\nCannot diagnose issues because logging is broken. This makes fixing other bugs much harder.\n\n## Files to Check\n\n* `Services/ErrorLogger.swift`\n* `Services/PerformanceMonitor.swift`\n* Any `DebugLogger` usage\n\n## Investigation Needed\n\n* Is DebugLogger properly initialized?\n* Are log statements being called?\n* Is output being suppressed?\n\n## Impact\n\n\ud83d\udfe1 HIGH - Makes debugging other critical issues much more difficult",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-24T03:08:18.375Z",
+    "updatedAt": "2025-12-24T03:08:18.375Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": {
+      "name": "MVP 1 \u2014 PT App & Agent Pilot",
+      "targetDate": null
+    },
+    "labels": {
+      "nodes": [
+        {
+          "name": "build-74",
+          "color": "#FF0000"
+        }
+      ]
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-506/fix-debug-logging-not-working-build-74"
+  },
+  {
+    "id": "df5fc229-5411-4c79-b12f-5241bde91a67",
+    "identifier": "ACP-505",
+    "title": "Fix: Tabata/EMOM timer not accessible from UI (Build 74)",
+    "description": "## What Was Built\n\n\u2705 `Services/IntervalTimerEngine.swift` - Timer logic\n\u2705 `Views/Workout/IntervalTimerView.swift` - TRX-style UI\n\u2705 `Views/Therapist/IntervalBlockPickerView.swift` - Template picker\n\u2705 `Models/IntervalBlock.swift` - Data models\n\u2705 Database migration applied with 6 templates\n\n## Problem\n\nUser cannot find the feature. Where is it supposed to appear?\n\n**Expected Flow:**\n\n1. **Therapist:** Edit Session \u2192 \"Add Warmup Block\" button \u2192 Select Tabata template\n2. **Patient:** Today's Session \u2192 See interval block card \u2192 Tap to launch timer\n\n## Investigation Needed\n\n* Is \"Add Warmup Block\" button visible in EditSessionView?\n* Are interval blocks being fetched from database?\n* Is navigation wired up correctly in TodaySessionView?\n\n## Files to Verify\n\n* `Views/Therapist/ProgramEditor/EditSessionView.swift:143-183`\n* `TodaySessionView.swift`\n* `ViewModels/TodaySessionViewModel.swift`\n\n## Recommended Fix\n\nAdd prominent \"Warmup Timer\" button to:\n\n* Today's Session view (patient)\n* Session editor toolbar (therapist)\n\n## Impact\n\n\ud83d\udfe1 HIGH - New feature is fully built but invisible to users",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-24T03:08:18.062Z",
+    "updatedAt": "2025-12-24T03:08:18.062Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": {
+      "name": "MVP 1 \u2014 PT App & Agent Pilot",
+      "targetDate": null
+    },
+    "labels": {
+      "nodes": [
+        {
+          "name": "build-74",
+          "color": "#FF0000"
+        }
+      ]
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-505/fix-tabataemom-timer-not-accessible-from-ui-build-74"
+  },
+  {
+    "id": "2d5f07a0-40bf-4b99-a964-6a581c2e3f75",
+    "identifier": "ACP-504",
+    "title": "Fix: Program creation crashes app (Watchdog timeout 0x8BADF00D) (Build 74)",
+    "description": "## Crash Details\n\n```\nTermination Code: 0x8BADF00D (ate bad food)\nReason: scene-update watchdog transgression\nDuration: App hung for 10+ seconds during UI update\nElapsed CPU: 24.820s (user 20.200s, system 4.620s), 25% CPU\n```\n\n## Stack Trace\n\n```\nThread 0 Crashed (Main Thread):\nListBatchUpdates.computeRemovesAndInserts\n  \u2192 UICollectionViewListCoordinator.update\n  \u2192 UpdateCollectionViewListCoordinator.updateValue\n  \u2192 GraphHost.flushTransactions\n  \u2192 ViewGraphRootValueUpdater.updateGraph\n```\n\n## Root Cause\n\nWhen creating a new program, SwiftUI's List is performing a massive batch update operation synchronously on the main thread. This is taking more than 10 seconds, triggering iOS's watchdog timer which kills the app.\n\n## Files Implicated\n\n* `ViewModels/ProgramEditorViewModel.swift` - Program creation logic\n* `Views/Therapist/ProgramBuilder/SessionBuilderSheet.swift` - UI that triggers creation\n* SwiftUI List performing batch updates on large datasets\n\n## Recommended Fix\n\n```swift\n// ProgramEditorViewModel.swift\nfunc createProgram() async {\n    await MainActor.run {\n        isLoading = true\n    }\n\n    // Move heavy computation off main thread\n    let program = await Task.detached {\n        // Build program data\n    }.value\n\n    await MainActor.run {\n        // Update UI\n        isLoading = false\n    }\n}\n```\n\n## Impact\n\n\ud83d\udd34 CRITICAL - App crashes when therapist tries to create new program",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-24T03:08:17.729Z",
+    "updatedAt": "2025-12-24T03:08:17.729Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": {
+      "name": "MVP 1 \u2014 PT App & Agent Pilot",
+      "targetDate": null
+    },
+    "labels": {
+      "nodes": [
+        {
+          "name": "build-74",
+          "color": "#FF0000"
+        }
+      ]
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-504/fix-program-creation-crashes-app-watchdog-timeout-0x8badf00d-build-74"
+  },
+  {
+    "id": "3d145cc0-8896-47f6-8baa-9433e3080786",
+    "identifier": "ACP-503",
+    "title": "Fix: Articles not loading in Help/Learn sections (Build 74)",
+    "description": "## Problem\n\n* Help section shows no articles\n* Learning modules show no content\n* Article browse view is empty\n\n## Investigation\n\n**Database Status:**\n\n```sql\nSELECT COUNT(*) FROM content_items;\n-- Result: 189 rows \u2705\n```\n\nArticles exist in database, but iOS app cannot see them.\n\n## Possible Causes\n\n1. **RLS Policies Blocking Access**\n   * Anon key may not have SELECT permission on `content_items`\n   * Need to verify policies allow public read access\n2. **ArticlesViewModel Not Being Called**\n   * `loadFeaturedArticles()` may not be triggered on view appear\n   * SwiftUI view lifecycle issue\n3. **RPC Function Issue**\n   * `search_content` function may have permission issues\n   * Function parameters may not match\n\n## Files to Check\n\n* `ViewModels/ArticlesViewModel.swift:55` (loadFeaturedArticles)\n* `Views/Articles/ArticleBrowseView.swift`\n* Supabase RLS policies on `content_items` table\n\n## Recommended Fix\n\n```sql\n-- Allow anonymous SELECT on content_items\nALTER POLICY \"Allow public read access\" ON content_items\nUSING (true);\n\n-- Verify search function has correct permissions\nGRANT EXECUTE ON FUNCTION search_content TO anon;\n```\n\n## Impact\n\n\ud83d\udd34 CRITICAL - Users cannot access 189 help articles or learning content",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-24T03:08:17.394Z",
+    "updatedAt": "2025-12-24T03:08:17.394Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": {
+      "name": "MVP 1 \u2014 PT App & Agent Pilot",
+      "targetDate": null
+    },
+    "labels": {
+      "nodes": [
+        {
+          "name": "build-74",
+          "color": "#FF0000"
+        }
+      ]
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-503/fix-articles-not-loading-in-helplearn-sections-build-74"
+  },
+  {
+    "id": "2423a6ca-b688-4679-8a4f-8c9787252a4b",
+    "identifier": "ACP-502",
+    "title": "[CRITICAL] Build 74 - Multiple Production Blockers",
+    "description": "## \ud83d\udea8 BUILD 74 CRITICAL BUGS - PRODUCTION BLOCKERS\n\n**Build:** 74\n**Status:** \ud83d\udd34 CRITICAL - DO NOT RELEASE TO PRODUCTION\n**Uploaded to TestFlight:** 2025-12-23 21:29 EST\n**Crash Log Received:** 2025-12-23 21:58 EST\n\n---\n\n## Critical Issues Summary\n\n| Issue | Severity | Impact |\n| -- | -- | -- |\n| 1. No help articles showing\n\n | \ud83d\udd34 CRITICAL | Users cannot access 189 articles |\n| 2. Debugging logger not working\n\n | \ud83d\udfe1 HIGH | Cannot diagnose issues |\n| 3. Creating program crashes app\n\n | \ud83d\udd34 CRITICAL | Watchdog timeout, app killed |\n| 4. Learning modules empty\n\n | \ud83d\udd34 CRITICAL | No content visible |\n| 5. Tabata/TRX timer not findable\n\n | \ud83d\udfe1 HIGH | New feature invisible to users |\n\n---\n\n## Features Added in Build 74\n\n\u2705 **Tabata/EMOM Interval Timer System**\n\n* Full TRX-style timer UI with color-coded work/rest phases\n* 6 pre-built templates (Tabata, EMOM, AMRAP, etc.)\n* Therapist UI to add warmup blocks to sessions\n* Patient UI to launch and complete interval workouts\n* Database schema and migrations applied\n* **PROBLEM:** Users cannot find the feature in the UI\n\n---\n\n## Root Cause Analysis\n\n### Why These Issues Weren't Caught\n\n1. **No QA Testing Protocol**\n   * Build uploaded without testing core flows\n   * Should test: Help, Learn, Program Creation, New Features\n2. **Missing Performance Testing**\n   * List updates not tested with realistic data volumes\n   * No profiling of synchronous operations\n3. **Incomplete Integration**\n   * Interval timer feature built but not wired to UI navigation\n   * Feature flags or discovery missing\n\n---\n\n## Next Steps\n\n### Priority 1 (Immediate)\n\n- [ ] Fix RLS policies to allow anon access to content_items\n- [ ] Add async loading to program creation (fix crash)\n- [ ] Make interval timer discoverable in UI\n- [ ] Fix debug logging\n\n### Before Build 75\n\n- [ ] Test Help section loads articles\n- [ ] Test Learning modules loads content\n- [ ] Test creating new program (no crash)\n- [ ] Test finding and using interval timer\n- [ ] Verify debug logging works\n- [ ] Run on device for 5+ minutes without crash\n\n---\n\nSee sub-issues for detailed investigation and fixes.",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-24T03:08:16.561Z",
+    "updatedAt": "2025-12-24T03:08:16.561Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": {
+      "name": "MVP 1 \u2014 PT App & Agent Pilot",
+      "targetDate": null
+    },
+    "labels": {
+      "nodes": [
+        {
+          "name": "build-74",
+          "color": "#FF0000"
+        }
+      ]
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-502/critical-build-74-multiple-production-blockers"
+  },
+  {
+    "id": "24fd9520-c01c-4ebb-a34c-c76e29d112f4",
+    "identifier": "ACP-501",
+    "title": "EPIC-10: Video Intelligence & Form Analysis",
+    "description": "**Strategic Priority:** \u26aa Future - Phase 4 (Q4 2025)\n**Builds:** Build 86-87\n\n## Overview\n\nCutting-edge computer vision capabilities. Future innovation layer.\n\n## Core Features\n\n* Computer vision form analysis\n* Movement quality scoring\n* Real-time coaching feedback\n* Normative data comparison\n\n## Competitive Advantage\n\n**vs All Competitors:** Cutting-edge capability, not yet available in market\n\n## Success Metrics\n\n* Form analysis accuracy: 80%+\n* Movement quality correlation with injury risk\n\n## Status\n\n\ud83d\udccb Deferred to Q4 2025 (Phase 4) - Research & Explore",
+    "priority": 4,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:49.175Z",
+    "updatedAt": "2025-12-21T03:52:49.175Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-501/epic-10-video-intelligence-and-form-analysis"
+  },
+  {
+    "id": "ddef6c3c-c4bb-432c-9e6e-76e76d8bd977",
+    "identifier": "ACP-500",
+    "title": "EPIC-09: Collaboration & Communication Hub",
+    "description": "**Strategic Priority:** \ud83d\udfe2 Lower - Phase 3 (Q3 2025)\n**Builds:** Build 83\n\n## Overview\n\nMulti-role care team coordination. Beyond 1:1 PT-patient, into PT-MD-Coach-AT workflows.\n\n## Core Features\n\n* Multi-role messaging (PT/MD/Coach/AT)\n* Care team coordination workflows\n* Shared care plans\n* Role-based permissions\n* Team dashboards\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** They have coach-athlete only, we have full care team\n**vs Physitrack:** Match care team features + add performance context\n\n## Success Metrics\n\n* Multi-role adoption: 80%+\n* Care team collaboration events tracked\n\n## Status\n\n\ud83d\udccb Deferred to Q3 2025 (Phase 3)",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:48.361Z",
+    "updatedAt": "2025-12-21T03:52:48.361Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-500/epic-09-collaboration-and-communication-hub"
+  },
+  {
+    "id": "ff876c5e-e304-4cd2-bcfa-b08b255d3371",
+    "identifier": "ACP-499",
+    "title": "EPIC-08: Analytics & Predictive Intelligence",
+    "description": "**Strategic Priority:** \ud83d\udfe2 Lower - Phase 3 (Q3 2025)\n**Builds:** Build 81 (Q2 kickoff)\n\n## Overview\n\nShift from reactive to predictive care. Clinical decision support layer that BridgeAthletic deliberately avoids.\n\n## Core Features\n\n* Volume load tracking (tonnage + predictive injury risk modeling)\n* Attendance & adherence (compliance + recovery adherence scoring)\n* Trend visualization with predictive insights\n* Actionable recommendations\n* Clinical decision support alerts\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** They deliberately avoid predictive analytics, we embrace it with medical context\n\n## Success Metrics\n\n* Injury prediction accuracy: 70%+\n* Time-to-clearance reduction: 15%+\n* Multi-role adoption: 80%+\n\n## Status\n\n\ud83d\udccb Deferred to Q3 2025 (Phase 3)",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:47.789Z",
+    "updatedAt": "2025-12-21T03:52:47.789Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-499/epic-08-analytics-and-predictive-intelligence"
+  },
+  {
+    "id": "95ea55e9-39cd-4862-9963-985b7f6a8775",
+    "identifier": "ACP-498",
+    "title": "EPIC-07: Pain Interpretation & Safety System",
+    "description": "**Strategic Priority:** \ud83d\udd34 High - Phase 1 (Q1 2025)\n**Builds:** Build 73\n\n## Overview\n\nMedical-grade safety layer that prevents unsafe progressions. Category-defining feature that BridgeAthletic cannot replicate.\n\n## Core Features\n\n### Workload Monitoring\n\n* Workload spike detection (>25% weekly volume increase)\n* ACWR monitoring (flag if >1.5 or <0.8)\n* Monotony detection (low training variety)\n\n### Pain & Safety Alerts\n\n* Pain-severity alerts (automatic PT notification on pain \u22657/10)\n* Push notifications for high-severity flags\n* Practitioner alert dashboard\n* Automated workout modification on pain flags\n\n### Audit & Compliance\n\n* Full audit trail for all safety events\n* Liability protection documentation\n* Medical-grade event logging\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** They have passive feedback forms, we have active medical-grade alerts\n**vs VOLT:** No pain interpretation layer\n**vs Physitrack:** Match safety focus + add predictive analytics\n\n## Success Metrics\n\n* 95%+ pain flagging accuracy\n* 90%+ workload flag accuracy\n* <1 hour PT notification latency\n* 30%+ injury rate reduction (vs baseline)\n* Zero unsafe progressions\n\n## Status\n\n\ud83d\udccb Next after Build 72 (ACP-225 to ACP-242)",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:47.276Z",
+    "updatedAt": "2025-12-21T03:52:47.276Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-498/epic-07-pain-interpretation-and-safety-system"
+  },
+  {
+    "id": "91f3a2c0-5d23-4211-a57b-e071a7c059c6",
+    "identifier": "ACP-497",
+    "title": "EPIC-06: Intelligent Exercise Library",
+    "description": "**Strategic Priority:** \ud83d\udfe1 Medium - Phase 1 (Q1 2025)\n**Builds:** Build 74\n\n## Overview\n\nVideo-first exercise library with medical intelligence layer. Table stakes + help system for patient education.\n\n## Core Features\n\n### Video Library (500+ exercises)\n\n* 500+ exercise video demonstrations\n* Video categorization (body region, equipment, difficulty)\n* Offline video caching\n* Quality selection (720p, 1080p)\n* Video search and filtering\n* Slow-motion playback\n\n### In-App Help System\n\n* 4 core patient-facing articles:\n  1. Getting Started: How to Begin Your Performance Program\n  2. Programs: Understanding Your Training Plan\n  3. Workouts: How to Complete and Log Training Sessions\n  4. Analytics: Tracking Progress and Recovery\n* Searchable help interface\n* Context-aware help suggestions\n\n### Medical Intelligence\n\n* Injury-aware exercise catalog\n* Contraindication logic\n* Evidence citations for each exercise\n* Progression/regression pathways\n\n## Content Strategy\n\n* Phase 1: License existing libraries (ATG, FRC, Functional Movement Systems) - 200 videos\n* Phase 2: Create custom clinical videos with PTs - 200 videos\n* Phase 3: User-generated content review - 100+ videos\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** Match video library + add contraindication intelligence\n**vs Physitrack:** Better video production quality, more comprehensive coverage\n\n## Success Metrics\n\n* 60%+ exercise completion with video reference\n* 500+ videos available by Q1 end\n* <5MB average video size (compressed)\n* Offline caching works seamlessly\n* 80%+ help article search success rate\n* <3 seconds to find help article\n\n## Status\n\n\ud83d\udccb Planned for Q1 2025 (ACP-243 to ACP-250)",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:46.730Z",
+    "updatedAt": "2025-12-21T03:52:46.730Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-497/epic-06-intelligent-exercise-library"
+  },
+  {
+    "id": "f9c4ed17-fb20-42a2-a952-5ea18f4668bc",
+    "identifier": "ACP-496",
+    "title": "EPIC-05: Parity - Athlete Assignment & Delivery",
+    "description": "**Strategic Priority:** \ud83d\udfe1 Medium - Phase 2 (Q2 2025)\n**Builds:** Build 82\n\n## Overview\n\nTeam management at scale. Required for institutional adoption (collegiate programs, professional teams).\n\n## Core Features\n\n* Team roster management (tags, cohorts)\n* Bulk program assignment (one-to-many)\n* Multi-athlete dashboard\n* Filtering and search\n* Team analytics (compliance, injury rates)\n* Export capabilities\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** Match their scale capabilities + add medical status tracking (injury phase, return-to-play stage)\n\n## Success Metrics\n\n* <5 minutes to onboard 50 athletes\n* 90%+ feature parity with BridgeAthletic team management\n* Support for 500+ athletes per team\n\n## Status\n\n\ud83d\udccb Planned for Q2 2025 (ACP-331 to ACP-338)",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:46.302Z",
+    "updatedAt": "2025-12-21T03:52:46.302Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-496/epic-05-parity-athlete-assignment-and-delivery"
+  },
+  {
+    "id": "b738f232-6af3-4261-8d31-fe7a6d84a7b4",
+    "identifier": "ACP-495",
+    "title": "EPIC-04: Parity - Program Builder & Periodization",
+    "description": "**Strategic Priority:** \ud83d\udfe1 Medium - Phase 2 (Q2 2025)\n**Builds:** Build 77\n\n## Overview\n\nTable stakes program builder with universal block-based logging across all training modalities. Match BridgeAthletic features + add intelligent automation.\n\n## Core Features\n\n### Build 77 - Universal Block-Based Logging System\n\n* **Canonical Block Programming Architecture** (ptos.cards.v1)\n  * Session \u2192 Blocks \u2192 Items (sets, intervals, throws, swings, poses)\n  * Event-driven logging (ptos.events.v1)\n  * Adaptive Card rendering for all modalities\n* **8 Block Types (Universal Coverage):**\n  1. Strength / Power Set Block\n  2. Conditioning / Endurance Block\n  3. Skill / Technique Block (baseball, jump rope, Olympic lifting)\n  4. Mobility / Yoga Block\n  5. Throwing Block (bullpen, long toss, plyos, pulldowns)\n  6. Hitting Block (tee, BP, live ABs, cage)\n  7. Vision / Reaction / Hand-eye Block\n  8. Recovery Block (sauna, cold plunge, breathwork, RLT)\n* **iPhone Fast-Logging UX:**\n  * Flow A: 1-tap completion (1-2 seconds per block)\n  * Flow B: Voice logging during workout\n  * Flow C: Manual ultra-fast corrections (+5/-5 load, +1/-1 reps)\n  * Flow D: Baseball real-time (pitch mix counters)\n  * Flow E: Quick add unplanned work (<5 seconds)\n* **Specialized Templates:**\n  * Bullpen quick log\n  * Long toss / Plyoballs\n  * Murph (with auto comparison)\n  * Hyrox (station times)\n  * Vision / Hand-eye drills\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** Match set/rep/load granularity + add AI adaptation\n**vs TrainHeroic/KOT:** Universal modality coverage (not just strength)\n**vs VOLT:** Faster logging, better UX, voice integration\n\n## Success Metrics\n\n* <10 seconds per block logged (average)\n* 90%+ blocks logged with 1-tap completion\n* 80%+ user satisfaction with logging speed\n* Voice logging accuracy >85% (phase 2)\n* Zero modality fragmentation (same UX for yoga + baseball)\n\n## Status\n\n\ud83d\udccb Planned for Q1 2025 (ACP-276 to ACP-283)",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:45.954Z",
+    "updatedAt": "2025-12-21T03:52:45.954Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-495/epic-04-parity-program-builder-and-periodization"
+  },
+  {
+    "id": "16df84ea-d4a1-46e4-b21b-ad7d7e2c6593",
+    "identifier": "ACP-494",
+    "title": "EPIC-03: Readiness & Auto-Regulation Engine",
+    "description": "**Strategic Priority:** \ud83d\udd34 High - Phase 1 (Q1 2025)\n**Builds:** Build 72 (IN PROGRESS), Build 76\n\n## Overview\n\nProactive load management that automatically adjusts workouts based on daily readiness. Category-defining feature that beats VOLT on adaptivity depth.\n\n## Core Features\n\n### Build 72 - Readiness-Based Auto-Adjustment \u2705 IN PROGRESS\n\n* Daily readiness bands (Green/Yellow/Orange/Red)\n* Smart workout adjustment algorithm:\n  * Green: No adjustment\n  * Yellow: -10% load OR -1 set\n  * Orange: -20% load AND -1 set\n  * Red: Rest day or active recovery\n* Practitioner override and lock controls\n* AI explanations for adjustments\n* Full audit trail for compliance\n\n### Build 76 - Daily Habit Loop & Streaks\n\n* Daily readiness check-in reminder (push notification)\n* \"Your workout is ready\" personalized notification\n* Streak tracking (consecutive days, with recovery credit)\n* Visual progress indicators (circular progress, badges)\n* Weekly consistency score\n* Milestone celebrations (10/30/90 day badges)\n* Recovery day credit (doesn't break streak)\n\n## Competitive Advantage\n\n**vs VOLT:** They have generic auto-regulation, we have medical-context-aware adaptation\n**vs Peloton:** They have instructor dependency, we have algorithmic engagement + medical authority\n\n## Success Metrics\n\n### Build 72\n\n* 80%+ auto-adjustment adoption\n* <20% practitioner override rate\n* 95%+ patient satisfaction with adjustments\n* Zero unsafe progressions\n\n### Build 76\n\n* 70%+ daily active usage (vs Peloton's 65%)\n* 50%+ users maintain 7+ day streak\n* 30%+ users reach 30-day milestone\n* 5%+ users reach 90-day milestone\n\n## Status\n\n\ud83c\udfd7\ufe0f Build 72 IN PROGRESS (ACP-209 through ACP-224)\n\ud83d\udccb Build 76 Planned for Q1 2025",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:45.394Z",
+    "updatedAt": "2025-12-21T03:52:45.394Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-494/epic-03-readiness-and-auto-regulation-engine"
+  },
+  {
+    "id": "1ac037c7-467f-4e0f-9110-35a9e1841bf2",
+    "identifier": "ACP-493",
+    "title": "EPIC-02: Return-to-Play Intelligence",
+    "description": "**Strategic Priority:** \ud83d\udd34 High - Phase 1 (Q1 2025)\n**Builds:** Build 75, Build 80\n\n## Overview\n\nMedical authority layer that bridges injury \u2192 rehab \u2192 performance continuum. Core differentiator vs Physitrack (stops at rehab) and BridgeAthletic (starts at healthy athletes).\n\n## Core Features\n\n### Build 75 - RTP Protocols (10 Injuries)\n\n 1. ACL reconstruction (6-9 month protocol)\n 2. Ankle sprain (4-6 week protocol)\n 3. Rotator cuff repair (12-16 week protocol)\n 4. Achilles tendinopathy (8-12 week protocol)\n 5. Meniscus repair (6-8 week protocol)\n 6. Hamstring strain (4-8 week protocol)\n 7. Patellar tendinopathy (8-12 week protocol)\n 8. Labral repair (shoulder, 12-16 week protocol)\n 9. Groin strain (4-6 week protocol)\n10. Chronic ankle instability (8-12 week protocol)\n\n### Build 80 - PT \u2192 S&C Handoff Workflow\n\n* Medical clearance workflow (PT signs off before S&C)\n* Handoff checklist (ROM, strength, pain-free criteria)\n* Graduated loading progression (rehab \u2192 strength \u2192 power \u2192 sport)\n* Return-to-sport readiness scoring (0-100 scale)\n* Shared visibility (PT sees S&C program, S&C sees rehab history)\n* Bi-directional communication (PT \u2194 S&C)\n\n## Competitive Advantage\n\n**vs Physitrack:** They stop at rehab exercises, we bridge to elite performance\n**vs BridgeAthletic:** They start at healthy athletes, we own the injury recovery market\n**vs VOLT:** No injury-specific intelligence\n\n## Success Metrics\n\n* 15%+ faster time-to-clearance\n* 25%+ re-injury rate reduction\n* 90%+ PT satisfaction with protocols\n* 100% of protocols evidence-based\n* 100% clearance decisions documented\n* 90%+ S&C coaches use handoff checklist\n\n## Status\n\n\ud83d\udccb Build 75 planned for Q1 2025\n\ud83d\udccb Build 80 planned for Q1 2025",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:44.863Z",
+    "updatedAt": "2025-12-21T03:52:44.863Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-493/epic-02-return-to-play-intelligence"
+  },
+  {
+    "id": "5da76321-5dc8-48d0-9f34-a361278f8008",
+    "identifier": "ACP-492",
+    "title": "EPIC-01: AI-Driven Program Intelligence Layer",
+    "description": "**Strategic Priority:** \ud83d\udd34 High - Phase 2 (Q2 2025)\n**Builds:** Build 81\n\n## Overview\n\nAI-powered program generation that reduces PT authoring time by 50%+ while maintaining medical authority and evidence-based protocols.\n\n## Core Features\n\n* AI suggests complete programs from injury diagnosis + patient profile\n* PT reviews and approves (not fully automated)\n* Evidence citations for every exercise selection\n* One-click deployment to patient\n* Learning from PT edits (feedback loop)\n* Contraindication logic (injury-aware)\n\n## Competitive Advantage\n\n**vs BridgeAthletic:** They have manual authoring templates, we have AI-assisted generation with medical context awareness\n**vs VOLT:** They have generic algorithms, we have injury-specific intelligence\n\n## Success Metrics\n\n* 80%+ program generation accuracy\n* 50%+ PT authoring time reduction\n* 90%+ PT review approval rate (minimal edits needed)\n* 100% evidence-based exercise selection\n\n## Implementation\n\n* **Backend:** OpenAI/Anthropic API integration with custom training\n* **Frontend:** Program review and approval workflow\n* **Database:** Program templates, exercise contraindications, evidence library\n\n## Related Issues\n\n* Build 81: ACP-316 through ACP-330 (15 issues)\n\n## Status\n\n\ud83d\udccb Planned for Q2 2025",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:52:44.407Z",
+    "updatedAt": "2025-12-21T03:52:44.407Z",
+    "completedAt": null,
+    "state": {
+      "name": "Backlog",
+      "type": "backlog"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-492/epic-01-ai-driven-program-intelligence-layer"
+  },
+  {
+    "id": "ad2b2e57-5ac5-4074-b276-f4e3ef8deaa7",
+    "identifier": "ACP-491",
+    "title": "ACP-415: Build 90 Integration Testing + Deployment",
+    "description": "**Build 90 Final Agent: Integration & Testing**\n\nIntegrate all Build 90 features and deploy.\n\n**Testing:**\n\n1. Create patient in Rehab Mode\n2. Verify Rehab UI, features, notifications\n3. Transition patient to Strength Mode\n4. Verify Strength UI, features, analytics\n5. Transition to Performance Mode\n6. Verify Performance UI, wearables, advanced features\n7. Test PT admin panel (mode switching)\n8. Test visual themes for all modes\n9. Verify feature gating works correctly\n\n**Success Metrics:**\n\n* All 3 modes render correctly\n* Mode transitions smooth (<5 seconds)\n* Feature visibility correct per mode\n* Visual themes consistent\n* PT admin panel intuitive\n\n**Deployment:**\n\n* Increment build to 90\n* Deploy to TestFlight\n* Q2 2025 COMPLETE! \ud83c\udf89\n\n**Parent Epic:** Multiple\n**Priority:** P0 (Critical)\n**Estimated Effort:** 10-12 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:17.055Z",
+    "updatedAt": "2025-12-21T03:24:17.055Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-491/acp-415-build-90-integration-testing-deployment"
+  },
+  {
+    "id": "4f6faa75-640a-4b1c-90d3-4fa7c51945de",
+    "identifier": "ACP-490",
+    "title": "ACP-414: Create mode switching admin panel (PT-controlled)",
+    "description": "**Build 90 Agent 12: Admin Panel**\n\nPT admin panel for mode assignment and switching.\n\n**Features:**\n\n1. **Patient Mode Overview:**\n   * See all patients and their current modes\n   * Filter by mode (Rehab, Strength, Performance)\n   * Bulk mode assignment\n2. **Mode Change Workflow:**\n   * Select patient\n   * Choose new mode (Rehab, Strength, Performance)\n   * Set transition date (immediate or scheduled)\n   * Add transition notes (e.g., \"Cleared for RTP\")\n   * Notify patient of mode change\n3. **Mode History:**\n   * Track mode transitions over time\n   * Audit trail (who changed, when, why)\n   * Revert capability (undo mode change)\n4. **Mode Analytics:**\n   * % patients in each mode\n   * Average time in Rehab mode\n   * Transition success rates\n\n**Parent Epic:** ACP-277 (Team Management)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:15.937Z",
+    "updatedAt": "2025-12-21T03:24:15.937Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-490/acp-414-create-mode-switching-admin-panel-pt-controlled"
+  },
+  {
+    "id": "011b205c-9ddb-4a21-8cff-53df9be51e54",
+    "identifier": "ACP-489",
+    "title": "ACP-413: Implement mode-specific visual themes and branding",
+    "description": "**Build 90 Agent 11: Visual Themes**\n\nCustom visual themes for each mode.\n\n**Rehab Mode Theme:**\n\n* Primary: Medical blue (#0077CC)\n* Secondary: Calming green (#00AA88)\n* Accent: Warning red (for alerts)\n* Fonts: Clean, readable (SF Pro, large sizes)\n* Icons: Medical-focused (bandage, clipboard, shield)\n* Tone: Reassuring, supportive\n\n**Strength Mode Theme:**\n\n* Primary: Black (#000000)\n* Secondary: White (#FFFFFF)\n* Accent: Motivational orange (#FF6600)\n* Fonts: Bold, impactful (SF Pro Rounded, heavy weights)\n* Icons: Strength-focused (dumbbell, trophy, fire)\n* Tone: Motivational, achievement-driven\n\n**Performance Mode Theme:**\n\n* Primary: Elite gold (#FFD700)\n* Secondary: Sophisticated black (#1A1A1A)\n* Accent: Performance blue (#0066FF)\n* Fonts: Sophisticated (SF Pro, medium weights)\n* Icons: Advanced (graph, lightning, crown)\n* Tone: Professional, data-driven\n\n**Parent Epic:** Multiple\n**Priority:** P1 (High)\n**Estimated Effort:** 8-10 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:14.806Z",
+    "updatedAt": "2025-12-21T03:24:14.806Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-489/acp-413-implement-mode-specific-visual-themes-and-branding"
+  },
+  {
+    "id": "f279d23c-180c-4066-b39b-2575a09d4c67",
+    "identifier": "ACP-488",
+    "title": "ACP-412: Build mode-specific settings and preferences",
+    "description": "**Build 90 Agent 10: Mode Settings**\n\nCustom settings for each mode.\n\n**Rehab Mode Settings:**\n\n* Pain tracking frequency (daily, after session, both)\n* Photo upload reminders\n* PT communication preferences\n* Safety alert thresholds\n\n**Strength Mode Settings:**\n\n* PR tracking preferences (which lifts to track)\n* Volume tracking (tonnage vs reps)\n* Notification preferences\n* Habit streak rules (recovery day credit)\n\n**Performance Mode Settings:**\n\n* Primary wearable selection\n* Auto-adjustment sensitivity (aggressive, moderate, conservative)\n* Multi-role permissions (who can see what)\n* Advanced analytics preferences\n\n**Parent Epic:** Multiple\n**Priority:** P2 (Medium)\n**Estimated Effort:** 4-6 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:13.849Z",
+    "updatedAt": "2025-12-21T03:24:13.849Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-488/acp-412-build-mode-specific-settings-and-preferences"
+  },
+  {
+    "id": "bbb9fbd9-781b-4fa6-b16e-352855790da8",
+    "identifier": "ACP-487",
+    "title": "ACP-411: Create mode-specific notification strategies",
+    "description": "**Build 90 Agent 9: Notifications**\n\nCustom notification strategies for each mode.\n\n**Rehab Mode Notifications:**\n\n* Daily pain check-in (9am)\n* Today's rehab session ready (based on schedule)\n* Safety alert (pain >7/10)\n* PT message received\n* Weekly progress summary\n\n**Strength Mode Notifications:**\n\n* Workout reminder (scheduled session time)\n* PR possible today!\n* Streak milestone (7 days, 30 days, 90 days)\n* Weekly summary (volume, PRs, consistency)\n\n**Performance Mode Notifications:**\n\n* Readiness score available (after WHOOP sync)\n* Auto-adjustment applied (workout modified)\n* Recovery alert (HRV low, reduce training)\n* Sleep reminder (based on tomorrow's training)\n* Competition countdown (T-7 days, T-3 days, T-1 day)\n\n**Parent Epic:** Multiple\n**Priority:** P2 (Medium)\n**Estimated Effort:** 6-8 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:12.970Z",
+    "updatedAt": "2025-12-21T03:24:12.970Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-487/acp-411-create-mode-specific-notification-strategies"
+  },
+  {
+    "id": "d28ac193-1bdb-4ce7-b959-787c928abb4c",
+    "identifier": "ACP-486",
+    "title": "ACP-410: Implement mode-specific analytics dashboards",
+    "description": "**Build 90 Agent 8: Mode Analytics**\n\nCustom analytics for each mode.\n\n**Rehab Mode Analytics:**\n\n* Pain trend (30-day chart)\n* ROM improvements\n* Adherence to rehab protocol\n* Time-to-clearance projection\n\n**Strength Mode Analytics:**\n\n* Volume trends (tonnage over time)\n* PR timeline (all lifts)\n* Consistency metrics\n* Strength balance (push/pull/legs)\n\n**Performance Mode Analytics:**\n\n* Readiness trend (30-day)\n* HRV baseline + deviations\n* Fatigue index\n* Injury risk score\n* Team compliance rank\n\n**Parent Epic:** ACP-280 (Analytics & Predictive Intelligence)\n**Priority:** P1 (High)\n**Estimated Effort:** 10-12 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:11.704Z",
+    "updatedAt": "2025-12-21T03:24:11.704Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-486/acp-410-implement-mode-specific-analytics-dashboards"
+  },
+  {
+    "id": "b4845d07-54cf-4e30-81d0-e1f7cfbf4d12",
+    "identifier": "ACP-485",
+    "title": "ACP-409: Build mode-specific onboarding flows",
+    "description": "**Build 90 Agent 7: Onboarding**\n\nCustom onboarding for each mode.\n\n**Rehab Mode Onboarding:**\n\n1. Injury intake (diagnosis, surgery date, ROM)\n2. Pain baseline (initial pain rating)\n3. PT introduction (assign therapist)\n4. Set rehab goals (return-to-play timeline)\n5. Explain safety features\n\n**Strength Mode Onboarding:**\n\n1. Training history (experience level)\n2. Set baseline PRs (squat, bench, deadlift)\n3. Set goals (strength, hypertrophy, endurance)\n4. Explain PR tracking and volume trends\n5. Habit streak system\n\n**Performance Mode Onboarding:**\n\n1. Connect wearable (WHOOP, Oura, Apple Watch)\n2. Set performance goals (competition dates)\n3. Enable multi-role team (PT, coach, nutritionist)\n4. Explain readiness-based auto-adjustment\n5. Advanced analytics tour\n\n**Parent Epic:** Multiple\n**Priority:** P1 (High)\n**Estimated Effort:** 8-10 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:10.505Z",
+    "updatedAt": "2025-12-21T03:24:10.505Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-485/acp-409-build-mode-specific-onboarding-flows"
+  },
+  {
+    "id": "0f8d37fa-c5e8-409a-b8f2-649558e47aec",
+    "identifier": "ACP-484",
+    "title": "ACP-408: Create mode transition workflows (Rehab \u2192 Strength \u2192 Performance)",
+    "description": "**Build 90 Agent 6: Mode Transitions**\n\nHandle mode transitions as patients progress.\n\n**Transition Triggers:**\n\n1. **Rehab \u2192 Strength:**\n   * PT clears patient for strength training\n   * Pain <3/10 for 7+ days\n   * ROM within normal limits\n   * Strength tests passed\n2. **Strength \u2192 Performance:**\n   * Athlete joins competitive team\n   * PT enables advanced features\n   * Wearable connected\n3. **Performance \u2192 Rehab (injury):**\n   * New injury flagged\n   * PT downgrades to rehab mode\n   * Safety features re-enabled\n\n**Transition UX:**\n\n* Congratulations message\n* Feature tour (new capabilities)\n* Onboarding for new mode\n* Data preserved across modes\n\n**Parent Epic:** ACP-282 (Return-to-Play)\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:09.223Z",
+    "updatedAt": "2025-12-21T03:24:09.223Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-484/acp-408-create-mode-transition-workflows-rehab-\u2192-strength-\u2192"
+  },
+  {
+    "id": "58df7786-b206-4a60-ac52-377ace755802",
+    "identifier": "ACP-483",
+    "title": "ACP-407: Implement mode-specific feature visibility logic",
+    "description": "**Build 90 Agent 5: Feature Gating**\n\nShow/hide features based on mode.\n\n**Feature Visibility Matrix:**\n\n**Rehab Mode:**\n\n* \u2705 Pain tracking\n* \u2705 ROM measurement\n* \u2705 Safety alerts\n* \u2705 PT messaging\n* \u2705 Progress photos\n* \u274c PR tracking\n* \u274c Readiness bands\n* \u274c Team management\n* \u274c Advanced analytics\n\n**Strength Mode:**\n\n* \u2705 PR tracking\n* \u2705 Volume trends\n* \u2705 Habit streaks\n* \u2705 Exercise library\n* \u274c Pain tracking (simplified)\n* \u274c Readiness bands (optional)\n* \u274c Team management\n* \u274c Multi-role coordination\n\n**Performance Mode:**\n\n* \u2705 All features unlocked\n* \u2705 Readiness bands\n* \u2705 WHOOP/Oura\n* \u2705 Team management\n* \u2705 Advanced analytics\n* \u2705 Multi-role coordination\n* \u274c None (everything available)\n\n**Implementation:**\n\n* Feature flag system\n* Dynamic navigation bar\n* Contextual help text\n\n**Parent Epic:** Multiple\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:08.215Z",
+    "updatedAt": "2025-12-21T03:24:08.215Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-483/acp-407-implement-mode-specific-feature-visibility-logic"
+  },
+  {
+    "id": "769c1fd4-5d05-461a-8271-b7a9eda95d34",
+    "identifier": "ACP-482",
+    "title": "ACP-406: Build Performance Mode UI (readiness-first, elite-focused)",
+    "description": "**Build 90 Agent 4: Performance Mode**\n\nBuild Performance Mode UI for elite athletes.\n\n**Home Screen (Performance Mode):**\n\n1. **Readiness Dashboard:**\n   * Today's readiness band (Green/Yellow/Orange/Red)\n   * WHOOP/Oura recovery score\n   * HRV trend\n   * Sleep quality\n2. **Today's Training:**\n   * Auto-adjusted based on readiness\n   * Periodization phase (Base, Build, Peak, Taper)\n   * Competition countdown (if applicable)\n3. **Multi-Role Coordination:**\n   * PT, coach, nutritionist visibility\n   * Team compliance rank\n   * Shared care plans\n4. **Advanced Analytics:**\n   * Fatigue index\n   * Injury risk score\n   * Performance prediction\n\n**Visual Design:**\n\n* Elite gold/black theme\n* Sophisticated, data-rich\n* Multi-metric dashboards\n* Professional tone\n\n**Parent Epic:** ACP-283 (Readiness & Auto-Regulation)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 12-14 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:07.033Z",
+    "updatedAt": "2025-12-21T03:24:07.033Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-482/acp-406-build-performance-mode-ui-readiness-first-elite-focused"
+  },
+  {
+    "id": "8f297502-2b99-437e-b698-37840be29cd7",
+    "identifier": "ACP-481",
+    "title": "ACP-405: Build Strength Mode UI (PR-focused, volume-driven)",
+    "description": "**Build 90 Agent 3: Strength Mode**\n\nBuild Strength Mode UI for general strength training.\n\n**Home Screen (Strength Mode):**\n\n1. **Today's Workout:**\n   * Exercise blocks (strength, accessory, conditioning)\n   * PR indicators (\"PR possible today!\")\n   * Volume targets (tonnage goal)\n2. **Quick Stats:**\n   * Total volume this week\n   * PRs this month\n   * Consistency streak\n3. **Progress Highlights:**\n   * Strength trends (squat, bench, deadlift)\n   * Volume progression\n   * Next milestone (\"10 lbs to 315 bench\")\n4. **Habit Streaks:**\n   * Days trained consecutively\n   * Weekly consistency\n   * Recovery day credit\n\n**Visual Design:**\n\n* Black/white theme\n* Bold, motivational\n* Data-driven charts\n* Achievement-focused\n\n**Parent Epic:** ACP-276 (Program Builder)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 10-12 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:05.835Z",
+    "updatedAt": "2025-12-21T03:24:05.835Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-481/acp-405-build-strength-mode-ui-pr-focused-volume-driven"
+  },
+  {
+    "id": "378ce611-49b9-47fc-9ee2-356cbb4d48b0",
+    "identifier": "ACP-480",
+    "title": "ACP-404: Build Rehab Mode UI (pain-first, safety-focused)",
+    "description": "**Build 90 Agent 2: Rehab Mode**\n\nBuild Rehab Mode UI for injury recovery patients.\n\n**Home Screen (Rehab Mode):**\n\n1. **Pain Check-In (prominent):**\n   * Daily pain rating (0-10)\n   * Pain location (body diagram)\n   * Quick notes\n2. **Today's Rehab Session:**\n   * Exercise list with contraindication warnings\n   * Video demonstrations\n   * ROM targets\n3. **Safety Alerts:**\n   * Workload flags (volume spike)\n   * Pain alerts (>7/10 triggers PT notification)\n4. **Progress Tracking:**\n   * ROM improvements\n   * Pain reduction over time\n   * Before/after photos\n\n**Visual Design:**\n\n* Medical blue theme\n* Large, readable fonts\n* Safety warnings in red\n* Calm, reassuring tone\n\n**Parent Epic:** ACP-282 (Return-to-Play)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 10-12 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:04.961Z",
+    "updatedAt": "2025-12-21T03:24:04.961Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-480/acp-404-build-rehab-mode-ui-pain-first-safety-focused"
+  },
+  {
+    "id": "ed914be0-d94f-41c0-9f18-34886b81e424",
+    "identifier": "ACP-479",
+    "title": "ACP-403: Design Performance OS mode architecture (3 modes)",
+    "description": "**Build 90 Agent 1: Mode Architecture**\n\nDesign 3-mode UX system: Rehab, Strength, Performance.\n\n**Mode Definitions:**\n\n1. **Rehab Mode (Injury Recovery):**\n   * Focus: Pain tracking, ROM, safety alerts\n   * UI: Medical-first, safety warnings prominent\n   * Features: Contraindication checks, PT messaging, progress photos\n   * Visual: Medical blue, cautious tone\n2. **Strength Mode (General Population):**\n   * Focus: Volume, tonnage, progressive overload\n   * UI: Clean, data-driven, motivational\n   * Features: PR tracking, volume trends, habit streaks\n   * Visual: Performance black/white, bold\n3. **Performance Mode (Elite Athletes):**\n   * Focus: Readiness, periodization, peak performance\n   * UI: Advanced analytics, multi-role coordination\n   * Features: WHOOP/Oura, team management, competition prep\n   * Visual: Elite gold/black, sophisticated\n\n**Mode Switching:**\n\n* PT assigns mode based on patient phase\n* Auto-suggest mode changes (e.g., cleared for RTP \u2192 switch to Strength)\n* Patient cannot change mode (PT-controlled)\n\n**Parent Epic:** Multiple (UX overhaul)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 8-10 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:03.658Z",
+    "updatedAt": "2025-12-21T03:24:03.658Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-479/acp-403-design-performance-os-mode-architecture-3-modes"
+  },
+  {
+    "id": "3f21d180-3af8-4070-867c-1eb5800e5072",
+    "identifier": "ACP-478",
+    "title": "ACP-402: Build 89 Integration Testing + Deployment",
+    "description": "**Build 89 Final Agent: Integration & Testing**\n\nIntegrate all Build 89 features and deploy.\n\n**Testing:**\n\n1. Connect Oura Ring via OAuth\n2. Connect Apple Watch via HealthKit\n3. Import recovery data from both\n4. Test unified recovery score fusion\n5. Import Apple Watch workout\n6. Test workout auto-matching\n7. Set device preferences\n8. Verify all data sources display correctly\n\n**Success Metrics:**\n\n* Multi-wearable data syncs correctly\n* Unified recovery score within \u00b15% of primary source\n* Apple Watch workouts match >80% of time\n* No sync conflicts or errors\n\n**Deployment:**\n\n* Increment build to 89\n* Deploy to TestFlight\n\n**Parent Epic:** ACP-283\n**Priority:** P0\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:02.545Z",
+    "updatedAt": "2025-12-21T03:24:02.545Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-478/acp-402-build-89-integration-testing-deployment"
+  },
+  {
+    "id": "2dbf9313-4140-432e-9ff8-e23b3f86987b",
+    "identifier": "ACP-477",
+    "title": "ACP-401: Build wearable data preference system (choose primary device)",
+    "description": "**Build 89 Agent 6: Device Preferences**\n\nAllow athletes to choose primary wearable for each data type.\n\n**Preference Settings:**\n\n1. **Recovery Score:**\n   * Primary: WHOOP, Oura, or Manual\n   * Fallback: Next available\n2. **Sleep Tracking:**\n   * Primary: WHOOP, Oura, Apple Watch, or Manual\n   * Preference for most accurate\n3. **Workout Tracking:**\n   * Primary: PT Performance manual log, Apple Watch, WHOOP\n   * Hybrid: Manual + wearable validation\n4. **HRV:**\n   * Primary: WHOOP, Oura, Apple Watch\n   * Most consistent source\n\n**UI:**\n\n* Settings \u2192 Wearable Integrations\n* Toggle primary/secondary for each data type\n* Show last sync status\n\n**Parent Epic:** ACP-283\n**Priority:** P2 (Medium)\n**Estimated Effort:** 4-6 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:01.450Z",
+    "updatedAt": "2025-12-21T03:24:01.450Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-477/acp-401-build-wearable-data-preference-system-choose-primary-device"
+  },
+  {
+    "id": "65d521d5-dc8f-42f4-9c46-581b5d337a01",
+    "identifier": "ACP-476",
+    "title": "ACP-400: Implement Apple Watch workout auto-import",
+    "description": "**Build 89 Agent 5: Workout Import**\n\nAuto-import Apple Watch workouts into PT Performance.\n\n**Features:**\n\n1. **Workout Detection:**\n   * Detect completed workouts from HealthKit\n   * Match to scheduled PT Performance sessions\n   * Auto-link if timing matches (\u00b130 min)\n2. **Data Import:**\n   * Duration\n   * Heart rate (avg, max)\n   * Calories burned\n   * Training zones (if available)\n3. **Unscheduled Workout Handling:**\n   * If workout not in schedule \u2192 suggest adding\n   * Quick-add as \"Extra Cardio\" or \"Unplanned Strength\"\n\n**Smart Matching:**\n\n* \"Outdoor Run\" \u2192 Cardio session\n* \"Traditional Strength Training\" \u2192 Strength session\n* HIIT \u2192 Conditioning session\n\n**Parent Epic:** ACP-283\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:24:00.380Z",
+    "updatedAt": "2025-12-21T03:24:00.380Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-476/acp-400-implement-apple-watch-workout-auto-import"
+  },
+  {
+    "id": "be952cdb-42cc-4d30-919d-d8e6593fe0e8",
+    "identifier": "ACP-475",
+    "title": "ACP-399: Create unified recovery score (multi-wearable fusion)",
+    "description": "**Build 89 Agent 4: Data Fusion**\n\nFuse data from multiple wearables into unified recovery score.\n\n**Fusion Logic:**\n\n1. **Prioritization (if multiple devices):**\n   * WHOOP recovery > Oura readiness > Apple Watch HRV\n   * Use most comprehensive data source\n   * Fall back if primary unavailable\n2. **Cross-Validation:**\n   * Compare WHOOP vs Oura (should be similar)\n   * Flag discrepancies (>20% difference)\n   * Average if both available\n3. **Unified Recovery Score (0-100):**\n   * Primary source: WHOOP or Oura\n   * Secondary: Apple Watch HRV-based estimate\n   * Tertiary: Manual check-in\n\n**Visualization:**\n\n* Show all sources (WHOOP 85%, Oura 82%, Unified 84%)\n* Indicate which source is primary\n\n**Parent Epic:** ACP-283\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:59.513Z",
+    "updatedAt": "2025-12-21T03:23:59.513Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-475/acp-399-create-unified-recovery-score-multi-wearable-fusion"
+  },
+  {
+    "id": "c802d3ce-9be6-4853-bec0-b9192e26ed40",
+    "identifier": "ACP-474",
+    "title": "ACP-398: Build Apple Watch HealthKit integration (workouts, HRV, sleep)",
+    "description": "**Build 89 Agent 3: Apple Watch Integration**\n\nIntegrate with Apple HealthKit for Apple Watch data.\n\n**HealthKit Data Types:**\n\n1. **Workouts:**\n   * Workout type (strength, run, HIIT, etc.)\n   * Duration\n   * Heart rate (avg, max)\n   * Active energy (calories)\n   * Distance (if applicable)\n2. **HRV:**\n   * Daily HRV measurements\n   * Time of measurement\n3. **Sleep (watchOS 10+):**\n   * Sleep stages (if available)\n   * Total sleep duration\n   * Bedtime, wake time\n4. **Resting Heart Rate:**\n   * Daily resting HR\n\n**HealthKit Permissions:**\n\n* Request read access for all data types\n* Background sync capability\n* Privacy-focused (no write access needed)\n\n**Parent Epic:** ACP-283\n**Priority:** P0 (Critical)\n**Estimated Effort:** 8-10 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:58.398Z",
+    "updatedAt": "2025-12-21T03:23:58.398Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-474/acp-398-build-apple-watch-healthkit-integration-workouts-hrv-sleep"
+  },
+  {
+    "id": "e573768f-adc5-4a46-b9f0-c68f06d58469",
+    "identifier": "ACP-473",
+    "title": "ACP-397: Implement Oura API integration (recovery, sleep, HRV)",
+    "description": "**Build 89 Agent 2: Oura Integration**\n\nIntegrate with Oura Cloud API.\n\n**Oura API Endpoints:**\n\n1. **Daily Readiness:**\n   * Readiness score (0-100)\n   * Contributors (sleep, HRV, temperature, activity)\n   * Previous night + previous day breakdown\n2. **Sleep Data:**\n   * Total sleep\n   * Sleep stages (REM, deep, light)\n   * Sleep efficiency\n   * Timing (bedtime, wake time)\n   * Restfulness score\n3. **Daily Activity:**\n   * Steps\n   * Active calories\n   * Inactivity alerts\n   * Training volume\n\n**OAuth Flow:**\n\n* Same pattern as WHOOP\n* Secure token storage\n* Auto-refresh\n\n**Parent Epic:** ACP-283\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:57.380Z",
+    "updatedAt": "2025-12-21T03:23:57.380Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-473/acp-397-implement-oura-api-integration-recovery-sleep-hrv"
+  },
+  {
+    "id": "bbef2588-6c53-46ad-b0e5-40b43fdae284",
+    "identifier": "ACP-472",
+    "title": "ACP-396: Design multi-wearable integration architecture (Oura, Apple Watch)",
+    "description": "**Build 89 Agent 1: Multi-Wearable Architecture**\n\nUnified integration layer for multiple wearables.\n\n**Wearables Supported:**\n\n1. **Oura Ring:**\n   * Recovery score\n   * Sleep stages\n   * HRV, resting HR\n   * Activity tracking\n2. **Apple Watch:**\n   * Workout tracking (HR, calories, duration)\n   * Steps, active energy\n   * Sleep tracking (watchOS 10+)\n   * HRV (Health app)\n3. **WHOOP (existing):**\n   * Recovery, strain, sleep\n\n**Unified Data Model:**\n\n```sql\nCREATE TABLE wearable_connections (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  athlete_id UUID REFERENCES profiles(id),\n  wearable_type TEXT CHECK (wearable_type IN ('whoop', 'oura', 'apple_watch', 'garmin')),\n  connected_at TIMESTAMPTZ,\n  last_sync TIMESTAMPTZ,\n  active BOOLEAN DEFAULT TRUE\n);\n\nCREATE TABLE wearable_data (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  athlete_id UUID REFERENCES profiles(id),\n  wearable_type TEXT,\n  data_type TEXT CHECK (data_type IN ('recovery', 'sleep', 'hrv', 'activity', 'workout')),\n  data_json JSONB,\n  recorded_at TIMESTAMPTZ,\n  synced_at TIMESTAMPTZ DEFAULT NOW()\n);\n```\n\n**Parent Epic:** ACP-283\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:56.629Z",
+    "updatedAt": "2025-12-21T03:23:56.629Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-472/acp-396-design-multi-wearable-integration-architecture-oura-apple"
+  },
+  {
+    "id": "65e40a47-1737-4133-89de-8c4cbb7cc955",
+    "identifier": "ACP-471",
+    "title": "ACP-395: Build 88 Integration Testing + Deployment",
+    "description": "**Build 88 Final Agent: Integration & Testing**\n\nIntegrate all Build 88 features and deploy.\n\n**Testing:**\n\n1. Connect WHOOP account via OAuth\n2. Import recovery, strain, sleep data\n3. Verify readiness band mapping\n4. Test HRV alerts\n5. Test auto-adjustment with WHOOP data\n6. Verify sleep visualization\n7. Test strain correlation analytics\n\n**Success Metrics:**\n\n* WHOOP data syncs within 5 minutes of waking\n* Readiness band mapping >90% accurate\n* HRV alerts trigger correctly\n* Auto-adjustment works seamlessly\n\n**Deployment:**\n\n* Increment build to 88\n* Deploy to TestFlight\n\n**Parent Epic:** ACP-283\n**Priority:** P0\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:55.380Z",
+    "updatedAt": "2025-12-21T03:23:55.380Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-471/acp-395-build-88-integration-testing-deployment"
+  },
+  {
+    "id": "06148c8c-9026-4280-bb80-db750747cc78",
+    "identifier": "ACP-470",
+    "title": "ACP-394: Build WHOOP-driven auto-adjustment integration",
+    "description": "**Build 88 Agent 6: Auto-Adjustment**\n\nIntegrate WHOOP recovery into existing auto-adjustment system.\n\n**Integration:**\n\n1. **Replace Manual Check-In:**\n   * WHOOP recovery auto-populates readiness\n   * Athlete can still override with subjective input\n2. **Enhanced Auto-Adjustment:**\n   * Use WHOOP strain from yesterday\n   * Use HRV trend\n   * Use sleep debt\n   * More accurate adjustment decisions\n3. **Feedback Loop:**\n   * Track adjustment effectiveness\n   * Refine mapping over time\n   * Personalize for each athlete\n\n**Parent Epic:** ACP-283\n**Priority:** P0 (Critical)\n**Estimated Effort:** 8-10 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:53.567Z",
+    "updatedAt": "2025-12-21T03:23:53.567Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-470/acp-394-build-whoop-driven-auto-adjustment-integration"
+  },
+  {
+    "id": "f5bcd3f9-9060-4b2d-b5f3-cb9d413acb0e",
+    "identifier": "ACP-469",
+    "title": "ACP-393: Implement WHOOP HRV trend analysis + alerts",
+    "description": "**Build 88 Agent 5: HRV Monitoring**\n\nMonitor HRV trends and alert on significant changes.\n\n**Features:**\n\n1. **HRV Baseline Calculation:**\n   * Rolling 7-day average\n   * Personal normal range (mean \u00b1 1 SD)\n2. **Trend Analysis:**\n   * HRV increasing \u2192 improved fitness or recovery\n   * HRV decreasing \u2192 overreaching or illness\n3. **Alerts:**\n   * Yellow: HRV >15% below baseline (monitor closely)\n   * Red: HRV >25% below baseline (reduce training)\n   * Green: HRV >10% above baseline (can push hard)\n4. **Visualization:**\n   * HRV trend chart (30 days)\n   * Baseline + normal range shaded\n   * Training load overlay\n\n**Parent Epic:** ACP-283\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:52.535Z",
+    "updatedAt": "2025-12-21T03:23:52.535Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-469/acp-393-implement-whoop-hrv-trend-analysis-alerts"
+  },
+  {
+    "id": "48c29589-beff-4037-a3fe-cb340c283402",
+    "identifier": "ACP-468",
+    "title": "ACP-392: Create WHOOP sleep data auto-import + visualization",
+    "description": "**Build 88 Agent 4: Sleep Integration**\n\nAuto-import WHOOP sleep data into PT Performance.\n\n**Features:**\n\n1. **Auto-Import (daily):**\n   * Total sleep duration\n   * Sleep stages breakdown\n   * Sleep efficiency\n   * Sleep debt\n   * Sync every morning at 8am\n2. **Visualization:**\n   * Sleep timeline (bedtime to wake)\n   * Stage breakdown (REM/Deep/Light/Awake)\n   * 7-day sleep trend\n   * Compare to training load\n3. **Insights:**\n   * \"You slept 20 min less than recommended\"\n   * \"Deep sleep was 15% below average\"\n   * \"Sleep debt increased by 45 min\"\n\n**Parent Epic:** ACP-283\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:51.400Z",
+    "updatedAt": "2025-12-21T03:23:51.400Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-468/acp-392-create-whoop-sleep-data-auto-import-visualization"
+  },
+  {
+    "id": "63b43bea-a3dd-4359-99ee-c2df2e591af0",
+    "identifier": "ACP-467",
+    "title": "ACP-391: Build WHOOP strain \u2192 session volume correlation",
+    "description": "**Build 88 Agent 3: Strain Analysis**\n\nCorrelate WHOOP strain with training volume.\n\n**Features:**\n\n1. **Strain Tracking:**\n   * Daily WHOOP strain score\n   * Compare to training volume (tonnage)\n   * Identify discrepancies (high strain, low volume = poor recovery)\n2. **Target Strain Recommendations:**\n   * Light training day: 8-12 strain\n   * Moderate: 12-16 strain\n   * Heavy: 16-20 strain\n   * Very heavy: 20-21 strain\n3. **Auto-Adjustment:**\n   * If strain consistently higher than expected \u2192 reduce volume\n   * If strain lower than expected \u2192 increase intensity\n\n**Parent Epic:** ACP-283\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:50.427Z",
+    "updatedAt": "2025-12-21T03:23:50.427Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-467/acp-391-build-whoop-strain-\u2192-session-volume-correlation"
+  },
+  {
+    "id": "a73d886e-0fc9-476c-84e4-7d78d2fe4a13",
+    "identifier": "ACP-466",
+    "title": "ACP-390: Implement WHOOP recovery score \u2192 readiness band mapping",
+    "description": "**Build 88 Agent 2: Recovery Mapping**\n\nMap WHOOP recovery score to PT Performance readiness bands.\n\n**Mapping Algorithm:**\n\n1. **WHOOP Recovery \u2192 Readiness Band:**\n   * 67-100% (Green) \u2192 Green readiness\n   * 34-66% (Yellow) \u2192 Yellow readiness\n   * 0-33% (Red) \u2192 Orange/Red readiness\n2. **HRV-Based Adjustments:**\n   * HRV >20% above baseline \u2192 boost to Green\n   * HRV >20% below baseline \u2192 downgrade band\n3. **Sleep Debt Integration:**\n   * Sleep debt >3 hours \u2192 downgrade band\n   * Perfect sleep \u2192 boost band\n4. **Override Logic:**\n   * PT can override auto-mapping\n   * Athlete subjective input considered\n\n**Parent Epic:** ACP-283\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:49.431Z",
+    "updatedAt": "2025-12-21T03:23:49.431Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-466/acp-390-implement-whoop-recovery-score-\u2192-readiness-band-mapping"
+  },
+  {
+    "id": "92af0346-8b45-4270-bedb-e2c3f4ef38e8",
+    "identifier": "ACP-465",
+    "title": "ACP-389: Design WHOOP API integration architecture",
+    "description": "**Build 88 Agent 1: API Architecture**\n\nIntegrate with WHOOP API for recovery and strain data.\n\n**WHOOP API Endpoints:**\n\n1. **Recovery Data:**\n   * Daily recovery score (0-100%)\n   * HRV (heart rate variability)\n   * Resting heart rate\n   * Sleep performance (hours, quality, debt)\n2. **Strain Data:**\n   * Daily strain score (0-21)\n   * Cardiovascular load\n   * Activity breakdown\n3. **Sleep Data:**\n   * Total sleep duration\n   * Sleep stages (REM, deep, light, awake)\n   * Sleep efficiency\n   * Sleep debt\n\n**Authentication:**\n\n* OAuth 2.0 flow\n* Secure token storage\n* Auto-refresh tokens\n\n**Parent Epic:** ACP-283 (Readiness & Auto-Regulation)\n**Priority:** P0 (Critical)\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:48.401Z",
+    "updatedAt": "2025-12-21T03:23:48.401Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-465/acp-389-design-whoop-api-integration-architecture"
+  },
+  {
+    "id": "978d698c-2515-478b-b20e-aa5be1984c3f",
+    "identifier": "ACP-464",
+    "title": "ACP-388: Build 87 Integration Testing + Deployment",
+    "description": "**Build 87 Final Agent: Integration & Testing**\n\nIntegrate all Build 87 features and deploy.\n\n**Testing:**\n\n1. Create pre-competition mental routine\n2. Test box breathing protocol with timer\n3. Log arousal state before/after protocol\n4. Test music playlist integration\n5. Complete visualization session\n6. Track mental performance over 7 days\n7. Verify analytics and insights\n\n**Success Metrics:**\n\n* Protocols improve state ratings by 2+ points\n* 70%+ athletes use mental protocols\n* Performance correlation insights accurate\n* User satisfaction >4/5\n\n**Deployment:**\n\n* Increment build to 87\n* Deploy to TestFlight\n\n**Parent Epic:** ACP-284\n**Priority:** P0\n**Estimated Effort:** 6-8 hours",
+    "priority": 1,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:47.342Z",
+    "updatedAt": "2025-12-21T03:23:47.342Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-464/acp-388-build-87-integration-testing-deployment"
+  },
+  {
+    "id": "8ff2bf9f-91fd-4ceb-b7a0-6383306c704e",
+    "identifier": "ACP-463",
+    "title": "ACP-387: Implement mental performance analytics and insights",
+    "description": "**Build 87 Agent 9: Mental Analytics**\n\nTrack and analyze mental performance over time.\n\n**Metrics:**\n\n1. **Protocol Effectiveness:**\n   * Pre-state vs post-state rating\n   * Performance correlation\n   * Athlete satisfaction\n2. **Trends:**\n   * Best protocols for you (personalized)\n   * Optimal arousal levels by session type\n   * Mental state \u2192 performance outcomes\n3. **Insights:**\n   * \"Box breathing improves focus by 30%\"\n   * \"Music psych-up increases max strength by 5%\"\n   * \"Your optimal arousal for heavy squats is 8/10\"\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 6-8 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:46.314Z",
+    "updatedAt": "2025-12-21T03:23:46.314Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-463/acp-387-implement-mental-performance-analytics-and-insights"
+  },
+  {
+    "id": "d65d33ba-931f-4b29-a85f-5c18484a000a",
+    "identifier": "ACP-462",
+    "title": "ACP-386: Build focus and attention training (pre-technical work)",
+    "description": "**Build 87 Agent 8: Focus Training**\n\nAttention training for technical skill work.\n\n**Focus Protocols:**\n\n1. **Pre-Technical Session:**\n   * 3-5 min focused breathing\n   * Attention anchoring (single point of focus)\n   * Intention setting\n2. **During Session:**\n   * Mindful rest between sets\n   * Attention reset cues\n   * Quality over quantity mindset\n3. **Focus Metrics:**\n   * Self-rated focus (1-10)\n   * Distractions counted\n   * Quality of execution\n\n**Use Cases:**\n\n* Pre-rehab (maximum attention to form)\n* Skill practice (baseball mechanics, Olympic lifting)\n* Technical strength work\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 4-6 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:45.061Z",
+    "updatedAt": "2025-12-21T03:23:45.061Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-462/acp-386-build-focus-and-attention-training-pre-technical-work"
+  },
+  {
+    "id": "819f1787-909a-4641-b66f-e3460178c6e3",
+    "identifier": "ACP-461",
+    "title": "ACP-385: Create post-competition recovery protocol (mental)",
+    "description": "**Build 87 Agent 7: Mental Recovery**\n\nMental recovery protocols after competition or hard training.\n\n**Recovery Techniques:**\n\n1. **Immediate Post (0-30 min):**\n   * Calm breathing (5-10 min)\n   * Gratitude practice\n   * Positive self-talk\n2. **Evening (2-4 hours post):**\n   * Reflection journaling\n   * Performance review (what went well)\n   * Let go of mistakes\n3. **Sleep Prep:**\n   * 4-7-8 breathing\n   * Progressive muscle relaxation\n   * Avoid rumination\n\n**Features:**\n\n* Guided recovery sequences\n* Journaling prompts\n* Mood tracking (post-competition)\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 4-6 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:44.135Z",
+    "updatedAt": "2025-12-21T03:23:44.135Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-461/acp-385-create-post-competition-recovery-protocol-mental"
+  },
+  {
+    "id": "a8c3512c-e441-44aa-aa5b-2b5645a93321",
+    "identifier": "ACP-460",
+    "title": "ACP-384: Implement pre-competition mental routine builder",
+    "description": "**Build 87 Agent 6: Competition Prep**\n\nBuild personalized pre-competition mental routines.\n\n**Routine Components:**\n\n1. **Timing (T-60 min to T-0):**\n   * T-60: Visualization (10 min)\n   * T-45: Calm breathing (5 min)\n   * T-30: Music psych-up (15 min)\n   * T-15: Physical warm-up + cues\n   * T-5: Final psych-up (breathing + visualization)\n   * T-0: Competition start\n2. **Customization:**\n   * Sport-specific routines\n   * Individual preferences\n   * Arousal level titration\n3. **Tracking:**\n   * Log routine adherence\n   * Correlate with performance\n   * Refine over time\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 6-8 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:43.312Z",
+    "updatedAt": "2025-12-21T03:23:43.312Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-460/acp-384-implement-pre-competition-mental-routine-builder"
+  },
+  {
+    "id": "ba09cc25-ff9e-472c-842d-f74aa5fefdb0",
+    "identifier": "ACP-459",
+    "title": "ACP-383: Build music-based arousal modulation (playlist integration)",
+    "description": "**Build 87 Agent 5: Music Integration**\n\nCurated playlists for arousal modulation.\n\n**Playlist Categories:**\n\n1. **Psych-Up (High Arousal):**\n   * Heavy metal, rap, EDM\n   * 140-180 BPM\n   * Aggressive, intense\n2. **Focus Flow (Medium Arousal):**\n   * Lo-fi hip hop, instrumental\n   * 90-120 BPM\n   * Steady, rhythmic\n3. **Calm/Recovery (Low Arousal):**\n   * Classical, ambient, nature sounds\n   * 60-80 BPM\n   * Soothing, relaxing\n\n**Features:**\n\n* Pre-built playlists (Spotify/Apple Music integration)\n* Custom playlist creation\n* Auto-suggest based on session type\n* Track effectiveness (rate playlist after session)\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 6-8 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:42.364Z",
+    "updatedAt": "2025-12-21T03:23:42.364Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-459/acp-383-build-music-based-arousal-modulation-playlist-integration"
+  },
+  {
+    "id": "427ba731-8a7d-4ecf-bb22-38cfa19e15ea",
+    "identifier": "ACP-458",
+    "title": "ACP-382: Create visualization and mental rehearsal system",
+    "description": "**Build 87 Agent 4: Mental Rehearsal**\n\nGuided visualization for performance enhancement.\n\n**Visualization Types:**\n\n1. **Pre-Competition:**\n   * Visualize perfect execution\n   * Rehearse key moments\n   * Build confidence\n   * Duration: 5-10 minutes\n2. **Injury Recovery:**\n   * Visualize tissue healing\n   * Imagine pain-free movement\n   * Positive outcome focus\n3. **Skill Acquisition:**\n   * Mental practice of technique\n   * Motor imagery\n   * Combine with video review\n\n**Features:**\n\n* Guided audio scripts\n* Customizable scenarios\n* Progress tracking\n* Combine with breathing\n\n**Parent Epic:** ACP-284\n**Priority:** P2 (Medium)\n**Estimated Effort:** 6-8 hours",
+    "priority": 3,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:41.463Z",
+    "updatedAt": "2025-12-21T03:23:41.463Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-458/acp-382-create-visualization-and-mental-rehearsal-system"
+  },
+  {
+    "id": "fe549fa2-4809-4e9b-959a-622baf77c470",
+    "identifier": "ACP-457",
+    "title": "ACP-381: Implement breathing protocol library (box, 4-7-8, Wim Hof)",
+    "description": "**Build 87 Agent 3: Breathing Protocols**\n\nGuided breathing protocols for state modulation.\n\n**Protocols:**\n\n1. **Box Breathing (Calm Focus):**\n   * Inhale 4s, Hold 4s, Exhale 4s, Hold 4s\n   * Repeat 5-10 minutes\n   * Use: Pre-rehab, pre-sleep, anxiety reduction\n2. **4-7-8 Breathing (Sleep/Relaxation):**\n   * Inhale 4s, Hold 7s, Exhale 8s\n   * Repeat 4-8 cycles\n   * Use: Before bed, post-competition wind-down\n3. **Wim Hof (High Arousal):**\n   * 30-40 deep breaths, exhale hold\n   * Repeat 3-4 rounds\n   * Use: Pre-competition, cold exposure prep\n4. **Physiological Sigh (Rapid Calm-Down):**\n   * Double inhale, long exhale\n   * 1-3 cycles\n   * Use: Panic/anxiety reset\n\n**Features:**\n\n* Visual breathing timer\n* Audio cues\n* Progress tracking\n* HRV biofeedback (if available)\n\n**Parent Epic:** ACP-284\n**Priority:** P1 (High)\n**Estimated Effort:** 6-8 hours",
+    "priority": 2,
+    "estimate": null,
+    "createdAt": "2025-12-21T03:23:40.132Z",
+    "updatedAt": "2025-12-21T03:23:40.132Z",
+    "completedAt": null,
+    "state": {
+      "name": "Todo",
+      "type": "unstarted"
+    },
+    "assignee": null,
+    "team": {
+      "id": "5296cff8-9c53-4cb3-9df3-ccb83601805e",
+      "name": "Agent-Control-Plane"
+    },
+    "project": null,
+    "labels": {
+      "nodes": []
+    },
+    "url": "https://linear.app/x2machines/issue/ACP-457/acp-381-implement-breathing-protocol-library-box-4-7-8-wim-hof"
+  }
+]
