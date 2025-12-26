@@ -16,7 +16,7 @@ enum Config {
     // MARK: - App Configuration
 
     static let appVersion = "1.0"
-    static let buildNumber = "61"
+    static let buildNumber = "83"
 
     // MARK: - Demo Credentials
 
@@ -34,5 +34,35 @@ enum Config {
         // WHOOP API credentials - registered app at https://developer.whoop.com
         static let clientId = ProcessInfo.processInfo.environment["WHOOP_CLIENT_ID"] ?? "1c0e3e35-1892-4efb-97f8-878be04c3095"
         static let clientSecret = ProcessInfo.processInfo.environment["WHOOP_CLIENT_SECRET"] ?? "deb077841909f55c5ccaf0be8625d2dc3497e16533909bf5f9030abe17f6c1d5"
+    }
+
+    // MARK: - AI Services Configuration (Build 79)
+
+    struct AIConfig {
+        // OpenAI Configuration
+        static let openAIEnabled = true
+        static let openAIModel = "gpt-4-turbo-preview"
+        static let openAIMaxTokens = 500
+        static let openAITemperature = 0.7
+
+        // Anthropic Configuration
+        static let anthropicEnabled = true
+        static let anthropicModel = "claude-3-5-sonnet-20241022"
+        static let anthropicMaxTokens = 1000
+        static let anthropicTemperature = 0.3
+
+        // Feature Flags
+        static let aiChatEnabled = true
+        static let aiSubstitutionEnabled = true
+        static let aiSafetyEnabled = true
+
+        // Safety Configuration
+        static let blockDangerLevel = true
+        static let safetyCacheDuration: TimeInterval = 24 * 60 * 60 // 24 hours
+        static let safetyDebounceDuration: TimeInterval = 5 * 60 // 5 minutes
+
+        // Cost Controls
+        static let maxChatHistoryMessages = 10
+        static let maxDailyAPICallsPerAthlete = 100
     }
 }
