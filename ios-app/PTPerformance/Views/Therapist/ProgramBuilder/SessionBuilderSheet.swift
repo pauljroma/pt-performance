@@ -69,7 +69,7 @@ struct SessionBuilderSheet: View {
                 }
             }
             .sheet(isPresented: $showExercisePicker) {
-                ExerciseTemplatePicker(selectedExercises: $session.exercises)
+                // ExerciseTemplatePicker (disabled - component missing)(selectedExercises: $session.exercises)
             }
         }
     }

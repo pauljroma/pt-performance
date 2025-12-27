@@ -15,7 +15,8 @@ struct PatientTabView: View {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
 
-            ProgressChartsView()
+            // ProgressChartsView() - Disabled (missing dependencies)
+            Text("Analytics Coming Soon")
                 .tabItem {
                     Label("Analytics", systemImage: "chart.bar.fill")
                 }
