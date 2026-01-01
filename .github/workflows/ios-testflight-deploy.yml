@@ -110,7 +110,7 @@ jobs:
             -allowProvisioningUpdates
 
       - name: Upload Debug Symbols to Sentry
-        if: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
