@@ -1,0 +1,8 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PTPerformance.xcodeproj -scheme PTPerformance -sdk iphonesimulator -configuration Debug build
+
+Build settings from command line:
+    SDKROOT = iphonesimulator26.1
+
+2025-12-20 23:39:01.304 xcodebuild[39457:89906196] Writing error result bundle to /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/ResultBundle_2025-20-12_23-39-0001.xcresult
+xcodebuild: error: 'PTPerformance.xcodeproj' does not exist.

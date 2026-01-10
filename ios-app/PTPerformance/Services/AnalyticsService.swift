@@ -116,7 +116,8 @@ class AnalyticsService {
                 session_number,
                 session_date,
                 completed,
-                exercise_count
+                exercise_count,
+                avg_pain_score
             """)
             .eq("patient_id", value: patientId)
             .order("session_number", ascending: false)
@@ -268,7 +269,7 @@ class AnalyticsService {
             startDate: startDate
         )
 
-        guard let exerciseName = logs.first?.exercise?.name ?? logs.first?.exerciseId else {
+        guard let exerciseName = logs.first?.exercise?.name ?? logs.first?.exerciseId.uuidString else {
             throw AnalyticsError.noData
         }
 

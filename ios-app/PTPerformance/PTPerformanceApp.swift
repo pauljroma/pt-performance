@@ -114,11 +114,11 @@ final class AppState: ObservableObject {
     }
 }
 
-// MARK: - Debug Logger for On-Screen Diagnostics
+// MARK: - Logging Service for On-Screen Diagnostics
 
-/// Shared debug logger that captures all diagnostic messages
-class DebugLogger: ObservableObject {
-    static let shared = DebugLogger()
+/// Shared logging service that captures all diagnostic messages for UI display
+class LoggingService: ObservableObject {
+    static let shared = LoggingService()
 
     @Published var messages: [LogMessage] = []
     @Published var isEnabled = true
@@ -183,82 +183,48 @@ class DebugLogger: ObservableObject {
     func getAllLogs() -> String {
         messages.map { $0.formatted }.joined(separator: "\n")
     }
-}
 
-/// Debug log viewer that can be shown as an overlay
-struct DebugLogView: View {
-    @ObservedObject var logger = DebugLogger.shared
-    @Environment(\.dismiss) var dismiss
+    /// Export logs to a temporary file
+    func exportLogs() -> URL? {
+        let logContent = getAllLogs()
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileName = "debug-logs-\(Date().timeIntervalSince1970).txt"
+        let fileURL = tempDir.appendingPathComponent(fileName)
 
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Stats bar
-                HStack {
-                    Text("\(logger.messages.count) messages")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Spacer()
-
-                    Button("Clear") {
-                        logger.clear()
-                    }
-                    .font(.caption)
-
-                    Button("Copy All") {
-                        UIPasteboard.general.string = logger.getAllLogs()
-                    }
-                    .font(.caption)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.1))
-
-                Divider()
-
-                // Log messages
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 4) {
-                            ForEach(logger.messages) { message in
-                                Text(message.formatted)
-                                    .font(.system(size: 10, design: .monospaced))
-                                    .foregroundColor(colorForLevel(message.level))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .id(message.id)
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    .onChange(of: logger.messages.count) { _ in
-                        if let lastMessage = logger.messages.last {
-                            withAnimation {
-                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Debug Logs")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+        do {
+            try logContent.write(to: fileURL, atomically: true, encoding: .utf8)
+            return fileURL
+        } catch {
+            print("Failed to export logs: \(error)")
+            return nil
         }
     }
 
-    private func colorForLevel(_ level: DebugLogger.LogLevel) -> Color {
-        switch level {
-        case .diagnostic: return .primary
-        case .success: return .green
-        case .error: return .red
-        case .warning: return .orange
-        }
+    /// Statistics about the logs
+    struct LogStats {
+        let totalMessages: Int
+        let errorCount: Int
+        let warningCount: Int
+        let fileSizeFormatted: String
     }
+
+    var logStats: LogStats {
+        let errorCount = messages.filter { $0.level == .error }.count
+        let warningCount = messages.filter { $0.level == .warning }.count
+        let logContent = getAllLogs()
+        let byteCount = logContent.data(using: .utf8)?.count ?? 0
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB]
+        formatter.countStyle = .file
+        let sizeFormatted = formatter.string(fromByteCount: Int64(byteCount))
+
+        return LogStats(
+            totalMessages: messages.count,
+            errorCount: errorCount,
+            warningCount: warningCount,
+            fileSizeFormatted: sizeFormatted
+        )
+    }
+
+    // Note: DebugLogView is defined in Views/Settings/DebugLogView.swift
 }

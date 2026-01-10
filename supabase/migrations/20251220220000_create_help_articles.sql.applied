@@ -1,0 +1,306 @@
+-- Help Articles Content Library for Baseball
+-- Stores 100 evidence-based articles for in-app help search
+-- Created: 2025-12-20
+
+BEGIN;
+
+-- ============================================================================
+-- 1. HELP_ARTICLES TABLE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.help_articles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Article identification
+    slug TEXT NOT NULL UNIQUE, -- URL-friendly identifier
+    title TEXT NOT NULL,
+
+    -- Organization
+    category TEXT NOT NULL CHECK (category IN (
+        'nutrition', 'recovery', 'arm-care', 'hitting',
+        'speed', 'mobility', 'warmup', 'injury-prevention',
+        'mental', 'training'
+    )),
+    subcategory TEXT,
+
+    -- Content
+    content TEXT NOT NULL, -- Full markdown content
+    excerpt TEXT, -- Short preview (150 chars)
+
+    -- Metadata
+    tags TEXT[] DEFAULT '{}', -- Search tags
+    difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
+    reading_time_minutes INTEGER DEFAULT 5,
+
+    -- Attribution
+    author TEXT DEFAULT 'PT Performance Medical Team',
+    reviewed_by TEXT DEFAULT 'Sports Medicine Specialist',
+
+    -- SEO & Discovery
+    search_vector tsvector, -- Full-text search
+    view_count INTEGER DEFAULT 0,
+    helpful_count INTEGER DEFAULT 0,
+
+    -- Status
+    is_published BOOLEAN DEFAULT true,
+    featured BOOLEAN DEFAULT false,
+
+    -- Timestamps
+    published_at TIMESTAMPTZ DEFAULT NOW(),
+    last_updated TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 2. ARTICLE_REFERENCES TABLE
+-- ============================================================================
+-- Stores citations/references separately for easy management
+
+CREATE TABLE IF NOT EXISTS public.article_references (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    article_id UUID NOT NULL REFERENCES public.help_articles(id) ON DELETE CASCADE,
+
+    -- Citation details
+    reference_number INTEGER NOT NULL,
+    citation_text TEXT NOT NULL,
+
+    -- Source metadata
+    authors TEXT,
+    title TEXT,
+    journal TEXT,
+    year INTEGER,
+    doi TEXT,
+    pubmed_id TEXT,
+    url TEXT,
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    UNIQUE(article_id, reference_number)
+);
+
+-- ============================================================================
+-- 3. ARTICLE_INTERACTIONS TABLE
+-- ============================================================================
+-- Track user interactions for analytics
+
+CREATE TABLE IF NOT EXISTS public.article_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    article_id UUID NOT NULL REFERENCES public.help_articles(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    patient_id UUID REFERENCES public.patients(id) ON DELETE SET NULL,
+
+    -- Interaction type
+    interaction_type TEXT NOT NULL CHECK (interaction_type IN (
+        'view', 'helpful', 'not_helpful', 'share', 'bookmark'
+    )),
+
+    -- Context
+    search_query TEXT, -- What they searched for
+    position_in_results INTEGER, -- Where in search results
+
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 4. INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Search and filtering
+CREATE INDEX idx_help_articles_category ON public.help_articles(category);
+CREATE INDEX idx_help_articles_tags ON public.help_articles USING GIN(tags);
+CREATE INDEX idx_help_articles_search_vector ON public.help_articles USING GIN(search_vector);
+CREATE INDEX idx_help_articles_slug ON public.help_articles(slug);
+CREATE INDEX idx_help_articles_published ON public.help_articles(is_published, published_at DESC);
+
+-- Analytics
+CREATE INDEX idx_help_articles_popular ON public.help_articles(view_count DESC, helpful_count DESC);
+CREATE INDEX idx_article_interactions_article_id ON public.article_interactions(article_id, created_at DESC);
+CREATE INDEX idx_article_interactions_user_id ON public.article_interactions(user_id, created_at DESC);
+
+-- References
+CREATE INDEX idx_article_references_article_id ON public.article_references(article_id, reference_number);
+
+-- ============================================================================
+-- 5. FULL-TEXT SEARCH TRIGGER
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.update_help_article_search_vector()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.search_vector :=
+        setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('english', coalesce(NEW.excerpt, '')), 'B') ||
+        setweight(to_tsvector('english', coalesce(array_to_string(NEW.tags, ' '), '')), 'C') ||
+        setweight(to_tsvector('english', coalesce(NEW.content, '')), 'D');
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER update_help_article_search_vector
+BEFORE INSERT OR UPDATE ON public.help_articles
+FOR EACH ROW
+EXECUTE FUNCTION public.update_help_article_search_vector();
+
+-- ============================================================================
+-- 6. VIEW COUNT INCREMENT FUNCTION
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.increment_article_view(
+    p_article_id UUID,
+    p_user_id UUID DEFAULT NULL,
+    p_search_query TEXT DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Increment view count
+    UPDATE public.help_articles
+    SET view_count = view_count + 1
+    WHERE id = p_article_id;
+
+    -- Log interaction
+    INSERT INTO public.article_interactions (
+        article_id,
+        user_id,
+        interaction_type,
+        search_query
+    ) VALUES (
+        p_article_id,
+        p_user_id,
+        'view',
+        p_search_query
+    );
+END;
+$$;
+
+-- ============================================================================
+-- 7. ARTICLE SEARCH FUNCTION
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.search_help_articles(
+    p_query TEXT,
+    p_category TEXT DEFAULT NULL,
+    p_difficulty TEXT DEFAULT NULL,
+    p_limit INTEGER DEFAULT 10
+)
+RETURNS TABLE (
+    id UUID,
+    slug TEXT,
+    title TEXT,
+    category TEXT,
+    excerpt TEXT,
+    difficulty TEXT,
+    reading_time_minutes INTEGER,
+    view_count INTEGER,
+    helpful_count INTEGER,
+    rank REAL
+)
+LANGUAGE plpgsql
+STABLE
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        ha.id,
+        ha.slug,
+        ha.title,
+        ha.category,
+        ha.excerpt,
+        ha.difficulty,
+        ha.reading_time_minutes,
+        ha.view_count,
+        ha.helpful_count,
+        ts_rank(ha.search_vector, websearch_to_tsquery('english', p_query)) as rank
+    FROM public.help_articles ha
+    WHERE
+        ha.is_published = true
+        AND ha.search_vector @@ websearch_to_tsquery('english', p_query)
+        AND (p_category IS NULL OR ha.category = p_category)
+        AND (p_difficulty IS NULL OR ha.difficulty = p_difficulty)
+    ORDER BY rank DESC, ha.view_count DESC
+    LIMIT p_limit;
+END;
+$$;
+
+-- ============================================================================
+-- 8. ROW LEVEL SECURITY
+-- ============================================================================
+
+ALTER TABLE public.help_articles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.article_references ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.article_interactions ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read published articles
+CREATE POLICY "Anyone can view published articles"
+ON public.help_articles
+FOR SELECT
+USING (is_published = true);
+
+-- Anyone can read article references
+CREATE POLICY "Anyone can view article references"
+ON public.article_references
+FOR SELECT
+USING (true);
+
+-- Users can track their own interactions
+CREATE POLICY "Users can view their own interactions"
+ON public.article_interactions
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+-- Users can create interactions
+CREATE POLICY "Users can create interactions"
+ON public.article_interactions
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = auth.uid() OR user_id IS NULL);
+
+-- ============================================================================
+-- 9. HELPER VIEWS
+-- ============================================================================
+
+-- Popular articles by category
+CREATE OR REPLACE VIEW public.vw_popular_articles AS
+SELECT
+    category,
+    slug,
+    title,
+    view_count,
+    helpful_count,
+    ROUND((helpful_count::NUMERIC / NULLIF(view_count, 0)) * 100, 1) as helpful_rate
+FROM public.help_articles
+WHERE is_published = true
+ORDER BY view_count DESC, helpful_count DESC;
+
+-- Most helpful articles
+CREATE OR REPLACE VIEW public.vw_most_helpful_articles AS
+SELECT
+    ha.slug,
+    ha.title,
+    ha.category,
+    ha.helpful_count,
+    ha.view_count,
+    ROUND((ha.helpful_count::NUMERIC / NULLIF(ha.view_count, 0)) * 100, 1) as helpful_rate
+FROM public.help_articles ha
+WHERE ha.is_published = true AND ha.view_count > 10
+ORDER BY helpful_rate DESC, ha.helpful_count DESC
+LIMIT 50;
+
+-- ============================================================================
+-- 10. GRANT PERMISSIONS
+-- ============================================================================
+
+GRANT SELECT ON public.help_articles TO authenticated, anon;
+GRANT SELECT ON public.article_references TO authenticated, anon;
+GRANT SELECT, INSERT ON public.article_interactions TO authenticated;
+GRANT SELECT ON public.vw_popular_articles TO authenticated, anon;
+GRANT SELECT ON public.vw_most_helpful_articles TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.search_help_articles TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.increment_article_view TO authenticated, anon;
+
+COMMIT;

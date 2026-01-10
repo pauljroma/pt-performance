@@ -2,8 +2,8 @@ import Foundation
 
 /// Patient model
 struct Patient: Codable, Identifiable, Hashable {
-    let id: String
-    let therapistId: String
+    let id: UUID
+    let therapistId: UUID
     let firstName: String
     let lastName: String
     let email: String
@@ -43,8 +43,8 @@ struct Patient: Codable, Identifiable, Hashable {
 
     static let samplePatients: [Patient] = [
         Patient(
-            id: "patient-1",
-            therapistId: "therapist-1",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
             firstName: "John",
             lastName: "Brebbia",
             email: "demo-patient@ptperformance.app",
@@ -59,8 +59,8 @@ struct Patient: Codable, Identifiable, Hashable {
             lastSessionDate: Date()
         ),
         Patient(
-            id: "patient-2",
-            therapistId: "therapist-1",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+            therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
             firstName: "Sarah",
             lastName: "Johnson",
             email: "sarah@example.com",
@@ -101,5 +101,5 @@ struct PatientWithStats: Codable, Identifiable {
     let completedSessions: Int
     let totalSessions: Int
 
-    var id: String { patient.id }
+    var id: UUID { patient.id }
 }

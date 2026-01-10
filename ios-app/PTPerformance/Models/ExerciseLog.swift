@@ -2,9 +2,9 @@ import Foundation
 
 /// Represents a completed exercise log submitted by a patient
 struct ExerciseLog: Codable, Identifiable {
-    let id: String
-    let sessionExerciseId: String
-    let patientId: String
+    let id: UUID
+    let sessionExerciseId: UUID
+    let patientId: UUID
     let loggedAt: Date
     let actualSets: Int
     let actualReps: [Int]
@@ -33,8 +33,8 @@ struct ExerciseLog: Codable, Identifiable {
 
 /// Input model for creating a new exercise log
 struct CreateExerciseLogInput: Codable {
-    let sessionExerciseId: String
-    let patientId: String
+    let sessionExerciseId: UUID
+    let patientId: UUID
     let actualSets: Int
     let actualReps: [Int]
     let actualLoad: Double?
@@ -84,7 +84,7 @@ extension ExerciseLog {
     }
 
     /// Exercise ID for analytics
-    var exerciseId: String? {
+    var exerciseId: UUID {
         sessionExerciseId
     }
 
@@ -97,6 +97,6 @@ extension ExerciseLog {
 
 /// Simplified exercise reference for analytics (avoids conflict with main Exercise model)
 struct ExerciseReference: Codable {
-    let id: String
+    let id: UUID
     let name: String
 }

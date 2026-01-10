@@ -1,0 +1,1032 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PTPerformance.xcodeproj -scheme PTPerformance -destination "platform=iOS Simulator,name=iPhone 17 Pro" build
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  swift-crypto: https://github.com/apple/swift-crypto.git @ 4.2.0
+  xctest-dynamic-overlay: https://github.com/pointfreeco/xctest-dynamic-overlay @ 1.8.0
+  swift-asn1: https://github.com/apple/swift-asn1.git @ 1.5.1
+  swift-clocks: https://github.com/pointfreeco/swift-clocks @ 1.0.6
+  Supabase: https://github.com/supabase/supabase-swift.git @ 2.38.1
+  swift-http-types: https://github.com/apple/swift-http-types.git @ 1.5.1
+  swift-concurrency-extras: https://github.com/pointfreeco/swift-concurrency-extras @ 1.3.2
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (23 targets)
+    Target 'PTPerformance' in project 'PTPerformance'
+        ➜ Explicit dependency on target 'Supabase' in project 'Supabase'
+    Target 'Supabase' in project 'Supabase'
+        ➜ Explicit dependency on target 'Supabase' in project 'Supabase'
+        ➜ Explicit dependency on target 'Functions' in project 'Supabase'
+        ➜ Explicit dependency on target 'PostgREST' in project 'Supabase'
+        ➜ Explicit dependency on target 'Auth' in project 'Supabase'
+        ➜ Explicit dependency on target 'Realtime' in project 'Supabase'
+        ➜ Explicit dependency on target 'Storage' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'Crypto' in project 'swift-crypto'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'Supabase' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'Auth' in project 'Supabase'
+        ➜ Explicit dependency on target 'Functions' in project 'Supabase'
+        ➜ Explicit dependency on target 'PostgREST' in project 'Supabase'
+        ➜ Explicit dependency on target 'Realtime' in project 'Supabase'
+        ➜ Explicit dependency on target 'Storage' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'Crypto' in project 'swift-crypto'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'Storage' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+    Target 'Realtime' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'PostgREST' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+    Target 'Functions' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+    Target 'Auth' in project 'Supabase'
+        ➜ Explicit dependency on target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'Crypto' in project 'swift-crypto'
+    Target 'Crypto' in project 'swift-crypto'
+        ➜ Explicit dependency on target 'Crypto' in project 'swift-crypto'
+        ➜ Explicit dependency on target 'swift-crypto_Crypto' in project 'swift-crypto'
+    Target 'Crypto' in project 'swift-crypto'
+        ➜ Explicit dependency on target 'swift-crypto_Crypto' in project 'swift-crypto'
+    Target 'swift-crypto_Crypto' in project 'swift-crypto' (no dependencies)
+    Target 'Helpers' in project 'Supabase'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+    Target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReportingPackageSupport' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'XCTestDynamicOverlay' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReportingPackageSupport' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'Clocks' in project 'swift-clocks'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+    Target 'IssueReporting' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReporting' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReportingPackageSupport' in project 'xctest-dynamic-overlay'
+    Target 'IssueReporting' in project 'xctest-dynamic-overlay'
+        ➜ Explicit dependency on target 'IssueReportingPackageSupport' in project 'xctest-dynamic-overlay'
+    Target 'IssueReportingPackageSupport' in project 'xctest-dynamic-overlay' (no dependencies)
+    Target 'HTTPTypes' in project 'swift-http-types'
+        ➜ Explicit dependency on target 'HTTPTypes' in project 'swift-http-types'
+    Target 'HTTPTypes' in project 'swift-http-types' (no dependencies)
+    Target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+        ➜ Explicit dependency on target 'ConcurrencyExtras' in project 'swift-concurrency-extras'
+    Target 'ConcurrencyExtras' in project 'swift-concurrency-extras' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ReadFileContents /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/share/docc/features.json
+
+Build description signature: b5bcb848a07b0223544994bf97754033
+Build description path: /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/XCBuildData/b5bcb848a07b0223544994bf97754033.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -o /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache
+
+ProcessInfoPlistFile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/swift-crypto_Crypto.bundle/Info.plist /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/swift-crypto.build/Debug-iphonesimulator/swift-crypto_Crypto.build/empty-swift-crypto_Crypto.plist (in target 'swift-crypto_Crypto' from project 'swift-crypto')
+    cd /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/swift-crypto
+    builtin-infoPlistUtility /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/swift-crypto.build/Debug-iphonesimulator/swift-crypto_Crypto.build/empty-swift-crypto_Crypto.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphonesimulator -o /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/swift-crypto_Crypto.bundle/Info.plist
+
+WriteAuxiliaryFile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.SwiftConstValuesFileList (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    write-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.SwiftFileList (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    write-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.SwiftFileList
+
+WriteAuxiliaryFile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.LinkFileList (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    write-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.LinkFileList
+
+WriteAuxiliaryFile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance-OutputFileMap.json (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    write-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance-OutputFileMap.json
+
+SwiftDriver Auth normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Auth -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -enable-upcoming-feature ExistentialAny -enable-experimental-feature StrictConcurrency -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios13.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -suppress-warnings -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/Developer/Library/Frameworks -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -package-name supabase_swift -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth_const_extract_protocols.json -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ AuthClient.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthClient.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthClient.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Auth (in target 'Auth' from project 'Supabase')
+
+EmitSwiftModule normal arm64 (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Types.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Types.swift (in target 'Auth' from project 'Supabase')
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Types.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Auth (in target 'Auth' from project 'Supabase')
+
+SwiftDriver\ Compilation\ Requirements Auth normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Auth -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -enable-upcoming-feature ExistentialAny -enable-experimental-feature StrictConcurrency -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios13.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -suppress-warnings -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/Developer/Library/Frameworks -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -package-name supabase_swift -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth_const_extract_protocols.json -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+Copy /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/Auth.swiftmodule/arm64-apple-ios-simulator.abi.json /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.abi.json (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Auth.build/Objects-normal/arm64/Auth.abi.json /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/Auth.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+SwiftDriver Supabase normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Supabase -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -enable-upcoming-feature ExistentialAny -enable-experimental-feature StrictConcurrency -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios13.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -suppress-warnings -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/Developer/Library/Frameworks -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -package-name supabase_swift -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase_const_extract_protocols.json -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Supabase (in target 'Supabase' from project 'Supabase')
+
+EmitSwiftModule normal arm64 (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ SupabaseClient.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Supabase/SupabaseClient.swift (in target 'Supabase' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Supabase/SupabaseClient.swift (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthClient.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 Compiling\ AuthMFA.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthMFA.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthMFA.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AuthError.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthError.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthError.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ APIClient.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/APIClient.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/APIClient.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Dependencies.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/Dependencies.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/Dependencies.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AuthClientConfiguration.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthClientConfiguration.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthClientConfiguration.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ EventEmitter.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/EventEmitter.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/EventEmitter.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ SessionStorage.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/SessionStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/SessionStorage.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AuthAdminOAuth.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthAdminOAuth.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthAdminOAuth.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ CodeVerifierStorage.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/CodeVerifierStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/CodeVerifierStorage.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ SessionManager.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/SessionManager.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Internal/SessionManager.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AuthAdmin.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthAdmin.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/AuthAdmin.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Defaults.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Defaults.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Defaults.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ AuthLocalStorage.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Storage/AuthLocalStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Storage/AuthLocalStorage.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftCompile normal arm64 Compiling\ Deprecated.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Deprecated.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Auth/Deprecated.swift (in target 'Auth' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Supabase (in target 'Supabase' from project 'Supabase')
+
+SwiftDriver\ Compilation\ Requirements Supabase normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Supabase -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -enable-upcoming-feature ExistentialAny -enable-experimental-feature StrictConcurrency -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios13.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -suppress-warnings -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/Developer/Library/Frameworks -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -package-name supabase_swift -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase_const_extract_protocols.json -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+Copy /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/Supabase.swiftmodule/arm64-apple-ios-simulator.abi.json /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.abi.json (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.abi.json /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/Supabase.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+SwiftDriver PTPerformance normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PTPerformance -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios17.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance_const_extract_protocols.json -Xcc -iquote -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-generated-files.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-own-target-headers.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance-f60d3a462ada4e41f6f94ab9498e36ce-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-project-headers.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance -experimental-emit-module-separately -disable-cmo
+
+CompileAssetCatalogVariant thinned /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PTPerformance.app /Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets --compile /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --filter-for-thinning-device-configuration iPhone18,1 --filter-for-device-os-version 26.1 --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 17.0 --platform iphonesimulator
+/* com.apple.actool.notices */
+/Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets: warning: Accent color ‘AccentColor’ is not present in any asset catalogs.
+/* com.apple.actool.document.notices */
+/Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets:./AppIcon.appiconset/[][ipad][76x76][][][1x][][][][]: notice: 76x76@1x app icons only apply to iPad apps targeting releases of iOS prior to 10.0.
+/* com.apple.actool.compilation-results */
+/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_generated_info.plist_thinned
+/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthLocalStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Defaults.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Deprecated.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthClientConfiguration.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling EventEmitter.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Dependencies.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CodeVerifierStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SessionStorage.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthAdminOAuth.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SupabaseClient.swift (in target 'Supabase' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthAdmin.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthMFA.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 Compiling\ Deprecated.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Supabase/Deprecated.swift (in target 'Supabase' from project 'Supabase')
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/SourcePackages/checkouts/supabase-swift/Sources/Supabase/Deprecated.swift (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling SessionManager.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling APIClient.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AuthError.swift (in target 'Auth' from project 'Supabase')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Deprecated.swift (in target 'Supabase' from project 'Supabase')
+
+SwiftDriver\ Compilation Supabase normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Supabase' from project 'Supabase')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Supabase -Onone -enforce-exclusivity\=checked @/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.SwiftFileList -DSWIFT_PACKAGE -DDEBUG -DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE -DXcode -enable-upcoming-feature ExistentialAny -enable-experimental-feature StrictConcurrency -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios13.0-simulator -g -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -suppress-warnings -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/Developer/Library/Frameworks -c -j32 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -package-name supabase_swift -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase_const_extract_protocols.json -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/DerivedSources -Xcc -DSWIFT_PACKAGE -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/Supabase.build/Debug-iphonesimulator/Supabase.build/Objects-normal/arm64/Supabase-Swift.h -working-directory /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformance.xcodeproj -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ PatientHistoryView.swift,\ PatientTabView.swift,\ RootView.swift,\ AnalyticsService.swift,\ ExerciseLogService.swift /Users/expo/Code/expo/ios-app/PTPerformance/PatientHistoryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/PatientTabView.swift /Users/expo/Code/expo/ios-app/PTPerformance/RootView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/AnalyticsService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/ExerciseLogService.swift (in target 'PTPerformance' from project 'PTPerformance')
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/PatientHistoryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/PatientTabView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/RootView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/AnalyticsService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/ExerciseLogService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ AuthView.swift,\ AdherenceChart.swift,\ PainTrendChart.swift,\ ProtocolSelector.swift,\ StrengthTargetsCard.swift /Users/expo/Code/expo/ios-app/PTPerformance/AuthView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/Charts/AdherenceChart.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/Charts/PainTrendChart.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/ProtocolSelector.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/StrengthTargetsCard.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/AuthView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/Charts/AdherenceChart.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/Charts/PainTrendChart.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/ProtocolSelector.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/StrengthTargetsCard.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ WorkloadFlagBanner.swift,\ Exercise.swift,\ ExerciseLog.swift,\ Patient.swift,\ PatientFlag.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/WorkloadFlagBanner.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/Exercise.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ExerciseLog.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/Patient.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/PatientFlag.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/WorkloadFlagBanner.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/Exercise.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ExerciseLog.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/Patient.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/PatientFlag.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ Program.swift,\ Protocol.swift,\ SessionNote.swift,\ WorkloadFlag.swift,\ PTPerformanceApp.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/Program.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/Protocol.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/SessionNote.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/WorkloadFlag.swift /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformanceApp.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/Program.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/Protocol.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/SessionNote.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/WorkloadFlag.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/PTPerformanceApp.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ TodaySessionView.swift,\ RMCalculator.swift,\ HistoryViewModel.swift,\ PatientDetailViewModel.swift,\ PatientListViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/TodaySessionView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/RMCalculator.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/HistoryViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/PatientDetailViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/PatientListViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/TodaySessionView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/RMCalculator.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/HistoryViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/PatientDetailViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/PatientListViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ProgramViewerView.swift,\ Config.swift,\ DeviceHelper.swift,\ SessionSummaryView.swift,\ ErrorLogger.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramViewerView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Config.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/DeviceHelper.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/SessionSummaryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/ErrorLogger.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramViewerView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Config.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/DeviceHelper.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/SessionSummaryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/ErrorLogger.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ StrengthChartView.swift,\ ConsistencyChartView.swift,\ ProgressChartsView.swift,\ ExerciseTemplateViewModel.swift,\ ExerciseTemplatePicker.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/StrengthChartView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/ConsistencyChartView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/ProgressChartsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ExerciseTemplateViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/ExerciseTemplatePicker.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/StrengthChartView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/ConsistencyChartView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/ProgressChartsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ExerciseTemplateViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/ExerciseTemplatePicker.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ PerformanceMonitor.swift,\ ChartData.swift,\ ScheduledSession.swift,\ AnalyticsViewModel.swift,\ VolumeChartView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/PerformanceMonitor.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ChartData.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ScheduledSession.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/AnalyticsViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/VolumeChartView.swift (in target 'PTPerformance' from project 'PTPerformance')
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/PerformanceMonitor.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ChartData.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ScheduledSession.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/AnalyticsViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Analytics/VolumeChartView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ NotesService.swift,\ SupabaseClient.swift,\ TherapistDashboardView.swift,\ TherapistProgramsView.swift,\ TherapistTabView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/NotesService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/SupabaseClient.swift /Users/expo/Code/expo/ios-app/PTPerformance/TherapistDashboardView.swift /Users/expo/Code/expo/ios-app/PTPerformance/TherapistProgramsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/TherapistTabView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/NotesService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/SupabaseClient.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/TherapistDashboardView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/TherapistProgramsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/TherapistTabView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ SessionBuilderSheet.swift,\ PhaseDetailView.swift,\ ProgramStructureView.swift,\ SessionEditorView.swift,\ ProgramManagerView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/SessionBuilderSheet.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/PhaseDetailView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramStructureView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/SessionEditorView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramManagerView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/SessionBuilderSheet.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramBuilder/PhaseDetailView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramStructureView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/SessionEditorView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramManagerView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ProgramBuilderViewModel.swift,\ ProgramEditorViewModel.swift,\ ProgramViewModel.swift,\ TodaySessionViewModel.swift,\ ExerciseLogView.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramBuilderViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramEditorViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/ExerciseLogView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramBuilderViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramEditorViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ProgramViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/TodaySessionViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/ExerciseLogView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ProgramEditorView.swift,\ EditPhaseView.swift,\ EditSessionView.swift,\ ExerciseEditorView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramEditorView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/EditPhaseView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/EditSessionView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ExerciseEditorView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ProgramEditorView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/EditPhaseView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/EditSessionView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ExerciseEditorView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ExercisePickerView.swift,\ LoadingStateView.swift,\ ErrorStateView.swift,\ SessionSummaryViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ExercisePickerView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/LoadingStateView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ErrorStateView.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/SessionSummaryViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/ProgramEditor/ExercisePickerView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/LoadingStateView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ErrorStateView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/SessionSummaryViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ HelpCategoryView.swift,\ HelpArticleView.swift,\ MessageThread.swift,\ Message.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpCategoryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpArticleView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/MessageThread.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/Message.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpCategoryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpArticleView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/MessageThread.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/Message.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ FormValidationIndicator.swift,\ HelpArticle.swift,\ ContextualHelpButton.swift,\ HelpView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/FormValidationIndicator.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/HelpArticle.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ContextualHelpButton.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/FormValidationIndicator.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/HelpArticle.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ContextualHelpButton.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Help/HelpView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ AIAssistantService.swift,\ VideoDownloadManager.swift,\ VideoLibraryViewModel.swift,\ MessageThreadView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/AIAssistantService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/VideoDownloadManager.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/VideoLibraryViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/MessageThreadView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/AIAssistantService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/VideoDownloadManager.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/VideoLibraryViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/MessageThreadView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ AssistantMessage.swift,\ ExerciseContext.swift,\ VideoCategory.swift,\ MessagingService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/AssistantMessage.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ExerciseContext.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/VideoCategory.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/MessagingService.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/AssistantMessage.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ExerciseContext.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/VideoCategory.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/MessagingService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ChatView.swift,\ VideoRecorderView.swift,\ FormCheckAnnotationView.swift,\ AIAssistantView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/ChatView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/VideoRecorderView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/FormCheckAnnotationView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/AIAssistantView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/ChatView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/VideoRecorderView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Messaging/FormCheckAnnotationView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/AIAssistantView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ QuickPromptsView.swift,\ ExerciseCardEmbed.swift,\ VideoLibraryView.swift,\ VideoCategoryGrid.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/QuickPromptsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/ExerciseCardEmbed.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoLibraryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoCategoryGrid.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/QuickPromptsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/AIAssistant/ExerciseCardEmbed.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoLibraryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoCategoryGrid.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ExerciseVideoDetailView.swift,\ ScheduledSessionsViewModel.swift,\ ReadinessAdjustment.swift,\ ReadinessAdjustmentViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/ExerciseVideoDetailView.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ScheduledSessionsViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ReadinessAdjustment.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ReadinessAdjustmentViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/ExerciseVideoDetailView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ScheduledSessionsViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ReadinessAdjustment.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ReadinessAdjustmentViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ OnboardingCoordinator.swift,\ OnboardingPage.swift,\ OnboardingView.swift,\ ExerciseTechniqueView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/OnboardingCoordinator.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingPage.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Exercise/ExerciseTechniqueView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/OnboardingCoordinator.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingPage.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Exercise/ExerciseTechniqueView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ AuditLogService.swift,\ CacheService.swift,\ NetworkSpeedMonitor.swift,\ NotificationService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/AuditLogService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/CacheService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/NetworkSpeedMonitor.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/NotificationService.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/AuditLogService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/CacheService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/NetworkSpeedMonitor.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/NotificationService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ReadinessAdjustmentView.swift,\ NutritionLog.swift,\ PhaseAdvancement.swift,\ WorkoutTemplate.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/ReadinessAdjustmentView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/NutritionLog.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/PhaseAdvancement.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/WorkoutTemplate.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/ReadinessAdjustmentView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/NutritionLog.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/PhaseAdvancement.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/WorkoutTemplate.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ VideoService.swift,\ WHOOPService.swift,\ DailyReadinessViewModel.swift,\ WorkloadFlagsViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/VideoService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/WHOOPService.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/DailyReadinessViewModel.swift /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/WorkloadFlagsViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/VideoService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/WHOOPService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/DailyReadinessViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/WorkloadFlagsViewModel.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ ProgressionService.swift,\ ReadinessService.swift,\ SchedulingService.swift,\ TemplatesService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/ProgressionService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/ReadinessService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/SchedulingService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/TemplatesService.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/ProgressionService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/ReadinessService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/SchedulingService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/TemplatesService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ VideoPlayerView.swift,\ ExerciseCuesCard.swift,\ ValidationHelpers.swift,\ AccessibleFormField.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/VideoPlayerView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/ExerciseCuesCard.swift /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ValidationHelpers.swift /Users/expo/Code/expo/ios-app/PTPerformance/Components/AccessibleFormField.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/VideoPlayerView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/ExerciseCuesCard.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Utils/ValidationHelpers.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Components/AccessibleFormField.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ DailyReadinessCheckInView.swift,\ CalendarView.swift,\ ScheduleSessionView.swift,\ UpcomingSessionsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/DailyReadinessCheckInView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/ScheduleSessionView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/UpcomingSessionsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Patient/DailyReadinessCheckInView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/ScheduleSessionView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/UpcomingSessionsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ CreateTemplateView.swift,\ TemplateDetailView.swift,\ TemplateLibraryView.swift,\ WorkloadFlagsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/CreateTemplateView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/TemplateDetailView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/TemplateLibraryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/WorkloadFlagsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/CreateTemplateView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/TemplateDetailView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Templates/TemplateLibraryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Therapist/WorkloadFlagsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PTPerformance (in target 'PTPerformance' from project 'PTPerformance')
+EmitSwiftModule normal arm64 (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ CalendarDayCell.swift,\ EnhancedSessionCalendarView.swift,\ SessionQuickLogView.swift,\ GeneratedAssetSymbols.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarDayCell.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/EnhancedSessionCalendarView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PTPerformance' from project 'PTPerformance')
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c -filelist /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/sources-1 -primary-file /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarDayCell.swift -primary-file /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/EnhancedSessionCalendarView.swift -primary-file /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift -primary-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/GeneratedAssetSymbols.swift -supplementary-output-file-map /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/supplementaryOutputs-32 -target arm64-apple-ios17.0-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -disable-cross-import-overlay-search -swift-module-cross-import AVKit /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/AVKit.framework/Modules/AVKit.swiftcrossimport/SwiftUI.swiftoverlay -swift-module-cross-import AVKit /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk/System/Library/Frameworks/AVKit.framework/Modules/AVKit.swiftcrossimport/SwiftUI.swiftoverlay -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libTipKitMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#TipKitMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -I /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=4 -module-cache-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/PTPerformance_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/expo/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/expo/Code/expo/ios-app/PTPerformance -enable-anonymous-context-mangled-names -file-compilation-dir /Users/expo/Code/expo/ios-app/PTPerformance -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-generated-files.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-own-target-headers.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance-f60d3a462ada4e41f6f94ab9498e36ce-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/PTPerformance-project-headers.hmap -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources-normal/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/arm64 -Xcc -I/Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name PTPerformance -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.1 -target-sdk-name iphonesimulator26.1 -clang-target arm64-apple-ios26.1-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -o /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/CalendarDayCell.o -o /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/EnhancedSessionCalendarView.o -o /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/SessionQuickLogView.o -o /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/GeneratedAssetSymbols.o -index-unit-output-path /PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/CalendarDayCell.o -index-unit-output-path /PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/EnhancedSessionCalendarView.o -index-unit-output-path /PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/SessionQuickLogView.o -index-unit-output-path /PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/Objects-normal/arm64/GeneratedAssetSymbols.o -index-store-path /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Index.noindex/DataStore -index-system-modules
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarDayCell.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/EnhancedSessionCalendarView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:474:44: error: 'schedulingService' is inaccessible due to 'private' protection level
+            let updatedSession = try await schedulingService.completeSessionWithDetails(
+                                           ^
+/Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ScheduledSessionsViewModel.swift:31:17: note: 'schedulingService' declared here
+    private let schedulingService = SchedulingService.shared
+                ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:488:13: error: 'errorLogger' is inaccessible due to 'private' protection level
+            errorLogger.logError(
+            ^
+/Users/expo/Code/expo/ios-app/PTPerformance/ViewModels/ScheduledSessionsViewModel.swift:33:17: note: 'errorLogger' declared here
+    private let errorLogger = ErrorLogger.shared
+                ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:509:55: error: 'supabase' is inaccessible due to 'private' protection level
+            let updated: ScheduledSession = try await supabase
+                                                      ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Services/SchedulingService.swift:23:17: note: 'supabase' declared here
+    private let supabase = PTSupabaseClient.shared.client
+                ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:524:13: error: 'errorLogger' is inaccessible due to 'private' protection level
+            errorLogger.logError(
+            ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Services/SchedulingService.swift:24:17: note: 'errorLogger' declared here
+    private let errorLogger = ErrorLogger.shared
+                ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:509:49: warning: no 'async' operations occur within 'await' expression
+            let updated: ScheduledSession = try await supabase
+                                                ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:509:45: warning: no calls to throwing functions occur within 'try' expression
+            let updated: ScheduledSession = try await supabase
+                                            ^
+/Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift:523:11: warning: 'catch' block is unreachable because no errors are thrown in 'do' block
+        } catch {
+          ^
+
+SwiftCompile normal arm64 /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 Compiling\ PushNotificationService.swift,\ SentryConfig.swift,\ ReadinessBand.swift,\ ReminderService.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/PushNotificationService.swift /Users/expo/Code/expo/ios-app/PTPerformance/SentryConfig.swift /Users/expo/Code/expo/ios-app/PTPerformance/Models/ReadinessBand.swift /Users/expo/Code/expo/ios-app/PTPerformance/Services/ReminderService.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/PushNotificationService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/SentryConfig.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Models/ReadinessBand.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Services/ReminderService.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling Types.swift (in target 'Auth' from project 'Supabase')
+
+SwiftCompile normal arm64 Compiling\ ExerciseVideoView.swift,\ VideoQualityPicker.swift,\ ScheduledSessionsView.swift,\ AdjustmentHistoryView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Exercises/ExerciseVideoView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoQualityPicker.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/ScheduledSessionsView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Readiness/AdjustmentHistoryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Exercises/ExerciseVideoView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/VideoLibrary/VideoQualityPicker.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/ScheduledSessionsView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Readiness/AdjustmentHistoryView.swift (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    
+
+LinkAssetCatalog /Users/expo/Code/expo/ios-app/PTPerformance/Assets.xcassets (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    builtin-linkAssetCatalog --thinned /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/thinned --thinned-dependencies /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_generated_info.plist_unthinned --output /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PTPerformance.app --plist-output /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PTPerformance.app/AppIcon76x76@2x~ipad.png (in target 'PTPerformance' from project 'PTPerformance')
+note: Emplaced /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PTPerformance.app/Assets.car (in target 'PTPerformance' from project 'PTPerformance')
+note: Emplaced /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Products/Debug-iphonesimulator/PTPerformance.app/AppIcon60x60@2x.png (in target 'PTPerformance' from project 'PTPerformance')
+
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/expo/Code/expo/ios-app/PTPerformance/Services/ReminderService.swift (in target 'PTPerformance' from project 'PTPerformance')
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 Compiling\ CalendarDayCell.swift,\ EnhancedSessionCalendarView.swift,\ SessionQuickLogView.swift,\ GeneratedAssetSymbols.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/CalendarDayCell.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/EnhancedSessionCalendarView.swift /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/PTPerformance.build/Debug-iphonesimulator/PTPerformance.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PTPerformance' from project 'PTPerformance')
+	SwiftCompile normal arm64 /Users/expo/Code/expo/ios-app/PTPerformance/Views/Scheduling/SessionQuickLogView.swift (in target 'PTPerformance' from project 'PTPerformance')
+	Building project PTPerformance with scheme PTPerformance
+(3 failures)

@@ -1,0 +1,18 @@
+name: "BUILD 95 - Production Release Candidate"
+description: "Final build before MVP 1.0 - E2E tests, bug fixes, performance, security, HIPAA compliance"
+build_number: 95
+estimated_agents: 21
+estimated_duration_minutes: 300
+estimated_cost_usd: 45.00
+
+phases:
+  - phase: 1
+    name: "E2E Test Infrastructure (6 agents, parallel)"
+  - phase: 2
+    name: "Critical Bug Fixes & Performance (4 agents, parallel)"
+  - phase: 3
+    name: "Security & Final Polish (4 agents, parallel)"
+  - phase: 4
+    name: "Integration Testing (3 agents, sequential)"
+  - phase: 5
+    name: "Build & Deploy (4 agents, sequential)"

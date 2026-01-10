@@ -1,0 +1,84 @@
+name: Schema Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'ios-app/PTPerformance/Models/**'
+      - 'supabase/migrations/**'
+      - 'scripts/validate_ios_schema.py'
+  push:
+    branches: [ main ]
+    paths:
+      - 'ios-app/PTPerformance/Models/**'
+      - 'supabase/migrations/**'
+
+jobs:
+  validate-schema:
+    name: Validate iOS Schema Against Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Run schema validation
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          python3 scripts/validate_ios_schema.py --verbose
+        continue-on-error: true
+        id: validation
+
+      - name: Check validation result
+        run: |
+          exit_code=${{ steps.validation.outcome }}
+
+          if [ "$exit_code" == "success" ]; then
+            echo "✅ Schema validation passed!"
+            exit 0
+          elif [ "$exit_code" == "failure" ]; then
+            echo "❌ Schema validation failed!"
+            echo "Please fix schema mismatches before merging."
+            exit 1
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = `
+            ## Schema Validation Results
+
+            ${{ steps.validation.outcome == 'success' && '✅ All schemas match!' || '❌ Schema mismatches detected!' }}
+
+            <details>
+            <summary>View Details</summary>
+
+            \`\`\`
+            ${{ steps.validation.outputs.stdout || 'No output' }}
+            \`\`\`
+            </details>
+
+            ${steps.validation.outcome == 'failure' ? '⚠️ **Please fix schema mismatches before merging.**' : ''}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: output
+            });

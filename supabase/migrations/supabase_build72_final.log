@@ -1,0 +1,28 @@
+Using workdir /Users/expo/Code/expo
+Connecting to remote database...
+Skipping migration 20251215140000_add_exercise_videos.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000001_create_messaging_tables.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000003_create_ai_conversations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy5.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy6.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_final.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_success.log... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20251220000001_create_readiness_adjustments.sql
+ • 20251220000001_validate_video_urls.sql
+ • 20251220000002_adjustment_audit_log.sql
+ • 20251220000003_adjustment_rls_policies.sql
+
+ [Y/n] Y
+Applying migration 20251220000001_create_readiness_adjustments.sql...
+NOTICE (00000): drop cascades to 2 other objects
+NOTICE (00000): function public.calculate_readiness_adjustment() does not exist, skipping
+NOTICE (00000): function public.lock_readiness_adjustment() does not exist, skipping
+Applying migration 20251220000001_validate_video_urls.sql...
+ERROR: syntax error at or near "||" (SQLSTATE 42601)                                      
+At statement: 1                                                                           
+-- Add comment to function                                                                
+COMMENT ON FUNCTION validate_video_url(TEXT) IS                                           
+'Validates that video_url is properly formatted and points to exercise-videos bucket. ' ||
+                                                                                        ^ 
+Try rerunning the command with --debug to troubleshoot the error.

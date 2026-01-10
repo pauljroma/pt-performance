@@ -1,0 +1,397 @@
+-- Create Adjustment Audit Log Table
+-- Tracks all readiness adjustment events for compliance and transparency
+-- Build 72 - Agent 4: Readiness Adjustment Infrastructure
+-- ACP-218
+
+BEGIN;
+
+-- ============================================================================
+-- 1. READINESS ADJUSTMENT AUDIT LOG TABLE
+-- ============================================================================
+-- Tracks all adjustment lifecycle events with full audit trail
+
+CREATE TABLE IF NOT EXISTS public.readiness_adjustment_audit (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    -- Event details
+    event_type TEXT NOT NULL CHECK (event_type IN (
+        'adjustment_calculated',    -- Auto-calculated by system
+        'adjustment_applied',       -- Patient accepted/applied adjustment
+        'adjustment_overridden',    -- Patient rejected/overridden adjustment
+        'auto_adjustment_disabled', -- Therapist disabled auto-adjustment
+        'auto_adjustment_enabled'   -- Therapist enabled auto-adjustment
+    )),
+
+    -- Related records
+    adjustment_id UUID REFERENCES public.readiness_adjustments(id) ON DELETE CASCADE,
+    patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
+
+    -- User context
+    triggered_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    triggered_by_role TEXT CHECK (triggered_by_role IN ('patient', 'therapist', 'system')),
+
+    -- Adjustment values (for calculated/applied/overridden events)
+    volume_multiplier NUMERIC CHECK (volume_multiplier >= 0.5 AND volume_multiplier <= 1.5),
+    intensity_multiplier NUMERIC CHECK (intensity_multiplier >= 0.5 AND intensity_multiplier <= 1.5),
+    readiness_category TEXT CHECK (readiness_category IN ('optimal', 'good', 'moderate', 'low', 'critical')),
+    recovery_score NUMERIC CHECK (recovery_score >= 0 AND recovery_score <= 100),
+
+    -- Override details (for overridden events)
+    override_reason TEXT,
+    original_volume_multiplier NUMERIC,
+    original_intensity_multiplier NUMERIC,
+
+    -- System context
+    algorithm_version TEXT,
+    event_metadata JSONB DEFAULT '{}'::jsonb,
+
+    -- Event description
+    description TEXT NOT NULL,
+
+    -- Indexes for performance
+    CONSTRAINT valid_adjustment_event CHECK (
+        -- For adjustment events, adjustment_id must be present
+        (event_type IN ('adjustment_calculated', 'adjustment_applied', 'adjustment_overridden') AND adjustment_id IS NOT NULL)
+        OR
+        -- For auto-adjustment toggle events, adjustment_id is optional
+        (event_type IN ('auto_adjustment_disabled', 'auto_adjustment_enabled'))
+    )
+);
+
+-- Create indexes for performance
+CREATE INDEX idx_readiness_adjustment_audit_timestamp ON public.readiness_adjustment_audit(timestamp DESC);
+CREATE INDEX idx_readiness_adjustment_audit_patient_id ON public.readiness_adjustment_audit(patient_id);
+CREATE INDEX idx_readiness_adjustment_audit_adjustment_id ON public.readiness_adjustment_audit(adjustment_id);
+CREATE INDEX idx_readiness_adjustment_audit_event_type ON public.readiness_adjustment_audit(event_type);
+CREATE INDEX idx_readiness_adjustment_audit_triggered_by ON public.readiness_adjustment_audit(triggered_by);
+CREATE INDEX idx_readiness_adjustment_audit_patient_timestamp ON public.readiness_adjustment_audit(patient_id, timestamp DESC);
+
+-- Comments
+COMMENT ON TABLE public.readiness_adjustment_audit IS 'Immutable audit trail for all readiness adjustment events';
+COMMENT ON COLUMN public.readiness_adjustment_audit.event_type IS 'Type of adjustment event: calculated, applied, overridden, disabled, enabled';
+COMMENT ON COLUMN public.readiness_adjustment_audit.triggered_by_role IS 'Role of the user who triggered the event';
+COMMENT ON COLUMN public.readiness_adjustment_audit.event_metadata IS 'Additional event-specific data in JSON format';
+
+-- ============================================================================
+-- 2. HELPER FUNCTION TO LOG ADJUSTMENT EVENTS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.log_adjustment_event(
+    p_event_type TEXT,
+    p_adjustment_id UUID DEFAULT NULL,
+    p_patient_id UUID DEFAULT NULL,
+    p_description TEXT DEFAULT NULL,
+    p_volume_multiplier NUMERIC DEFAULT NULL,
+    p_intensity_multiplier NUMERIC DEFAULT NULL,
+    p_readiness_category TEXT DEFAULT NULL,
+    p_recovery_score NUMERIC DEFAULT NULL,
+    p_override_reason TEXT DEFAULT NULL,
+    p_original_volume_multiplier NUMERIC DEFAULT NULL,
+    p_original_intensity_multiplier NUMERIC DEFAULT NULL,
+    p_algorithm_version TEXT DEFAULT NULL,
+    p_event_metadata JSONB DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_audit_id UUID;
+    v_user_id UUID;
+    v_user_role TEXT;
+    v_final_patient_id UUID;
+BEGIN
+    -- Get current user ID (may be NULL for system events)
+    v_user_id := auth.uid();
+
+    -- Determine user role
+    IF v_user_id IS NULL THEN
+        v_user_role := 'system';
+    ELSE
+        -- Check if user is a therapist
+        IF EXISTS (SELECT 1 FROM public.therapists WHERE user_id = v_user_id) THEN
+            v_user_role := 'therapist';
+        -- Check if user is a patient
+        ELSIF EXISTS (SELECT 1 FROM public.patients WHERE user_id = v_user_id) THEN
+            v_user_role := 'patient';
+        ELSE
+            v_user_role := 'system';
+        END IF;
+    END IF;
+
+    -- Determine patient_id if not provided
+    IF p_patient_id IS NULL AND p_adjustment_id IS NOT NULL THEN
+        SELECT patient_id INTO v_final_patient_id
+        FROM public.readiness_adjustments
+        WHERE id = p_adjustment_id;
+    ELSE
+        v_final_patient_id := p_patient_id;
+    END IF;
+
+    -- Validate patient_id is present
+    IF v_final_patient_id IS NULL THEN
+        RAISE EXCEPTION 'patient_id must be provided or derivable from adjustment_id';
+    END IF;
+
+    -- Insert audit log entry
+    INSERT INTO public.readiness_adjustment_audit (
+        event_type,
+        adjustment_id,
+        patient_id,
+        triggered_by,
+        triggered_by_role,
+        volume_multiplier,
+        intensity_multiplier,
+        readiness_category,
+        recovery_score,
+        override_reason,
+        original_volume_multiplier,
+        original_intensity_multiplier,
+        algorithm_version,
+        event_metadata,
+        description
+    ) VALUES (
+        p_event_type,
+        p_adjustment_id,
+        v_final_patient_id,
+        v_user_id,
+        v_user_role,
+        p_volume_multiplier,
+        p_intensity_multiplier,
+        p_readiness_category,
+        p_recovery_score,
+        p_override_reason,
+        p_original_volume_multiplier,
+        p_original_intensity_multiplier,
+        p_algorithm_version,
+        COALESCE(p_event_metadata, '{}'::jsonb),
+        p_description
+    )
+    RETURNING id INTO v_audit_id;
+
+    RETURN v_audit_id;
+END;
+$$;
+
+COMMENT ON FUNCTION public.log_adjustment_event IS 'Logs readiness adjustment events to audit table with automatic user context';
+
+-- ============================================================================
+-- 3. TRIGGER TO AUTO-LOG ADJUSTMENT CALCULATIONS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.audit_adjustment_calculation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Log when a new adjustment is calculated
+    IF TG_OP = 'INSERT' THEN
+        PERFORM public.log_adjustment_event(
+            'adjustment_calculated',
+            NEW.id,
+            NEW.patient_id,
+            format('Readiness adjustment calculated: %s (recovery: %s, volume: %sx, intensity: %sx)',
+                   NEW.readiness_category,
+                   NEW.recovery_score,
+                   NEW.volume_multiplier,
+                   NEW.intensity_multiplier),
+            NEW.volume_multiplier,
+            NEW.intensity_multiplier,
+            NEW.readiness_category,
+            NEW.recovery_score,
+            NULL,
+            NULL,
+            NULL,
+            NEW.algorithm_version,
+            NEW.calculation_metadata
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER audit_adjustment_calculation_trigger
+AFTER INSERT ON public.readiness_adjustments
+FOR EACH ROW
+EXECUTE FUNCTION public.audit_adjustment_calculation();
+
+COMMENT ON FUNCTION public.audit_adjustment_calculation IS 'Automatically logs when readiness adjustments are calculated';
+
+-- ============================================================================
+-- 4. TRIGGER TO AUTO-LOG ADJUSTMENT STATUS CHANGES
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.audit_adjustment_status_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Log when adjustment is applied
+    IF NEW.status = 'applied' AND OLD.status != 'applied' THEN
+        PERFORM public.log_adjustment_event(
+            'adjustment_applied',
+            NEW.id,
+            NEW.patient_id,
+            format('Patient accepted adjustment: %s (volume: %sx, intensity: %sx)',
+                   NEW.readiness_category,
+                   NEW.volume_multiplier,
+                   NEW.intensity_multiplier),
+            NEW.volume_multiplier,
+            NEW.intensity_multiplier,
+            NEW.readiness_category,
+            NEW.recovery_score,
+            NULL,
+            NULL,
+            NULL,
+            NEW.algorithm_version,
+            NULL
+        );
+    END IF;
+
+    -- Log when adjustment is overridden (by patient)
+    IF NEW.status = 'overridden' AND OLD.status != 'overridden' AND NEW.is_overridden = TRUE THEN
+        PERFORM public.log_adjustment_event(
+            'adjustment_overridden',
+            NEW.id,
+            NEW.patient_id,
+            format('Adjustment overridden: %s → volume %sx→%sx, intensity %sx→%sx. Reason: %s',
+                   NEW.readiness_category,
+                   OLD.volume_multiplier,
+                   NEW.volume_multiplier,
+                   OLD.intensity_multiplier,
+                   NEW.intensity_multiplier,
+                   COALESCE(NEW.override_reason, 'No reason provided')),
+            NEW.volume_multiplier,
+            NEW.intensity_multiplier,
+            NEW.readiness_category,
+            NEW.recovery_score,
+            NEW.override_reason,
+            OLD.volume_multiplier,
+            OLD.intensity_multiplier,
+            NEW.algorithm_version,
+            NULL
+        );
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER audit_adjustment_status_change_trigger
+AFTER UPDATE ON public.readiness_adjustments
+FOR EACH ROW
+WHEN (OLD.status IS DISTINCT FROM NEW.status OR OLD.is_overridden IS DISTINCT FROM NEW.is_overridden)
+EXECUTE FUNCTION public.audit_adjustment_status_change();
+
+COMMENT ON FUNCTION public.audit_adjustment_status_change IS 'Automatically logs when adjustment status changes (applied, overridden)';
+
+-- ============================================================================
+-- 5. ROW LEVEL SECURITY
+-- ============================================================================
+
+ALTER TABLE public.readiness_adjustment_audit ENABLE ROW LEVEL SECURITY;
+
+-- Patients can view their own adjustment audit logs
+CREATE POLICY "Patients can view their own adjustment audit logs"
+ON public.readiness_adjustment_audit
+FOR SELECT
+TO authenticated
+USING (
+    patient_id IN (
+        SELECT id FROM public.patients WHERE user_id = auth.uid()
+    )
+);
+
+-- Therapists can view adjustment audit logs for their patients
+CREATE POLICY "Therapists can view patient adjustment audit logs"
+ON public.readiness_adjustment_audit
+FOR SELECT
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.therapists t
+        JOIN public.patients p ON p.therapist_id = t.id
+        WHERE t.user_id = auth.uid()
+        AND p.id = patient_id
+    )
+);
+
+-- System can insert audit logs (through triggers and functions)
+CREATE POLICY "System can insert adjustment audit logs"
+ON public.readiness_adjustment_audit
+FOR INSERT
+TO authenticated
+WITH CHECK (true); -- Controlled by function security
+
+-- No updates or deletes allowed (immutable audit trail)
+CREATE POLICY "Adjustment audit logs are immutable"
+ON public.readiness_adjustment_audit
+FOR UPDATE
+TO authenticated
+USING (false);
+
+CREATE POLICY "Adjustment audit logs cannot be deleted"
+ON public.readiness_adjustment_audit
+FOR DELETE
+TO authenticated
+USING (false); -- Completely immutable
+
+-- ============================================================================
+-- 6. HELPER VIEWS
+-- ============================================================================
+
+-- Recent adjustment events view
+CREATE OR REPLACE VIEW public.vw_recent_adjustment_events AS
+SELECT
+    raa.id,
+    raa.timestamp,
+    raa.event_type,
+    p.first_name || ' ' || p.last_name as patient_name,
+    raa.patient_id,
+    raa.adjustment_id,
+    raa.triggered_by_role,
+    raa.readiness_category,
+    raa.recovery_score,
+    raa.volume_multiplier,
+    raa.intensity_multiplier,
+    raa.override_reason,
+    raa.description
+FROM public.readiness_adjustment_audit raa
+JOIN public.patients p ON p.id = raa.patient_id
+ORDER BY raa.timestamp DESC;
+
+COMMENT ON VIEW public.vw_recent_adjustment_events IS 'Recent adjustment events with patient names for easy monitoring';
+
+-- Patient adjustment history view
+CREATE OR REPLACE VIEW public.vw_patient_adjustment_history AS
+SELECT
+    patient_id,
+    DATE(timestamp) as event_date,
+    event_type,
+    COUNT(*) as event_count,
+    AVG(recovery_score) as avg_recovery_score,
+    AVG(volume_multiplier) as avg_volume_multiplier,
+    AVG(intensity_multiplier) as avg_intensity_multiplier,
+    SUM(CASE WHEN event_type = 'adjustment_overridden' THEN 1 ELSE 0 END) as override_count
+FROM public.readiness_adjustment_audit
+WHERE event_type IN ('adjustment_calculated', 'adjustment_applied', 'adjustment_overridden')
+GROUP BY patient_id, DATE(timestamp)
+ORDER BY patient_id, event_date DESC;
+
+COMMENT ON VIEW public.vw_patient_adjustment_history IS 'Daily summary of adjustment events per patient';
+
+-- ============================================================================
+-- 7. GRANT PERMISSIONS
+-- ============================================================================
+
+GRANT SELECT ON public.readiness_adjustment_audit TO authenticated;
+GRANT INSERT ON public.readiness_adjustment_audit TO authenticated;
+GRANT SELECT ON public.vw_recent_adjustment_events TO authenticated;
+GRANT SELECT ON public.vw_patient_adjustment_history TO authenticated;
+GRANT EXECUTE ON FUNCTION public.log_adjustment_event TO authenticated;
+
+COMMIT;

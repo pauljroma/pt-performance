@@ -1,0 +1,5 @@
+2025-12-27 15:32:23.736 xcodebuild[34032:113783539] [MT] IDEDistribution: -[IDEDistributionLogging _createLoggingBundleAtPath:]: Created bundle at path "/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/PTPerformance_2025-12-27_15-32-23.735.xcdistributionlogs".
+2025-12-27 15:32:23.818 xcodebuild[34032:113783539] [MT] IDEDistribution: Command line name "app-store" is deprecated. Use "app-store-connect" instead.
+Exported PTPerformance to: /Users/expo/Code/expo/ios-app/PTPerformance/build/export
+** EXPORT SUCCEEDED **
+

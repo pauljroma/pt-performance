@@ -213,6 +213,12 @@ struct AuthView: View {
         do {
             try await supabase.signIn(email: email, password: password)
 
+            // Record successful login (clear failed attempts)
+            SecurityMonitor.shared.recordSuccessfulLogin(email: email)
+
+            // Start session monitoring (HIPAA automatic logoff requirement)
+            SessionManager.shared.startMonitoring()
+
             // Update app state after successful login
             await MainActor.run {
                 if let userRole = supabase.userRole {
@@ -223,9 +229,23 @@ struct AuthView: View {
                 isLoading = false
             }
         } catch {
-            await MainActor.run {
-                errorMessage = "Sign in failed: \(error.localizedDescription)"
-                isLoading = false
+            // Record failed login attempt
+            await SecurityMonitor.shared.recordFailedLogin(email: email)
+
+            // Check if account is locked
+            if SecurityMonitor.shared.isAccountLocked(email: email) {
+                let remainingTime = SecurityMonitor.shared.getRemainingLockoutTime(email: email)
+                let remainingMinutes = Int(remainingTime / 60)
+                await MainActor.run {
+                    errorMessage = "Account locked due to too many failed login attempts. Please try again in \(remainingMinutes) minutes."
+                    isLoading = false
+                }
+            } else {
+                let remaining = SecurityMonitor.shared.getRemainingAttempts(email: email)
+                await MainActor.run {
+                    errorMessage = "Sign in failed: \(error.localizedDescription)\n\(remaining) attempts remaining."
+                    isLoading = false
+                }
             }
         }
     }
@@ -236,6 +256,9 @@ struct AuthView: View {
 
         do {
             try await supabase.signInAsDemoPatient()
+
+            // Start session monitoring (HIPAA automatic logoff requirement)
+            SessionManager.shared.startMonitoring()
 
             // Update app state
             await MainActor.run {
@@ -259,6 +282,9 @@ struct AuthView: View {
         do {
             try await supabase.signInAsNicRoma()
 
+            // Start session monitoring (HIPAA automatic logoff requirement)
+            SessionManager.shared.startMonitoring()
+
             // Update app state
             await MainActor.run {
                 appState.isAuthenticated = true
@@ -280,6 +306,9 @@ struct AuthView: View {
 
         do {
             try await supabase.signInAsDemoTherapist()
+
+            // Start session monitoring (HIPAA automatic logoff requirement)
+            SessionManager.shared.startMonitoring()
 
             // Update app state
             await MainActor.run {

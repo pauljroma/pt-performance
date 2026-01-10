@@ -13,13 +13,13 @@ import Foundation
 /// Represents a reusable workout program template
 struct WorkoutTemplate: Codable, Identifiable, Hashable {
 
-    let id: String
+    let id: UUID
     let name: String
     let description: String?
     let category: TemplateCategory
     let difficultyLevel: DifficultyLevel?
     let durationWeeks: Int?
-    let createdBy: String
+    let createdBy: UUID
     let isPublic: Bool
     let tags: [String]
     let usageCount: Int
@@ -125,8 +125,8 @@ struct WorkoutTemplate: Codable, Identifiable, Hashable {
 /// Represents a phase within a workout template
 struct TemplatePhase: Codable, Identifiable, Hashable {
 
-    let id: String
-    let templateId: String
+    let id: UUID
+    let templateId: UUID
     let name: String
     let description: String?
     let sequence: Int
@@ -157,8 +157,8 @@ struct TemplatePhase: Codable, Identifiable, Hashable {
 /// Represents a session within a template phase
 struct TemplateSession: Codable, Identifiable, Hashable {
 
-    let id: String
-    let phaseId: String
+    let id: UUID
+    let phaseId: UUID
     let name: String
     let description: String?
     let sequence: Int
@@ -195,7 +195,7 @@ struct TemplateSession: Codable, Identifiable, Hashable {
 /// Represents an exercise configuration within a template session
 struct TemplateExercise: Codable, Hashable {
 
-    let exerciseId: String
+    let exerciseId: UUID
     let sequence: Int
     let sets: Int
     let reps: Int?
@@ -253,7 +253,7 @@ struct WorkoutTemplateDetail: Codable, Identifiable {
     let template: WorkoutTemplate
     let phases: [TemplatePhaseDetail]
 
-    var id: String { template.id }
+    var id: UUID { template.id }
 
     // Computed properties
     var totalSessions: Int {
@@ -272,14 +272,14 @@ struct TemplatePhaseDetail: Codable, Identifiable {
     let phase: TemplatePhase
     let sessions: [TemplateSession]
 
-    var id: String { phase.id }
+    var id: UUID { phase.id }
 }
 
 // MARK: - Template Statistics
 
 /// Statistics for a workout template
 struct TemplateStatistics: Codable {
-    let templateId: String
+    let templateId: UUID
     let phaseCount: Int
     let totalSessions: Int
     let usageCount: Int
@@ -299,13 +299,13 @@ struct TemplateStatistics: Codable {
 extension WorkoutTemplate {
     static var sample: WorkoutTemplate {
         WorkoutTemplate(
-            id: UUID().uuidString,
+            id: UUID(),
             name: "ACL Rehabilitation Program",
             description: "Comprehensive post-surgery ACL rehabilitation focusing on strength, stability, and return to sport",
             category: .rehab,
             difficultyLevel: .intermediate,
             durationWeeks: 12,
-            createdBy: UUID().uuidString,
+            createdBy: UUID(),
             isPublic: true,
             tags: ["ACL", "Knee", "Post-Surgery", "Sport"],
             usageCount: 24,
@@ -316,13 +316,13 @@ extension WorkoutTemplate {
 
     static var sampleStrength: WorkoutTemplate {
         WorkoutTemplate(
-            id: UUID().uuidString,
+            id: UUID(),
             name: "Upper Body Strength Builder",
             description: "Progressive overload program for upper body strength development",
             category: .strength,
             difficultyLevel: .advanced,
             durationWeeks: 8,
-            createdBy: UUID().uuidString,
+            createdBy: UUID(),
             isPublic: true,
             tags: ["Strength", "Upper Body", "Progressive Overload"],
             usageCount: 15,
@@ -333,13 +333,13 @@ extension WorkoutTemplate {
 
     static var sampleMobility: WorkoutTemplate {
         WorkoutTemplate(
-            id: UUID().uuidString,
+            id: UUID(),
             name: "Daily Mobility Flow",
             description: "20-minute daily mobility routine for improved flexibility and joint health",
             category: .mobility,
             difficultyLevel: .beginner,
             durationWeeks: 4,
-            createdBy: UUID().uuidString,
+            createdBy: UUID(),
             isPublic: true,
             tags: ["Mobility", "Flexibility", "Daily", "Recovery"],
             usageCount: 42,
@@ -352,8 +352,8 @@ extension WorkoutTemplate {
 extension TemplatePhase {
     static var sample: TemplatePhase {
         TemplatePhase(
-            id: UUID().uuidString,
-            templateId: UUID().uuidString,
+            id: UUID(),
+            templateId: UUID(),
             name: "Foundation Phase",
             description: "Build basic strength and stability",
             sequence: 1,
@@ -367,14 +367,14 @@ extension TemplatePhase {
 extension TemplateSession {
     static var sample: TemplateSession {
         TemplateSession(
-            id: UUID().uuidString,
-            phaseId: UUID().uuidString,
+            id: UUID(),
+            phaseId: UUID(),
             name: "Lower Body Strength",
             description: "Focus on compound movements",
             sequence: 1,
             exercises: [
                 TemplateExercise(
-                    exerciseId: UUID().uuidString,
+                    exerciseId: UUID(),
                     sequence: 1,
                     sets: 3,
                     reps: 10,
@@ -385,7 +385,7 @@ extension TemplateSession {
                     intensity: "RPE 7-8"
                 ),
                 TemplateExercise(
-                    exerciseId: UUID().uuidString,
+                    exerciseId: UUID(),
                     sequence: 2,
                     sets: 3,
                     reps: 12,

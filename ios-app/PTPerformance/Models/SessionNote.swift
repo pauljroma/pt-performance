@@ -2,9 +2,9 @@ import Foundation
 
 /// Session note model
 struct SessionNote: Codable, Identifiable {
-    let id: String
-    let patientId: String
-    let sessionId: String?
+    let id: UUID
+    let patientId: UUID
+    let sessionId: UUID?
     let noteType: String
     let noteText: String
     let createdBy: String?  // Optional - some old notes have null created_by
@@ -43,8 +43,8 @@ struct SessionNote: Codable, Identifiable {
 
 /// Input for creating a new note
 struct CreateNoteInput: Codable {
-    let patientId: String
-    let sessionId: String?
+    let patientId: UUID
+    let sessionId: UUID?
     let noteType: String
     let noteText: String
     let createdBy: String?  // Optional - database will use default if not provided

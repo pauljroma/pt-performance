@@ -295,9 +295,9 @@ struct TechniqueGroupBoxStyle: GroupBoxStyle {
 #Preview {
     ExerciseTechniqueView(
         exercise: Exercise(
-            id: "1",
-            session_id: "session-1",
-            exercise_template_id: "template-1",
+            id: UUID(),
+            session_id: UUID(),
+            exercise_template_id: UUID(),
             sequence: 1,
             prescribed_sets: 3,
             prescribed_reps: "8-10",
@@ -306,7 +306,7 @@ struct TechniqueGroupBoxStyle: GroupBoxStyle {
             rest_period_seconds: 120,
             notes: nil,
             exercise_templates: Exercise.ExerciseTemplate(
-                id: "template-1",
+                id: UUID(),
                 name: "Back Squat",
                 category: "squat",
                 body_region: "lower",

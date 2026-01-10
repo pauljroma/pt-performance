@@ -2,8 +2,8 @@ import Foundation
 
 /// Patient flag model
 struct PatientFlag: Codable, Identifiable {
-    let id: String
-    let patientId: String
+    let id: UUID
+    let patientId: UUID
     let flagType: String
     let severity: String
     let description: String

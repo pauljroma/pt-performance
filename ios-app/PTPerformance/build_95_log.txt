@@ -1,0 +1,9 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build  -project PTPerformance.xcodeproj  -scheme PTPerformance  -configuration Release  -destination generic/platform=iOS  "CODE_SIGN_IDENTITY=Apple Distribution"  DEVELOPMENT_TEAM=5NNLBL74XR
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = Apple Distribution
+    DEVELOPMENT_TEAM = 5NNLBL74XR
+
+2025-12-28 07:59:56.531 xcodebuild[59397:116273556] Writing error result bundle to /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/ResultBundle_2025-28-12_07-59-0056.xcresult
+xcodebuild: error: Unknown build action ''.

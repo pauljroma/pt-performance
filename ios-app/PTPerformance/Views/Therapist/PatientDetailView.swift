@@ -27,7 +27,7 @@ struct PatientDetailView: View {
                 } else if let error = viewModel.errorMessage {
                     ErrorView(message: error) {
                         Task {
-                            await viewModel.fetchData(for: patient.id)
+                            await viewModel.fetchData(for: patient.id.uuidString)
                         }
                     }
                 } else {
@@ -102,19 +102,19 @@ struct PatientDetailView: View {
         .navigationTitle(patient.fullName)
         .navigationBarTitleDisplayMode(shouldUseSplitView ? .inline : .large)
         .refreshable {
-            await viewModel.fetchData(for: patient.id)
+            await viewModel.fetchData(for: patient.id.uuidString)
         }
         .task {
-            await viewModel.fetchData(for: patient.id)
+            await viewModel.fetchData(for: patient.id.uuidString)
         }
         .sheet(isPresented: $showProgramViewer) {
             NavigationView {
-                ProgramViewerView(patientId: patient.id)
+                ProgramViewerView(patientId: patient.id.uuidString)
             }
         }
         .sheet(isPresented: $showAddNote) {
             NavigationView {
-                NotesView(patientId: patient.id)
+                NotesView(patientId: patient.id.uuidString)
             }
         }
     }
@@ -364,8 +364,8 @@ struct PatientDetailView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             PatientDetailView(patient: Patient(
-                id: "1",
-                therapistId: "t1",
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
                 firstName: "John",
                 lastName: "Brebbia",
                 email: "john@example.com",

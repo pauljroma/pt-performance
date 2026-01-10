@@ -39,7 +39,9 @@ class PatientDetailViewModel: ObservableObject {
         adherenceError = nil
         recentSessionsError = nil
 
+        #if DEBUG
         print("📊 [PatientDetail] Starting data fetch for patient: \(patientId)")
+        #endif
 
         // Fetch each section independently - failures are isolated
         await fetchFlagsSection(patientId: patientId)
@@ -54,7 +56,9 @@ class PatientDetailViewModel: ObservableObject {
         }
 
         isLoading = false
+        #if DEBUG
         print("✅ [PatientDetail] Data fetch complete")
+        #endif
     }
 
     // MARK: - Individual Section Fetchers
@@ -62,9 +66,13 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchFlagsSection(patientId: String) async {
         do {
             flags = try await fetchFlags(patientId: patientId)
+            #if DEBUG
             print("✅ [PatientDetail] Loaded \(flags.count) flags")
+            #endif
         } catch {
+            #if DEBUG
             print("❌ [PatientDetail] Flags error: \(error.localizedDescription)")
+            #endif
             flagsError = "Unable to load flags"
             flags = []
         }
@@ -73,9 +81,13 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchPainTrendSection(patientId: String) async {
         do {
             painTrend = try await analyticsService.fetchPainTrend(patientId: patientId, days: 14)
+            #if DEBUG
             print("✅ [PatientDetail] Loaded pain trend (\(painTrend.count) points)")
+            #endif
         } catch {
+            #if DEBUG
             print("❌ [PatientDetail] Pain trend error: \(error.localizedDescription)")
+            #endif
             painTrendError = "Unable to load pain trend"
             painTrend = []
         }
@@ -84,9 +96,13 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchAdherenceSection(patientId: String) async {
         do {
             adherence = try await analyticsService.fetchAdherence(patientId: patientId, days: 30)
+            #if DEBUG
             print("✅ [PatientDetail] Loaded adherence data")
+            #endif
         } catch {
+            #if DEBUG
             print("❌ [PatientDetail] Adherence error: \(error.localizedDescription)")
+            #endif
             adherenceError = "Unable to load adherence"
             adherence = nil
         }
@@ -95,9 +111,13 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchRecentSessionsSection(patientId: String) async {
         do {
             recentSessions = try await analyticsService.fetchRecentSessions(patientId: patientId, limit: 5)
+            #if DEBUG
             print("✅ [PatientDetail] Loaded \(recentSessions.count) recent sessions")
+            #endif
         } catch {
+            #if DEBUG
             print("❌ [PatientDetail] Recent sessions error: \(error.localizedDescription)")
+            #endif
             recentSessionsError = "Unable to load recent sessions"
             recentSessions = []
         }

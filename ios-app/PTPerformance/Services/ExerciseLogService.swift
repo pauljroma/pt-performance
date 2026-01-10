@@ -11,8 +11,8 @@ class ExerciseLogService: ObservableObject {
 
     /// Submit an exercise log to the database
     func submitExerciseLog(
-        sessionExerciseId: String,
-        patientId: String,
+        sessionExerciseId: UUID,
+        patientId: UUID,
         actualSets: Int,
         actualReps: [Int],
         actualLoad: Double?,

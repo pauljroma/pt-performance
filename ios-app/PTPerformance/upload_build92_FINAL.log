@@ -1,0 +1,27 @@
+🚀 Building and uploading Build 84 to TestFlight...
+
+📋 Build 84: Help article logging fix
+
+🧹 Cleaning...
+📦 Archiving...
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/BuildProductsPath/Release-iphoneos/swift-crypto_Crypto.bundle /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/InstallationBuildProductsLocation/Applications/PTPerformance.app
+
+CpResource /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/InstallationBuildProductsLocation/Applications/PTPerformance.app/HelpContent.json /Users/expo/Code/expo/ios-app/PTPerformance/Resources/HelpContent.json (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/expo/Code/expo/ios-app/PTPerformance/Resources/HelpContent.json /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/InstallationBuildProductsLocation/Applications/PTPerformance.app
+
+CompileStoryboard /Users/expo/Code/expo/ios-app/PTPerformance/LaunchScreen.storyboard (in target 'PTPerformance' from project 'PTPerformance')
+    cd /Users/expo/Code/expo/ios-app/PTPerformance
+    /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --errors --warnings --notices --module PTPerformance --output-partial-info-plist /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/IntermediateBuildFilesPath/PTPerformance.build/Release-iphoneos/PTPerformance.build/LaunchScreen-SBPartialInfo.plist --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 17.0 --output-format human-readable-text /Users/expo/Code/expo/ios-app/PTPerformance/LaunchScreen.storyboard --compilation-directory /Users/expo/Library/Developer/Xcode/DerivedData/PTPerformance-cosprcndkloofvfariqpidjzmdiv/Build/Intermediates.noindex/ArchiveIntermediates/PTPerformance/IntermediateBuildFilesPath/PTPerformance.build/Release-iphoneos/PTPerformance.build
+
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/expo/Code/expo/ios-app/PTPerformance/Services/OnboardingCoordinator.swift (in target 'PTPerformance' from project 'PTPerformance')
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingPage.swift (in target 'PTPerformance' from project 'PTPerformance')
+warning: Skipping duplicate build file in Compile Sources build phase: /Users/expo/Code/expo/ios-app/PTPerformance/Views/Onboarding/OnboardingView.swift (in target 'PTPerformance' from project 'PTPerformance')
+** ARCHIVE FAILED **
+
+
+The following build commands failed:
+	SwiftDriver PTPerformance normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PTPerformance' from project 'PTPerformance')
+	Archiving project PTPerformance with scheme PTPerformance
+(2 failures)
+❌ Archive failed!

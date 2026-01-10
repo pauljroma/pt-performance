@@ -1,248 +1,290 @@
 import Foundation
 import SwiftUI
 
-/// Represents a daily readiness check-in for a patient
-/// Part of the Auto-Regulation System (Build 39 - Phase 3)
+/// Daily readiness check-in
+/// Simplified schema with core wellness metrics
 struct DailyReadiness: Codable, Identifiable {
-    let id: String
-    let patientId: String
-    let checkInDate: Date
+    let id: UUID
+    let patientId: UUID
+    let date: Date
 
-    // Readiness inputs
+    // Core metrics (1-10 scale for levels)
     let sleepHours: Double?
-    let sleepQuality: Int?  // 1-5
-    let hrvValue: Double?
-    let hrvDeltaFromBaseline: Double?
-    let whoopRecoveryPct: Int?  // 0-100
-    let subjectiveReadiness: Int?  // 1-5
+    let sorenessLevel: Int?     // 1-10 (1=no soreness, 10=extreme)
+    let energyLevel: Int?       // 1-10 (1=exhausted, 10=fully energized)
+    let stressLevel: Int?       // 1-10 (1=no stress, 10=extreme)
 
-    // Soreness/pain
-    let armSoreness: Bool
-    let armSorenessSeverity: Int?  // 1-3
-    let shoulderPain: Bool
-    let elbowPain: Bool
-    let hipPain: Bool
-    let kneePain: Bool
-    let backPain: Bool
-    let jointPainNotes: String?
-
-    // CNS fatigue
-    let barSpeedAvg: Double?
-    let barSpeedBaseline: Double?
-
-    // Calculated
-    let readinessBand: ReadinessBand
+    // Calculated score (0-100, auto-calculated by database)
     let readinessScore: Double?
 
-    // Override
-    let overrideBand: ReadinessBand?
-    let overrideReason: String?
+    // Optional
+    let notes: String?
+
+    // Metadata
+    let createdAt: Date
+    let updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
         case id
         case patientId = "patient_id"
-        case checkInDate = "check_in_date"
+        case date
         case sleepHours = "sleep_hours"
-        case sleepQuality = "sleep_quality"
-        case hrvValue = "hrv_value"
-        case hrvDeltaFromBaseline = "hrv_delta_from_baseline"
-        case whoopRecoveryPct = "whoop_recovery_pct"
-        case subjectiveReadiness = "subjective_readiness"
-        case armSoreness = "arm_soreness"
-        case armSorenessSeverity = "arm_soreness_severity"
-        case shoulderPain = "shoulder_pain"
-        case elbowPain = "elbow_pain"
-        case hipPain = "hip_pain"
-        case kneePain = "knee_pain"
-        case backPain = "back_pain"
-        case jointPainNotes = "joint_pain_notes"
-        case barSpeedAvg = "bar_speed_avg"
-        case barSpeedBaseline = "bar_speed_baseline"
-        case readinessBand = "readiness_band"
+        case sorenessLevel = "soreness_level"
+        case energyLevel = "energy_level"
+        case stressLevel = "stress_level"
         case readinessScore = "readiness_score"
-        case overrideBand = "override_band"
-        case overrideReason = "override_reason"
+        case notes
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    // Memberwise initializer (replaces default since we have custom decoder)
+    init(
+        id: UUID,
+        patientId: UUID,
+        date: Date,
+        sleepHours: Double? = nil,
+        sorenessLevel: Int? = nil,
+        energyLevel: Int? = nil,
+        stressLevel: Int? = nil,
+        readinessScore: Double? = nil,
+        notes: String? = nil,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.date = date
+        self.sleepHours = sleepHours
+        self.sorenessLevel = sorenessLevel
+        self.energyLevel = energyLevel
+        self.stressLevel = stressLevel
+        self.readinessScore = readinessScore
+        self.notes = notes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    // Custom decoder to handle PostgreSQL numeric as string AND date format
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decode(UUID.self, forKey: .id)
+        patientId = try container.decode(UUID.self, forKey: .patientId)
+
+        // BUILD 133: Handle DATE column format "YYYY-MM-DD" from PostgreSQL
+        // Database returns DATE as "2026-01-04" (not ISO8601 with time component)
+        if let dateString = try? container.decode(String.self, forKey: .date) {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+            if let parsedDate = dateFormatter.date(from: dateString) {
+                date = parsedDate
+            } else {
+                // Fallback: try ISO8601 decoder in case database schema changes
+                date = try container.decode(Date.self, forKey: .date)
+            }
+        } else {
+            // Fallback: try standard date decoding (ISO8601)
+            date = try container.decode(Date.self, forKey: .date)
+        }
+
+        // Handle numeric fields that might come as strings from PostgreSQL
+        if let sleepString = try? container.decode(String.self, forKey: .sleepHours) {
+            sleepHours = Double(sleepString)
+        } else {
+            sleepHours = try container.decodeIfPresent(Double.self, forKey: .sleepHours)
+        }
+
+        sorenessLevel = try container.decodeIfPresent(Int.self, forKey: .sorenessLevel)
+        energyLevel = try container.decodeIfPresent(Int.self, forKey: .energyLevel)
+        stressLevel = try container.decodeIfPresent(Int.self, forKey: .stressLevel)
+
+        // Readiness score might come as string from PostgreSQL numeric type
+        if let scoreString = try? container.decode(String.self, forKey: .readinessScore) {
+            readinessScore = Double(scoreString)
+        } else {
+            readinessScore = try container.decodeIfPresent(Double.self, forKey: .readinessScore)
+        }
+
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 }
 
-/// Readiness band classification with workout modifications
-enum ReadinessBand: String, Codable, CaseIterable {
-    case green
-    case yellow
-    case orange
-    case red
-
-    var color: Color {
-        switch self {
-        case .green: return .green
-        case .yellow: return .yellow
-        case .orange: return .orange
-        case .red: return .red
-        }
-    }
-
-    var displayName: String {
-        rawValue.capitalized
-    }
-
-    var description: String {
-        switch self {
-        case .green: return "Full prescription"
-        case .yellow: return "Reduce top set load 5-8%"
-        case .orange: return "Skip top set, back-off work only"
-        case .red: return "Technique + arm care only"
-        }
-    }
-
-    var loadAdjustment: Double {
-        switch self {
-        case .green: return 0
-        case .yellow: return -0.07      // -7%
-        case .orange: return -0.12      // -12%
-        case .red: return -1.0          // No loading
-        }
-    }
-
-    var volumeAdjustment: Double {
-        switch self {
-        case .green: return 0
-        case .yellow: return -0.20      // -20%
-        case .orange: return -0.35      // -35%
-        case .red: return -1.0          // No volume
-        }
-    }
-}
-
-/// Input model for creating a daily readiness check-in
+/// Input model for creating/updating daily readiness
 struct ReadinessInput: Codable {
     var sleepHours: Double?
-    var sleepQuality: Int?
-    var hrvValue: Double?
-    var whoopRecoveryPct: Int?
-    var subjectiveReadiness: Int?
-    var armSoreness: Bool = false
-    var armSorenessSeverity: Int?
-    var jointPain: [JointPainLocation] = []
-    var jointPainNotes: String?
+    var sorenessLevel: Int?     // 1-10
+    var energyLevel: Int?       // 1-10
+    var stressLevel: Int?       // 1-10
+    var notes: String?
 
-    init(
-        sleepHours: Double? = nil,
-        sleepQuality: Int? = nil,
-        hrvValue: Double? = nil,
-        whoopRecoveryPct: Int? = nil,
-        subjectiveReadiness: Int? = nil,
-        armSoreness: Bool = false,
-        armSorenessSeverity: Int? = nil,
-        jointPain: [JointPainLocation] = [],
-        jointPainNotes: String? = nil
-    ) {
-        self.sleepHours = sleepHours
-        self.sleepQuality = sleepQuality
-        self.hrvValue = hrvValue
-        self.whoopRecoveryPct = whoopRecoveryPct
-        self.subjectiveReadiness = subjectiveReadiness
-        self.armSoreness = armSoreness
-        self.armSorenessSeverity = armSorenessSeverity
-        self.jointPain = jointPain
-        self.jointPainNotes = jointPainNotes
-    }
-}
-
-/// Joint pain location classification
-enum JointPainLocation: String, Codable, CaseIterable {
-    case shoulder
-    case elbow
-    case hip
-    case knee
-    case back
-
-    var displayName: String {
-        rawValue.capitalized
-    }
-}
-
-/// Preview model for real-time band calculation
-struct ReadinessPreview {
-    let band: ReadinessBand
-    let score: Double?
-}
-
-/// Readiness modification record applied to a session
-struct ReadinessModification: Codable, Identifiable {
-    let id: String
-    let patientId: String
-    let sessionId: String
-    let dailyReadinessId: String?
-
-    // Applied band
-    let readinessBand: String
-
-    // Modifications
-    let loadAdjustmentPct: Double?
-    let volumeAdjustmentPct: Double?
-    let skipTopSet: Bool
-    let techniqueOnly: Bool
-
-    // Exercise-level modifications (stored as JSONB)
-    let modifiedExercises: [ModifiedExercise]?
-
-    let appliedAt: Date
+    // Internal fields for database
+    var patientId: String?
+    var date: String?
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case sleepHours = "sleep_hours"
+        case sorenessLevel = "soreness_level"
+        case energyLevel = "energy_level"
+        case stressLevel = "stress_level"
+        case notes
         case patientId = "patient_id"
-        case sessionId = "session_id"
-        case dailyReadinessId = "daily_readiness_id"
-        case readinessBand = "readiness_band"
-        case loadAdjustmentPct = "load_adjustment_pct"
-        case volumeAdjustmentPct = "volume_adjustment_pct"
-        case skipTopSet = "skip_top_set"
-        case techniqueOnly = "technique_only"
-        case modifiedExercises = "modified_exercises"
-        case appliedAt = "applied_at"
+        case date
     }
 
-    struct ModifiedExercise: Codable {
-        let exerciseId: String
-        let originalLoad: Double
-        let modifiedLoad: Double
-        let loadAdjustmentPct: Double
+    /// Validate input before submission
+    func validate() throws {
+        if let sleep = sleepHours {
+            guard sleep >= 0 && sleep <= 24 else {
+                throw ReadinessError.invalidSleepHours
+            }
+        }
 
-        enum CodingKeys: String, CodingKey {
-            case exerciseId = "exercise_id"
-            case originalLoad = "original_load"
-            case modifiedLoad = "modified_load"
-            case loadAdjustmentPct = "load_adjustment_pct"
+        if let soreness = sorenessLevel {
+            guard soreness >= 1 && soreness <= 10 else {
+                throw ReadinessError.invalidSorenessLevel
+            }
+        }
+
+        if let energy = energyLevel {
+            guard energy >= 1 && energy <= 10 else {
+                throw ReadinessError.invalidEnergyLevel
+            }
+        }
+
+        if let stress = stressLevel {
+            guard stress >= 1 && stress <= 10 else {
+                throw ReadinessError.invalidStressLevel
+            }
+        }
+
+        // At least one metric must be provided
+        guard sleepHours != nil || sorenessLevel != nil ||
+              energyLevel != nil || stressLevel != nil else {
+            throw ReadinessError.noMetricsProvided
         }
     }
 }
 
-/// HRV baseline tracking (7-day rolling average)
-struct HRVBaseline: Codable, Identifiable {
-    let id: String
-    let patientId: String
-    let calculatedDate: Date
-
-    // Baseline calculation
-    let baselineValue: Double
-    let calculationWindowDays: Int
-    let dataPointsUsed: Int?
-
-    // Rolling window data
-    let windowStart: Date?
-    let windowEnd: Date?
-
-    let createdAt: Date
+/// Readiness trend data returned from database function
+struct ReadinessTrend: Codable {
+    let patientId: UUID
+    let daysAnalyzed: Int
+    let currentDate: Date
+    let trendData: [TrendDataPoint]
+    let statistics: TrendStatistics
 
     enum CodingKeys: String, CodingKey {
-        case id
         case patientId = "patient_id"
-        case calculatedDate = "calculated_date"
-        case baselineValue = "baseline_value"
-        case calculationWindowDays = "calculation_window_days"
-        case dataPointsUsed = "data_points_used"
-        case windowStart = "window_start"
-        case windowEnd = "window_end"
-        case createdAt = "created_at"
+        case daysAnalyzed = "days_analyzed"
+        case currentDate = "current_date"
+        case trendData = "trend_data"
+        case statistics
+    }
+
+    struct TrendDataPoint: Codable {
+        let date: Date
+        let readinessScore: Double?
+        let sleepHours: Double?
+        let sorenessLevel: Int?
+        let energyLevel: Int?
+        let stressLevel: Int?
+        let notes: String?
+
+        enum CodingKeys: String, CodingKey {
+            case date
+            case readinessScore = "readiness_score"
+            case sleepHours = "sleep_hours"
+            case sorenessLevel = "soreness_level"
+            case energyLevel = "energy_level"
+            case stressLevel = "stress_level"
+            case notes
+        }
+    }
+
+    struct TrendStatistics: Codable {
+        let avgReadiness: Double?
+        let minReadiness: Double?
+        let maxReadiness: Double?
+        let avgSleep: Double?
+        let avgSoreness: Double?
+        let avgEnergy: Double?
+        let avgStress: Double?
+        let totalEntries: Int
+
+        enum CodingKeys: String, CodingKey {
+            case avgReadiness = "avg_readiness"
+            case minReadiness = "min_readiness"
+            case maxReadiness = "max_readiness"
+            case avgSleep = "avg_sleep"
+            case avgSoreness = "avg_soreness"
+            case avgEnergy = "avg_energy"
+            case avgStress = "avg_stress"
+            case totalEntries = "total_entries"
+        }
+    }
+}
+
+/// Readiness-related errors
+enum ReadinessError: LocalizedError {
+    case invalidSleepHours
+    case invalidSorenessLevel
+    case invalidEnergyLevel
+    case invalidStressLevel
+    case noMetricsProvided
+    case scoreCalculationFailed
+    case noDataFound
+    case trendCalculationFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidSleepHours:
+            return "Sleep hours must be between 0 and 24"
+        case .invalidSorenessLevel:
+            return "Soreness level must be between 1 and 10"
+        case .invalidEnergyLevel:
+            return "Energy level must be between 1 and 10"
+        case .invalidStressLevel:
+            return "Stress level must be between 1 and 10"
+        case .noMetricsProvided:
+            return "At least one metric must be provided"
+        case .scoreCalculationFailed:
+            return "Failed to calculate readiness score"
+        case .noDataFound:
+            return "No readiness data found"
+        case .trendCalculationFailed:
+            return "Failed to calculate readiness trend"
+        }
+    }
+}
+
+// MARK: - Display Extensions
+
+extension DailyReadiness {
+    /// Readiness category based on score
+    var category: ReadinessCategory? {
+        guard let score = readinessScore else { return nil }
+        return ReadinessCategory.category(for: score)
+    }
+
+    /// Color for displaying the readiness score
+    var scoreColor: Color {
+        return category?.color ?? .gray
+    }
+
+    /// Formatted score text for display
+    var scoreText: String {
+        guard let score = readinessScore else { return "--" }
+        return String(format: "%.0f", score)
+    }
+
+    /// Formatted date for accessibility and display
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
     }
 }

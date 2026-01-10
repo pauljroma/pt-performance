@@ -1,0 +1,2015 @@
+Running altool at path '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+2026-01-02 21:46:15.690 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload'.
+2026-01-02 21:46:15.691 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app'.
+2026-01-02 21:46:15.691 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/_CodeSignature'.
+2026-01-02 21:46:15.691 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/_CodeSignature/CodeResources'.
+2026-01-02 21:46:15.692 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/HelpContent.json'.
+2026-01-02 21:46:15.692 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/AppIcon60x60@2x.png'.
+2026-01-02 21:46:15.692 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/swift-crypto_Crypto.bundle'.
+2026-01-02 21:46:15.692 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/swift-crypto_Crypto.bundle/PrivacyInfo.xcprivacy'.
+2026-01-02 21:46:15.692 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/swift-crypto_Crypto.bundle/Info.plist'.
+2026-01-02 21:46:15.694 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/Assets.car'.
+2026-01-02 21:46:15.694 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/AppIcon76x76@2x~ipad.png'.
+2026-01-02 21:46:15.694 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/LaunchScreen.storyboardc'.
+2026-01-02 21:46:15.694 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib'.
+2026-01-02 21:46:15.695 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib'.
+2026-01-02 21:46:15.695 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/LaunchScreen.storyboardc/Info.plist'.
+2026-01-02 21:46:15.697 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/PTPerformance'.
+2026-01-02 21:46:15.697 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/embedded.mobileprovision'.
+2026-01-02 21:46:15.697 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/Info.plist'.
+2026-01-02 21:46:15.700 DEBUG: [altool.1018A70F0] Found file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/33BE227A-08E1-47E8-95DA-AC253C1CD5DE/Payload/PTPerformance.app/PkgInfo'.
+2026-01-02 21:46:16.967 DEBUG: [altool.1018A70F0] 
+=======================================
+GET APP SETTINGS REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/clientApplicationSettings?filter[applicationName]=altool&filter[applicationVersion]=26.10.1 (171001)
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:17.227 DEBUG: [altool.A48C498C0] Download task 1 did write 4984 bytes.
+2026-01-02 21:46:17.228 DEBUG: [altool.A48C498C0] Download task 1 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_KxGgh0.tmp
+2026-01-02 21:46:17.231 DEBUG: [altool.1018A70F0] 
+=======================================
+GET APP SETTINGS RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/clientApplicationSettings?filter[applicationName]=altool&filter[applicationVersion]=26.10.1 (171001)
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 1321;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:17 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 14;
+    "apple-tk" = false;
+    b3 = "566b092570de7063b6f878d30abdece8-f9412ffd8a0e21b8";
+    "x-apple-jingle-correlation-key" = KZVQSJLQ3ZYGHNXYPDJQVPPM5A;
+    "x-apple-request-uuid" = "566b0925-70de-7063-b6f8-78d30abdece8";
+    "x-b3-spanid" = f9412ffd8a0e21b8;
+    "x-b3-traceid" = 566b092570de7063b6f878d30abdece8;
+    "x-daiquiri-instance" = "daiquiri:13624001:mr85p00it-hyhk04174601:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-mr, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3590;";
+}
+    httpBody: {
+  "data" : [ {
+    "type" : "clientApplicationSettings",
+    "id" : "ae9afd3f-27e9-4570-a87c-24bac21aa158",
+    "attributes" : {
+      "applicationName" : null,
+      "applicationVersion" : null,
+      "applicationSettings" : {
+        "AllowsMetadataOnlyInitialImport" : false,
+        "MZWebServiceTimeOut" : 900,
+        "InstructionalTextDefaultName" : null,
+        "ITunesCrashLogServiceAddress" : "https://contentdelivery.itunes.apple.com/WebObjects/MZLabelService.woa/json/MZITunesProducerService",
+        "TerritoriesAllowedToAlterPlusQuality" : [ "JP" ],
+        "IsDisplayArtistVisible" : false,
+        "IsEnabledForMasteredForItunes" : false,
+        "IsISBNOptional" : true,
+        "IsPublicationDateOptional" : false,
+        "ShouldPricingTabBeDisplayed" : true,
+        "IsVendorIDEditablePreferenceEnabled" : true,
+        "BookSeriesSequenceNumberFormatter" : "#.#;0;#0.#",
+        "ShouldShowAllPublicationVersioningFields" : null,
+        "PublicationSubjectSchemesForPreferences" : null,
+        "VerifyZipIntegrity" : true,
+        "PerformServerVerification" : true,
+        "SkipValidatePurpleSPIUsage" : false,
+        "SkipValidateProductErrors" : true,
+        "SkipValidateFirenzeSPIUsage" : false,
+        "MZWebServiceValidateSoftwareSPIUsageMaximumSize" : 20971520,
+        "ITunesTransporterProxyDiscoveryEnabled" : null,
+        "ITunesTransporterExtraArgs" : null,
+        "musicUserGuideFilePath" : null,
+        "filmUserGuideFilePath" : null,
+        "softwareUserGuideFilePath" : "https://help.apple.com/itc/apploader/",
+        "publicationUserGuideFilePath" : null,
+        "CDEnableImportErrorChecking" : true
+      },
+      "allowedPlatforms" : [ {
+        "type" : 1,
+        "displayName" : "iOS App",
+        "serverID" : "Purple",
+        "sdkID" : "com.apple.platform.iphoneos",
+        "xmlID" : "ios",
+        "xmlIDAliases" : null,
+        "validationMethod" : "ios",
+        "platformCriteria" : {
+          "plistEntries" : {
+            "MinimumOSVersion" : "",
+            "LSRequiresIPhoneOS" : ""
+          }
+        },
+        "platformDirectory" : "iPhoneOS.platform",
+        "restApiPlatformUTI" : "com.apple.ipa",
+        "restApiPlatformEnum" : "IOS"
+      }, {
+        "type" : 2,
+        "displayName" : "macOS App",
+        "serverID" : "Firenze",
+        "sdkID" : "com.apple.platform.macosx",
+        "xmlID" : "osx",
+        "xmlIDAliases" : [ "macos" ],
+        "validationMethod" : "osx",
+        "platformCriteria" : {
+          "plistEntries" : {
+            "LSMinimumSystemVersion" : ""
+          }
+        },
+        "platformDirectory" : "MacOSX.platform",
+        "restApiPlatformUTI" : "com.apple.pkg",
+        "restApiPlatformEnum" : "MAC_OS"
+      }, {
+        "type" : 3,
+        "displayName" : "In-App Purchase",
+        "serverID" : "InAppPurchase",
+        "sdkID" : null,
+        "xmlID" : null,
+        "xmlIDAliases" : null,
+        "validationMethod" : "iap",
+        "platformCriteria" : null,
+        "platformDirectory" : null,
+        "restApiPlatformUTI" : null,
+        "restApiPlatformEnum" : null
+      }, {
+        "type" : 4,
+        "displayName" : "tvOS App",
+        "serverID" : "AppleTVOS",
+        "sdkID" : "com.apple.platform.appletvos",
+        "xmlID" : "appletvos",
+        "xmlIDAliases" : null,
+        "validationMethod" : "ios",
+        "platformCriteria" : {
+          "plistEntries" : {
+            "UIDeviceFamily" : "3"
+          }
+        },
+        "platformDirectory" : "AppleTVOS.platform",
+        "restApiPlatformUTI" : "com.apple.ipa",
+        "restApiPlatformEnum" : "TV_OS"
+      }, {
+        "type" : 6,
+        "displayName" : "watchOS",
+        "serverID" : null,
+        "sdkID" : "com.apple.platform.watchos",
+        "xmlID" : null,
+        "xmlIDAliases" : null,
+        "validationMethod" : "ios",
+        "platformCriteria" : null,
+        "platformDirectory" : "WatchOS.platform",
+        "restApiPlatformUTI" : null,
+        "restApiPlatformEnum" : null
+      }, {
+        "type" : 7,
+        "displayName" : "visionOS App",
+        "serverID" : "XROS",
+        "sdkID" : "com.apple.platform.xros",
+        "xmlID" : "xros",
+        "xmlIDAliases" : [ "visionos" ],
+        "validationMethod" : "xros",
+        "platformCriteria" : {
+          "plistEntries" : {
+            "UIDeviceFamily" : "7"
+          }
+        },
+        "platformDirectory" : "XROS.platform",
+        "restApiPlatformUTI" : "com.apple.ipa",
+        "restApiPlatformEnum" : "VISION_OS"
+      } ]
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/clientApplicationSettings/ae9afd3f-27e9-4570-a87c-24bac21aa158"
+    }
+  } ],
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/clientApplicationSettings?filter%5BapplicationName%5D=altool&filter%5BapplicationVersion%5D=26.10.1+%28171001%29"
+  },
+  "meta" : {
+    "paging" : {
+      "limit" : 50
+    }
+  }
+}
+=======================================
+2026-01-02 21:46:17.244 DEBUG: [CDASCAPI.1018A70F0] 
+=======================================
+APP STORE CONNECT API list-apps REQUEST:
+
+         URL: https://api.appstoreconnect.apple.com/v1/apps?include=appStoreVersions&limit=50&filter[bundleId]="com.ptperformance.app"&filter[appStoreVersions.platform]=IOS
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+    "x-tx-correlation-key" = "45FF60AE-E759-4681-A580-B8BB9B66528D-0";
+    "x-tx-request-id" = "20260102-214617-0";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:17.628 DEBUG: [CDASCAPI.A48C4AE80] Download task 1 did write 15810 bytes.
+2026-01-02 21:46:17.632 DEBUG: [CDASCAPI.A48C4AE80] Download task 1 did write 2144 bytes.
+2026-01-02 21:46:17.632 DEBUG: [CDASCAPI.A48C498C0] Download task 1 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_pHz6Fh.tmp
+2026-01-02 21:46:17.637 DEBUG: [CDASCAPI.1018A70F0] 
+=======================================
+APP STORE CONNECT API list-apps RESPONSE:
+
+         URL: https://api.appstoreconnect.apple.com/v1/apps?include=appStoreVersions&limit=50&filter[bundleId]="com.ptperformance.app"&filter[appStoreVersions.platform]=IOS
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Length" = 17954;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:17 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-timing-app" = "65 ms";
+    b3 = "7eaef94514d2789964f0bdbca654eaa6-3385269a0504cc97";
+    "x-apple-jingle-correlation-key" = P2XPSRIU2J4JSZHQXW6KMVHKUY;
+    "x-b3-parentspanid" = e628c132f99fe4c0;
+    "x-b3-spanid" = 3385269a0504cc97;
+    "x-b3-traceid" = aaea033de5e6773b;
+    "x-daiquiri-instance" = "daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-rate-limit" = "user-hour-lim:3600;user-hour-rem:3598;";
+    "x-request-id" = P2XPSRIU2J4JSZHQXW6KMVHKUY;
+    "x-responding-instance" = "ac-gateway-api:ac-gateway-api-main-548dd7994-kk82t:ac-gateway-api-main-548dd7994-kk82t:-1::::";
+    "x-unicorn-originated" = true;
+}
+    httpBody: {
+  "data" : [ {
+    "type" : "apps",
+    "id" : "6756226704",
+    "attributes" : {
+      "accessibilityUrl" : null,
+      "name" : "com.ptperformance.app",
+      "bundleId" : "com.ptperformance.app",
+      "sku" : "com.ptperformance.app",
+      "primaryLocale" : "en-US",
+      "isOrEverWasMadeForKids" : false,
+      "subscriptionStatusUrl" : null,
+      "subscriptionStatusUrlVersion" : null,
+      "subscriptionStatusUrlForSandbox" : null,
+      "subscriptionStatusUrlVersionForSandbox" : null,
+      "contentRightsDeclaration" : null,
+      "streamlinedPurchasingEnabled" : true
+    },
+    "relationships" : {
+      "accessibilityDeclarations" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/accessibilityDeclarations",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/accessibilityDeclarations"
+        }
+      },
+      "ciProduct" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/ciProduct",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/ciProduct"
+        }
+      },
+      "betaTesters" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaTesters"
+        }
+      },
+      "betaGroups" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaGroups",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaGroups"
+        }
+      },
+      "appStoreVersions" : {
+        "meta" : {
+          "paging" : {
+            "total" : 1,
+            "limit" : 10
+          }
+        },
+        "data" : [ {
+          "type" : "appStoreVersions",
+          "id" : "87ab213b-328e-4d0b-ba27-850e5ee00a1e"
+        } ],
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appStoreVersions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appStoreVersions"
+        }
+      },
+      "appTags" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appTags",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appTags"
+        }
+      },
+      "preReleaseVersions" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/preReleaseVersions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/preReleaseVersions"
+        }
+      },
+      "betaAppLocalizations" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaAppLocalizations",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaAppLocalizations"
+        }
+      },
+      "builds" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/builds",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/builds"
+        }
+      },
+      "betaLicenseAgreement" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaLicenseAgreement",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaLicenseAgreement"
+        }
+      },
+      "betaAppReviewDetail" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaAppReviewDetail",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaAppReviewDetail"
+        }
+      },
+      "appInfos" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appInfos",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appInfos"
+        }
+      },
+      "appClips" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appClips",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appClips"
+        }
+      },
+      "appPricePoints" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appPricePoints",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appPricePoints"
+        }
+      },
+      "endUserLicenseAgreement" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/endUserLicenseAgreement",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/endUserLicenseAgreement"
+        }
+      },
+      "appPriceSchedule" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appPriceSchedule",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appPriceSchedule"
+        }
+      },
+      "appAvailabilityV2" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appAvailabilityV2",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appAvailabilityV2"
+        }
+      },
+      "inAppPurchases" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/inAppPurchases",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/inAppPurchases"
+        }
+      },
+      "subscriptionGroups" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/subscriptionGroups",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/subscriptionGroups"
+        }
+      },
+      "gameCenterEnabledVersions" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/gameCenterEnabledVersions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/gameCenterEnabledVersions"
+        }
+      },
+      "perfPowerMetrics" : {
+        "links" : {
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/perfPowerMetrics"
+        }
+      },
+      "appCustomProductPages" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appCustomProductPages",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appCustomProductPages"
+        }
+      },
+      "inAppPurchasesV2" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/inAppPurchasesV2",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/inAppPurchasesV2"
+        }
+      },
+      "promotedPurchases" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/promotedPurchases",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/promotedPurchases"
+        }
+      },
+      "appEvents" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appEvents",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appEvents"
+        }
+      },
+      "reviewSubmissions" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/reviewSubmissions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/reviewSubmissions"
+        }
+      },
+      "subscriptionGracePeriod" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/subscriptionGracePeriod",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/subscriptionGracePeriod"
+        }
+      },
+      "customerReviews" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/customerReviews",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/customerReviews"
+        }
+      },
+      "customerReviewSummarizations" : {
+        "links" : {
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/customerReviewSummarizations"
+        }
+      },
+      "gameCenterDetail" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/gameCenterDetail",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/gameCenterDetail"
+        }
+      },
+      "appStoreVersionExperimentsV2" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/appStoreVersionExperimentsV2",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/appStoreVersionExperimentsV2"
+        }
+      },
+      "alternativeDistributionKey" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/alternativeDistributionKey",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/alternativeDistributionKey"
+        }
+      },
+      "analyticsReportRequests" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/analyticsReportRequests",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/analyticsReportRequests"
+        }
+      },
+      "marketplaceSearchDetail" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/marketplaceSearchDetail",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/marketplaceSearchDetail"
+        }
+      },
+      "buildUploads" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/buildUploads",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/buildUploads"
+        }
+      },
+      "backgroundAssets" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/backgroundAssets",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/backgroundAssets"
+        }
+      },
+      "betaFeedbackScreenshotSubmissions" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaFeedbackScreenshotSubmissions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaFeedbackScreenshotSubmissions"
+        }
+      },
+      "betaFeedbackCrashSubmissions" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/betaFeedbackCrashSubmissions",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/betaFeedbackCrashSubmissions"
+        }
+      },
+      "searchKeywords" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/searchKeywords",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/searchKeywords"
+        }
+      },
+      "webhooks" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/webhooks",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/webhooks"
+        }
+      },
+      "androidToIosAppMappingDetails" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/relationships/androidToIosAppMappingDetails",
+          "related" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704/androidToIosAppMappingDetails"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://api.appstoreconnect.apple.com/v1/apps/6756226704"
+    }
+  } ],
+  "included" : [ {
+    "type" : "appStoreVersions",
+    "id" : "87ab213b-328e-4d0b-ba27-850e5ee00a1e",
+    "attributes" : {
+      "platform" : "IOS",
+      "versionString" : "1.0",
+      "appStoreState" : "PREPARE_FOR_SUBMISSION",
+      "appVersionState" : "PREPARE_FOR_SUBMISSION",
+      "copyright" : null,
+      "reviewType" : "APP_STORE",
+      "releaseType" : "AFTER_APPROVAL",
+      "earliestReleaseDate" : null,
+      "usesIdfa" : null,
+      "downloadable" : true,
+      "createdDate" : "2025-12-06T23:03:58-08:00"
+    },
+    "relationships" : {
+      "ageRatingDeclaration" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/ageRatingDeclaration",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/ageRatingDeclaration"
+        }
+      },
+      "appStoreVersionLocalizations" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreVersionLocalizations",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreVersionLocalizations"
+        }
+      },
+      "build" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/build",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/build"
+        }
+      },
+      "appStoreVersionPhasedRelease" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreVersionPhasedRelease",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreVersionPhasedRelease"
+        }
+      },
+      "gameCenterAppVersion" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/gameCenterAppVersion",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/gameCenterAppVersion"
+        }
+      },
+      "routingAppCoverage" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/routingAppCoverage",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/routingAppCoverage"
+        }
+      },
+      "appStoreReviewDetail" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreReviewDetail",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreReviewDetail"
+        }
+      },
+      "appStoreVersionSubmission" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreVersionSubmission",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreVersionSubmission"
+        }
+      },
+      "appClipDefaultExperience" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appClipDefaultExperience",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appClipDefaultExperience"
+        }
+      },
+      "appStoreVersionExperiments" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreVersionExperiments",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreVersionExperiments"
+        }
+      },
+      "appStoreVersionExperimentsV2" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/appStoreVersionExperimentsV2",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/appStoreVersionExperimentsV2"
+        }
+      },
+      "customerReviews" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/customerReviews",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/customerReviews"
+        }
+      },
+      "alternativeDistributionPackage" : {
+        "links" : {
+          "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/relationships/alternativeDistributionPackage",
+          "related" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e/alternativeDistributionPackage"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://api.appstoreconnect.apple.com/v1/appStoreVersions/87ab213b-328e-4d0b-ba27-850e5ee00a1e"
+    }
+  } ],
+  "links" : {
+    "self" : "https://api.appstoreconnect.apple.com/v1/apps?filter%5BbundleId%5D=%22com.ptperformance.app%22&filter%5BappStoreVersions.platform%5D=IOS&include=appStoreVersions&limit=50"
+  },
+  "meta" : {
+    "paging" : {
+      "total" : 1,
+      "limit" : 50
+    }
+  }
+}
+=======================================
+2026-01-02 21:46:17.641 DEBUG: [altool.1018A70F0] CDP8KeyFile: p8 private key loaded from '/Users/expo/Code/expo/ios-app/PTPerformance/private_keys/AuthKey_9S37GWGW49.p8'.
+2026-01-02 21:46:17.684 DEBUG: [ContentDelivery.Uploader.1018A70F0] --- altool ---
+ContentDelivery version 26.10.1 (171001) (API 0)
+Macintosh; macOS 26.1 25B78 (arm64)
+Free disk space: 6081.167GB
+2026-01-02 21:46:17.684 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created log file at path '~/Library/Logs/ContentDelivery/com.apple.itunes.altool/com.apple.itunes.altool_Upload_2026-01-02_21-46-17_647.txt'.
+2026-01-02 21:46:17.685 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Contacting Apple Services…
+2026-01-02 21:46:17.686 DEBUG: [ContentDelivery.Uploader.A48C4AE80] *** Launching: /usr/bin/log stream --predicate process contains "altool" and subsystem == "com.apple.network" --debug --info --style compact
+2026-01-02 21:46:17.686 DEBUG: [ContentDelivery.Uploader.A48C4AE80] Executing: /usr/bin/log stream --predicate process contains "altool" and subsystem == "com.apple.network" --debug --info --style compact
+2026-01-02 21:46:17.686 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CREATE BUILD (ASSET_UPLOAD) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 184;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"cfBundleShortVersionString":"1.0","cfBundleVersion":"113","platform":"IOS"},"relationships":{"app":{"data":{"id":"6756226704","type":"apps"}}},"type":"builds"}}
+========================================
+2026-01-02 21:46:17.837 DEBUG: [ContentDelivery.Uploader.A48C498C0] Download task 1 sent 184 bytes (184 of 184 bytes sent).
+2026-01-02 21:46:18.216 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 1 did write 2937 bytes.
+2026-01-02 21:46:18.217 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 1 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_oLnRLv.tmp
+2026-01-02 21:46:18.221 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CREATE BUILD (ASSET_UPLOAD) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds
+ status code: 201 (created)
+ httpHeaders: {
+    "Content-Length" = 2937;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:18 GMT";
+    Location = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 296;
+    "apple-tk" = false;
+    b3 = "2ca8d4a8e45fe468214b2eb1eeacb737-fe4cb1c750cf4c97";
+    "x-apple-jingle-correlation-key" = FSUNJKHEL7SGQIKLF2Y65LFXG4;
+    "x-apple-request-uuid" = "2ca8d4a8-e45f-e468-214b-2eb1eeacb737";
+    "x-b3-spanid" = fe4cb1c750cf4c97;
+    "x-b3-traceid" = 2ca8d4a8e45fe468214b2eb1eeacb737;
+    "x-daiquiri-instance" = "daiquiri:13624001:mr85p00it-hyhk04174601:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-mr, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3589;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "builds",
+    "id" : "35fa0d73-5f20-46e9-a607-ddf9ff30b03a",
+    "attributes" : {
+      "version" : "113",
+      "uploadedDate" : null,
+      "processingState" : null,
+      "processingErrors" : null,
+      "buildProcessingState" : null
+    },
+    "relationships" : {
+      "app" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/app",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/app"
+        }
+      },
+      "buildDeliveryFiles" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildDeliveryFiles",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildDeliveryFiles"
+        }
+      },
+      "deliveryNotifications" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/deliveryNotifications",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/deliveryNotifications"
+        }
+      },
+      "buildAssetDescription" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAssetDescription",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAssetDescription"
+        }
+      },
+      "buildAsset" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAsset",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAsset"
+        }
+      },
+      "buildAssetSpi" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAssetSpi",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAssetSpi"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds"
+  }
+}
+=======================================
+2026-01-02 21:46:18.222 DEBUG: [ContentDelivery.Uploader.1018A70F0] Received build ID: 35fa0d73-5f20-46e9-a607-ddf9ff30b03a
+2026-01-02 21:46:18.253 DEBUG: [ContentDelivery.Uploader.1018A70F0] --- altool ---
+ContentDelivery version 26.10.1 (171001) (API 0)
+Macintosh; macOS 26.1 25B78 (arm64)
+Free disk space: 6081.167GB
+2026-01-02 21:46:18.254 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created log file at path '~/Library/Logs/ContentDelivery/com.apple.itunes.altool/com.apple.itunes.altool_Upload_2026-01-02_21-46-18_227.txt'.
+2026-01-02 21:46:18.254 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state machine...
+2026-01-02 21:46:18.254 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateBegin'...
+2026-01-02 21:46:18.254 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Making copy of ‘PTPerformance.ipa’…
+2026-01-02 21:46:18.255 DEBUG: [ContentDelivery.Uploader.1018A70F0] Copied 'build/export/PTPerformance.ipa' to '~/Library/Caches/com.apple.cds/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/PTPerformance.ipa'.
+2026-01-02 21:46:18.257 DEBUG: [ContentDelivery.Uploader.1018A70F0] Uploading file: PTPerformance.ipa
+           File size: 4047700
+            Apple ID: 6756226704
+Short version string: 1.0
+      Version string: 113
+            Platform: iOS App
+2026-01-02 21:46:18.257 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Preparing to upload ‘PTPerformance.ipa’…
+2026-01-02 21:46:18.257 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateComputeAssetChecksum'...
+2026-01-02 21:46:18.273 DEBUG: [ContentDelivery.Uploader.1018A70F0] Estimated part size: 5242880
+Part checksums:(
+    1389269D7BE6582B82726CD7A0ADC01F
+)
+2026-01-02 21:46:18.273 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateRequestCreateContainer'...
+2026-01-02 21:46:18.274 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateUploadAssetDescription'...
+2026-01-02 21:46:18.274 DEBUG: [ContentDelivery.Uploader.1018A70F0] No asset describer was set; using default describer.
+2026-01-02 21:46:18.274 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Analyzing package…
+2026-01-02 21:46:18.274 DEBUG: [ContentDelivery.Uploader.1018A70F0] myBundlePath: /Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework
+2026-01-02 21:46:18.276 DEBUG: [altool.A48C49F40] 
+==========================
+KPI REQUEST (CD altool version:26.10.1.171001 ran uploadPackage using JWT(null))
+  URLRequest:
+    endpoint: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 187;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"items":[{"level":"INFO","message":"CD altool version:26.10.1.171001 ran uploadPackage using JWT(null)"}],"sourceApplication":"altool"},"type":"metricsAndLogging"}}
+==========================
+2026-01-02 21:46:18.283 DEBUG: [ContentDelivery.Uploader.1018A70F0] Searching for swinfo at: /Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo
+2026-01-02 21:46:18.283 DEBUG: [ContentDelivery.Uploader.1018A70F0] Calling swinfo at '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo'.
+2026-01-02 21:46:18.284 DEBUG: [ContentDelivery.Uploader.1018A70F0] Executing: /Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo -f /Users/expo/Library/Caches/com.apple.cds/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/PTPerformance.ipa --extra-args /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/swinfo-extra-args-DB5E3743-0ADF-44D5-BF1F-20A1B8F381C2.plist --platform ios -o /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml --plistFormat binary --output-spi -temporary /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T
+2026-01-02 21:46:18.489 DEBUG: [altool.A48C4A6C0] 
+==========================
+KPI RESPONSE (CD altool version:26.10.1.171001 ran uploadPackage using JWT(null))
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging
+ status code: 201 (created)
+    httpBody: {
+  "data" : {
+    "type" : "metricsAndLogging",
+    "id" : "e00a889d-5060-4228-aae3-963660613999",
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging/e00a889d-5060-4228-aae3-963660613999"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging"
+  }
+}
+==========================
+2026-01-02 21:46:18.489 DEBUG: [altool.A48C4A6C0] logKPIName: jsonOutput as dictionary = {
+    data =     {
+        id = "e00a889d-5060-4228-aae3-963660613999";
+        links =         {
+            self = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging/e00a889d-5060-4228-aae3-963660613999";
+        };
+        type = metricsAndLogging;
+    };
+    links =     {
+        self = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging";
+    };
+}
+2026-01-02 21:46:18.489 DEBUG: [altool.A48C4A6C0] Sent KPI OK.
+2026-01-02 21:46:20.413 DEBUG: [ContentDelivery.Uploader.1018A70F0] Task ‘CDTask’ did terminate in ‘CDSwinfoCommandExecutor’ with exit code 0.
+2026-01-02 21:46:20.414 DEBUG: [ContentDelivery.Uploader.1018A70F0] Finished: '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo -f /Users/expo/Library/Caches/com.apple.cds/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/PTPerformance.ipa --extra-args /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/swinfo-extra-args-DB5E3743-0ADF-44D5-BF1F-20A1B8F381C2.plist --platform ios -o /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml --plistFormat binary --output-spi -temporary /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T' with status 0
+2026-01-02 21:46:20.414 DEBUG: [ContentDelivery.Uploader.1018A70F0] *** /Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo
+stdout: spi-output-file: /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip
+
+2026-01-02 21:46:20.415 DEBUG: [ContentDelivery.Uploader.1018A70F0] dealloc CDSAbstractToolExecutor (CDSwinfoCommandExecutor), cdTask=/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/swinfo -f /Users/expo/Library/Caches/com.apple.cds/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/PTPerformance.ipa --extra-args /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/swinfo-extra-args-DB5E3743-0ADF-44D5-BF1F-20A1B8F381C2.plist --platform ios -o /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml --plistFormat binary --output-spi -temporary /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T
+2026-01-02 21:46:20.415 DEBUG: [ContentDelivery.Uploader.1018A70F0] Asset description file: /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml
+2026-01-02 21:46:20.415 DEBUG: [ContentDelivery.Uploader.1018A70F0] SPI file: /var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip
+2026-01-02 21:46:20.420 DEBUG: [ContentDelivery.Uploader.1018A70F0] Creating container for asset description.
+2026-01-02 21:46:20.420 DEBUG: [ContentDelivery.Uploader.1018A70F0] Getting upload instructions for asset description.
+2026-01-02 21:46:20.420 DEBUG: [ContentDelivery.Uploader.A48C4A0C0] *** Launching: /usr/bin/log stream --predicate process contains "altool" and subsystem == "com.apple.network" --debug --info --style compact
+2026-01-02 21:46:20.420 DEBUG: [ContentDelivery.Uploader.A48C4A0C0] Executing: /usr/bin/log stream --predicate process contains "altool" and subsystem == "com.apple.network" --debug --info --style compact
+2026-01-02 21:46:20.421 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (UPLOADING ASSET DESCRIPTION) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 367;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"assetType":"ASSET_DESCRIPTION","fileName":"asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml","fileSize":376478,"sourceFileChecksum":"44C78CEE298178EE0AF6186D9BC2F7E1","uti":"com.apple.binary-property-list"},"relationships":{"build":{"data":{"id":"35fa0d73-5f20-46e9-a607-ddf9ff30b03a","type":"builds"}}},"type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:20.561 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 1 sent 367 bytes (367 of 367 bytes sent).
+2026-01-02 21:46:20.923 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 1 did write 2371 bytes.
+2026-01-02 21:46:20.924 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 1 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_f7neuU.tmp
+2026-01-02 21:46:20.927 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (UPLOADING ASSET DESCRIPTION) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+ status code: 201 (created)
+ httpHeaders: {
+    "Content-Length" = 2371;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:20 GMT";
+    Location = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 204;
+    "apple-tk" = false;
+    b3 = "db8303ecdd591795a164a64b3e26a8aa-db93f5a9214b7f58";
+    "x-apple-jingle-correlation-key" = 3OBQH3G5LELZLILEUZFT4JVIVI;
+    "x-apple-request-uuid" = "db8303ec-dd59-1795-a164-a64b3e26a8aa";
+    "x-b3-spanid" = db93f5a9214b7f58;
+    "x-b3-traceid" = db8303ecdd591795a164a64b3e26a8aa;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3593;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "7d1c1397-1dc3-4850-a00c-0103c808f116",
+    "attributes" : {
+      "assetType" : "ASSET_DESCRIPTION",
+      "fileSize" : 376478,
+      "fileName" : "asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml",
+      "sourceFileChecksum" : "44C78CEE298178EE0AF6186D9BC2F7E1",
+      "sequentialChecksum" : null,
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/0663014d-9c4c-4fda-9e80-af3772798509",
+      "uploadOperations" : [ {
+        "method" : "PUT",
+        "url" : "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/RShcf6DXh30G70sdZ3Vywz9y7rkTSlh2vZZN7qScwBM_U003d-1767408380727?partNumber=1&uploadId=6291f0b0-e84e-11f0-9fbe-5a3e2c51a05b&apple-asset-repo-correlation-key=3OBQH3G5LELZLILEUZFT4JVIVI&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260103T024620Z&X-Amz-SignedHeaders=host&X-Amz-Credential=MKIAP7F9QNTEY48OTE7F%2F20260103%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=0ad1ca56cc9d4f838732a5e366238eff55eff16bcfcf0d479b44a9bb5009f45b",
+        "length" : 376478,
+        "offset" : 0,
+        "requestHeaders" : [ {
+          "name" : "Content-Type",
+          "value" : "application/octet-stream"
+        } ],
+        "expiration" : "2026-01-09T18:46:20.888-08:00",
+        "partNumber" : 1,
+        "entityTag" : null
+      } ],
+      "uti" : "com.apple.binary-property-list",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "AWAITING_UPLOAD"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles"
+  }
+}
+=======================================
+2026-01-02 21:46:20.928 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Sending analysis to App Store Connect…
+2026-01-02 21:46:20.929 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+UPLOADING ASSET DESCRIPTION
+=======================================
+2026-01-02 21:46:20.931 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created the temporary directory '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:20.936 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 still needs to be uploaded (376478 bytes).
+2026-01-02 21:46:20.937 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 will expire on 2026-01-09T21:46:20.888000-05:00.
+2026-01-02 21:46:20.942 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote part 1 to temp file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/Part-1.tmp'.
+2026-01-02 21:46:20.942 DEBUG: [ContentDelivery.Uploader.1018A70F0] Adding upload task for part 1.
+2026-01-02 21:46:20.943 DEBUG: [ContentDelivery.Uploader.1018A70F0] Waiting for 1 upload task to finish.
+2026-01-02 21:46:21.024 DEBUG: [ContentDelivery.Uploader.A48C49F40] PROGRESS - PART 1 (376478) - 'asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml' 100.00% (376478/376478)
+2026-01-02 21:46:21.411 DEBUG: [ContentDelivery.Uploader.A48C4B100] COMPLETED - PART 1 - asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml - eTag: "44C78CEE298178EE0AF6186D9BC2F7E1"
+2026-01-02 21:46:21.412 DEBUG: [ContentDelivery.Uploader.A48C4B100] Removed temporary part file '/private/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/Part-1.tmp'.
+2026-01-02 21:46:21.413 DEBUG: [ContentDelivery.Uploader.A48C4B100] Saving uploader state (CDUploaderStateUploadAssetDescription) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:21.415 DEBUG: [ContentDelivery.Uploader.A48C4B100] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:21.415 DEBUG: [ContentDelivery.Uploader.A48C4B100] All parts have been uploaded.
+2026-01-02 21:46:21.416 DEBUG: [ContentDelivery.Uploader.1018A70F0] Time to transfer: 0.082 seconds
+2026-01-02 21:46:21.417 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removed temporary directory '/private/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:21.419 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_DESCRIPTION) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:21.689 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 3 did write 2438 bytes.
+2026-01-02 21:46:21.690 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 3 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_92Fibb.tmp
+2026-01-02 21:46:21.693 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_DESCRIPTION) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 1058;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:21 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 188;
+    "apple-tk" = false;
+    b3 = "432da70a857eb2b2efd5d6662f6307c5-ac3e5df1608d1907";
+    "x-apple-jingle-correlation-key" = IMW2OCUFP2ZLF36V2ZTC6YYHYU;
+    "x-apple-request-uuid" = "432da70a-857e-b2b2-efd5-d6662f6307c5";
+    "x-b3-spanid" = ac3e5df1608d1907;
+    "x-b3-traceid" = 432da70a857eb2b2efd5d6662f6307c5;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3592;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "7d1c1397-1dc3-4850-a00c-0103c808f116",
+    "attributes" : {
+      "assetType" : "ASSET_DESCRIPTION",
+      "fileSize" : 376478,
+      "fileName" : "asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml",
+      "sourceFileChecksum" : "44C78CEE298178EE0AF6186D9BC2F7E1",
+      "sequentialChecksum" : null,
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/0663014d-9c4c-4fda-9e80-af3772798509",
+      "uploadOperations" : [ {
+        "method" : "PUT",
+        "url" : "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/RShcf6DXh30G70sdZ3Vywz9y7rkTSlh2vZZN7qScwBM_U003d-1767408380727?partNumber=1&uploadId=6291f0b0-e84e-11f0-9fbe-5a3e2c51a05b&apple-asset-repo-correlation-key=3OBQH3G5LELZLILEUZFT4JVIVI&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260103T024620Z&X-Amz-SignedHeaders=host&X-Amz-Credential=MKIAP7F9QNTEY48OTE7F%2F20260103%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=0ad1ca56cc9d4f838732a5e366238eff55eff16bcfcf0d479b44a9bb5009f45b",
+        "length" : 376478,
+        "offset" : 0,
+        "requestHeaders" : [ {
+          "name" : "Content-Type",
+          "value" : "application/octet-stream"
+        } ],
+        "expiration" : "2026-01-09T18:46:20.888-08:00",
+        "partNumber" : 1,
+        "entityTag" : "44C78CEE298178EE0AF6186D9BC2F7E1"
+      } ],
+      "uti" : "com.apple.binary-property-list",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "AWAITING_UPLOAD"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+  }
+}
+=======================================
+2026-01-02 21:46:21.694 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Waiting for App Store Connect analysis response…
+2026-01-02 21:46:21.695 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING ASSET DESCRIPTION)
+=======================================
+2026-01-02 21:46:21.699 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING ASSET DESCRIPTION) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+     timeout: 900 seconds
+      method: PATCH
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 113;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"uploaded":true},"id":"7d1c1397-1dc3-4850-a00c-0103c808f116","type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:21.702 DEBUG: [ContentDelivery.Uploader.A48C498C0] Download task 4 sent 113 bytes (113 of 113 bytes sent).
+2026-01-02 21:46:24.809 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 4 did write 1499 bytes.
+2026-01-02 21:46:24.809 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 4 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_TtNGpl.tmp
+2026-01-02 21:46:24.813 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING ASSET DESCRIPTION) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Length" = 1499;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:24 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 3026;
+    "apple-tk" = false;
+    b3 = "0286d2125bfb33ddc764c1e67cf1ce95-8cc5071b79e12305";
+    "x-apple-jingle-correlation-key" = AKDNEES37MZ53R3EYHTHZ4OOSU;
+    "x-apple-request-uuid" = "0286d212-5bfb-33dd-c764-c1e67cf1ce95";
+    "x-b3-spanid" = 8cc5071b79e12305;
+    "x-b3-traceid" = 0286d2125bfb33ddc764c1e67cf1ce95;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3591;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "7d1c1397-1dc3-4850-a00c-0103c808f116",
+    "attributes" : {
+      "assetType" : "ASSET_DESCRIPTION",
+      "fileSize" : 376478,
+      "fileName" : "asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml",
+      "sourceFileChecksum" : "44C78CEE298178EE0AF6186D9BC2F7E1",
+      "sequentialChecksum" : "c62d043bbc133233e9794b25b7cfdfa7-1-376478",
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/0663014d-9c4c-4fda-9e80-af3772798509",
+      "uploadOperations" : null,
+      "uti" : "com.apple.binary-property-list",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "COMPLETE"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+  }
+}
+=======================================
+2026-01-02 21:46:24.814 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+========================================
+Set ASSET_DESCRIPTION status to COMPLETE
+========================================
+2026-01-02 21:46:24.815 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_DESCRIPTION) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:24.998 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 5 did write 1499 bytes.
+2026-01-02 21:46:24.999 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 5 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_6lUJva.tmp
+2026-01-02 21:46:25.000 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_DESCRIPTION) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 585;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:24 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 98;
+    "apple-tk" = false;
+    b3 = "cf6992373c75544d1d0c9f5c9b746df7-19b85b603df4fa67";
+    "x-apple-jingle-correlation-key" = Z5UZENZ4OVKE2HIMT5OJW5DN64;
+    "x-apple-request-uuid" = "cf699237-3c75-544d-1d0c-9f5c9b746df7";
+    "x-b3-spanid" = 19b85b603df4fa67;
+    "x-b3-traceid" = cf6992373c75544d1d0c9f5c9b746df7;
+    "x-daiquiri-instance" = "daiquiri:13624001:mr85p00it-hyhk04174601:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-mr, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3587;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "7d1c1397-1dc3-4850-a00c-0103c808f116",
+    "attributes" : {
+      "assetType" : "ASSET_DESCRIPTION",
+      "fileSize" : 376478,
+      "fileName" : "asset-description-B7AC7C3D-EC5D-49C2-B1FD-A7465E3A0356.xml",
+      "sourceFileChecksum" : "44C78CEE298178EE0AF6186D9BC2F7E1",
+      "sequentialChecksum" : "c62d043bbc133233e9794b25b7cfdfa7-1-376478",
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/0663014d-9c4c-4fda-9e80-af3772798509",
+      "uploadOperations" : null,
+      "uti" : "com.apple.binary-property-list",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "COMPLETE"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/7d1c1397-1dc3-4850-a00c-0103c808f116"
+  }
+}
+=======================================
+2026-01-02 21:46:25.003 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStateUploadAssetDescription) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:25.006 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:25.025 DEBUG: [ContentDelivery.Uploader.1018A70F0] Creating container for SPI analysis.
+2026-01-02 21:46:25.026 DEBUG: [ContentDelivery.Uploader.1018A70F0] Getting upload instructions for SPI analysis.
+2026-01-02 21:46:25.028 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (UPLOADING SPI ANALYSIS) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 363;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"assetType":"ASSET_SPI","fileName":"DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip","fileSize":1936388,"sourceFileChecksum":"4EA30CC9D266BC0232A651D9E3276B00","uti":"com.pkware.zip-archive"},"relationships":{"build":{"data":{"id":"35fa0d73-5f20-46e9-a607-ddf9ff30b03a","type":"builds"}}},"type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:25.030 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 6 sent 363 bytes (363 of 363 bytes sent).
+2026-01-02 21:46:25.322 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 6 did write 2368 bytes.
+2026-01-02 21:46:25.323 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 6 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_3B4MJM.tmp
+2026-01-02 21:46:25.325 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (UPLOADING SPI ANALYSIS) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+ status code: 201 (created)
+ httpHeaders: {
+    "Content-Length" = 2368;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:25 GMT";
+    Location = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 213;
+    "apple-tk" = false;
+    b3 = "c570f6249360df572d726caacf42913b-85c736f1dbdf519b";
+    "x-apple-jingle-correlation-key" = YVYPMJETMDPVOLLSNSVM6QURHM;
+    "x-apple-request-uuid" = "c570f624-9360-df57-2d72-6caacf42913b";
+    "x-b3-spanid" = 85c736f1dbdf519b;
+    "x-b3-traceid" = c570f6249360df572d726caacf42913b;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3590;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "5e7916c6-7c10-4673-9012-ceea0d414f8a",
+    "attributes" : {
+      "assetType" : "ASSET_SPI",
+      "fileSize" : 1936388,
+      "fileName" : "DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip",
+      "sourceFileChecksum" : "4EA30CC9D266BC0232A651D9E3276B00",
+      "sequentialChecksum" : null,
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/819835e1-3868-4c71-8ce6-23d437c6c241",
+      "uploadOperations" : [ {
+        "method" : "PUT",
+        "url" : "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/kyhEAoD9p5qTEQnOeye6QGGEC8PRBg-4sym-nIp8Z1U_U003d-1767408385116?partNumber=1&uploadId=652f7ef0-e84e-11f0-8fce-569cb7dcd579&apple-asset-repo-correlation-key=YVYPMJETMDPVOLLSNSVM6QURHM&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260103T024625Z&X-Amz-SignedHeaders=host&X-Amz-Credential=MKIAP7F9QNTEY48OTE7F%2F20260103%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=131c88914a2cdb42dc521c5f52f1921a2a781880031016c59d482c1e72ddba68",
+        "length" : 1936388,
+        "offset" : 0,
+        "requestHeaders" : [ {
+          "name" : "Content-Type",
+          "value" : "application/octet-stream"
+        } ],
+        "expiration" : "2026-01-09T18:46:25.288-08:00",
+        "partNumber" : 1,
+        "entityTag" : null
+      } ],
+      "uti" : "com.pkware.zip-archive",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "AWAITING_UPLOAD"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles"
+  }
+}
+=======================================
+2026-01-02 21:46:25.326 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Sending SPI analysis to App Store Connect…
+2026-01-02 21:46:25.326 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+UPLOADING SPI ANALYSIS
+=======================================
+2026-01-02 21:46:25.326 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created the temporary directory '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:25.327 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 still needs to be uploaded (1936388 bytes).
+2026-01-02 21:46:25.327 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 will expire on 2026-01-09T21:46:25.288000-05:00.
+2026-01-02 21:46:25.331 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote part 1 to temp file '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/Part-1.tmp'.
+2026-01-02 21:46:25.331 DEBUG: [ContentDelivery.Uploader.1018A70F0] Adding upload task for part 1.
+2026-01-02 21:46:25.332 DEBUG: [ContentDelivery.Uploader.1018A70F0] Waiting for 1 upload task to finish.
+2026-01-02 21:46:25.439 DEBUG: [ContentDelivery.Uploader.A48C4B340] PROGRESS - PART 1 (1936388) - 'DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip' 100.00% (1936388/1936388)
+2026-01-02 21:46:25.996 DEBUG: [ContentDelivery.Uploader.A48C4AC80] COMPLETED - PART 1 - DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip - eTag: "4EA30CC9D266BC0232A651D9E3276B00"
+2026-01-02 21:46:25.998 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Removed temporary part file '/private/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1/Part-1.tmp'.
+2026-01-02 21:46:25.998 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Saving uploader state (CDUploaderStateUploadAssetDescription) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:26.001 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:26.002 DEBUG: [ContentDelivery.Uploader.A48C4AC80] All parts have been uploaded.
+2026-01-02 21:46:26.002 DEBUG: [ContentDelivery.Uploader.1018A70F0] Time to transfer: 0.108 seconds
+2026-01-02 21:46:26.003 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removed temporary directory '/private/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:26.007 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_SPI) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:26.294 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 8 did write 2435 bytes.
+2026-01-02 21:46:26.294 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 8 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_Juf1GW.tmp
+2026-01-02 21:46:26.297 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_SPI) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 1055;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:26 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 205;
+    "apple-tk" = false;
+    b3 = "7018424d496b23c32d027f114d584014-e968795d5eca8e4c";
+    "x-apple-jingle-correlation-key" = OAMEETKJNMR4GLICP4IU2WCACQ;
+    "x-apple-request-uuid" = "7018424d-496b-23c3-2d02-7f114d584014";
+    "x-b3-spanid" = e968795d5eca8e4c;
+    "x-b3-traceid" = 7018424d496b23c32d027f114d584014;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3589;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "5e7916c6-7c10-4673-9012-ceea0d414f8a",
+    "attributes" : {
+      "assetType" : "ASSET_SPI",
+      "fileSize" : 1936388,
+      "fileName" : "DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip",
+      "sourceFileChecksum" : "4EA30CC9D266BC0232A651D9E3276B00",
+      "sequentialChecksum" : null,
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/819835e1-3868-4c71-8ce6-23d437c6c241",
+      "uploadOperations" : [ {
+        "method" : "PUT",
+        "url" : "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/kyhEAoD9p5qTEQnOeye6QGGEC8PRBg-4sym-nIp8Z1U_U003d-1767408385116?partNumber=1&uploadId=652f7ef0-e84e-11f0-8fce-569cb7dcd579&apple-asset-repo-correlation-key=YVYPMJETMDPVOLLSNSVM6QURHM&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260103T024625Z&X-Amz-SignedHeaders=host&X-Amz-Credential=MKIAP7F9QNTEY48OTE7F%2F20260103%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=131c88914a2cdb42dc521c5f52f1921a2a781880031016c59d482c1e72ddba68",
+        "length" : 1936388,
+        "offset" : 0,
+        "requestHeaders" : [ {
+          "name" : "Content-Type",
+          "value" : "application/octet-stream"
+        } ],
+        "expiration" : "2026-01-09T18:46:25.288-08:00",
+        "partNumber" : 1,
+        "entityTag" : "4EA30CC9D266BC0232A651D9E3276B00"
+      } ],
+      "uti" : "com.pkware.zip-archive",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "AWAITING_UPLOAD"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+  }
+}
+=======================================
+2026-01-02 21:46:26.298 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Waiting for App Store Connect SPI analysis response…
+2026-01-02 21:46:26.298 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING SPI ANALYSIS)
+=======================================
+2026-01-02 21:46:26.301 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING SPI ANALYSIS) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+     timeout: 900 seconds
+      method: PATCH
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 113;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"uploaded":true},"id":"5e7916c6-7c10-4673-9012-ceea0d414f8a","type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:26.303 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 9 sent 113 bytes (113 of 113 bytes sent).
+2026-01-02 21:46:37.028 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 9 did write 1496 bytes.
+2026-01-02 21:46:37.029 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 9 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_oobNNI.tmp
+2026-01-02 21:46:37.032 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (UPLOADING SPI ANALYSIS) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Length" = 1496;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:37 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 10646;
+    "apple-tk" = false;
+    b3 = "0c1d8b5dd80eb4b1186b9d7f85a1239f-4b15a2c1a7537469";
+    "x-apple-jingle-correlation-key" = BQOYWXOYB22LCGDLTV7YLIJDT4;
+    "x-apple-request-uuid" = "0c1d8b5d-d80e-b4b1-186b-9d7f85a1239f";
+    "x-b3-spanid" = 4b15a2c1a7537469;
+    "x-b3-traceid" = 0c1d8b5dd80eb4b1186b9d7f85a1239f;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3588;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "5e7916c6-7c10-4673-9012-ceea0d414f8a",
+    "attributes" : {
+      "assetType" : "ASSET_SPI",
+      "fileSize" : 1936388,
+      "fileName" : "DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip",
+      "sourceFileChecksum" : "4EA30CC9D266BC0232A651D9E3276B00",
+      "sequentialChecksum" : "4fa3d5f60607384b282da6a148d13f0e-1-1936388",
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/819835e1-3868-4c71-8ce6-23d437c6c241",
+      "uploadOperations" : null,
+      "uti" : "com.pkware.zip-archive",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "COMPLETE"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+  }
+}
+=======================================
+2026-01-02 21:46:37.033 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+========================================
+Set ASSET_SPI status to COMPLETE
+========================================
+2026-01-02 21:46:37.035 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_SPI) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:37.149 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 10 did write 1496 bytes.
+2026-01-02 21:46:37.150 DEBUG: [ContentDelivery.Uploader.A48C49F40] Download task 10 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_lkglEK.tmp
+2026-01-02 21:46:37.151 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET UPLOAD STATE (ASSET_SPI) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 583;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:37 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 32;
+    "apple-tk" = false;
+    b3 = "e39281f05499de083269452e391bdcda-578f028021577d8a";
+    "x-apple-jingle-correlation-key" = 4OJID4CUTHPAQMTJIUXDSG643I;
+    "x-apple-request-uuid" = "e39281f0-5499-de08-3269-452e391bdcda";
+    "x-b3-spanid" = 578f028021577d8a;
+    "x-b3-traceid" = e39281f05499de083269452e391bdcda;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3587;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "5e7916c6-7c10-4673-9012-ceea0d414f8a",
+    "attributes" : {
+      "assetType" : "ASSET_SPI",
+      "fileSize" : 1936388,
+      "fileName" : "DTAppAnalyzerExtractorOutput-6B61BB7C-14D5-403A-B2AB-B6D14767DCB8.zip",
+      "sourceFileChecksum" : "4EA30CC9D266BC0232A651D9E3276B00",
+      "sequentialChecksum" : "4fa3d5f60607384b282da6a148d13f0e-1-1936388",
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/819835e1-3868-4c71-8ce6-23d437c6c241",
+      "uploadOperations" : null,
+      "uti" : "com.pkware.zip-archive",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "COMPLETE"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/5e7916c6-7c10-4673-9012-ceea0d414f8a"
+  }
+}
+=======================================
+2026-01-02 21:46:37.154 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+[GRAPH-OVERALL],time,Mbps,totalBytesSent
+[GRAPH-PART-COMPLETE],time,Mbps
+2026-01-02 21:46:37.154 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateRetrieveUploadOperations'...
+2026-01-02 21:46:37.154 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStateRetrieveUploadOperations) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:37.157 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:37.158 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Requesting upload instructions from App Store Connect…
+2026-01-02 21:46:37.161 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (ASSET_UPLOAD) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 298;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"assetType":"ASSET","fileName":"PTPerformance.ipa","fileSize":4047700,"sourceFileChecksum":"1389269D7BE6582B82726CD7A0ADC01F","uti":"com.apple.ipa"},"relationships":{"build":{"data":{"id":"35fa0d73-5f20-46e9-a607-ddf9ff30b03a","type":"builds"}}},"type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:37.164 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Download task 11 sent 298 bytes (298 of 298 bytes sent).
+2026-01-02 21:46:37.975 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 11 did write 2307 bytes.
+2026-01-02 21:46:37.976 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 11 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_71cjOW.tmp
+2026-01-02 21:46:37.979 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+RETRIEVE UPLOAD OPERATIONS (ASSET_UPLOAD) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles
+ status code: 201 (created)
+ httpHeaders: {
+    "Content-Length" = 2307;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:37 GMT";
+    Location = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 729;
+    "apple-tk" = false;
+    b3 = "dfe6a2271076831333372cf935312544-82e846479e65b6f5";
+    "x-apple-jingle-correlation-key" = 37TKEJYQO2BRGMZXFT4TKMJFIQ;
+    "x-apple-request-uuid" = "dfe6a227-1076-8313-3337-2cf935312544";
+    "x-b3-spanid" = 82e846479e65b6f5;
+    "x-b3-traceid" = dfe6a2271076831333372cf935312544;
+    "x-daiquiri-instance" = "daiquiri:33624001:pv50p00it-hyhk10063801:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-pv, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3586;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "25538495-390e-4db7-93f1-2dc553a42f64",
+    "attributes" : {
+      "assetType" : "ASSET",
+      "fileSize" : 4047700,
+      "fileName" : "PTPerformance.ipa",
+      "sourceFileChecksum" : "1389269D7BE6582B82726CD7A0ADC01F",
+      "sequentialChecksum" : null,
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/3c3cc24b-0fa7-4f2c-8f3a-a9e30bb08aa1.ipa",
+      "uploadOperations" : [ {
+        "method" : "PUT",
+        "url" : "https://northamerica-1.object-storage.apple.com/itmspod12-assets-massilia-200001/PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/odkrGom22i7NqfrCicqPhcsyb6Uzw5lHgG2yebxjuyQ_U003d-1767408397246?partNumber=1&uploadId=6c6ab130-e84e-11f0-8bdf-70b2b916dc71&apple-asset-repo-correlation-key=37TKEJYQO2BRGMZXFT4TKMJFIQ&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260103T024637Z&X-Amz-SignedHeaders=host&X-Amz-Credential=MKIAP7F9QNTEY48OTE7F%2F20260103%2Fnorthamerica-1%2Fs3%2Faws4_request&X-Amz-Expires=604800&X-Amz-Signature=0d86fbf1a97fded4487657b91ede2a2dd435172c10d660da793a6371681a97f4",
+        "length" : 4047700,
+        "offset" : 0,
+        "requestHeaders" : [ {
+          "name" : "Content-Type",
+          "value" : "application/octet-stream"
+        } ],
+        "expiration" : "2026-01-09T18:46:37.938-08:00",
+        "partNumber" : 1,
+        "entityTag" : null
+      } ],
+      "uti" : "com.apple.ipa",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "AWAITING_UPLOAD"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles"
+  }
+}
+=======================================
+2026-01-02 21:46:37.981 DEBUG: [ContentDelivery.Uploader.1018A70F0] File checksum matched the file.
+2026-01-02 21:46:37.981 DEBUG: [ContentDelivery.Uploader.1018A70F0] Composite checksum was nil.
+2026-01-02 21:46:37.982 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStatePrepareAssetUpload'...
+2026-01-02 21:46:37.982 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStatePrepareAssetUpload) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:37.985 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:37.985 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Preparing file for upload to App Store Connect…
+2026-01-02 21:46:37.986 DEBUG: [ContentDelivery.Uploader.1018A70F0] Build ID 35fa0d73-5f20-46e9-a607-ddf9ff30b03a is in state AWAITING_UPLOAD
+2026-01-02 21:46:37.987 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 still needs to be uploaded (4047700 bytes).
+2026-01-02 21:46:37.987 DEBUG: [ContentDelivery.Uploader.1018A70F0] Part 1 will expire on 2026-01-09T21:46:37.938000-05:00.
+2026-01-02 21:46:37.988 DEBUG: [ContentDelivery.Uploader.1018A70F0] 1 upload operations were requested for 1 parts. (Build ID = 35fa0d73-5f20-46e9-a607-ddf9ff30b03a)
+2026-01-02 21:46:37.989 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created RESUME file at path: '~/Library/Caches/com.apple.cds.vbtx/ResumeFiles/6756226704/IOS_113'.
+2026-01-02 21:46:37.992 DEBUG: [ContentDelivery.Uploader.1018A70F0] Created temporary directory '/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:37.993 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateUploadAssetDirectly'...
+2026-01-02 21:46:37.994 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStateUploadAssetDirectly) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:37.995 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:37.996 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Preparing file for upload to App Store Connect…
+2026-01-02 21:46:37.996 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Uploading to App Store Connect…
+2026-01-02 21:46:37.997 DEBUG: [ContentDelivery.Uploader.1018A70F0] Will upload up to 6 parts concurrently.
+2026-01-02 21:46:37.997 DEBUG: [ContentDelivery.Uploader.1018A70F0] Waiting for 1 parts to upload.
+2026-01-02 21:46:37.997 DEBUG: [ContentDelivery.Uploader.A48C4B340] Created upload task ID 12 for part 1.
+2026-01-02 21:46:37.998 DEBUG: [ContentDelivery.Uploader.A48C4B340] PART 1 STARTED
+2026-01-02 21:46:37.998 DEBUG: [ContentDelivery.Uploader.A48C4B340] Waiting for part 1 to upload.
+2026-01-02 21:46:38.105 DEBUG: [ContentDelivery.Uploader.A48C4B100] PROGRESS - PART 1 (3145728) - 'PTPerformance.ipa' 77.72% (3145728/4047700)
+2026-01-02 21:46:38.105 DEBUG: [ContentDelivery.Uploader.A48C4B100] Show Progress: Uploading to App Store Connect…
+2026-01-02 21:46:38.221 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] PROGRESS - PART 1 (901972) - 'PTPerformance.ipa' 100.00% (4047700/4047700)
+2026-01-02 21:46:38.548 DEBUG: [ContentDelivery.Uploader.A48C4AC80] COMPLETED - PART 1 - PTPerformance.ipa - eTag: "1389269D7BE6582B82726CD7A0ADC01F"
+2026-01-02 21:46:38.549 DEBUG: [ContentDelivery.Uploader.A48C4B340] Done with uploading part 1.
+2026-01-02 21:46:38.549 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Saving uploader state (CDUploaderStateUploadAssetDirectly) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:38.552 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:38.552 DEBUG: [ContentDelivery.Uploader.A48C4AC80] All parts have been uploaded.
+2026-01-02 21:46:38.553 DEBUG: [ContentDelivery.Uploader.A48C4B340] PART 1 THROUGHPUT - 4047700 bytes in 0.555 seconds, 58.317 Mbps
+[GRAPH-PART-COMPLETE-1],0.233895624987781,58.31685942263773
+2026-01-02 21:46:38.553 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removed temporary directory '/private/var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/com.apple.cds.vbtx/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:38.554 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateChangeUploadStateToComplete'...
+2026-01-02 21:46:38.554 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStateChangeUploadStateToComplete) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:38.556 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:38.556 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Completing upload…
+2026-01-02 21:46:38.556 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (ASSET_UPLOAD)
+=======================================
+2026-01-02 21:46:38.559 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (ASSET_UPLOAD) REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64
+     timeout: 900 seconds
+      method: PATCH
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 113;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"uploaded":true},"id":"25538495-390e-4db7-93f1-2dc553a42f64","type":"buildDeliveryFiles"}}
+========================================
+2026-01-02 21:46:38.561 DEBUG: [ContentDelivery.Uploader.A48C4A6C0] Download task 13 sent 113 bytes (113 of 113 bytes sent).
+2026-01-02 21:46:40.061 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 13 did write 1435 bytes.
+2026-01-02 21:46:40.062 DEBUG: [ContentDelivery.Uploader.A48C4B340] Download task 13 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_WybXEb.tmp
+2026-01-02 21:46:40.065 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+CHANGE UPLOAD STATE TO COMPLETE (ASSET_UPLOAD) RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Length" = 1435;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:40 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 1421;
+    "apple-tk" = false;
+    b3 = "9afafd3f4a7877e67952b1b9ef0f442a-569b4d5b0e2802e0";
+    "x-apple-jingle-correlation-key" = TL5P2P2KPB36M6KSWG466D2EFI;
+    "x-apple-request-uuid" = "9afafd3f-4a78-77e6-7952-b1b9ef0f442a";
+    "x-b3-spanid" = 569b4d5b0e2802e0;
+    "x-b3-traceid" = 9afafd3f4a7877e67952b1b9ef0f442a;
+    "x-daiquiri-instance" = "daiquiri:13624001:mr85p00it-hyhk04174601:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-mr, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3586;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "buildDeliveryFiles",
+    "id" : "25538495-390e-4db7-93f1-2dc553a42f64",
+    "attributes" : {
+      "assetType" : "ASSET",
+      "fileSize" : 4047700,
+      "fileName" : "PTPerformance.ipa",
+      "sourceFileChecksum" : "1389269D7BE6582B82726CD7A0ADC01F",
+      "sequentialChecksum" : "398f0231730b719376147c486ffb3dab-1-4047700",
+      "assetToken" : "PurpleSource221/v4/81/d2/c5/81d2c54a-e354-4cb9-567e-92cebcb316bf/3c3cc24b-0fa7-4f2c-8f3a-a9e30bb08aa1.ipa",
+      "uploadOperations" : null,
+      "uti" : "com.apple.ipa",
+      "assetDeliveryState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "state" : "COMPLETE"
+      }
+    },
+    "relationships" : {
+      "build" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64/relationships/build",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64/build"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/buildDeliveryFiles/25538495-390e-4db7-93f1-2dc553a42f64"
+  }
+}
+=======================================
+2026-01-02 21:46:40.066 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+========================================
+Set ASSET status to COMPLETE
+========================================
+2026-01-02 21:46:40.067 DEBUG: [ContentDelivery.Uploader.1018A70F0] Running state 'CDUploaderStateCheckForProcessing'...
+2026-01-02 21:46:40.067 DEBUG: [ContentDelivery.Uploader.1018A70F0] Saving uploader state (CDUploaderStateCheckForProcessing) for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:40.068 DEBUG: [ContentDelivery.Uploader.A48C4AC80] Sending upload complete (INFO) KPI for 'VoiceBoxClient-CD'. type=app_ipa, numPartsToUpload=1, numPartsUploaded=1, numPartsPreviouslyUploaded=0, numPartsRetried=0, numRetries=0, bytesLost=0, bytesSent=4047700, elapsedTimeSecs=0.234s, throughput=17305582 bytes/sec, throughputMbps=138.445, API=0, transport=HTTPS
+2026-01-02 21:46:40.068 DEBUG: [ContentDelivery.Uploader.A48C4A0C0] Task ‘CDTask’ did terminate in ‘CDOSLogFilter’ with exit code 143.
+2026-01-02 21:46:40.069 DEBUG: [ContentDelivery.Uploader.A48C4A0C0] Finished: '/usr/bin/log stream --predicate process contains "altool" and subsystem == "com.apple.network" --debug --info --style compact' with status 143
+2026-01-02 21:46:40.071 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:40.071 DEBUG: [ContentDelivery.Uploader.A48C4A0C0] *** /usr/bin/log result: 143
+stdout: (null)
+stderr: 
+2026-01-02 21:46:40.072 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Waiting for package to begin processing…
+2026-01-02 21:46:40.073 DEBUG: [altool.1018A70F0] File 'PTPerformance.ipa' upload complete.
+2026-01-02 21:46:40.074 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+======================
+GET BUILD UPLOAD STATE
+======================
+2026-01-02 21:46:40.074 DEBUG: [ContentDelivery.Uploader.A48C4AC80] 
+==========================
+KPI REQUEST (VoiceBoxClient-CD)
+  URLRequest:
+    endpoint: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging
+     timeout: 900 seconds
+      method: POST
+ httpHeaders: {
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Length" = 569;
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: {"data":{"attributes":{"items":[{"correlationKey":"35fa0d73-5f20-46e9-a607-ddf9ff30b03a","kpiValue":17305582,"kpiValueType":"Counter","level":"INFO","message":"type=app_ipa, numPartsToUpload=1, numPartsUploaded=1, numPartsPreviouslyUploaded=0, numPartsRetried=0, numRetries=0, bytesLost=0, bytesSent=4047700, elapsedTimeSecs=0.234s, throughput=17305582 bytes/sec, throughputMbps=138.445, API=0, transport=HTTPS","name":"VoiceBoxClient-CD - Upload throughput (bytes/sec)","timestamp":"2026-01-03T02:46:40.066"}],"sourceApplication":"altool"},"type":"metricsAndLogging"}}
+==========================
+2026-01-02 21:46:40.078 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET BUILD UPLOAD STATE REQUEST:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a
+     timeout: 900 seconds
+      method: GET
+ httpHeaders: {
+    Accept = "application/json";
+    "Accept-Language" = "en-US";
+    Authorization = "**hidden value**";
+    "Content-Type" = "application/json";
+    "User-Agent" = "altool/26.10.1-171001 (Macintosh; macOS 26.1 25B78 (arm64)) ContentDelivery/26.10.1-171001";
+}
+    httpBody: 
+========================================
+2026-01-02 21:46:40.309 DEBUG: [ContentDelivery.Uploader.A48C4B100] 
+==========================
+KPI RESPONSE (VoiceBoxClient-CD)
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging
+ status code: 201 (created)
+    httpBody: {
+  "data" : {
+    "type" : "metricsAndLogging",
+    "id" : "6d8e715c-783a-45ab-ba8c-bde486922a42",
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging/6d8e715c-783a-45ab-ba8c-bde486922a42"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging"
+  }
+}
+==========================
+2026-01-02 21:46:40.310 DEBUG: [ContentDelivery.Uploader.A48C4B100] logKPIName: jsonOutput as dictionary = {
+    data =     {
+        id = "6d8e715c-783a-45ab-ba8c-bde486922a42";
+        links =         {
+            self = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging/6d8e715c-783a-45ab-ba8c-bde486922a42";
+        };
+        type = metricsAndLogging;
+    };
+    links =     {
+        self = "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/metricsAndLogging";
+    };
+}
+2026-01-02 21:46:40.311 DEBUG: [ContentDelivery.Uploader.A48C4B100] Sent KPI OK.
+2026-01-02 21:46:40.342 DEBUG: [ContentDelivery.Uploader.A48C4B100] Download task 14 did write 3113 bytes.
+2026-01-02 21:46:40.342 DEBUG: [ContentDelivery.Uploader.A48C4B100] Download task 14 did write file: file:///var/folders/zk/htv5fjf971909x_qfzlqc3xc0000gn/T/CFNetworkDownload_am4O0f.tmp
+2026-01-02 21:46:40.346 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+=======================================
+GET BUILD UPLOAD STATE RESPONSE:
+
+         URL: https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a
+ status code: 200 (no error)
+ httpHeaders: {
+    "Content-Encoding" = gzip;
+    "Content-Length" = 449;
+    "Content-Type" = "application/json";
+    Date = "Sat, 03 Jan 2026 02:46:40 GMT";
+    Server = "daiquiri/5";
+    "Strict-Transport-Security" = "max-age=31536000; includeSubDomains";
+    Vary = "Accept-Encoding, User-Agent";
+    "apple-originating-system" = MZContentDeliveryService;
+    "apple-seq" = "0.0";
+    "apple-timing-app" = 178;
+    "apple-tk" = false;
+    b3 = "0781239992ba82741d940b1da6b9f8dc-485f8f4eff8f3b06";
+    "x-apple-jingle-correlation-key" = A6ASHGMSXKBHIHMUBMO2NOPY3Q;
+    "x-apple-request-uuid" = "07812399-92ba-8274-1d94-0b1da6b9f8dc";
+    "x-b3-spanid" = 485f8f4eff8f3b06;
+    "x-b3-traceid" = 0781239992ba82741d940b1da6b9f8dc;
+    "x-daiquiri-instance" = "daiquiri:13624001:mr85p00it-hyhk04174601:7987:25HOTFIX33:daiquiri-amp-processing-shared-int-001-mr, daiquiri:18493001:mr85p00it-hyhk03154801:7987:25HOTFIX33:daiquiri-amp-all-shared-ext-001-mr";
+    "x-daiquiri-rate-limit-timing-user" = 0;
+    "x-daiquiri-rate-limit-user" = "user-hour-lim:3600;user-hour-rem:3585;";
+}
+    httpBody: {
+  "data" : {
+    "type" : "builds",
+    "id" : "35fa0d73-5f20-46e9-a607-ddf9ff30b03a",
+    "attributes" : {
+      "version" : "113",
+      "uploadedDate" : "2026-01-02T18:46:39-08:00",
+      "processingState" : "PROCESSING",
+      "processingErrors" : [ ],
+      "buildProcessingState" : {
+        "errors" : [ ],
+        "warnings" : [ ],
+        "infos" : [ ],
+        "state" : "PROCESSING"
+      }
+    },
+    "relationships" : {
+      "app" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/app",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/app"
+        }
+      },
+      "buildDeliveryFiles" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildDeliveryFiles",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildDeliveryFiles"
+        }
+      },
+      "deliveryNotifications" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/deliveryNotifications",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/deliveryNotifications"
+        }
+      },
+      "buildAssetDescription" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAssetDescription",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAssetDescription"
+        }
+      },
+      "buildAsset" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAsset",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAsset"
+        }
+      },
+      "buildAssetSpi" : {
+        "links" : {
+          "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/relationships/buildAssetSpi",
+          "related" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a/buildAssetSpi"
+        }
+      }
+    },
+    "links" : {
+      "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a"
+    }
+  },
+  "links" : {
+    "self" : "https://contentdelivery.itunes.apple.com/MZContentDeliveryService/iris/v1/builds/35fa0d73-5f20-46e9-a607-ddf9ff30b03a"
+  }
+}
+=======================================
+2026-01-02 21:46:40.346 DEBUG: [ContentDelivery.Uploader.1018A70F0] 
+==================================
+Upload State: PROCESSING
+==================================
+2026-01-02 21:46:40.346 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Uploaded package is processing.
+2026-01-02 21:46:40.347 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removing uploader state for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'
+2026-01-02 21:46:40.348 DEBUG: [ContentDelivery.Uploader.1018A70F0] Wrote state to '~/Library/Application Support/com.apple.itunes.altool/CDUploads/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1.plist'.
+2026-01-02 21:46:40.349 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removed the temporary asset directory '~/Library/Caches/com.apple.cds/com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:40.349 DEBUG: [ContentDelivery.Uploader.1018A70F0] Removing uploader saved state for identifier 'com.apple.cds_52703ABF-B15C-4E9F-995D-2BAF739A63C1'.
+2026-01-02 21:46:40.349 DEBUG: [ContentDelivery.Uploader.1018A70F0] Show Progress: Upload succeeded.
+2026-01-02 21:46:40.350  INFO: [ContentDelivery.Uploader.1018A70F0] 
+==========================================
+UPLOAD SUCCEEDED with no errors
+Delivery UUID: 35fa0d73-5f20-46e9-a607-ddf9ff30b03a
+Transferred 4047700 bytes in 0.234 seconds (17.3MB/s, 138.445Mbps)
+==========================================
+2026-01-02 21:46:40.350 DEBUG: [ContentDelivery.Uploader.1018A70F0] Log file path: ~/Library/Logs/ContentDelivery/com.apple.itunes.altool/com.apple.itunes.altool_Upload_2026-01-02_21-46-18_227.txt
+No errors uploading archive at './build/export/PTPerformance.ipa'.

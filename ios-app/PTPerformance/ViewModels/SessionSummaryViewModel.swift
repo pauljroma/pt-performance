@@ -16,17 +16,111 @@ class SessionSummaryViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        // BUILD 132: Debug logging for session summary bug
+        DebugLogger.shared.info("SESSION_SUMMARY", """
+            Calculating summary for session:
+            Session ID: \(session.id.uuidString)
+            Patient ID: \(patientId)
+            Session created: \(session.created_at ?? Date())
+            Session started: \(session.started_at?.description ?? "nil")
+            Session completed: \(session.completed_at?.description ?? "nil")
+            """)
+
         do {
-            // Fetch exercise logs for this session
-            let response = try await supabase.client
+            // BUILD 133: Add time-based filtering to prevent retrieving logs from other session completions
+            // Bug fix: session_id alone isn't enough - need to filter by time range too
+            var queryParams: [String: String] = [
+                "patient_id": patientId,
+                "session_id": session.id.uuidString
+            ]
+
+            // Add time range if session has start/end times
+            var timeRangeLog = "No time range filter (session times unavailable)"
+            if let startedAt = session.started_at {
+                queryParams["started_at_gte"] = startedAt.ISO8601Format()
+                timeRangeLog = "started_at >= \(startedAt)"
+            }
+            if let completedAt = session.completed_at {
+                queryParams["completed_at_lte"] = completedAt.ISO8601Format()
+                timeRangeLog += ", completed_at <= \(completedAt)"
+            }
+
+            DebugLogger.shared.logQuery(
+                table: "exercise_logs",
+                query: "SELECT * WHERE patient_id = ? AND session_id = ? + time filters",
+                params: queryParams
+            )
+
+            DebugLogger.shared.info("SESSION_SUMMARY", """
+                Time-based filtering: \(timeRangeLog)
+                This prevents retrieving logs from other completions of the same session
+                """)
+
+            // Build query with time-based filtering
+            var query = supabase.client
                 .from("exercise_logs")
                 .select("*")
                 .eq("patient_id", value: patientId)
-                .execute()
+                .eq("session_id", value: session.id.uuidString)
+
+            // Add time range filters if available to scope to THIS session completion only
+            if let startedAt = session.started_at {
+                query = query.gte("logged_at", value: startedAt.ISO8601Format())
+            }
+            if let completedAt = session.completed_at {
+                query = query.lte("logged_at", value: completedAt.ISO8601Format())
+            }
+
+            let response = try await query.execute()
 
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let exerciseLogs = try decoder.decode([ExerciseLogResponse].self, from: response.data)
+
+            // BUILD 133: Enhanced logging to verify time-based filtering worked
+            let sortedLogs = exerciseLogs.sorted { $0.logged_at < $1.logged_at }
+            let dateRange = sortedLogs.isEmpty ? "N/A" :
+                "\(sortedLogs.first!.logged_at) to \(sortedLogs.last!.logged_at)"
+
+            DebugLogger.shared.info("SESSION_SUMMARY", """
+                Retrieved \(exerciseLogs.count) exercise logs
+                Raw response size: \(response.data.count) bytes
+                Date range of logs: \(dateRange)
+                Expected range: \(session.started_at?.description ?? "nil") to \(session.completed_at?.description ?? "nil")
+                """)
+
+            if exerciseLogs.isEmpty {
+                DebugLogger.shared.warning("SESSION_SUMMARY", """
+                    NO EXERCISE LOGS FOUND!
+                    This could mean:
+                    1. session_id not populated in exercise_logs table
+                    2. Time range filter excluded all logs
+                    3. No exercises were actually logged
+                    Raw response: \(String(data: response.data, encoding: .utf8) ?? "Unable to decode")
+                    """)
+            } else {
+                // Log first, last, and count
+                DebugLogger.shared.info("SESSION_SUMMARY", """
+                    First log: \(sortedLogs.first!.logged_at)
+                    Last log: \(sortedLogs.last!.logged_at)
+                    Span: \(sortedLogs.last!.logged_at.timeIntervalSince(sortedLogs.first!.logged_at) / 60) minutes
+                    """)
+
+                // Log each exercise log (first 5 only to avoid spam)
+                for (index, log) in exerciseLogs.prefix(5).enumerated() {
+                    DebugLogger.shared.info("SESSION_SUMMARY", """
+                        Log \(index + 1)/\(exerciseLogs.count):
+                        - Exercise: \(log.session_exercise_id)
+                        - Logged at: \(log.logged_at)
+                        - Sets: \(log.actual_sets)
+                        - Reps: \(log.actual_reps)
+                        - Load: \(log.actual_load ?? 0)
+                        """)
+                }
+                if exerciseLogs.count > 5 {
+                    DebugLogger.shared.info("SESSION_SUMMARY", "... and \(exerciseLogs.count - 5) more logs")
+                }
+            }
 
             // Fetch historical PRs for comparison
             let prRecords = await fetchPersonalRecords(patientId: patientId)
@@ -34,9 +128,19 @@ class SessionSummaryViewModel: ObservableObject {
             // Calculate metrics
             let exercisesCompleted = exerciseLogs.count
             let totalVolume = calculateTotalVolume(from: exerciseLogs)
-            let duration = calculateDuration(from: exerciseLogs)
+            let duration = calculateDuration(from: exerciseLogs, session: session)
             let prCount = detectPersonalRecords(exerciseLogs: exerciseLogs, historicalPRs: prRecords)
             let complianceScore = await calculateCompliance(exerciseLogs: exerciseLogs, session: session)
+
+            // DEBUG: Log calculated metrics
+            DebugLogger.shared.success("SESSION_SUMMARY", """
+                Calculated metrics:
+                - Exercises: \(exercisesCompleted)
+                - Volume: \(Int(totalVolume)) lbs
+                - Duration: \(duration) seconds (\(Int(duration / 60)) minutes)
+                - PRs: \(prCount)
+                - Compliance: \(String(format: "%.0f%%", complianceScore))
+                """)
 
             summary = SessionSummaryData(
                 exercisesCompleted: exercisesCompleted,
@@ -53,6 +157,12 @@ class SessionSummaryViewModel: ObservableObject {
 
             isLoading = false
         } catch {
+            DebugLogger.shared.error("SESSION_SUMMARY", """
+                Error calculating summary:
+                Error: \(error.localizedDescription)
+                Type: \(type(of: error))
+                Session ID: \(session.id.uuidString)
+                """)
             errorMessage = error.localizedDescription
             isLoading = false
         }
@@ -70,7 +180,14 @@ class SessionSummaryViewModel: ObservableObject {
     }
 
     /// Calculate workout duration
-    private func calculateDuration(from logs: [ExerciseLogResponse]) -> TimeInterval {
+    /// BUILD 123: Use actual session start/end times if available, fallback to exercise log timestamps
+    private func calculateDuration(from logs: [ExerciseLogResponse], session: Session) -> TimeInterval {
+        // Prefer actual session times if both exist
+        if let startedAt = session.started_at, let completedAt = session.completed_at {
+            return completedAt.timeIntervalSince(startedAt)
+        }
+
+        // Fallback to exercise log timestamps (legacy behavior)
         guard !logs.isEmpty else { return 0 }
 
         let sortedLogs = logs.sorted { $0.logged_at < $1.logged_at }
@@ -123,7 +240,9 @@ class SessionSummaryViewModel: ObservableObject {
 
             return Array(prMap.values)
         } catch {
+            #if DEBUG
             print("Failed to fetch PRs: \(error.localizedDescription)")
+            #endif
             return []
         }
     }
@@ -190,7 +309,9 @@ class SessionSummaryViewModel: ObservableObject {
 
             return exerciseLogs.isEmpty ? 0 : totalComplianceScore / Double(exerciseLogs.count)
         } catch {
+            #if DEBUG
             print("Failed to calculate compliance: \(error.localizedDescription)")
+            #endif
             return 0
         }
     }

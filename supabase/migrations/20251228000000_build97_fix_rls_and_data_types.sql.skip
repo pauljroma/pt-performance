@@ -1,0 +1,340 @@
+-- BUILD 97: Fix RLS Policies and Data Types
+-- Created: 2025-12-28
+-- Purpose: Ensure exercise_logs and ai_chat tables have correct RLS policies
+
+-- ==================================================
+-- PART 1: Fix actual_reps data type if needed
+-- ==================================================
+
+-- Check if actual_reps is text and needs conversion
+DO $$
+BEGIN
+  -- If actual_reps is text/varchar, convert to integer array
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'exercise_logs'
+    AND column_name = 'actual_reps'
+    AND data_type IN ('text', 'character varying')
+  ) THEN
+    RAISE NOTICE 'Converting actual_reps from text to integer array...';
+
+    -- Create a temporary column
+    ALTER TABLE exercise_logs ADD COLUMN actual_reps_temp integer[];
+
+    -- Convert string values to arrays
+    -- Handle formats: "[10,10,8]", "10,10,8", or NULL
+    UPDATE exercise_logs
+    SET actual_reps_temp = CASE
+      WHEN actual_reps IS NULL THEN ARRAY[actual_sets]
+      WHEN actual_reps ~ '^\[.*\]$' THEN
+        -- Format: "[10,10,8]" -> remove brackets and convert
+        string_to_array(
+          regexp_replace(actual_reps, '[\[\]]', '', 'g'),
+          ','
+        )::integer[]
+      WHEN actual_reps ~ '^[0-9,\s]+$' THEN
+        -- Format: "10,10,8" -> convert directly
+        string_to_array(actual_reps, ',')::integer[]
+      ELSE
+        -- Invalid format, fallback to actual_sets
+        ARRAY[actual_sets]
+    END;
+
+    -- Drop old column and rename new one
+    ALTER TABLE exercise_logs DROP COLUMN actual_reps;
+    ALTER TABLE exercise_logs RENAME COLUMN actual_reps_temp TO actual_reps;
+
+    RAISE NOTICE 'actual_reps converted to integer array';
+  ELSE
+    RAISE NOTICE 'actual_reps is already integer array or correct type';
+  END IF;
+END $$;
+
+-- Ensure actual_reps column exists and has correct type
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'exercise_logs'
+    AND column_name = 'actual_reps'
+  ) THEN
+    -- Add column if it doesn't exist
+    ALTER TABLE exercise_logs ADD COLUMN actual_reps integer[] NOT NULL DEFAULT ARRAY[]::integer[];
+    RAISE NOTICE 'Added actual_reps column';
+  END IF;
+END $$;
+
+-- ==================================================
+-- PART 2: RLS Policies for exercise_logs
+-- ==================================================
+
+-- Enable RLS on exercise_logs if not already enabled
+ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies to recreate them
+DROP POLICY IF EXISTS "Users can view their own exercise logs" ON exercise_logs;
+DROP POLICY IF EXISTS "Users can insert their own exercise logs" ON exercise_logs;
+DROP POLICY IF EXISTS "Users can update their own exercise logs" ON exercise_logs;
+DROP POLICY IF EXISTS "Therapists can view patient exercise logs" ON exercise_logs;
+DROP POLICY IF EXISTS "exercise_logs_select_policy" ON exercise_logs;
+DROP POLICY IF EXISTS "exercise_logs_insert_policy" ON exercise_logs;
+DROP POLICY IF EXISTS "exercise_logs_update_policy" ON exercise_logs;
+
+-- Policy 1: Users can view exercise logs for their sessions
+CREATE POLICY "Users can view their own exercise logs"
+  ON exercise_logs
+  FOR SELECT
+  USING (
+    -- User is the patient for this log's session
+    EXISTS (
+      SELECT 1
+      FROM session_exercises se
+      JOIN scheduled_sessions ss ON se.scheduled_session_id = ss.id
+      WHERE se.id = exercise_logs.session_exercise_id
+        AND ss.patient_id = auth.uid()::text
+    )
+  );
+
+-- Policy 2: Users can insert exercise logs for their sessions
+CREATE POLICY "Users can insert their own exercise logs"
+  ON exercise_logs
+  FOR INSERT
+  WITH CHECK (
+    -- User is the patient for this session
+    EXISTS (
+      SELECT 1
+      FROM session_exercises se
+      JOIN scheduled_sessions ss ON se.scheduled_session_id = ss.id
+      WHERE se.id = exercise_logs.session_exercise_id
+        AND ss.patient_id = auth.uid()::text
+    )
+  );
+
+-- Policy 3: Users can update their own exercise logs
+CREATE POLICY "Users can update their own exercise logs"
+  ON exercise_logs
+  FOR UPDATE
+  USING (
+    -- User is the patient for this log
+    EXISTS (
+      SELECT 1
+      FROM session_exercises se
+      JOIN scheduled_sessions ss ON se.scheduled_session_id = ss.id
+      WHERE se.id = exercise_logs.session_exercise_id
+        AND ss.patient_id = auth.uid()::text
+    )
+  );
+
+-- Policy 4: Therapists can view patient exercise logs
+CREATE POLICY "Therapists can view patient exercise logs"
+  ON exercise_logs
+  FOR SELECT
+  USING (
+    -- User is a therapist assigned to this patient
+    EXISTS (
+      SELECT 1
+      FROM session_exercises se
+      JOIN scheduled_sessions ss ON se.scheduled_session_id = ss.id
+      JOIN programs p ON ss.program_id = p.id
+      WHERE se.id = exercise_logs.session_exercise_id
+        AND p.therapist_id = auth.uid()::text
+    )
+  );
+
+-- ==================================================
+-- PART 3: RLS Policies for session_exercises
+-- ==================================================
+
+ALTER TABLE session_exercises ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view session exercises" ON session_exercises;
+DROP POLICY IF EXISTS "session_exercises_select_policy" ON session_exercises;
+
+CREATE POLICY "Users can view session exercises"
+  ON session_exercises
+  FOR SELECT
+  USING (
+    -- User is the patient OR therapist for this session
+    EXISTS (
+      SELECT 1
+      FROM scheduled_sessions ss
+      LEFT JOIN programs p ON ss.program_id = p.id
+      WHERE ss.id = session_exercises.scheduled_session_id
+        AND (
+          ss.patient_id = auth.uid()::text
+          OR p.therapist_id = auth.uid()::text
+        )
+    )
+  );
+
+-- ==================================================
+-- PART 4: RLS Policies for scheduled_sessions
+-- ==================================================
+
+ALTER TABLE scheduled_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their scheduled sessions" ON scheduled_sessions;
+DROP POLICY IF EXISTS "Therapists can view patient sessions" ON scheduled_sessions;
+DROP POLICY IF EXISTS "scheduled_sessions_select_policy" ON scheduled_sessions;
+
+CREATE POLICY "Users can view their scheduled sessions"
+  ON scheduled_sessions
+  FOR SELECT
+  USING (patient_id = auth.uid()::text);
+
+CREATE POLICY "Therapists can view patient sessions"
+  ON scheduled_sessions
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM programs
+      WHERE programs.id = scheduled_sessions.program_id
+        AND programs.therapist_id = auth.uid()::text
+    )
+  );
+
+-- ==================================================
+-- PART 5: RLS Policies for ai_chat_sessions
+-- ==================================================
+
+-- Check if ai_chat_sessions table exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.tables
+    WHERE table_name = 'ai_chat_sessions'
+  ) THEN
+    -- Enable RLS
+    ALTER TABLE ai_chat_sessions ENABLE ROW LEVEL SECURITY;
+
+    -- Drop existing policies
+    DROP POLICY IF EXISTS "Users can view their AI chat sessions" ON ai_chat_sessions;
+    DROP POLICY IF EXISTS "Users can insert their AI chat sessions" ON ai_chat_sessions;
+    DROP POLICY IF EXISTS "ai_chat_sessions_select_policy" ON ai_chat_sessions;
+
+    -- Create new policies
+    CREATE POLICY "Users can view their AI chat sessions"
+      ON ai_chat_sessions
+      FOR SELECT
+      USING (athlete_id = auth.uid()::text);
+
+    CREATE POLICY "Users can insert their AI chat sessions"
+      ON ai_chat_sessions
+      FOR INSERT
+      WITH CHECK (athlete_id = auth.uid()::text);
+
+    RAISE NOTICE 'RLS policies created for ai_chat_sessions';
+  ELSE
+    RAISE NOTICE 'Table ai_chat_sessions does not exist, skipping';
+  END IF;
+END $$;
+
+-- ==================================================
+-- PART 6: RLS Policies for ai_chat_messages
+-- ==================================================
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT FROM information_schema.tables
+    WHERE table_name = 'ai_chat_messages'
+  ) THEN
+    -- Enable RLS
+    ALTER TABLE ai_chat_messages ENABLE ROW LEVEL SECURITY;
+
+    -- Drop existing policies
+    DROP POLICY IF EXISTS "Users can view their AI chat messages" ON ai_chat_messages;
+    DROP POLICY IF EXISTS "Users can insert their AI chat messages" ON ai_chat_messages;
+    DROP POLICY IF EXISTS "ai_chat_messages_select_policy" ON ai_chat_messages;
+
+    -- Create new policies
+    CREATE POLICY "Users can view their AI chat messages"
+      ON ai_chat_messages
+      FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM ai_chat_sessions
+          WHERE ai_chat_sessions.id = ai_chat_messages.session_id
+            AND ai_chat_sessions.athlete_id = auth.uid()::text
+        )
+      );
+
+    CREATE POLICY "Users can insert their AI chat messages"
+      ON ai_chat_messages
+      FOR INSERT
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM ai_chat_sessions
+          WHERE ai_chat_sessions.id = ai_chat_messages.session_id
+            AND ai_chat_sessions.athlete_id = auth.uid()::text
+        )
+      );
+
+    RAISE NOTICE 'RLS policies created for ai_chat_messages';
+  ELSE
+    RAISE NOTICE 'Table ai_chat_messages does not exist, skipping';
+  END IF;
+END $$;
+
+-- ==================================================
+-- PART 7: Grant necessary permissions
+-- ==================================================
+
+-- Grant SELECT to authenticated users on all tables
+GRANT SELECT ON exercise_logs TO authenticated;
+GRANT SELECT ON session_exercises TO authenticated;
+GRANT SELECT ON scheduled_sessions TO authenticated;
+GRANT SELECT ON exercises TO authenticated;
+GRANT SELECT ON programs TO authenticated;
+
+-- Grant INSERT/UPDATE on exercise_logs (controlled by RLS)
+GRANT INSERT, UPDATE ON exercise_logs TO authenticated;
+
+-- Grant permissions on AI chat tables if they exist
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ai_chat_sessions') THEN
+    GRANT SELECT, INSERT ON ai_chat_sessions TO authenticated;
+  END IF;
+
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ai_chat_messages') THEN
+    GRANT SELECT, INSERT ON ai_chat_messages TO authenticated;
+  END IF;
+END $$;
+
+-- ==================================================
+-- VERIFICATION
+-- ==================================================
+
+-- Show all RLS policies created
+SELECT
+  'RLS Policies' as info,
+  tablename,
+  policyname
+FROM pg_policies
+WHERE tablename IN (
+  'exercise_logs',
+  'session_exercises',
+  'scheduled_sessions',
+  'ai_chat_sessions',
+  'ai_chat_messages'
+)
+ORDER BY tablename, policyname;
+
+-- Show actual_reps data type
+SELECT
+  'actual_reps data type' as info,
+  data_type,
+  udt_name
+FROM information_schema.columns
+WHERE table_name = 'exercise_logs'
+  AND column_name = 'actual_reps';
+
+-- Show sample actual_reps values
+SELECT
+  'Sample actual_reps' as info,
+  id,
+  actual_reps,
+  pg_typeof(actual_reps) as type
+FROM exercise_logs
+LIMIT 5;

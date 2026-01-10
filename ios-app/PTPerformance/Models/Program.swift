@@ -2,8 +2,8 @@ import Foundation
 
 /// Program model
 struct Program: Codable, Identifiable {
-    let id: String
-    let patientId: String
+    let id: UUID
+    let patientId: UUID
     let name: String
     let targetLevel: String
     let durationWeeks: Int
@@ -23,8 +23,8 @@ struct Program: Codable, Identifiable {
 
 /// Phase model
 struct Phase: Codable, Identifiable {
-    let id: String
-    let programId: String
+    let id: UUID
+    let programId: UUID
     let phaseNumber: Int
     let name: String
     let durationWeeks: Int?  // Optional - can be null in database
@@ -42,8 +42,8 @@ struct Phase: Codable, Identifiable {
 
 /// Session model (simplified for program viewer)
 struct ProgramSession: Codable, Identifiable {
-    let id: String
-    let phaseId: String
+    let id: UUID
+    let phaseId: UUID
     let sessionNumber: Int
     let sessionDate: Date?
     let completed: Bool?  // Optional - may not exist in database
@@ -61,8 +61,8 @@ struct ProgramSession: Codable, Identifiable {
 
 /// Session exercise (for program viewer)
 struct ProgramExercise: Decodable, Identifiable {
-    let id: String
-    let sessionId: String
+    let id: UUID
+    let sessionId: UUID
     let exerciseName: String
     let sets: Int
     let reps: String
@@ -96,8 +96,8 @@ struct ProgramExercise: Decodable, Identifiable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(String.self, forKey: .id)
-        sessionId = try container.decode(String.self, forKey: .sessionId)
+        id = try container.decode(UUID.self, forKey: .id)
+        sessionId = try container.decode(UUID.self, forKey: .sessionId)
         sets = try container.decode(Int.self, forKey: .sets)
         reps = try container.decode(String.self, forKey: .reps)
         load = try container.decodeIfPresent(Double.self, forKey: .load)

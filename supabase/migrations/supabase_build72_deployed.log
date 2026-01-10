@@ -1,0 +1,42 @@
+Using workdir /Users/expo/Code/expo
+Connecting to remote database...
+Skipping migration 20251215140000_add_exercise_videos.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000001_create_messaging_tables.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000003_create_ai_conversations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_complete.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy5.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy6.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deployed.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_final.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_success.log... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20251220000001_validate_video_urls.sql
+ • 20251220000002_adjustment_audit_log.sql
+ • 20251220000003_adjustment_rls_policies.sql
+
+ [Y/n] Y
+Applying migration 20251220000001_validate_video_urls.sql...
+NOTICE (00000): === Video URL Validation Report ===
+NOTICE (00000): Total exercises: 64
+NOTICE (00000): Exercises with video URLs: 53
+NOTICE (00000): Exercises with thumbnail URLs: 1
+NOTICE (00000): Invalid video URLs: 53
+NOTICE (00000): Invalid thumbnail URLs: 1
+NOTICE (00000): Placeholder video URLs: 53
+NOTICE (00000): ===================================
+WARNING (01000): Found 53 exercises with invalid video URLs - these will be set to NULL
+WARNING (01000): Found 1 exercises with invalid thumbnail URLs - these will be set to NULL
+NOTICE (00000): constraint "exercise_templates_video_url_check" of relation "exercise_templates" does not exist, skipping
+NOTICE (00000): constraint "exercise_templates_thumbnail_url_check" of relation "exercise_templates" does not exist, skipping
+NOTICE (00000): trigger "auto_set_thumbnail_url_trigger" for relation "exercise_templates" does not exist, skipping
+NOTICE (00000): === Migration Complete ===
+NOTICE (00000): Validation constraints: 2 of 2
+NOTICE (00000): exercise_video_status view: Created
+NOTICE (00000): Auto-thumbnail trigger: Created
+NOTICE (00000): =========================
+NOTICE (00000): ✓ All video URL validation components created successfully
+ERROR: duplicate key value violates unique constraint "schema_migrations_pkey" (SQLSTATE 23505)
+Key (version)=(20251220000001) already exists.                                                 
+At statement: 20                                                                               
+INSERT INTO supabase_migrations.schema_migrations(version, name, statements) VALUES($1, $2, $3)
+Try rerunning the command with --debug to troubleshoot the error.

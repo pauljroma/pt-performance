@@ -359,14 +359,15 @@ struct MetricCard: View {
 struct SessionSummaryView_Previews: PreviewProvider {
     static var previews: some View {
         SessionSummaryView(session: Session(
-            id: "session-1",
-            phase_id: "phase-1",
+            id: UUID(),
+            phase_id: UUID(),
             name: "Upper Body Strength",
             sequence: 1,
             weekday: 1,
             notes: nil,
             created_at: Date(),
             completed: true,
+            started_at: Date().addingTimeInterval(-2700), // BUILD 123: 45 min ago
             completed_at: Date(),
             total_volume: 12500.50,
             avg_rpe: 7.5,

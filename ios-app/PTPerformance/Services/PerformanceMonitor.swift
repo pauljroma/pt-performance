@@ -45,7 +45,11 @@ class PerformanceMonitor {
         }
 
         appLaunchEndTime = Date()
-        let launchDuration = appLaunchEndTime!.timeIntervalSince(startTime)
+        guard let endTime = appLaunchEndTime else {
+            logger.error("Failed to record app launch end time")
+            return
+        }
+        let launchDuration = endTime.timeIntervalSince(startTime)
 
         logger.info("App launch completed in \(String(format: "%.2f", launchDuration * 1000))ms")
 
@@ -322,6 +326,10 @@ class PerformanceMonitor {
 
     /// Print performance summary to console
     func printPerformanceSummary() {
+        #if DEBUG
         print(getPerformanceSummary())
+        #else
+        logger.debug("\(self.getPerformanceSummary())")
+        #endif
     }
 }

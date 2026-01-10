@@ -2,9 +2,9 @@ import Foundation
 
 /// Exercise model from Supabase session_exercises and exercise_templates
 struct Exercise: Codable, Identifiable, Hashable {
-    let id: String
-    let session_id: String
-    let exercise_template_id: String
+    let id: UUID
+    let session_id: UUID
+    let exercise_template_id: UUID
     let sequence: Int?
     let prescribed_sets: Int
     let prescribed_reps: String?  // Database has this as string (e.g., "15" or "8-10")
@@ -15,7 +15,7 @@ struct Exercise: Codable, Identifiable, Hashable {
 
     // From exercise_templates (joined data)
     struct ExerciseTemplate: Codable, Hashable, Identifiable {
-        let id: String
+        let id: UUID
         let name: String
         let category: String?
         let body_region: String?
@@ -129,9 +129,9 @@ struct Exercise: Codable, Identifiable, Hashable {
 
     static let sampleExercises: [Exercise] = [
         Exercise(
-            id: "ex-1",
-            session_id: "session-1",
-            exercise_template_id: "template-1",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
+            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
+            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000030")!,
             sequence: 1,
             prescribed_sets: 3,
             prescribed_reps: "8-10",
@@ -140,7 +140,7 @@ struct Exercise: Codable, Identifiable, Hashable {
             rest_period_seconds: 90,
             notes: nil,
             exercise_templates: ExerciseTemplate(
-                id: "template-1",
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000030")!,
                 name: "Bench Press",
                 category: "push",
                 body_region: "upper",
@@ -154,9 +154,9 @@ struct Exercise: Codable, Identifiable, Hashable {
             )
         ),
         Exercise(
-            id: "ex-2",
-            session_id: "session-1",
-            exercise_template_id: "template-2",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
+            session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
+            exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000031")!,
             sequence: 2,
             prescribed_sets: 3,
             prescribed_reps: "10-12",
@@ -165,7 +165,7 @@ struct Exercise: Codable, Identifiable, Hashable {
             rest_period_seconds: 120,
             notes: nil,
             exercise_templates: ExerciseTemplate(
-                id: "template-2",
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000031")!,
                 name: "Squat",
                 category: "squat",
                 body_region: "lower",
@@ -185,8 +185,8 @@ struct Exercise: Codable, Identifiable, Hashable {
 /// Matches actual database schema: id, phase_id, name, sequence, weekday, notes, created_at
 /// Build 33: Added completion tracking fields
 struct Session: Codable, Identifiable {
-    let id: String
-    let phase_id: String
+    let id: UUID
+    let phase_id: UUID
     let name: String
     let sequence: Int
     let weekday: Int?
@@ -194,7 +194,9 @@ struct Session: Codable, Identifiable {
     let created_at: Date?
 
     // Build 33: Completion tracking
+    // BUILD 123: Added started_at for accurate workout duration tracking
     let completed: Bool?
+    let started_at: Date? // BUILD 123: When workout actually began
     let completed_at: Date?
     let total_volume: Double?
     let avg_rpe: Double?
@@ -213,6 +215,7 @@ struct Session: Codable, Identifiable {
         case notes
         case created_at
         case completed
+        case started_at // BUILD 123
         case completed_at
         case total_volume
         case avg_rpe

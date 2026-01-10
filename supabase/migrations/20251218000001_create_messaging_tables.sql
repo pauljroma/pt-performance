@@ -1,0 +1,292 @@
+-- Build 62: Patient Communication System (ACP-159)
+-- Creates message_threads and messages tables with video support and real-time capabilities
+
+-- Message threads table
+CREATE TABLE IF NOT EXISTS message_threads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    therapist_id UUID NOT NULL REFERENCES therapists(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_message_at TIMESTAMPTZ,
+    last_message_preview TEXT,
+    last_message_type TEXT CHECK (last_message_type IN ('text', 'image', 'video', 'form_check')),
+
+    -- Ensure one thread per patient-therapist pair
+    UNIQUE(patient_id, therapist_id)
+);
+
+-- Messages table
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    thread_id UUID NOT NULL REFERENCES message_threads(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL,
+    sender_type TEXT NOT NULL CHECK (sender_type IN ('patient', 'therapist')),
+    message_type TEXT NOT NULL CHECK (message_type IN ('text', 'image', 'video', 'form_check')),
+    content TEXT,
+    video_url TEXT,
+    image_url TEXT,
+    video_duration INTEGER, -- seconds
+    video_thumbnail TEXT,
+    annotations JSONB, -- array of annotation objects
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    read_at TIMESTAMPTZ,
+
+    -- Validation constraints
+    CONSTRAINT valid_content CHECK (
+        CASE message_type
+            WHEN 'text' THEN content IS NOT NULL
+            WHEN 'video' THEN video_url IS NOT NULL
+            WHEN 'form_check' THEN video_url IS NOT NULL
+            WHEN 'image' THEN image_url IS NOT NULL
+            ELSE false
+        END
+    )
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_message_threads_patient ON message_threads(patient_id);
+CREATE INDEX IF NOT EXISTS idx_message_threads_therapist ON message_threads(therapist_id);
+CREATE INDEX IF NOT EXISTS idx_message_threads_last_message ON message_threads(last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(thread_id) WHERE read_at IS NULL;
+
+-- Function to update thread's last message
+CREATE OR REPLACE FUNCTION update_thread_last_message()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE message_threads
+    SET
+        last_message_at = NEW.created_at,
+        last_message_preview = CASE
+            WHEN NEW.message_type = 'text' THEN LEFT(NEW.content, 100)
+            WHEN NEW.message_type = 'video' THEN 'Video message'
+            WHEN NEW.message_type = 'form_check' THEN 'Form check video'
+            WHEN NEW.message_type = 'image' THEN 'Image message'
+            ELSE 'Message'
+        END,
+        last_message_type = NEW.message_type
+    WHERE id = NEW.thread_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update thread on new message
+DROP TRIGGER IF EXISTS trigger_update_thread_last_message ON messages;
+CREATE TRIGGER trigger_update_thread_last_message
+    AFTER INSERT ON messages
+    FOR EACH ROW
+    EXECUTE FUNCTION update_thread_last_message();
+
+-- Function to get unread count for a thread
+CREATE OR REPLACE FUNCTION get_thread_unread_count(
+    p_thread_id UUID,
+    p_user_id UUID,
+    p_user_type TEXT
+)
+RETURNS INTEGER AS $$
+BEGIN
+    RETURN (
+        SELECT COUNT(*)
+        FROM messages
+        WHERE thread_id = p_thread_id
+            AND sender_id != p_user_id
+            AND read_at IS NULL
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- View for threads with unread counts (patient view)
+CREATE OR REPLACE VIEW patient_message_threads AS
+SELECT
+    t.*,
+    p.first_name || ' ' || p.last_name AS patient_name,
+    th.first_name || ' ' || th.last_name AS therapist_name,
+    (
+        SELECT COUNT(*)
+        FROM messages m
+        WHERE m.thread_id = t.id
+            AND m.sender_type = 'therapist'
+            AND m.read_at IS NULL
+    ) AS unread_count
+FROM message_threads t
+JOIN patients p ON t.patient_id = p.id
+JOIN therapists th ON t.therapist_id = th.id;
+
+-- View for threads with unread counts (therapist view)
+CREATE OR REPLACE VIEW therapist_message_threads AS
+SELECT
+    t.*,
+    p.first_name || ' ' || p.last_name AS patient_name,
+    th.first_name || ' ' || th.last_name AS therapist_name,
+    (
+        SELECT COUNT(*)
+        FROM messages m
+        WHERE m.thread_id = t.id
+            AND m.sender_type = 'patient'
+            AND m.read_at IS NULL
+    ) AS unread_count
+FROM message_threads t
+JOIN patients p ON t.patient_id = p.id
+JOIN therapists th ON t.therapist_id = th.id;
+
+-- RLS Policies
+
+-- Enable RLS
+ALTER TABLE message_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Message threads policies
+-- Patients can view their own threads
+CREATE POLICY "Patients can view their threads"
+    ON message_threads FOR SELECT
+    USING (
+        patient_id IN (
+            SELECT id FROM patients
+            WHERE user_id = auth.uid()
+        )
+    );
+
+-- Therapists can view their threads
+CREATE POLICY "Therapists can view their threads"
+    ON message_threads FOR SELECT
+    USING (
+        therapist_id IN (
+            SELECT id FROM therapists
+            WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can create threads with their therapist
+CREATE POLICY "Patients can create threads with therapist"
+    ON message_threads FOR INSERT
+    WITH CHECK (
+        patient_id IN (
+            SELECT id FROM patients
+            WHERE user_id = auth.uid()
+        )
+    );
+
+-- Therapists can create threads with their patients
+CREATE POLICY "Therapists can create threads with patients"
+    ON message_threads FOR INSERT
+    WITH CHECK (
+        therapist_id IN (
+            SELECT id FROM therapists
+            WHERE user_id = auth.uid()
+        )
+    );
+
+-- Messages policies
+-- Patients can view messages in their threads
+CREATE POLICY "Patients can view messages in their threads"
+    ON messages FOR SELECT
+    USING (
+        thread_id IN (
+            SELECT id FROM message_threads
+            WHERE patient_id IN (
+                SELECT id FROM patients
+                WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+-- Therapists can view messages in their threads
+CREATE POLICY "Therapists can view messages in their threads"
+    ON messages FOR SELECT
+    USING (
+        thread_id IN (
+            SELECT id FROM message_threads
+            WHERE therapist_id IN (
+                SELECT id FROM therapists
+                WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+-- Patients can send messages in their threads
+CREATE POLICY "Patients can send messages"
+    ON messages FOR INSERT
+    WITH CHECK (
+        sender_type = 'patient'
+        AND sender_id IN (
+            SELECT id FROM patients
+            WHERE user_id = auth.uid()
+        )
+        AND thread_id IN (
+            SELECT id FROM message_threads
+            WHERE patient_id = sender_id
+        )
+    );
+
+-- Therapists can send messages in their threads
+CREATE POLICY "Therapists can send messages"
+    ON messages FOR INSERT
+    WITH CHECK (
+        sender_type = 'therapist'
+        AND sender_id IN (
+            SELECT id FROM therapists
+            WHERE user_id = auth.uid()
+        )
+        AND thread_id IN (
+            SELECT id FROM message_threads
+            WHERE therapist_id = sender_id
+        )
+    );
+
+-- Users can mark their received messages as read
+CREATE POLICY "Users can mark messages as read"
+    ON messages FOR UPDATE
+    USING (
+        -- Patients can mark therapist messages as read
+        (sender_type = 'therapist' AND thread_id IN (
+            SELECT id FROM message_threads
+            WHERE patient_id IN (
+                SELECT id FROM patients
+                WHERE user_id = auth.uid()
+            )
+        ))
+        OR
+        -- Therapists can mark patient messages as read
+        (sender_type = 'patient' AND thread_id IN (
+            SELECT id FROM message_threads
+            WHERE therapist_id IN (
+                SELECT id FROM therapists
+                WHERE user_id = auth.uid()
+            )
+        ))
+    );
+
+-- Therapists can add annotations to form check videos
+CREATE POLICY "Therapists can annotate form check videos"
+    ON messages FOR UPDATE
+    USING (
+        sender_type = 'patient'
+        AND message_type = 'form_check'
+        AND thread_id IN (
+            SELECT id FROM message_threads
+            WHERE therapist_id IN (
+                SELECT id FROM therapists
+                WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+-- Enable Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE message_threads;
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+
+-- Grant permissions
+GRANT SELECT, INSERT, UPDATE ON message_threads TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON messages TO authenticated;
+GRANT SELECT ON patient_message_threads TO authenticated;
+GRANT SELECT ON therapist_message_threads TO authenticated;
+
+-- Comments for documentation
+COMMENT ON TABLE message_threads IS 'Build 62: Message threads between therapists and patients';
+COMMENT ON TABLE messages IS 'Build 62: Messages with support for text, images, and form check videos';
+COMMENT ON COLUMN messages.annotations IS 'JSONB array of video annotations for form check feedback';
+COMMENT ON FUNCTION update_thread_last_message() IS 'Updates thread last_message_at and preview when new message is sent';
+COMMENT ON VIEW patient_message_threads IS 'Patient view of message threads with unread counts';
+COMMENT ON VIEW therapist_message_threads IS 'Therapist view of message threads with unread counts';

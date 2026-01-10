@@ -1,0 +1,372 @@
+-- Create RLS Policies for Readiness Adjustment System
+-- Enables therapist control and patient overrides with proper security
+-- Build 72 - Agent 4: Readiness Adjustment Infrastructure
+-- ACP-219
+
+BEGIN;
+
+-- ============================================================================
+-- 1. ADD AUTO_ADJUSTMENT_ENABLED COLUMN TO PATIENTS TABLE
+-- ============================================================================
+-- Allows therapists to enable/disable auto-adjustment per patient
+
+ALTER TABLE public.patients
+ADD COLUMN IF NOT EXISTS auto_adjustment_enabled BOOLEAN DEFAULT TRUE;
+
+COMMENT ON COLUMN public.patients.auto_adjustment_enabled IS 'Therapist toggle: enables/disables automatic readiness adjustments for this patient';
+
+-- Create index for filtering
+CREATE INDEX IF NOT EXISTS idx_patients_auto_adjustment_enabled
+ON public.patients(auto_adjustment_enabled)
+WHERE auto_adjustment_enabled = TRUE;
+
+-- ============================================================================
+-- 2. THERAPIST RLS POLICIES FOR PATIENTS TABLE
+-- ============================================================================
+-- Therapists can update auto_adjustment_enabled for their patients
+
+-- Drop existing policy if it exists (to avoid conflicts)
+DROP POLICY IF EXISTS "Therapists can update patient auto_adjustment_enabled" ON public.patients;
+
+-- Create new policy for therapist updates to auto_adjustment_enabled
+CREATE POLICY "Therapists can update patient auto_adjustment_enabled"
+ON public.patients
+FOR UPDATE
+TO authenticated
+USING (
+    -- Therapist owns this patient
+    EXISTS (
+        SELECT 1 FROM public.therapists t
+        WHERE t.user_id = auth.uid()
+        AND t.id = patients.therapist_id
+    )
+)
+WITH CHECK (
+    -- Therapist owns this patient
+    EXISTS (
+        SELECT 1 FROM public.therapists t
+        WHERE t.user_id = auth.uid()
+        AND t.id = patients.therapist_id
+    )
+);
+
+COMMENT ON POLICY "Therapists can update patient auto_adjustment_enabled" ON public.patients
+IS 'Allows therapists to enable/disable auto-adjustments for their patients';
+
+-- ============================================================================
+-- 3. PATIENT RLS POLICIES FOR READINESS_ADJUSTMENTS TABLE
+-- ============================================================================
+-- Patients can update override fields for their own adjustments
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Patients can update their own readiness adjustment overrides" ON public.readiness_adjustments;
+
+-- Create new policy for patient updates to override fields
+CREATE POLICY "Patients can update their own readiness adjustment overrides"
+ON public.readiness_adjustments
+FOR UPDATE
+TO authenticated
+USING (
+    -- Patient owns this adjustment
+    patient_id IN (
+        SELECT id FROM public.patients WHERE user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    -- Patient owns this adjustment
+    patient_id IN (
+        SELECT id FROM public.patients WHERE user_id = auth.uid()
+    )
+);
+
+COMMENT ON POLICY "Patients can update their own readiness adjustment overrides" ON public.readiness_adjustments
+IS 'Allows patients to override adjustments by updating overridden_by, override_reason, and status fields';
+
+-- ============================================================================
+-- 4. FUNCTION TO TOGGLE AUTO-ADJUSTMENT (THERAPIST)
+-- ============================================================================
+-- Secure function for therapists to enable/disable auto-adjustments
+
+CREATE OR REPLACE FUNCTION public.toggle_auto_adjustment(
+    p_patient_id UUID,
+    p_enabled BOOLEAN,
+    p_reason TEXT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_therapist_id UUID;
+    v_patient_therapist_id UUID;
+    v_previous_state BOOLEAN;
+BEGIN
+    -- Get therapist ID for current user
+    SELECT id INTO v_therapist_id
+    FROM public.therapists
+    WHERE user_id = auth.uid();
+
+    IF v_therapist_id IS NULL THEN
+        RAISE EXCEPTION 'Only therapists can toggle auto-adjustment settings';
+    END IF;
+
+    -- Verify patient belongs to this therapist
+    SELECT therapist_id, auto_adjustment_enabled
+    INTO v_patient_therapist_id, v_previous_state
+    FROM public.patients
+    WHERE id = p_patient_id;
+
+    IF v_patient_therapist_id IS NULL THEN
+        RAISE EXCEPTION 'Patient not found: %', p_patient_id;
+    END IF;
+
+    IF v_patient_therapist_id != v_therapist_id THEN
+        RAISE EXCEPTION 'Patient does not belong to this therapist';
+    END IF;
+
+    -- Update auto_adjustment_enabled
+    UPDATE public.patients
+    SET auto_adjustment_enabled = p_enabled,
+        updated_at = NOW()
+    WHERE id = p_patient_id;
+
+    -- Log audit event
+    IF p_enabled = TRUE THEN
+        PERFORM public.log_adjustment_event(
+            'auto_adjustment_enabled',
+            NULL,
+            p_patient_id,
+            format('Therapist enabled auto-adjustment for patient. Reason: %s',
+                   COALESCE(p_reason, 'No reason provided')),
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+            jsonb_build_object(
+                'previous_state', v_previous_state,
+                'new_state', p_enabled,
+                'reason', p_reason
+            )
+        );
+    ELSE
+        PERFORM public.log_adjustment_event(
+            'auto_adjustment_disabled',
+            NULL,
+            p_patient_id,
+            format('Therapist disabled auto-adjustment for patient. Reason: %s',
+                   COALESCE(p_reason, 'No reason provided')),
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+            jsonb_build_object(
+                'previous_state', v_previous_state,
+                'new_state', p_enabled,
+                'reason', p_reason
+            )
+        );
+    END IF;
+
+    RETURN TRUE;
+END;
+$$;
+
+COMMENT ON FUNCTION public.toggle_auto_adjustment IS 'Allows therapists to enable/disable auto-adjustments for their patients with audit trail';
+
+-- ============================================================================
+-- 5. FUNCTION FOR PATIENT TO OVERRIDE ADJUSTMENT
+-- ============================================================================
+-- Secure function for patients to reject/override auto-adjustments
+
+CREATE OR REPLACE FUNCTION public.patient_override_adjustment(
+    p_adjustment_id UUID,
+    p_override_reason TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_patient_id UUID;
+    v_adjustment_patient_id UUID;
+    v_original_volume NUMERIC;
+    v_original_intensity NUMERIC;
+BEGIN
+    -- Get patient ID for current user
+    SELECT id INTO v_patient_id
+    FROM public.patients
+    WHERE user_id = auth.uid();
+
+    IF v_patient_id IS NULL THEN
+        RAISE EXCEPTION 'Only patients can override their own adjustments';
+    END IF;
+
+    -- Verify adjustment belongs to this patient
+    SELECT patient_id, volume_multiplier, intensity_multiplier
+    INTO v_adjustment_patient_id, v_original_volume, v_original_intensity
+    FROM public.readiness_adjustments
+    WHERE id = p_adjustment_id;
+
+    IF v_adjustment_patient_id IS NULL THEN
+        RAISE EXCEPTION 'Adjustment not found: %', p_adjustment_id;
+    END IF;
+
+    IF v_adjustment_patient_id != v_patient_id THEN
+        RAISE EXCEPTION 'Adjustment does not belong to this patient';
+    END IF;
+
+    -- Update adjustment with patient override
+    -- Patient override means: keep original prescribed values (1.0x multipliers)
+    UPDATE public.readiness_adjustments
+    SET
+        is_overridden = TRUE,
+        override_reason = p_override_reason,
+        overridden_by = auth.uid(),
+        overridden_at = NOW(),
+        original_volume_multiplier = volume_multiplier,
+        original_intensity_multiplier = intensity_multiplier,
+        volume_multiplier = 1.0, -- Reset to baseline
+        intensity_multiplier = 1.0, -- Reset to baseline
+        status = 'overridden',
+        updated_at = NOW()
+    WHERE id = p_adjustment_id;
+
+    -- Audit event is logged automatically by trigger
+    -- (audit_adjustment_status_change_trigger)
+
+    RETURN TRUE;
+END;
+$$;
+
+COMMENT ON FUNCTION public.patient_override_adjustment IS 'Allows patients to reject auto-adjustments and revert to prescribed workout with audit trail';
+
+-- ============================================================================
+-- 6. FUNCTION FOR PATIENT TO ACCEPT ADJUSTMENT
+-- ============================================================================
+-- Secure function for patients to explicitly accept auto-adjustments
+
+CREATE OR REPLACE FUNCTION public.patient_accept_adjustment(
+    p_adjustment_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_patient_id UUID;
+    v_adjustment_patient_id UUID;
+BEGIN
+    -- Get patient ID for current user
+    SELECT id INTO v_patient_id
+    FROM public.patients
+    WHERE user_id = auth.uid();
+
+    IF v_patient_id IS NULL THEN
+        RAISE EXCEPTION 'Only patients can accept their own adjustments';
+    END IF;
+
+    -- Verify adjustment belongs to this patient
+    SELECT patient_id INTO v_adjustment_patient_id
+    FROM public.readiness_adjustments
+    WHERE id = p_adjustment_id;
+
+    IF v_adjustment_patient_id IS NULL THEN
+        RAISE EXCEPTION 'Adjustment not found: %', p_adjustment_id;
+    END IF;
+
+    IF v_adjustment_patient_id != v_patient_id THEN
+        RAISE EXCEPTION 'Adjustment does not belong to this patient';
+    END IF;
+
+    -- Mark adjustment as applied
+    UPDATE public.readiness_adjustments
+    SET
+        status = 'applied',
+        applied_at = NOW(),
+        updated_at = NOW()
+    WHERE id = p_adjustment_id
+    AND status = 'calculated'; -- Only accept if not already applied/overridden
+
+    -- Audit event is logged automatically by trigger
+    -- (audit_adjustment_status_change_trigger)
+
+    RETURN TRUE;
+END;
+$$;
+
+COMMENT ON FUNCTION public.patient_accept_adjustment IS 'Allows patients to explicitly accept and apply auto-adjustments with audit trail';
+
+-- ============================================================================
+-- 7. HELPER VIEW FOR PATIENT ADJUSTMENT CONTROLS
+-- ============================================================================
+-- Shows patients their current auto-adjustment status and pending adjustments
+
+CREATE OR REPLACE VIEW public.vw_patient_adjustment_controls AS
+SELECT
+    p.id as patient_id,
+    p.first_name || ' ' || p.last_name as patient_name,
+    p.auto_adjustment_enabled,
+    COUNT(CASE WHEN ra.status = 'calculated' THEN 1 END) as pending_adjustments,
+    COUNT(CASE WHEN ra.status = 'applied' THEN 1 END) as applied_adjustments,
+    COUNT(CASE WHEN ra.status = 'overridden' THEN 1 END) as overridden_adjustments,
+    MAX(ra.adjustment_date) as last_adjustment_date,
+    MAX(ra.created_at) as last_adjustment_created_at
+FROM public.patients p
+LEFT JOIN public.readiness_adjustments ra ON ra.patient_id = p.id
+    AND ra.adjustment_date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY p.id, p.first_name, p.last_name, p.auto_adjustment_enabled;
+
+COMMENT ON VIEW public.vw_patient_adjustment_controls IS 'Patient adjustment status and statistics for last 30 days';
+
+-- ============================================================================
+-- 8. HELPER VIEW FOR THERAPIST ADJUSTMENT OVERSIGHT
+-- ============================================================================
+-- Shows therapists their patients' auto-adjustment settings and usage
+
+CREATE OR REPLACE VIEW public.vw_therapist_adjustment_oversight AS
+SELECT
+    p.id as patient_id,
+    p.first_name || ' ' || p.last_name as patient_name,
+    t.id as therapist_id,
+    t.first_name || ' ' || t.last_name as therapist_name,
+    p.auto_adjustment_enabled,
+    COUNT(CASE WHEN ra.status = 'calculated' THEN 1 END) as pending_adjustments,
+    COUNT(CASE WHEN ra.status = 'applied' THEN 1 END) as applied_adjustments,
+    COUNT(CASE WHEN ra.status = 'overridden' THEN 1 END) as overridden_adjustments,
+    ROUND(
+        100.0 * COUNT(CASE WHEN ra.status = 'overridden' THEN 1 END) /
+        NULLIF(COUNT(CASE WHEN ra.status IN ('applied', 'overridden') THEN 1 END), 0),
+        1
+    ) as override_rate_pct,
+    MAX(ra.adjustment_date) as last_adjustment_date
+FROM public.patients p
+JOIN public.therapists t ON t.id = p.therapist_id
+LEFT JOIN public.readiness_adjustments ra ON ra.patient_id = p.id
+    AND ra.adjustment_date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY p.id, p.first_name, p.last_name, t.id, t.first_name, t.last_name, p.auto_adjustment_enabled;
+
+COMMENT ON VIEW public.vw_therapist_adjustment_oversight IS 'Therapist view of patient adjustment settings and compliance for last 30 days';
+
+-- ============================================================================
+-- 9. GRANT PERMISSIONS
+-- ============================================================================
+
+GRANT EXECUTE ON FUNCTION public.toggle_auto_adjustment TO authenticated;
+GRANT EXECUTE ON FUNCTION public.patient_override_adjustment TO authenticated;
+GRANT EXECUTE ON FUNCTION public.patient_accept_adjustment TO authenticated;
+GRANT SELECT ON public.vw_patient_adjustment_controls TO authenticated;
+GRANT SELECT ON public.vw_therapist_adjustment_oversight TO authenticated;
+
+-- Grant UPDATE on patients table (controlled by RLS policies)
+GRANT UPDATE(auto_adjustment_enabled, updated_at) ON public.patients TO authenticated;
+
+-- Grant UPDATE on readiness_adjustments table for override fields (controlled by RLS policies)
+GRANT UPDATE(
+    is_overridden,
+    override_reason,
+    overridden_by,
+    overridden_at,
+    original_volume_multiplier,
+    original_intensity_multiplier,
+    volume_multiplier,
+    intensity_multiplier,
+    status,
+    applied_at,
+    updated_at
+) ON public.readiness_adjustments TO authenticated;
+
+COMMIT;

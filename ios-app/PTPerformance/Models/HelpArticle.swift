@@ -30,7 +30,7 @@ enum HelpCategory: String, Codable, CaseIterable {
 
 /// Help article model
 struct HelpArticle: Identifiable, Codable {
-    let id: String
+    let id: UUID
     let title: String
     let content: String // Markdown content
     let category: HelpCategory

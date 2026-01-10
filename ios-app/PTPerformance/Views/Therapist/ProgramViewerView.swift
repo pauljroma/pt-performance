@@ -110,7 +110,7 @@ struct PhaseView: View {
             ForEach(sessions) { session in
                 SessionDisclosureView(
                     session: session,
-                    exercises: exercisesBySession[session.id] ?? []
+                    exercises: exercisesBySession[session.id.uuidString] ?? []
                 )
             }
         }

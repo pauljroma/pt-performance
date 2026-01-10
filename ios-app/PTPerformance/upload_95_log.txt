@@ -1,0 +1,9 @@
+Running altool at path '/Applications/Xcode.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+2025-12-28 08:06:09.539  INFO: [ContentDelivery.Uploader.10321B0D0] 
+==========================================
+UPLOAD SUCCEEDED with no errors
+Delivery UUID: 98fa6b90-2454-425f-995a-2e243314cdbc
+Transferred 4714974 bytes in 0.202 seconds (23.3MB/s, 186.486Mbps)
+==========================================
+No errors uploading archive at './build/export/PTPerformance.ipa'.

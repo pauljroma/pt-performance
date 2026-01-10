@@ -11,9 +11,9 @@ import Foundation
 /// Represents a scheduled workout session
 struct ScheduledSession: Codable, Identifiable, Hashable {
 
-    let id: String
-    let patientId: String
-    let sessionId: String
+    let id: UUID
+    let patientId: UUID
+    let sessionId: UUID
     let scheduledDate: Date
     let scheduledTime: Date
     let status: ScheduleStatus
@@ -35,6 +35,52 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
         case notes
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    init(
+        id: UUID,
+        patientId: UUID,
+        sessionId: UUID,
+        scheduledDate: Date,
+        scheduledTime: Date,
+        status: ScheduleStatus,
+        completedAt: Date?,
+        reminderSent: Bool,
+        notes: String?,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.sessionId = sessionId
+        self.scheduledDate = scheduledDate
+        self.scheduledTime = scheduledTime
+        self.status = status
+        self.completedAt = completedAt
+        self.reminderSent = reminderSent
+        self.notes = notes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        patientId = try container.decode(UUID.self, forKey: .patientId)
+        sessionId = try container.decode(UUID.self, forKey: .sessionId)
+        scheduledDate = try container.decode(Date.self, forKey: .scheduledDate)
+        status = try container.decode(ScheduleStatus.self, forKey: .status)
+        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
+        reminderSent = try container.decode(Bool.self, forKey: .reminderSent)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+
+        // Parse TIME type from "HH:MM:SS" string
+        let timeString = try container.decode(String.self, forKey: .scheduledTime)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        scheduledTime = formatter.date(from: timeString) ?? Date()
     }
 
     enum ScheduleStatus: String, Codable {
@@ -127,10 +173,10 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
 
 extension ScheduledSession {
     static var sample: ScheduledSession {
-        ScheduledSession(
-            id: UUID().uuidString,
-            patientId: UUID().uuidString,
-            sessionId: UUID().uuidString,
+        var session = ScheduledSession.__createDirectly(
+            id: UUID(),
+            patientId: UUID(),
+            sessionId: UUID(),
             scheduledDate: Date().addingTimeInterval(86400), // Tomorrow
             scheduledTime: Date(),
             status: .scheduled,
@@ -140,13 +186,14 @@ extension ScheduledSession {
             createdAt: Date(),
             updatedAt: Date()
         )
+        return session
     }
 
     static var sampleCompleted: ScheduledSession {
-        ScheduledSession(
-            id: UUID().uuidString,
-            patientId: UUID().uuidString,
-            sessionId: UUID().uuidString,
+        var session = ScheduledSession.__createDirectly(
+            id: UUID(),
+            patientId: UUID(),
+            sessionId: UUID(),
             scheduledDate: Date().addingTimeInterval(-86400), // Yesterday
             scheduledTime: Date(),
             status: .completed,
@@ -156,5 +203,59 @@ extension ScheduledSession {
             createdAt: Date(),
             updatedAt: Date()
         )
+        return session
+    }
+
+    // Internal helper for creating instances (bypasses custom decoder)
+    static func __createDirectly(
+        id: UUID,
+        patientId: UUID,
+        sessionId: UUID,
+        scheduledDate: Date,
+        scheduledTime: Date,
+        status: ScheduleStatus,
+        completedAt: Date?,
+        reminderSent: Bool,
+        notes: String?,
+        createdAt: Date,
+        updatedAt: Date
+    ) -> ScheduledSession {
+        // Create a properly encodable struct
+        struct DirectScheduledSession: Codable {
+            let id: String
+            let patient_id: String
+            let session_id: String
+            let scheduled_date: String
+            let scheduled_time: String
+            let status: String
+            let completed_at: String?
+            let reminder_sent: Bool
+            let notes: String?
+            let created_at: String
+            let updated_at: String
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        let isoFormatter = ISO8601DateFormatter()
+
+        let directSession = DirectScheduledSession(
+            id: id.uuidString,
+            patient_id: patientId.uuidString,
+            session_id: sessionId.uuidString,
+            scheduled_date: isoFormatter.string(from: scheduledDate),
+            scheduled_time: formatter.string(from: scheduledTime),
+            status: status.rawValue,
+            completed_at: completedAt.map { isoFormatter.string(from: $0) },
+            reminder_sent: reminderSent,
+            notes: notes,
+            created_at: isoFormatter.string(from: createdAt),
+            updated_at: isoFormatter.string(from: updatedAt)
+        )
+
+        let data = try! JSONEncoder().encode(directSession)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try! decoder.decode(ScheduledSession.self, from: data)
     }
 }

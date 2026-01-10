@@ -330,9 +330,15 @@ struct ExerciseLogView: View {
             do {
                 let load = Double(actualLoad)
 
+                guard let sessionExerciseUUID = UUID(uuidString: sessionExerciseId),
+                      let patientUUID = UUID(uuidString: patientId) else {
+                    // Handle invalid UUIDs
+                    return
+                }
+
                 _ = try await service.submitExerciseLog(
-                    sessionExerciseId: sessionExerciseId,
-                    patientId: patientId,
+                    sessionExerciseId: sessionExerciseUUID,
+                    patientId: patientUUID,
                     actualSets: actualSets,
                     actualReps: Array(repsPerSet.prefix(actualSets)),
                     actualLoad: load,
@@ -347,6 +353,14 @@ struct ExerciseLogView: View {
                     showSuccess = true
                 }
             } catch {
+                DebugLogger.shared.error("EXERCISE_SAVE", """
+                    Failed to save exercise log:
+                    Error: \(error.localizedDescription)
+                    Type: \(type(of: error))
+                    Sets: \(actualSets), Reps: \(Array(repsPerSet.prefix(actualSets)))
+                    RPE: \(Int(rpe)), Pain: \(Int(painScore))
+                    """)
+
                 await MainActor.run {
                     isSubmitting = false
                     errorMessage = error.localizedDescription
@@ -416,9 +430,9 @@ struct ExerciseLogView_Previews: PreviewProvider {
     static var previews: some View {
         ExerciseLogView(
             exercise: Exercise(
-                id: "1",
-                session_id: "session-1",
-                exercise_template_id: "template-1",
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+                exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
                 sequence: 1,
                 prescribed_sets: 3,
                 prescribed_reps: "10",
@@ -427,7 +441,7 @@ struct ExerciseLogView_Previews: PreviewProvider {
                 rest_period_seconds: 120,
                 notes: nil,
                 exercise_templates: Exercise.ExerciseTemplate(
-                    id: "template-1",
+                    id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
                     name: "Back Squat",
                     category: "squat",
                     body_region: "lower",

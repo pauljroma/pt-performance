@@ -1,0 +1,65 @@
+-- ============================================================================
+-- SEED MODE FEATURES - BUILD 115
+-- ============================================================================
+-- Define which features are visible in each mode
+--
+-- Date: 2026-01-02
+-- Linear: ACP-483
+-- ============================================================================
+
+-- REHAB MODE: Injury Recovery Features
+INSERT INTO mode_features (mode, feature_key, feature_name, feature_description) VALUES
+    ('rehab', 'pain_tracking', 'Pain Tracking', 'Track pain levels (0-10) after each exercise'),
+    ('rehab', 'rom_exercises', 'ROM Exercises', 'Range of motion exercises and tracking'),
+    ('rehab', 'safety_alerts', 'Safety Alerts', 'Contraindication warnings and precautions'),
+    ('rehab', 'pt_messaging', 'PT Messaging', 'Direct messaging with physical therapist'),
+    ('rehab', 'progress_photos', 'Progress Photos', 'Photo documentation of recovery'),
+    ('rehab', 'function_tests', 'Function Tests', 'Functional movement assessments');
+
+-- STRENGTH MODE: General Fitness Features
+INSERT INTO mode_features (mode, feature_key, feature_name, feature_description) VALUES
+    ('strength', 'pr_tracking', 'PR Tracking', 'Personal record tracking for all lifts'),
+    ('strength', 'volume_trends', 'Volume Trends', 'Weekly/monthly volume progression charts'),
+    ('strength', 'habit_streaks', 'Habit Streaks', 'Consecutive workout streak tracking'),
+    ('strength', 'progressive_overload', 'Progressive Overload', 'Automatic weight progression recommendations'),
+    ('strength', 'workout_calendar', 'Workout Calendar', 'Training schedule and adherence'),
+    ('strength', 'body_comp', 'Body Composition', 'Weight and body fat tracking');
+
+-- PERFORMANCE MODE: Elite Athlete Features
+INSERT INTO mode_features (mode, feature_key, feature_name, feature_description) VALUES
+    ('performance', 'readiness_score', 'Readiness Score', 'Daily readiness from WHOOP/Oura integration'),
+    ('performance', 'periodization', 'Periodization', 'Training phase visualization (Base/Build/Peak)'),
+    ('performance', 'team_management', 'Team Management', 'Multi-athlete dashboard for coaches'),
+    ('performance', 'competition_prep', 'Competition Prep', 'Competition calendar and taper tracking'),
+    ('performance', 'advanced_analytics', 'Advanced Analytics', 'Load management, fatigue, and performance trends'),
+    ('performance', 'video_analysis', 'Video Analysis', 'Exercise technique video review');
+
+-- Verification query
+DO $$
+DECLARE
+    v_rehab_count int;
+    v_strength_count int;
+    v_performance_count int;
+BEGIN
+    SELECT COUNT(*) INTO v_rehab_count FROM mode_features WHERE mode = 'rehab';
+    SELECT COUNT(*) INTO v_strength_count FROM mode_features WHERE mode = 'strength';
+    SELECT COUNT(*) INTO v_performance_count FROM mode_features WHERE mode = 'performance';
+
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'MODE FEATURES SEEDED - BUILD 115';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '✅ REHAB mode: % features', v_rehab_count;
+    RAISE NOTICE '✅ STRENGTH mode: % features', v_strength_count;
+    RAISE NOTICE '✅ PERFORMANCE mode: % features', v_performance_count;
+    RAISE NOTICE '';
+    RAISE NOTICE 'Feature Examples:';
+    RAISE NOTICE '  REHAB: pain_tracking, rom_exercises, safety_alerts';
+    RAISE NOTICE '  STRENGTH: pr_tracking, volume_trends, progressive_overload';
+    RAISE NOTICE '  PERFORMANCE: readiness_score, periodization, team_management';
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'Ready to apply migrations to Supabase';
+    RAISE NOTICE '============================================================================';
+END $$;

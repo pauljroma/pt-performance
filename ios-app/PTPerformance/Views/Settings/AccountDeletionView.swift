@@ -1,0 +1,136 @@
+//
+//  AccountDeletionView.swift
+//  PTPerformance
+//
+//  Created by BUILD 119 on 2026-01-03
+//  Purpose: Account deletion UI with confirmation flow
+//
+
+import SwiftUI
+
+struct AccountDeletionView: View {
+
+    @StateObject private var viewModel = AccountDeletionViewModel()
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            Form {
+                warningSection
+                confirmationSection
+                actionSection
+            }
+            .navigationTitle("Delete Account")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .alert("Account Scheduled for Deletion", isPresented: $viewModel.showSuccessAlert) {
+                Button("OK") {
+                    dismiss()
+                }
+            } message: {
+                Text("Your account will be permanently deleted in 30 days. You can cancel this request within the grace period by logging in.")
+            }
+            .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+                Button("OK") {
+                    viewModel.errorMessage = nil
+                }
+            } message: {
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                }
+            }
+        }
+    }
+
+    private var warningSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Warning", systemImage: "exclamationmark.triangle.fill")
+                    .font(.headline)
+                    .foregroundColor(.red)
+
+                Text("Deleting your account will:")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    bulletPoint("Permanently delete all your data")
+                    bulletPoint("Remove all your workout history")
+                    bulletPoint("Cancel any active programs")
+                    bulletPoint("Delete all your progress and analytics")
+                }
+
+                Text("This action cannot be undone after the 30-day grace period.")
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                    .fontWeight(.medium)
+                    .padding(.top, 8)
+
+                Text("30-Day Grace Period: You can cancel this request within 30 days by logging in.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 8)
+            }
+            .padding(.vertical, 8)
+        }
+    }
+
+    private var confirmationSection: some View {
+        Section(header: Text("Confirmation Required")) {
+            SecureField("Enter your password", text: $viewModel.password)
+                .textContentType(.password)
+                .autocapitalization(.none)
+
+            TextField("Type 'DELETE' to confirm", text: $viewModel.confirmationText)
+                .autocapitalization(.allCharacters)
+                .autocorrectionDisabled()
+
+            if !viewModel.confirmationText.isEmpty && viewModel.confirmationText != "DELETE" {
+                Text("Must type 'DELETE' exactly")
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+        }
+    }
+
+    private var actionSection: some View {
+        Section {
+            Button(action: {
+                Task {
+                    await viewModel.deleteAccount()
+                }
+            }) {
+                HStack {
+                    if viewModel.isDeleting {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                    }
+                    Text(viewModel.isDeleting ? "Deleting..." : "Delete My Account")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .foregroundColor(.white)
+            .listRowBackground(viewModel.isFormValid ? Color.red : Color.gray)
+            .disabled(!viewModel.isFormValid || viewModel.isDeleting)
+        }
+    }
+
+    private func bulletPoint(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("•")
+            Text(text)
+                .font(.subheadline)
+        }
+    }
+}
+
+#Preview {
+    AccountDeletionView()
+}

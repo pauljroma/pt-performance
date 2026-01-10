@@ -1,0 +1,27 @@
+Using workdir /Users/expo/Code/expo
+Connecting to remote database...
+Skipping migration 20251215140000_add_exercise_videos.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000001_create_messaging_tables.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000003_create_ai_conversations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_complete.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_complete_final.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy5.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy6.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deployed.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_final.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_success.log... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20251220000002_adjustment_audit_log.sql
+ • 20251220000003_adjustment_rls_policies.sql
+ • 20251220000004_validate_video_urls.sql
+
+ [Y/n] Y
+Applying migration 20251220000002_adjustment_audit_log.sql...
+ERROR: column old.status does not exist (SQLSTATE 42703)                                             
+At statement: 18                                                                                     
+CREATE TRIGGER audit_adjustment_status_change_trigger                                                
+AFTER UPDATE ON public.readiness_adjustments                                                         
+FOR EACH ROW                                                                                         
+WHEN (OLD.status IS DISTINCT FROM NEW.status OR OLD.is_overridden IS DISTINCT FROM NEW.is_overridden)
+      ^                                                                                              
+Try rerunning the command with --debug to troubleshoot the error.

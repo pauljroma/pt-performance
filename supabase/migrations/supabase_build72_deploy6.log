@@ -1,0 +1,22 @@
+Using workdir /Users/expo/Code/expo
+Connecting to remote database...
+Skipping migration 20251215140000_add_exercise_videos.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000001_create_messaging_tables.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000003_create_ai_conversations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy5.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy6.log... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20251220000001_create_readiness_adjustments.sql
+ • 20251220000001_validate_video_urls.sql
+ • 20251220000002_adjustment_audit_log.sql
+ • 20251220000003_adjustment_rls_policies.sql
+
+ [Y/n] Y
+Applying migration 20251220000001_create_readiness_adjustments.sql...
+NOTICE (42P07): relation "readiness_adjustments" already exists, skipping
+NOTICE (42P07): relation "idx_readiness_adjustments_patient_id" already exists, skipping
+NOTICE (42P07): relation "idx_readiness_adjustments_session_id" already exists, skipping
+ERROR: column "readiness_band" does not exist (SQLSTATE 42703)                                           
+At statement: 4                                                                                          
+CREATE INDEX IF NOT EXISTS idx_readiness_adjustments_band ON public.readiness_adjustments(readiness_band)
+Try rerunning the command with --debug to troubleshoot the error.

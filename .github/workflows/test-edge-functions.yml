@@ -1,0 +1,143 @@
+name: Test Edge Functions
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'supabase/functions/**'
+      - 'scripts/tests/**'
+      - '.github/workflows/test-edge-functions.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'supabase/functions/**'
+      - 'scripts/tests/**'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  test-edge-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local instance
+        run: |
+          cd supabase
+          supabase start
+          supabase status
+
+      - name: Wait for Supabase to be ready
+        run: |
+          echo "Waiting for Supabase to be fully ready..."
+          sleep 10
+          curl -f http://localhost:54321/rest/v1/ || exit 1
+
+      - name: Start Edge Functions server
+        run: |
+          cd supabase
+          supabase functions serve &
+          FUNCTIONS_PID=$!
+          echo "FUNCTIONS_PID=$FUNCTIONS_PID" >> $GITHUB_ENV
+
+          # Wait for functions server to start
+          echo "Waiting for Edge Functions server..."
+          sleep 5
+          curl -f http://localhost:54321/functions/v1/ || exit 1
+
+      - name: Setup test environment
+        run: |
+          cd scripts/tests
+          ./setup_test_environment.sh
+
+      - name: Run integration tests
+        id: tests
+        run: |
+          cd scripts/tests
+          ./ci_test_edge_functions.sh --output test-results.json
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: http://localhost:54321
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: scripts/tests/test-results.json
+          retention-days: 30
+
+      - name: Parse test results
+        if: always()
+        run: |
+          cd scripts/tests
+          if [ -f test-results.json ]; then
+            echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            TOTAL=$(jq -r '.summary.total' test-results.json)
+            PASSED=$(jq -r '.summary.passed' test-results.json)
+            FAILED=$(jq -r '.summary.failed' test-results.json)
+            SKIPPED=$(jq -r '.summary.skipped' test-results.json)
+            PASS_RATE=$(jq -r '.summary.pass_rate' test-results.json)
+            DURATION=$(jq -r '.test_duration_seconds' test-results.json)
+
+            echo "- **Total Tests:** $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "- **Passed:** ✅ $PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "- **Failed:** ❌ $FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "- **Skipped:** ⊘ $SKIPPED" >> $GITHUB_STEP_SUMMARY
+            echo "- **Pass Rate:** ${PASS_RATE}%" >> $GITHUB_STEP_SUMMARY
+            echo "- **Duration:** ${DURATION}s" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            echo "### By Function" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Function | Tests |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Equipment Substitution | $(jq -r '.by_function.generate_equipment_substitution.actual' test-results.json)/10 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Apply Substitution | $(jq -r '.by_function.apply_substitution.actual' test-results.json)/7 |" >> $GITHUB_STEP_SUMMARY
+            echo "| WHOOP Sync | $(jq -r '.by_function.sync_whoop_recovery.actual' test-results.json)/8 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Nutrition Recommendation | $(jq -r '.by_function.ai_nutrition_recommendation.actual' test-results.json)/9 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Meal Parser | $(jq -r '.by_function.ai_meal_parser.actual' test-results.json)/10 |" >> $GITHUB_STEP_SUMMARY
+
+            # Fail workflow if tests failed
+            if [ "$FAILED" != "0" ]; then
+              echo "::error ::$FAILED test(s) failed"
+              exit 1
+            fi
+          else
+            echo "::error ::Test results file not found"
+            exit 1
+          fi
+
+      - name: Stop Edge Functions server
+        if: always()
+        run: |
+          if [ -n "$FUNCTIONS_PID" ]; then
+            kill $FUNCTIONS_PID || true
+          fi
+
+      - name: Stop Supabase
+        if: always()
+        run: |
+          cd supabase
+          supabase stop
+
+  # Optional: Notify on failure
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: test-edge-functions
+    if: failure()
+    steps:
+      - name: Notify failure
+        run: |
+          echo "Edge Function tests failed!"
+          echo "Check the test results artifact for details."

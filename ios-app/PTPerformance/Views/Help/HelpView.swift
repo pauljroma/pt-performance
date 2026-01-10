@@ -88,7 +88,7 @@ struct HelpView: View {
                         .foregroundColor(.blue)
                 }
 
-                if let firstArticle = contentLoader.articles.first(where: { $0.id == "creating-first-program" }) {
+                if let firstArticle = contentLoader.articles.first(where: { $0.category == .gettingStarted }) {
                     NavigationLink {
                         HelpArticleView(article: firstArticle)
                     } label: {

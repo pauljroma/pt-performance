@@ -1,0 +1,21 @@
+Using workdir /Users/expo/Code/expo
+Connecting to remote database...
+Skipping migration 20251215140000_add_exercise_videos.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000001_create_messaging_tables.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration 20251218000003_create_ai_conversations.sql.bak... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy5.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_deploy6.log... (file name must match pattern "<timestamp>_name.sql")
+Skipping migration supabase_build72_success.log... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20251220000001_create_readiness_adjustments.sql
+ • 20251220000001_validate_video_urls.sql
+ • 20251220000002_adjustment_audit_log.sql
+ • 20251220000003_adjustment_rls_policies.sql
+
+ [Y/n] Y
+Applying migration 20251220000001_create_readiness_adjustments.sql...
+NOTICE (00000): drop cascades to 2 other objects
+ERROR: function name "public.override_readiness_adjustment" is not unique (SQLSTATE 42725)                           
+At statement: 16                                                                                                     
+COMMENT ON FUNCTION public.override_readiness_adjustment IS 'Allows patients to override adjustments (if not locked)'
+Try rerunning the command with --debug to troubleshoot the error.

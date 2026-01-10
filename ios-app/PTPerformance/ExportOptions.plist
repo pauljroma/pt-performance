@@ -13,13 +13,6 @@
     <key>teamID</key>
     <string>5NNLBL74XR</string>
     <key>signingStyle</key>
-    <string>manual</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.ptperformance.app</key>
-        <string>match AppStore com.ptperformance.app</string>
-    </dict>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
+    <string>automatic</string>
 </dict>
 </plist>

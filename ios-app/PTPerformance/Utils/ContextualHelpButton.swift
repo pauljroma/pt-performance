@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Reusable help button that opens help system with specific article
 struct ContextualHelpButton: View {
-    let articleId: String?
+    let articleId: UUID?
     @State private var showHelp = false
 
     var body: some View {
@@ -32,7 +32,7 @@ struct ContextualHelpButton: View {
 
 /// Deep link view that opens help with specific article pre-selected
 struct HelpArticleDeepLinkView: View {
-    let articleId: String
+    let articleId: UUID
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -53,29 +53,5 @@ struct HelpArticleDeepLinkView: View {
         }
     }
 }
-
-/// Helper to load help content from JSON
-class HelpContentLoader: ObservableObject {
-    static let shared = HelpContentLoader()
-
-    @Published var articles: [HelpArticle] = []
-
-    init() {
-        loadArticles()
-    }
-
-    private func loadArticles() {
-        guard let url = Bundle.main.url(forResource: "HelpContent", withExtension: "json"),
-              let data = try? Data(contentsOf: url) else {
-            print("Failed to load HelpContent.json")
-            return
-        }
-
-        let decoder = JSONDecoder()
-        do {
-            articles = try decoder.decode([HelpArticle].self, from: data)
-        } catch {
-            print("Failed to decode HelpContent.json: \(error)")
-        }
-    }
-}
+// HelpContentLoader moved to Services/HelpContentLoader.swift
+// This duplicate class was causing the app to load from JSON instead of Supabase

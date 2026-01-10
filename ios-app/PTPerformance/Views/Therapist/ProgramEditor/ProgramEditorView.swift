@@ -205,9 +205,10 @@ struct ProgramEditorView: View {
         // Create a new phase and add it to the phases array
         // Note: This creates an in-memory phase that will be saved when user taps Save
         let newPhaseNumber = viewModel.phases.count + 1
+        guard let programUUID = UUID(uuidString: programId) else { return }
         let newPhase = Phase(
-            id: UUID().uuidString,
-            programId: programId,
+            id: UUID(),
+            programId: programUUID,
             phaseNumber: newPhaseNumber,
             name: "Phase \(newPhaseNumber)",
             durationWeeks: 2,

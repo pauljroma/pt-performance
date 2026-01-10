@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Supabase
 
 struct ChatMessage: Identifiable, Codable {
     let id: UUID
@@ -33,7 +34,7 @@ class AIChatService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var currentSessionId: UUID?
 
-    private let supabase = SupabaseManager.shared
+    private let supabase = PTSupabaseClient.shared
 
     // MARK: - Send Message
 
@@ -41,21 +42,25 @@ class AIChatService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        let athleteId = await SupabaseManager.shared.currentAthlete?.id.uuidString ?? ""
+        let athleteId = await PTSupabaseClient.shared.userId ?? ""
 
         // Call AI chat completion Edge Function
-        let response = try await supabase.functions.invoke(
+        let requestBody = [
+            "athlete_id": athleteId,
+            "message": text,
+            "session_id": currentSessionId?.uuidString as Any
+        ]
+        let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+        let responseData: Data = try await supabase.client.functions.invoke(
             "ai-chat-completion",
-            body: [
-                "athlete_id": athleteId,
-                "message": text,
-                "session_id": currentSessionId?.uuidString as Any
-            ]
-        )
+            options: FunctionInvokeOptions(body: bodyData)
+        ) { data, _ in
+            data
+        }
 
         // Parse response
-        guard let data = response.data,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        guard let json = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
               let messageText = json["message"] as? String,
               let sessionIdString = json["session_id"] as? String,
               let sessionId = UUID(uuidString: sessionIdString) else {
@@ -100,19 +105,20 @@ class AIChatService: ObservableObject {
 
     func loadHistory() async {
         do {
-            let athleteId = await SupabaseManager.shared.currentAthlete?.id ?? UUID()
+            let athleteId = await PTSupabaseClient.shared.userId.flatMap { UUID(uuidString: $0) } ?? UUID()
 
             // Get latest session
-            let sessionQuery = supabase.database
+            let sessionResponse = try await supabase.client
                 .from("ai_chat_sessions")
                 .select("id")
                 .eq("athlete_id", value: athleteId.uuidString)
                 .order("started_at", ascending: false)
                 .limit(1)
+                .execute()
 
-            let sessionResponse: [[String: Any]] = try await sessionQuery.execute().value
+            let sessions = try JSONDecoder().decode([[String: String]].self, from: sessionResponse.data)
 
-            guard let sessionId = sessionResponse.first?["id"] as? String,
+            guard let sessionId = sessions.first?["id"],
                   let uuid = UUID(uuidString: sessionId) else {
                 return
             }
@@ -122,19 +128,24 @@ class AIChatService: ObservableObject {
             }
 
             // Load messages
-            let messagesQuery = supabase.database
+            let messagesResponse = try await supabase.client
                 .from("ai_chat_messages")
                 .select()
                 .eq("session_id", value: sessionId)
                 .order("created_at", ascending: true)
+                .execute()
 
-            let loadedMessages: [ChatMessage] = try await messagesQuery.execute().value
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let loadedMessages = try decoder.decode([ChatMessage].self, from: messagesResponse.data)
 
             await MainActor.run {
                 self.messages = loadedMessages
             }
         } catch {
+            #if DEBUG
             print("❌ Failed to load chat history: \(error)")
+            #endif
         }
     }
 

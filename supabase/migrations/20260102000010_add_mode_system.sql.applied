@@ -1,0 +1,202 @@
+-- ============================================================================
+-- ADD MODE SYSTEM - BUILD 115
+-- ============================================================================
+-- Create 3-mode architecture: Rehab, Strength, Performance
+-- PT-controlled mode switching with history tracking
+--
+-- Date: 2026-01-02
+-- Linear: ACP-479, ACP-483
+-- ============================================================================
+
+-- Create mode enum
+CREATE TYPE patient_mode AS ENUM ('rehab', 'strength', 'performance');
+
+COMMENT ON TYPE patient_mode IS
+    'Patient training mode: rehab (injury recovery), strength (general fitness), performance (elite athletes)';
+
+-- Add mode column to patients table
+ALTER TABLE patients
+ADD COLUMN mode patient_mode NOT NULL DEFAULT 'rehab',
+ADD COLUMN mode_changed_at timestamptz,
+ADD COLUMN mode_changed_by uuid REFERENCES auth.users(id);
+
+COMMENT ON COLUMN patients.mode IS 'Current patient mode (PT-controlled)';
+COMMENT ON COLUMN patients.mode_changed_at IS 'Timestamp of last mode change';
+COMMENT ON COLUMN patients.mode_changed_by IS 'Therapist who changed the mode';
+
+-- Create mode history table
+CREATE TABLE mode_history (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id uuid NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    previous_mode patient_mode,
+    new_mode patient_mode NOT NULL,
+    changed_by uuid NOT NULL REFERENCES auth.users(id),
+    reason text,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_mode_history_patient ON mode_history(patient_id, created_at DESC);
+CREATE INDEX idx_mode_history_therapist ON mode_history(changed_by);
+
+COMMENT ON TABLE mode_history IS
+    'Audit log of patient mode changes for compliance and analysis';
+
+-- Create mode features table (defines which features are visible per mode)
+CREATE TABLE mode_features (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    mode patient_mode NOT NULL,
+    feature_key text NOT NULL,
+    feature_name text NOT NULL,
+    feature_description text,
+    enabled boolean NOT NULL DEFAULT true,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(mode, feature_key)
+);
+
+CREATE INDEX idx_mode_features_mode ON mode_features(mode) WHERE enabled = true;
+
+COMMENT ON TABLE mode_features IS
+    'Feature visibility rules per mode (defines UX customization)';
+
+-- RLS Policies
+ALTER TABLE mode_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mode_features ENABLE ROW LEVEL SECURITY;
+
+-- Patients can view their own mode but cannot change it
+CREATE POLICY "Patients can view their own mode"
+    ON patients FOR SELECT
+    USING (id = auth.uid());
+
+-- Only therapists can change patient modes
+CREATE POLICY "Therapists can update patient modes"
+    ON patients FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM auth.users
+            WHERE auth.users.id = auth.uid()
+            AND auth.users.raw_user_meta_data->>'role' = 'therapist'
+        )
+    );
+
+-- Patients can view their mode history
+CREATE POLICY "Patients can view their mode history"
+    ON mode_history FOR SELECT
+    USING (patient_id = auth.uid());
+
+-- Therapists can view all mode history
+CREATE POLICY "Therapists can view all mode history"
+    ON mode_history FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM auth.users
+            WHERE auth.users.id = auth.uid()
+            AND auth.users.raw_user_meta_data->>'role' = 'therapist'
+        )
+    );
+
+-- Therapists can insert mode history entries
+CREATE POLICY "Therapists can insert mode history"
+    ON mode_history FOR INSERT
+    WITH CHECK (
+        changed_by = auth.uid()
+        AND EXISTS (
+            SELECT 1 FROM auth.users
+            WHERE auth.users.id = auth.uid()
+            AND auth.users.raw_user_meta_data->>'role' = 'therapist'
+        )
+    );
+
+-- Everyone can read mode features (needed for UI rendering)
+CREATE POLICY "Anyone can read mode features"
+    ON mode_features FOR SELECT
+    TO authenticated
+    USING (enabled = true);
+
+-- Only service role can manage mode features
+CREATE POLICY "Service role can manage mode features"
+    ON mode_features FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- Function to change patient mode (enforces history tracking)
+CREATE OR REPLACE FUNCTION change_patient_mode(
+    p_patient_id uuid,
+    p_new_mode patient_mode,
+    p_reason text DEFAULT NULL
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_current_mode patient_mode;
+    v_therapist_id uuid;
+BEGIN
+    -- Verify caller is a therapist
+    SELECT id INTO v_therapist_id
+    FROM auth.users
+    WHERE id = auth.uid()
+    AND raw_user_meta_data->>'role' = 'therapist';
+
+    IF v_therapist_id IS NULL THEN
+        RAISE EXCEPTION 'Only therapists can change patient modes';
+    END IF;
+
+    -- Get current mode
+    SELECT mode INTO v_current_mode
+    FROM patients
+    WHERE id = p_patient_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Patient not found: %', p_patient_id;
+    END IF;
+
+    -- Don't update if mode is the same
+    IF v_current_mode = p_new_mode THEN
+        RETURN;
+    END IF;
+
+    -- Record mode change in history
+    INSERT INTO mode_history (patient_id, previous_mode, new_mode, changed_by, reason)
+    VALUES (p_patient_id, v_current_mode, p_new_mode, v_therapist_id, p_reason);
+
+    -- Update patient mode
+    UPDATE patients
+    SET
+        mode = p_new_mode,
+        mode_changed_at = now(),
+        mode_changed_by = v_therapist_id
+    WHERE id = p_patient_id;
+END;
+$$;
+
+COMMENT ON FUNCTION change_patient_mode IS
+    'Change patient mode with automatic history tracking (therapist-only)';
+
+-- Grant permissions
+GRANT SELECT ON patients TO authenticated;
+GRANT UPDATE ON patients TO authenticated;
+GRANT SELECT, INSERT ON mode_history TO authenticated;
+GRANT SELECT ON mode_features TO authenticated;
+GRANT EXECUTE ON FUNCTION change_patient_mode TO authenticated;
+
+-- Verification
+DO $$
+BEGIN
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'MODE SYSTEM CREATED - BUILD 115';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '✅ patient_mode enum: rehab, strength, performance';
+    RAISE NOTICE '✅ patients.mode column added (default: rehab)';
+    RAISE NOTICE '✅ mode_history table created (audit log)';
+    RAISE NOTICE '✅ mode_features table created (feature visibility)';
+    RAISE NOTICE '✅ RLS policies: patients view only, therapists can change';
+    RAISE NOTICE '✅ change_patient_mode() function (enforces history tracking)';
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'Next: Run 20260102000011_seed_mode_features.sql';
+    RAISE NOTICE '============================================================================';
+END $$;

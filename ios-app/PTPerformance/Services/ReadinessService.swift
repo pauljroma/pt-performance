@@ -1,451 +1,517 @@
 import Foundation
 import Supabase
 
-/// Service for managing daily readiness check-ins and workout modifications
-/// Part of the Auto-Regulation System (Build 39 - Phase 3)
+/// Service for managing daily readiness data
+/// Provides CRUD operations for daily readiness check-ins
+/// Uses database functions for automatic score calculation
+@MainActor
 class ReadinessService: ObservableObject {
-    private let supabase: PTSupabaseClient
+    private let client: PTSupabaseClient
+    @Published var isLoading: Bool = false
+    @Published var error: Error?
 
-    init(supabase: PTSupabaseClient = .shared) {
-        self.supabase = supabase
+    nonisolated init(client: PTSupabaseClient = .shared) {
+        self.client = client
     }
 
-    // MARK: - Daily Check-in
+    // MARK: - Submit Daily Readiness
 
-    /// Submit a daily readiness check-in
-    /// Calculates readiness band based on multiple inputs and stores to database
+    /// Submit or update daily readiness check-in
+    /// Score is automatically calculated by database trigger
     /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - input: Readiness input data
-    /// - Returns: The created DailyReadiness record
-    func submitDailyReadiness(
-        patientId: String,
-        input: ReadinessInput
+    ///   - patientId: Patient UUID
+    ///   - date: Date of check-in (defaults to today)
+    ///   - sleepHours: Hours of sleep (0-24)
+    ///   - sorenessLevel: Muscle soreness (1-10, 1=no soreness)
+    ///   - energyLevel: Energy level (1-10, 1=exhausted)
+    ///   - stressLevel: Stress level (1-10, 1=no stress)
+    ///   - notes: Optional patient notes
+    /// - Returns: Created/updated DailyReadiness record with calculated score
+    func submitReadiness(
+        patientId: UUID,
+        date: Date = Date(),
+        sleepHours: Double? = nil,
+        sorenessLevel: Int? = nil,
+        energyLevel: Int? = nil,
+        stressLevel: Int? = nil,
+        notes: String? = nil
     ) async throws -> DailyReadiness {
-        let logger = DebugLogger.shared
+        isLoading = true
+        defer { isLoading = false }
 
-        logger.log("📊 Submitting daily readiness check-in for patient \(patientId)", level: .diagnostic)
+        // Create and validate input
+        // Format date as YYYY-MM-DD for PostgreSQL DATE column
+        // BUILD 137: Use local timezone for consistency with getTodayReadiness
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone.current
+        let dateString = dateFormatter.string(from: date)
 
-        // Calculate HRV delta from baseline if HRV value provided
-        var hrvDelta: Double? = nil
-        if let hrvValue = input.hrvValue {
-            hrvDelta = try? await calculateHRVDelta(patientId: patientId, currentHRV: hrvValue)
-            if let delta = hrvDelta {
-                logger.log("  HRV delta from baseline: \(String(format: "%.1f%%", delta))", level: .diagnostic)
-            }
-        }
+        let input = ReadinessInput(
+            sleepHours: sleepHours,
+            sorenessLevel: sorenessLevel,
+            energyLevel: energyLevel,
+            stressLevel: stressLevel,
+            notes: notes,
+            patientId: patientId.uuidString,
+            date: dateString
+        )
 
-        // Calculate readiness band using weighted scoring algorithm
-        let (band, score) = calculateReadinessBand(input: input, hrvDelta: hrvDelta)
-
-        logger.log("  Calculated band: \(band.rawValue)", level: .diagnostic)
-        logger.log("  Calculated score: \(score)", level: .diagnostic)
-
-        let record: [String: Any?] = [
-            "patient_id": patientId,
-            "check_in_date": Calendar.current.startOfDay(for: Date()).ISO8601Format(),
-            "sleep_hours": input.sleepHours,
-            "sleep_quality": input.sleepQuality,
-            "hrv_value": input.hrvValue,
-            "hrv_delta_from_baseline": hrvDelta,
-            "whoop_recovery_pct": input.whoopRecoveryPct,
-            "subjective_readiness": input.subjectiveReadiness,
-            "arm_soreness": input.armSoreness,
-            "arm_soreness_severity": input.armSorenessSeverity,
-            "shoulder_pain": input.jointPain.contains(.shoulder),
-            "elbow_pain": input.jointPain.contains(.elbow),
-            "hip_pain": input.jointPain.contains(.hip),
-            "knee_pain": input.jointPain.contains(.knee),
-            "back_pain": input.jointPain.contains(.back),
-            "joint_pain_notes": input.jointPainNotes,
-            "readiness_band": band.rawValue,
-            "readiness_score": score,
-            "band_calculation_method": "weighted_scoring"
-        ]
+        try input.validate()
 
         do {
-            logger.log("📊 Upserting to daily_readiness table...", level: .diagnostic)
-
-            let response = try await supabase.client
+            // Upsert to database (handles duplicate dates)
+            // Database trigger will auto-calculate readiness_score
+            let response = try await client.client
                 .from("daily_readiness")
-                .upsert(record, onConflict: "patient_id,check_in_date")
+                .upsert(input, onConflict: "patient_id,date")
                 .select()
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            // Use custom decoder that handles both DATE and TIMESTAMP formats
+            let decoder = createReadinessDecoder()
             let readiness = try decoder.decode(DailyReadiness.self, from: response.data)
-
-            logger.log("✅ Daily readiness check-in submitted successfully", level: .success)
-
-            // Update HRV baseline if new HRV value provided
-            if let hrvValue = input.hrvValue {
-                try? await updateHRVBaseline(patientId: patientId, newHRVValue: hrvValue)
-            }
-
             return readiness
         } catch {
-            logger.log("❌ READINESS SUBMISSION ERROR: \(error.localizedDescription)", level: .error)
+            self.error = error
             throw error
         }
     }
 
-    // MARK: - Band Calculation
+    // MARK: - Fetch Readiness Factors
 
-    /// Calculate readiness band from input data
-    /// Uses weighted scoring system with automatic overrides for pain
-    /// Algorithm weights:
-    /// - Sleep: 30% (hours + quality)
-    /// - HRV delta: 20%
-    /// - WHOOP recovery: 20%
-    /// - Subjective readiness: 15%
-    /// - Pain: 15% (auto-red if joint pain present)
-    /// - Parameters:
-    ///   - input: Readiness input data
-    ///   - hrvDelta: Calculated HRV delta from baseline (percentage)
-    /// - Returns: Tuple of (band, score)
-    func calculateReadinessBand(
-        input: ReadinessInput,
-        hrvDelta: Double? = nil
-    ) -> (band: ReadinessBand, score: Double) {
-        var score: Double = 100.0
-
-        // Sleep scoring (30% weight)
-        // Hours component: 15%
-        if let sleepHours = input.sleepHours {
-            if sleepHours < 6 {
-                score -= 15  // Severe penalty
-            } else if sleepHours < 7 {
-                score -= 10  // Moderate penalty
-            } else if sleepHours < 7.5 {
-                score -= 5   // Minor penalty
-            }
-            // 7.5+ hours = no penalty
-        }
-
-        // Sleep quality component: 15%
-        if let sleepQuality = input.sleepQuality {
-            switch sleepQuality {
-            case 1:
-                score -= 15  // Very poor
-            case 2:
-                score -= 10  // Poor
-            case 3:
-                score -= 5   // Fair
-            case 4:
-                score -= 0   // Good
-            case 5:
-                score -= 0   // Excellent
-            default:
-                break
-            }
-        }
-
-        // HRV delta from baseline (20% weight)
-        if let delta = hrvDelta {
-            if delta < -15 {
-                score -= 20  // Significant decrease
-            } else if delta < -10 {
-                score -= 15  // Moderate decrease
-            } else if delta < -5 {
-                score -= 10  // Minor decrease
-            } else if delta < 0 {
-                score -= 5   // Slight decrease
-            }
-            // Positive delta = no penalty (good recovery)
-        }
-
-        // WHOOP Recovery (20% weight)
-        if let recovery = input.whoopRecoveryPct {
-            if recovery < 33 {
-                score -= 20  // Red zone
-            } else if recovery < 66 {
-                score -= 10  // Yellow zone
-            }
-            // 66+ = Green zone, no penalty
-        }
-
-        // Subjective readiness (15% weight)
-        if let subjective = input.subjectiveReadiness {
-            switch subjective {
-            case 1:
-                score -= 15  // Very low
-            case 2:
-                score -= 10  // Low
-            case 3:
-                score -= 5   // Moderate
-            case 4:
-                score -= 0   // Good
-            case 5:
-                score -= 0   // Excellent
-            default:
-                break
-            }
-        }
-
-        // Joint pain (15% weight - AUTO RED if present)
-        if !input.jointPain.isEmpty {
-            // Any joint pain triggers automatic red band
-            return (.red, max(score - 15, 0))
-        }
-
-        // Arm soreness (can downgrade to orange)
-        if input.armSoreness, let severity = input.armSorenessSeverity {
-            if severity >= 3 {
-                return (.red, max(score - 15, 0))
-            } else if severity >= 2 {
-                return (.orange, max(score - 10, 0))
-            }
-            // Mild soreness (severity 1) is tolerable, continue with score
-        }
-
-        // Determine band from final score
-        let band: ReadinessBand
-        if score >= 85 {
-            band = .green     // Full prescription
-        } else if score >= 70 {
-            band = .yellow    // Reduce load 5-8%
-        } else if score >= 50 {
-            band = .orange    // Skip top set
-        } else {
-            band = .red       // Technique only
-        }
-
-        return (band, max(score, 0))
-    }
-
-    // MARK: - Apply Modifications
-
-    /// Apply readiness-based modifications to a workout session
-    /// Adjusts load and volume for all exercises based on readiness band
-    /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - sessionId: The session ID
-    ///   - readinessId: The daily readiness record ID
-    ///   - band: The readiness band to apply
-    func applyReadinessModifications(
-        patientId: String,
-        sessionId: String,
-        readinessId: String,
-        band: ReadinessBand
-    ) async throws {
-        let logger = DebugLogger.shared
-
-        logger.log("🔧 Applying readiness modifications for session \(sessionId)", level: .diagnostic)
-        logger.log("  Band: \(band.rawValue)", level: .diagnostic)
-        logger.log("  Load adjustment: \(band.loadAdjustment * 100)%", level: .diagnostic)
-        logger.log("  Volume adjustment: \(band.volumeAdjustment * 100)%", level: .diagnostic)
-
+    /// Fetch active readiness factors (used for score calculation)
+    /// - Returns: Array of active factors with weights
+    func fetchReadinessFactors() async throws -> [ReadinessFactor] {
         do {
-            // Fetch session exercises
-            let exercisesResponse = try await supabase.client
-                .from("session_exercises")
-                .select("*")
-                .eq("session_id", value: sessionId)
-                .execute()
-
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            let exercises = try decoder.decode([Exercise].self, from: exercisesResponse.data)
-
-            logger.log("  Found \(exercises.count) exercises to modify", level: .diagnostic)
-
-            // Modify each exercise based on band
-            var modifiedExercises: [[String: Any]] = []
-
-            for exercise in exercises {
-                var modification: [String: Any] = [
-                    "exercise_id": exercise.id,
-                    "original_sets": exercise.prescribed_sets,
-                    "original_reps": exercise.prescribed_reps as Any
-                ]
-
-                // Apply load adjustment if load is prescribed
-                if let originalLoad = exercise.prescribed_load {
-                    let loadAdjustment = band.loadAdjustment
-                    let modifiedLoad = originalLoad * (1 + loadAdjustment)
-
-                    modification["original_load"] = originalLoad
-                    modification["modified_load"] = max(0, modifiedLoad)
-                    modification["load_adjustment_pct"] = loadAdjustment
-                }
-
-                // Apply volume adjustment (modify sets)
-                let volumeAdjustment = band.volumeAdjustment
-                let modifiedSets = Int(Double(exercise.prescribed_sets) * (1 + volumeAdjustment))
-
-                modification["modified_sets"] = max(1, modifiedSets)
-                modification["volume_adjustment_pct"] = volumeAdjustment
-
-                modifiedExercises.append(modification)
-            }
-
-            // Record modifications
-            let record: [String: Any] = [
-                "patient_id": patientId,
-                "session_id": sessionId,
-                "daily_readiness_id": readinessId,
-                "readiness_band": band.rawValue,
-                "load_adjustment_pct": band.loadAdjustment,
-                "volume_adjustment_pct": band.volumeAdjustment,
-                "skip_top_set": band == .orange || band == .red,
-                "technique_only": band == .red,
-                "modified_exercises": modifiedExercises
-            ]
-
-            try await supabase.client
-                .from("readiness_modifications")
-                .insert(record)
-                .execute()
-
-            logger.log("✅ Readiness modifications applied successfully", level: .success)
-        } catch {
-            logger.log("❌ READINESS MODIFICATION ERROR: \(error.localizedDescription)", level: .error)
-            throw error
-        }
-    }
-
-    // MARK: - Fetch Methods
-
-    /// Fetch today's readiness check-in for a patient
-    /// - Parameter patientId: The patient ID
-    /// - Returns: Today's readiness record, or nil if not found
-    func fetchTodayReadiness(patientId: String) async throws -> DailyReadiness? {
-        let today = ISO8601DateFormatter().string(from: Date())
-
-        do {
-            let response = try await supabase.client
-                .from("daily_readiness")
+            let response = try await client.client
+                .from("readiness_factors")
                 .select()
-                .eq("patient_id", value: patientId)
-                .eq("check_in_date", value: today)
-                .single()
+                .eq("is_active", value: true)
+                .order("weight", ascending: false)
                 .execute()
 
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            return try decoder.decode(DailyReadiness.self, from: response.data)
+            return try decoder.decode([ReadinessFactor].self, from: response.data)
         } catch {
-            // Return nil if no record found (not an error condition)
+            self.error = error
+            throw error
+        }
+    }
+
+    // MARK: - Calculate Readiness Score
+
+    /// Calculate readiness score using database function
+    /// This calls the same calculation logic the trigger uses
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - date: Date to calculate score for
+    /// - Returns: Calculated score (0-100)
+    func calculateScore(
+        for patientId: UUID,
+        on date: Date = Date()
+    ) async throws -> Double {
+        do {
+            let dateString = ISO8601DateFormatter().string(from: date)
+
+            let response = try await client.client
+                .rpc("calculate_readiness_score", params: [
+                    "p_patient_id": patientId.uuidString,
+                    "p_date": dateString
+                ])
+                .execute()
+
+            // Decode as Double
+            let decoder = JSONDecoder()
+            guard let scoreString = String(data: response.data, encoding: .utf8),
+                  let score = Double(scoreString) else {
+                throw ReadinessError.scoreCalculationFailed
+            }
+
+            return score
+        } catch {
+            self.error = error
+            throw error
+        }
+    }
+
+    // MARK: - Get Readiness Trend
+
+    /// Get readiness trend data and statistics over N days
+    /// Uses database function for efficient aggregation
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - days: Number of days to analyze (default 7)
+    /// - Returns: Trend data with statistics
+    func getReadinessTrend(
+        for patientId: UUID,
+        days: Int = 7
+    ) async throws -> ReadinessTrend {
+        do {
+            let response = try await client.client
+                .rpc("get_readiness_trend", params: [
+                    "p_patient_id": patientId.uuidString,
+                    "p_days": String(days)
+                ])
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(ReadinessTrend.self, from: response.data)
+        } catch {
+            self.error = error
+            throw ReadinessError.trendCalculationFailed
+        }
+    }
+
+    // MARK: - Get Today's Readiness
+
+    /// Fetch today's readiness entry for a patient
+    /// - Parameter patientId: Patient UUID
+    /// - Returns: Today's readiness or nil if not found
+    func getTodayReadiness(for patientId: UUID) async throws -> DailyReadiness? {
+        // BUILD 137: Fix timezone - use local timezone instead of GMT for daily check-ins
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.timeZone = TimeZone.current  // Use device's local timezone
+        let today = dateFormatter.string(from: Date())
+
+        // DEBUG: Log the exact query being executed
+        DebugLogger.shared.logDateConversion(
+            original: Date(),
+            formatted: today,
+            formatter: "yyyy-MM-dd with local timezone (\(TimeZone.current.identifier))"
+        )
+        DebugLogger.shared.logQuery(
+            table: "daily_readiness",
+            query: "SELECT * WHERE patient_id = ? AND date = ?",
+            params: [
+                "patient_id": patientId.uuidString,
+                "date": today
+            ]
+        )
+
+        do {
+            let response = try await client.client
+                .from("daily_readiness")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("date", value: today)
+                .limit(1)
+                .execute()
+
+            // DEBUG: Log response details
+            let dataSize = response.data.count
+            DebugLogger.shared.info("READINESS", "Response data size: \(dataSize) bytes")
+
+            // Check if response has data
+            guard !response.data.isEmpty else {
+                DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
+                DebugLogger.shared.info("READINESS", "Raw response: \(String(data: response.data, encoding: .utf8) ?? "Unable to decode")")
+                return nil
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            // BUILD 133: Try to decode with detailed error logging
+            do {
+                let results = try decoder.decode([DailyReadiness].self, from: response.data)
+
+                // DEBUG: Log successful fetch
+                if let readiness = results.first {
+                    DebugLogger.shared.success("READINESS", """
+                        Found readiness for \(today):
+                        Score: \(readiness.readinessScore ?? 0)
+                        Sleep: \(readiness.sleepHours ?? 0)h
+                        Energy: \(readiness.energyLevel ?? 0)
+                        Soreness: \(readiness.sorenessLevel ?? 0)
+                        Stress: \(readiness.stressLevel ?? 0)
+                        """)
+                }
+
+                return results.first
+            } catch let decodingError as DecodingError {
+                // BUILD 133: Enhanced error logging to diagnose decoding failures
+                let rawJSON = String(data: response.data, encoding: .utf8) ?? "Unable to decode as UTF-8"
+
+                DebugLogger.shared.error("READINESS", """
+                    DECODING ERROR - Raw JSON follows:
+                    \(rawJSON)
+
+                    Decoding error details:
+                    \(decodingError)
+                    """)
+
+                // Log specific decoding error type
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    DebugLogger.shared.error("READINESS", """
+                        Type Mismatch:
+                        Expected type: \(type)
+                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Debug description: \(context.debugDescription)
+                        """)
+                case .valueNotFound(let type, let context):
+                    DebugLogger.shared.error("READINESS", """
+                        Value Not Found:
+                        Expected type: \(type)
+                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Debug description: \(context.debugDescription)
+                        """)
+                case .keyNotFound(let key, let context):
+                    DebugLogger.shared.error("READINESS", """
+                        Key Not Found:
+                        Missing key: \(key.stringValue)
+                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Debug description: \(context.debugDescription)
+                        """)
+                case .dataCorrupted(let context):
+                    DebugLogger.shared.error("READINESS", """
+                        Data Corrupted:
+                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Debug description: \(context.debugDescription)
+                        """)
+                @unknown default:
+                    DebugLogger.shared.error("READINESS", "Unknown decoding error: \(decodingError)")
+                }
+
+                return nil
+            }
+        } catch {
+            // DEBUG: Log other error types (network errors, etc.)
+            DebugLogger.shared.error("READINESS", """
+                Error fetching readiness:
+                Error: \(error.localizedDescription)
+                Type: \(type(of: error))
+                Date queried: \(today)
+                Patient: \(patientId.uuidString)
+                """)
+            // Return nil if not found (not an error condition)
             return nil
         }
     }
 
-    /// Fetch readiness history for a patient
+    // MARK: - Fetch Recent Readiness
+
+    /// Fetch recent readiness entries for a patient
     /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - limit: Maximum number of records to return
+    ///   - patientId: Patient UUID
+    ///   - limit: Maximum number of records (default 7)
     /// - Returns: Array of readiness records, ordered by date descending
-    func fetchReadinessHistory(
-        patientId: String,
-        limit: Int = 30
+    func fetchRecentReadiness(
+        for patientId: UUID,
+        limit: Int = 7
     ) async throws -> [DailyReadiness] {
-        let response = try await supabase.client
-            .from("daily_readiness")
-            .select()
-            .eq("patient_id", value: patientId)
-            .order("check_in_date", ascending: false)
-            .limit(limit)
-            .execute()
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([DailyReadiness].self, from: response.data)
-    }
-
-    // MARK: - HRV Baseline Management
-
-    /// Calculate HRV delta from 7-day rolling baseline
-    /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - currentHRV: Current HRV value
-    /// - Returns: Percentage delta from baseline
-    private func calculateHRVDelta(patientId: String, currentHRV: Double) async throws -> Double {
-        // Fetch most recent baseline
-        let response = try await supabase.client
-            .from("hrv_baseline")
-            .select()
-            .eq("patient_id", value: patientId)
-            .order("calculated_date", ascending: false)
-            .limit(1)
-            .execute()
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let baselines = try decoder.decode([HRVBaseline].self, from: response.data)
-
-        guard let baseline = baselines.first else {
-            // No baseline yet, return 0 (neutral)
-            return 0
-        }
-
-        // Calculate percentage delta
-        let delta = ((currentHRV - baseline.baselineValue) / baseline.baselineValue) * 100
-        return delta
-    }
-
-    /// Update HRV baseline with new data point (7-day rolling average)
-    /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - newHRVValue: New HRV value to incorporate
-    private func updateHRVBaseline(patientId: String, newHRVValue: Double) async throws {
-        let logger = DebugLogger.shared
-
-        // Fetch last 7 days of HRV values
-        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
-
-        let response = try await supabase.client
-            .from("daily_readiness")
-            .select("hrv_value")
-            .eq("patient_id", value: patientId)
-            .gte("check_in_date", value: sevenDaysAgo.ISO8601Format())
-            .not("hrv_value", operator: "is", value: "null")
-            .execute()
-
-        struct HRVRecord: Codable {
-            let hrvValue: Double?
-            enum CodingKeys: String, CodingKey {
-                case hrvValue = "hrv_value"
-            }
-        }
-
-        let decoder = JSONDecoder()
-        let records = try decoder.decode([HRVRecord].self, from: response.data)
-        let hrvValues = records.compactMap { $0.hrvValue }
-
-        // Add current value
-        var allValues = hrvValues
-        allValues.append(newHRVValue)
-
-        // Calculate new baseline (7-day average)
-        guard !allValues.isEmpty else { return }
-
-        let baseline = allValues.reduce(0, +) / Double(allValues.count)
-
-        let today = Calendar.current.startOfDay(for: Date())
-        let windowStart = Calendar.current.date(byAdding: .day, value: -7, to: today)!
-
-        let baselineRecord: [String: Any] = [
-            "patient_id": patientId,
-            "calculated_date": today.ISO8601Format(),
-            "baseline_value": baseline,
-            "calculation_window_days": 7,
-            "data_points_used": allValues.count,
-            "window_start": windowStart.ISO8601Format(),
-            "window_end": today.ISO8601Format()
-        ]
-
         do {
-            try await supabase.client
-                .from("hrv_baseline")
-                .upsert(baselineRecord, onConflict: "patient_id,calculated_date")
+            let response = try await client.client
+                .from("daily_readiness")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .order("date", ascending: false)
+                .limit(limit)
                 .execute()
 
-            logger.log("✅ HRV baseline updated: \(String(format: "%.1f", baseline))", level: .diagnostic)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([DailyReadiness].self, from: response.data)
         } catch {
-            logger.log("⚠️ Failed to update HRV baseline: \(error.localizedDescription)", level: .warning)
-            // Non-fatal error, continue
+            self.error = error
+            throw error
         }
+    }
+
+    // MARK: - Fetch Readiness for Date Range
+
+    /// Fetch readiness entries for a specific date range
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - startDate: Start of date range
+    ///   - endDate: End of date range
+    /// - Returns: Array of readiness records in range
+    func fetchReadiness(
+        for patientId: UUID,
+        from startDate: Date,
+        to endDate: Date
+    ) async throws -> [DailyReadiness] {
+        let startString = ISO8601DateFormatter().string(from: startDate)
+        let endString = ISO8601DateFormatter().string(from: endDate)
+
+        do {
+            let response = try await client.client
+                .from("daily_readiness")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .gte("date", value: startString)
+                .lte("date", value: endString)
+                .order("date", ascending: false)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([DailyReadiness].self, from: response.data)
+        } catch {
+            self.error = error
+            throw error
+        }
+    }
+
+    // MARK: - Delete Readiness Entry
+
+    /// Delete a readiness entry
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - date: Date of entry to delete
+    func deleteReadiness(
+        for patientId: UUID,
+        on date: Date
+    ) async throws {
+        isLoading = true
+        defer { isLoading = false }
+
+        let dateString = ISO8601DateFormatter().string(from: date)
+
+        do {
+            try await client.client
+                .from("daily_readiness")
+                .delete()
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("date", value: dateString)
+                .execute()
+        } catch {
+            self.error = error
+            throw error
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    /// Check if readiness has been logged for today
+    /// - Parameter patientId: Patient UUID
+    /// - Returns: True if today's entry exists
+    func hasLoggedToday(patientId: UUID) async -> Bool {
+        do {
+            let todayEntry = try await getTodayReadiness(for: patientId)
+            return todayEntry != nil
+        } catch {
+            return false
+        }
+    }
+
+    /// Get readiness score interpretation
+    /// - Parameter score: Readiness score (0-100)
+    /// - Returns: ReadinessScore with level and recommendation
+    func interpretScore(_ score: Double) -> ReadinessScore {
+        return ReadinessScore(score: score)
+    }
+
+    /// Create a JSON decoder configured for daily readiness data
+    /// Handles both DATE format (YYYY-MM-DD) and ISO8601 timestamps
+    /// - Returns: Configured JSONDecoder
+    private func createReadinessDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try ISO8601 with time first (for created_at, updated_at)
+            let iso8601Formatter = ISO8601DateFormatter()
+            iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            // Try ISO8601 without fractional seconds
+            iso8601Formatter.formatOptions = [.withInternetDateTime]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            // Try DATE format (YYYY-MM-DD) for the 'date' column
+            // BUILD 137: Use local timezone for date decoding
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            dateFormatter.timeZone = TimeZone.current
+            if let date = dateFormatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Cannot decode date string: \(dateString)"
+            )
+        }
+        return decoder
+    }
+}
+
+// MARK: - Convenience Extensions
+
+extension ReadinessService {
+    /// Submit readiness with only the metrics that were collected
+    /// Makes it easy to submit partial data
+    func submitPartialReadiness(
+        patientId: UUID,
+        date: Date = Date(),
+        metrics: [String: Any],
+        notes: String? = nil
+    ) async throws -> DailyReadiness {
+        let sleepHours = metrics["sleep_hours"] as? Double
+        let sorenessLevel = metrics["soreness_level"] as? Int
+        let energyLevel = metrics["energy_level"] as? Int
+        let stressLevel = metrics["stress_level"] as? Int
+
+        return try await submitReadiness(
+            patientId: patientId,
+            date: date,
+            sleepHours: sleepHours,
+            sorenessLevel: sorenessLevel,
+            energyLevel: energyLevel,
+            stressLevel: stressLevel,
+            notes: notes
+        )
+    }
+
+    /// Get comprehensive readiness summary for a patient
+    /// Includes today's entry, recent history, and 7-day trend
+    func getReadinessSummary(for patientId: UUID) async throws -> ReadinessSummary {
+        async let todayEntry = getTodayReadiness(for: patientId)
+        async let recentEntries = fetchRecentReadiness(for: patientId, limit: 7)
+        async let trend = getReadinessTrend(for: patientId, days: 7)
+
+        return try await ReadinessSummary(
+            today: todayEntry,
+            recent: recentEntries,
+            trend: trend
+        )
+    }
+}
+
+/// Comprehensive readiness summary
+struct ReadinessSummary {
+    let today: DailyReadiness?
+    let recent: [DailyReadiness]
+    let trend: ReadinessTrend
+
+    var hasLoggedToday: Bool {
+        today != nil
+    }
+
+    var currentScore: Double? {
+        today?.readinessScore
+    }
+
+    var averageScore: Double? {
+        trend.statistics.avgReadiness
+    }
+
+    var scoreChange: Double? {
+        guard let current = currentScore,
+              let average = averageScore else {
+            return nil
+        }
+        return current - average
     }
 }

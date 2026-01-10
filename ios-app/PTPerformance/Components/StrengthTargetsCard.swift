@@ -142,9 +142,9 @@ struct TargetRow: View {
 struct StrengthTargetsCard_Previews: PreviewProvider {
     static var sampleExercise: Exercise {
         Exercise(
-            id: UUID().uuidString,
-            session_id: UUID().uuidString,
-            exercise_template_id: UUID().uuidString,
+            id: UUID(),
+            session_id: UUID(),
+            exercise_template_id: UUID(),
             sequence: 1,
             prescribed_sets: 3,
             prescribed_reps: "8-10",
@@ -153,7 +153,7 @@ struct StrengthTargetsCard_Previews: PreviewProvider {
             rest_period_seconds: 90,
             notes: nil,
             exercise_templates: Exercise.ExerciseTemplate(
-                id: UUID().uuidString,
+                id: UUID(),
                 name: "Bench Press",
                 category: "push",
                 body_region: "upper",
