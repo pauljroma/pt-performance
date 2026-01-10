@@ -1,5 +1,0 @@
-# Exclude large data files from archive
-.archive/**/*.csv
-.archive/**/*.jar
-.archive/**/*.rlib
-.archive/**/target/
