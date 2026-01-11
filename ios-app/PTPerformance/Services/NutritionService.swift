@@ -75,17 +75,51 @@ class NutritionService: ObservableObject {
             DebugLogger.shared.success("NUTRITION", "Edge function returned successfully")
             DebugLogger.shared.info("NUTRITION", "Response data size: \(responseData.count) bytes")
 
-            // Log raw response for debugging
+            // Log full raw response for debugging
             if let responseString = String(data: responseData, encoding: .utf8) {
-                DebugLogger.shared.info("NUTRITION", "Raw response: \(responseString.prefix(500))")
+                DebugLogger.shared.info("NUTRITION", "Full raw response: \(responseString)")
             }
 
             // Decode response
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            // Don't use convertFromSnakeCase since we have explicit CodingKeys
             decoder.dateDecodingStrategy = .iso8601
 
-            let recommendation = try decoder.decode(NutritionRecommendation.self, from: responseData)
+            let recommendation: NutritionRecommendation
+            do {
+                recommendation = try decoder.decode(NutritionRecommendation.self, from: responseData)
+            } catch let decodingError as DecodingError {
+                // Detailed error logging
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    DebugLogger.shared.error("NUTRITION", """
+                        Missing key: \(key.stringValue)
+                        Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Description: \(context.debugDescription)
+                        """)
+                case .typeMismatch(let type, let context):
+                    DebugLogger.shared.error("NUTRITION", """
+                        Type mismatch: expected \(type)
+                        Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Description: \(context.debugDescription)
+                        """)
+                case .valueNotFound(let type, let context):
+                    DebugLogger.shared.error("NUTRITION", """
+                        Value not found: \(type)
+                        Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Description: \(context.debugDescription)
+                        """)
+                case .dataCorrupted(let context):
+                    DebugLogger.shared.error("NUTRITION", """
+                        Data corrupted
+                        Path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                        Description: \(context.debugDescription)
+                        """)
+                @unknown default:
+                    DebugLogger.shared.error("NUTRITION", "Unknown decoding error: \(decodingError)")
+                }
+                throw decodingError
+            }
 
             lastRecommendation = recommendation
 
