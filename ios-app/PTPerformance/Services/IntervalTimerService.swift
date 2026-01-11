@@ -230,12 +230,32 @@ class IntervalTimerService: ObservableObject {
             Current state: \(state)
             Active session: \(activeSession?.id.uuidString ?? "nil")
             Active template: \(activeTemplate?.id.uuidString ?? "nil")
+            Has active timer: \(timer != nil)
             """)
 
-        // Reset state if no active session exists (handles stale state from previous sessions)
-        if activeSession == nil && activeTemplate == nil {
-            DebugLogger.shared.info("TIMER_START", "No active session/template - resetting state to .idle")
+        // Debounce: If we just started a timer with this exact template, ignore duplicate call
+        if state == .running,
+           let activeTemplate = activeTemplate,
+           activeTemplate.id == template.id {
+            DebugLogger.shared.warning("TIMER_START", "Ignoring duplicate start call for same template (debouncing)")
+            return
+        }
+
+        // Cancel any existing timer and reset state
+        if timer == nil {
+            // No timer running - safe to reset
+            DebugLogger.shared.info("TIMER_START", "No active countdown timer - forcing state to .idle")
             state = .idle
+            activeSession = nil
+            activeTemplate = nil
+        } else if state != .running {
+            // Timer exists but state is wrong - clean up
+            DebugLogger.shared.warning("TIMER_START", "Found orphaned timer - cleaning up")
+            timer?.invalidate()
+            timer = nil
+            state = .idle
+            activeSession = nil
+            activeTemplate = nil
         }
 
         // Allow starting a new timer if idle or if previous timer completed
