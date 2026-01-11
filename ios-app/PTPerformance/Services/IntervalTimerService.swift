@@ -231,7 +231,7 @@ class IntervalTimerService: ObservableObject {
         // Create workout session in database
         let sessionInput = CreateWorkoutTimerInput(
             patientId: patientId,
-            templateId: template.id,
+            templateId: nil,  // NULL - template is ephemeral from preset
             startedAt: Date(),
             roundsCompleted: 0,
             pausedSeconds: 0,

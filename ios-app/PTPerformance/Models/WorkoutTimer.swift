@@ -5,7 +5,7 @@ import Foundation
 struct WorkoutTimer: Codable, Identifiable {
     let id: UUID
     let patientId: UUID
-    let templateId: UUID
+    let templateId: UUID?  // Optional - NULL when started from preset
     let startedAt: Date
     let completedAt: Date?
     let roundsCompleted: Int
@@ -130,7 +130,7 @@ struct WorkoutTimer: Codable, Identifiable {
     static let sample = WorkoutTimer(
         id: UUID(),
         patientId: UUID(),
-        templateId: UUID(),
+        templateId: nil,  // No template - started from preset
         startedAt: Date().addingTimeInterval(-300),  // 5 minutes ago
         completedAt: Date(),
         roundsCompleted: 8,
@@ -142,7 +142,7 @@ struct WorkoutTimer: Codable, Identifiable {
     static let sampleInProgress = WorkoutTimer(
         id: UUID(),
         patientId: UUID(),
-        templateId: UUID(),
+        templateId: nil,  // No template - started from preset
         startedAt: Date().addingTimeInterval(-120),  // 2 minutes ago
         completedAt: nil,
         roundsCompleted: 4,
@@ -155,7 +155,7 @@ struct WorkoutTimer: Codable, Identifiable {
         WorkoutTimer(
             id: UUID(),
             patientId: UUID(),
-            templateId: UUID(),
+            templateId: nil,  // No template - started from preset
             startedAt: Date().addingTimeInterval(-86400),  // Yesterday
             completedAt: Date().addingTimeInterval(-86100),
             roundsCompleted: 8,
@@ -166,7 +166,7 @@ struct WorkoutTimer: Codable, Identifiable {
         WorkoutTimer(
             id: UUID(),
             patientId: UUID(),
-            templateId: UUID(),
+            templateId: nil,  // No template - started from preset
             startedAt: Date().addingTimeInterval(-172800),  // 2 days ago
             completedAt: Date().addingTimeInterval(-172500),
             roundsCompleted: 10,

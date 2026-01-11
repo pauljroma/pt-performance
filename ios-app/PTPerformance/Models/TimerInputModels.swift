@@ -38,7 +38,7 @@ struct CreateIntervalTemplateInput: Codable {
 /// Input for creating a new workout timer session
 struct CreateWorkoutTimerInput: Codable {
     let patientId: UUID
-    let templateId: UUID
+    let templateId: UUID?  // Optional - NULL when starting from preset
     let startedAt: Date
     let roundsCompleted: Int
     let pausedSeconds: Int
