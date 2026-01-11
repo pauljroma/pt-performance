@@ -224,7 +224,8 @@ class IntervalTimerService: ObservableObject {
 
     /// Start a timer session with a template
     func startTimer(template: IntervalTemplate, patientId: UUID) async throws {
-        guard state == .idle else {
+        // Allow starting a new timer if idle or if previous timer completed
+        guard state == .idle || state == .completed else {
             throw TimerError.timerAlreadyRunning
         }
 
