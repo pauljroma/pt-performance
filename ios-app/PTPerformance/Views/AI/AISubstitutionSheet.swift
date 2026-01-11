@@ -11,6 +11,7 @@ struct AISubstitutionSheet: View {
     let exerciseId: UUID
     let exerciseName: String
     let patientId: UUID
+    let sessionId: UUID
     @State private var reason = ""
     @StateObject private var substitutionService = ExerciseSubstitutionService()
     @Environment(\.dismiss) var dismiss
@@ -105,11 +106,31 @@ struct AISubstitutionSheet: View {
 
     private func getSuggestions() async {
         do {
+            // Map reason to equipment_available and intensity_preference
+            let equipmentAvailable: [String]
+            let intensityPreference: String
+
+            if reason.contains("Equipment not available") {
+                // User has no equipment - pass empty array
+                equipmentAvailable = []
+                intensityPreference = "standard"
+            } else if reason.contains("Injury or pain") {
+                // Recovery mode - but equipment function won't help with pain-based substitutions
+                // TODO: Need different edge function for injury/pain substitutions
+                equipmentAvailable = []
+                intensityPreference = "recovery"
+            } else {
+                // Too difficult - use recovery mode
+                equipmentAvailable = []
+                intensityPreference = "recovery"
+            }
+
             _ = try await substitutionService.getSubstitutions(
-                exerciseId: exerciseId,
-                exerciseName: exerciseName,
-                reason: reason,
-                patientId: patientId
+                patientId: patientId,
+                sessionId: sessionId,
+                scheduledDate: ISO8601DateFormatter().string(from: Date()),
+                equipmentAvailable: equipmentAvailable,
+                intensityPreference: intensityPreference
             )
         } catch {
             // Error is already set in service

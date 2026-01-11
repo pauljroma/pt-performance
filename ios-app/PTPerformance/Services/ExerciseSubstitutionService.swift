@@ -30,10 +30,12 @@ class ExerciseSubstitutionService: ObservableObject {
 
     /// Get AI exercise substitution suggestions
     func getSubstitutions(
-        exerciseId: UUID,
-        exerciseName: String,
-        reason: String,
-        patientId: UUID
+        patientId: UUID,
+        sessionId: UUID,
+        scheduledDate: String,
+        equipmentAvailable: [String],
+        intensityPreference: String = "standard",
+        readinessScore: Double? = nil
     ) async throws -> [ExerciseSubstitution] {
         isLoading = true
         error = nil
@@ -41,13 +43,18 @@ class ExerciseSubstitutionService: ObservableObject {
 
         defer { isLoading = false }
 
-        // Prepare request
-        let request: [String: Any] = [
-            "exercise_id": exerciseId.uuidString,
-            "exercise_name": exerciseName,
-            "reason": reason,
-            "patient_id": patientId.uuidString
+        // Prepare request matching edge function API
+        var request: [String: Any] = [
+            "patient_id": patientId.uuidString,
+            "session_id": sessionId.uuidString,
+            "scheduled_date": scheduledDate,
+            "equipment_available": equipmentAvailable,
+            "intensity_preference": intensityPreference
         ]
+
+        if let readiness = readinessScore {
+            request["readiness_score"] = readiness
+        }
 
         DebugLogger.shared.info("SUBSTITUTION", "Calling ai-exercise-substitution edge function")
         DebugLogger.shared.info("SUBSTITUTION", "Request: \(request)")
@@ -73,13 +80,18 @@ class ExerciseSubstitutionService: ObservableObject {
 
             // Decode response
             let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            // Don't use convertFromSnakeCase - we have explicit CodingKeys
 
             let responseData = try decoder.decode(SubstitutionResponse.self, from: responseDataRaw)
 
-            substitutions = responseData.substitutions
+            // Convert edge function response to display models
+            substitutions = responseData.patch.exerciseSubstitutions.map { item in
+                ExerciseSubstitution(from: item, confidence: 85)
+            }
 
             DebugLogger.shared.success("SUBSTITUTION", "Found \(substitutions.count) substitutions")
+            DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId)")
+            DebugLogger.shared.info("SUBSTITUTION", "Rationale: \(responseData.rationale)")
 
             return substitutions
 
@@ -148,26 +160,92 @@ class ExerciseSubstitutionService: ObservableObject {
 
 // MARK: - Models
 
+/// Response from ai-exercise-substitution edge function
 struct SubstitutionResponse: Codable {
-    let substitutions: [ExerciseSubstitution]
+    let success: Bool
+    let recommendationId: String
+    let patch: SubstitutionPatch
+    let rationale: String
+    let status: String
+    let tokensUsed: Int?
+    let exercisesSubstituted: Int
+
+    enum CodingKeys: String, CodingKey {
+        case success
+        case recommendationId = "recommendation_id"
+        case patch
+        case rationale
+        case status
+        case tokensUsed = "tokens_used"
+        case exercisesSubstituted = "exercises_substituted"
+    }
 }
 
-struct ExerciseSubstitution: Codable, Identifiable {
-    let exerciseTemplateId: UUID
+struct SubstitutionPatch: Codable {
+    let exerciseSubstitutions: [ExerciseSubstitutionItem]
+    let intensityAdjustments: [IntensityAdjustment]
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseSubstitutions = "exercise_substitutions"
+        case intensityAdjustments = "intensity_adjustments"
+    }
+}
+
+struct ExerciseSubstitutionItem: Codable {
+    let originalExerciseId: String
+    let originalExerciseName: String
+    let substituteExerciseId: String
+    let substituteExerciseName: String
+    let reason: String
+
+    enum CodingKeys: String, CodingKey {
+        case originalExerciseId = "original_exercise_id"
+        case originalExerciseName = "original_exercise_name"
+        case substituteExerciseId = "substitute_exercise_id"
+        case substituteExerciseName = "substitute_exercise_name"
+        case reason
+    }
+}
+
+struct IntensityAdjustment: Codable {
+    let exerciseId: String
+    let exerciseName: String
+    let originalSets: Int
+    let adjustedSets: Int
+    let originalReps: Int
+    let adjustedReps: Int
+    let originalRpe: Int?
+    let adjustedRpe: Int?
+    let reason: String
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseId = "exercise_id"
+        case exerciseName = "exercise_name"
+        case originalSets = "original_sets"
+        case adjustedSets = "adjusted_sets"
+        case originalReps = "original_reps"
+        case adjustedReps = "adjusted_reps"
+        case originalRpe = "original_rpe"
+        case adjustedRpe = "adjusted_rpe"
+        case reason
+    }
+}
+
+/// Display model for UI
+struct ExerciseSubstitution: Identifiable {
+    let id: UUID
     let exerciseName: String
     let rationale: String
     let confidence: Int
     let equipment: [String]?
     let musclesTargeted: [String]?
 
-    var id: UUID { exerciseTemplateId }
-
-    enum CodingKeys: String, CodingKey {
-        case exerciseTemplateId = "exercise_template_id"
-        case exerciseName = "exercise_name"
-        case rationale
-        case confidence
-        case equipment
-        case musclesTargeted = "muscles_targeted"
+    init(from item: ExerciseSubstitutionItem, confidence: Int = 85) {
+        self.id = UUID(uuidString: item.substituteExerciseId) ?? UUID()
+        self.exerciseName = item.substituteExerciseName
+        self.rationale = item.reason
+        self.confidence = confidence
+        self.equipment = nil
+        self.musclesTargeted = nil
     }
 }

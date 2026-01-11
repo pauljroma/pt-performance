@@ -60,11 +60,13 @@ struct ExerciseCompactRow: View {
         .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
         .sheet(isPresented: $showingSubstitutionSheet) {
-            if let patientId = viewModel.patientId {
+            if let patientId = viewModel.patientId,
+               let sessionId = viewModel.session?.id {
                 AISubstitutionSheet(
                     exerciseId: exercise.exercise_template_id,
                     exerciseName: exercise.exercise_name ?? "Exercise",
-                    patientId: patientId
+                    patientId: patientId,
+                    sessionId: sessionId
                 )
             }
         }
