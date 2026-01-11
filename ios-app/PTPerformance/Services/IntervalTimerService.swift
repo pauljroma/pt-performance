@@ -233,11 +233,15 @@ class IntervalTimerService: ObservableObject {
             Has active timer: \(timer != nil)
             """)
 
-        // Debounce: If we just started a timer with this exact template, ignore duplicate call
+        // Debounce: If we just started a timer with this exact configuration, ignore duplicate call
+        // Compare by configuration (type, work, rest, rounds) not ID, since presets create new template instances
         if state == .running,
            let activeTemplate = activeTemplate,
-           activeTemplate.id == template.id {
-            DebugLogger.shared.warning("TIMER_START", "Ignoring duplicate start call for same template (debouncing)")
+           activeTemplate.type == template.type &&
+           activeTemplate.workSeconds == template.workSeconds &&
+           activeTemplate.restSeconds == template.restSeconds &&
+           activeTemplate.rounds == template.rounds {
+            DebugLogger.shared.warning("TIMER_START", "Ignoring duplicate start call for same template configuration (debouncing)")
             return
         }
 

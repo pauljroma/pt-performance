@@ -1,0 +1,19 @@
+{
+  "id": "build143-verify-01",
+  "title": "Verify BUILD 143 Migration Applied Successfully",
+  "priority": "HIGH",
+  "estimatedTime": "5 minutes",
+  "description": "Paste verify_migration.sql in Supabase dashboard and confirm all checks pass",
+  "createdDate": "2026-01-10",
+  "status": "pending",
+  "acceptanceCriteria": [
+    "4 RLS policies on workout_timers",
+    "2 calculate_rm_estimate functions exist",
+    "Test calculations return expected values (133.33, 120.00)"
+  ],
+  "relatedFiles": [
+    "verify_migration.sql",
+    "supabase/migrations/20260109000001_fix_timers_and_exercise_errors.sql"
+  ],
+  "assignedTo": "user"
+}

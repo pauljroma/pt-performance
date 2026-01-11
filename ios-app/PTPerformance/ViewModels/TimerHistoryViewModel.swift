@@ -234,16 +234,19 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Get template for a session (if available)
     func template(for session: WorkoutTimer) -> IntervalTemplate? {
-        return templates[session.templateId]
+        guard let templateId = session.templateId else {
+            return nil
+        }
+        return templates[templateId]
     }
 
     /// Get template name for a session
     func templateName(for session: WorkoutTimer) -> String {
-        if let template = templates[session.templateId] {
-            return template.name
-        } else {
+        guard let templateId = session.templateId,
+              let template = templates[templateId] else {
             return "Custom Timer"
         }
+        return template.name
     }
 
     /// Get completion status text for a session
@@ -257,7 +260,8 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Get completion percentage for a session (based on rounds)
     func completionPercentage(for session: WorkoutTimer) -> Double? {
-        guard let template = templates[session.templateId] else {
+        guard let templateId = session.templateId,
+              let template = templates[templateId] else {
             return nil
         }
 

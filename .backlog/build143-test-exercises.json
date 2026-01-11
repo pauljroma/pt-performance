@@ -1,0 +1,21 @@
+{
+  "id": "build143-test-02",
+  "title": "Test Exercise Logging on TestFlight",
+  "priority": "HIGH",
+  "estimatedTime": "10 minutes",
+  "description": "Follow BUILD_143_EXERCISE_TEST_INSTRUCTIONS.md and report results",
+  "createdDate": "2026-01-10",
+  "status": "pending",
+  "acceptanceCriteria": [
+    "Multi-set exercise (100 lbs x [10,8,6] reps) saves successfully",
+    "RM estimate calculated correctly (expected: 120.00)",
+    "No [EXERCISE_SAVE] errors in debug logs",
+    "No function not found errors",
+    "exercise_logs table contains new records with rm_estimate"
+  ],
+  "relatedFiles": [
+    ".outcomes/BUILD_143_EXERCISE_TEST_INSTRUCTIONS.md"
+  ],
+  "assignedTo": "user",
+  "blockedBy": ["build143-verify-01"]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "migrations-cleanup-01",
+  "title": "Clean Up Conflicting Migrations",
+  "priority": "LOW",
+  "estimatedTime": "2 hours",
+  "description": "Resolve conflicts with earlier migrations (20260102*, 20260103*, 20260107*) to enable automated CLI deployment",
+  "createdDate": "2026-01-10",
+  "status": "pending",
+  "acceptanceCriteria": [
+    "All migrations apply successfully via 'supabase db push'",
+    "No conflicts with remote schema",
+    "Migration history clean and linear",
+    "Automated deployment workflow restored"
+  ],
+  "relatedFiles": [
+    "supabase/migrations/20260102000001_add_help_articles_rls.sql",
+    "supabase/migrations/20260103210000_create_timer_presets.sql",
+    "supabase/migrations/20260107000000_lims_schema.sql",
+    "supabase/migrations/20260107000001_lims_indexes.sql",
+    "supabase/migrations/20260107000002_lims_views.sql"
+  ],
+  "assignedTo": "developer",
+  "blockedBy": []
+}

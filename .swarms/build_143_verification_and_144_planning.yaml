@@ -1,0 +1,503 @@
+# BUILD 143 Verification & BUILD 144 Planning Swarm
+# Created: 2026-01-10
+# Purpose: Verify SQL migration fixes, test production functionality, plan next improvements
+
+swarm_name: "BUILD 143 Verification & BUILD 144 Planning"
+swarm_id: "build-143-verification-v1"
+created: "2026-01-10"
+status: "active"
+
+## Context
+
+context:
+  current_build: 143
+  deployment_status: "✅ Deployed to TestFlight"
+  delivery_uuid: "Already on TestFlight"
+
+  critical_fixes_applied:
+    - name: "DebugLogger Always Enabled"
+      file: "Services/DebugLogger.swift"
+      impact: "0% → 100% error visibility in TestFlight"
+      status: "✅ Deployed in BUILD 143"
+
+    - name: "Error Logging in Catch Blocks"
+      files:
+        - "Views/Timers/CustomTimerBuilderView.swift"
+        - "ViewModels/TimerPickerViewModel.swift"
+        - "Views/Patient/ExerciseLogView.swift"
+      impact: "All errors now captured with context"
+      status: "✅ Deployed in BUILD 143"
+
+  pending_sql_migrations:
+    - file: "supabase/migrations/20260109000001_fix_timers_and_exercise_errors.sql"
+      status: "⏳ Created, pending application"
+      fixes:
+        - "workout_timers RLS policies (4 policies)"
+        - "calculate_rm_estimate function overloads (2 functions)"
+        - "update_rm_estimate trigger recreation"
+        - "Backfill existing exercise_logs"
+
+  user_reported_errors:
+    - error: "Timer RLS Policy Violation"
+      message: "new row violates row-level security policy for table workout_timers"
+      fix: "4 RLS policies created in migration"
+
+    - error: "Exercise Save Function Missing"
+      message: "function calculate_rm_estimate(numeric, integer[]) does not exist"
+      fix: "2 overloaded functions created in migration"
+
+  documentation:
+    - ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+    - "supabase/migrations/20260109000001_fix_timers_and_exercise_errors.sql"
+    - "verify_migration.sql"
+
+## Objectives
+
+objectives:
+  primary:
+    - Verify SQL migration was applied successfully in Supabase
+    - Test timer creation and execution (no more RLS errors)
+    - Test exercise logging with sets/reps (no more function errors)
+    - Confirm all errors are resolved in production
+
+  secondary:
+    - Analyze any remaining errors in debug logs
+    - Plan BUILD 144 improvements
+    - Document complete resolution
+    - Establish error monitoring baseline
+
+## Agents
+
+agents:
+  - name: "Verification Coordinator"
+    role: "Lead verification and testing coordination"
+    responsibilities:
+      - Guide user through SQL migration verification
+      - Coordinate testing of timers and exercise logs
+      - Collect and analyze test results
+      - Identify any remaining issues
+    tools:
+      - Read Supabase logs
+      - Parse user feedback
+      - Update outcome documentation
+
+  - name: "SQL Migration Validator"
+    role: "Ensure database fixes are correctly applied"
+    responsibilities:
+      - Verify RLS policies exist and are correct
+      - Verify calculate_rm_estimate functions work
+      - Verify trigger is properly configured
+      - Check backfill completed successfully
+    tools:
+      - verify_migration.sql script
+      - Supabase SQL editor
+      - PostgreSQL inspection queries
+    success_criteria:
+      - "4 RLS policies on workout_timers"
+      - "2 calculate_rm_estimate function signatures"
+      - "1 update_rm_estimate_trigger active"
+      - "Function tests return expected values"
+
+  - name: "Timer Functionality Tester"
+    role: "Verify timer system works end-to-end"
+    responsibilities:
+      - Test timer creation (5 Minute AMRAP, custom timers)
+      - Test timer start/stop/pause
+      - Test timer completion and save to database
+      - Verify no RLS policy violations
+    tools:
+      - BUILD 143 TestFlight app
+      - Debug log viewer (shake device)
+      - Supabase workout_timers table inspection
+    test_cases:
+      - "Create preset timer (5 Minute AMRAP)"
+      - "Create custom timer with intervals"
+      - "Start timer and let it run"
+      - "Complete timer and verify save"
+      - "Check debug logs for errors"
+
+  - name: "Exercise Logging Tester"
+    role: "Verify exercise save functionality"
+    responsibilities:
+      - Test exercise logging with multiple sets
+      - Test RM estimate calculation
+      - Verify saves to database
+      - Verify no function errors
+    tools:
+      - BUILD 143 TestFlight app
+      - Debug log viewer (shake device)
+      - Supabase exercise_logs table inspection
+    test_cases:
+      - "Log exercise with single set (e.g., 100 lbs x 10 reps)"
+      - "Log exercise with multiple sets (e.g., 100 lbs x [10,8,6] reps)"
+      - "Verify RM estimate calculated correctly"
+      - "Check debug logs for errors"
+      - "Inspect database record"
+
+  - name: "Error Log Analyzer"
+    role: "Analyze debug logs for any remaining issues"
+    responsibilities:
+      - Review all error logs after testing
+      - Categorize errors by severity
+      - Identify patterns or new issues
+      - Recommend fixes for BUILD 144
+    tools:
+      - Debug log viewer output
+      - LoggingService UI
+      - Error categorization framework
+    analysis_criteria:
+      - "Zero timer-related errors"
+      - "Zero exercise save errors"
+      - "Any new errors discovered"
+      - "Error frequency and patterns"
+
+  - name: "BUILD 144 Planner"
+    role: "Plan improvements for next build"
+    responsibilities:
+      - Review lessons learned from BUILD 143
+      - Identify user experience improvements
+      - Plan error handling enhancements
+      - Design error reporting infrastructure
+    deliverables:
+      - "BUILD_144_PLAN.md with prioritized improvements"
+      - "User-friendly error message designs"
+      - "Retry logic specifications"
+      - "Error monitoring service evaluation (Sentry, etc.)"
+
+## Workflow
+
+workflow:
+  phase_1_migration_verification:
+    name: "Verify SQL Migration Applied"
+    duration: "15 minutes"
+    steps:
+      - step: 1
+        action: "User pastes verify_migration.sql into Supabase SQL editor"
+        agent: "SQL Migration Validator"
+        expected_output: "6 query results with all ✅ PASS statuses"
+
+      - step: 2
+        action: "Validate RLS policies count = 4"
+        agent: "SQL Migration Validator"
+        success: "pg_policies shows 4 policies on workout_timers"
+
+      - step: 3
+        action: "Validate functions count = 2"
+        agent: "SQL Migration Validator"
+        success: "pg_proc shows 2 calculate_rm_estimate signatures"
+
+      - step: 4
+        action: "Test function: calculate_rm_estimate(100, 10)"
+        agent: "SQL Migration Validator"
+        expected: "133.33"
+
+      - step: 5
+        action: "Test function: calculate_rm_estimate(100, ARRAY[10,8,6])"
+        agent: "SQL Migration Validator"
+        expected: "120.00"
+
+      - step: 6
+        action: "Document verification results"
+        agent: "Verification Coordinator"
+        output: "Update BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+
+  phase_2_timer_testing:
+    name: "Test Timer Functionality"
+    duration: "20 minutes"
+    steps:
+      - step: 1
+        action: "User opens BUILD 143 on TestFlight device"
+        agent: "Timer Functionality Tester"
+
+      - step: 2
+        action: "Navigate to Timers tab"
+        agent: "Timer Functionality Tester"
+
+      - step: 3
+        action: "Select '5 Minute AMRAP' preset"
+        agent: "Timer Functionality Tester"
+
+      - step: 4
+        action: "Tap Start Timer"
+        agent: "Timer Functionality Tester"
+        expected: "Timer starts without errors"
+
+      - step: 5
+        action: "Let timer run for 10-15 seconds, then stop"
+        agent: "Timer Functionality Tester"
+
+      - step: 6
+        action: "Shake device to open debug logs"
+        agent: "Timer Functionality Tester"
+        expected: "No [TIMER_START] errors visible"
+
+      - step: 7
+        action: "Check Supabase workout_timers table"
+        agent: "Timer Functionality Tester"
+        expected: "New timer record exists with patient_id"
+
+      - step: 8
+        action: "Document results"
+        agent: "Verification Coordinator"
+        on_success: "✅ Timers working - RLS fixed"
+        on_failure: "❌ Still seeing errors - investigate"
+
+  phase_3_exercise_testing:
+    name: "Test Exercise Logging"
+    duration: "20 minutes"
+    steps:
+      - step: 1
+        action: "Navigate to Exercise Log section"
+        agent: "Exercise Logging Tester"
+
+      - step: 2
+        action: "Select an exercise (e.g., Bench Press)"
+        agent: "Exercise Logging Tester"
+
+      - step: 3
+        action: "Log 3 sets: 100 lbs x 10, 8, 6 reps"
+        agent: "Exercise Logging Tester"
+
+      - step: 4
+        action: "Add RPE and pain scores"
+        agent: "Exercise Logging Tester"
+
+      - step: 5
+        action: "Tap Save"
+        agent: "Exercise Logging Tester"
+        expected: "Exercise saved successfully"
+
+      - step: 6
+        action: "Shake device to check debug logs"
+        agent: "Exercise Logging Tester"
+        expected: "No calculate_rm_estimate errors"
+
+      - step: 7
+        action: "Check Supabase exercise_logs table"
+        agent: "Exercise Logging Tester"
+        expected: "New record with rm_estimate = 120.00"
+
+      - step: 8
+        action: "Document results"
+        agent: "Verification Coordinator"
+        on_success: "✅ Exercise saves working - Function fixed"
+        on_failure: "❌ Still seeing errors - investigate"
+
+  phase_4_error_analysis:
+    name: "Analyze Remaining Errors"
+    duration: "15 minutes"
+    steps:
+      - step: 1
+        action: "User shares full debug log output"
+        agent: "Error Log Analyzer"
+
+      - step: 2
+        action: "Categorize all errors by type"
+        agent: "Error Log Analyzer"
+        categories:
+          - "Timer errors (should be 0)"
+          - "Exercise save errors (should be 0)"
+          - "New errors (investigate)"
+          - "Warnings (low priority)"
+
+      - step: 3
+        action: "Calculate error frequencies"
+        agent: "Error Log Analyzer"
+
+      - step: 4
+        action: "Identify root causes for any new errors"
+        agent: "Error Log Analyzer"
+
+      - step: 5
+        action: "Document findings"
+        agent: "Error Log Analyzer"
+        output: "Error analysis report in outcome file"
+
+  phase_5_build_144_planning:
+    name: "Plan BUILD 144 Improvements"
+    duration: "30 minutes"
+    steps:
+      - step: 1
+        action: "Review BUILD 143 lessons learned"
+        agent: "BUILD 144 Planner"
+        reference: ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+
+      - step: 2
+        action: "Collect user feedback on error visibility"
+        agent: "BUILD 144 Planner"
+
+      - step: 3
+        action: "Design user-friendly error messages"
+        agent: "BUILD 144 Planner"
+        examples:
+          - "Replace: 'new row violates RLS policy'"
+          - "With: 'Unable to save timer. Please check your connection.'"
+
+      - step: 4
+        action: "Plan retry logic for failed operations"
+        agent: "BUILD 144 Planner"
+        areas:
+          - "Timer start failures → Retry with exponential backoff"
+          - "Exercise save failures → Retry with local cache"
+          - "Network errors → Offline queue"
+
+      - step: 5
+        action: "Evaluate error reporting services"
+        agent: "BUILD 144 Planner"
+        options:
+          - "Sentry (recommended for mobile)"
+          - "Crashlytics (Firebase)"
+          - "Custom solution with Supabase"
+
+      - step: 6
+        action: "Create BUILD_144_PLAN.md"
+        agent: "BUILD 144 Planner"
+        sections:
+          - "Immediate fixes (any remaining errors)"
+          - "UX improvements (friendly error messages)"
+          - "Resilience improvements (retry logic)"
+          - "Monitoring improvements (error service)"
+          - "Testing improvements (automated error scenarios)"
+
+      - step: 7
+        action: "Prioritize improvements"
+        agent: "BUILD 144 Planner"
+        criteria:
+          - "User impact (high = do first)"
+          - "Implementation complexity (low = do first)"
+          - "Risk level (low = do first)"
+
+## Success Criteria
+
+success_criteria:
+  must_have:
+    - "SQL migration verified with all checks passing"
+    - "Timers create and start without RLS errors"
+    - "Exercise logs save without function errors"
+    - "Zero timer-related errors in debug logs"
+    - "Zero exercise save errors in debug logs"
+
+  should_have:
+    - "Complete error analysis documented"
+    - "BUILD 144 plan created with priorities"
+    - "User satisfaction with error visibility"
+    - "Outcome document updated with results"
+
+  nice_to_have:
+    - "Error reporting service selected for BUILD 144"
+    - "User-friendly error message designs complete"
+    - "Retry logic specifications written"
+
+## Deliverables
+
+deliverables:
+  - name: "Migration Verification Report"
+    file: ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+    section: "Verification Results"
+    content: "SQL verification query results with ✅/❌ status"
+
+  - name: "Timer Testing Report"
+    file: ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+    section: "Testing Checklist"
+    content: "Timer test results with pass/fail status"
+
+  - name: "Exercise Testing Report"
+    file: ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+    section: "Testing Checklist"
+    content: "Exercise save test results with pass/fail status"
+
+  - name: "Error Analysis Report"
+    file: ".outcomes/BUILD_143_ERROR_ANALYSIS.md"
+    content: "Complete analysis of all errors, categorized and prioritized"
+
+  - name: "BUILD 144 Plan"
+    file: ".outcomes/BUILD_144_PLAN.md"
+    content: "Prioritized improvements for next build with time estimates"
+
+## Exit Criteria
+
+exit_criteria:
+  can_proceed_to_build_144:
+    - "✅ All SQL migration checks pass"
+    - "✅ Timers work without errors"
+    - "✅ Exercise saves work without errors"
+    - "✅ BUILD 144 plan approved by user"
+
+  needs_build_143_hotfix:
+    - "❌ Critical errors still occurring"
+    - "❌ SQL migration failed to apply"
+    - "❌ User cannot use core features"
+
+  needs_more_investigation:
+    - "⚠️  Intermittent errors occurring"
+    - "⚠️  Edge cases discovered"
+    - "⚠️  Performance issues observed"
+
+## Notes
+
+notes:
+  - "BUILD 143 already deployed - no new deployment needed unless critical issues found"
+  - "SQL migration must be applied manually by user in Supabase dashboard"
+  - "All testing done on actual TestFlight build, not simulator"
+  - "User has full error visibility now - can shake device to see all logs"
+  - "This swarm focuses on VERIFICATION, not new development"
+  - "BUILD 144 planning is secondary objective - only after verification complete"
+
+## Related Files
+
+related_files:
+  documentation:
+    - ".outcomes/BUILD_143_ERROR_LOGGING_FIX_COMPLETE.md"
+    - ".outcomes/BUILD_141_ERROR_LOGGING_DEPLOYED.md"
+    - ".outcomes/BUILD_138_ERROR_LOGGING_FIX.md"
+
+  migrations:
+    - "supabase/migrations/20260109000001_fix_timers_and_exercise_errors.sql"
+    - "verify_migration.sql"
+
+  ios_code:
+    - "Services/DebugLogger.swift"
+    - "Views/Timers/CustomTimerBuilderView.swift"
+    - "ViewModels/TimerPickerViewModel.swift"
+    - "Views/Patient/ExerciseLogView.swift"
+
+  git_commits:
+    - "BUILD 143: 104b86d99 - CRITICAL FIX - Enable error logging in Release builds"
+    - "BUILD 141: [commit hash] - Connect DebugLogger to LoggingService"
+
+## Timeline
+
+timeline:
+  start: "2026-01-10"
+  estimated_duration: "2 hours"
+  phases:
+    - phase: "Migration Verification"
+      duration: "15 min"
+      start: "Immediate"
+
+    - phase: "Timer Testing"
+      duration: "20 min"
+      start: "After migration verified"
+
+    - phase: "Exercise Testing"
+      duration: "20 min"
+      start: "After timer testing complete"
+
+    - phase: "Error Analysis"
+      duration: "15 min"
+      start: "After all testing complete"
+
+    - phase: "BUILD 144 Planning"
+      duration: "30 min"
+      start: "After verification complete"
+
+    - phase: "Documentation"
+      duration: "20 min"
+      start: "Continuous throughout"
+
+## Contact
+
+owner: "User (expo)"
+assistant: "Claude Sonnet 4.5"
+repository: "git@github.com:pauljroma/pt-performance.git"
+directory: "/Users/expo/pt-performance"

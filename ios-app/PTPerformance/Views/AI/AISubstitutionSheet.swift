@@ -10,9 +10,9 @@ import SwiftUI
 struct AISubstitutionSheet: View {
     let exerciseId: UUID
     let exerciseName: String
+    let patientId: UUID
     @State private var reason = ""
-    @State private var isLoading = false
-    @State private var substitutions: [[String: Any]] = []
+    @StateObject private var substitutionService = ExerciseSubstitutionService()
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -43,27 +43,37 @@ struct AISubstitutionSheet: View {
                 }
                 .padding()
 
-                if !substitutions.isEmpty {
+                if !substitutionService.substitutions.isEmpty {
                     // Results
                     ScrollView {
                         VStack(spacing: 12) {
-                            ForEach(substitutions.indices, id: \.self) { index in
-                                SubstitutionCard(substitution: substitutions[index])
+                            ForEach(substitutionService.substitutions) { substitution in
+                                SubstitutionCard(substitution: substitution)
                             }
                         }
                         .padding()
                     }
                 }
 
+                // Error Display
+                if let error = substitutionService.error {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding()
+                }
+
                 Spacer()
 
                 // Get Suggestions Button
-                if substitutions.isEmpty && !reason.isEmpty {
+                if substitutionService.substitutions.isEmpty && !reason.isEmpty {
                     Button {
-                        getSuggestions()
+                        Task {
+                            await getSuggestions()
+                        }
                     } label: {
                         HStack {
-                            if isLoading {
+                            if substitutionService.isLoading {
                                 ProgressView()
                                     .tint(.white)
                             } else {
@@ -77,7 +87,7 @@ struct AISubstitutionSheet: View {
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }
-                    .disabled(isLoading)
+                    .disabled(substitutionService.isLoading)
                     .padding()
                 }
             }
@@ -93,11 +103,17 @@ struct AISubstitutionSheet: View {
         }
     }
 
-    private func getSuggestions() {
-        isLoading = true
-        // This would call the ai-exercise-substitution Edge Function
-        // For now, placeholder
-        isLoading = false
+    private func getSuggestions() async {
+        do {
+            _ = try await substitutionService.getSubstitutions(
+                exerciseId: exerciseId,
+                exerciseName: exerciseName,
+                reason: reason,
+                patientId: patientId
+            )
+        } catch {
+            // Error is already set in service
+        }
     }
 }
 
@@ -134,24 +150,53 @@ struct ReasonButton: View {
 }
 
 struct SubstitutionCard: View {
-    let substitution: [String: Any]
+    let substitution: ExerciseSubstitution
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(substitution["exercise_name"] as? String ?? "Unknown")
+                Text(substitution.exerciseName)
                     .font(.headline)
                 Spacer()
-                Text("\(substitution["confidence"] as? Int ?? 0)%")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.caption)
+                    Text("\(substitution.confidence)%")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
-            Text(substitution["rationale"] as? String ?? "")
+
+            Text(substitution.rationale)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
+            if let equipment = substitution.equipment, !equipment.isEmpty {
+                HStack {
+                    Image(systemName: "dumbbell")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    Text(equipment.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            if let muscles = substitution.musclesTargeted, !muscles.isEmpty {
+                HStack {
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                    Text(muscles.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+            }
+
             Button("Use This Exercise") {
-                // Accept substitution
+                // TODO: Wire up apply-substitution
+                // This would call substitutionService.applySubstitution()
             }
             .buttonStyle(.borderedProminent)
         }

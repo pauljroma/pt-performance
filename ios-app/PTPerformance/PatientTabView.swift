@@ -42,6 +42,15 @@ struct PatientTabView: View {
                     }
             }
 
+            // BUILD 159: Nutrition AI moved to top-level tab
+            if let patientIdString = supabase.userId,
+               let patientId = UUID(uuidString: patientIdString) {
+                NutritionRecommendationView(patientId: patientId)
+                    .tabItem {
+                        Label("Nutrition", systemImage: "fork.knife")
+                    }
+            }
+
             AIChatView()
                 .tabItem {
                     Label("AI Assistant", systemImage: "brain.head.profile")
@@ -64,10 +73,13 @@ struct PatientTabView: View {
 
 struct PatientSettingsView: View {
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
 
     var body: some View {
         NavigationStack {
             List {
+                // BUILD 159: Removed Nutrition AI from Settings (now top-level tab)
+
                 Section("Help & Support") {
                     Button {
                         onboardingCoordinator.resetOnboarding()

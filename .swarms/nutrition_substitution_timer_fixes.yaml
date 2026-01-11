@@ -1,0 +1,164 @@
+name: "Nutrition & Substitution AI + Timer Fixes"
+description: "Expose nutrition and exercise substitution AI edge functions in iOS UI, and verify/fix timer debouncing"
+
+enforcement:
+  pre_flight_required: true
+  component_registration_required: true
+  zone_boundaries_enforced: false  # iOS app doesn't use zone system
+  zone_7_api_required: false
+
+phases:
+  - phase: 1
+    name: "Discovery & Verification"
+    agents:
+      - id: "timer-verifier"
+        task: |
+          Verify BUILD 157 timer debouncing fix when available on TestFlight.
+          - Wait for BUILD 157 to appear (~00:31)
+          - Test timer start functionality
+          - Verify debouncing logs appear
+          - Confirm no "already running" errors
+          - Document results
+        zone: "ios-app"
+        
+      - id: "ui-discovery"
+        task: |
+          Discover existing UI components and integration points:
+          - Audit Views/AI/ directory
+          - Find NutritionLog.swift model
+          - Identify AISubstitutionSheet.swift usage
+          - Check if edge functions are called anywhere
+          - Document current state
+        zone: "ios-app"
+        
+      - id: "edge-function-audit"
+        task: |
+          Audit edge functions and their interfaces:
+          - Read ai-nutrition-recommendation/index.ts
+          - Read ai-exercise-substitution/index.ts
+          - Document request/response schemas
+          - Verify deployment status
+          - Check authentication requirements
+        zone: "supabase"
+
+  - phase: 2
+    name: "Nutrition UI Integration"
+    depends_on: ["ui-discovery", "edge-function-audit"]
+    agents:
+      - id: "nutrition-service"
+        task: |
+          Create NutritionService.swift to call ai-nutrition-recommendation:
+          - Define request/response models matching edge function schema
+          - Implement async function to call edge function
+          - Handle authentication with Supabase client
+          - Add error handling and logging
+          - Register as component in Component Registry
+        zone: "ios-app"
+        enforcement_checks:
+          - "Component Registry registration"
+          - "Error handling implemented"
+          
+      - id: "nutrition-view"
+        task: |
+          Create NutritionRecommendationView.swift:
+          - Display current nutrition summary (from NutritionLog)
+          - Add "Get AI Recommendation" button
+          - Show loading state while calling edge function
+          - Display recommendation with macros
+          - Show reasoning and timing suggestions
+          - Register as component
+        zone: "ios-app"
+        
+      - id: "nutrition-navigation"
+        task: |
+          Add nutrition recommendation to main navigation:
+          - Add to Patient tab bar or menu
+          - Create navigation link
+          - Add appropriate SF Symbol icon
+          - Test navigation flow
+        zone: "ios-app"
+
+  - phase: 3
+    name: "Exercise Substitution UI Integration"
+    depends_on: ["ui-discovery", "edge-function-audit"]
+    agents:
+      - id: "substitution-service"
+        task: |
+          Create or enhance ExerciseSubstitutionService.swift:
+          - Define request/response models for ai-exercise-substitution
+          - Implement async function to call edge function
+          - Handle equipment availability context
+          - Add error handling and logging
+          - Register as component
+        zone: "ios-app"
+        
+      - id: "substitution-integration"
+        task: |
+          Integrate AISubstitutionSheet.swift into exercise views:
+          - Add "Suggest Substitute" button to exercise cards
+          - Wire up button to call substitution service
+          - Display substitution suggestions
+          - Allow user to accept/apply substitution
+          - Test with various exercises
+        zone: "ios-app"
+        
+      - id: "substitution-flow"
+        task: |
+          Complete substitution application flow:
+          - Implement apply-substitution edge function call
+          - Update exercise in session when substitution accepted
+          - Refresh UI to show new exercise
+          - Add confirmation/success feedback
+        zone: "ios-app"
+
+  - phase: 4
+    name: "Timer Fix Verification & Refinement"
+    depends_on: ["timer-verifier"]
+    agents:
+      - id: "timer-refinement"
+        task: |
+          If BUILD 157 still has issues:
+          - Analyze new diagnostic logs
+          - Identify root cause
+          - Implement additional fixes
+          - Build and deploy BUILD 158
+          - Re-test until working
+          
+          If BUILD 157 works:
+          - Document success
+          - Clean up diagnostic logging
+          - Create outcome file
+        zone: "ios-app"
+
+  - phase: 5
+    name: "Testing & Documentation"
+    depends_on: ["nutrition-navigation", "substitution-flow", "timer-refinement"]
+    agents:
+      - id: "integration-tester"
+        task: |
+          Test all new features end-to-end:
+          - Test nutrition recommendation flow
+          - Test exercise substitution flow
+          - Test timer functionality
+          - Verify edge function calls work
+          - Check error handling
+          - Test offline behavior
+        zone: "ios-app"
+        
+      - id: "documentation-writer"
+        task: |
+          Create comprehensive documentation:
+          - Update README with new features
+          - Document edge function integration
+          - Create user guide for nutrition AI
+          - Create user guide for substitution AI
+          - Document timer debouncing fix
+          - Create deployment outcome file
+        zone: "documentation"
+
+outcomes:
+  - "Nutrition AI recommendations accessible in iOS app"
+  - "Exercise substitution AI accessible during workouts"
+  - "Timer debouncing verified and working"
+  - "All edge functions integrated and tested"
+  - "Complete documentation for new features"

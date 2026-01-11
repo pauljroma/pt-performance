@@ -23,6 +23,7 @@ struct ExerciseCompactRow: View {
     // UI state
     @State private var showingSaveConfirmation = false
     @State private var isSaving = false
+    @State private var showingSubstitutionSheet = false
 
     enum EditingField: Equatable {
         case sets, reps(Int), load, rpe, pain, notes
@@ -58,6 +59,15 @@ struct ExerciseCompactRow: View {
         )
         .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
+        .sheet(isPresented: $showingSubstitutionSheet) {
+            if let patientId = viewModel.patientId {
+                AISubstitutionSheet(
+                    exerciseId: exercise.exercise_template_id,
+                    exerciseName: exercise.exercise_name ?? "Exercise",
+                    patientId: patientId
+                )
+            }
+        }
     }
 
     // MARK: - Collapsed Content
@@ -186,6 +196,10 @@ struct ExerciseCompactRow: View {
                     .padding(.horizontal)
             }
 
+            // AI Substitution Button
+            suggestSubstituteButton
+                .padding(.horizontal)
+
             // Inline Weight & Reps Editor
             inlineWeightRepsEditor
                 .padding(.horizontal)
@@ -235,6 +249,39 @@ struct ExerciseCompactRow: View {
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel("Quick complete with prescribed values")
+    }
+
+    @ViewBuilder
+    private var suggestSubstituteButton: some View {
+        Button(action: {
+            showingSubstitutionSheet = true
+        }) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.purple)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Need a substitute?")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Get AI-powered exercise alternatives")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding()
+            .background(Color.purple.opacity(0.1))
+            .cornerRadius(10)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Suggest exercise substitute")
     }
 
     @ViewBuilder

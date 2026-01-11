@@ -456,12 +456,10 @@ struct TimerPickerView: View {
     private var activeTimerView: some View {
         Group {
             if let preset = selectedPreset {
-                Text("Active Timer: \(preset.name)")
-                    .onAppear {
-                        Task {
-                            await viewModel.startTimer(with: preset)
-                        }
-                    }
+                ActiveTimerView(
+                    template: preset.toIntervalTemplate(createdBy: patientId),
+                    patientId: patientId
+                )
             }
         }
     }

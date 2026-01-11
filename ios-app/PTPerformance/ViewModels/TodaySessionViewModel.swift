@@ -12,6 +12,12 @@ class TodaySessionViewModel: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
+    /// Patient ID for current session (derived from Supabase auth)
+    var patientId: UUID? {
+        guard let userIdString = supabase.userId else { return nil }
+        return UUID(uuidString: userIdString)
+    }
+
     // MARK: - BUILD 120: Codable Models
 
     /// Codable struct for exercise log insertion

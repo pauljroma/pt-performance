@@ -1,0 +1,21 @@
+{
+  "id": "build143-test-01",
+  "title": "Test Timer Functionality on TestFlight",
+  "priority": "HIGH",
+  "estimatedTime": "10 minutes",
+  "description": "Follow BUILD_143_TIMER_TEST_INSTRUCTIONS.md and report results",
+  "createdDate": "2026-01-10",
+  "status": "pending",
+  "acceptanceCriteria": [
+    "Preset timer (5 Minute AMRAP) starts without errors",
+    "Custom timer creates and starts successfully",
+    "No [TIMER_START] errors in debug logs",
+    "No RLS policy violations",
+    "workout_timers table contains new records"
+  ],
+  "relatedFiles": [
+    ".outcomes/BUILD_143_TIMER_TEST_INSTRUCTIONS.md"
+  ],
+  "assignedTo": "user",
+  "blockedBy": ["build143-verify-01"]
+}
