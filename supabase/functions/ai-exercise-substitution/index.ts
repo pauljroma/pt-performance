@@ -39,6 +39,15 @@ interface SubstitutionCandidate {
   equipment_required: string[]
   difficulty_delta: number
   notes: string | null
+  // NEW: Extended fields for UI display
+  video_url?: string | null
+  video_thumbnail_url?: string | null
+  technique_cues?: any
+  form_cues?: any
+  common_mistakes?: string | null
+  safety_notes?: string | null
+  category?: string | null
+  body_region?: string | null
 }
 
 // JSONB patch structure
@@ -49,6 +58,16 @@ interface SubstitutionPatch {
     substitute_exercise_id: string
     substitute_exercise_name: string
     reason: string
+    // NEW FIELDS: Video and instruction data
+    video_url?: string | null
+    video_thumbnail_url?: string | null
+    technique_cues?: any
+    form_cues?: any
+    common_mistakes?: string | null
+    safety_notes?: string | null
+    equipment_required?: string[]
+    muscles_targeted?: string[]
+    difficulty_level?: string
   }[]
   intensity_adjustments: {
     exercise_id: string
@@ -371,9 +390,69 @@ Respond with valid JSON ONLY:
 
     console.log('[generate-equipment-substitution] AI response validated successfully')
 
-    // Build final patch
+    // Fetch complete exercise template data for selected substitutions
+    const substituteExerciseIds = aiResponse.exercise_substitutions.map((sub: any) => sub.substitute_exercise_id)
+
+    const { data: exerciseTemplates, error: templatesError } = await supabaseClient
+      .from('exercise_templates')
+      .select('id, video_url, video_thumbnail_url, technique_cues, form_cues, common_mistakes, safety_notes, equipment_required, category, body_region')
+      .in('id', substituteExerciseIds)
+
+    if (templatesError) {
+      console.error('[generate-equipment-substitution] Error fetching exercise templates:', templatesError)
+      // Continue without extended data rather than failing
+    }
+
+    // Create lookup map for exercise template data
+    const templateDataMap: Record<string, any> = {}
+    if (exerciseTemplates) {
+      for (const template of exerciseTemplates) {
+        templateDataMap[template.id] = template
+      }
+    }
+
+    // Helper function to derive muscles from category and body_region
+    const deriveMusclesFromCategory = (category: string | null, bodyRegion: string | null): string[] => {
+      const muscles: string[] = []
+
+      if (bodyRegion) {
+        if (bodyRegion === 'upper') muscles.push('Upper Body')
+        else if (bodyRegion === 'lower') muscles.push('Lower Body')
+        else if (bodyRegion === 'core') muscles.push('Core')
+      }
+
+      if (category) {
+        if (category.includes('push')) muscles.push('Chest', 'Shoulders', 'Triceps')
+        else if (category.includes('pull')) muscles.push('Back', 'Biceps')
+        else if (category.includes('squat')) muscles.push('Quads', 'Glutes')
+        else if (category.includes('hinge')) muscles.push('Hamstrings', 'Glutes', 'Lower Back')
+        else if (category.includes('lunge')) muscles.push('Quads', 'Glutes', 'Hamstrings')
+      }
+
+      return muscles.length > 0 ? muscles : ['Full Body']
+    }
+
+    // Build final patch with enriched data
     const patch: SubstitutionPatch = {
-      exercise_substitutions: aiResponse.exercise_substitutions,
+      exercise_substitutions: aiResponse.exercise_substitutions.map((sub: any) => {
+        const templateData = templateDataMap[sub.substitute_exercise_id]
+        const candidate = substitutionMap[sub.original_exercise_id]?.find(c => c.substitute_id === sub.substitute_exercise_id)
+
+        return {
+          ...sub,
+          // Add extended fields from exercise_templates
+          video_url: templateData?.video_url || null,
+          video_thumbnail_url: templateData?.video_thumbnail_url || null,
+          technique_cues: templateData?.technique_cues || null,
+          form_cues: templateData?.form_cues || null,
+          common_mistakes: templateData?.common_mistakes || null,
+          safety_notes: templateData?.safety_notes || null,
+          equipment_required: templateData?.equipment_required || candidate?.equipment_required || [],
+          muscles_targeted: deriveMusclesFromCategory(templateData?.category, templateData?.body_region),
+          difficulty_level: candidate && candidate.difficulty_delta > 0 ? 'Advanced' :
+                           candidate && candidate.difficulty_delta < 0 ? 'Beginner' : 'Intermediate'
+        }
+      }),
       intensity_adjustments: aiResponse.intensity_adjustments || []
     }
 

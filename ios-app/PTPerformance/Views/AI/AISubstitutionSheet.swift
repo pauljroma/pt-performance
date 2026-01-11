@@ -191,6 +191,7 @@ struct ReasonButton: View {
 
 struct SubstitutionCard: View {
     let substitution: ExerciseSubstitution
+    @State private var showingDetail = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -212,36 +213,79 @@ struct SubstitutionCard: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            if let equipment = substitution.equipment, !equipment.isEmpty {
-                HStack {
-                    Image(systemName: "dumbbell")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                    Text(equipment.joined(separator: ", "))
-                        .font(.caption)
-                        .foregroundColor(.blue)
+            // Equipment and Muscles row
+            HStack(spacing: 12) {
+                if let equipment = substitution.equipment, !equipment.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "dumbbell")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text(equipment.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                            .lineLimit(1)
+                    }
+                }
+
+                if let muscles = substitution.musclesTargeted, !muscles.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        Text(muscles.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .lineLimit(1)
+                    }
                 }
             }
 
-            if let muscles = substitution.musclesTargeted, !muscles.isEmpty {
-                HStack {
-                    Image(systemName: "figure.strengthtraining.traditional")
+            // Difficulty level
+            if let difficulty = substitution.difficultyLevel {
+                HStack(spacing: 4) {
+                    Image(systemName: "chart.bar.fill")
                         .font(.caption)
-                        .foregroundColor(.green)
-                    Text(muscles.joined(separator: ", "))
+                        .foregroundColor(.orange)
+                    Text(difficulty)
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(.orange)
                 }
             }
 
-            Button("Use This Exercise") {
-                // TODO: Wire up apply-substitution
-                // This would call substitutionService.applySubstitution()
+            // Action buttons
+            HStack(spacing: 12) {
+                Button {
+                    showingDetail = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "info.circle.fill")
+                        Text("View Details")
+                    }
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(8)
+                }
+
+                Button {
+                    // TODO: Wire up apply-substitution
+                    // This would call substitutionService.applySubstitution()
+                } label: {
+                    Text("Use This")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
+        .sheet(isPresented: $showingDetail) {
+            ExerciseDetailSheet(substitution: substitution)
+        }
     }
 }

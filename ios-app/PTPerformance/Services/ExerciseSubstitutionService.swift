@@ -213,6 +213,19 @@ struct SubstitutionPatch: Codable {
     }
 }
 
+// MARK: - Supporting Types for Exercise Instructions
+
+struct TechniqueCues: Codable, Hashable {
+    let setup: [String]
+    let execution: [String]
+    let breathing: [String]
+}
+
+struct FormCue: Codable, Hashable {
+    let cue: String
+    let timestamp: Int?
+}
+
 struct ExerciseSubstitutionItem: Codable {
     let originalExerciseId: String
     let originalExerciseName: String
@@ -220,12 +233,32 @@ struct ExerciseSubstitutionItem: Codable {
     let substituteExerciseName: String
     let reason: String
 
+    // NEW: Video and instruction fields
+    let videoUrl: String?
+    let videoThumbnailUrl: String?
+    let techniqueCues: TechniqueCues?
+    let formCues: [FormCue]?
+    let commonMistakes: String?
+    let safetyNotes: String?
+    let equipmentRequired: [String]?
+    let musclesTargeted: [String]?
+    let difficultyLevel: String?
+
     enum CodingKeys: String, CodingKey {
         case originalExerciseId = "original_exercise_id"
         case originalExerciseName = "original_exercise_name"
         case substituteExerciseId = "substitute_exercise_id"
         case substituteExerciseName = "substitute_exercise_name"
         case reason
+        case videoUrl = "video_url"
+        case videoThumbnailUrl = "video_thumbnail_url"
+        case techniqueCues = "technique_cues"
+        case formCues = "form_cues"
+        case commonMistakes = "common_mistakes"
+        case safetyNotes = "safety_notes"
+        case equipmentRequired = "equipment_required"
+        case musclesTargeted = "muscles_targeted"
+        case difficultyLevel = "difficulty_level"
     }
 }
 
@@ -262,12 +295,28 @@ struct ExerciseSubstitution: Identifiable {
     let equipment: [String]?
     let musclesTargeted: [String]?
 
+    // NEW: Video and instruction fields
+    let videoUrl: String?
+    let videoThumbnailUrl: String?
+    let techniqueCues: TechniqueCues?
+    let formCues: [FormCue]?
+    let commonMistakes: String?
+    let safetyNotes: String?
+    let difficultyLevel: String?
+
     init(from item: ExerciseSubstitutionItem, confidence: Int = 85) {
         self.id = UUID(uuidString: item.substituteExerciseId) ?? UUID()
         self.exerciseName = item.substituteExerciseName
         self.rationale = item.reason
         self.confidence = confidence
-        self.equipment = nil
-        self.musclesTargeted = nil
+        self.equipment = item.equipmentRequired
+        self.musclesTargeted = item.musclesTargeted
+        self.videoUrl = item.videoUrl
+        self.videoThumbnailUrl = item.videoThumbnailUrl
+        self.techniqueCues = item.techniqueCues
+        self.formCues = item.formCues
+        self.commonMistakes = item.commonMistakes
+        self.safetyNotes = item.safetyNotes
+        self.difficultyLevel = item.difficultyLevel
     }
 }
