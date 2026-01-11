@@ -64,6 +64,12 @@ class ExerciseSubstitutionService: ObservableObject {
             }
 
             DebugLogger.shared.success("SUBSTITUTION", "Edge function returned successfully")
+            DebugLogger.shared.info("SUBSTITUTION", "Response data size: \(responseDataRaw.count) bytes")
+
+            // Log full raw response for debugging
+            if let responseString = String(data: responseDataRaw, encoding: .utf8) {
+                DebugLogger.shared.info("SUBSTITUTION", "Full raw response: \(responseString)")
+            }
 
             // Decode response
             let decoder = JSONDecoder()
@@ -80,6 +86,8 @@ class ExerciseSubstitutionService: ObservableObject {
         } catch {
             let errorMessage = "Failed to get exercise substitutions: \(error.localizedDescription)"
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
+            DebugLogger.shared.error("SUBSTITUTION", "Error type: \(type(of: error))")
+            DebugLogger.shared.error("SUBSTITUTION", "Full error: \(error)")
             self.error = errorMessage
             throw error
         }
