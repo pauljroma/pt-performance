@@ -78,10 +78,21 @@ class ExerciseSubstitutionService: ObservableObject {
                 DebugLogger.shared.info("SUBSTITUTION", "Full raw response: \(responseString)")
             }
 
-            // Decode response
+            // Decode response - edge function returns different structures
             let decoder = JSONDecoder()
             // Don't use convertFromSnakeCase - we have explicit CodingKeys
 
+            // First, check if this is a "no substitutions needed" response
+            if let noSubstitutionsResponse = try? decoder.decode(NoSubstitutionsResponse.self, from: responseDataRaw) {
+                DebugLogger.shared.success("SUBSTITUTION", noSubstitutionsResponse.message)
+                DebugLogger.shared.info("SUBSTITUTION", "Exercises checked: \(noSubstitutionsResponse.exercisesChecked)")
+
+                // No substitutions needed - return empty array
+                substitutions = []
+                return substitutions
+            }
+
+            // Otherwise, decode as substitution response
             let responseData = try decoder.decode(SubstitutionResponse.self, from: responseDataRaw)
 
             // Convert edge function response to display models
@@ -160,7 +171,18 @@ class ExerciseSubstitutionService: ObservableObject {
 
 // MARK: - Models
 
-/// Response from ai-exercise-substitution edge function
+/// Response when no substitutions are needed
+struct NoSubstitutionsResponse: Codable {
+    let message: String
+    let exercisesChecked: Int
+
+    enum CodingKeys: String, CodingKey {
+        case message
+        case exercisesChecked = "exercises_checked"
+    }
+}
+
+/// Response from ai-exercise-substitution edge function when substitutions are available
 struct SubstitutionResponse: Codable {
     let success: Bool
     let recommendationId: String

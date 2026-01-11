@@ -64,6 +64,25 @@ struct AISubstitutionSheet: View {
                         .padding()
                 }
 
+                // Success message when no substitutions needed
+                if !substitutionService.isLoading &&
+                   substitutionService.substitutions.isEmpty &&
+                   substitutionService.error == nil &&
+                   !reason.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.green)
+                        Text("All exercises can be performed!")
+                            .font(.headline)
+                        Text("No substitutions needed with your available equipment.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                }
+
                 Spacer()
 
                 // Get Suggestions Button
