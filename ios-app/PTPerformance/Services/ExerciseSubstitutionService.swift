@@ -83,6 +83,25 @@ class ExerciseSubstitutionService: ObservableObject {
 
             return substitutions
 
+        } catch let functionsError as Supabase.FunctionsError {
+            // Supabase edge function error - extract error body
+            switch functionsError {
+            case .httpError(let statusCode, let data):
+                DebugLogger.shared.error("SUBSTITUTION", "Edge function HTTP error: \(statusCode)")
+                if let errorString = String(data: data, encoding: .utf8) {
+                    DebugLogger.shared.error("SUBSTITUTION", "Error body: \(errorString)")
+                } else {
+                    DebugLogger.shared.error("SUBSTITUTION", "Error body (raw): \(data.count) bytes, unable to decode as UTF-8")
+                }
+                let errorMessage = "Failed to get exercise substitutions: HTTP \(statusCode)"
+                self.error = errorMessage
+                throw functionsError
+            case .relayError:
+                DebugLogger.shared.error("SUBSTITUTION", "Edge function relay error")
+                let errorMessage = "Failed to get exercise substitutions: Relay error"
+                self.error = errorMessage
+                throw functionsError
+            }
         } catch {
             let errorMessage = "Failed to get exercise substitutions: \(error.localizedDescription)"
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
