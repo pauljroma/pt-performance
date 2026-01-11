@@ -108,17 +108,19 @@ struct NutritionRecommendationView: View {
                                 .cornerRadius(12)
                         }
 
-                        // Timing
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Best Timing", systemImage: "clock")
-                                .font(.headline)
-                                .foregroundColor(.purple)
+                        // Timing (optional)
+                        if let timing = recommendation.suggestedTiming {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Label("Best Timing", systemImage: "clock")
+                                    .font(.headline)
+                                    .foregroundColor(.purple)
 
-                            Text(recommendation.suggestedTiming)
-                                .font(.body)
-                                .padding()
-                                .background(Color.purple.opacity(0.1))
-                                .cornerRadius(12)
+                                Text(timing)
+                                    .font(.body)
+                                    .padding()
+                                    .background(Color.purple.opacity(0.1))
+                                    .cornerRadius(12)
+                            }
                         }
                     }
                     .padding(.horizontal)

@@ -14,6 +14,10 @@ import UIKit
 /// Service for managing interval timers with precise countdown logic
 @MainActor
 class IntervalTimerService: ObservableObject {
+    // MARK: - Singleton
+
+    static let shared = IntervalTimerService()
+
     private let client: PTSupabaseClient
 
     // MARK: - Published State
@@ -50,7 +54,7 @@ class IntervalTimerService: ObservableObject {
 
     // MARK: - Initialization
 
-    nonisolated init(client: PTSupabaseClient = .shared) {
+    private nonisolated init(client: PTSupabaseClient = .shared) {
         self.client = client
         setupAudio()
     }
@@ -437,14 +441,21 @@ class IntervalTimerService: ObservableObject {
                 .execute()
 
             // Log session via database function
-            _ = try await client.client.rpc(
-                "log_timer_session",
-                params: [
-                    "p_patient_id": session.patientId.uuidString,
-                    "p_template_id": template.id.uuidString,
-                    "p_duration": String(Int(totalElapsed))
-                ]
-            ).execute()
+            // Use session.templateId (null for ephemeral presets) instead of template.id
+            // Note: For ephemeral templates from presets, templateId is nil
+            if let templateId = session.templateId {
+                _ = try await client.client.rpc(
+                    "log_timer_session",
+                    params: [
+                        "p_patient_id": session.patientId.uuidString,
+                        "p_template_id": templateId.uuidString,
+                        "p_duration": String(Int(totalElapsed))
+                    ]
+                ).execute()
+            } else {
+                // Skip logging for ephemeral templates (from presets)
+                DebugLogger.shared.info("TIMER", "Skipping log_timer_session for ephemeral template")
+            }
 
             DebugLogger.shared.success("TIMER", "Timer session completed and logged")
         } catch {

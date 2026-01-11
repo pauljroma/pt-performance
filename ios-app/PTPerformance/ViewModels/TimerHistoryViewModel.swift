@@ -90,7 +90,7 @@ class TimerHistoryViewModel: ObservableObject {
 
     init(
         patientId: UUID,
-        timerService: IntervalTimerService = IntervalTimerService()
+        timerService: IntervalTimerService = .shared
     ) {
         self.patientId = patientId
         self.timerService = timerService
@@ -391,7 +391,7 @@ extension TimerHistoryViewModel {
     static var preview: TimerHistoryViewModel {
         let vm = TimerHistoryViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
 
         // Mock sessions
@@ -418,7 +418,7 @@ extension TimerHistoryViewModel {
     static var emptyPreview: TimerHistoryViewModel {
         return TimerHistoryViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
     }
 }

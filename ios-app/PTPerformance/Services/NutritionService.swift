@@ -110,7 +110,7 @@ struct NutritionRecommendation: Codable, Identifiable {
     let recommendationText: String
     let targetMacros: TargetMacros
     let reasoning: String
-    let suggestedTiming: String
+    let suggestedTiming: String?  // Optional - edge function may not return this
 
     var id: String { recommendationId }
 

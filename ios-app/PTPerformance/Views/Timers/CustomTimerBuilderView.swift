@@ -46,8 +46,8 @@ struct CustomTimerBuilderView: View {
     ) {
         self.patientId = patientId
         self.onTimerCreated = onTimerCreated
-        // Initialize StateObject with new IntervalTimerService instance
-        _timerService = StateObject(wrappedValue: IntervalTimerService())
+        // Initialize StateObject with shared IntervalTimerService instance
+        _timerService = StateObject(wrappedValue: .shared)
     }
 
     // MARK: - Computed Properties

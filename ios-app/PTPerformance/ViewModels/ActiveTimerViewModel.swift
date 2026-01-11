@@ -116,7 +116,7 @@ class ActiveTimerViewModel: ObservableObject {
     // MARK: - Initialization
 
     init(
-        timerService: IntervalTimerService = IntervalTimerService(),
+        timerService: IntervalTimerService = .shared,
         backgroundManager: BackgroundTimerManager = .shared
     ) {
         self.timerService = timerService

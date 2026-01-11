@@ -94,7 +94,7 @@ class TimerPickerViewModel: ObservableObject {
 
     init(
         patientId: UUID,
-        timerService: IntervalTimerService = IntervalTimerService()
+        timerService: IntervalTimerService = .shared
     ) {
         self.patientId = patientId
         self.timerService = timerService
@@ -401,7 +401,7 @@ extension TimerPickerViewModel {
     static var preview: TimerPickerViewModel {
         let vm = TimerPickerViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
 
         // Mock presets for preview
@@ -415,7 +415,7 @@ extension TimerPickerViewModel {
     static var previewLoading: TimerPickerViewModel {
         let vm = TimerPickerViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
 
         vm.isLoading = true
@@ -427,7 +427,7 @@ extension TimerPickerViewModel {
     static var previewError: TimerPickerViewModel {
         let vm = TimerPickerViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
 
         vm.showError = true
@@ -440,11 +440,11 @@ extension TimerPickerViewModel {
     static var previewFiltered: TimerPickerViewModel {
         let vm = TimerPickerViewModel(
             patientId: UUID(),
-            timerService: IntervalTimerService()
+            timerService: .shared
         )
 
         vm.allPresets = TimerPreset.samples
-        vm.selectedCategory = .cardio
+        vm.selectedCategory = TimerCategory.cardio
         vm.filteredPresets = TimerPreset.samples.filter { $0.category == .cardio }
 
         return vm

@@ -35,8 +35,8 @@ struct ActiveTimerView: View {
     // MARK: - Initialization
 
     init(template: IntervalTemplate, patientId: UUID) {
-        // Create view model with timer service
-        let timerService = IntervalTimerService()
+        // Use shared timer service instance to preserve state
+        let timerService = IntervalTimerService.shared
         _viewModel = StateObject(wrappedValue: ActiveTimerViewModel(timerService: timerService))
 
         // Start timer immediately
