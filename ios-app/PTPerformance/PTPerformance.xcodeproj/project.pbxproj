@@ -15,6 +15,7 @@
 		060E8CEA80079F0A00AC3DD6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25683FB4E5ED67007D98BFC6 /* Foundation.framework */; };
 		061C8FAFFE0772CF2D727B50 /* SessionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29508805106C0ED0628FA76F /* SessionNote.swift */; };
 		063BFD4174A66BA6F8C7810A /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4192E361011BC89D74709A /* AuthView.swift */; };
+		06D6D14B8F774E79330D9057 /* ExerciseDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD22CCA056A1F11036717AFF /* ExerciseDetailSheet.swift */; };
 		06FC9CACDAA54EBFB7AD797A /* IntervalBlockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9961E3C04F0D4E4DB75155E4 /* IntervalBlockView.swift */; };
 		09C8A4A2205F749EA8756143 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F9EF1BBDEA3F049635053A /* ConfigTests.swift */; };
 		0AA057859F9AB9204AEBF4A0 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F62DDEAB098C9900B98516B /* SupabaseClient.swift */; };
@@ -61,6 +62,7 @@
 		4C5C4B79C18B4810918230F0 /* HelpContentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E704F37E47AD4175ACCB2D6B /* HelpContentLoader.swift */; };
 		4E6DC177F63A1AA0E5B80CB3 /* PatientListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34988911E8A0920578FF2ADA /* PatientListView.swift */; };
 		4EA79498AA690022406B8B9C /* DeviceHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC4FD9CD89D3C22FF539952 /* DeviceHelper.swift */; };
+		547DC9417F5E4DD5680A4AE7 /* ExerciseDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 519001294350F6AFBA9D881F /* ExerciseDetailSheet.swift */; };
 		54BD71E7DF08A5D329A582FB /* PatientDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845A857A24D024FED064FD03 /* PatientDetailView.swift */; };
 		5553BE779FFF19E4ACF6BC08 /* PatientTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F203BAB56648899B1DCD85 /* PatientTabView.swift */; };
 		5A388B6360F336179E35A404 /* PatientDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8D6AEA2A25E7B269D26551 /* PatientDetailViewModel.swift */; };
@@ -220,6 +222,7 @@
 		4F94BB5E3D2AA5EDFD49882B /* PhaseDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PhaseDetailView.swift; path = Views/Therapist/ProgramBuilder/PhaseDetailView.swift; sourceTree = "<group>"; };
 		505B7D7566D2960387C3AACE /* TimerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerState.swift; path = Models/TimerState.swift; sourceTree = "<group>"; };
 		50F9EF1BBDEA3F049635053A /* ConfigTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConfigTests.swift; path = Tests/Unit/ConfigTests.swift; sourceTree = "<group>"; };
+		519001294350F6AFBA9D881F /* ExerciseDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseDetailSheet.swift; path = Views/AI/ExerciseDetailSheet.swift; sourceTree = "<group>"; };
 		55F0B7F69F0084CCEEC7DB36 /* ReadinessDashboardViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessDashboardViewModel.swift; path = ViewModels/ReadinessDashboardViewModel.swift; sourceTree = "<group>"; };
 		56B37BFB0BDF4D1DA3E31FDC /* ModeThemeModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeThemeModifier.swift; sourceTree = "<group>"; };
 		57A89540A9070BF9C6624971 /* PTPerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PTPerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -323,6 +326,7 @@
 		F4797A320142A261AF69642D /* IntervalTimerService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IntervalTimerService.swift; path = Services/IntervalTimerService.swift; sourceTree = "<group>"; };
 		F55981C4C3B400E980AC9FD9 /* PrivacyNoticeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PrivacyNoticeView.swift; path = Views/Onboarding/PrivacyNoticeView.swift; sourceTree = "<group>"; };
 		F864C1C20C83CEB715275285 /* TimerCategory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerCategory.swift; path = Models/TimerCategory.swift; sourceTree = "<group>"; };
+		FD22CCA056A1F11036717AFF /* ExerciseDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseDetailSheet.swift; path = Views/AI/ExerciseDetailSheet.swift; sourceTree = "<group>"; };
 		FD2527A4FAF6E4462E1D6711 /* HistoryViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HistoryViewModel.swift; path = ViewModels/HistoryViewModel.swift; sourceTree = "<group>"; };
 		FD8D6AEA2A25E7B269D26551 /* PatientDetailViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientDetailViewModel.swift; path = ViewModels/PatientDetailViewModel.swift; sourceTree = "<group>"; };
 		FDE3C68F9A1C2FB6F12879FD /* PTPerformance.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PTPerformance.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -393,6 +397,7 @@
 				B65B550B6A5131932D187B34 /* Components */,
 				20003E0BC66EF3C56E385B7D /* DebugLogView.swift */,
 				7699258DC5FBA1AA7C7674A7 /* DebugLogView.swift */,
+				C6DF5EEE2A284FBE369F72E9 /* AI */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -700,6 +705,15 @@
 				631D2B8D72C0204D45D1E5DA /* HelpArticle.swift */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		C6DF5EEE2A284FBE369F72E9 /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				519001294350F6AFBA9D881F /* ExerciseDetailSheet.swift */,
+				FD22CCA056A1F11036717AFF /* ExerciseDetailSheet.swift */,
+			);
+			name = AI;
 			sourceTree = "<group>";
 		};
 		C775524AC52532ED1A350DBB /* ProgramEditor */ = {
@@ -1076,6 +1090,8 @@
 				D0A80DF251C606B743402C67 /* ExerciseSubstitutionService.swift in Sources */,
 				854CE473E889E50040863F5B /* NutritionService.swift in Sources */,
 				245523466685D1599CDE07A2 /* NutritionRecommendationView.swift in Sources */,
+				547DC9417F5E4DD5680A4AE7 /* ExerciseDetailSheet.swift in Sources */,
+				06D6D14B8F774E79330D9057 /* ExerciseDetailSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1137,7 +1153,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 143;
+				CURRENT_PROJECT_VERSION = 173;
 				DEVELOPMENT_TEAM = V9L3BZN3ZT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
@@ -1161,7 +1177,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 143;
+				CURRENT_PROJECT_VERSION = 173;
 				DEVELOPMENT_TEAM = V9L3BZN3ZT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
