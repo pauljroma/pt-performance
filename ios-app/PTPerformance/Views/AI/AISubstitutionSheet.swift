@@ -44,8 +44,26 @@ struct AISubstitutionSheet: View {
                 }
                 .padding()
 
+                // BUILD 175 DEBUG: Show substitution count always
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("DEBUG: substitutions.count = \(substitutionService.substitutions.count)")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                    Text("DEBUG: isLoading = \(substitutionService.isLoading ? "true" : "false")")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                    Text("DEBUG: error = \(substitutionService.error ?? "nil")")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                }
+                .padding(.horizontal)
+
                 if !substitutionService.substitutions.isEmpty {
                     // Results
+                    Text("Showing \(substitutionService.substitutions.count) results:")
+                        .font(.headline)
+                        .padding(.horizontal)
+
                     ScrollView {
                         VStack(spacing: 12) {
                             ForEach(substitutionService.substitutions) { substitution in
@@ -54,6 +72,7 @@ struct AISubstitutionSheet: View {
                         }
                         .padding()
                     }
+                    .frame(minHeight: 200) // Ensure ScrollView has minimum height
                 }
 
                 // Error Display
@@ -119,6 +138,12 @@ struct AISubstitutionSheet: View {
                         dismiss()
                     }
                 }
+            }
+            .onAppear {
+                print("BUILD 176 DEBUG: AISubstitutionSheet appeared")
+                print("BUILD 176 DEBUG: exerciseId = \(exerciseId)")
+                print("BUILD 176 DEBUG: patientId = \(patientId)")
+                print("BUILD 176 DEBUG: sessionId = \(sessionId)")
             }
         }
     }

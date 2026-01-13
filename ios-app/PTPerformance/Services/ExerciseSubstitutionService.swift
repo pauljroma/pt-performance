@@ -84,6 +84,7 @@ class ExerciseSubstitutionService: ObservableObject {
 
             // First, check if this is a "no substitutions needed" response
             if let noSubstitutionsResponse = try? decoder.decode(NoSubstitutionsResponse.self, from: responseDataRaw) {
+                DebugLogger.shared.warning("SUBSTITUTION", "BUILD 176 DEBUG: Decoded as NoSubstitutionsResponse!")
                 DebugLogger.shared.success("SUBSTITUTION", noSubstitutionsResponse.message)
                 DebugLogger.shared.info("SUBSTITUTION", "Exercises checked: \(noSubstitutionsResponse.exercisesChecked)")
 
@@ -92,14 +93,22 @@ class ExerciseSubstitutionService: ObservableObject {
                 return substitutions
             }
 
+            DebugLogger.shared.info("SUBSTITUTION", "BUILD 176 DEBUG: NoSubstitutionsResponse decode failed, trying SubstitutionResponse...")
+
             // Otherwise, decode as substitution response
             let responseData = try decoder.decode(SubstitutionResponse.self, from: responseDataRaw)
 
             // Convert edge function response to display models
-            substitutions = responseData.patch.exerciseSubstitutions.map { item in
+            let mappedSubstitutions = responseData.patch.exerciseSubstitutions.map { item in
                 ExerciseSubstitution(from: item, confidence: 85)
             }
 
+            DebugLogger.shared.info("SUBSTITUTION", "BUILD 176 DEBUG: About to set substitutions array with \(mappedSubstitutions.count) items")
+
+            // Set the @Published property
+            substitutions = mappedSubstitutions
+
+            DebugLogger.shared.success("SUBSTITUTION", "BUILD 176 DEBUG: substitutions.count is now \(substitutions.count)")
             DebugLogger.shared.success("SUBSTITUTION", "Found \(substitutions.count) substitutions")
             DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId)")
             DebugLogger.shared.info("SUBSTITUTION", "Rationale: \(responseData.rationale)")
