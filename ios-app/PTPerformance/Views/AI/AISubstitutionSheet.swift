@@ -44,19 +44,30 @@ struct AISubstitutionSheet: View {
                 }
                 .padding()
 
-                // BUILD 175 DEBUG: Show substitution count always
+                // BUILD 181 DEBUG: Show substitution count always with high visibility
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("DEBUG: substitutions.count = \(substitutionService.substitutions.count)")
-                        .font(.caption2)
+                    Text("🔶 COUNT: \(substitutionService.substitutions.count)")
+                        .font(.headline)
                         .foregroundColor(.orange)
-                    Text("DEBUG: isLoading = \(substitutionService.isLoading ? "true" : "false")")
-                        .font(.caption2)
+                    Text("🔶 LOADING: \(substitutionService.isLoading ? "YES" : "NO")")
+                        .font(.subheadline)
                         .foregroundColor(.orange)
-                    Text("DEBUG: error = \(substitutionService.error ?? "nil")")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
+                    if let error = substitutionService.error {
+                        Text("🔴 ERROR: \(error)")
+                            .font(.subheadline)
+                            .foregroundColor(.red)
+                    }
                 }
+                .padding()
+                .background(Color.orange.opacity(0.2))
+                .cornerRadius(8)
                 .padding(.horizontal)
+                .onAppear {
+                    print("BUILD 181: Debug VStack appeared, count=\(substitutionService.substitutions.count)")
+                }
+                .onChange(of: substitutionService.substitutions.count) { newCount in
+                    print("BUILD 181: substitutions.count CHANGED to \(newCount)")
+                }
 
                 if !substitutionService.substitutions.isEmpty {
                     // Results

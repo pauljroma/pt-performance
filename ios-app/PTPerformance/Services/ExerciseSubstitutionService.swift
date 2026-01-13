@@ -103,12 +103,17 @@ class ExerciseSubstitutionService: ObservableObject {
                 ExerciseSubstitution(from: item, confidence: 85)
             }
 
-            DebugLogger.shared.info("SUBSTITUTION", "BUILD 176 DEBUG: About to set substitutions array with \(mappedSubstitutions.count) items")
+            DebugLogger.shared.info("SUBSTITUTION", "BUILD 181 DEBUG: About to set substitutions array with \(mappedSubstitutions.count) items")
 
-            // Set the @Published property
+            // BUILD 181 FIX: Explicitly notify SwiftUI before updating
+            // This ensures the view observes the change
+            objectWillChange.send()
             substitutions = mappedSubstitutions
 
-            DebugLogger.shared.success("SUBSTITUTION", "BUILD 176 DEBUG: substitutions.count is now \(substitutions.count)")
+            // Also explicitly set isLoading to false here (before defer runs)
+            isLoading = false
+
+            DebugLogger.shared.success("SUBSTITUTION", "BUILD 181 DEBUG: substitutions.count is now \(substitutions.count), isLoading=\(isLoading)")
             DebugLogger.shared.success("SUBSTITUTION", "Found \(substitutions.count) substitutions")
             DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId)")
             DebugLogger.shared.info("SUBSTITUTION", "Rationale: \(responseData.rationale)")
