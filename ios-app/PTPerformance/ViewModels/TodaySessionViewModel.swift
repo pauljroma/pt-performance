@@ -265,6 +265,7 @@ class TodaySessionViewModel: ObservableObject {
         // Fetch exercises for this session
         do {
             logger.log("📱 Fetching exercises for session \(session.id)...")
+            // BUILD 177: Include video and technique fields for ExerciseTechniqueView
             let response = try await supabase.client
                 .from("session_exercises")
                 .select("""
@@ -273,7 +274,13 @@ class TodaySessionViewModel: ObservableObject {
                         id,
                         name,
                         category,
-                        body_region
+                        body_region,
+                        video_url,
+                        video_thumbnail_url,
+                        video_duration,
+                        technique_cues,
+                        common_mistakes,
+                        safety_notes
                     )
                 """)
                 .eq("session_id", value: session.id)
