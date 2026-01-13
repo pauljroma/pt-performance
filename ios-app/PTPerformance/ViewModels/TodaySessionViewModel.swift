@@ -413,12 +413,22 @@ class TodaySessionViewModel: ObservableObject {
 
             logger.log("✅ Session marked as complete!", level: .success)
 
-            // Refresh session data
-            await fetchTodaySession()
+            // BUILD 174: Fetch the specific completed session by ID (not fetchTodaySession which gets wrong session)
+            let fetchResponse = try await supabase.client
+                .from("sessions")
+                .select("*")
+                .eq("id", value: session.id)
+                .single()
+                .execute()
 
-            guard let updatedSession = self.session else {
-                return .failure(NSError(domain: "TodaySessionViewModel", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch updated session"]))
-            }
+            let sessionDecoder = JSONDecoder()
+            sessionDecoder.dateDecodingStrategy = .iso8601
+            let updatedSession = try sessionDecoder.decode(Session.self, from: fetchResponse.data)
+
+            logger.log("✅ Fetched updated session with started_at: \(updatedSession.started_at?.description ?? "nil")")
+
+            // Also update viewModel.session for UI refresh
+            self.session = updatedSession
 
             return .success(updatedSession)
 

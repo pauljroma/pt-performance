@@ -25,6 +25,9 @@ struct TodaySessionView: View {
     @State private var currentTime = Date() // For running clock
     @State private var timer: Timer?
 
+    // BUILD 174: Store completed session with correct started_at/completed_at
+    @State private var completedSession: Session?
+
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
     }
@@ -41,7 +44,9 @@ struct TodaySessionView: View {
             DebugLogView()
         }
         .sheet(isPresented: $showSessionSummary) {
-            if let session = viewModel.session {
+            // BUILD 174: Use completedSession which has correct started_at/completed_at
+            // Previously used viewModel.session which could be wrong session after fetchTodaySession()
+            if let session = completedSession {
                 SessionSummaryView(session: session)
             }
         }
@@ -524,7 +529,9 @@ struct TodaySessionView: View {
         let result = await viewModel.completeSession(startedAt: startTime)
 
         switch result {
-        case .success:
+        case .success(let session):
+            // BUILD 174: Store the completed session with correct started_at/completed_at
+            completedSession = session
             isCompletingSession = false
             showSessionSummary = true
         case .failure(let error):

@@ -275,6 +275,10 @@ struct ExerciseLogView: View {
             } message: {
                 Text(errorMessage ?? "Failed to submit exercise log")
             }
+            // BUILD 174: Add missing sheet for technique guide with video
+            .sheet(isPresented: $showTechniqueGuide) {
+                ExerciseTechniqueView(exercise: exercise)
+            }
             .onAppear {
                 // Initialize validation arrays
                 repsValidations = Array(repeating: nil, count: actualSets)
