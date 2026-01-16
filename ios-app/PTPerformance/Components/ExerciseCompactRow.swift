@@ -63,10 +63,17 @@ struct ExerciseCompactRow: View {
             if let patientId = viewModel.patientId,
                let sessionId = viewModel.session?.id {
                 AISubstitutionSheet(
-                    exerciseId: exercise.exercise_template_id,
+                    sessionExerciseId: exercise.id,  // The session_exercise row ID
+                    exerciseTemplateId: exercise.exercise_template_id,
                     exerciseName: exercise.exercise_name ?? "Exercise",
                     patientId: patientId,
-                    sessionId: sessionId
+                    sessionId: sessionId,
+                    onSubstitutionApplied: {
+                        // Refresh the session to show the new exercise
+                        Task {
+                            await viewModel.fetchTodaySession()
+                        }
+                    }
                 )
             }
         }

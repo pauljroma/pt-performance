@@ -158,13 +158,12 @@ final class PatientListViewModelTests: XCTestCase {
     func testPatientLookup() {
         viewModel.patients = Patient.samplePatients
 
-        guard let firstPatient = viewModel.patients.first,
-              let patientUUID = UUID(uuidString: firstPatient.id) else {
+        guard let firstPatient = viewModel.patients.first else {
             XCTFail("No sample patients available")
             return
         }
 
-        let foundPatient = viewModel.patient(for: patientUUID)
+        let foundPatient = viewModel.patient(for: firstPatient.id)
         XCTAssertNotNil(foundPatient, "Should find patient by UUID")
         XCTAssertEqual(foundPatient?.id, firstPatient.id, "Should return correct patient")
 

@@ -124,7 +124,7 @@ final class TodaySessionViewModelTests: XCTestCase {
         // If session is loaded, it should be from database, not hardcoded
         if let session = viewModel.session {
             // Real database sessions should have valid UUIDs
-            XCTAssertFalse(session.id.isEmpty, "Session ID should not be empty")
+            XCTAssertNotEqual(session.id.uuidString, "", "Session ID should not be empty")
 
             // Session name should not be obviously hardcoded
             XCTAssertNotEqual(session.name, "Sample Session",

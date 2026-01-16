@@ -19,6 +19,7 @@ class ExerciseSubstitutionService: ObservableObject {
     @Published var isLoading = false
     @Published var substitutions: [ExerciseSubstitution] = []
     @Published var error: String?
+    @Published var currentRecommendationId: String?  // BUILD 183: Store for apply-substitution
 
     // MARK: - Initialization
 
@@ -113,9 +114,12 @@ class ExerciseSubstitutionService: ObservableObject {
             // Also explicitly set isLoading to false here (before defer runs)
             isLoading = false
 
+            // BUILD 183: Store recommendation ID for apply-substitution
+            currentRecommendationId = responseData.recommendationId
+
             DebugLogger.shared.success("SUBSTITUTION", "BUILD 181 DEBUG: substitutions.count is now \(substitutions.count), isLoading=\(isLoading)")
             DebugLogger.shared.success("SUBSTITUTION", "Found \(substitutions.count) substitutions")
-            DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId)")
+            DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId) (stored for apply)")
             DebugLogger.shared.info("SUBSTITUTION", "Rationale: \(responseData.rationale)")
 
             return substitutions
@@ -149,19 +153,20 @@ class ExerciseSubstitutionService: ObservableObject {
         }
     }
 
-    /// Apply a substitution (calls apply-substitution edge function)
-    func applySubstitution(
-        sessionExerciseId: UUID,
-        newExerciseTemplateId: UUID,
-        reason: String
-    ) async throws {
+    /// Apply all substitutions from the current recommendation (calls apply-substitution edge function)
+    /// BUILD 183 FIX: Edge function expects recommendation_id, not individual exercise IDs
+    func applySubstitution() async throws {
+        guard let recommendationId = currentRecommendationId else {
+            throw NSError(domain: "ExerciseSubstitutionService", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "No recommendation ID available. Please get suggestions first."
+            ])
+        }
+
         let request: [String: Any] = [
-            "session_exercise_id": sessionExerciseId.uuidString,
-            "new_exercise_template_id": newExerciseTemplateId.uuidString,
-            "reason": reason
+            "recommendation_id": recommendationId
         ]
 
-        DebugLogger.shared.info("SUBSTITUTION", "Applying substitution")
+        DebugLogger.shared.info("SUBSTITUTION", "Applying substitution with recommendation_id: \(recommendationId)")
 
         do {
             let bodyData = try JSONSerialization.data(withJSONObject: request)
@@ -174,6 +179,10 @@ class ExerciseSubstitutionService: ObservableObject {
             }
 
             DebugLogger.shared.success("SUBSTITUTION", "Substitution applied successfully")
+
+            // Clear state after successful apply
+            currentRecommendationId = nil
+            substitutions = []
 
         } catch {
             let errorMessage = "Failed to apply substitution: \(error.localizedDescription)"
@@ -309,7 +318,11 @@ struct ExerciseSubstitution: Identifiable {
     let equipment: [String]?
     let musclesTargeted: [String]?
 
-    // NEW: Video and instruction fields
+    // BUILD 184: Track which exercise this is a substitute FOR
+    let originalExerciseId: UUID?
+    let originalExerciseName: String?
+
+    // Video and instruction fields
     let videoUrl: String?
     let videoThumbnailUrl: String?
     let techniqueCues: TechniqueCues?
@@ -325,6 +338,8 @@ struct ExerciseSubstitution: Identifiable {
         self.confidence = confidence
         self.equipment = item.equipmentRequired
         self.musclesTargeted = item.musclesTargeted
+        self.originalExerciseId = UUID(uuidString: item.originalExerciseId)
+        self.originalExerciseName = item.originalExerciseName
         self.videoUrl = item.videoUrl
         self.videoThumbnailUrl = item.videoThumbnailUrl
         self.techniqueCues = item.techniqueCues

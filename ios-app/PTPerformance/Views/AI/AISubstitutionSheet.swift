@@ -8,13 +8,32 @@
 import SwiftUI
 
 struct AISubstitutionSheet: View {
-    let exerciseId: UUID
+    let sessionExerciseId: UUID  // The session_exercise row to substitute
+    let exerciseTemplateId: UUID // The current exercise template
     let exerciseName: String
     let patientId: UUID
     let sessionId: UUID
+    var onSubstitutionApplied: (() -> Void)? = nil  // Callback to refresh session
     @State private var reason = ""
+    @State private var isApplying = false
     @StateObject private var substitutionService = ExerciseSubstitutionService()
     @Environment(\.dismiss) var dismiss
+
+    // BUILD 186: Filter to show only substitution for THIS exercise
+    private var relevantSubstitution: ExerciseSubstitution? {
+        // Debug: Log what we're looking for
+        print("BUILD 186: Looking for exerciseTemplateId = \(exerciseTemplateId)")
+        print("BUILD 186: Available substitutions count = \(substitutionService.substitutions.count)")
+        for sub in substitutionService.substitutions {
+            print("BUILD 186: Sub originalExerciseId = \(String(describing: sub.originalExerciseId)) for \(sub.exerciseName)")
+        }
+
+        let result = substitutionService.substitutions.first { sub in
+            sub.originalExerciseId == exerciseTemplateId
+        }
+        print("BUILD 186: Found match = \(result != nil)")
+        return result
+    }
 
     var body: some View {
         NavigationView {
@@ -44,46 +63,62 @@ struct AISubstitutionSheet: View {
                 }
                 .padding()
 
-                // BUILD 181 DEBUG: Show substitution count always with high visibility
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("🔶 COUNT: \(substitutionService.substitutions.count)")
-                        .font(.headline)
-                        .foregroundColor(.orange)
-                    Text("🔶 LOADING: \(substitutionService.isLoading ? "YES" : "NO")")
-                        .font(.subheadline)
-                        .foregroundColor(.orange)
-                    if let error = substitutionService.error {
-                        Text("🔴 ERROR: \(error)")
-                            .font(.subheadline)
-                            .foregroundColor(.red)
-                    }
-                }
-                .padding()
-                .background(Color.orange.opacity(0.2))
-                .cornerRadius(8)
-                .padding(.horizontal)
-                .onAppear {
-                    print("BUILD 181: Debug VStack appeared, count=\(substitutionService.substitutions.count)")
-                }
-                .onChange(of: substitutionService.substitutions.count) { newCount in
-                    print("BUILD 181: substitutions.count CHANGED to \(newCount)")
-                }
-
-                if !substitutionService.substitutions.isEmpty {
-                    // Results
-                    Text("Showing \(substitutionService.substitutions.count) results:")
-                        .font(.headline)
+                // BUILD 185: Show only the substitution for THIS specific exercise
+                if let substitution = relevantSubstitution {
+                    // Show the specific substitution
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Original exercise being replaced
+                        HStack {
+                            Image(systemName: "arrow.right.circle.fill")
+                                .foregroundColor(.orange)
+                            Text("Replacing: \(exerciseName)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
                         .padding(.horizontal)
 
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            ForEach(substitutionService.substitutions) { substitution in
-                                SubstitutionCard(substitution: substitution)
+                        // The substitution card
+                        SubstitutionCard(substitution: substitution)
+                            .padding(.horizontal)
+
+                        // Use This button
+                        Button {
+                            Task {
+                                await applyAllSubstitutions()
                             }
+                        } label: {
+                            HStack {
+                                if isApplying {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Use \(substitution.exerciseName)")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
                         }
-                        .padding()
+                        .disabled(isApplying)
+                        .padding(.horizontal)
                     }
-                    .frame(minHeight: 200) // Ensure ScrollView has minimum height
+                } else if !substitutionService.substitutions.isEmpty {
+                    // Edge function returned results but none match this exercise
+                    VStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.green)
+                        Text("No substitution needed!")
+                            .font(.headline)
+                        Text("\(exerciseName) can be performed as-is.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
                 }
 
                 // Error Display
@@ -151,10 +186,11 @@ struct AISubstitutionSheet: View {
                 }
             }
             .onAppear {
-                print("BUILD 176 DEBUG: AISubstitutionSheet appeared")
-                print("BUILD 176 DEBUG: exerciseId = \(exerciseId)")
-                print("BUILD 176 DEBUG: patientId = \(patientId)")
-                print("BUILD 176 DEBUG: sessionId = \(sessionId)")
+                print("BUILD 183 DEBUG: AISubstitutionSheet appeared")
+                print("BUILD 183 DEBUG: sessionExerciseId = \(sessionExerciseId)")
+                print("BUILD 183 DEBUG: exerciseTemplateId = \(exerciseTemplateId)")
+                print("BUILD 183 DEBUG: patientId = \(patientId)")
+                print("BUILD 183 DEBUG: sessionId = \(sessionId)")
             }
         }
     }
@@ -189,6 +225,28 @@ struct AISubstitutionSheet: View {
             )
         } catch {
             // Error is already set in service
+        }
+    }
+
+    private func applyAllSubstitutions() async {
+        isApplying = true
+        defer { isApplying = false }
+
+        do {
+            print("BUILD 184: Applying all substitutions via recommendation_id")
+
+            try await substitutionService.applySubstitution()
+
+            print("BUILD 184: All substitutions applied successfully!")
+
+            // Notify parent to refresh and dismiss
+            await MainActor.run {
+                onSubstitutionApplied?()
+                dismiss()
+            }
+        } catch {
+            print("BUILD 184: Failed to apply substitutions: \(error)")
+            substitutionService.error = "Failed to apply: \(error.localizedDescription)"
         }
     }
 }
@@ -231,9 +289,15 @@ struct SubstitutionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Substitution header with arrow
             HStack {
-                Text(substitution.exerciseName)
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Replace with:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(substitution.exerciseName)
+                        .font(.headline)
+                }
                 Spacer()
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
@@ -261,16 +325,25 @@ struct SubstitutionCard: View {
                             .foregroundColor(.blue)
                             .lineLimit(1)
                     }
+                } else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "hand.raised.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        Text("No equipment needed")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
                 }
 
                 if let muscles = substitution.musclesTargeted, !muscles.isEmpty {
                     HStack(spacing: 4) {
                         Image(systemName: "figure.strengthtraining.traditional")
                             .font(.caption)
-                            .foregroundColor(.green)
+                            .foregroundColor(.purple)
                         Text(muscles.joined(separator: ", "))
                             .font(.caption)
-                            .foregroundColor(.green)
+                            .foregroundColor(.purple)
                             .lineLimit(1)
                     }
                 }
@@ -288,33 +361,20 @@ struct SubstitutionCard: View {
                 }
             }
 
-            // Action buttons
-            HStack(spacing: 12) {
-                Button {
-                    showingDetail = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                        Text("View Details")
-                    }
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
-                    .cornerRadius(8)
+            // View Details button
+            Button {
+                showingDetail = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle.fill")
+                    Text("View Details")
                 }
-
-                Button {
-                    // TODO: Wire up apply-substitution
-                    // This would call substitutionService.applySubstitution()
-                } label: {
-                    Text("Use This")
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                }
-                .buttonStyle(.borderedProminent)
+                .font(.subheadline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .cornerRadius(8)
             }
         }
         .padding()
