@@ -8,6 +8,119 @@
 
 import Foundation
 
+// MARK: - Workout Blocks JSONB Structure
+
+/// JSONB structure for workout blocks stored in templates
+typealias WorkoutBlocks = [WorkoutBlock]
+
+// MARK: - System Workout Template
+
+/// Represents a system-defined workout template
+/// Maps to system_workout_templates table in Supabase
+struct SystemWorkoutTemplate: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let description: String?
+    let category: String?
+    let difficulty: String?
+    let estimatedDurationMinutes: Int?
+    let blocks: WorkoutBlocks
+    let isActive: Bool
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case description
+        case category
+        case difficulty
+        case estimatedDurationMinutes = "estimated_duration_minutes"
+        case blocks
+        case isActive = "is_active"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var durationDisplay: String? {
+        guard let minutes = estimatedDurationMinutes else { return nil }
+        if minutes >= 60 {
+            let hours = minutes / 60
+            let remainingMinutes = minutes % 60
+            if remainingMinutes > 0 {
+                return "\(hours)h \(remainingMinutes)m"
+            }
+            return "\(hours)h"
+        }
+        return "\(minutes) min"
+    }
+
+    var exerciseCount: Int {
+        blocks.reduce(0) { $0 + $1.exercises.count }
+    }
+
+    var difficultyDisplay: String {
+        difficulty?.capitalized ?? "Moderate"
+    }
+}
+
+// MARK: - Patient Workout Template
+
+/// Represents a patient-specific workout template (customized from system template or created by clinician)
+/// Maps to patient_workout_templates table in Supabase
+struct PatientWorkoutTemplate: Codable, Identifiable {
+    let id: UUID
+    let patientId: UUID
+    let sourceTemplateId: UUID?
+    let name: String
+    let description: String?
+    let blocks: WorkoutBlocks
+    let isActive: Bool
+    let createdBy: UUID?
+    let createdAt: Date
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case patientId = "patient_id"
+        case sourceTemplateId = "source_template_id"
+        case name
+        case description
+        case blocks
+        case isActive = "is_active"
+        case createdBy = "created_by"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
+    var exerciseCount: Int {
+        blocks.reduce(0) { $0 + $1.exercises.count }
+    }
+
+    var isCustomized: Bool {
+        sourceTemplateId != nil
+    }
+}
+
+// MARK: - Create Patient Template Input
+
+/// Input model for creating a patient workout template
+struct CreatePatientTemplateInput: Codable {
+    let patientId: UUID
+    let sourceTemplateId: UUID?
+    let name: String
+    let description: String?
+    let blocks: WorkoutBlocks
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case sourceTemplateId = "source_template_id"
+        case name
+        case description
+        case blocks
+    }
+}
+
 // MARK: - Workout Template
 
 /// Represents a reusable workout program template
@@ -192,52 +305,152 @@ struct TemplateSession: Codable, Identifiable, Hashable {
 
 // MARK: - Template Exercise
 
-/// Represents an exercise configuration within a template session
-struct TemplateExercise: Codable, Hashable {
+/// Represents an exercise configuration within a template session or workout block
+struct TemplateExercise: Codable, Identifiable, Hashable {
 
-    let exerciseId: UUID
+    let id: UUID
+    let exerciseTemplateId: UUID
+    let name: String
     let sequence: Int
-    let sets: Int
+    let prescribedSets: Int
+    let prescribedReps: String?
+    let prescribedLoad: Double?
+    let loadUnit: String?
+    let restPeriodSeconds: Int?
+    let notes: String?
+
+    // Optional joined data from exercise_templates
+    let category: String?
+    let bodyRegion: String?
+    let videoUrl: String?
+
+    // Legacy fields for backward compatibility
+    let exerciseId: UUID?
+    let sets: Int?
     let reps: Int?
     let duration: Int? // Duration in seconds
     let rest: Int? // Rest in seconds
-    let notes: String?
     let weight: Double? // Suggested weight
     let intensity: String? // e.g., "RPE 7-8", "70% 1RM"
 
     enum CodingKeys: String, CodingKey {
-        case exerciseId = "exercise_id"
+        case id
+        case exerciseTemplateId = "exercise_template_id"
+        case name
         case sequence
+        case prescribedSets = "prescribed_sets"
+        case prescribedReps = "prescribed_reps"
+        case prescribedLoad = "prescribed_load"
+        case loadUnit = "load_unit"
+        case restPeriodSeconds = "rest_period_seconds"
+        case notes
+        case category
+        case bodyRegion = "body_region"
+        case videoUrl = "video_url"
+        // Legacy keys
+        case exerciseId = "exercise_id"
         case sets
         case reps
         case duration
         case rest
-        case notes
         case weight
         case intensity
     }
 
+    // Initialize with required fields (for new code)
+    init(id: UUID = UUID(), exerciseTemplateId: UUID, name: String, sequence: Int, prescribedSets: Int, prescribedReps: String? = nil, prescribedLoad: Double? = nil, loadUnit: String? = nil, restPeriodSeconds: Int? = nil, notes: String? = nil, category: String? = nil, bodyRegion: String? = nil, videoUrl: String? = nil) {
+        self.id = id
+        self.exerciseTemplateId = exerciseTemplateId
+        self.name = name
+        self.sequence = sequence
+        self.prescribedSets = prescribedSets
+        self.prescribedReps = prescribedReps
+        self.prescribedLoad = prescribedLoad
+        self.loadUnit = loadUnit
+        self.restPeriodSeconds = restPeriodSeconds
+        self.notes = notes
+        self.category = category
+        self.bodyRegion = bodyRegion
+        self.videoUrl = videoUrl
+        // Legacy fields
+        self.exerciseId = nil
+        self.sets = nil
+        self.reps = nil
+        self.duration = nil
+        self.rest = nil
+        self.weight = nil
+        self.intensity = nil
+    }
+
+    // Legacy initializer for backward compatibility
+    init(exerciseId: UUID, sequence: Int, sets: Int, reps: Int?, duration: Int?, rest: Int?, notes: String?, weight: Double?, intensity: String?) {
+        self.id = UUID()
+        self.exerciseTemplateId = exerciseId
+        self.name = ""
+        self.sequence = sequence
+        self.prescribedSets = sets
+        self.prescribedReps = reps.map { String($0) }
+        self.prescribedLoad = weight
+        self.loadUnit = nil
+        self.restPeriodSeconds = rest
+        self.notes = notes
+        self.category = nil
+        self.bodyRegion = nil
+        self.videoUrl = nil
+        // Legacy fields
+        self.exerciseId = exerciseId
+        self.sets = sets
+        self.reps = reps
+        self.duration = duration
+        self.rest = rest
+        self.weight = weight
+        self.intensity = intensity
+    }
+
     // Computed properties
+    var repsDisplay: String {
+        prescribedReps ?? (reps.map { String($0) } ?? "0")
+    }
+
+    var loadDisplay: String {
+        if let load = prescribedLoad ?? weight, let unit = loadUnit {
+            return "\(Int(load)) \(unit)"
+        } else if let load = prescribedLoad ?? weight {
+            return "\(Int(load)) lbs"
+        }
+        return "Bodyweight"
+    }
+
+    var setsDisplay: String {
+        "\(prescribedSets) sets"
+    }
+
+    var hasVideo: Bool {
+        videoUrl != nil
+    }
+
     var setsRepsDisplay: String {
-        if let reps = reps {
-            return "\(sets) x \(reps)"
+        if let repsValue = prescribedReps {
+            return "\(prescribedSets) x \(repsValue)"
+        } else if let repsValue = reps {
+            return "\(sets ?? prescribedSets) x \(repsValue)"
         } else if let duration = duration {
             let minutes = duration / 60
             let seconds = duration % 60
             if minutes > 0 {
-                return "\(sets) x \(minutes):\(String(format: "%02d", seconds))"
+                return "\(sets ?? prescribedSets) x \(minutes):\(String(format: "%02d", seconds))"
             } else {
-                return "\(sets) x \(seconds)s"
+                return "\(sets ?? prescribedSets) x \(seconds)s"
             }
         } else {
-            return "\(sets) sets"
+            return "\(prescribedSets) sets"
         }
     }
 
     var restDisplay: String? {
-        guard let rest = rest else { return nil }
-        let minutes = rest / 60
-        let seconds = rest % 60
+        guard let restSeconds = restPeriodSeconds ?? rest else { return nil }
+        let minutes = restSeconds / 60
+        let seconds = restSeconds % 60
         if minutes > 0 {
             return "\(minutes):\(String(format: "%02d", seconds)) rest"
         } else {

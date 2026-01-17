@@ -28,6 +28,11 @@ struct TodaySessionView: View {
     // BUILD 174: Store completed session with correct started_at/completed_at
     @State private var completedSession: Session?
 
+    // Manual Workout Navigation
+    @State private var showTemplateLibrary = false
+    @State private var showWorkoutCreator = false
+    @State private var showAddToTodayPicker = false
+
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
     }
@@ -64,6 +69,29 @@ struct TodaySessionView: View {
             if let patientId = appState.userId {
                 NavigationStack {
                     ReadinessDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                }
+            }
+        }
+        // Manual Workout Sheets
+        .sheet(isPresented: $showTemplateLibrary) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    WorkoutTemplateLibraryView(
+                        patientId: UUID(uuidString: patientId) ?? UUID(),
+                        onStartWorkout: { template in
+                            // Template selected - the view handles session creation internally
+                            showTemplateLibrary = false
+                        }
+                    )
+                }
+            }
+        }
+        .sheet(isPresented: $showWorkoutCreator) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    ManualWorkoutCreatorView(
+                        patientId: UUID(uuidString: patientId) ?? UUID()
+                    )
                 }
             }
         }
@@ -121,6 +149,19 @@ struct TodaySessionView: View {
             } else {
                 sessionContent
             }
+
+            // Manual Workout FAB
+            FloatingActionButton(
+                onAddToToday: {
+                    showAddToTodayPicker = true
+                },
+                onNewWorkout: {
+                    showWorkoutCreator = true
+                },
+                onFromLibrary: {
+                    showTemplateLibrary = true
+                }
+            )
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

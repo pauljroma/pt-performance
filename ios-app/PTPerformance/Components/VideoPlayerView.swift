@@ -25,9 +25,6 @@ struct VideoPlayerView: View {
                     .onTapGesture {
                         toggleControls()
                     }
-                    .onAppear {
-                        playerController.setupPlayer(with: videoUrl)
-                    }
                     .onDisappear {
                         playerController.pause()
                     }
@@ -153,6 +150,7 @@ struct VideoPlayerView: View {
             }
         }
         .onAppear {
+            playerController.setupPlayer(with: videoUrl)
             startControlsTimer()
         }
         .onChange(of: showControls) { isShowing in
