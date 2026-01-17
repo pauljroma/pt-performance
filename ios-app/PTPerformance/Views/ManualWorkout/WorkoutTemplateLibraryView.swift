@@ -192,13 +192,13 @@ struct AnyWorkoutTemplate: Identifiable {
         self.id = patientTemplate.id
         self.name = patientTemplate.name
         self.description = patientTemplate.description
-        self.category = nil
+        self.category = patientTemplate.category
         self.difficulty = nil
         self.durationDisplay = nil
         self.exerciseCount = patientTemplate.exerciseCount
         self.blocks = patientTemplate.blocks
         self.isSystemTemplate = false
-        self.sourceTemplateId = patientTemplate.sourceTemplateId
+        self.sourceTemplateId = nil // Patient templates don't track source
     }
 }
 
@@ -543,7 +543,7 @@ struct TemplateCardView: View {
     let template: AnyWorkoutTemplate
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             // Header with category badge
             HStack {
                 if let category = template.category {
@@ -563,6 +563,25 @@ struct TemplateCardView: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
 
+            // Description preview
+            if let description = template.description, !description.isEmpty {
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            // Exercise preview - show first 3 exercise names
+            let exerciseNames = template.blocks.flatMap { $0.exercises.map { $0.name } }
+            if !exerciseNames.isEmpty {
+                Text(exerciseNames.prefix(3).joined(separator: " • "))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 4)
+
             // Stats row
             HStack(spacing: 12) {
                 // Exercise count
@@ -576,17 +595,17 @@ struct TemplateCardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-            }
 
-            // Difficulty badge if available
-            if let difficulty = template.difficulty {
-                TemplateDifficultyBadge(difficulty: difficulty)
-            }
+                Spacer()
 
-            Spacer(minLength: 0)
+                // Difficulty badge if available
+                if let difficulty = template.difficulty {
+                    TemplateDifficultyBadge(difficulty: difficulty)
+                }
+            }
         }
         .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)

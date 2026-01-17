@@ -25,6 +25,15 @@ struct WorkoutBlock: Codable, Identifiable, Hashable {
         self.exercises = exercises
     }
 
+    /// Convenience initializer for creating blocks from template data
+    init(name: String, exercises: [TemplateExercise]) {
+        self.id = UUID()
+        self.name = name
+        self.blockType = WorkoutBlockType.inferFromName(name)
+        self.sequence = 0
+        self.exercises = exercises
+    }
+
     var exerciseCount: Int {
         exercises.count
     }
@@ -144,6 +153,33 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
         case .recovery:
             return "Cool down and recovery exercises"
         }
+    }
+
+    /// Infer block type from a block name string
+    static func inferFromName(_ name: String) -> WorkoutBlockType {
+        let lowercased = name.lowercased()
+        if lowercased.contains("cardio") || lowercased.contains("warm") || lowercased.contains("active") {
+            return .cardio
+        } else if lowercased.contains("dynamic") || lowercased.contains("stretch") || lowercased.contains("mobility") {
+            return .dynamicStretch
+        } else if lowercased.contains("prehab") || lowercased.contains("activation") {
+            return .prehab
+        } else if lowercased.contains("push") || lowercased.contains("press") || lowercased.contains("chest") {
+            return .push
+        } else if lowercased.contains("pull") || lowercased.contains("row") || lowercased.contains("back") {
+            return .pull
+        } else if lowercased.contains("hinge") || lowercased.contains("deadlift") || lowercased.contains("rdl") {
+            return .hinge
+        } else if lowercased.contains("lunge") || lowercased.contains("squat") || lowercased.contains("leg") {
+            return .lungeSquat
+        } else if lowercased.contains("functional") || lowercased.contains("conditioning") || lowercased.contains("finisher") {
+            return .functional
+        } else if lowercased.contains("recovery") || lowercased.contains("cool") || lowercased.contains("foam") {
+            return .recovery
+        } else if lowercased.contains("strength") {
+            return .push // Default strength to push
+        }
+        return .functional // Default fallback
     }
 }
 

@@ -168,6 +168,35 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Load Exercises (for when initialized without exercises)
+
+    @Published var needsExerciseLoad = false
+
+    func loadExercisesIfNeeded() async {
+        guard exercises.isEmpty else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            DebugLogger.shared.log("📥 Loading exercises for session: \(session.id)", level: .diagnostic)
+
+            let loadedExercises = try await service.fetchSessionExercises(sessionId: session.id)
+
+            await MainActor.run {
+                exercises = loadedExercises
+                if let firstExercise = exercises.first {
+                    setupInputFields(for: firstExercise)
+                }
+                DebugLogger.shared.log("✅ Loaded \(exercises.count) exercises", level: .success)
+            }
+        } catch {
+            DebugLogger.shared.log("❌ Failed to load exercises: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load exercises: \(error.localizedDescription)"
+            showError = true
+        }
+    }
+
     // MARK: - Timer Management
 
     func startTimer() {
@@ -321,19 +350,41 @@ struct ManualWorkoutExecutionView: View {
     @StateObject private var viewModel: ManualWorkoutExecutionViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showEndEarlyConfirmation = false
+    let onComplete: (() -> Void)?
 
-    init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID) {
+    init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
             session: session,
             exercises: exercises,
             patientId: patientId
         ))
+        self.onComplete = onComplete
+    }
+
+    /// Convenience initializer that creates a view with empty exercises
+    /// The ViewModel should fetch exercises when this is used
+    init(session: ManualSession, patientId: UUID, onComplete: (() -> Void)? = nil) {
+        _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
+            session: session,
+            exercises: [],  // Will be loaded by ViewModel
+            patientId: patientId
+        ))
+        self.onComplete = onComplete
     }
 
     var body: some View {
         NavigationView {
             ZStack {
-                if viewModel.isWorkoutCompleted {
+                if viewModel.isLoading && viewModel.exercises.isEmpty {
+                    // Loading exercises state
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Loading workout...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                } else if viewModel.isWorkoutCompleted {
                     workoutCompletedView
                 } else {
                     workoutExecutionView
@@ -347,10 +398,25 @@ struct ManualWorkoutExecutionView: View {
                         if viewModel.completedCount > 0 {
                             showEndEarlyConfirmation = true
                         } else {
+                            onComplete?()
                             dismiss()
                         }
                     }
                     .foregroundColor(.red)
+                }
+            }
+            .task {
+                // Load exercises if needed (for convenience init)
+                await viewModel.loadExercisesIfNeeded()
+                // Start the timer
+                viewModel.startTimer()
+            }
+            .onChange(of: viewModel.isWorkoutCompleted) { isCompleted in
+                // Call onComplete when workout finishes
+                if isCompleted {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        onComplete?()
+                    }
                 }
             }
             .alert("End Workout Early?", isPresented: $showEndEarlyConfirmation) {

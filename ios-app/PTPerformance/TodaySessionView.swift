@@ -32,6 +32,10 @@ struct TodaySessionView: View {
     @State private var showTemplateLibrary = false
     @State private var showWorkoutCreator = false
     @State private var showAddToTodayPicker = false
+    @State private var showManualWorkoutExecution = false
+    @State private var selectedWorkoutTemplate: AnyWorkoutTemplate?
+    @State private var createdManualSession: ManualSession?
+    @State private var isCreatingManualSession = false
 
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
@@ -79,8 +83,12 @@ struct TodaySessionView: View {
                     WorkoutTemplateLibraryView(
                         patientId: UUID(uuidString: patientId) ?? UUID(),
                         onStartWorkout: { template in
-                            // Template selected - the view handles session creation internally
+                            // Store template and trigger session creation
+                            selectedWorkoutTemplate = template
                             showTemplateLibrary = false
+                            Task {
+                                await createManualSessionFromTemplate(template, patientId: patientId)
+                            }
                         }
                     )
                 }
@@ -93,6 +101,21 @@ struct TodaySessionView: View {
                         patientId: UUID(uuidString: patientId) ?? UUID()
                     )
                 }
+            }
+        }
+        .fullScreenCover(isPresented: $showManualWorkoutExecution) {
+            if let session = createdManualSession, let patientId = appState.userId {
+                ManualWorkoutExecutionView(
+                    session: session,
+                    patientId: UUID(uuidString: patientId) ?? UUID(),
+                    onComplete: {
+                        showManualWorkoutExecution = false
+                        createdManualSession = nil
+                        selectedWorkoutTemplate = nil
+                        // Refresh today's session to show any updates
+                        Task { await viewModel.fetchTodaySession() }
+                    }
+                )
             }
         }
         .task {
@@ -600,6 +623,68 @@ struct TodaySessionView: View {
             // Silently fail - just means no check-in today
             DebugLogger.shared.log("ℹ️ No readiness check-in for today: \(error.localizedDescription)")
             todayReadiness = nil
+        }
+    }
+
+    // MARK: - Manual Workout Creation from Template
+
+    private func createManualSessionFromTemplate(_ template: AnyWorkoutTemplate, patientId: String) async {
+        guard let patientUUID = UUID(uuidString: patientId) else {
+            DebugLogger.shared.log("❌ Invalid patient ID for manual workout", level: .error)
+            return
+        }
+
+        isCreatingManualSession = true
+        defer { isCreatingManualSession = false }
+
+        let service = ManualWorkoutService()
+
+        do {
+            DebugLogger.shared.log("📝 Creating manual session from template: \(template.name)", level: .diagnostic)
+
+            // 1. Create the manual session
+            let session = try await service.createManualSession(
+                name: template.name,
+                patientId: patientUUID,
+                sourceTemplateId: template.id,
+                sourceTemplateType: template.isSystemTemplate ? .system : .patient
+            )
+
+            DebugLogger.shared.log("✅ Manual session created: \(session.id)", level: .success)
+
+            // 2. Add exercises from the template
+            var orderIndex = 0
+            for block in template.blocks {
+                for exercise in block.exercises {
+                    let input = AddManualSessionExerciseInput(
+                        manualSessionId: session.id,
+                        exerciseTemplateId: exercise.exerciseTemplateId,
+                        name: exercise.name,
+                        sets: exercise.prescribedSets,
+                        reps: exercise.reps,
+                        load: exercise.prescribedLoad,
+                        loadUnit: exercise.loadUnit,
+                        notes: exercise.notes,
+                        orderIndex: orderIndex
+                    )
+                    _ = try await service.addExercise(to: session.id, exercise: input)
+                    orderIndex += 1
+                }
+            }
+
+            DebugLogger.shared.log("✅ Added \(orderIndex) exercises to session", level: .success)
+
+            // 3. Start the workout
+            let startedSession = try await service.startWorkout(session.id)
+
+            // 4. Store the session and navigate to execution view
+            await MainActor.run {
+                createdManualSession = startedSession
+                showManualWorkoutExecution = true
+            }
+
+        } catch {
+            DebugLogger.shared.log("❌ Failed to create manual session: \(error.localizedDescription)", level: .error)
         }
     }
 }

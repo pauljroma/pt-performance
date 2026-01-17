@@ -243,16 +243,16 @@ class ManualWorkoutService: ObservableObject {
         description: String?,
         blocks: WorkoutBlocks,
         patientId: UUID,
-        sourceTemplateId: UUID? = nil
+        category: String? = nil
     ) async throws -> PatientWorkoutTemplate {
         let logger = DebugLogger.shared
         logger.log("Saving template '\(name)' for patient: \(patientId)", level: .diagnostic)
 
         let input = CreatePatientTemplateInput(
             patientId: patientId,
-            sourceTemplateId: sourceTemplateId,
             name: name,
             description: description,
+            category: category,
             blocks: blocks
         )
 
@@ -580,6 +580,31 @@ class ManualWorkoutService: ObservableObject {
             return session
         } catch {
             logger.log("Failed to fetch session: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    /// Fetch exercises for a manual session
+    func fetchSessionExercises(sessionId: UUID) async throws -> [ManualSessionExercise] {
+        let logger = DebugLogger.shared
+        logger.log("Fetching exercises for session: \(sessionId)", level: .diagnostic)
+
+        do {
+            let response = try await supabase.client
+                .from("manual_session_exercises")
+                .select()
+                .eq("manual_session_id", value: sessionId.uuidString)
+                .order("sequence", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let exercises = try decoder.decode([ManualSessionExercise].self, from: response.data)
+
+            logger.log("Fetched \(exercises.count) exercises for session", level: .success)
+            return exercises
+        } catch {
+            logger.log("Failed to fetch session exercises: \(error.localizedDescription)", level: .error)
             throw error
         }
     }

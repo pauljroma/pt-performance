@@ -23,11 +23,11 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     let description: String?
     let category: String?
     let difficulty: String?
-    let estimatedDurationMinutes: Int?
-    let blocks: WorkoutBlocks
-    let isActive: Bool
-    let createdAt: Date
-    let updatedAt: Date?
+    let durationMinutes: Int?
+    let exercises: [TemplateExerciseData]
+    let tags: [String]?
+    let sourceFile: String?
+    let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -35,15 +35,15 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         case description
         case category
         case difficulty
-        case estimatedDurationMinutes = "estimated_duration_minutes"
-        case blocks
-        case isActive = "is_active"
+        case durationMinutes = "duration_minutes"
+        case exercises
+        case tags
+        case sourceFile = "source_file"
         case createdAt = "created_at"
-        case updatedAt = "updated_at"
     }
 
     var durationDisplay: String? {
-        guard let minutes = estimatedDurationMinutes else { return nil }
+        guard let minutes = durationMinutes else { return nil }
         if minutes >= 60 {
             let hours = minutes / 60
             let remainingMinutes = minutes % 60
@@ -56,11 +56,107 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     }
 
     var exerciseCount: Int {
-        blocks.reduce(0) { $0 + $1.exercises.count }
+        exercises.count
     }
 
     var difficultyDisplay: String {
         difficulty?.capitalized ?? "Moderate"
+    }
+
+    /// Convert exercises to WorkoutBlocks for UI display
+    var blocks: WorkoutBlocks {
+        // Group exercises by block_name
+        var blockDict: [String: [TemplateExercise]] = [:]
+        for (index, exerciseData) in exercises.enumerated() {
+            let blockName = exerciseData.blockName ?? "Main"
+            let exercise = TemplateExercise(
+                id: UUID(),
+                exerciseTemplateId: exerciseData.exerciseTemplateId ?? UUID(),
+                name: exerciseData.exerciseName ?? exerciseData.name ?? "Unknown",
+                sequence: exerciseData.sequence ?? index,
+                prescribedSets: exerciseData.targetSets ?? exerciseData.sets ?? 3,
+                prescribedReps: exerciseData.targetReps ?? exerciseData.reps.map { String($0) },
+                prescribedLoad: exerciseData.targetLoad ?? exerciseData.load,
+                loadUnit: exerciseData.loadUnit,
+                restPeriodSeconds: exerciseData.restPeriodSeconds ?? exerciseData.rest,
+                notes: exerciseData.notes
+            )
+            blockDict[blockName, default: []].append(exercise)
+        }
+
+        // Convert to WorkoutBlocks
+        return blockDict.map { name, exercises in
+            WorkoutBlock(name: name, exercises: exercises)
+        }.sorted { $0.name < $1.name }
+    }
+}
+
+/// Raw exercise data from database JSONB
+struct TemplateExerciseData: Codable {
+    let exerciseTemplateId: UUID?
+    let exerciseName: String?
+    let name: String?
+    let blockName: String?
+    let sequence: Int?
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
+    let loadUnit: String?
+    let restPeriodSeconds: Int?
+    let notes: String?
+    // Legacy fields
+    let sets: Int?
+    let reps: Int?
+    let load: Double?
+    let rest: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseTemplateId = "exercise_template_id"
+        case exerciseName = "exercise_name"
+        case name
+        case blockName = "block_name"
+        case sequence
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
+        case loadUnit = "load_unit"
+        case restPeriodSeconds = "rest_period_seconds"
+        case notes
+        case sets, reps, load, rest
+    }
+
+    init(
+        exerciseTemplateId: UUID? = nil,
+        exerciseName: String? = nil,
+        name: String? = nil,
+        blockName: String? = nil,
+        sequence: Int? = nil,
+        targetSets: Int? = nil,
+        targetReps: String? = nil,
+        targetLoad: Double? = nil,
+        loadUnit: String? = nil,
+        restPeriodSeconds: Int? = nil,
+        notes: String? = nil,
+        sets: Int? = nil,
+        reps: Int? = nil,
+        load: Double? = nil,
+        rest: Int? = nil
+    ) {
+        self.exerciseTemplateId = exerciseTemplateId
+        self.exerciseName = exerciseName
+        self.name = name
+        self.blockName = blockName
+        self.sequence = sequence
+        self.targetSets = targetSets
+        self.targetReps = targetReps
+        self.targetLoad = targetLoad
+        self.loadUnit = loadUnit
+        self.restPeriodSeconds = restPeriodSeconds
+        self.notes = notes
+        self.sets = sets
+        self.reps = reps
+        self.load = load
+        self.rest = rest
     }
 }
 
@@ -71,34 +167,54 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
 struct PatientWorkoutTemplate: Codable, Identifiable {
     let id: UUID
     let patientId: UUID
-    let sourceTemplateId: UUID?
     let name: String
     let description: String?
-    let blocks: WorkoutBlocks
-    let isActive: Bool
-    let createdBy: UUID?
-    let createdAt: Date
+    let category: String?
+    let exercises: [TemplateExerciseData]
+    let usageCount: Int
+    let createdAt: Date?
     let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
         case patientId = "patient_id"
-        case sourceTemplateId = "source_template_id"
         case name
         case description
-        case blocks
-        case isActive = "is_active"
-        case createdBy = "created_by"
+        case category
+        case exercises
+        case usageCount = "usage_count"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
 
     var exerciseCount: Int {
-        blocks.reduce(0) { $0 + $1.exercises.count }
+        exercises.count
     }
 
-    var isCustomized: Bool {
-        sourceTemplateId != nil
+    /// Convert exercises to WorkoutBlocks for UI display
+    var blocks: WorkoutBlocks {
+        // Group exercises by block_name
+        var blockDict: [String: [TemplateExercise]] = [:]
+        for (index, exerciseData) in exercises.enumerated() {
+            let blockName = exerciseData.blockName ?? "Main"
+            let exercise = TemplateExercise(
+                id: UUID(),
+                exerciseTemplateId: exerciseData.exerciseTemplateId ?? UUID(),
+                name: exerciseData.exerciseName ?? exerciseData.name ?? "Unknown",
+                sequence: exerciseData.sequence ?? index,
+                prescribedSets: exerciseData.targetSets ?? exerciseData.sets ?? 3,
+                prescribedReps: exerciseData.targetReps ?? exerciseData.reps.map { String($0) },
+                prescribedLoad: exerciseData.targetLoad ?? exerciseData.load,
+                loadUnit: exerciseData.loadUnit,
+                restPeriodSeconds: exerciseData.restPeriodSeconds ?? exerciseData.rest,
+                notes: exerciseData.notes
+            )
+            blockDict[blockName, default: []].append(exercise)
+        }
+
+        return blockDict.map { name, exercises in
+            WorkoutBlock(name: name, exercises: exercises)
+        }.sorted { $0.name < $1.name }
     }
 }
 
@@ -107,17 +223,53 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
 /// Input model for creating a patient workout template
 struct CreatePatientTemplateInput: Codable {
     let patientId: UUID
-    let sourceTemplateId: UUID?
     let name: String
     let description: String?
-    let blocks: WorkoutBlocks
+    let category: String?
+    let exercises: [TemplateExerciseData]
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
-        case sourceTemplateId = "source_template_id"
         case name
         case description
-        case blocks
+        case category
+        case exercises
+    }
+
+    /// Initialize from WorkoutBlocks (for backward compatibility with UI)
+    init(patientId: UUID, name: String, description: String?, category: String? = nil, blocks: WorkoutBlocks) {
+        self.patientId = patientId
+        self.name = name
+        self.description = description
+        self.category = category
+
+        // Convert blocks to flat exercise list
+        var exerciseList: [TemplateExerciseData] = []
+        var sequence = 0
+        for block in blocks {
+            for exercise in block.exercises {
+                let data = TemplateExerciseData(
+                    exerciseTemplateId: exercise.exerciseTemplateId,
+                    exerciseName: exercise.name,
+                    name: exercise.name,
+                    blockName: block.name,
+                    sequence: sequence,
+                    targetSets: exercise.prescribedSets,
+                    targetReps: exercise.prescribedReps,
+                    targetLoad: exercise.prescribedLoad,
+                    loadUnit: exercise.loadUnit,
+                    restPeriodSeconds: exercise.restPeriodSeconds,
+                    notes: exercise.notes,
+                    sets: nil,
+                    reps: nil,
+                    load: nil,
+                    rest: nil
+                )
+                exerciseList.append(data)
+                sequence += 1
+            }
+        }
+        self.exercises = exerciseList
     }
 }
 
