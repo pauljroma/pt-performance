@@ -1084,6 +1084,7 @@
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
+				TEST_TARGET_NAME = PTPerformance;
 			};
 			name = Debug;
 		};
@@ -1274,6 +1275,7 @@
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
 				SDKROOT = iphoneos;
+				TEST_TARGET_NAME = PTPerformance;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
