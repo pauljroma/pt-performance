@@ -229,8 +229,8 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
     let name: String
     let description: String?
     let category: String?
-    let exercises: [DatabaseBlock]  // This is actually blocks with nested exercises
-    let usageCount: Int
+    let exercises: [DatabaseBlock]?  // Optional - may be null or empty
+    let usageCount: Int?  // Optional - may be null in database
     let createdAt: Date?
     let updatedAt: Date?
 
@@ -248,12 +248,12 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
 
     /// Total exercise count across all blocks
     var exerciseCount: Int {
-        exercises.reduce(0) { $0 + $1.exercises.count }
+        (exercises ?? []).reduce(0) { $0 + $1.exercises.count }
     }
 
     /// Convert database blocks to WorkoutBlocks for UI display
     var blocks: WorkoutBlocks {
-        exercises.sorted { $0.sequence < $1.sequence }.map { dbBlock in
+        (exercises ?? []).sorted { $0.sequence < $1.sequence }.map { dbBlock in
             let templateExercises = dbBlock.exercises.map { dbExercise in
                 TemplateExercise(
                     id: dbExercise.id ?? UUID(),
