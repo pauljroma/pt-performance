@@ -218,11 +218,45 @@ struct TemplateExerciseData: Codable {
     }
 }
 
+// MARK: - Flat Patient Exercise (Legacy Format)
+
+/// Flat exercise format for patient templates (legacy structure)
+/// Used when exercises are stored directly without blocks
+struct FlatPatientExercise: Codable {
+    let id: UUID?
+    let exerciseTemplateId: UUID?
+    let name: String?
+    let sequence: Int?
+    let prescribedSets: Int?
+    let prescribedReps: String?
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
+    let loadUnit: String?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case exerciseTemplateId = "exercise_template_id"
+        case name
+        case sequence
+        case prescribedSets = "prescribed_sets"
+        case prescribedReps = "prescribed_reps"
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
+        case loadUnit = "load_unit"
+        case notes
+    }
+}
+
 // MARK: - Patient Workout Template
 
 /// Represents a patient-specific workout template (customized from system template or created by clinician)
 /// Maps to patient_workout_templates table in Supabase
-/// Note: The `exercises` JSONB column contains an array of blocks, each with nested exercises
+/// Note: The `exercises` JSONB column can contain:
+///   1. Block format: `[{name: "Block", sequence: 0, exercises: [...]}]`
+///   2. Flat format: `[{name: "Exercise Name", prescribed_sets: 3, ...}]` (legacy)
 struct PatientWorkoutTemplate: Codable, Identifiable {
     let id: UUID
     let patientId: UUID
@@ -246,7 +280,7 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         case updatedAt = "updated_at"
     }
 
-    /// Custom decoder to handle potentially missing optional fields
+    /// Custom decoder to handle both block format and flat exercise format
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
@@ -254,10 +288,46 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         name = try container.decode(String.self, forKey: .name)
         description = try container.decodeIfPresent(String.self, forKey: .description)
         category = try container.decodeIfPresent(String.self, forKey: .category)
-        exercises = try container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises)
         usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount)
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
         updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
+
+        // Try to decode exercises - support both block format and flat format
+        if let blocks = try? container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises) {
+            // Block format: [{name: "Block", exercises: [...]}]
+            exercises = blocks
+        } else if let flatExercises = try? container.decodeIfPresent([FlatPatientExercise].self, forKey: .exercises) {
+            // Flat format: [{name: "Exercise", prescribed_sets: 3, ...}]
+            // Wrap in a single "Main" block
+            var dbExercises: [DatabaseExercise] = []
+            for (index, flat) in flatExercises.enumerated() {
+                let exerciseId = flat.id ?? UUID()
+                let exerciseSeq = flat.sequence ?? index
+                let exerciseSets = flat.prescribedSets ?? flat.targetSets ?? 3
+                let exerciseReps = flat.prescribedReps ?? flat.targetReps
+                let dbExercise = DatabaseExercise(
+                    id: exerciseId,
+                    exerciseTemplateId: flat.exerciseTemplateId,
+                    name: flat.name,
+                    sequence: exerciseSeq,
+                    prescribedSets: exerciseSets,
+                    prescribedReps: exerciseReps,
+                    notes: flat.notes
+                )
+                dbExercises.append(dbExercise)
+            }
+            let mainBlock = DatabaseBlock(
+                id: UUID(),
+                name: "Main",
+                blockType: "strength",
+                sequence: 0,
+                exercises: dbExercises
+            )
+            exercises = [mainBlock]
+        } else {
+            // No exercises or null
+            exercises = nil
+        }
     }
 
     /// Total exercise count across all blocks
