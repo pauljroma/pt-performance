@@ -555,47 +555,47 @@ struct ManualWorkoutExecutionView: View {
 
     private var blockNavigationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Workout Blocks")
+            Text("All Exercises")
                 .font(.headline)
 
+            // Show all exercises in a flat list with block headers
             ForEach(viewModel.exercisesByBlock, id: \.blockType) { block in
-                blockRow(blockType: block.blockType, exercises: block.exercises)
+                VStack(spacing: 8) {
+                    // Block header
+                    blockHeader(blockType: block.blockType, exercises: block.exercises)
+
+                    // All exercises in this block (always visible)
+                    ForEach(block.exercises) { exercise in
+                        exerciseRow(exercise)
+                    }
+                }
             }
         }
     }
 
-    private func blockRow(blockType: String, exercises: [ManualSessionExercise]) -> some View {
+    private func blockHeader(blockType: String, exercises: [ManualSessionExercise]) -> some View {
         let isCompleted = viewModel.isBlockCompleted(blockType)
         let isCurrent = viewModel.isCurrentBlock(blockType)
         let blockTypeEnum = WorkoutBlockType(rawValue: blockType.lowercased().replacingOccurrences(of: " ", with: "_"))
 
-        return DisclosureGroup {
-            VStack(spacing: 8) {
-                ForEach(exercises) { exercise in
-                    exerciseRow(exercise)
-                }
-            }
-            .padding(.leading, 8)
-        } label: {
-            HStack {
-                Image(systemName: blockTypeEnum?.icon ?? "square.stack.fill")
-                    .foregroundColor(blockTypeEnum?.color ?? .gray)
-                    .frame(width: 24)
+        return HStack {
+            Image(systemName: blockTypeEnum?.icon ?? "square.stack.fill")
+                .foregroundColor(blockTypeEnum?.color ?? .gray)
+                .frame(width: 24)
 
-                Text(blockTypeEnum?.displayName ?? blockType)
-                    .font(.subheadline)
-                    .fontWeight(isCurrent ? .semibold : .regular)
+            Text(blockTypeEnum?.displayName ?? blockType)
+                .font(.subheadline)
+                .fontWeight(isCurrent ? .semibold : .regular)
 
-                Spacer()
+            Spacer()
 
-                if isCompleted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                } else {
-                    Text("\(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count)/\(exercises.count)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+            if isCompleted {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+            } else {
+                Text("\(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count)/\(exercises.count)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .padding(12)
@@ -613,36 +613,68 @@ struct ManualWorkoutExecutionView: View {
                 viewModel.selectExercise(exercise)
             }
         } label: {
-            HStack {
+            HStack(spacing: 12) {
                 // Status Icon
                 if isCompleted {
                     Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
                         .foregroundColor(.green)
                 } else if isSkipped {
                     Image(systemName: "forward.fill")
+                        .font(.title3)
                         .foregroundColor(.orange)
                 } else if isCurrent {
                     Image(systemName: "play.circle.fill")
+                        .font(.title3)
                         .foregroundColor(.blue)
                 } else {
                     Image(systemName: "circle")
+                        .font(.title3)
                         .foregroundColor(.gray)
                 }
 
-                // Exercise Name
-                Text(exercise.exerciseName ?? "Exercise")
-                    .font(.subheadline)
-                    .foregroundColor(isCompleted || isSkipped ? .secondary : .primary)
-                    .strikethrough(isSkipped)
+                // Exercise Details
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(exercise.exerciseName)
+                        .font(.subheadline)
+                        .fontWeight(isCurrent ? .semibold : .regular)
+                        .foregroundColor(isCompleted || isSkipped ? .secondary : .primary)
+                        .strikethrough(isSkipped)
+
+                    // Prescription details
+                    HStack(spacing: 8) {
+                        Text("\(exercise.targetSets ?? 3) sets")
+                            .font(.caption)
+                        Text("×")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(exercise.targetReps ?? "10") reps")
+                            .font(.caption)
+                        if let load = exercise.targetLoad, let unit = exercise.loadUnit {
+                            Text("• \(Int(load)) \(unit)")
+                                .font(.caption)
+                        }
+                    }
+                    .foregroundColor(.secondary)
+                }
 
                 Spacer()
 
-                // Prescription Summary
-                Text("\(exercise.targetSets ?? 3) x \(exercise.targetReps ?? "10")")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Arrow indicator for tappable exercises
+                if !isCompleted && !isSkipped {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(isCurrent ? Color.blue.opacity(0.08) : Color(.systemBackground))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isCurrent ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
         }
         .disabled(isCompleted || isSkipped)
     }

@@ -543,7 +543,7 @@ struct TemplateCardView: View {
     let template: AnyWorkoutTemplate
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             // Header with category badge
             HStack {
                 if let category = template.category {
@@ -571,13 +571,32 @@ struct TemplateCardView: View {
                     .lineLimit(2)
             }
 
-            // Exercise preview - show first 3 exercise names
-            let exerciseNames = template.blocks.flatMap { $0.exercises.map { $0.name } }
-            if !exerciseNames.isEmpty {
-                Text(exerciseNames.prefix(3).joined(separator: " • "))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+            // Exercise list - show first 5 exercises with sets/reps
+            let allExercises = template.blocks.flatMap { $0.exercises }
+            if !allExercises.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(Array(allExercises.prefix(5).enumerated()), id: \.offset) { _, exercise in
+                        HStack(spacing: 4) {
+                            Text("•")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Text(exercise.name)
+                                .font(.caption)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(exercise.setsRepsDisplay)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    if allExercises.count > 5 {
+                        Text("+ \(allExercises.count - 5) more exercises")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                    }
+                }
+                .padding(.vertical, 4)
             }
 
             Spacer(minLength: 4)
@@ -586,6 +605,11 @@ struct TemplateCardView: View {
             HStack(spacing: 12) {
                 // Exercise count
                 Label("\(template.exerciseCount)", systemImage: "figure.strengthtraining.traditional")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                // Block count
+                Label("\(template.blocks.count)", systemImage: "square.stack.3d.up")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -605,7 +629,7 @@ struct TemplateCardView: View {
             }
         }
         .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)

@@ -686,11 +686,11 @@ class ManualWorkoutService: ObservableObject {
 
         do {
             try await supabase.client
-                .from("manual_exercise_logs")
+                .from("exercise_logs")
                 .insert(input)
                 .execute()
 
-            logger.log("Exercise logged successfully", level: .success)
+            logger.log("Manual exercise logged successfully to exercise_logs", level: .success)
         } catch {
             logger.log("Failed to log exercise: \(error.localizedDescription)", level: .error)
             throw error
