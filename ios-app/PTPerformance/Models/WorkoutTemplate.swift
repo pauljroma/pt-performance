@@ -232,6 +232,7 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
     let exercises: [DatabaseBlock]?  // Optional - may be null or empty
     let usageCount: Int?  // Optional - may be null in database
     let createdAt: Date?
+    let updatedAt: Date?  // Added back - exists in database schema
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -242,6 +243,7 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         case exercises
         case usageCount = "usage_count"
         case createdAt = "created_at"
+        case updatedAt = "updated_at"
     }
 
     /// Custom decoder to handle potentially missing optional fields
@@ -255,6 +257,7 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         exercises = try container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises)
         usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount)
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
     }
 
     /// Total exercise count across all blocks
