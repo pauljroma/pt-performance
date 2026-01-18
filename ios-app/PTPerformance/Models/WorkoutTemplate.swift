@@ -17,6 +17,7 @@ typealias WorkoutBlocks = [WorkoutBlock]
 
 /// Represents a system-defined workout template
 /// Maps to system_workout_templates table in Supabase
+/// Note: The `exercises` JSONB column contains an array of blocks, each with nested exercises
 struct SystemWorkoutTemplate: Codable, Identifiable {
     let id: UUID
     let name: String
@@ -24,7 +25,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     let category: String?
     let difficulty: String?
     let durationMinutes: Int?
-    let exercises: [TemplateExerciseData]
+    let exercises: [DatabaseBlock]  // This is actually blocks with nested exercises
     let tags: [String]?
     let sourceFile: String?
     let createdAt: Date?
@@ -55,39 +56,96 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         return "\(minutes) min"
     }
 
+    /// Total exercise count across all blocks
     var exerciseCount: Int {
-        exercises.count
+        exercises.reduce(0) { $0 + $1.exercises.count }
     }
 
     var difficultyDisplay: String {
         difficulty?.capitalized ?? "Moderate"
     }
 
-    /// Convert exercises to WorkoutBlocks for UI display
+    /// Convert database blocks to WorkoutBlocks for UI display
     var blocks: WorkoutBlocks {
-        // Group exercises by block_name
-        var blockDict: [String: [TemplateExercise]] = [:]
-        for (index, exerciseData) in exercises.enumerated() {
-            let blockName = exerciseData.blockName ?? "Main"
-            let exercise = TemplateExercise(
-                id: UUID(),
-                exerciseTemplateId: exerciseData.exerciseTemplateId ?? UUID(),
-                name: exerciseData.exerciseName ?? exerciseData.name ?? "Unknown",
-                sequence: exerciseData.sequence ?? index,
-                prescribedSets: exerciseData.targetSets ?? exerciseData.sets ?? 3,
-                prescribedReps: exerciseData.targetReps ?? exerciseData.reps.map { String($0) },
-                prescribedLoad: exerciseData.targetLoad ?? exerciseData.load,
-                loadUnit: exerciseData.loadUnit,
-                restPeriodSeconds: exerciseData.restPeriodSeconds ?? exerciseData.rest,
-                notes: exerciseData.notes
+        exercises.sorted { $0.sequence < $1.sequence }.map { dbBlock in
+            let templateExercises = dbBlock.exercises.map { dbExercise in
+                TemplateExercise(
+                    id: dbExercise.id ?? UUID(),
+                    exerciseTemplateId: dbExercise.exerciseTemplateId ?? UUID(),
+                    name: dbExercise.name ?? "Unknown",
+                    sequence: dbExercise.sequence ?? 0,
+                    prescribedSets: dbExercise.prescribedSets ?? 3,
+                    prescribedReps: dbExercise.prescribedReps,
+                    prescribedLoad: nil,
+                    loadUnit: nil,
+                    restPeriodSeconds: nil,
+                    notes: dbExercise.notes
+                )
+            }
+            return WorkoutBlock(
+                id: dbBlock.id ?? UUID(),
+                name: dbBlock.name,
+                blockType: WorkoutBlockType(rawValue: dbBlock.blockType ?? "") ?? .inferFromName(dbBlock.name),
+                sequence: dbBlock.sequence,
+                exercises: templateExercises
             )
-            blockDict[blockName, default: []].append(exercise)
         }
+    }
+}
 
-        // Convert to WorkoutBlocks
-        return blockDict.map { name, exercises in
-            WorkoutBlock(name: name, exercises: exercises)
-        }.sorted { $0.name < $1.name }
+/// Represents a block as stored in the database JSONB
+struct DatabaseBlock: Codable {
+    let id: UUID?
+    let name: String
+    let blockType: String?
+    let sequence: Int
+    let exercises: [DatabaseExercise]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case blockType = "block_type"
+        case sequence
+        case exercises
+    }
+
+    init(id: UUID? = nil, name: String, blockType: String?, sequence: Int, exercises: [DatabaseExercise]) {
+        self.id = id
+        self.name = name
+        self.blockType = blockType
+        self.sequence = sequence
+        self.exercises = exercises
+    }
+}
+
+/// Represents an exercise within a database block
+struct DatabaseExercise: Codable {
+    let id: UUID?
+    let exerciseTemplateId: UUID?
+    let name: String?
+    let sequence: Int?
+    let prescribedSets: Int?
+    let prescribedReps: String?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case exerciseTemplateId = "exercise_template_id"
+        case name
+        case sequence
+        case prescribedSets = "prescribed_sets"
+        case prescribedReps = "prescribed_reps"
+        case notes
+    }
+
+    init(id: UUID? = nil, exerciseTemplateId: UUID?, name: String?, sequence: Int?, prescribedSets: Int?, prescribedReps: String?, notes: String?) {
+        self.id = id
+        self.exerciseTemplateId = exerciseTemplateId
+        self.name = name
+        self.sequence = sequence
+        self.prescribedSets = prescribedSets
+        self.prescribedReps = prescribedReps
+        self.notes = notes
     }
 }
 
@@ -164,13 +222,14 @@ struct TemplateExerciseData: Codable {
 
 /// Represents a patient-specific workout template (customized from system template or created by clinician)
 /// Maps to patient_workout_templates table in Supabase
+/// Note: The `exercises` JSONB column contains an array of blocks, each with nested exercises
 struct PatientWorkoutTemplate: Codable, Identifiable {
     let id: UUID
     let patientId: UUID
     let name: String
     let description: String?
     let category: String?
-    let exercises: [TemplateExerciseData]
+    let exercises: [DatabaseBlock]  // This is actually blocks with nested exercises
     let usageCount: Int
     let createdAt: Date?
     let updatedAt: Date?
@@ -187,34 +246,36 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         case updatedAt = "updated_at"
     }
 
+    /// Total exercise count across all blocks
     var exerciseCount: Int {
-        exercises.count
+        exercises.reduce(0) { $0 + $1.exercises.count }
     }
 
-    /// Convert exercises to WorkoutBlocks for UI display
+    /// Convert database blocks to WorkoutBlocks for UI display
     var blocks: WorkoutBlocks {
-        // Group exercises by block_name
-        var blockDict: [String: [TemplateExercise]] = [:]
-        for (index, exerciseData) in exercises.enumerated() {
-            let blockName = exerciseData.blockName ?? "Main"
-            let exercise = TemplateExercise(
-                id: UUID(),
-                exerciseTemplateId: exerciseData.exerciseTemplateId ?? UUID(),
-                name: exerciseData.exerciseName ?? exerciseData.name ?? "Unknown",
-                sequence: exerciseData.sequence ?? index,
-                prescribedSets: exerciseData.targetSets ?? exerciseData.sets ?? 3,
-                prescribedReps: exerciseData.targetReps ?? exerciseData.reps.map { String($0) },
-                prescribedLoad: exerciseData.targetLoad ?? exerciseData.load,
-                loadUnit: exerciseData.loadUnit,
-                restPeriodSeconds: exerciseData.restPeriodSeconds ?? exerciseData.rest,
-                notes: exerciseData.notes
+        exercises.sorted { $0.sequence < $1.sequence }.map { dbBlock in
+            let templateExercises = dbBlock.exercises.map { dbExercise in
+                TemplateExercise(
+                    id: dbExercise.id ?? UUID(),
+                    exerciseTemplateId: dbExercise.exerciseTemplateId ?? UUID(),
+                    name: dbExercise.name ?? "Unknown",
+                    sequence: dbExercise.sequence ?? 0,
+                    prescribedSets: dbExercise.prescribedSets ?? 3,
+                    prescribedReps: dbExercise.prescribedReps,
+                    prescribedLoad: nil,
+                    loadUnit: nil,
+                    restPeriodSeconds: nil,
+                    notes: dbExercise.notes
+                )
+            }
+            return WorkoutBlock(
+                id: dbBlock.id ?? UUID(),
+                name: dbBlock.name,
+                blockType: WorkoutBlockType(rawValue: dbBlock.blockType ?? "") ?? .inferFromName(dbBlock.name),
+                sequence: dbBlock.sequence,
+                exercises: templateExercises
             )
-            blockDict[blockName, default: []].append(exercise)
         }
-
-        return blockDict.map { name, exercises in
-            WorkoutBlock(name: name, exercises: exercises)
-        }.sorted { $0.name < $1.name }
     }
 }
 
@@ -226,7 +287,7 @@ struct CreatePatientTemplateInput: Codable {
     let name: String
     let description: String?
     let category: String?
-    let exercises: [TemplateExerciseData]
+    let exercises: [DatabaseBlock]  // Stores blocks with nested exercises
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
@@ -236,40 +297,34 @@ struct CreatePatientTemplateInput: Codable {
         case exercises
     }
 
-    /// Initialize from WorkoutBlocks (for backward compatibility with UI)
+    /// Initialize from WorkoutBlocks
     init(patientId: UUID, name: String, description: String?, category: String? = nil, blocks: WorkoutBlocks) {
         self.patientId = patientId
         self.name = name
         self.description = description
         self.category = category
 
-        // Convert blocks to flat exercise list
-        var exerciseList: [TemplateExerciseData] = []
-        var sequence = 0
-        for block in blocks {
-            for exercise in block.exercises {
-                let data = TemplateExerciseData(
+        // Convert WorkoutBlocks to DatabaseBlocks
+        self.exercises = blocks.enumerated().map { index, block in
+            let dbExercises = block.exercises.map { exercise in
+                DatabaseExercise(
+                    id: exercise.id,
                     exerciseTemplateId: exercise.exerciseTemplateId,
-                    exerciseName: exercise.name,
                     name: exercise.name,
-                    blockName: block.name,
-                    sequence: sequence,
-                    targetSets: exercise.prescribedSets,
-                    targetReps: exercise.prescribedReps,
-                    targetLoad: exercise.prescribedLoad,
-                    loadUnit: exercise.loadUnit,
-                    restPeriodSeconds: exercise.restPeriodSeconds,
-                    notes: exercise.notes,
-                    sets: nil,
-                    reps: nil,
-                    load: nil,
-                    rest: nil
+                    sequence: exercise.sequence,
+                    prescribedSets: exercise.prescribedSets,
+                    prescribedReps: exercise.prescribedReps,
+                    notes: exercise.notes
                 )
-                exerciseList.append(data)
-                sequence += 1
             }
+            return DatabaseBlock(
+                id: block.id,
+                name: block.name,
+                blockType: block.blockType.rawValue,
+                sequence: index,
+                exercises: dbExercises
+            )
         }
-        self.exercises = exerciseList
     }
 }
 
