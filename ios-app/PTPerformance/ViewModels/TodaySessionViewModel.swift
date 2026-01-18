@@ -588,6 +588,7 @@ struct SessionMetrics {
 }
 
 /// Exercise log record from database (for metrics calculation)
+/// Includes ALL columns from exercise_logs table to avoid decode errors
 struct ExerciseLogRecord: Codable {
     let id: String
     let session_exercise_id: String?  // NULL for manual workout logs
@@ -597,19 +598,9 @@ struct ExerciseLogRecord: Codable {
     let actual_sets: Int?
     let actual_reps: [Int]?
     let actual_load: Double?
+    let load_unit: String?  // Added: returned by SELECT *
     let rpe: Int?
     let pain_score: Int?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case session_exercise_id
-        case manual_session_exercise_id
-        case patient_id
-        case logged_at
-        case actual_sets
-        case actual_reps
-        case actual_load
-        case rpe
-        case pain_score
-    }
+    let notes: String?  // Added: returned by SELECT *
+    let created_at: Date?  // Added: returned by SELECT *
 }

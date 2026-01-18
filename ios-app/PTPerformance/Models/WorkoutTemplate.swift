@@ -232,7 +232,6 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
     let exercises: [DatabaseBlock]?  // Optional - may be null or empty
     let usageCount: Int?  // Optional - may be null in database
     let createdAt: Date?
-    let updatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -243,7 +242,19 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
         case exercises
         case usageCount = "usage_count"
         case createdAt = "created_at"
-        case updatedAt = "updated_at"
+    }
+
+    /// Custom decoder to handle potentially missing optional fields
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        patientId = try container.decode(UUID.self, forKey: .patientId)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        exercises = try container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises)
+        usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
     }
 
     /// Total exercise count across all blocks
