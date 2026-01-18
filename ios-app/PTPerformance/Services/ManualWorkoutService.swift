@@ -388,6 +388,11 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
+            // Log raw response for debugging
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("📦 createSession response: \(jsonString.prefix(500))", level: .diagnostic)
+            }
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let session = try decoder.decode(ManualSession.self, from: response.data)
@@ -396,6 +401,19 @@ class ManualWorkoutService: ObservableObject {
             return session
         } catch {
             logger.log("Failed to create manual session: \(error.localizedDescription)", level: .error)
+            // Log detailed decode error
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    logger.log("  Missing key: \(key.stringValue) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                case .typeMismatch(let type, let context):
+                    logger.log("  Type mismatch: expected \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                case .valueNotFound(let type, let context):
+                    logger.log("  Value not found: \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                default:
+                    logger.log("  Decode error: \(decodingError)", level: .error)
+                }
+            }
             throw error
         }
     }
