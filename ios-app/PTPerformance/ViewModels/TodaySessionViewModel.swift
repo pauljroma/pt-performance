@@ -453,24 +453,29 @@ class TodaySessionViewModel: ObservableObject {
 
         // Calculate total volume: sum of (sets × reps × load) for each exercise
         let totalVolume = logs.reduce(0.0) { sum, log in
-            let setsCount = Double(log.actual_sets)
-            let repsSum = log.actual_reps.reduce(0, +) // Sum all reps across sets
+            let repsSum = (log.actual_reps ?? []).reduce(0, +) // Sum all reps across sets
             let load = log.actual_load ?? 0
             let exerciseVolume = (Double(repsSum) * load)  // Total reps × load
             return sum + exerciseVolume
         }
 
-        // Calculate average RPE
-        let avgRpe = logs.map { Double($0.rpe) }.reduce(0, +) / Double(logs.count)
+        // Calculate average RPE (filter out logs without RPE)
+        let rpeValues = logs.compactMap { $0.rpe }
+        let avgRpe = rpeValues.isEmpty ? 0.0 : Double(rpeValues.reduce(0, +)) / Double(rpeValues.count)
 
-        // Calculate average pain
-        let avgPain = logs.map { Double($0.pain_score) }.reduce(0, +) / Double(logs.count)
+        // Calculate average pain (filter out logs without pain score)
+        let painValues = logs.compactMap { $0.pain_score }
+        let avgPain = painValues.isEmpty ? 0.0 : Double(painValues.reduce(0, +)) / Double(painValues.count)
 
-        // Calculate duration in minutes
-        let sortedLogs = logs.sorted { $0.logged_at < $1.logged_at }
+        // Calculate duration in minutes (filter out logs without logged_at)
+        let logsWithDates = logs.compactMap { log -> (date: Date, log: ExerciseLogRecord)? in
+            guard let date = log.logged_at else { return nil }
+            return (date, log)
+        }.sorted { $0.date < $1.date }
+
         var durationMinutes = 0
-        if let firstLog = sortedLogs.first, let lastLog = sortedLogs.last {
-            let duration = lastLog.logged_at.timeIntervalSince(firstLog.logged_at)
+        if let firstLog = logsWithDates.first, let lastLog = logsWithDates.last {
+            let duration = lastLog.date.timeIntervalSince(firstLog.date)
             durationMinutes = max(1, Int(duration / 60))  // At least 1 minute
         }
 
@@ -585,18 +590,20 @@ struct SessionMetrics {
 /// Exercise log record from database (for metrics calculation)
 struct ExerciseLogRecord: Codable {
     let id: String
-    let session_exercise_id: String
+    let session_exercise_id: String?  // NULL for manual workout logs
+    let manual_session_exercise_id: String?  // NULL for prescribed workout logs
     let patient_id: String
-    let logged_at: Date
-    let actual_sets: Int
-    let actual_reps: [Int]
+    let logged_at: Date?
+    let actual_sets: Int?
+    let actual_reps: [Int]?
     let actual_load: Double?
-    let rpe: Int
-    let pain_score: Int
+    let rpe: Int?
+    let pain_score: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
         case session_exercise_id
+        case manual_session_exercise_id
         case patient_id
         case logged_at
         case actual_sets
