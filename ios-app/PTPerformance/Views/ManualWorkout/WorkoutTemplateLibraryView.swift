@@ -935,7 +935,11 @@ struct BlockPreviewCard: View {
                                 .fill(Color.secondary.opacity(0.3))
                                 .frame(width: 6, height: 6)
 
-                            Text(exercise.name.isEmpty ? "Exercise" : exercise.name)
+                            // Use notes as display name if exercise name is just a number (strength block)
+                            let exerciseDisplayName = exercise.name.count <= 2 && Int(exercise.name) != nil
+                                ? (exercise.notes ?? exercise.name)
+                                : (exercise.name.isEmpty ? "Exercise" : exercise.name)
+                            Text(exerciseDisplayName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 

@@ -695,7 +695,14 @@ struct ManualWorkoutExecutionView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                Text(exercise.exerciseName ?? "Exercise")
+                // Use notes as display name if exercise name is just a number (strength block)
+                let currentDisplayName = {
+                    let name = exercise.exerciseName ?? "Exercise"
+                    return name.count <= 2 && Int(name) != nil
+                        ? (exercise.notes ?? name)
+                        : name
+                }()
+                Text(currentDisplayName)
                     .font(.title2)
                     .fontWeight(.bold)
 
