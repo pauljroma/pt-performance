@@ -653,12 +653,13 @@ struct TodaySessionView: View {
             DebugLogger.shared.log("✅ Manual session created: \(session.id)", level: .success)
 
             // 2. Add exercises from the template
+            // Note: Pass nil for exerciseTemplateId - imported templates don't have valid FK references
             var sequence = 0
             for block in template.blocks {
                 for exercise in block.exercises {
                     let input = AddManualSessionExerciseInput(
                         manualSessionId: session.id,
-                        exerciseTemplateId: exercise.exerciseTemplateId,
+                        exerciseTemplateId: nil,  // Templates don't have valid exercise_template_id references
                         exerciseName: exercise.name,
                         blockName: block.name,
                         sequence: sequence,
