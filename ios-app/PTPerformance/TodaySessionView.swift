@@ -702,7 +702,12 @@ struct TodaySessionView: View {
             }
 
         } catch {
-            DebugLogger.shared.log("❌ Failed to create manual session: \(error.localizedDescription)", level: .error)
+            DebugLogger.shared.log("❌ Failed to create manual session: \(error)", level: .error)
+            // Don't show execution view if creation failed
+            await MainActor.run {
+                showManualWorkoutExecution = false
+                createdManualSession = nil
+            }
         }
     }
 }

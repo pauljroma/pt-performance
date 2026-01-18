@@ -510,14 +510,26 @@ class ManualWorkoutService: ObservableObject {
                 .single()
                 .execute()
 
+            logger.log("📦 startWorkout response size: \(response.data.count) bytes", level: .diagnostic)
+
+            // Log raw JSON for debugging
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("📦 startWorkout JSON: \(jsonString.prefix(500))", level: .diagnostic)
+            }
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            let session = try decoder.decode(ManualSession.self, from: response.data)
 
-            logger.log("Workout started at \(now)", level: .success)
-            return session
+            do {
+                let session = try decoder.decode(ManualSession.self, from: response.data)
+                logger.log("✅ Workout started at \(now)", level: .success)
+                return session
+            } catch let decodeError {
+                logger.log("❌ Decode error: \(decodeError)", level: .error)
+                throw decodeError
+            }
         } catch {
-            logger.log("Failed to start workout: \(error.localizedDescription)", level: .error)
+            logger.log("❌ Failed to start workout: \(error)", level: .error)
             throw error
         }
     }
