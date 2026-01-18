@@ -635,11 +635,17 @@ struct ManualWorkoutExecutionView: View {
 
                 // Exercise Details
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(exercise.exerciseName)
+                    // Use notes as name if exercise name is just a number
+                    let displayName = exercise.exerciseName.count <= 2 && Int(exercise.exerciseName) != nil
+                        ? (exercise.notes ?? exercise.exerciseName)
+                        : exercise.exerciseName
+
+                    Text(displayName)
                         .font(.subheadline)
                         .fontWeight(isCurrent ? .semibold : .regular)
                         .foregroundColor(isCompleted || isSkipped ? .secondary : .primary)
                         .strikethrough(isSkipped)
+                        .lineLimit(2)
 
                     // Prescription details
                     HStack(spacing: 8) {

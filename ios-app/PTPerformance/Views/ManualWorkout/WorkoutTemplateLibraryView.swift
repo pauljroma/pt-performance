@@ -576,11 +576,16 @@ struct TemplateCardView: View {
             if !allExercises.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(Array(allExercises.prefix(5).enumerated()), id: \.offset) { _, exercise in
+                        // Use notes as name if exercise name is just a number
+                        let displayName = exercise.name.count <= 2 && Int(exercise.name) != nil
+                            ? (exercise.notes ?? exercise.name)
+                            : exercise.name
+
                         HStack(spacing: 4) {
                             Text("•")
                                 .font(.caption2)
                                 .foregroundColor(.blue)
-                            Text(exercise.name)
+                            Text(displayName)
                                 .font(.caption)
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
