@@ -116,6 +116,19 @@ struct TodaySessionView: View {
                         Task { await viewModel.fetchTodaySession() }
                     }
                 )
+            } else {
+                // Debug: Show what's missing
+                VStack(spacing: 20) {
+                    Text("Error Loading Workout")
+                        .font(.title)
+                    Text("Session: \(createdManualSession?.id.uuidString ?? "NIL")")
+                    Text("Patient ID: \(appState.userId ?? "NIL")")
+                    Button("Dismiss") {
+                        showManualWorkoutExecution = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
             }
         }
         .task {
