@@ -220,6 +220,7 @@ class ManualWorkoutService: ObservableObject {
     // MARK: - Patient Templates
 
     /// Fetch patient-specific workout templates
+    /// Returns empty array if table doesn't exist or other errors occur
     func fetchPatientTemplates(patientId: UUID) async throws -> [PatientWorkoutTemplate] {
         let logger = DebugLogger.shared
         logger.log("Fetching patient templates for: \(patientId)", level: .diagnostic)
@@ -232,6 +233,11 @@ class ManualWorkoutService: ObservableObject {
                 .order("usage_count", ascending: false)
                 .execute()
 
+            // Log raw response for debugging
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("Patient templates raw response: \(jsonString.prefix(200))", level: .diagnostic)
+            }
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let templates = try decoder.decode([PatientWorkoutTemplate].self, from: response.data)
@@ -239,8 +245,23 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(templates.count) patient templates", level: .success)
             return templates
         } catch {
+            // Log detailed error info
             logger.log("Failed to fetch patient templates: \(error.localizedDescription)", level: .error)
-            throw error
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    logger.log("  Missing key: \(key.stringValue) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                case .typeMismatch(let type, let context):
+                    logger.log("  Type mismatch: expected \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                case .valueNotFound(let type, let context):
+                    logger.log("  Value not found: \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))", level: .error)
+                default:
+                    break
+                }
+            }
+            // Return empty array instead of throwing - table may not exist yet
+            logger.log("Returning empty patient templates (table may not exist)", level: .warning)
+            return []
         }
     }
 
