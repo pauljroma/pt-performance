@@ -653,26 +653,28 @@ struct TodaySessionView: View {
             DebugLogger.shared.log("✅ Manual session created: \(session.id)", level: .success)
 
             // 2. Add exercises from the template
-            var orderIndex = 0
+            var sequence = 0
             for block in template.blocks {
                 for exercise in block.exercises {
                     let input = AddManualSessionExerciseInput(
                         manualSessionId: session.id,
                         exerciseTemplateId: exercise.exerciseTemplateId,
-                        name: exercise.name,
-                        sets: exercise.prescribedSets,
-                        reps: exercise.reps,
-                        load: exercise.prescribedLoad,
+                        exerciseName: exercise.name,
+                        blockName: block.name,
+                        sequence: sequence,
+                        targetSets: exercise.prescribedSets,
+                        targetReps: exercise.prescribedReps,
+                        targetLoad: exercise.prescribedLoad,
                         loadUnit: exercise.loadUnit,
-                        notes: exercise.notes,
-                        orderIndex: orderIndex
+                        restPeriodSeconds: exercise.restPeriodSeconds,
+                        notes: exercise.notes
                     )
                     _ = try await service.addExercise(to: session.id, exercise: input)
-                    orderIndex += 1
+                    sequence += 1
                 }
             }
 
-            DebugLogger.shared.log("✅ Added \(orderIndex) exercises to session", level: .success)
+            DebugLogger.shared.log("✅ Added \(sequence) exercises to session", level: .success)
 
             // 3. Start the workout
             let startedSession = try await service.startWorkout(session.id)

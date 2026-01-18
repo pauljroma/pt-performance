@@ -48,7 +48,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // MARK: - Computed Properties
 
     var workoutName: String {
-        session.name
+        session.name ?? "Workout"
     }
 
     var totalExercises: Int {
@@ -217,9 +217,9 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // MARK: - Exercise Navigation
 
     func setupInputFields(for exercise: ManualSessionExercise) {
-        actualSets = exercise.prescribedSets
-        repsPerSet = Array(repeating: Int(exercise.prescribedReps ?? "10") ?? 10, count: exercise.prescribedSets)
-        actualLoad = exercise.prescribedLoad != nil ? String(format: "%.0f", exercise.prescribedLoad!) : ""
+        actualSets = exercise.targetSets ?? 3
+        repsPerSet = Array(repeating: Int(exercise.targetReps ?? "10") ?? 10, count: exercise.targetSets ?? 3)
+        actualLoad = exercise.targetLoad != nil ? String(format: "%.0f", exercise.targetLoad!) : ""
         loadUnit = exercise.loadUnit ?? "lbs"
         rpe = 5.0
         painScore = 0.0
@@ -630,7 +630,7 @@ struct ManualWorkoutExecutionView: View {
                 Spacer()
 
                 // Prescription Summary
-                Text("\(exercise.prescribedSets) x \(exercise.prescribedReps ?? "10")")
+                Text("\(exercise.targetSets ?? 3) x \(exercise.targetReps ?? "10")")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -655,9 +655,9 @@ struct ManualWorkoutExecutionView: View {
 
                 // Target prescription
                 HStack(spacing: 16) {
-                    Label("\(exercise.prescribedSets) sets", systemImage: "number")
-                    Label("\(exercise.prescribedReps ?? "10") reps", systemImage: "repeat")
-                    if let load = exercise.prescribedLoad, let unit = exercise.loadUnit {
+                    Label("\(exercise.targetSets ?? 3) sets", systemImage: "number")
+                    Label("\(exercise.targetReps ?? "10") reps", systemImage: "repeat")
+                    if let load = exercise.targetLoad, let unit = exercise.loadUnit {
                         Label("\(Int(load)) \(unit)", systemImage: "scalemass")
                     }
                 }
@@ -997,121 +997,69 @@ struct ManualWorkoutExecutionView: View {
 #if DEBUG
 struct ManualWorkoutExecutionView_Previews: PreviewProvider {
     static var previews: some View {
+        let sessionId = UUID()
         ManualWorkoutExecutionView(
             session: ManualSession(
-                id: UUID(),
+                id: sessionId,
                 patientId: UUID(),
-                templateId: nil,
                 name: "Upper Body Strength",
                 notes: nil,
+                sourceTemplateId: nil,
+                sourceTemplateType: nil,
                 startedAt: Date(),
                 completedAt: nil,
-                durationMinutes: nil,
+                completed: false,
                 totalVolume: nil,
                 avgRpe: nil,
                 avgPain: nil,
-                createdAt: Date(),
-                updatedAt: nil
+                durationMinutes: nil,
+                createdAt: Date()
             ),
             exercises: [
                 ManualSessionExercise(
                     id: UUID(),
-                    manualSessionId: UUID(),
+                    manualSessionId: sessionId,
                     exerciseTemplateId: UUID(),
-                    blockType: "push",
-                    sequence: 1,
-                    prescribedSets: 3,
-                    prescribedReps: "10",
-                    prescribedLoad: 135,
+                    exerciseName: "Bench Press",
+                    blockName: "Push",
+                    sequence: 0,
+                    targetSets: 3,
+                    targetReps: "10",
+                    targetLoad: 135,
                     loadUnit: "lbs",
                     restPeriodSeconds: 90,
-                    actualSets: nil,
-                    actualReps: nil,
-                    actualLoad: nil,
-                    rpe: nil,
-                    painScore: nil,
                     notes: nil,
-                    completed: false,
-                    createdAt: Date(),
-                    exerciseTemplates: Exercise.ExerciseTemplate(
-                        id: UUID(),
-                        name: "Bench Press",
-                        category: "push",
-                        body_region: "upper",
-                        videoUrl: nil,
-                        videoThumbnailUrl: nil,
-                        videoDuration: nil,
-                        formCues: nil,
-                        techniqueCues: nil,
-                        commonMistakes: nil,
-                        safetyNotes: nil
-                    )
+                    createdAt: Date()
                 ),
                 ManualSessionExercise(
                     id: UUID(),
-                    manualSessionId: UUID(),
+                    manualSessionId: sessionId,
                     exerciseTemplateId: UUID(),
-                    blockType: "push",
-                    sequence: 2,
-                    prescribedSets: 3,
-                    prescribedReps: "12",
-                    prescribedLoad: 30,
+                    exerciseName: "Dumbbell Shoulder Press",
+                    blockName: "Push",
+                    sequence: 1,
+                    targetSets: 3,
+                    targetReps: "12",
+                    targetLoad: 30,
                     loadUnit: "lbs",
                     restPeriodSeconds: 60,
-                    actualSets: nil,
-                    actualReps: nil,
-                    actualLoad: nil,
-                    rpe: nil,
-                    painScore: nil,
                     notes: nil,
-                    completed: false,
-                    createdAt: Date(),
-                    exerciseTemplates: Exercise.ExerciseTemplate(
-                        id: UUID(),
-                        name: "Dumbbell Shoulder Press",
-                        category: "push",
-                        body_region: "upper",
-                        videoUrl: nil,
-                        videoThumbnailUrl: nil,
-                        videoDuration: nil,
-                        formCues: nil,
-                        techniqueCues: nil,
-                        commonMistakes: nil,
-                        safetyNotes: nil
-                    )
+                    createdAt: Date()
                 ),
                 ManualSessionExercise(
                     id: UUID(),
-                    manualSessionId: UUID(),
+                    manualSessionId: sessionId,
                     exerciseTemplateId: UUID(),
-                    blockType: "pull",
-                    sequence: 3,
-                    prescribedSets: 4,
-                    prescribedReps: "8",
-                    prescribedLoad: 100,
+                    exerciseName: "Barbell Row",
+                    blockName: "Pull",
+                    sequence: 2,
+                    targetSets: 4,
+                    targetReps: "8",
+                    targetLoad: 100,
                     loadUnit: "lbs",
                     restPeriodSeconds: 90,
-                    actualSets: nil,
-                    actualReps: nil,
-                    actualLoad: nil,
-                    rpe: nil,
-                    painScore: nil,
                     notes: nil,
-                    completed: false,
-                    createdAt: Date(),
-                    exerciseTemplates: Exercise.ExerciseTemplate(
-                        id: UUID(),
-                        name: "Barbell Row",
-                        category: "pull",
-                        body_region: "upper",
-                        videoUrl: nil,
-                        videoThumbnailUrl: nil,
-                        videoDuration: nil,
-                        formCues: nil,
-                        techniqueCues: nil,
-                        commonMistakes: nil,
-                        safetyNotes: nil
-                    )
+                    createdAt: Date()
                 )
             ],
             patientId: UUID()

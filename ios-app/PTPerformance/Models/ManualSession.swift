@@ -5,17 +5,18 @@ import Foundation
 struct ManualSession: Codable, Identifiable, Equatable {
     let id: UUID
     let patientId: UUID
-    let templateId: UUID?
-    let name: String
+    let name: String?
     let notes: String?
-    let startedAt: Date
+    let sourceTemplateId: UUID?
+    let sourceTemplateType: String?
+    let startedAt: Date?
     let completedAt: Date?
-    let durationMinutes: Int?
+    let completed: Bool
     let totalVolume: Double?
     let avgRpe: Double?
     let avgPain: Double?
+    let durationMinutes: Int?
     let createdAt: Date
-    let updatedAt: Date?
 
     // Exercises for this manual session (loaded separately or joined)
     var exercises: [ManualSessionExercise] = []
@@ -23,22 +24,23 @@ struct ManualSession: Codable, Identifiable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id
         case patientId = "patient_id"
-        case templateId = "template_id"
         case name
         case notes
+        case sourceTemplateId = "source_template_id"
+        case sourceTemplateType = "source_template_type"
         case startedAt = "started_at"
         case completedAt = "completed_at"
-        case durationMinutes = "duration_minutes"
+        case completed
         case totalVolume = "total_volume"
         case avgRpe = "avg_rpe"
         case avgPain = "avg_pain"
+        case durationMinutes = "duration_minutes"
         case createdAt = "created_at"
-        case updatedAt = "updated_at"
         // exercises is NOT in CodingKeys - will use default value
     }
 
     var isCompleted: Bool {
-        completedAt != nil
+        completed || completedAt != nil
     }
 
     var completionStatus: String {
@@ -49,7 +51,10 @@ struct ManualSession: Codable, Identifiable, Equatable {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: startedAt)
+        if let startedAt = startedAt {
+            return formatter.string(from: startedAt)
+        }
+        return formatter.string(from: createdAt)
     }
 
     var durationDisplay: String? {
@@ -79,76 +84,64 @@ struct ManualSession: Codable, Identifiable, Equatable {
 struct ManualSessionExercise: Codable, Identifiable, Hashable {
     let id: UUID
     let manualSessionId: UUID
-    let exerciseTemplateId: UUID
-    let blockType: String?
+    let exerciseTemplateId: UUID?
+    let exerciseName: String
+    let blockName: String?
     let sequence: Int
-    let prescribedSets: Int
-    let prescribedReps: String?
-    let prescribedLoad: Double?
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
     let loadUnit: String?
     let restPeriodSeconds: Int?
-    let actualSets: Int?
-    let actualReps: [Int]?
-    let actualLoad: Double?
-    let rpe: Int?
-    let painScore: Int?
     let notes: String?
-    let completed: Bool
     let createdAt: Date
 
-    // From exercise_templates (joined data)
-    let exerciseTemplates: Exercise.ExerciseTemplate?
+    // Transient properties for tracking logged exercise data during workout execution
+    // These are NOT persisted to database - they're stored in exercise_logs table
+    var actualSets: Int?
+    var actualReps: [Int]?
+    var actualLoad: Double?
+    var rpe: Double?
+    var painScore: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
         case manualSessionId = "manual_session_id"
         case exerciseTemplateId = "exercise_template_id"
-        case blockType = "block_type"
+        case exerciseName = "exercise_name"
+        case blockName = "block_name"
         case sequence
-        case prescribedSets = "prescribed_sets"
-        case prescribedReps = "prescribed_reps"
-        case prescribedLoad = "prescribed_load"
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
         case loadUnit = "load_unit"
         case restPeriodSeconds = "rest_period_seconds"
-        case actualSets = "actual_sets"
-        case actualReps = "actual_reps"
-        case actualLoad = "actual_load"
-        case rpe
-        case painScore = "pain_score"
         case notes
-        case completed
         case createdAt = "created_at"
-        case exerciseTemplates = "exercise_templates"
+        // Transient properties NOT in CodingKeys - they won't be encoded/decoded
     }
 
-    var exerciseName: String? {
-        exerciseTemplates?.name
+    var name: String {
+        exerciseName
+    }
+
+    var blockType: String? {
+        blockName
     }
 
     var repsDisplay: String {
-        prescribedReps ?? "0"
+        targetReps ?? "0"
     }
 
     var loadDisplay: String {
-        if let load = prescribedLoad, let unit = loadUnit {
+        if let load = targetLoad, let unit = loadUnit {
             return "\(Int(load)) \(unit)"
         }
         return "Bodyweight"
     }
 
     var setsDisplay: String {
-        "\(prescribedSets) sets"
-    }
-
-    var actualRepsDisplay: String? {
-        guard let reps = actualReps, !reps.isEmpty else { return nil }
-        return reps.map { String($0) }.joined(separator: ", ")
-    }
-
-    var actualLoadDisplay: String? {
-        guard let load = actualLoad else { return nil }
-        let unit = loadUnit ?? "lbs"
-        return "\(Int(load)) \(unit)"
+        "\(targetSets ?? 0) sets"
     }
 }
 

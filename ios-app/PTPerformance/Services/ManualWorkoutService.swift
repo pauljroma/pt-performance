@@ -52,10 +52,9 @@ struct CreateManualSessionInput: Codable {
     let name: String
     let sourceTemplateId: UUID?
     let sourceTemplateType: String?
-    let status: String
 
     enum CodingKeys: String, CodingKey {
-        case name, status
+        case name
         case patientId = "patient_id"
         case sourceTemplateId = "source_template_id"
         case sourceTemplateType = "source_template_type"
@@ -65,38 +64,46 @@ struct CreateManualSessionInput: Codable {
 /// Input for adding exercise to manual session
 struct AddManualSessionExerciseInput: Codable {
     let manualSessionId: UUID
-    let exerciseTemplateId: UUID
-    let name: String
-    let sets: Int?
-    let reps: Int?
-    let load: Double?
+    let exerciseTemplateId: UUID?
+    let exerciseName: String
+    let blockName: String?
+    let sequence: Int
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
     let loadUnit: String?
+    let restPeriodSeconds: Int?
     let notes: String?
-    let orderIndex: Int
 
     enum CodingKeys: String, CodingKey {
-        case name, sets, reps, load, notes
+        case notes
         case manualSessionId = "manual_session_id"
         case exerciseTemplateId = "exercise_template_id"
+        case exerciseName = "exercise_name"
+        case blockName = "block_name"
+        case sequence
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
         case loadUnit = "load_unit"
-        case orderIndex = "order_index"
+        case restPeriodSeconds = "rest_period_seconds"
     }
 }
 
 /// Input for updating manual session exercise
 struct UpdateManualSessionExerciseInput: Codable {
-    let prescribedSets: Int?
-    let prescribedReps: String?
-    let prescribedLoad: Double?
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
     let loadUnit: String?
     let notes: String?
     let sequence: Int?
 
     enum CodingKeys: String, CodingKey {
         case notes
-        case prescribedSets = "prescribed_sets"
-        case prescribedReps = "prescribed_reps"
-        case prescribedLoad = "prescribed_load"
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
         case loadUnit = "load_unit"
         case sequence
     }
@@ -349,8 +356,7 @@ class ManualWorkoutService: ObservableObject {
             patientId: patientId,
             name: name,
             sourceTemplateId: sourceTemplateId,
-            sourceTemplateType: sourceTemplateType?.rawValue,
-            status: ManualSessionStatus.draft.rawValue
+            sourceTemplateType: sourceTemplateType?.rawValue
         )
 
         do {
@@ -381,18 +387,19 @@ class ManualWorkoutService: ObservableObject {
         let logger = DebugLogger.shared
         logger.log("Adding exercise to session: \(sessionId)", level: .diagnostic)
 
-        var input = exercise
         // Ensure the session ID matches
         let correctedInput = AddManualSessionExerciseInput(
             manualSessionId: sessionId,
             exerciseTemplateId: exercise.exerciseTemplateId,
-            name: exercise.name,
-            sets: exercise.sets,
-            reps: exercise.reps,
-            load: exercise.load,
+            exerciseName: exercise.exerciseName,
+            blockName: exercise.blockName,
+            sequence: exercise.sequence,
+            targetSets: exercise.targetSets,
+            targetReps: exercise.targetReps,
+            targetLoad: exercise.targetLoad,
             loadUnit: exercise.loadUnit,
-            notes: exercise.notes,
-            orderIndex: exercise.orderIndex
+            restPeriodSeconds: exercise.restPeriodSeconds,
+            notes: exercise.notes
         )
 
         do {
@@ -421,9 +428,9 @@ class ManualWorkoutService: ObservableObject {
         logger.log("Updating exercise: \(exercise.id)", level: .diagnostic)
 
         let input = UpdateManualSessionExerciseInput(
-            prescribedSets: exercise.prescribedSets,
-            prescribedReps: exercise.prescribedReps,
-            prescribedLoad: exercise.prescribedLoad,
+            targetSets: exercise.targetSets,
+            targetReps: exercise.targetReps,
+            targetLoad: exercise.targetLoad,
             loadUnit: exercise.loadUnit,
             notes: exercise.notes,
             sequence: exercise.sequence

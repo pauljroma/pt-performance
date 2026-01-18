@@ -184,13 +184,15 @@ class ManualWorkoutCreatorViewModel: ObservableObject {
                     let input = AddManualSessionExerciseInput(
                         manualSessionId: session.id,
                         exerciseTemplateId: exercise.exerciseTemplateId,
-                        name: exercise.name,
-                        sets: exercise.sets,
-                        reps: Int(exercise.reps ?? "0"),
-                        load: exercise.load,
+                        exerciseName: exercise.name,
+                        blockName: blockType.displayName,
+                        sequence: index,
+                        targetSets: exercise.sets,
+                        targetReps: exercise.reps,
+                        targetLoad: exercise.load,
                         loadUnit: exercise.loadUnit,
-                        notes: exercise.notes,
-                        orderIndex: index
+                        restPeriodSeconds: exercise.restSeconds,
+                        notes: exercise.notes
                     )
                     _ = try await service.addExercise(to: session.id, exercise: input)
                 }
