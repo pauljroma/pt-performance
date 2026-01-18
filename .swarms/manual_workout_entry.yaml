@@ -1,0 +1,124 @@
+name: "Manual Workout Entry Swarm"
+description: "Implement manual workout entry with FAB, templates, and Obsidian import"
+created: "2026-01-17"
+plan_file: "/Users/expo/.claude/plans/kind-inventing-storm.md"
+
+estimation:
+  total_agents: 6
+  estimated_time_minutes: 120
+  estimated_cost: "$15-25"
+  complexity: "high"
+
+phases:
+  - phase: 1
+    name: "Database Foundation"
+    parallel: false
+    agents:
+      - id: "db-migrations"
+        task: "Create Supabase migrations for manual_sessions, manual_session_exercises, system_workout_templates, patient_workout_templates tables"
+        output_files:
+          - "supabase/migrations/20260118000001_create_system_workout_templates.sql"
+          - "supabase/migrations/20260118000002_create_patient_workout_templates.sql"
+          - "supabase/migrations/20260118000003_create_manual_sessions.sql"
+          - "supabase/migrations/20260118000004_update_exercise_logs_for_manual.sql"
+
+  - phase: 2
+    name: "iOS Models"
+    parallel: true
+    agents:
+      - id: "ios-models"
+        skill: "code-writer"
+        task: "Create Swift models for ManualSession, ManualSessionExercise, SystemWorkoutTemplate, PatientWorkoutTemplate, WorkoutBlock"
+        output_files:
+          - "ios-app/PTPerformance/Models/ManualSession.swift"
+          - "ios-app/PTPerformance/Models/WorkoutTemplate.swift"
+          - "ios-app/PTPerformance/Models/WorkoutBlock.swift"
+
+  - phase: 3
+    name: "Service Layer"
+    parallel: false
+    agents:
+      - id: "ios-service"
+        skill: "code-writer"
+        task: "Create ManualWorkoutService with CRUD operations for manual sessions and templates"
+        output_files:
+          - "ios-app/PTPerformance/Services/ManualWorkoutService.swift"
+
+  - phase: 4
+    name: "UI Components"
+    parallel: true
+    agents:
+      - id: "fab-component"
+        skill: "code-writer"
+        task: "Create FloatingActionButton component with expandable menu"
+        output_files:
+          - "ios-app/PTPerformance/Components/FloatingActionButton.swift"
+
+      - id: "template-library"
+        skill: "code-writer"
+        task: "Create WorkoutTemplateLibraryView with search, filtering, and template cards"
+        output_files:
+          - "ios-app/PTPerformance/Views/ManualWorkout/WorkoutTemplateLibraryView.swift"
+
+  - phase: 5
+    name: "Workout Flow Views"
+    parallel: true
+    agents:
+      - id: "workout-creator"
+        skill: "code-writer"
+        task: "Create ManualWorkoutCreatorView with block-based exercise organization"
+        output_files:
+          - "ios-app/PTPerformance/Views/ManualWorkout/ManualWorkoutCreatorView.swift"
+
+      - id: "workout-execution"
+        skill: "code-writer"
+        task: "Create ManualWorkoutExecutionView for logging exercises during workout"
+        output_files:
+          - "ios-app/PTPerformance/Views/ManualWorkout/ManualWorkoutExecutionView.swift"
+
+  - phase: 6
+    name: "Integration"
+    parallel: false
+    agents:
+      - id: "today-view-integration"
+        skill: "code-writer"
+        task: "Add FAB overlay to TodaySessionView with navigation to manual workout flows"
+        modify_files:
+          - "ios-app/PTPerformance/TodaySessionView.swift"
+
+  - phase: 7
+    name: "Build & Test"
+    parallel: false
+    agents:
+      - id: "build-test"
+        skill: "app-tester"
+        task: "Build app and run tests to verify integration"
+
+workout_blocks:
+  - name: "Cardio"
+    icon: "figure.run"
+    color: "red"
+  - name: "Dynamic Stretch"
+    icon: "figure.flexibility"
+    color: "orange"
+  - name: "Prehab"
+    icon: "shield.fill"
+    color: "yellow"
+  - name: "Push"
+    icon: "arrow.up.circle.fill"
+    color: "blue"
+  - name: "Pull"
+    icon: "arrow.down.circle.fill"
+    color: "indigo"
+  - name: "Hinge"
+    icon: "figure.strengthtraining.traditional"
+    color: "purple"
+  - name: "Lunge/Squat"
+    icon: "figure.walk"
+    color: "pink"
+  - name: "Functional"
+    icon: "star.fill"
+    color: "green"
+  - name: "Recovery"
+    icon: "heart.fill"
+    color: "teal"

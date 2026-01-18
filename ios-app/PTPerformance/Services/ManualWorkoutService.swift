@@ -136,7 +136,7 @@ struct CreateManualExerciseLogInput: Codable {
 
 /// Input for completing a workout session
 struct CompleteWorkoutInput: Codable {
-    let status: String
+    let completed: Bool
     let completedAt: String
     let totalVolume: Double?
     let avgRpe: Double?
@@ -144,7 +144,7 @@ struct CompleteWorkoutInput: Codable {
     let durationMinutes: Int?
 
     enum CodingKeys: String, CodingKey {
-        case status
+        case completed
         case completedAt = "completed_at"
         case totalVolume = "total_volume"
         case avgRpe = "avg_rpe"
@@ -503,7 +503,6 @@ class ManualWorkoutService: ObservableObject {
             let response = try await supabase.client
                 .from("manual_sessions")
                 .update([
-                    "status": ManualSessionStatus.inProgress.rawValue,
                     "started_at": now
                 ])
                 .eq("id", value: sessionId.uuidString)
@@ -538,7 +537,7 @@ class ManualWorkoutService: ObservableObject {
             let now = ISO8601DateFormatter().string(from: Date())
 
             let updateInput = CompleteWorkoutInput(
-                status: ManualSessionStatus.completed.rawValue,
+                completed: true,
                 completedAt: now,
                 totalVolume: totalVolume,
                 avgRpe: avgRpe,
@@ -626,7 +625,7 @@ class ManualWorkoutService: ObservableObject {
                 .from("manual_sessions")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
-                .eq("status", value: ManualSessionStatus.completed.rawValue)
+                .eq("completed", value: true)
                 .order("completed_at", ascending: false)
                 .limit(limit)
                 .execute()
