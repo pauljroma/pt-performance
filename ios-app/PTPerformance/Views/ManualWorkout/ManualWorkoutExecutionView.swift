@@ -406,10 +406,18 @@ struct ManualWorkoutExecutionView: View {
                 }
             }
             .task {
+                DebugLogger.shared.log("🏋️ ManualWorkoutExecutionView task started", level: .diagnostic)
+                DebugLogger.shared.log("🏋️ Session ID: \(viewModel.session.id)", level: .diagnostic)
+                DebugLogger.shared.log("🏋️ Initial exercise count: \(viewModel.exercises.count)", level: .diagnostic)
+
                 // Load exercises if needed (for convenience init)
                 await viewModel.loadExercisesIfNeeded()
+
+                DebugLogger.shared.log("🏋️ After load, exercise count: \(viewModel.exercises.count)", level: .diagnostic)
+
                 // Start the timer
                 viewModel.startTimer()
+                DebugLogger.shared.log("🏋️ Timer started", level: .success)
             }
             .onChange(of: viewModel.isWorkoutCompleted) { isCompleted in
                 // Call onComplete when workout finishes

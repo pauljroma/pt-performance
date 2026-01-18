@@ -681,9 +681,11 @@ struct TodaySessionView: View {
             let startedSession = try await service.startWorkout(session.id)
 
             // 4. Store the session and navigate to execution view
+            DebugLogger.shared.log("🎯 Navigating to execution view with session: \(startedSession.id)", level: .success)
             await MainActor.run {
                 createdManualSession = startedSession
                 showManualWorkoutExecution = true
+                DebugLogger.shared.log("🎯 showManualWorkoutExecution = true", level: .diagnostic)
             }
 
         } catch {
