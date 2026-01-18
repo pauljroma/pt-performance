@@ -32,7 +32,7 @@ struct TodaySessionView: View {
     @State private var showTemplateLibrary = false
     @State private var showWorkoutCreator = false
     @State private var showAddToTodayPicker = false
-    @State private var showManualWorkoutExecution = false
+    // showManualWorkoutExecution removed - using fullScreenCover(item:) pattern instead
     @State private var selectedWorkoutTemplate: AnyWorkoutTemplate?
     @State private var createdManualSession: ManualSession?
     @State private var isCreatingManualSession = false
@@ -103,32 +103,19 @@ struct TodaySessionView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showManualWorkoutExecution) {
-            if let session = createdManualSession, let patientId = appState.userId {
+        // Use item: pattern to avoid SwiftUI state race condition
+        .fullScreenCover(item: $createdManualSession) { (session: ManualSession) in
+            if let patientId = appState.userId {
                 ManualWorkoutExecutionView(
                     session: session,
                     patientId: UUID(uuidString: patientId) ?? UUID(),
                     onComplete: {
-                        showManualWorkoutExecution = false
                         createdManualSession = nil
                         selectedWorkoutTemplate = nil
                         // Refresh today's session to show any updates
                         Task { await viewModel.fetchTodaySession() }
                     }
                 )
-            } else {
-                // Debug: Show what's missing
-                VStack(spacing: 20) {
-                    Text("Error Loading Workout")
-                        .font(.title)
-                    Text("Session: \(createdManualSession?.id.uuidString ?? "NIL")")
-                    Text("Patient ID: \(appState.userId ?? "NIL")")
-                    Button("Dismiss") {
-                        showManualWorkoutExecution = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding()
             }
         }
         .task {
@@ -693,19 +680,17 @@ struct TodaySessionView: View {
             // 3. Start the workout
             let startedSession = try await service.startWorkout(session.id)
 
-            // 4. Store the session and navigate to execution view
-            DebugLogger.shared.log("🎯 Navigating to execution view with session: \(startedSession.id)", level: .success)
+            // 4. Store the session - fullScreenCover(item:) will present automatically
+            DebugLogger.shared.log("🎯 Setting createdManualSession to trigger fullScreenCover: \(startedSession.id)", level: .success)
             await MainActor.run {
                 createdManualSession = startedSession
-                showManualWorkoutExecution = true
-                DebugLogger.shared.log("🎯 showManualWorkoutExecution = true", level: .diagnostic)
+                DebugLogger.shared.log("🎯 createdManualSession set, fullScreenCover should present", level: .diagnostic)
             }
 
         } catch {
             DebugLogger.shared.log("❌ Failed to create manual session: \(error)", level: .error)
-            // Don't show execution view if creation failed
+            // Ensure session is nil so fullScreenCover doesn't present
             await MainActor.run {
-                showManualWorkoutExecution = false
                 createdManualSession = nil
             }
         }
