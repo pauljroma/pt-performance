@@ -15,9 +15,14 @@ typealias WorkoutBlocks = [WorkoutBlock]
 
 // MARK: - System Workout Template
 
+/// Wrapper for JSONB blocks structure: {"blocks": [...]}
+struct BlocksWrapper: Codable {
+    let blocks: [DatabaseBlock]
+}
+
 /// Represents a system-defined workout template
 /// Maps to system_workout_templates table in Supabase
-/// Note: The `exercises` JSONB column contains an array of blocks, each with nested exercises
+/// Note: The `exercises` JSONB column contains {"blocks": [...]} wrapper
 struct SystemWorkoutTemplate: Codable, Identifiable {
     let id: UUID
     let name: String
@@ -25,7 +30,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     let category: String?
     let difficulty: String?
     let durationMinutes: Int?
-    let exercises: [DatabaseBlock]  // This is actually blocks with nested exercises
+    let exerciseBlocks: [DatabaseBlock]  // Decoded from {"blocks": [...]} wrapper
     let tags: [String]?
     let sourceFile: String?
     let createdAt: Date?
@@ -43,6 +48,42 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         case createdAt = "created_at"
     }
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        category = try container.decodeIfPresent(String.self, forKey: .category)
+        difficulty = try container.decodeIfPresent(String.self, forKey: .difficulty)
+        durationMinutes = try container.decodeIfPresent(Int.self, forKey: .durationMinutes)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags)
+        sourceFile = try container.decodeIfPresent(String.self, forKey: .sourceFile)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+
+        // Decode exercises - handle both {"blocks": [...]} wrapper and direct [...] array
+        if let wrapper = try? container.decodeIfPresent(BlocksWrapper.self, forKey: .exercises) {
+            exerciseBlocks = wrapper.blocks
+        } else if let directBlocks = try? container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises) {
+            exerciseBlocks = directBlocks
+        } else {
+            exerciseBlocks = []
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(category, forKey: .category)
+        try container.encodeIfPresent(difficulty, forKey: .difficulty)
+        try container.encodeIfPresent(durationMinutes, forKey: .durationMinutes)
+        try container.encode(BlocksWrapper(blocks: exerciseBlocks), forKey: .exercises)
+        try container.encodeIfPresent(tags, forKey: .tags)
+        try container.encodeIfPresent(sourceFile, forKey: .sourceFile)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+    }
+
     var durationDisplay: String? {
         guard let minutes = durationMinutes else { return nil }
         if minutes >= 60 {
@@ -58,7 +99,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
 
     /// Total exercise count across all blocks
     var exerciseCount: Int {
-        exercises.reduce(0) { $0 + $1.exercises.count }
+        exerciseBlocks.reduce(0) { $0 + $1.exercises.count }
     }
 
     var difficultyDisplay: String {
@@ -67,7 +108,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
 
     /// Convert database blocks to WorkoutBlocks for UI display
     var blocks: WorkoutBlocks {
-        exercises.sorted { $0.sequence < $1.sequence }.map { dbBlock in
+        exerciseBlocks.sorted { $0.sequence < $1.sequence }.map { dbBlock in
             let templateExercises = dbBlock.exercises.map { dbExercise in
                 TemplateExercise(
                     id: dbExercise.id ?? UUID(),
