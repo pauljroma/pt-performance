@@ -106,39 +106,32 @@ class MealPlanService {
     func fetchMealPlans(patientId: String, includeInactive: Bool = false) async throws -> [MealPlan] {
         logger.info("MEAL PLAN", "Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
 
-        // Build query fresh (don't reuse query builders)
-        let response: PostgrestResponse<Data>
+        // BUILD 234: Remove explicit PostgrestResponse<Data> type to avoid SDK decoding issues
+        // Use same pattern as fetchActiveMealPlan which works correctly
         do {
-            if includeInactive {
-                logger.info("MEAL PLAN", "Query: meal_plans with patient_id=\(patientId), all statuses")
-                response = try await supabase.client
-                    .from("meal_plans")
-                    .select("*, meal_plan_items(*)")
-                    .eq("patient_id", value: patientId)
+            let query = supabase.client
+                .from("meal_plans")
+                .select("*, meal_plan_items(*)")
+                .eq("patient_id", value: patientId)
+
+            let response = if includeInactive {
+                try await query
                     .order("created_at", ascending: false)
                     .execute()
             } else {
-                logger.info("MEAL PLAN", "Query: meal_plans with patient_id=\(patientId), active only")
-                response = try await supabase.client
-                    .from("meal_plans")
-                    .select("*, meal_plan_items(*)")
-                    .eq("patient_id", value: patientId)
+                try await query
                     .eq("is_active", value: true)
                     .order("created_at", ascending: false)
                     .execute()
             }
+
             logger.info("MEAL PLAN", "Query executed successfully, data size: \(response.data.count) bytes")
-        } catch {
-            logger.error("MEAL PLAN", "Query execution failed: \(error)")
-            throw error
-        }
 
-        if let json = String(data: response.data, encoding: .utf8) {
-            logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
-        }
+            if let json = String(data: response.data, encoding: .utf8) {
+                logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
+            }
 
-        let decoder = createFlexibleDecoder()
-        do {
+            let decoder = createFlexibleDecoder()
             let plans = try decoder.decode([MealPlan].self, from: response.data)
             logger.success("MEAL PLAN", "Fetched \(plans.count) meal plans")
             return plans
@@ -159,7 +152,7 @@ class MealPlanService {
             logger.error("MEAL PLAN", "DECODING ERROR: \(errorMsg)")
             throw decodingError
         } catch {
-            logger.error("MEAL PLAN", "Non-decoding error during decode: \(error)")
+            logger.error("MEAL PLAN", "Query/decode error: \(error)")
             throw error
         }
     }
