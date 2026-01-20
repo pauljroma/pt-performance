@@ -30,28 +30,16 @@ class PTSupabaseClient: ObservableObject {
             fatalError("Invalid Supabase URL: \(supabaseURL)")
         }
 
-        // Configure decoder for ISO8601 dates (Supabase default format)
-        logger.log("Configuring ISO8601 date decoder...")
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        // Configure encoder for ISO8601 dates
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-
-        logger.log("Creating Supabase client with custom decoder/encoder...")
+        // BUILD 233: Use SDK defaults for internal parsing
+        // Custom date handling is done in individual services (MealPlanService.createFlexibleDecoder)
+        // This prevents SDK internal parsing conflicts with JSONB arrays and DATE columns
+        logger.log("Creating Supabase client with default options...")
         client = Supabase.SupabaseClient(
             supabaseURL: url,
-            supabaseKey: supabaseAnonKey,
-            options: SupabaseClientOptions(
-                db: SupabaseClientOptions.DatabaseOptions(
-                    encoder: encoder,
-                    decoder: decoder
-                )
-            )
+            supabaseKey: supabaseAnonKey
         )
 
-        logger.log("Supabase client initialized with ISO8601 date strategy", level: .success)
+        logger.log("Supabase client initialized with SDK defaults", level: .success)
 
         // Check for existing session on init
         Task {
