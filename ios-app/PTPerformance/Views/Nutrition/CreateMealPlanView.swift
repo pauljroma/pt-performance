@@ -120,13 +120,17 @@ struct CreateMealPlanView: View {
         !name.isEmpty
     }
 
+    private let logger = DebugLogger.shared
+
     private func createPlan() async {
         guard let patientId = supabase.userId else {
+            logger.error("CREATE MEAL PLAN", "Not logged in - no userId")
             error = "Not logged in"
             showError = true
             return
         }
 
+        logger.info("CREATE MEAL PLAN", "Starting create for patient: \(patientId)")
         isSaving = true
 
         do {
@@ -139,12 +143,16 @@ struct CreateMealPlanView: View {
                 endDate: hasEndDate ? endDate : nil
             )
 
+            logger.info("CREATE MEAL PLAN", "DTO: name=\(name), type=\(planType.rawValue)")
             let newPlan = try await mealPlanService.createMealPlan(dto)
 
+            logger.success("CREATE MEAL PLAN", "Created: \(newPlan.id)")
             isSaving = false
             onCreated(newPlan)
             dismiss()
         } catch {
+            logger.error("CREATE MEAL PLAN", "FAILED: \(error)")
+            logger.error("CREATE MEAL PLAN", "Error type: \(type(of: error)), details: \(String(describing: error))")
             self.error = "Failed to create plan: \(error.localizedDescription)"
             self.showError = true
             isSaving = false

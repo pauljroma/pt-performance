@@ -214,16 +214,32 @@ class MealPlanService {
 
     /// Create a new meal plan
     func createMealPlan(_ plan: CreateMealPlanDTO) async throws -> MealPlan {
-        // Use the DTO directly since it's already Codable
-        let response = try await supabase.client
-            .from("meal_plans")
-            .insert(plan)
-            .select()
-            .single()
-            .execute()
+        logger.info("MEAL PLAN", "Creating meal plan: \(plan.name) for patient: \(plan.patientId)")
+        logger.info("MEAL PLAN", "Plan type: \(plan.planType ?? "nil"), startDate: \(plan.startDate?.description ?? "nil")")
 
-        let decoder = createFlexibleDecoder()
-        return try decoder.decode(MealPlan.self, from: response.data)
+        do {
+            let response = try await supabase.client
+                .from("meal_plans")
+                .insert(plan)
+                .select()
+                .single()
+                .execute()
+
+            logger.info("MEAL PLAN", "Insert response size: \(response.data.count) bytes")
+
+            if let json = String(data: response.data, encoding: .utf8) {
+                logger.info("MEAL PLAN", "Insert response: \(json.prefix(500))")
+            }
+
+            let decoder = createFlexibleDecoder()
+            let newPlan = try decoder.decode(MealPlan.self, from: response.data)
+            logger.success("MEAL PLAN", "Created meal plan: \(newPlan.id)")
+            return newPlan
+        } catch {
+            logger.error("MEAL PLAN", "CREATE FAILED: \(error)")
+            logger.error("MEAL PLAN", "Error details: \(String(describing: error))")
+            throw error
+        }
     }
 
     /// Update a meal plan
