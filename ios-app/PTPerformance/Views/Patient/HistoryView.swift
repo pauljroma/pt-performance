@@ -45,13 +45,13 @@ struct HistoryView: View {
                         AdherenceSection(adherence: adherence)
                     }
 
-                    // Recent sessions list
-                    if !viewModel.recentSessions.isEmpty {
-                        RecentSessionsSection(sessions: viewModel.recentSessions)
+                    // BUILD 219: Combined workout history (prescribed + manual)
+                    if !viewModel.allWorkouts.isEmpty {
+                        RecentWorkoutsSection(workouts: viewModel.allWorkouts)
                     } else if viewModel.summaryStats != nil {
                         EmptyDataSection(
-                            title: "No Sessions Yet",
-                            message: "Your completed sessions will appear here",
+                            title: "No Workouts Yet",
+                            message: "Your completed sessions and manual workouts will appear here",
                             icon: "calendar.badge.clock"
                         )
                     }
@@ -298,7 +298,7 @@ struct StatRow: View {
     }
 }
 
-// MARK: - Recent Sessions Section
+// MARK: - Recent Sessions Section (Legacy - kept for compatibility)
 
 struct RecentSessionsSection: View {
     let sessions: [SessionSummary]
@@ -347,6 +347,131 @@ struct SessionRow: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(8)
+    }
+}
+
+// MARK: - BUILD 219: Combined Workout History Section
+
+struct RecentWorkoutsSection: View {
+    let workouts: [WorkoutHistoryItem]
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Recent Workouts")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(spacing: 12) {
+                ForEach(workouts) { workout in
+                    WorkoutHistoryRow(workout: workout)
+                }
+            }
+        }
+    }
+}
+
+struct WorkoutHistoryRow: View {
+    let workout: WorkoutHistoryItem
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Type indicator icon
+            Image(systemName: workout.isManual ? "figure.strengthtraining.traditional" : "list.clipboard")
+                .font(.title2)
+                .foregroundColor(workout.isManual ? .orange : .blue)
+                .frame(width: 40)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(workout.name)
+                        .font(.headline)
+                        .lineLimit(1)
+
+                    if workout.isManual {
+                        Text("Manual")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.2))
+                            .foregroundColor(.orange)
+                            .cornerRadius(4)
+                    }
+                }
+
+                HStack(spacing: 12) {
+                    Text(workout.date, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if let count = workout.exerciseCount, count > 0 {
+                        Text("\(count) exercises")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let duration = workout.duration {
+                        Text("\(duration)m")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // Stats row for manual workouts
+                if workout.isManual {
+                    HStack(spacing: 16) {
+                        if let volume = workout.volume, volume > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "scalemass")
+                                    .font(.caption2)
+                                Text(formatVolume(volume))
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+
+                        if let pain = workout.avgPain {
+                            HStack(spacing: 2) {
+                                Image(systemName: "heart")
+                                    .font(.caption2)
+                                Text(String(format: "%.1f", pain))
+                                    .font(.caption)
+                            }
+                            .foregroundColor(painColor(pain))
+                        }
+                    }
+                }
+            }
+
+            Spacer()
+
+            // Completion status
+            if workout.isCompleted {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+            } else {
+                Image(systemName: "circle")
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private func formatVolume(_ volume: Double) -> String {
+        if volume >= 1000 {
+            return String(format: "%.1fk", volume / 1000)
+        }
+        return "\(Int(volume)) lbs"
+    }
+
+    private func painColor(_ pain: Double) -> Color {
+        switch pain {
+        case 0...2: return .green
+        case 2...5: return .yellow
+        default: return .red
+        }
     }
 }
 

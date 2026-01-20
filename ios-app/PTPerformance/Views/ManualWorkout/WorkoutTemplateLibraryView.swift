@@ -606,26 +606,46 @@ struct TemplateCardView: View {
 
             Spacer(minLength: 4)
 
-            // Stats row
-            HStack(spacing: 12) {
-                // Exercise count
-                Label("\(template.exerciseCount)", systemImage: "figure.strengthtraining.traditional")
+            // BUILD 216: Improved stats row for phone layout
+            HStack(spacing: 8) {
+                // Compact stats with better spacing
+                HStack(spacing: 6) {
+                    // Exercise count
+                    HStack(spacing: 2) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                        Text("\(template.exerciseCount)")
+                    }
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                // Block count
-                Label("\(template.blocks.count)", systemImage: "square.stack.3d.up")
+                    Text("·")
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    // Block count
+                    HStack(spacing: 2) {
+                        Image(systemName: "square.stack.3d.up")
+                        Text("\(template.blocks.count)")
+                    }
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                // Duration if available
-                if let duration = template.durationDisplay {
-                    Label(duration, systemImage: "clock")
+                    // Duration if available
+                    if let duration = template.durationDisplay {
+                        Text("·")
+                            .foregroundColor(.secondary.opacity(0.5))
+
+                        HStack(spacing: 2) {
+                            Image(systemName: "clock")
+                            Text(duration)
+                        }
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    }
                 }
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
-                Spacer()
+                Spacer(minLength: 4)
 
                 // Difficulty badge if available
                 if let difficulty = template.difficulty {

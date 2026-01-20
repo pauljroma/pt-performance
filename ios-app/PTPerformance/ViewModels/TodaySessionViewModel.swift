@@ -189,12 +189,86 @@ class TodaySessionViewModel: ObservableObject {
     private func fetchFromSupabase(patientId: String) async throws {
         let logger = DebugLogger.shared
         logger.log("📱 Fetching session from Supabase for patient: \(patientId)")
+
+        // BUILD 218: First check scheduled_sessions for today
+        let today = ISO8601DateFormatter().string(from: Date()).prefix(10) // YYYY-MM-DD
+        logger.log("📱 Checking scheduled_sessions for today: \(today)")
+        #if DEBUG
+        print("📱 [TodaySession] Checking scheduled_sessions for today: \(today)")
+        #endif
+
+        // Try to find a scheduled session for today first
+        var sessionId: String? = nil
+
+        do {
+            let scheduledResponse = try await supabase.client
+                .from("scheduled_sessions")
+                .select("session_id, status")
+                .eq("patient_id", value: patientId)
+                .eq("scheduled_date", value: String(today))
+                .eq("status", value: "scheduled")
+                .limit(1)
+                .execute()
+
+            if let jsonString = String(data: scheduledResponse.data, encoding: .utf8) {
+                logger.log("📱 Scheduled sessions response: \(jsonString)")
+            }
+
+            // Decode the scheduled session to get session_id
+            struct ScheduledSessionRow: Codable {
+                let session_id: String
+                let status: String
+            }
+
+            let decoder = JSONDecoder()
+            let scheduledSessions = try decoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
+
+            if let scheduled = scheduledSessions.first {
+                sessionId = scheduled.session_id
+                logger.log("✅ Found scheduled session for today: \(sessionId!)", level: .success)
+                #if DEBUG
+                print("✅ [TodaySession] Found scheduled session for today: \(sessionId!)")
+                #endif
+            }
+        } catch {
+            logger.log("⚠️ Failed to fetch scheduled sessions: \(error.localizedDescription)", level: .warning)
+        }
+
+        // If we have a scheduled session, fetch it directly
+        if let sessionId = sessionId {
+            logger.log("📱 Fetching scheduled session by ID: \(sessionId)")
+            do {
+                let response = try await supabase.client
+                    .from("sessions")
+                    .select("*")
+                    .eq("id", value: sessionId)
+                    .single()
+                    .execute()
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let session = try decoder.decode(Session.self, from: response.data)
+
+                logger.log("✅ Found scheduled session: \(session.name) (ID: \(session.id))", level: .success)
+                #if DEBUG
+                print("✅ [TodaySession] Found scheduled session: \(session.name)")
+                #endif
+                self.session = session
+
+                // Fetch exercises for this session
+                try await fetchExercisesForSession(session)
+                return
+            } catch {
+                logger.log("⚠️ Failed to fetch scheduled session: \(error.localizedDescription)", level: .warning)
+                // Fall through to program-based lookup
+            }
+        }
+
+        // Fallback: Query sessions via program chain
+        logger.log("📱 No scheduled session, falling back to program-based lookup")
         logger.log("📱 Query filters: phases.programs.patient_id=\(patientId), status=active")
         #if DEBUG
-        print("📱 [TodaySession] Fetching session for patient: \(patientId)")
-        print("📱 [TodaySession] Querying sessions table with filters:")
-        print("   - phases.programs.patient_id = \(patientId)")
-        print("   - phases.programs.status = active")
+        print("📱 [TodaySession] Falling back to program-based lookup")
         #endif
 
         // Query sessions via correct relationship chain: sessions -> phases -> programs
@@ -262,74 +336,11 @@ class TodaySessionViewModel: ObservableObject {
         #endif
         self.session = session
 
-        // Fetch exercises for this session
+        // Fetch exercises for this session using helper
         do {
-            logger.log("📱 Fetching exercises for session \(session.id)...")
-            // BUILD 177: Include video and technique fields for ExerciseTechniqueView
-            let response = try await supabase.client
-                .from("session_exercises")
-                .select("""
-                    *,
-                    exercise_templates!inner(
-                        id,
-                        name,
-                        category,
-                        body_region,
-                        video_url,
-                        video_thumbnail_url,
-                        video_duration,
-                        technique_cues,
-                        common_mistakes,
-                        safety_notes
-                    )
-                """)
-                .eq("session_id", value: session.id)
-                .order("sequence", ascending: true)
-                .execute()
-
-            logger.log("📱 Exercises response size: \(response.data.count) bytes")
-            if let jsonString = String(data: response.data, encoding: .utf8) {
-                logger.log("📱 Exercises JSON: \(jsonString.prefix(500))")
-            }
-
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let exercisesResponse = try decoder.decode([Exercise].self, from: response.data)
-
-            logger.log("✅ Found \(exercisesResponse.count) exercises", level: .success)
-            #if DEBUG
-            print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
-            #endif
-            self.exercises = exercisesResponse
-        } catch let decodingError as DecodingError {
-            logger.log("❌ EXERCISE DECODING ERROR:", level: .error)
-            switch decodingError {
-            case .typeMismatch(let type, let context):
-                logger.log("  Type mismatch: Expected \(type)", level: .error)
-                logger.log("  Path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))", level: .error)
-            case .valueNotFound(let type, let context):
-                logger.log("  Value not found: \(type)", level: .error)
-                logger.log("  Context: \(context.debugDescription)", level: .error)
-            case .keyNotFound(let key, let context):
-                logger.log("  Key not found: \(key.stringValue)", level: .error)
-                logger.log("  Context: \(context.debugDescription)", level: .error)
-            case .dataCorrupted(let context):
-                logger.log("  Data corrupted: \(context.debugDescription)", level: .error)
-            @unknown default:
-                logger.log("  Unknown decoding error: \(decodingError)", level: .error)
-            }
-            // If exercise fetch fails, still show session but with empty exercises
-            logger.log("⚠️ Setting exercises to empty array", level: .warning)
-            #if DEBUG
-            print("⚠️ [TodaySession] Failed to fetch exercises: \(decodingError.localizedDescription)")
-            #endif
-            self.exercises = []
+            try await fetchExercisesForSession(session)
         } catch {
-            // If exercise fetch fails, still show session but with empty exercises
             logger.log("⚠️ Failed to fetch exercises: \(error.localizedDescription)", level: .warning)
-            #if DEBUG
-            print("⚠️ [TodaySession] Failed to fetch exercises: \(error.localizedDescription)")
-            #endif
             self.exercises = []
         }
         } catch let decodingError as DecodingError {
@@ -352,6 +363,49 @@ class TodaySessionViewModel: ObservableObject {
             }
             throw decodingError
         }
+    }
+
+    /// BUILD 218: Helper to fetch exercises for a session
+    private func fetchExercisesForSession(_ session: Session) async throws {
+        let logger = DebugLogger.shared
+        logger.log("📱 Fetching exercises for session \(session.id)...")
+
+        // BUILD 177: Include video and technique fields for ExerciseTechniqueView
+        let response = try await supabase.client
+            .from("session_exercises")
+            .select("""
+                *,
+                exercise_templates!inner(
+                    id,
+                    name,
+                    category,
+                    body_region,
+                    video_url,
+                    video_thumbnail_url,
+                    video_duration,
+                    technique_cues,
+                    common_mistakes,
+                    safety_notes
+                )
+            """)
+            .eq("session_id", value: session.id)
+            .order("sequence", ascending: true)
+            .execute()
+
+        logger.log("📱 Exercises response size: \(response.data.count) bytes")
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            logger.log("📱 Exercises JSON: \(jsonString.prefix(500))")
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let exercisesResponse = try decoder.decode([Exercise].self, from: response.data)
+
+        logger.log("✅ Found \(exercisesResponse.count) exercises", level: .success)
+        #if DEBUG
+        print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
+        #endif
+        self.exercises = exercisesResponse
     }
 
     /// Refresh data

@@ -90,11 +90,11 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
             let hours = minutes / 60
             let remainingMinutes = minutes % 60
             if remainingMinutes > 0 {
-                return "\(hours)h \(remainingMinutes)m"
+                return "\(hours)h\(remainingMinutes)m"  // More compact format
             }
-            return "\(hours)h"
+            return "\(hours)hr"
         }
-        return "\(minutes) min"
+        return "\(minutes)m"  // Compact format for phone
     }
 
     /// Total exercise count across all blocks
@@ -160,6 +160,9 @@ struct DatabaseBlock: Codable {
 }
 
 /// Represents an exercise within a database block
+/// Handles both formats:
+///   - System templates: {"name": "...", "sets": 3, "reps": "10", ...}
+///   - Prescribed sessions: {"name": "...", "prescribed_sets": 3, "prescribed_reps": "10", ...}
 struct DatabaseExercise: Codable {
     let id: UUID?
     let exerciseTemplateId: UUID?
@@ -168,6 +171,8 @@ struct DatabaseExercise: Codable {
     let prescribedSets: Int?
     let prescribedReps: String?
     let notes: String?
+    let rpe: Int?
+    let duration: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -177,9 +182,14 @@ struct DatabaseExercise: Codable {
         case prescribedSets = "prescribed_sets"
         case prescribedReps = "prescribed_reps"
         case notes
+        case rpe
+        case duration
+        // Alternate keys for system templates
+        case sets
+        case reps
     }
 
-    init(id: UUID? = nil, exerciseTemplateId: UUID?, name: String?, sequence: Int?, prescribedSets: Int?, prescribedReps: String?, notes: String?) {
+    init(id: UUID? = nil, exerciseTemplateId: UUID?, name: String?, sequence: Int?, prescribedSets: Int?, prescribedReps: String?, notes: String?, rpe: Int? = nil, duration: String? = nil) {
         self.id = id
         self.exerciseTemplateId = exerciseTemplateId
         self.name = name
@@ -187,6 +197,55 @@ struct DatabaseExercise: Codable {
         self.prescribedSets = prescribedSets
         self.prescribedReps = prescribedReps
         self.notes = notes
+        self.rpe = rpe
+        self.duration = duration
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decodeIfPresent(UUID.self, forKey: .id)
+        exerciseTemplateId = try container.decodeIfPresent(UUID.self, forKey: .exerciseTemplateId)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        sequence = try container.decodeIfPresent(Int.self, forKey: .sequence)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        rpe = try container.decodeIfPresent(Int.self, forKey: .rpe)
+        duration = try container.decodeIfPresent(String.self, forKey: .duration)
+
+        // Handle sets: try prescribed_sets first, then sets
+        if let sets = try container.decodeIfPresent(Int.self, forKey: .prescribedSets) {
+            prescribedSets = sets
+        } else if let sets = try container.decodeIfPresent(Int.self, forKey: .sets) {
+            prescribedSets = sets
+        } else {
+            prescribedSets = nil
+        }
+
+        // Handle reps: try prescribed_reps first, then reps (can be String or Int)
+        if let reps = try container.decodeIfPresent(String.self, forKey: .prescribedReps) {
+            prescribedReps = reps
+        } else if let reps = try container.decodeIfPresent(String.self, forKey: .reps) {
+            prescribedReps = reps
+        } else if let repsInt = try container.decodeIfPresent(Int.self, forKey: .reps) {
+            prescribedReps = String(repsInt)
+        } else if let repsInt = try container.decodeIfPresent(Int.self, forKey: .prescribedReps) {
+            prescribedReps = String(repsInt)
+        } else {
+            prescribedReps = nil
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(exerciseTemplateId, forKey: .exerciseTemplateId)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(sequence, forKey: .sequence)
+        try container.encodeIfPresent(prescribedSets, forKey: .prescribedSets)
+        try container.encodeIfPresent(prescribedReps, forKey: .prescribedReps)
+        try container.encodeIfPresent(notes, forKey: .notes)
+        try container.encodeIfPresent(rpe, forKey: .rpe)
+        try container.encodeIfPresent(duration, forKey: .duration)
     }
 }
 

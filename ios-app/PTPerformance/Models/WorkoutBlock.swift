@@ -155,6 +155,36 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
         }
     }
 
+    /// BUILD 220: Workout block order (warm-up first, recovery last)
+    var sortOrder: Int {
+        switch self {
+        case .cardio:
+            return 0
+        case .dynamicStretch:
+            return 1
+        case .prehab:
+            return 2
+        case .push:
+            return 3
+        case .pull:
+            return 4
+        case .hinge:
+            return 5
+        case .lungeSquat:
+            return 6
+        case .functional:
+            return 7
+        case .recovery:
+            return 8
+        }
+    }
+
+    /// Get sort order for a block name string
+    static func sortOrder(for name: String) -> Int {
+        let blockType = inferFromName(name)
+        return blockType.sortOrder
+    }
+
     /// Infer block type from a block name string
     static func inferFromName(_ name: String) -> WorkoutBlockType {
         let lowercased = name.lowercased()

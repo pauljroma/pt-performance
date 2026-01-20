@@ -91,9 +91,12 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     }
 
     /// Group exercises by block type for block-based navigation
+    /// BUILD 220: Sort by proper workout order (warm-up first, recovery last)
     var exercisesByBlock: [(blockType: String, exercises: [ManualSessionExercise])] {
         let grouped = Dictionary(grouping: exercises) { $0.blockType ?? "General" }
-        return grouped.sorted { $0.key < $1.key }.map { ($0.key, $0.value.sorted { $0.sequence < $1.sequence }) }
+        // Sort by workout block order, not alphabetically
+        return grouped.sorted { WorkoutBlockType.sortOrder(for: $0.key) < WorkoutBlockType.sortOrder(for: $1.key) }
+            .map { ($0.key, $0.value.sorted { $0.sequence < $1.sequence }) }
     }
 
     /// Check if a block is completed
@@ -294,6 +297,64 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         moveToNextExercise()
     }
 
+    // BUILD 216: Skip a specific exercise (not just current)
+    func skipExercise(_ exercise: ManualSessionExercise) {
+        skippedExerciseIds.insert(exercise.id)
+        DebugLogger.shared.info("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' skipped")
+
+        // If this was the current exercise, move to next
+        if currentExercise?.id == exercise.id {
+            moveToNextExercise()
+        }
+    }
+
+    // BUILD 216: Quick complete exercise with prescribed values
+    func quickCompleteExercise(_ exercise: ManualSessionExercise) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Use prescribed values for quick completion
+            let sets = exercise.targetSets ?? 3
+            let repsPerSet = Array(repeating: Int(exercise.targetReps ?? "10") ?? 10, count: sets)
+            let load = exercise.targetLoad
+
+            try await service.logManualExercise(
+                manualSessionExerciseId: exercise.id,
+                patientId: patientId,
+                actualSets: sets,
+                actualReps: repsPerSet,
+                actualLoad: load,
+                loadUnit: exercise.loadUnit ?? "lbs",
+                rpe: 5,  // Default RPE for quick complete
+                painScore: 0,  // Default no pain for quick complete
+                notes: nil
+            )
+
+            completedExerciseIds.insert(exercise.id)
+
+            DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' quick completed")
+
+            isLoading = false
+
+            // If this was the current exercise, move to next
+            if currentExercise?.id == exercise.id {
+                moveToNextExercise()
+            }
+
+            // Check if all exercises done
+            if allExercisesCompleted {
+                showCompletionConfirmation = true
+            }
+
+        } catch {
+            DebugLogger.shared.error("MANUAL_WORKOUT", "Failed to quick complete exercise: \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+            showError = true
+            isLoading = false
+        }
+    }
+
     func completeWorkout() async {
         isLoading = true
         errorMessage = nil
@@ -350,6 +411,7 @@ struct ManualWorkoutExecutionView: View {
     @StateObject private var viewModel: ManualWorkoutExecutionViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showEndEarlyConfirmation = false
+    @State private var expandedExercises: Set<UUID> = []  // BUILD 216: Track expanded exercises
     let onComplete: (() -> Void)?
 
     init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
@@ -603,86 +665,165 @@ struct ManualWorkoutExecutionView: View {
         .cornerRadius(8)
     }
 
+    // BUILD 216: Expandable exercise row with inline completion
     private func exerciseRow(_ exercise: ManualSessionExercise) -> some View {
         let isCompleted = viewModel.completedExerciseIds.contains(exercise.id)
         let isSkipped = viewModel.skippedExerciseIds.contains(exercise.id)
         let isCurrent = viewModel.currentExercise?.id == exercise.id
+        let isExpanded = expandedExercises.contains(exercise.id)
 
-        return Button {
-            if !isCompleted && !isSkipped {
-                viewModel.selectExercise(exercise)
-            }
-        } label: {
-            HStack(spacing: 12) {
-                // Status Icon
-                if isCompleted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.green)
-                } else if isSkipped {
-                    Image(systemName: "forward.fill")
-                        .font(.title3)
-                        .foregroundColor(.orange)
-                } else if isCurrent {
-                    Image(systemName: "play.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.blue)
-                } else {
-                    Image(systemName: "circle")
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                }
-
-                // Exercise Details
-                VStack(alignment: .leading, spacing: 2) {
-                    // Use notes as name if exercise name is just a number
-                    let displayName = exercise.exerciseName.count <= 2 && Int(exercise.exerciseName) != nil
-                        ? (exercise.notes ?? exercise.exerciseName)
-                        : exercise.exerciseName
-
-                    Text(displayName)
-                        .font(.subheadline)
-                        .fontWeight(isCurrent ? .semibold : .regular)
-                        .foregroundColor(isCompleted || isSkipped ? .secondary : .primary)
-                        .strikethrough(isSkipped)
-                        .lineLimit(2)
-
-                    // Prescription details
-                    HStack(spacing: 8) {
-                        Text("\(exercise.targetSets ?? 3) sets")
-                            .font(.caption)
-                        Text("×")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Text("\(exercise.targetReps ?? "10") reps")
-                            .font(.caption)
-                        if let load = exercise.targetLoad, let unit = exercise.loadUnit {
-                            Text("• \(Int(load)) \(unit)")
-                                .font(.caption)
+        return VStack(spacing: 0) {
+            // Header row (always visible)
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    if expandedExercises.contains(exercise.id) {
+                        expandedExercises.remove(exercise.id)
+                    } else {
+                        expandedExercises.insert(exercise.id)
+                        // Also select as current exercise
+                        if !isCompleted && !isSkipped {
+                            viewModel.selectExercise(exercise)
                         }
                     }
-                    .foregroundColor(.secondary)
                 }
+            } label: {
+                HStack(spacing: 12) {
+                    // Status Icon
+                    if isCompleted {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.green)
+                    } else if isSkipped {
+                        Image(systemName: "forward.fill")
+                            .font(.title3)
+                            .foregroundColor(.orange)
+                    } else if isCurrent {
+                        Image(systemName: "play.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.blue)
+                    } else {
+                        Image(systemName: "circle")
+                            .font(.title3)
+                            .foregroundColor(.gray)
+                    }
 
-                Spacer()
+                    // Exercise Details
+                    VStack(alignment: .leading, spacing: 2) {
+                        let displayName = exercise.exerciseName.count <= 2 && Int(exercise.exerciseName) != nil
+                            ? (exercise.notes ?? exercise.exerciseName)
+                            : exercise.exerciseName
 
-                // Arrow indicator for tappable exercises
-                if !isCompleted && !isSkipped {
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
+                        Text(displayName)
+                            .font(.subheadline)
+                            .fontWeight(isCurrent ? .semibold : .regular)
+                            .foregroundColor(isCompleted || isSkipped ? .secondary : .primary)
+                            .strikethrough(isSkipped)
+                            .lineLimit(2)
+
+                        // Prescription details
+                        HStack(spacing: 8) {
+                            Text("\(exercise.targetSets ?? 3) sets")
+                                .font(.caption)
+                            Text("×")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("\(exercise.targetReps ?? "10") reps")
+                                .font(.caption)
+                            if let load = exercise.targetLoad, let unit = exercise.loadUnit {
+                                Text("• \(Int(load)) \(unit)")
+                                    .font(.caption)
+                            }
+                        }
                         .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Chevron for expand/collapse
+                    if !isCompleted && !isSkipped {
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .rotationEffect(.degrees(isExpanded ? 0 : 0))
+                    }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(isCurrent ? Color.blue.opacity(0.08) : Color(.systemBackground))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(isCurrent ? Color.blue.opacity(0.08) : Color(.systemBackground))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isCurrent ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
-            )
+
+            // Expanded content
+            if isExpanded && !isCompleted && !isSkipped {
+                VStack(spacing: 12) {
+                    Divider()
+                        .padding(.horizontal, 12)
+
+                    // Quick complete button
+                    Button {
+                        Task {
+                            await viewModel.quickCompleteExercise(exercise)
+                            withAnimation {
+                                expandedExercises.remove(exercise.id)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.circle")
+                            Text("Complete as Prescribed")
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.green.opacity(0.1))
+                        .foregroundColor(.green)
+                        .cornerRadius(8)
+                    }
+                    .padding(.horizontal, 12)
+
+                    // Or log with details button
+                    Button {
+                        viewModel.selectExercise(exercise)
+                        // Scroll to current exercise card section
+                    } label: {
+                        HStack {
+                            Image(systemName: "pencil.circle")
+                            Text("Log with Custom Values")
+                        }
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(8)
+                    }
+                    .padding(.horizontal, 12)
+
+                    // Skip button
+                    Button {
+                        viewModel.skipExercise(exercise)
+                        withAnimation {
+                            expandedExercises.remove(exercise.id)
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "forward.fill")
+                            Text("Skip Exercise")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    }
+                    .padding(.bottom, 8)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
-        .disabled(isCompleted || isSkipped)
+        .background(Color(.systemBackground))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isCurrent ? Color.blue.opacity(0.3) : Color(.separator).opacity(0.3), lineWidth: 1)
+        )
     }
 
     // MARK: - Current Exercise Card

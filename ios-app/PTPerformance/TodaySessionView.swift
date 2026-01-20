@@ -103,6 +103,17 @@ struct TodaySessionView: View {
                 }
             }
         }
+        // BUILD 220: Add exercise to today's session picker
+        .sheet(isPresented: $showAddToTodayPicker) {
+            NavigationStack {
+                AddExerciseToTodaySheet(
+                    onExerciseAdded: {
+                        showAddToTodayPicker = false
+                        Task { await viewModel.fetchTodaySession() }
+                    }
+                )
+            }
+        }
         // Use item: pattern to avoid SwiftUI state race condition
         .fullScreenCover(item: $createdManualSession) { (session: ManualSession) in
             if let patientId = appState.userId {
@@ -218,43 +229,47 @@ struct TodaySessionView: View {
                 // BUILD 116 - Readiness Section (Agent 18)
                 readinessSection
 
-                // BUILD 124: Start Workout Button with Running Clock
-                if let session = viewModel.session, !session.isCompleted {
-                    startWorkoutSection
-                }
-
-                // Session Header
-                if let session = viewModel.session {
-                    sessionHeaderView(session)
-                }
-
-                // Exercise List
-                if viewModel.exercises.isEmpty {
-                    Text("No exercises in this session")
-                        .foregroundColor(.secondary)
-                        .padding()
+                // BUILD 215: Show completed view when session is done
+                if let session = viewModel.session, session.isCompleted {
+                    sessionCompletedView
                 } else {
-                    VStack(spacing: 12) {
-                        ForEach(viewModel.exercises) { exercise in
-                            // BUILD 120: Use ExerciseCompactRow for inline editing
-                            ExerciseCompactRow(
-                                exercise: exercise,
-                                isCompleted: Binding(
-                                    get: { completedExercises[exercise.id] ?? false },
-                                    set: { completedExercises[exercise.id] = $0 }
-                                ),
-                                isExpanded: Binding(
-                                    get: { expandedExercises[exercise.id] ?? false },
-                                    set: { expandedExercises[exercise.id] = $0 }
+                    // BUILD 124: Start Workout Button with Running Clock
+                    if let session = viewModel.session, !session.isCompleted {
+                        startWorkoutSection
+                    }
+
+                    // Session Header
+                    if let session = viewModel.session {
+                        sessionHeaderView(session)
+                    }
+
+                    // Exercise List
+                    if viewModel.exercises.isEmpty {
+                        Text("No exercises in this session")
+                            .foregroundColor(.secondary)
+                            .padding()
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(viewModel.exercises) { exercise in
+                                // BUILD 120: Use ExerciseCompactRow for inline editing
+                                ExerciseCompactRow(
+                                    exercise: exercise,
+                                    isCompleted: Binding(
+                                        get: { completedExercises[exercise.id] ?? false },
+                                        set: { completedExercises[exercise.id] = $0 }
+                                    ),
+                                    isExpanded: Binding(
+                                        get: { expandedExercises[exercise.id] ?? false },
+                                        set: { expandedExercises[exercise.id] = $0 }
+                                    )
                                 )
-                            )
-                            .environmentObject(viewModel)
+                                .environmentObject(viewModel)
+                            }
                         }
                     }
-                }
 
-                // Build 33: Complete Session Button
-                if let session = viewModel.session, !session.isCompleted {
+                    // Build 33: Complete Session Button
+                    if let session = viewModel.session, !session.isCompleted {
                     VStack(spacing: 16) {
                         Divider()
                             .padding(.vertical, 8)
@@ -289,7 +304,8 @@ struct TodaySessionView: View {
                                 .multilineTextAlignment(.center)
                         }
                     }
-                }
+                    }
+                } // End of else block for non-completed session
 
                 Spacer()
             }
@@ -562,6 +578,136 @@ struct TodaySessionView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
+        .padding()
+    }
+
+    // MARK: - Session Completed View (BUILD 215)
+
+    @ViewBuilder
+    private var sessionCompletedView: some View {
+        VStack(spacing: 24) {
+            // Success icon and message
+            VStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 72))
+                    .foregroundColor(.green)
+
+                Text("Session Complete!")
+                    .font(.title)
+                    .bold()
+
+                if let session = viewModel.session {
+                    Text(session.name)
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                }
+
+                // Show metrics if available
+                if let session = viewModel.session {
+                    HStack(spacing: 24) {
+                        if let volume = session.total_volume, volume > 0 {
+                            VStack {
+                                Text(volume >= 1000 ? String(format: "%.1fk", volume / 1000) : "\(Int(volume))")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                Text("lbs")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        if let duration = session.duration_minutes {
+                            VStack {
+                                Text("\(duration)")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                Text("min")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        if let rpe = session.avg_rpe {
+                            VStack {
+                                Text(String(format: "%.1f", rpe))
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                Text("RPE")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
+                }
+            }
+
+            Divider()
+                .padding(.vertical, 8)
+
+            // Options for next steps
+            VStack(spacing: 12) {
+                Text("Want to do more?")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+
+                // Start another workout from library
+                Button(action: {
+                    showTemplateLibrary = true
+                }) {
+                    HStack {
+                        Image(systemName: "books.vertical.fill")
+                        Text("Browse Workout Library")
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+
+                // Create custom workout
+                Button(action: {
+                    showWorkoutCreator = true
+                }) {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Create Custom Workout")
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green.opacity(0.15))
+                    .foregroundColor(.green)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.green, lineWidth: 1)
+                    )
+                }
+
+                // View summary
+                Button(action: {
+                    if let session = viewModel.session {
+                        completedSession = session
+                        showSessionSummary = true
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "chart.bar.fill")
+                        Text("View Session Summary")
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+                }
+                .padding(.top, 8)
+            }
+        }
+        .padding(24)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         .padding()
     }
 

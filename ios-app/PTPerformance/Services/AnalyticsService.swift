@@ -131,6 +131,106 @@ class AnalyticsService {
         return sessions
     }
 
+    // MARK: - BUILD 219: Manual Workout History
+
+    /// Summary of a completed manual workout for history display
+    struct ManualWorkoutSummary: Codable, Identifiable {
+        let id: UUID
+        let name: String?
+        let completedAt: Date?
+        let createdAt: Date
+        let completed: Bool
+        let totalVolume: Double?
+        let avgRpe: Double?
+        let avgPain: Double?
+        let durationMinutes: Int?
+        let exerciseCount: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case name
+            case completedAt = "completed_at"
+            case createdAt = "created_at"
+            case completed
+            case totalVolume = "total_volume"
+            case avgRpe = "avg_rpe"
+            case avgPain = "avg_pain"
+            case durationMinutes = "duration_minutes"
+            case exerciseCount = "exercise_count"
+        }
+
+        var displayName: String {
+            name ?? "Manual Workout"
+        }
+
+        var workoutDate: Date {
+            completedAt ?? createdAt
+        }
+    }
+
+    /// Fetch recent completed manual workouts
+    func fetchRecentManualWorkouts(patientId: String, limit: Int = 10) async throws -> [ManualWorkoutSummary] {
+        // Query manual_sessions with exercise count subquery
+        let response = try await supabase.client
+            .from("manual_sessions")
+            .select("""
+                id,
+                name,
+                completed_at,
+                created_at,
+                completed,
+                total_volume,
+                avg_rpe,
+                avg_pain,
+                duration_minutes,
+                manual_session_exercises(count)
+            """)
+            .eq("patient_id", value: patientId)
+            .eq("completed", value: true)
+            .order("completed_at", ascending: false)
+            .limit(limit)
+            .execute()
+
+        // Custom decoder to handle the nested count
+        struct ManualSessionWithCount: Codable {
+            let id: UUID
+            let name: String?
+            let completed_at: Date?
+            let created_at: Date
+            let completed: Bool
+            let total_volume: Double?
+            let avg_rpe: Double?
+            let avg_pain: Double?
+            let duration_minutes: Int?
+            let manual_session_exercises: [CountResult]?
+
+            struct CountResult: Codable {
+                let count: Int
+            }
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let rawSessions = try decoder.decode([ManualSessionWithCount].self, from: response.data)
+
+        // Map to ManualWorkoutSummary
+        return rawSessions.map { raw in
+            ManualWorkoutSummary(
+                id: raw.id,
+                name: raw.name,
+                completedAt: raw.completed_at,
+                createdAt: raw.created_at,
+                completed: raw.completed,
+                totalVolume: raw.total_volume,
+                avgRpe: raw.avg_rpe,
+                avgPain: raw.avg_pain,
+                durationMinutes: raw.duration_minutes,
+                exerciseCount: raw.manual_session_exercises?.first?.count
+            )
+        }
+    }
+
     /// Fetch summary statistics
     func fetchSummaryStats(patientId: String) async throws -> SummaryStats {
         // Fetch adherence
