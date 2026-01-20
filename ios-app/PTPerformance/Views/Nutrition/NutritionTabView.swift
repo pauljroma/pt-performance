@@ -10,6 +10,9 @@ import SwiftUI
 /// Main entry point for the Nutrition tab
 struct NutritionTabView: View {
     @State private var selectedSection: NutritionSection = .dashboard
+    @State private var showLogMeal = false
+    @State private var showSetGoals = false
+    @State private var showHistory = false
 
     init() {
         DebugLogger.shared.info("NUTRITION TAB", "NutritionTabView initialized")
@@ -39,19 +42,19 @@ struct NutritionTabView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button {
-                            // Quick log action
+                            showLogMeal = true
                         } label: {
                             Label("Log Meal", systemImage: "plus.circle")
                         }
 
                         Button {
-                            // Set goals action
+                            showSetGoals = true
                         } label: {
                             Label("Set Goals", systemImage: "target")
                         }
 
                         Button {
-                            // View history action
+                            showHistory = true
                         } label: {
                             Label("View History", systemImage: "clock")
                         }
@@ -59,6 +62,15 @@ struct NutritionTabView: View {
                         Image(systemName: "ellipsis.circle")
                     }
                 }
+            }
+            .sheet(isPresented: $showLogMeal) {
+                QuickLogMealSheet()
+            }
+            .sheet(isPresented: $showSetGoals) {
+                NutritionGoalsView()
+            }
+            .sheet(isPresented: $showHistory) {
+                NutritionHistoryView()
             }
         }
     }

@@ -236,11 +236,17 @@ struct MealPlanView: View {
                     .padding()
             } else {
                 ForEach(mealPlans) { plan in
-                    MealPlanRow(plan: plan, isActive: plan.id == activePlan?.id) {
-                        Task {
-                            await activatePlan(plan)
+                    NavigationLink(destination: MealPlanDetailView(plan: plan)) {
+                        MealPlanRowWithActivate(
+                            plan: plan,
+                            isActive: plan.id == activePlan?.id
+                        ) {
+                            Task {
+                                await activatePlan(plan)
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -327,9 +333,9 @@ struct PlanStat: View {
     }
 }
 
-// MARK: - Meal Plan Row
+// MARK: - Meal Plan Row with Activate
 
-struct MealPlanRow: View {
+struct MealPlanRowWithActivate: View {
     let plan: MealPlan
     let isActive: Bool
     let onActivate: () -> Void
@@ -353,9 +359,15 @@ struct MealPlanRow: View {
                     }
                 }
 
-                Text("\(plan.items?.count ?? 0) meals")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack {
+                    Text("\(plan.items?.count ?? 0) meals")
+                    if plan.totalCalories > 0 {
+                        Text("•")
+                        Text("\(plan.totalCalories) cal")
+                    }
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
             }
 
             Spacer()
@@ -367,6 +379,10 @@ struct MealPlanRow: View {
                 .font(.caption)
                 .foregroundColor(.blue)
             }
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(.systemGray6))

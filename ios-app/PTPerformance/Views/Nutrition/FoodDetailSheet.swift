@@ -174,19 +174,19 @@ struct FoodDetailSheet: View {
 
             // Macros
             HStack(spacing: 20) {
-                MacroCircle(
+                FoodMacroCircle(
                     title: "Protein",
                     value: totalProtein,
                     color: .red
                 )
 
-                MacroCircle(
+                FoodMacroCircle(
                     title: "Carbs",
                     value: totalCarbs,
                     color: .blue
                 )
 
-                MacroCircle(
+                FoodMacroCircle(
                     title: "Fat",
                     value: totalFat,
                     color: .yellow
@@ -224,9 +224,9 @@ struct FoodDetailSheet: View {
     }
 }
 
-// MARK: - Macro Circle
+// MARK: - Food Macro Circle
 
-struct MacroCircle: View {
+struct FoodMacroCircle: View {
     let title: String
     let value: Double
     let color: Color
