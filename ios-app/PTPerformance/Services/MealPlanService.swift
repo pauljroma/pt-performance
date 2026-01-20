@@ -106,53 +106,60 @@ class MealPlanService {
     func fetchMealPlans(patientId: String, includeInactive: Bool = false) async throws -> [MealPlan] {
         logger.info("MEAL PLAN", "Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
 
+        // Build query fresh (don't reuse query builders)
+        let response: PostgrestResponse<Data>
         do {
-            // Build query with filters applied before transforms
-            let baseQuery = supabase.client
-                .from("meal_plans")
-                .select("*, meal_plan_items(*)")
-                .eq("patient_id", value: patientId)
-
-            let response: PostgrestResponse<Data>
             if includeInactive {
-                response = try await baseQuery
+                logger.info("MEAL PLAN", "Query: meal_plans with patient_id=\(patientId), all statuses")
+                response = try await supabase.client
+                    .from("meal_plans")
+                    .select("*, meal_plan_items(*)")
+                    .eq("patient_id", value: patientId)
                     .order("created_at", ascending: false)
                     .execute()
             } else {
-                response = try await baseQuery
+                logger.info("MEAL PLAN", "Query: meal_plans with patient_id=\(patientId), active only")
+                response = try await supabase.client
+                    .from("meal_plans")
+                    .select("*, meal_plan_items(*)")
+                    .eq("patient_id", value: patientId)
                     .eq("is_active", value: true)
                     .order("created_at", ascending: false)
                     .execute()
             }
-
-            if let json = String(data: response.data, encoding: .utf8) {
-                logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
-            }
-
-            let decoder = createFlexibleDecoder()
-            do {
-                let plans = try decoder.decode([MealPlan].self, from: response.data)
-                logger.success("MEAL PLAN", "Fetched \(plans.count) meal plans")
-                return plans
-            } catch let decodingError as DecodingError {
-                let errorMsg: String
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    errorMsg = "Key '\(key.stringValue)' not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-                case .typeMismatch(let type, let context):
-                    errorMsg = "Type mismatch for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-                case .valueNotFound(let type, let context):
-                    errorMsg = "Value of type \(type) not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
-                case .dataCorrupted(let context):
-                    errorMsg = "Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)"
-                @unknown default:
-                    errorMsg = "Unknown: \(decodingError)"
-                }
-                logger.error("MEAL PLAN", "DECODING ERROR: \(errorMsg)")
-                throw decodingError
-            }
+            logger.info("MEAL PLAN", "Query executed successfully, data size: \(response.data.count) bytes")
         } catch {
-            logger.error("MEAL PLAN", "Non-decoding error: \(error)")
+            logger.error("MEAL PLAN", "Query execution failed: \(error)")
+            throw error
+        }
+
+        if let json = String(data: response.data, encoding: .utf8) {
+            logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
+        }
+
+        let decoder = createFlexibleDecoder()
+        do {
+            let plans = try decoder.decode([MealPlan].self, from: response.data)
+            logger.success("MEAL PLAN", "Fetched \(plans.count) meal plans")
+            return plans
+        } catch let decodingError as DecodingError {
+            let errorMsg: String
+            switch decodingError {
+            case .keyNotFound(let key, let context):
+                errorMsg = "Key '\(key.stringValue)' not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+            case .typeMismatch(let type, let context):
+                errorMsg = "Type mismatch for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+            case .valueNotFound(let type, let context):
+                errorMsg = "Value of type \(type) not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
+            case .dataCorrupted(let context):
+                errorMsg = "Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)"
+            @unknown default:
+                errorMsg = "Unknown: \(decodingError)"
+            }
+            logger.error("MEAL PLAN", "DECODING ERROR: \(errorMsg)")
+            throw decodingError
+        } catch {
+            logger.error("MEAL PLAN", "Non-decoding error during decode: \(error)")
             throw error
         }
     }
