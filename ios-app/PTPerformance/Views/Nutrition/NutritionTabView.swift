@@ -11,7 +11,12 @@ import SwiftUI
 struct NutritionTabView: View {
     @State private var selectedSection: NutritionSection = .dashboard
 
+    init() {
+        DebugLogger.shared.info("NUTRITION TAB", "NutritionTabView initialized")
+    }
+
     var body: some View {
+        let _ = DebugLogger.shared.info("NUTRITION TAB", "Rendering body, section: \(selectedSection.title)")
         NavigationStack {
             VStack(spacing: 0) {
                 // Section Picker

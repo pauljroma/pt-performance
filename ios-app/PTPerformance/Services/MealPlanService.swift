@@ -100,11 +100,11 @@ class MealPlanService {
 
     // MARK: - Meal Plans
 
+    private let logger = DebugLogger.shared
+
     /// Fetch all meal plans for a patient
     func fetchMealPlans(patientId: String, includeInactive: Bool = false) async throws -> [MealPlan] {
-        #if DEBUG
-        print("🍎 [MEAL PLAN] Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
-        #endif
+        logger.info("MEAL PLAN", "Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
 
         do {
             // Build query with filters applied before transforms
@@ -125,46 +125,34 @@ class MealPlanService {
                     .execute()
             }
 
-            #if DEBUG
             if let json = String(data: response.data, encoding: .utf8) {
-                print("🍎 [MEAL PLAN] Raw JSON response (full):")
-                print(json)
+                logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
             }
-            #endif
 
             let decoder = createFlexibleDecoder()
             do {
                 let plans = try decoder.decode([MealPlan].self, from: response.data)
-                #if DEBUG
-                print("🍎 [MEAL PLAN] ✓ Fetched \(plans.count) meal plans")
-                #endif
+                logger.success("MEAL PLAN", "Fetched \(plans.count) meal plans")
                 return plans
             } catch let decodingError as DecodingError {
-                #if DEBUG
-                print("🍎 [MEAL PLAN] ✗ DECODING ERROR:")
+                let errorMsg: String
                 switch decodingError {
                 case .keyNotFound(let key, let context):
-                    print("  Key '\(key.stringValue)' not found: \(context.debugDescription)")
-                    print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    errorMsg = "Key '\(key.stringValue)' not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
                 case .typeMismatch(let type, let context):
-                    print("  Type mismatch for \(type): \(context.debugDescription)")
-                    print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    errorMsg = "Type mismatch for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
                 case .valueNotFound(let type, let context):
-                    print("  Value of type \(type) not found: \(context.debugDescription)")
-                    print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    errorMsg = "Value of type \(type) not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
                 case .dataCorrupted(let context):
-                    print("  Data corrupted: \(context.debugDescription)")
-                    print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                    errorMsg = "Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)"
                 @unknown default:
-                    print("  Unknown decoding error: \(decodingError)")
+                    errorMsg = "Unknown: \(decodingError)"
                 }
-                #endif
+                logger.error("MEAL PLAN", "DECODING ERROR: \(errorMsg)")
                 throw decodingError
             }
         } catch {
-            #if DEBUG
-            print("🍎 [MEAL PLAN] ✗ Non-decoding error: \(error)")
-            #endif
+            logger.error("MEAL PLAN", "Non-decoding error: \(error)")
             throw error
         }
     }
@@ -185,9 +173,7 @@ class MealPlanService {
 
     /// Fetch active meal plan for a patient
     func fetchActiveMealPlan(patientId: String) async throws -> MealPlan? {
-        #if DEBUG
-        print("🍎 [MEAL PLAN] Fetching active meal plan for patient: \(patientId)")
-        #endif
+        logger.info("MEAL PLAN", "Fetching active meal plan for patient: \(patientId)")
 
         let response = try await supabase.client
             .from("meal_plans")
@@ -198,40 +184,30 @@ class MealPlanService {
             .limit(1)
             .execute()
 
-        #if DEBUG
         if let json = String(data: response.data, encoding: .utf8) {
-            print("🍎 [MEAL PLAN] Active plan raw JSON:")
-            print(json)
+            logger.info("MEAL PLAN", "Active plan JSON: \(json.prefix(500))")
         }
-        #endif
 
         let decoder = createFlexibleDecoder()
         do {
             let plans = try decoder.decode([MealPlan].self, from: response.data)
-            #if DEBUG
-            print("🍎 [MEAL PLAN] ✓ Active plan: \(plans.first?.name ?? "none")")
-            #endif
+            logger.success("MEAL PLAN", "Active plan: \(plans.first?.name ?? "none")")
             return plans.first
         } catch let decodingError as DecodingError {
-            #if DEBUG
-            print("🍎 [MEAL PLAN] ✗ ACTIVE PLAN DECODING ERROR:")
+            let errorMsg: String
             switch decodingError {
             case .keyNotFound(let key, let context):
-                print("  Key '\(key.stringValue)' not found: \(context.debugDescription)")
-                print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                errorMsg = "Key '\(key.stringValue)' not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
             case .typeMismatch(let type, let context):
-                print("  Type mismatch for \(type): \(context.debugDescription)")
-                print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                errorMsg = "Type mismatch for \(type) at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
             case .valueNotFound(let type, let context):
-                print("  Value of type \(type) not found: \(context.debugDescription)")
-                print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                errorMsg = "Value of type \(type) not found at \(context.codingPath.map { $0.stringValue }.joined(separator: "."))"
             case .dataCorrupted(let context):
-                print("  Data corrupted: \(context.debugDescription)")
-                print("  Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))")
+                errorMsg = "Data corrupted at \(context.codingPath.map { $0.stringValue }.joined(separator: ".")): \(context.debugDescription)"
             @unknown default:
-                print("  Unknown decoding error: \(decodingError)")
+                errorMsg = "Unknown: \(decodingError)"
             }
-            #endif
+            logger.error("MEAL PLAN", "ACTIVE PLAN DECODING ERROR: \(errorMsg)")
             throw decodingError
         }
     }

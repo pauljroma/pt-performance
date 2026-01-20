@@ -21,6 +21,10 @@ struct MealPlanView: View {
     private let mealPlanService = MealPlanService.shared
     private let supabase = PTSupabaseClient.shared
 
+    init() {
+        DebugLogger.shared.info("MEAL PLAN VIEW", "MealPlanView initialized")
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -245,7 +249,14 @@ struct MealPlanView: View {
     // MARK: - Data Loading
 
     private func loadData() async {
-        guard let patientId = supabase.userId else { return }
+        DebugLogger.shared.info("MEAL PLAN VIEW", "loadData() called")
+
+        guard let patientId = supabase.userId else {
+            DebugLogger.shared.error("MEAL PLAN VIEW", "No patient ID - user not logged in")
+            return
+        }
+
+        DebugLogger.shared.info("MEAL PLAN VIEW", "Loading data for patient: \(patientId)")
 
         isLoading = true
 
@@ -260,8 +271,11 @@ struct MealPlanView: View {
             activePlan = active
             todaysMeals = todays
 
+            DebugLogger.shared.success("MEAL PLAN VIEW", "Loaded \(plans.count) plans, active: \(active?.name ?? "none"), today's meals: \(todays.count)")
+
             isLoading = false
         } catch {
+            DebugLogger.shared.error("MEAL PLAN VIEW", "Error loading data: \(error)")
             self.error = "Failed to load meal plans: \(error.localizedDescription)"
             self.showError = true
             isLoading = false
