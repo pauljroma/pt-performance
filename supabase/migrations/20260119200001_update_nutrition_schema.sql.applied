@@ -1,0 +1,218 @@
+-- Migration: Update nutrition_logs schema and create views
+-- Created: 2026-01-19
+-- Description: Add missing columns to nutrition_logs/nutrition_goals and create analytics views
+
+-- Create nutrition_goals table if it doesn't exist
+CREATE TABLE IF NOT EXISTS nutrition_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID NOT NULL,
+    goal_type TEXT NOT NULL DEFAULT 'daily',
+    target_calories INT,
+    target_protein_g DOUBLE PRECISION,
+    target_carbs_g DOUBLE PRECISION,
+    target_fat_g DOUBLE PRECISION,
+    target_fiber_g DOUBLE PRECISION,
+    target_water_ml INT,
+    protein_per_kg DOUBLE PRECISION,
+    active BOOLEAN DEFAULT TRUE,
+    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    end_date DATE,
+    notes TEXT,
+    created_by UUID,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add missing columns to nutrition_goals (if table existed with different schema)
+DO $$
+BEGIN
+    -- Add target_calories if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_goals' AND column_name = 'target_calories') THEN
+        ALTER TABLE nutrition_goals ADD COLUMN target_calories INT;
+    END IF;
+
+    -- Add target_protein_g if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_goals' AND column_name = 'target_protein_g') THEN
+        ALTER TABLE nutrition_goals ADD COLUMN target_protein_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add target_carbs_g if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_goals' AND column_name = 'target_carbs_g') THEN
+        ALTER TABLE nutrition_goals ADD COLUMN target_carbs_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add target_fat_g if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_goals' AND column_name = 'target_fat_g') THEN
+        ALTER TABLE nutrition_goals ADD COLUMN target_fat_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add active if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_goals' AND column_name = 'active') THEN
+        ALTER TABLE nutrition_goals ADD COLUMN active BOOLEAN DEFAULT TRUE;
+    END IF;
+END $$;
+
+-- Enable RLS on nutrition_goals if not already enabled
+ALTER TABLE nutrition_goals ENABLE ROW LEVEL SECURITY;
+
+-- Grant permissions on nutrition_goals
+GRANT SELECT, INSERT, UPDATE, DELETE ON nutrition_goals TO authenticated;
+
+-- Add missing columns to nutrition_logs (if they don't exist)
+DO $$
+BEGIN
+    -- Add food_items JSONB column
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'food_items') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN food_items JSONB DEFAULT '[]';
+    END IF;
+
+    -- Add total_calories (alias for calories)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'total_calories') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN total_calories INT;
+    END IF;
+
+    -- Add total_protein_g
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'total_protein_g') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN total_protein_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add total_carbs_g
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'total_carbs_g') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN total_carbs_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add total_fat_g
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'total_fat_g') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN total_fat_g DOUBLE PRECISION;
+    END IF;
+
+    -- Add total_fiber_g
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'nutrition_logs' AND column_name = 'total_fiber_g') THEN
+        ALTER TABLE nutrition_logs ADD COLUMN total_fiber_g DOUBLE PRECISION;
+    END IF;
+END $$;
+
+-- Sync existing data: copy values from old columns to new columns where new columns are null
+UPDATE nutrition_logs
+SET
+    total_calories = COALESCE(total_calories, calories),
+    total_protein_g = COALESCE(total_protein_g, protein_grams::double precision, protein::double precision),
+    total_carbs_g = COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision),
+    total_fat_g = COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)
+WHERE total_calories IS NULL OR total_protein_g IS NULL OR total_carbs_g IS NULL OR total_fat_g IS NULL;
+
+-- Daily nutrition summary view (uses log_date which always exists)
+CREATE OR REPLACE VIEW vw_daily_nutrition AS
+SELECT
+    patient_id::text as patient_id,
+    log_date as log_date,
+    COUNT(*) as meal_count,
+    COALESCE(SUM(COALESCE(total_calories, calories)), 0)::bigint as total_calories,
+    COALESCE(SUM(COALESCE(total_protein_g, protein_grams::double precision, protein::double precision)), 0) as total_protein_g,
+    COALESCE(SUM(COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision)), 0) as total_carbs_g,
+    COALESCE(SUM(COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)), 0) as total_fat_g,
+    COALESCE(SUM(total_fiber_g), 0) as total_fiber_g
+FROM nutrition_logs
+GROUP BY patient_id, log_date;
+
+ALTER VIEW vw_daily_nutrition SET (security_invoker = on);
+GRANT SELECT ON vw_daily_nutrition TO authenticated;
+
+-- Weekly nutrition trend view
+CREATE OR REPLACE VIEW vw_nutrition_trend AS
+SELECT
+    patient_id::text as patient_id,
+    DATE_TRUNC('week', log_date)::date as week_start,
+    COUNT(DISTINCT log_date) as days_logged,
+    COALESCE(AVG(daily.total_calories), 0) as avg_daily_calories,
+    COALESCE(AVG(daily.total_protein_g), 0) as avg_daily_protein_g,
+    COALESCE(AVG(daily.total_carbs_g), 0) as avg_daily_carbs_g,
+    COALESCE(AVG(daily.total_fat_g), 0) as avg_daily_fat_g
+FROM (
+    SELECT
+        patient_id,
+        log_date,
+        DATE_TRUNC('week', log_date) as week_start,
+        SUM(COALESCE(total_calories, calories)) as total_calories,
+        SUM(COALESCE(total_protein_g, protein_grams::double precision, protein::double precision)) as total_protein_g,
+        SUM(COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision)) as total_carbs_g,
+        SUM(COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)) as total_fat_g
+    FROM nutrition_logs
+    GROUP BY patient_id, log_date
+) daily
+GROUP BY patient_id, DATE_TRUNC('week', log_date);
+
+ALTER VIEW vw_nutrition_trend SET (security_invoker = on);
+GRANT SELECT ON vw_nutrition_trend TO authenticated;
+
+-- Goal progress view
+CREATE OR REPLACE VIEW vw_nutrition_goal_progress AS
+SELECT
+    ng.patient_id::text as patient_id,
+    ng.id::text as goal_id,
+    ng.target_calories,
+    ng.target_protein_g,
+    ng.target_carbs_g,
+    ng.target_fat_g,
+    COALESCE(today.total_calories, 0)::bigint as consumed_calories,
+    COALESCE(today.total_protein_g, 0) as consumed_protein_g,
+    COALESCE(today.total_carbs_g, 0) as consumed_carbs_g,
+    COALESCE(today.total_fat_g, 0) as consumed_fat_g,
+    CASE WHEN ng.target_calories > 0
+        THEN ROUND((COALESCE(today.total_calories, 0)::numeric / ng.target_calories) * 100, 1)
+        ELSE 0
+    END as calories_percent,
+    CASE WHEN ng.target_protein_g > 0
+        THEN ROUND(((COALESCE(today.total_protein_g, 0) / ng.target_protein_g) * 100)::numeric, 1)
+        ELSE 0
+    END as protein_percent
+FROM nutrition_goals ng
+LEFT JOIN (
+    SELECT
+        patient_id,
+        SUM(COALESCE(total_calories, calories)) as total_calories,
+        SUM(COALESCE(total_protein_g, protein_grams::double precision, protein::double precision)) as total_protein_g,
+        SUM(COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision)) as total_carbs_g,
+        SUM(COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)) as total_fat_g
+    FROM nutrition_logs
+    WHERE log_date = CURRENT_DATE
+    GROUP BY patient_id
+) today ON ng.patient_id = today.patient_id
+WHERE ng.active = TRUE;
+
+ALTER VIEW vw_nutrition_goal_progress SET (security_invoker = on);
+GRANT SELECT ON vw_nutrition_goal_progress TO authenticated;
+
+-- Macro distribution view (for pie charts)
+CREATE OR REPLACE VIEW vw_macro_distribution AS
+SELECT
+    patient_id::text as patient_id,
+    log_date as log_date,
+    COALESCE(SUM(COALESCE(total_protein_g, protein_grams::double precision, protein::double precision)) * 4, 0) as protein_calories,
+    COALESCE(SUM(COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision)) * 4, 0) as carbs_calories,
+    COALESCE(SUM(COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)) * 9, 0) as fat_calories,
+    CASE WHEN COALESCE(SUM(COALESCE(total_calories, calories)), 0) > 0 THEN
+        ROUND(((SUM(COALESCE(total_protein_g, protein_grams::double precision, protein::double precision)) * 4 / NULLIF(SUM(COALESCE(total_calories, calories)), 0)) * 100)::numeric, 1)
+    ELSE 0 END as protein_percent,
+    CASE WHEN COALESCE(SUM(COALESCE(total_calories, calories)), 0) > 0 THEN
+        ROUND(((SUM(COALESCE(total_carbs_g, carbs_grams::double precision, carbs::double precision)) * 4 / NULLIF(SUM(COALESCE(total_calories, calories)), 0)) * 100)::numeric, 1)
+    ELSE 0 END as carbs_percent,
+    CASE WHEN COALESCE(SUM(COALESCE(total_calories, calories)), 0) > 0 THEN
+        ROUND(((SUM(COALESCE(total_fat_g, fats_grams::double precision, fats::double precision)) * 9 / NULLIF(SUM(COALESCE(total_calories, calories)), 0)) * 100)::numeric, 1)
+    ELSE 0 END as fat_percent
+FROM nutrition_logs
+GROUP BY patient_id, log_date;
+
+ALTER VIEW vw_macro_distribution SET (security_invoker = on);
+GRANT SELECT ON vw_macro_distribution TO authenticated;
