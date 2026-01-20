@@ -149,37 +149,82 @@ class NutritionDashboardViewModel: ObservableObject {
 
         isLoading = true
 
+        #if DEBUG
+        print("🍎 [NUTRITION VM] Loading dashboard for patient: \(patientId)")
+        #endif
+
+        // Load each component individually to prevent one failure from stopping others
         do {
-            // Load all dashboard data concurrently
-            async let summaryTask = nutritionService.fetchDailySummary(patientId: patientId, date: Date())
-            async let progressTask = nutritionService.fetchGoalProgress(patientId: patientId)
-            async let trendsTask = nutritionService.fetchWeeklyTrends(patientId: patientId, weeks: 4)
-            async let logsTask = nutritionService.fetchTodaysLogs(patientId: patientId)
-            async let macroTask = nutritionService.fetchMacroDistribution(patientId: patientId, date: Date())
-            async let goalTask = nutritionService.fetchActiveGoal(patientId: patientId)
-
-            let (summary, progress, trends, logs, macro, goal) = try await (
-                summaryTask,
-                progressTask,
-                trendsTask,
-                logsTask,
-                macroTask,
-                goalTask
-            )
-
-            todaySummary = summary
-            goalProgress = progress
-            weeklyTrends = trends
-            todaysLogs = logs
-            macroDistribution = macro
-            activeGoal = goal
-
-            isLoading = false
+            todaySummary = try await nutritionService.fetchDailySummary(patientId: patientId, date: Date())
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Daily summary loaded")
+            #endif
         } catch {
-            self.error = "Failed to load nutrition data: \(error.localizedDescription)"
-            self.showError = true
-            isLoading = false
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Daily summary error: \(error)")
+            #endif
         }
+
+        do {
+            goalProgress = try await nutritionService.fetchGoalProgress(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Goal progress loaded")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Goal progress error: \(error)")
+            #endif
+        }
+
+        do {
+            weeklyTrends = try await nutritionService.fetchWeeklyTrends(patientId: patientId, weeks: 4)
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Weekly trends loaded: \(weeklyTrends.count) weeks")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Weekly trends error: \(error)")
+            #endif
+        }
+
+        do {
+            todaysLogs = try await nutritionService.fetchTodaysLogs(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Today's logs loaded: \(todaysLogs.count) logs")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Today's logs error: \(error)")
+            #endif
+        }
+
+        do {
+            macroDistribution = try await nutritionService.fetchMacroDistribution(patientId: patientId, date: Date())
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Macro distribution loaded")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Macro distribution error: \(error)")
+            #endif
+        }
+
+        do {
+            activeGoal = try await nutritionService.fetchActiveGoal(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Active goal loaded")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Active goal error: \(error)")
+            #endif
+        }
+
+        #if DEBUG
+        print("🍎 [NUTRITION VM] Dashboard load complete")
+        #endif
+
+        isLoading = false
     }
 
     // MARK: - Quick Log Actions

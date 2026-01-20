@@ -46,6 +46,51 @@ class NutritionService {
 
     private init() {}
 
+    // MARK: - Flexible JSON Decoder
+
+    /// Decoder that handles both ISO8601 and simple date formats
+    private func flexibleDecode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try ISO8601 with fractional seconds
+            let isoFormatter = ISO8601DateFormatter()
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try ISO8601 without fractional seconds
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try simple date format (yyyy-MM-dd)
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
+        }
+
+        do {
+            return try decoder.decode(type, from: data)
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] Decode error: \(error)")
+            if let json = String(data: data, encoding: .utf8) {
+                print("🍎 [NUTRITION] Failed JSON: \(json)")
+            }
+            #endif
+            throw error
+        }
+    }
+
     // MARK: - Nutrition Logs
 
     /// Fetch nutrition logs for a patient within a date range
@@ -213,6 +258,10 @@ class NutritionService {
 
     /// Fetch current goal progress from view
     func fetchGoalProgress(patientId: String) async throws -> NutritionGoalProgress? {
+        #if DEBUG
+        print("🍎 [NUTRITION] Fetching goal progress for patient: \(patientId)")
+        #endif
+
         let response = try await supabase.client
             .from("vw_nutrition_goal_progress")
             .select()
@@ -220,8 +269,13 @@ class NutritionService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        let progress = try decoder.decode([NutritionGoalProgress].self, from: response.data)
+        #if DEBUG
+        if let json = String(data: response.data, encoding: .utf8) {
+            print("🍎 [NUTRITION] Goal progress response: \(json)")
+        }
+        #endif
+
+        let progress = try flexibleDecode([NutritionGoalProgress].self, from: response.data)
         return progress.first
     }
 
@@ -229,24 +283,56 @@ class NutritionService {
 
     /// Fetch daily nutrition summary
     func fetchDailySummary(patientId: String, date: Date) async throws -> DailyNutritionSummary? {
-        let dateStr = ISO8601DateFormatter().string(from: date).prefix(10)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateStr = dateFormatter.string(from: date)
+
+        #if DEBUG
+        print("🍎 [NUTRITION] Fetching daily summary for patient: \(patientId), date: \(dateStr)")
+        #endif
 
         let response = try await supabase.client
             .from("vw_daily_nutrition")
             .select()
             .eq("patient_id", value: patientId)
-            .eq("log_date", value: String(dateStr))
+            .eq("log_date", value: dateStr)
             .limit(1)
             .execute()
 
+        #if DEBUG
+        if let json = String(data: response.data, encoding: .utf8) {
+            print("🍎 [NUTRITION] Daily summary response: \(json)")
+        }
+        #endif
+
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        // Use flexible date decoding for date-only fields
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try ISO8601 first
+            if let date = ISO8601DateFormatter().date(from: dateString) {
+                return date
+            }
+            // Try simple date format
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
+        }
         let summaries = try decoder.decode([DailyNutritionSummary].self, from: response.data)
         return summaries.first
     }
 
     /// Fetch weekly nutrition trends
     func fetchWeeklyTrends(patientId: String, weeks: Int = 4) async throws -> [WeeklyNutritionTrend] {
+        #if DEBUG
+        print("🍎 [NUTRITION] Fetching weekly trends for patient: \(patientId)")
+        #endif
+
         let response = try await supabase.client
             .from("vw_nutrition_trend")
             .select()
@@ -255,26 +341,40 @@ class NutritionService {
             .limit(weeks)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([WeeklyNutritionTrend].self, from: response.data)
+        #if DEBUG
+        if let json = String(data: response.data, encoding: .utf8) {
+            print("🍎 [NUTRITION] Weekly trends response: \(json)")
+        }
+        #endif
+
+        return try flexibleDecode([WeeklyNutritionTrend].self, from: response.data)
     }
 
     /// Fetch macro distribution for a date
     func fetchMacroDistribution(patientId: String, date: Date) async throws -> MacroDistribution? {
-        let dateStr = ISO8601DateFormatter().string(from: date).prefix(10)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateStr = dateFormatter.string(from: date)
+
+        #if DEBUG
+        print("🍎 [NUTRITION] Fetching macro distribution for patient: \(patientId), date: \(dateStr)")
+        #endif
 
         let response = try await supabase.client
             .from("vw_macro_distribution")
             .select()
             .eq("patient_id", value: patientId)
-            .eq("log_date", value: String(dateStr))
+            .eq("log_date", value: dateStr)
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let distributions = try decoder.decode([MacroDistribution].self, from: response.data)
+        #if DEBUG
+        if let json = String(data: response.data, encoding: .utf8) {
+            print("🍎 [NUTRITION] Macro distribution response: \(json)")
+        }
+        #endif
+
+        let distributions = try flexibleDecode([MacroDistribution].self, from: response.data)
         return distributions.first
     }
 
@@ -282,18 +382,82 @@ class NutritionService {
 
     /// Fetch all data needed for nutrition dashboard
     func fetchDashboardData(patientId: String) async throws -> NutritionDashboardData {
-        async let todaySummary = fetchDailySummary(patientId: patientId, date: Date())
-        async let goalProgress = fetchGoalProgress(patientId: patientId)
-        async let weeklyTrend = fetchWeeklyTrends(patientId: patientId, weeks: 4)
-        async let recentLogs = fetchTodaysLogs(patientId: patientId)
-        async let macroDistribution = fetchMacroDistribution(patientId: patientId, date: Date())
+        #if DEBUG
+        print("🍎 [NUTRITION] Starting dashboard data fetch for patient: \(patientId)")
+        #endif
 
-        return try await NutritionDashboardData(
-            todaySummary: todaySummary,
-            goalProgress: goalProgress,
-            weeklyTrend: weeklyTrend,
-            recentLogs: recentLogs,
-            macroDistribution: macroDistribution
+        // Fetch each component separately with error logging
+        var todaySummaryResult: DailyNutritionSummary?
+        var goalProgressResult: NutritionGoalProgress?
+        var weeklyTrendResult: [WeeklyNutritionTrend] = []
+        var recentLogsResult: [NutritionLog] = []
+        var macroDistributionResult: MacroDistribution?
+
+        do {
+            todaySummaryResult = try await fetchDailySummary(patientId: patientId, date: Date())
+            #if DEBUG
+            print("🍎 [NUTRITION] ✓ Daily summary fetched")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] ✗ Daily summary error: \(error)")
+            #endif
+        }
+
+        do {
+            goalProgressResult = try await fetchGoalProgress(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION] ✓ Goal progress fetched")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] ✗ Goal progress error: \(error)")
+            #endif
+        }
+
+        do {
+            weeklyTrendResult = try await fetchWeeklyTrends(patientId: patientId, weeks: 4)
+            #if DEBUG
+            print("🍎 [NUTRITION] ✓ Weekly trends fetched: \(weeklyTrendResult.count) weeks")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] ✗ Weekly trends error: \(error)")
+            #endif
+        }
+
+        do {
+            recentLogsResult = try await fetchTodaysLogs(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION] ✓ Today's logs fetched: \(recentLogsResult.count) logs")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] ✗ Today's logs error: \(error)")
+            #endif
+        }
+
+        do {
+            macroDistributionResult = try await fetchMacroDistribution(patientId: patientId, date: Date())
+            #if DEBUG
+            print("🍎 [NUTRITION] ✓ Macro distribution fetched")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION] ✗ Macro distribution error: \(error)")
+            #endif
+        }
+
+        #if DEBUG
+        print("🍎 [NUTRITION] Dashboard data fetch complete")
+        #endif
+
+        return NutritionDashboardData(
+            todaySummary: todaySummaryResult,
+            goalProgress: goalProgressResult,
+            weeklyTrend: weeklyTrendResult,
+            recentLogs: recentLogsResult,
+            macroDistribution: macroDistributionResult
         )
     }
 }
