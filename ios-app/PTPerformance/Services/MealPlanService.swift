@@ -3,10 +3,62 @@
 //  PTPerformance
 //
 //  BUILD 222: Nutrition Module - Meal planning service
+//  BUILD 228: Fixed flexible date decoding for DATE vs TIMESTAMPTZ columns
 //
 
 import Foundation
 import Supabase
+
+// MARK: - Flexible Date Decoder
+
+/// Creates a decoder that handles both ISO8601 timestamps and "yyyy-MM-dd" date formats
+private func createFlexibleDecoder() -> JSONDecoder {
+    let decoder = JSONDecoder()
+
+    // Custom date decoding strategy that tries multiple formats
+    decoder.dateDecodingStrategy = .custom { decoder in
+        let container = try decoder.singleValueContainer()
+        let dateString = try container.decode(String.self)
+
+        // Try ISO8601 with fractional seconds first (most common from Supabase TIMESTAMPTZ)
+        let iso8601Formatter = ISO8601DateFormatter()
+        iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = iso8601Formatter.date(from: dateString) {
+            return date
+        }
+
+        // Try ISO8601 without fractional seconds
+        iso8601Formatter.formatOptions = [.withInternetDateTime]
+        if let date = iso8601Formatter.date(from: dateString) {
+            return date
+        }
+
+        // Try "yyyy-MM-dd" format for DATE columns (start_date, end_date)
+        let dateOnlyFormatter = DateFormatter()
+        dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+        dateOnlyFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateOnlyFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        if let date = dateOnlyFormatter.date(from: dateString) {
+            return date
+        }
+
+        // Try "yyyy-MM-dd'T'HH:mm:ss" without timezone
+        let dateTimeFormatter = DateFormatter()
+        dateTimeFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateTimeFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateTimeFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        if let date = dateTimeFormatter.date(from: dateString) {
+            return date
+        }
+
+        throw DecodingError.dataCorruptedError(
+            in: container,
+            debugDescription: "Cannot decode date from: \(dateString)"
+        )
+    }
+
+    return decoder
+}
 
 // MARK: - Simple Supabase Input Models
 
@@ -79,8 +131,7 @@ class MealPlanService {
             }
             #endif
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = createFlexibleDecoder()
             let plans = try decoder.decode([MealPlan].self, from: response.data)
 
             #if DEBUG
@@ -105,8 +156,7 @@ class MealPlanService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createFlexibleDecoder()
         let plans = try decoder.decode([MealPlan].self, from: response.data)
         return plans.first
     }
@@ -122,8 +172,7 @@ class MealPlanService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createFlexibleDecoder()
         let plans = try decoder.decode([MealPlan].self, from: response.data)
         return plans.first
     }
@@ -138,8 +187,7 @@ class MealPlanService {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createFlexibleDecoder()
         return try decoder.decode(MealPlan.self, from: response.data)
     }
 
@@ -201,8 +249,7 @@ class MealPlanService {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createFlexibleDecoder()
         return try decoder.decode(MealPlanItem.self, from: response.data)
     }
 
@@ -270,8 +317,7 @@ class MealPlanService {
             .order("sequence", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createFlexibleDecoder()
         return try decoder.decode([MealPlanItem].self, from: response.data)
     }
 
