@@ -243,17 +243,40 @@ class FoodDatabaseService {
 
     /// Fetch popular system foods
     func fetchPopularFoods(limit: Int = 20) async throws -> [FoodSearchResult] {
-        let response = try await supabase.client
-            .from("food_items")
-            .select("id, name, brand, serving_size, calories, protein_g, carbs_g, fat_g, category, is_verified")
-            .eq("is_system", value: true)
-            .eq("is_verified", value: true)
-            .order("name", ascending: true)
-            .limit(limit)
-            .execute()
+        #if DEBUG
+        print("🍎 [FOOD DB] Fetching popular foods, limit: \(limit)")
+        #endif
 
-        let decoder = JSONDecoder()
-        return try decoder.decode([FoodSearchResult].self, from: response.data)
+        do {
+            let response = try await supabase.client
+                .from("food_items")
+                .select("id, name, brand, serving_size, calories, protein_g, carbs_g, fat_g, category, is_verified")
+                .eq("is_system", value: true)
+                .eq("is_verified", value: true)
+                .order("name", ascending: true)
+                .limit(limit)
+                .execute()
+
+            #if DEBUG
+            if let json = String(data: response.data, encoding: .utf8) {
+                print("🍎 [FOOD DB] Popular foods response: \(json.prefix(500))")
+            }
+            #endif
+
+            let decoder = JSONDecoder()
+            let results = try decoder.decode([FoodSearchResult].self, from: response.data)
+
+            #if DEBUG
+            print("🍎 [FOOD DB] ✓ Fetched \(results.count) popular foods")
+            #endif
+
+            return results
+        } catch {
+            #if DEBUG
+            print("🍎 [FOOD DB] ✗ Popular foods error: \(error)")
+            #endif
+            throw error
+        }
     }
 
     /// Fetch user's custom foods

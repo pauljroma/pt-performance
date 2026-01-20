@@ -50,27 +50,50 @@ class MealPlanService {
 
     /// Fetch all meal plans for a patient
     func fetchMealPlans(patientId: String, includeInactive: Bool = false) async throws -> [MealPlan] {
-        // Build query with filters applied before transforms
-        let baseQuery = supabase.client
-            .from("meal_plans")
-            .select("*, meal_plan_items(*)")
-            .eq("patient_id", value: patientId)
+        #if DEBUG
+        print("🍎 [MEAL PLAN] Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
+        #endif
 
-        let response: PostgrestResponse<Data>
-        if includeInactive {
-            response = try await baseQuery
-                .order("created_at", ascending: false)
-                .execute()
-        } else {
-            response = try await baseQuery
-                .eq("is_active", value: true)
-                .order("created_at", ascending: false)
-                .execute()
+        do {
+            // Build query with filters applied before transforms
+            let baseQuery = supabase.client
+                .from("meal_plans")
+                .select("*, meal_plan_items(*)")
+                .eq("patient_id", value: patientId)
+
+            let response: PostgrestResponse<Data>
+            if includeInactive {
+                response = try await baseQuery
+                    .order("created_at", ascending: false)
+                    .execute()
+            } else {
+                response = try await baseQuery
+                    .eq("is_active", value: true)
+                    .order("created_at", ascending: false)
+                    .execute()
+            }
+
+            #if DEBUG
+            if let json = String(data: response.data, encoding: .utf8) {
+                print("🍎 [MEAL PLAN] Response: \(json.prefix(500))")
+            }
+            #endif
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let plans = try decoder.decode([MealPlan].self, from: response.data)
+
+            #if DEBUG
+            print("🍎 [MEAL PLAN] ✓ Fetched \(plans.count) meal plans")
+            #endif
+
+            return plans
+        } catch {
+            #if DEBUG
+            print("🍎 [MEAL PLAN] ✗ Error fetching meal plans: \(error)")
+            #endif
+            throw error
         }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([MealPlan].self, from: response.data)
     }
 
     /// Fetch a single meal plan with items
