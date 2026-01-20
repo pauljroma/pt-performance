@@ -42,14 +42,11 @@ struct PatientTabView: View {
                     }
             }
 
-            // BUILD 159: Nutrition AI moved to top-level tab
-            if let patientIdString = supabase.userId,
-               let patientId = UUID(uuidString: patientIdString) {
-                NutritionRecommendationView(patientId: patientId)
-                    .tabItem {
-                        Label("Nutrition", systemImage: "fork.knife")
-                    }
-            }
+            // BUILD 223: Full Nutrition tab with dashboard, meal plans, and food library
+            NutritionTabView()
+                .tabItem {
+                    Label("Nutrition", systemImage: "fork.knife")
+                }
 
             AIChatView()
                 .tabItem {

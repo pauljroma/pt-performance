@@ -1,0 +1,15 @@
+-- Migration: Fix exercise_logs load_unit constraint
+-- Created: 2026-01-20
+-- Description: Allow 'BW' as a valid load_unit value (used for bodyweight exercises)
+
+-- Drop the existing constraint
+ALTER TABLE exercise_logs DROP CONSTRAINT IF EXISTS exercise_logs_load_unit_check;
+
+-- Add updated constraint that includes 'BW' for bodyweight
+ALTER TABLE exercise_logs ADD CONSTRAINT exercise_logs_load_unit_check
+    CHECK (load_unit IS NULL OR load_unit IN ('lbs', 'kg', 'bodyweight', 'BW', 'bands', 'plates'));
+
+-- Also update manual_session_exercises constraint to be consistent
+ALTER TABLE manual_session_exercises DROP CONSTRAINT IF EXISTS manual_session_exercises_load_unit_check;
+ALTER TABLE manual_session_exercises ADD CONSTRAINT manual_session_exercises_load_unit_check
+    CHECK (load_unit IS NULL OR load_unit IN ('lbs', 'kg', 'bodyweight', 'BW', 'bands', 'plates'));
