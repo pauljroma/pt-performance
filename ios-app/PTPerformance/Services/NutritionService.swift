@@ -100,46 +100,81 @@ class NutritionService {
         endDate: Date? = nil,
         limit: Int = 50
     ) async throws -> [NutritionLog] {
-        // Build query - apply filters before transforms
-        let baseQuery = supabase.client
-            .from("nutrition_logs")
-            .select()
-            .eq("patient_id", value: patientId)
+        // BUILD 249: Debug at function start with granular error catching
+        let logger = DebugLogger.shared
+        logger.info("FETCH LOGS", "Starting for patient: \(patientId)")
 
+        // BUILD 249: Wrap execute() in its own try-catch to isolate SDK errors
         let response: PostgrestResponse<Data>
-        if let start = startDate, let end = endDate {
-            let startStr = ISO8601DateFormatter().string(from: start)
-            let endStr = ISO8601DateFormatter().string(from: end)
-            response = try await baseQuery
-                .gte("logged_at", value: startStr)
-                .lte("logged_at", value: endStr)
-                .order("logged_at", ascending: false)
-                .limit(limit)
-                .execute()
-        } else if let start = startDate {
-            let startStr = ISO8601DateFormatter().string(from: start)
-            response = try await baseQuery
-                .gte("logged_at", value: startStr)
-                .order("logged_at", ascending: false)
-                .limit(limit)
-                .execute()
-        } else if let end = endDate {
-            let endStr = ISO8601DateFormatter().string(from: end)
-            response = try await baseQuery
-                .lte("logged_at", value: endStr)
-                .order("logged_at", ascending: false)
-                .limit(limit)
-                .execute()
-        } else {
-            response = try await baseQuery
-                .order("logged_at", ascending: false)
-                .limit(limit)
-                .execute()
+        do {
+            // Build query step by step with logging
+            logger.info("FETCH LOGS", "Building query...")
+            let baseQuery = supabase.client
+                .from("nutrition_logs")
+                .select()
+                .eq("patient_id", value: patientId)
+
+            logger.info("FETCH LOGS", "Base query built, adding filters...")
+
+            if let start = startDate, let end = endDate {
+                let startStr = ISO8601DateFormatter().string(from: start)
+                let endStr = ISO8601DateFormatter().string(from: end)
+                logger.info("FETCH LOGS", "Date range: \(startStr) to \(endStr)")
+                response = try await baseQuery
+                    .gte("logged_at", value: startStr)
+                    .lte("logged_at", value: endStr)
+                    .order("logged_at", ascending: false)
+                    .limit(limit)
+                    .execute()
+            } else if let start = startDate {
+                let startStr = ISO8601DateFormatter().string(from: start)
+                logger.info("FETCH LOGS", "Start date only: \(startStr)")
+                response = try await baseQuery
+                    .gte("logged_at", value: startStr)
+                    .order("logged_at", ascending: false)
+                    .limit(limit)
+                    .execute()
+            } else if let end = endDate {
+                let endStr = ISO8601DateFormatter().string(from: end)
+                logger.info("FETCH LOGS", "End date only: \(endStr)")
+                response = try await baseQuery
+                    .lte("logged_at", value: endStr)
+                    .order("logged_at", ascending: false)
+                    .limit(limit)
+                    .execute()
+            } else {
+                logger.info("FETCH LOGS", "No date filter")
+                response = try await baseQuery
+                    .order("logged_at", ascending: false)
+                    .limit(limit)
+                    .execute()
+            }
+            logger.success("FETCH LOGS", "Execute succeeded, data size: \(response.data.count) bytes")
+        } catch {
+            // BUILD 249: Catch SDK errors specifically
+            logger.error("FETCH LOGS", "SUPABASE EXECUTE ERROR: \(error)")
+            logger.error("FETCH LOGS", "Error type: \(type(of: error))")
+            throw error
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([NutritionLog].self, from: response.data)
+        // Log raw response
+        if let json = String(data: response.data, encoding: .utf8) {
+            logger.info("FETCH LOGS", "Raw JSON: \(json.prefix(2000))")
+        }
+
+        // Decode response
+        do {
+            logger.info("FETCH LOGS", "Decoding...")
+            let result = try flexibleDecode([NutritionLog].self, from: response.data)
+            logger.success("FETCH LOGS", "Decoded \(result.count) logs")
+            return result
+        } catch {
+            logger.error("FETCH LOGS", "DECODE ERROR: \(error)")
+            if let json = String(data: response.data, encoding: .utf8) {
+                logger.error("FETCH LOGS", "Full JSON: \(json)")
+            }
+            throw error
+        }
     }
 
     /// Fetch today's nutrition logs for a patient
@@ -201,9 +236,8 @@ class NutritionService {
             .limit(1)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let goals = try decoder.decode([NutritionGoal].self, from: response.data)
+        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
+        let goals = try flexibleDecode([NutritionGoal].self, from: response.data)
         return goals.first
     }
 
@@ -216,9 +250,8 @@ class NutritionService {
             .order("created_at", ascending: false)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([NutritionGoal].self, from: response.data)
+        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
+        return try flexibleDecode([NutritionGoal].self, from: response.data)
     }
 
     /// Create a new nutrition goal
@@ -240,9 +273,8 @@ class NutritionService {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(NutritionGoal.self, from: response.data)
+        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
+        return try flexibleDecode(NutritionGoal.self, from: response.data)
     }
 
     /// Update a nutrition goal
