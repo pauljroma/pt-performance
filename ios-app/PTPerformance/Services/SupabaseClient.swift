@@ -13,6 +13,47 @@ class PTSupabaseClient: ObservableObject {
     @Published var userRole: UserRole?
     @Published var userId: String?
 
+    // BUILD 251: Shared flexible decoder for all Supabase queries
+    static let flexibleDecoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try ISO8601 with fractional seconds (Supabase TIMESTAMPTZ)
+            let isoFormatter = ISO8601DateFormatter()
+            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try ISO8601 without fractional seconds
+            isoFormatter.formatOptions = [.withInternetDateTime]
+            if let date = isoFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try simple date format (yyyy-MM-dd for DATE columns)
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            if let date = dateFormatter.date(from: dateString) {
+                return date
+            }
+
+            // Try time format (HH:mm:ss for TIME columns)
+            dateFormatter.dateFormat = "HH:mm:ss"
+            if let date = dateFormatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Cannot decode date: \(dateString)"
+            )
+        }
+        return decoder
+    }()
+
     private init() {
         let logger = DebugLogger.shared
 
@@ -30,16 +71,18 @@ class PTSupabaseClient: ObservableObject {
             fatalError("Invalid Supabase URL: \(supabaseURL)")
         }
 
-        // BUILD 233: Use SDK defaults for internal parsing
-        // Custom date handling is done in individual services (MealPlanService.createFlexibleDecoder)
-        // This prevents SDK internal parsing conflicts with JSONB arrays and DATE columns
-        logger.log("Creating Supabase client with default options...")
+        // BUILD 251: Use flexible decoder for all database queries
+        // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
+        logger.log("Creating Supabase client with flexible decoder...")
         client = Supabase.SupabaseClient(
             supabaseURL: url,
-            supabaseKey: supabaseAnonKey
+            supabaseKey: supabaseAnonKey,
+            options: SupabaseClientOptions(
+                db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder)
+            )
         )
 
-        logger.log("Supabase client initialized with SDK defaults", level: .success)
+        logger.log("Supabase client initialized with flexible decoder", level: .success)
 
         // Check for existing session on init
         Task {

@@ -39,57 +39,13 @@ struct UpdateNutritionLogInput: Codable {
 }
 
 /// Service for managing nutrition logging, goals, and analytics
+/// BUILD 251: Uses PTSupabaseClient.flexibleDecoder for all date handling
 @MainActor
 class NutritionService {
     static let shared = NutritionService()
     private let supabase = PTSupabaseClient.shared
 
     private init() {}
-
-    // MARK: - Flexible JSON Decoder
-
-    /// Decoder that handles both ISO8601 and simple date formats
-    private func flexibleDecode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let dateString = try container.decode(String.self)
-
-            // Try ISO8601 with fractional seconds
-            let isoFormatter = ISO8601DateFormatter()
-            isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let date = isoFormatter.date(from: dateString) {
-                return date
-            }
-
-            // Try ISO8601 without fractional seconds
-            isoFormatter.formatOptions = [.withInternetDateTime]
-            if let date = isoFormatter.date(from: dateString) {
-                return date
-            }
-
-            // Try simple date format (yyyy-MM-dd)
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            if let date = formatter.date(from: dateString) {
-                return date
-            }
-
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
-        }
-
-        do {
-            return try decoder.decode(type, from: data)
-        } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] Decode error: \(error)")
-            if let json = String(data: data, encoding: .utf8) {
-                print("🍎 [NUTRITION] Failed JSON: \(json)")
-            }
-            #endif
-            throw error
-        }
-    }
 
     // MARK: - Nutrition Logs
 
@@ -100,79 +56,61 @@ class NutritionService {
         endDate: Date? = nil,
         limit: Int = 50
     ) async throws -> [NutritionLog] {
-        // BUILD 249: Debug at function start with granular error catching
+        // BUILD 251: Use .execute().value pattern with flexible decoder
         let logger = DebugLogger.shared
         logger.info("FETCH LOGS", "Starting for patient: \(patientId)")
 
-        // BUILD 249: Wrap execute() in its own try-catch to isolate SDK errors
-        let response: PostgrestResponse<Data>
         do {
-            // Build query step by step with logging
-            logger.info("FETCH LOGS", "Building query...")
+            // Build base query
             let baseQuery = supabase.client
                 .from("nutrition_logs")
                 .select()
                 .eq("patient_id", value: patientId)
 
-            logger.info("FETCH LOGS", "Base query built, adding filters...")
-
+            // Apply date filters and execute
+            let logs: [NutritionLog]
             if let start = startDate, let end = endDate {
                 let startStr = ISO8601DateFormatter().string(from: start)
                 let endStr = ISO8601DateFormatter().string(from: end)
                 logger.info("FETCH LOGS", "Date range: \(startStr) to \(endStr)")
-                response = try await baseQuery
+                logs = try await baseQuery
                     .gte("logged_at", value: startStr)
                     .lte("logged_at", value: endStr)
                     .order("logged_at", ascending: false)
                     .limit(limit)
                     .execute()
+                    .value
             } else if let start = startDate {
                 let startStr = ISO8601DateFormatter().string(from: start)
-                logger.info("FETCH LOGS", "Start date only: \(startStr)")
-                response = try await baseQuery
+                logger.info("FETCH LOGS", "Start date: \(startStr)")
+                logs = try await baseQuery
                     .gte("logged_at", value: startStr)
                     .order("logged_at", ascending: false)
                     .limit(limit)
                     .execute()
+                    .value
             } else if let end = endDate {
                 let endStr = ISO8601DateFormatter().string(from: end)
-                logger.info("FETCH LOGS", "End date only: \(endStr)")
-                response = try await baseQuery
+                logger.info("FETCH LOGS", "End date: \(endStr)")
+                logs = try await baseQuery
                     .lte("logged_at", value: endStr)
                     .order("logged_at", ascending: false)
                     .limit(limit)
                     .execute()
+                    .value
             } else {
                 logger.info("FETCH LOGS", "No date filter")
-                response = try await baseQuery
+                logs = try await baseQuery
                     .order("logged_at", ascending: false)
                     .limit(limit)
                     .execute()
+                    .value
             }
-            logger.success("FETCH LOGS", "Execute succeeded, data size: \(response.data.count) bytes")
-        } catch {
-            // BUILD 249: Catch SDK errors specifically
-            logger.error("FETCH LOGS", "SUPABASE EXECUTE ERROR: \(error)")
-            logger.error("FETCH LOGS", "Error type: \(type(of: error))")
-            throw error
-        }
 
-        // Log raw response
-        if let json = String(data: response.data, encoding: .utf8) {
-            logger.info("FETCH LOGS", "Raw JSON: \(json.prefix(2000))")
-        }
-
-        // Decode response
-        do {
-            logger.info("FETCH LOGS", "Decoding...")
-            let result = try flexibleDecode([NutritionLog].self, from: response.data)
-            logger.success("FETCH LOGS", "Decoded \(result.count) logs")
-            return result
+            logger.success("FETCH LOGS", "Fetched \(logs.count) logs")
+            return logs
         } catch {
-            logger.error("FETCH LOGS", "DECODE ERROR: \(error)")
-            if let json = String(data: response.data, encoding: .utf8) {
-                logger.error("FETCH LOGS", "Full JSON: \(json)")
-            }
+            logger.error("FETCH LOGS", "ERROR: \(error)")
             throw error
         }
     }
@@ -192,17 +130,15 @@ class NutritionService {
 
     /// Create a new nutrition log
     func createNutritionLog(_ log: CreateNutritionLogDTO) async throws -> NutritionLog {
-        // Use the DTO directly since it's already Codable
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let result: NutritionLog = try await supabase.client
             .from("nutrition_logs")
             .insert(log)
             .select()
             .single()
             .execute()
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(NutritionLog.self, from: response.data)
+            .value
+        return result
     }
 
     /// Update an existing nutrition log
@@ -227,7 +163,8 @@ class NutritionService {
 
     /// Fetch active nutrition goal for a patient
     func fetchActiveGoal(patientId: String) async throws -> NutritionGoal? {
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let goals: [NutritionGoal] = try await supabase.client
             .from("nutrition_goals")
             .select()
             .eq("patient_id", value: patientId)
@@ -235,23 +172,21 @@ class NutritionService {
             .order("created_at", ascending: false)
             .limit(1)
             .execute()
-
-        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
-        let goals = try flexibleDecode([NutritionGoal].self, from: response.data)
+            .value
         return goals.first
     }
 
     /// Fetch all nutrition goals for a patient
     func fetchAllGoals(patientId: String) async throws -> [NutritionGoal] {
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let goals: [NutritionGoal] = try await supabase.client
             .from("nutrition_goals")
             .select()
             .eq("patient_id", value: patientId)
             .order("created_at", ascending: false)
             .execute()
-
-        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
-        return try flexibleDecode([NutritionGoal].self, from: response.data)
+            .value
+        return goals
     }
 
     /// Create a new nutrition goal
@@ -265,16 +200,15 @@ class NutritionService {
             .eq("active", value: true)
             .execute()
 
-        // Use the DTO directly since it's already Codable
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let result: NutritionGoal = try await supabase.client
             .from("nutrition_goals")
             .insert(goal)
             .select()
             .single()
             .execute()
-
-        // Use flexible decoder to handle DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
-        return try flexibleDecode(NutritionGoal.self, from: response.data)
+            .value
+        return result
     }
 
     /// Update a nutrition goal
@@ -290,24 +224,14 @@ class NutritionService {
 
     /// Fetch current goal progress from view
     func fetchGoalProgress(patientId: String) async throws -> NutritionGoalProgress? {
-        #if DEBUG
-        print("🍎 [NUTRITION] Fetching goal progress for patient: \(patientId)")
-        #endif
-
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let progress: [NutritionGoalProgress] = try await supabase.client
             .from("vw_nutrition_goal_progress")
             .select()
             .eq("patient_id", value: patientId)
             .limit(1)
             .execute()
-
-        #if DEBUG
-        if let json = String(data: response.data, encoding: .utf8) {
-            print("🍎 [NUTRITION] Goal progress response: \(json)")
-        }
-        #endif
-
-        let progress = try flexibleDecode([NutritionGoalProgress].self, from: response.data)
+            .value
         return progress.first
     }
 
@@ -319,67 +243,30 @@ class NutritionService {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateStr = dateFormatter.string(from: date)
 
-        #if DEBUG
-        print("🍎 [NUTRITION] Fetching daily summary for patient: \(patientId), date: \(dateStr)")
-        #endif
-
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let summaries: [DailyNutritionSummary] = try await supabase.client
             .from("vw_daily_nutrition")
             .select()
             .eq("patient_id", value: patientId)
             .eq("log_date", value: dateStr)
             .limit(1)
             .execute()
-
-        #if DEBUG
-        if let json = String(data: response.data, encoding: .utf8) {
-            print("🍎 [NUTRITION] Daily summary response: \(json)")
-        }
-        #endif
-
-        let decoder = JSONDecoder()
-        // Use flexible date decoding for date-only fields
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let dateString = try container.decode(String.self)
-
-            // Try ISO8601 first
-            if let date = ISO8601DateFormatter().date(from: dateString) {
-                return date
-            }
-            // Try simple date format
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"
-            if let date = formatter.date(from: dateString) {
-                return date
-            }
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date: \(dateString)")
-        }
-        let summaries = try decoder.decode([DailyNutritionSummary].self, from: response.data)
+            .value
         return summaries.first
     }
 
     /// Fetch weekly nutrition trends
     func fetchWeeklyTrends(patientId: String, weeks: Int = 4) async throws -> [WeeklyNutritionTrend] {
-        #if DEBUG
-        print("🍎 [NUTRITION] Fetching weekly trends for patient: \(patientId)")
-        #endif
-
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let trends: [WeeklyNutritionTrend] = try await supabase.client
             .from("vw_nutrition_trend")
             .select()
             .eq("patient_id", value: patientId)
             .order("week_start", ascending: false)
             .limit(weeks)
             .execute()
-
-        #if DEBUG
-        if let json = String(data: response.data, encoding: .utf8) {
-            print("🍎 [NUTRITION] Weekly trends response: \(json)")
-        }
-        #endif
-
-        return try flexibleDecode([WeeklyNutritionTrend].self, from: response.data)
+            .value
+        return trends
     }
 
     /// Fetch macro distribution for a date
@@ -388,25 +275,15 @@ class NutritionService {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateStr = dateFormatter.string(from: date)
 
-        #if DEBUG
-        print("🍎 [NUTRITION] Fetching macro distribution for patient: \(patientId), date: \(dateStr)")
-        #endif
-
-        let response = try await supabase.client
+        // BUILD 251: Use .execute().value with flexible decoder
+        let distributions: [MacroDistribution] = try await supabase.client
             .from("vw_macro_distribution")
             .select()
             .eq("patient_id", value: patientId)
             .eq("log_date", value: dateStr)
             .limit(1)
             .execute()
-
-        #if DEBUG
-        if let json = String(data: response.data, encoding: .utf8) {
-            print("🍎 [NUTRITION] Macro distribution response: \(json)")
-        }
-        #endif
-
-        let distributions = try flexibleDecode([MacroDistribution].self, from: response.data)
+            .value
         return distributions.first
     }
 
