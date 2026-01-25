@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TodaySessionView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 264: For ManualWorkoutExecutionView
     @StateObject private var viewModel = TodaySessionViewModel()
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
@@ -131,6 +132,7 @@ struct TodaySessionView: View {
                         Task { await viewModel.fetchTodaySession() }
                     }
                 )
+                .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
             }
         }
         // BUILD 258: Unified workout execution for prescribed sessions
@@ -149,6 +151,7 @@ struct TodaySessionView: View {
                         Task { await viewModel.fetchTodaySession() }
                     }
                 )
+                .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
             }
         }
         .task {
