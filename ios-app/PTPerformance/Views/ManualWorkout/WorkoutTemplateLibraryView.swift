@@ -81,28 +81,33 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     }
 
     // MARK: - Filtered Templates
+    // BUILD 275: Added stable sorting to prevent reordering while viewing
 
     var filteredSystemTemplates: [SystemWorkoutTemplate] {
-        systemTemplates.filter { template in
-            let matchesSearch = searchText.isEmpty ||
-                template.name.localizedCaseInsensitiveContains(searchText) ||
-                template.description?.localizedCaseInsensitiveContains(searchText) == true
+        systemTemplates
+            .filter { template in
+                let matchesSearch = searchText.isEmpty ||
+                    template.name.localizedCaseInsensitiveContains(searchText) ||
+                    template.description?.localizedCaseInsensitiveContains(searchText) == true
 
-            let matchesCategory = selectedCategory == nil ||
-                template.category?.lowercased() == selectedCategory?.rawValue
+                let matchesCategory = selectedCategory == nil ||
+                    template.category?.lowercased() == selectedCategory?.rawValue
 
-            return matchesSearch && matchesCategory
-        }
+                return matchesSearch && matchesCategory
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     var filteredPatientTemplates: [PatientWorkoutTemplate] {
-        patientTemplates.filter { template in
-            let matchesSearch = searchText.isEmpty ||
-                template.name.localizedCaseInsensitiveContains(searchText) ||
-                template.description?.localizedCaseInsensitiveContains(searchText) == true
+        patientTemplates
+            .filter { template in
+                let matchesSearch = searchText.isEmpty ||
+                    template.name.localizedCaseInsensitiveContains(searchText) ||
+                    template.description?.localizedCaseInsensitiveContains(searchText) == true
 
-            return matchesSearch
-        }
+                return matchesSearch
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     // MARK: - Data Fetching

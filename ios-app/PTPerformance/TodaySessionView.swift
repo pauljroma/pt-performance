@@ -128,8 +128,11 @@ struct TodaySessionView: View {
                     onComplete: {
                         createdManualSession = nil
                         selectedWorkoutTemplate = nil
-                        // Refresh today's session to show any updates
-                        Task { await viewModel.fetchTodaySession() }
+                        // BUILD 275: Refresh completed workouts FIRST, then fetch next session
+                        Task {
+                            await viewModel.fetchTodaysCompletedWorkouts()
+                            await viewModel.fetchTodaySession()
+                        }
                     }
                 )
                 .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
@@ -147,8 +150,11 @@ struct TodaySessionView: View {
                         isWorkoutStarted = false
                         timer?.invalidate()
                         timer = nil
-                        // Refresh today's session
-                        Task { await viewModel.fetchTodaySession() }
+                        // BUILD 275: Refresh completed workouts FIRST, then fetch next session
+                        Task {
+                            await viewModel.fetchTodaysCompletedWorkouts()
+                            await viewModel.fetchTodaySession()
+                        }
                     }
                 )
                 .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
