@@ -37,6 +37,9 @@ struct TodaySessionView: View {
     @State private var createdManualSession: ManualSession?
     @State private var isCreatingManualSession = false
 
+    // BUILD 258: Unified workout execution
+    @State private var showUnifiedWorkoutExecution = false
+
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
     }
@@ -57,6 +60,7 @@ struct TodaySessionView: View {
             // Previously used viewModel.session which could be wrong session after fetchTodaySession()
             if let session = completedSession {
                 SessionSummaryView(session: session)
+                    .environmentObject(appState)  // BUILD 263: Pass environment object to sheet
             }
         }
         .sheet(isPresented: $showReadinessCheckIn, onDismiss: {
@@ -129,6 +133,24 @@ struct TodaySessionView: View {
                 )
             }
         }
+        // BUILD 258: Unified workout execution for prescribed sessions
+        .fullScreenCover(isPresented: $showUnifiedWorkoutExecution) {
+            if let session = viewModel.session, let patientId = appState.userId {
+                ManualWorkoutExecutionView(
+                    prescribedSession: session,
+                    exercises: viewModel.exercises,
+                    patientId: UUID(uuidString: patientId) ?? UUID(),
+                    onComplete: {
+                        showUnifiedWorkoutExecution = false
+                        isWorkoutStarted = false
+                        timer?.invalidate()
+                        timer = nil
+                        // Refresh today's session
+                        Task { await viewModel.fetchTodaySession() }
+                    }
+                )
+            }
+        }
         .task {
             await viewModel.fetchTodaySession()
             await loadTodayReadiness()
@@ -184,11 +206,9 @@ struct TodaySessionView: View {
                 sessionContent
             }
 
-            // Manual Workout FAB
+            // BUILD 259: Simplified FAB - just New Workout and From Library
             FloatingActionButton(
-                onAddToToday: {
-                    showAddToTodayPicker = true
-                },
+                onAddToToday: nil,  // Removed - all editing happens in execution view
                 onNewWorkout: {
                     showWorkoutCreator = true
                 },
@@ -222,100 +242,111 @@ struct TodaySessionView: View {
         }
     }
 
+    // BUILD 259: Simplified session content - just cards and Start Workout button
     @ViewBuilder
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // BUILD 116 - Readiness Section (Agent 18)
+                // Readiness Section
                 readinessSection
 
-                // BUILD 215: Show completed view when session is done
-                if let session = viewModel.session, session.isCompleted {
-                    sessionCompletedView
-                } else {
-                    // BUILD 124: Start Workout Button with Running Clock
-                    if let session = viewModel.session, !session.isCompleted {
-                        startWorkoutSection
-                    }
-
-                    // Session Header
-                    if let session = viewModel.session {
-                        sessionHeaderView(session)
-                    }
-
-                    // Exercise List
-                    if viewModel.exercises.isEmpty {
-                        Text("No exercises in this session")
-                            .foregroundColor(.secondary)
-                            .padding()
+                // Session Card with Start Workout
+                if let session = viewModel.session {
+                    if session.isCompleted {
+                        sessionCompletedView
                     } else {
-                        VStack(spacing: 12) {
-                            ForEach(viewModel.exercises) { exercise in
-                                // BUILD 120: Use ExerciseCompactRow for inline editing
-                                ExerciseCompactRow(
-                                    exercise: exercise,
-                                    isCompleted: Binding(
-                                        get: { completedExercises[exercise.id] ?? false },
-                                        set: { completedExercises[exercise.id] = $0 }
-                                    ),
-                                    isExpanded: Binding(
-                                        get: { expandedExercises[exercise.id] ?? false },
-                                        set: { expandedExercises[exercise.id] = $0 }
-                                    )
-                                )
-                                .environmentObject(viewModel)
-                            }
-                        }
+                        todaySessionCard(session)
                     }
-
-                    // Build 33: Complete Session Button
-                    if let session = viewModel.session, !session.isCompleted {
-                    VStack(spacing: 16) {
-                        Divider()
-                            .padding(.vertical, 8)
-
-                        Button(action: {
-                            Task {
-                                await handleCompleteSession()
-                            }
-                        }) {
-                            HStack {
-                                if isCompletingSession {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
-                                    Image(systemName: "checkmark.circle.fill")
-                                    Text("Complete Session")
-                                }
-                            }
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(isCompletingSession ? Color.gray : Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                        }
-                        .disabled(isCompletingSession || viewModel.exercises.isEmpty)
-
-                        if let error = completionError {
-                            Text(error)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                    }
-                } // End of else block for non-completed session
+                }
 
                 Spacer()
             }
             .padding()
         }
-        .navigationDestination(for: Exercise.self) { exercise in
-            if !shouldUseSplitView {
-                ExerciseDetailView(exercise: exercise)
+    }
+
+    // BUILD 259: Clean session card with exercise preview and Start button
+    @ViewBuilder
+    private func todaySessionCard(_ session: Session) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Session Info Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("TODAY'S WORKOUT")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+
+                    Text(session.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+
+                Spacer()
+
+                // Exercise count badge
+                VStack {
+                    Text("\(viewModel.exercises.count)")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                    Text("exercises")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Exercise preview (first 3)
+            if !viewModel.exercises.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(viewModel.exercises.prefix(3)) { exercise in
+                        HStack(spacing: 12) {
+                            Image(systemName: "circle")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Text(exercise.exercise_name ?? "Exercise")
+                                .font(.subheadline)
+
+                            Spacer()
+
+                            Text("\(exercise.prescribed_sets) × \(exercise.repsDisplay)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if viewModel.exercises.count > 3 {
+                        Text("+ \(viewModel.exercises.count - 3) more exercises")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 24)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+
+            Divider()
+
+            // Start Workout Button
+            Button(action: startWorkout) {
+                HStack {
+                    Image(systemName: "play.circle.fill")
+                        .font(.title2)
+                    Text("Start Workout")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(12)
             }
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 
     // MARK: - BUILD 116: Readiness Section (Agent 18)
@@ -509,15 +540,9 @@ struct TodaySessionView: View {
     }
 
     private func startWorkout() {
-        sessionStartTime = Date()
-        isWorkoutStarted = true
-
-        // Start timer to update clock every second
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            currentTime = Date()
-        }
-
-        DebugLogger.shared.log("⏱️ Workout session started at: \(sessionStartTime!)")
+        // BUILD 258: Launch unified workout execution view
+        showUnifiedWorkoutExecution = true
+        DebugLogger.shared.log("🏋️ Launching unified workout execution view")
     }
 
     @ViewBuilder
