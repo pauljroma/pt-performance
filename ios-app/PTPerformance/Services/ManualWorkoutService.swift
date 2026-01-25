@@ -861,6 +861,203 @@ class ManualWorkoutService: ObservableObject {
         }
     }
 
+    // MARK: - Favorites (BUILD 282)
+
+    /// Fetch patient's favorite template IDs
+    func fetchFavoriteTemplateIds(patientId: UUID) async throws -> (systemIds: Set<UUID>, patientIds: Set<UUID>) {
+        let logger = DebugLogger.shared
+        logger.log("Fetching favorite template IDs for patient: \(patientId)", level: .diagnostic)
+
+        struct FavoriteRow: Codable {
+            let systemTemplateId: UUID?
+            let patientTemplateId: UUID?
+
+            enum CodingKeys: String, CodingKey {
+                case systemTemplateId = "system_template_id"
+                case patientTemplateId = "patient_template_id"
+            }
+        }
+
+        do {
+            let response = try await supabase.client
+                .from("patient_favorite_templates")
+                .select("system_template_id, patient_template_id")
+                .eq("patient_id", value: patientId.uuidString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let rows = try decoder.decode([FavoriteRow].self, from: response.data)
+
+            var systemIds: Set<UUID> = []
+            var patientIds: Set<UUID> = []
+
+            for row in rows {
+                if let sysId = row.systemTemplateId {
+                    systemIds.insert(sysId)
+                }
+                if let patId = row.patientTemplateId {
+                    patientIds.insert(patId)
+                }
+            }
+
+            logger.log("Fetched \(systemIds.count) system favorites, \(patientIds.count) patient favorites", level: .success)
+            return (systemIds, patientIds)
+        } catch {
+            logger.log("Failed to fetch favorites: \(error.localizedDescription)", level: .error)
+            // Return empty sets if table doesn't exist
+            return ([], [])
+        }
+    }
+
+    /// Add a system template to favorites
+    func addSystemTemplateToFavorites(patientId: UUID, templateId: UUID) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Adding system template \(templateId) to favorites", level: .diagnostic)
+
+        struct InsertFavorite: Codable {
+            let patientId: UUID
+            let systemTemplateId: UUID
+
+            enum CodingKeys: String, CodingKey {
+                case patientId = "patient_id"
+                case systemTemplateId = "system_template_id"
+            }
+        }
+
+        do {
+            try await supabase.client
+                .from("patient_favorite_templates")
+                .insert(InsertFavorite(patientId: patientId, systemTemplateId: templateId))
+                .execute()
+
+            logger.log("System template added to favorites", level: .success)
+        } catch {
+            logger.log("Failed to add to favorites: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    /// Add a patient template to favorites
+    func addPatientTemplateToFavorites(patientId: UUID, templateId: UUID) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Adding patient template \(templateId) to favorites", level: .diagnostic)
+
+        struct InsertFavorite: Codable {
+            let patientId: UUID
+            let patientTemplateId: UUID
+
+            enum CodingKeys: String, CodingKey {
+                case patientId = "patient_id"
+                case patientTemplateId = "patient_template_id"
+            }
+        }
+
+        do {
+            try await supabase.client
+                .from("patient_favorite_templates")
+                .insert(InsertFavorite(patientId: patientId, patientTemplateId: templateId))
+                .execute()
+
+            logger.log("Patient template added to favorites", level: .success)
+        } catch {
+            logger.log("Failed to add to favorites: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    /// Remove a system template from favorites
+    func removeSystemTemplateFromFavorites(patientId: UUID, templateId: UUID) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Removing system template \(templateId) from favorites", level: .diagnostic)
+
+        do {
+            try await supabase.client
+                .from("patient_favorite_templates")
+                .delete()
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("system_template_id", value: templateId.uuidString)
+                .execute()
+
+            logger.log("System template removed from favorites", level: .success)
+        } catch {
+            logger.log("Failed to remove from favorites: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    /// Remove a patient template from favorites
+    func removePatientTemplateFromFavorites(patientId: UUID, templateId: UUID) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Removing patient template \(templateId) from favorites", level: .diagnostic)
+
+        do {
+            try await supabase.client
+                .from("patient_favorite_templates")
+                .delete()
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("patient_template_id", value: templateId.uuidString)
+                .execute()
+
+            logger.log("Patient template removed from favorites", level: .success)
+        } catch {
+            logger.log("Failed to remove from favorites: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    // MARK: - Trainer Recommendations (BUILD 282)
+
+    /// Fetch trainer-recommended templates for a patient
+    func fetchTrainerRecommendations(patientId: UUID) async throws -> [SystemWorkoutTemplate] {
+        let logger = DebugLogger.shared
+        logger.log("Fetching trainer recommendations for patient: \(patientId)", level: .diagnostic)
+
+        struct RecommendationRow: Codable {
+            let systemTemplateId: UUID
+            let notes: String?
+
+            enum CodingKeys: String, CodingKey {
+                case systemTemplateId = "system_template_id"
+                case notes
+            }
+        }
+
+        do {
+            // First get the recommendation IDs
+            let recResponse = try await supabase.client
+                .from("trainer_recommended_templates")
+                .select("system_template_id, notes")
+                .eq("patient_id", value: patientId.uuidString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let rows = try decoder.decode([RecommendationRow].self, from: recResponse.data)
+
+            if rows.isEmpty {
+                logger.log("No trainer recommendations found", level: .info)
+                return []
+            }
+
+            // Fetch the actual templates
+            let templateIds = rows.map { $0.systemTemplateId.uuidString }
+            let templatesResponse = try await supabase.client
+                .from("system_workout_templates")
+                .select()
+                .in("id", values: templateIds)
+                .execute()
+
+            decoder.dateDecodingStrategy = .iso8601
+            let templates = try decoder.decode([SystemWorkoutTemplate].self, from: templatesResponse.data)
+
+            logger.log("Fetched \(templates.count) trainer-recommended templates", level: .success)
+            return templates
+        } catch {
+            logger.log("Failed to fetch trainer recommendations: \(error.localizedDescription)", level: .error)
+            // Return empty array if table doesn't exist
+            return []
+        }
+    }
+
     // MARK: - Add to Prescribed Session
 
     /// Add an exercise to a prescribed (scheduled) session

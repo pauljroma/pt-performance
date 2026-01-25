@@ -16,18 +16,24 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
 
     @Published var systemTemplates: [SystemWorkoutTemplate] = []
     @Published var patientTemplates: [PatientWorkoutTemplate] = []
+    @Published var trainerRecommendations: [SystemWorkoutTemplate] = []  // BUILD 282
     @Published var isLoadingSystem = false
     @Published var isLoadingPatient = false
+    @Published var isLoadingRecommendations = false  // BUILD 282
     @Published var errorMessage: String?
     @Published var searchText = ""
     @Published var selectedCategory: TemplateCategory?
     @Published var selectedTemplate: AnyWorkoutTemplate?
     @Published var showingPreview = false
 
+    // BUILD 282: Favorites tracking
+    @Published var favoriteSystemIds: Set<UUID> = []
+    @Published var favoritePatientIds: Set<UUID> = []
+
     // MARK: - Dependencies
 
     private let service: ManualWorkoutService
-    private let patientId: UUID
+    let patientId: UUID  // Made public for favorites toggle
 
     // MARK: - Initialization
 
@@ -110,6 +116,61 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
+    // BUILD 282: Favorite system templates
+    var favoriteSystemTemplates: [SystemWorkoutTemplate] {
+        systemTemplates
+            .filter { favoriteSystemIds.contains($0.id) }
+            .filter { template in
+                let matchesSearch = searchText.isEmpty ||
+                    template.name.localizedCaseInsensitiveContains(searchText) ||
+                    template.description?.localizedCaseInsensitiveContains(searchText) == true
+                return matchesSearch
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // BUILD 282: Favorite patient templates
+    var favoritePatientTemplates: [PatientWorkoutTemplate] {
+        patientTemplates
+            .filter { favoritePatientIds.contains($0.id) }
+            .filter { template in
+                let matchesSearch = searchText.isEmpty ||
+                    template.name.localizedCaseInsensitiveContains(searchText) ||
+                    template.description?.localizedCaseInsensitiveContains(searchText) == true
+                return matchesSearch
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // BUILD 282: Trainer recommendations filtered
+    var filteredTrainerRecommendations: [SystemWorkoutTemplate] {
+        trainerRecommendations
+            .filter { template in
+                let matchesSearch = searchText.isEmpty ||
+                    template.name.localizedCaseInsensitiveContains(searchText) ||
+                    template.description?.localizedCaseInsensitiveContains(searchText) == true
+                return matchesSearch
+            }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // BUILD 282: Check if template is favorited
+    func isFavorite(_ template: AnyWorkoutTemplate) -> Bool {
+        if template.isSystemTemplate {
+            return favoriteSystemIds.contains(template.id)
+        } else {
+            return favoritePatientIds.contains(template.id)
+        }
+    }
+
+    func isFavoriteSystem(_ templateId: UUID) -> Bool {
+        favoriteSystemIds.contains(templateId)
+    }
+
+    func isFavoritePatient(_ templateId: UUID) -> Bool {
+        favoritePatientIds.contains(templateId)
+    }
+
     // MARK: - Data Fetching
     // BUILD 278: Always fetch all templates, filter locally to prevent reordering
 
@@ -147,6 +208,83 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.loadSystemTemplates() }
             group.addTask { await self.loadPatientTemplates() }
+            group.addTask { await self.loadFavorites() }
+            group.addTask { await self.loadTrainerRecommendations() }
+        }
+    }
+
+    // BUILD 282: Load favorites
+    func loadFavorites() async {
+        do {
+            let (sysIds, patIds) = try await service.fetchFavoriteTemplateIds(patientId: patientId)
+            favoriteSystemIds = sysIds
+            favoritePatientIds = patIds
+        } catch {
+            // Silently handle - favorites are optional
+            DebugLogger.shared.log("Failed to load favorites: \(error)", level: .warning)
+        }
+    }
+
+    // BUILD 282: Load trainer recommendations
+    func loadTrainerRecommendations() async {
+        isLoadingRecommendations = true
+        do {
+            trainerRecommendations = try await service.fetchTrainerRecommendations(patientId: patientId)
+            isLoadingRecommendations = false
+        } catch {
+            // Silently handle - recommendations are optional
+            DebugLogger.shared.log("Failed to load trainer recommendations: \(error)", level: .warning)
+            isLoadingRecommendations = false
+        }
+    }
+
+    // BUILD 282: Toggle favorite for system template
+    func toggleFavoriteSystem(_ templateId: UUID) async {
+        if favoriteSystemIds.contains(templateId) {
+            // Remove from favorites
+            favoriteSystemIds.remove(templateId)
+            do {
+                try await service.removeSystemTemplateFromFavorites(patientId: patientId, templateId: templateId)
+            } catch {
+                // Revert on error
+                favoriteSystemIds.insert(templateId)
+                errorMessage = "Failed to remove from favorites"
+            }
+        } else {
+            // Add to favorites
+            favoriteSystemIds.insert(templateId)
+            do {
+                try await service.addSystemTemplateToFavorites(patientId: patientId, templateId: templateId)
+            } catch {
+                // Revert on error
+                favoriteSystemIds.remove(templateId)
+                errorMessage = "Failed to add to favorites"
+            }
+        }
+    }
+
+    // BUILD 282: Toggle favorite for patient template
+    func toggleFavoritePatient(_ templateId: UUID) async {
+        if favoritePatientIds.contains(templateId) {
+            // Remove from favorites
+            favoritePatientIds.remove(templateId)
+            do {
+                try await service.removePatientTemplateFromFavorites(patientId: patientId, templateId: templateId)
+            } catch {
+                // Revert on error
+                favoritePatientIds.insert(templateId)
+                errorMessage = "Failed to remove from favorites"
+            }
+        } else {
+            // Add to favorites
+            favoritePatientIds.insert(templateId)
+            do {
+                try await service.addPatientTemplateToFavorites(patientId: patientId, templateId: templateId)
+            } catch {
+                // Revert on error
+                favoritePatientIds.remove(templateId)
+                errorMessage = "Failed to add to favorites"
+            }
         }
     }
 
@@ -239,13 +377,16 @@ struct WorkoutTemplateLibraryView: View {
                 // Tab navigation
                 tabPicker
 
-                // Content
+                // Content - BUILD 282: 3 tabs
                 TabView(selection: $selectedTab) {
-                    systemTemplatesTab
+                    myWorkoutsTab
                         .tag(0)
 
-                    patientTemplatesTab
+                    ptTrainerTab
                         .tag(1)
+
+                    fullLibraryTab
+                        .tag(2)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
@@ -350,23 +491,32 @@ struct WorkoutTemplateLibraryView: View {
     }
 
     // MARK: - Tab Picker
+    // BUILD 282: 3-tab system - My Workouts | PT/Trainer | Full Library
 
     private var tabPicker: some View {
         HStack(spacing: 0) {
             TabButton(
-                title: "PT Library",
-                icon: "building.2.fill",
+                title: "My Workouts",
+                icon: "heart.fill",
                 isSelected: selectedTab == 0
             ) {
                 withAnimation { selectedTab = 0 }
             }
 
             TabButton(
-                title: "My Templates",
-                icon: "person.fill",
+                title: "PT/Trainer",
+                icon: "person.badge.shield.checkmark.fill",
                 isSelected: selectedTab == 1
             ) {
                 withAnimation { selectedTab = 1 }
+            }
+
+            TabButton(
+                title: "Library",
+                icon: "building.2.fill",
+                isSelected: selectedTab == 2
+            ) {
+                withAnimation { selectedTab = 2 }
             }
         }
         .background(Color(.systemGray6))
@@ -375,9 +525,56 @@ struct WorkoutTemplateLibraryView: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - System Templates Tab
+    // MARK: - My Workouts Tab (BUILD 282)
+    // Shows: Favorites + User-created templates
 
-    private var systemTemplatesTab: some View {
+    private var myWorkoutsTab: some View {
+        Group {
+            let favoriteSystem = viewModel.favoriteSystemTemplates
+            let favoritePatient = viewModel.favoritePatientTemplates
+            let userCreated = viewModel.filteredPatientTemplates.filter { !viewModel.favoritePatientIds.contains($0.id) }
+
+            if viewModel.isLoadingSystem && viewModel.systemTemplates.isEmpty {
+                loadingView
+            } else if favoriteSystem.isEmpty && favoritePatient.isEmpty && userCreated.isEmpty {
+                emptyStateView(
+                    title: "No Saved Workouts",
+                    message: "Tap the heart icon on any workout to save it here, or create your own templates",
+                    showClearButton: false
+                )
+            } else {
+                myWorkoutsGrid(
+                    favoriteSystemTemplates: favoriteSystem,
+                    favoritePatientTemplates: favoritePatient,
+                    userCreatedTemplates: userCreated
+                )
+            }
+        }
+    }
+
+    // MARK: - PT/Trainer Tab (BUILD 282)
+    // Shows: Trainer recommendations + Prescribed workouts
+
+    private var ptTrainerTab: some View {
+        Group {
+            if viewModel.isLoadingRecommendations && viewModel.trainerRecommendations.isEmpty {
+                loadingView
+            } else if viewModel.filteredTrainerRecommendations.isEmpty {
+                emptyStateView(
+                    title: "No PT/Trainer Workouts",
+                    message: "Workouts recommended by your trainer will appear here",
+                    showClearButton: false
+                )
+            } else {
+                templateGrid(templates: viewModel.filteredTrainerRecommendations.map { AnyWorkoutTemplate(systemTemplate: $0) }, showFavoriteButton: true)
+            }
+        }
+    }
+
+    // MARK: - Full Library Tab (BUILD 282)
+    // Shows: All 535 system templates
+
+    private var fullLibraryTab: some View {
         Group {
             if viewModel.isLoadingSystem && viewModel.systemTemplates.isEmpty {
                 loadingView
@@ -390,55 +587,165 @@ struct WorkoutTemplateLibraryView: View {
                     showClearButton: !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil
                 )
             } else {
-                templateGrid(templates: viewModel.filteredSystemTemplates.map { AnyWorkoutTemplate(systemTemplate: $0) })
-            }
-        }
-    }
-
-    // MARK: - Patient Templates Tab
-
-    private var patientTemplatesTab: some View {
-        Group {
-            if viewModel.isLoadingPatient && viewModel.patientTemplates.isEmpty {
-                loadingView
-            } else if viewModel.filteredPatientTemplates.isEmpty {
-                emptyStateView(
-                    title: "No Custom Templates",
-                    message: viewModel.searchText.isEmpty
-                        ? "Templates you create or customize will appear here"
-                        : "No templates match your search",
-                    showClearButton: !viewModel.searchText.isEmpty
-                )
-            } else {
-                templateGrid(templates: viewModel.filteredPatientTemplates.map { AnyWorkoutTemplate(patientTemplate: $0) })
+                templateGrid(templates: viewModel.filteredSystemTemplates.map { AnyWorkoutTemplate(systemTemplate: $0) }, showFavoriteButton: true)
             }
         }
     }
 
     // MARK: - Template Grid
+    // BUILD 282: Added showFavoriteButton parameter
 
-    private func templateGrid(templates: [AnyWorkoutTemplate]) -> some View {
+    private func templateGrid(templates: [AnyWorkoutTemplate], showFavoriteButton: Bool = false) -> some View {
         ScrollView {
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: 12),
                 GridItem(.flexible(), spacing: 12)
             ], spacing: 12) {
                 ForEach(templates) { template in
-                    TemplateCardView(template: template)
-                        .onTapGesture {
-                            if template.isSystemTemplate {
-                                if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
-                                    viewModel.selectSystemTemplate(systemTemplate)
-                                }
-                            } else {
-                                if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
-                                    viewModel.selectPatientTemplate(patientTemplate)
+                    TemplateCardView(
+                        template: template,
+                        isFavorite: viewModel.isFavorite(template),
+                        showFavoriteButton: showFavoriteButton,
+                        onFavoriteToggle: {
+                            Task {
+                                if template.isSystemTemplate {
+                                    await viewModel.toggleFavoriteSystem(template.id)
+                                } else {
+                                    await viewModel.toggleFavoritePatient(template.id)
                                 }
                             }
                         }
+                    )
+                    .onTapGesture {
+                        if template.isSystemTemplate {
+                            if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
+                                viewModel.selectSystemTemplate(systemTemplate)
+                            }
+                        } else {
+                            if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
+                                viewModel.selectPatientTemplate(patientTemplate)
+                            }
+                        }
+                    }
                 }
             }
             .padding()
+        }
+        .refreshable {
+            await viewModel.loadAllTemplates()
+        }
+    }
+
+    // MARK: - My Workouts Grid (BUILD 282)
+    // Shows favorites and user-created templates in sections
+
+    private func myWorkoutsGrid(
+        favoriteSystemTemplates: [SystemWorkoutTemplate],
+        favoritePatientTemplates: [PatientWorkoutTemplate],
+        userCreatedTemplates: [PatientWorkoutTemplate]
+    ) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Favorites Section
+                if !favoriteSystemTemplates.isEmpty || !favoritePatientTemplates.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "heart.fill")
+                                .foregroundColor(.red)
+                            Text("Favorites")
+                                .font(.headline)
+                            Spacer()
+                            Text("\(favoriteSystemTemplates.count + favoritePatientTemplates.count)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal)
+
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ], spacing: 12) {
+                            // System favorites
+                            ForEach(favoriteSystemTemplates) { template in
+                                let anyTemplate = AnyWorkoutTemplate(systemTemplate: template)
+                                TemplateCardView(
+                                    template: anyTemplate,
+                                    isFavorite: true,
+                                    showFavoriteButton: true,
+                                    onFavoriteToggle: {
+                                        Task {
+                                            await viewModel.toggleFavoriteSystem(template.id)
+                                        }
+                                    }
+                                )
+                                .onTapGesture {
+                                    viewModel.selectSystemTemplate(template)
+                                }
+                            }
+
+                            // Patient favorites
+                            ForEach(favoritePatientTemplates) { template in
+                                let anyTemplate = AnyWorkoutTemplate(patientTemplate: template)
+                                TemplateCardView(
+                                    template: anyTemplate,
+                                    isFavorite: true,
+                                    showFavoriteButton: true,
+                                    onFavoriteToggle: {
+                                        Task {
+                                            await viewModel.toggleFavoritePatient(template.id)
+                                        }
+                                    }
+                                )
+                                .onTapGesture {
+                                    viewModel.selectPatientTemplate(template)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                // User Created Section
+                if !userCreatedTemplates.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "person.fill")
+                                .foregroundColor(.blue)
+                            Text("My Created Workouts")
+                                .font(.headline)
+                            Spacer()
+                            Text("\(userCreatedTemplates.count)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal)
+
+                        LazyVGrid(columns: [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ], spacing: 12) {
+                            ForEach(userCreatedTemplates) { template in
+                                let anyTemplate = AnyWorkoutTemplate(patientTemplate: template)
+                                TemplateCardView(
+                                    template: anyTemplate,
+                                    isFavorite: viewModel.isFavoritePatient(template.id),
+                                    showFavoriteButton: true,
+                                    onFavoriteToggle: {
+                                        Task {
+                                            await viewModel.toggleFavoritePatient(template.id)
+                                        }
+                                    }
+                                )
+                                .onTapGesture {
+                                    viewModel.selectPatientTemplate(template)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+            .padding(.vertical)
         }
         .refreshable {
             await viewModel.loadAllTemplates()
@@ -546,19 +853,34 @@ struct TabButton: View {
 }
 
 // MARK: - Template Card View
+// BUILD 282: Added favorite button support
 
 struct TemplateCardView: View {
     let template: AnyWorkoutTemplate
+    var isFavorite: Bool = false
+    var showFavoriteButton: Bool = false
+    var onFavoriteToggle: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Header with category badge
+            // Header with category badge and favorite button
             HStack {
                 if let category = template.category {
                     TemplateCategoryBadge(category: category)
                 }
                 Spacer()
-                if template.isSystemTemplate {
+
+                // BUILD 282: Favorite button
+                if showFavoriteButton {
+                    Button {
+                        onFavoriteToggle?()
+                    } label: {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                            .font(.body)
+                            .foregroundColor(isFavorite ? .red : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                } else if template.isSystemTemplate {
                     Image(systemName: "building.2.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
