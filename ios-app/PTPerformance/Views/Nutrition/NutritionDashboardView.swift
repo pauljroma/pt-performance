@@ -51,7 +51,8 @@ struct NutritionDashboardView: View {
             await viewModel.loadDashboard()
         }
         .refreshable {
-            await viewModel.loadDashboard()
+            // BUILD 279: Use forceRefresh for pull-to-refresh
+            await viewModel.forceRefresh()
         }
         .sheet(isPresented: $showMealLogSheet) {
             NavigationStack {

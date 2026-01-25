@@ -142,6 +142,9 @@ struct FoodLibraryView: View {
     @State private var isLoading = false
     @State private var showAddCustomFood = false
 
+    // BUILD 279: Prevent duplicate fetches when switching tabs
+    @State private var hasLoadedInitialData = false
+
     private let foodService = FoodDatabaseService.shared
 
     var body: some View {
@@ -254,7 +257,11 @@ struct FoodLibraryView: View {
     }
 
     private func loadInitialData() async {
+        // BUILD 279: Prevent duplicate fetches when switching tabs
+        guard !hasLoadedInitialData else { return }
+
         isLoading = true
+        hasLoadedInitialData = true
 
         do {
             async let popularTask = foodService.fetchPopularFoods(limit: 50)

@@ -38,6 +38,9 @@ class NutritionDashboardViewModel: ObservableObject {
     private let mealPlanService = MealPlanService.shared  // BUILD 244: For today's planned meals
     private let supabase = PTSupabaseClient.shared
 
+    // BUILD 279: Track if data has been loaded to prevent duplicate fetches
+    private var hasLoadedInitialData = false
+
     // MARK: - Computed Properties
 
     var patientId: String? {
@@ -143,6 +146,14 @@ class NutritionDashboardViewModel: ObservableObject {
     // MARK: - Load Data
 
     func loadDashboard() async {
+        // BUILD 279: Prevent duplicate fetches when switching tabs
+        guard !hasLoadedInitialData else {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] Skipping reload - data already loaded")
+            #endif
+            return
+        }
+
         guard let patientId = patientId else {
             error = "Not logged in"
             showError = true
@@ -150,6 +161,7 @@ class NutritionDashboardViewModel: ObservableObject {
         }
 
         isLoading = true
+        hasLoadedInitialData = true  // Mark as loaded to prevent future duplicate calls
 
         #if DEBUG
         print("🍎 [NUTRITION VM] Loading dashboard for patient: \(patientId)")
@@ -270,6 +282,14 @@ class NutritionDashboardViewModel: ObservableObject {
     }
 
     func refreshAfterLogAdded() async {
+        // Force refresh after logging a meal
+        hasLoadedInitialData = false
+        await loadDashboard()
+    }
+
+    // BUILD 279: Force refresh for pull-to-refresh
+    func forceRefresh() async {
+        hasLoadedInitialData = false
         await loadDashboard()
     }
 }

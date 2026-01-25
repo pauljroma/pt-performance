@@ -111,15 +111,17 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     }
 
     // MARK: - Data Fetching
+    // BUILD 278: Always fetch all templates, filter locally to prevent reordering
 
     func loadSystemTemplates() async {
         isLoadingSystem = true
         errorMessage = nil
 
         do {
+            // Fetch ALL templates - filtering is done locally via filteredSystemTemplates
             systemTemplates = try await service.fetchSystemTemplates(
-                category: selectedCategory?.rawValue,
-                search: searchText.isEmpty ? nil : searchText
+                category: nil,
+                search: nil
             )
             isLoadingSystem = false
         } catch {
@@ -314,6 +316,7 @@ struct WorkoutTemplateLibraryView: View {
     }
 
     // MARK: - Category Filters
+    // BUILD 278: Removed network reloads - filtering happens locally via computed properties
 
     private var categoryFilters: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -326,7 +329,7 @@ struct WorkoutTemplateLibraryView: View {
                     color: .gray
                 ) {
                     viewModel.selectedCategory = nil
-                    Task { await viewModel.loadSystemTemplates() }
+                    // No network reload - filtering is done locally
                 }
 
                 ForEach(WorkoutTemplateLibraryViewModel.TemplateCategory.allCases, id: \.self) { category in
@@ -337,7 +340,7 @@ struct WorkoutTemplateLibraryView: View {
                         color: category.color
                     ) {
                         viewModel.selectedCategory = viewModel.selectedCategory == category ? nil : category
-                        Task { await viewModel.loadSystemTemplates() }
+                        // No network reload - filtering is done locally
                     }
                 }
             }

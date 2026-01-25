@@ -422,17 +422,15 @@ struct TimerPickerView: View {
 
     // MARK: - Sheets
 
+    // BUILD 280: Use actual CustomTimerBuilderView instead of placeholder
     private var customBuilderSheet: some View {
-        NavigationView {
-            Text("Custom Timer Builder")
-                .navigationTitle("Custom Timer")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            showCustomBuilder = false
-                        }
-                    }
-                }
+        CustomTimerBuilderView(patientId: patientId) { template in
+            // Timer was created - close the sheet and optionally start the timer
+            showCustomBuilder = false
+            // Refresh presets to show the new custom timer
+            Task {
+                await viewModel.refresh()
+            }
         }
     }
 

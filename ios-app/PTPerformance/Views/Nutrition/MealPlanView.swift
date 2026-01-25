@@ -18,6 +18,9 @@ struct MealPlanView: View {
     @State private var error: String?
     @State private var showError = false
 
+    // BUILD 279: Prevent duplicate fetches when switching tabs
+    @State private var hasLoadedInitialData = false
+
     private let mealPlanService = MealPlanService.shared
     private let supabase = PTSupabaseClient.shared
 
@@ -62,6 +65,8 @@ struct MealPlanView: View {
             await loadData()
         }
         .refreshable {
+            // BUILD 279: Force refresh for pull-to-refresh
+            hasLoadedInitialData = false
             await loadData()
         }
         .sheet(isPresented: $showCreatePlanSheet) {
@@ -255,6 +260,12 @@ struct MealPlanView: View {
     // MARK: - Data Loading
 
     private func loadData() async {
+        // BUILD 279: Prevent duplicate fetches when switching tabs
+        guard !hasLoadedInitialData else {
+            DebugLogger.shared.info("MEAL PLAN VIEW", "Skipping reload - data already loaded")
+            return
+        }
+
         DebugLogger.shared.info("MEAL PLAN VIEW", "loadData() called")
 
         guard let patientId = supabase.userId else {
@@ -265,6 +276,7 @@ struct MealPlanView: View {
         DebugLogger.shared.info("MEAL PLAN VIEW", "Loading data for patient: \(patientId)")
 
         isLoading = true
+        hasLoadedInitialData = true  // Mark as loaded to prevent future duplicate calls
 
         do {
             async let plansTask = mealPlanService.fetchMealPlans(patientId: patientId, includeInactive: true)
