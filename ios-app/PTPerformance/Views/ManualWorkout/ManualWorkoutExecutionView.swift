@@ -470,13 +470,26 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         let durationMinutes = Int(elapsedTime / 60)
 
         do {
-            _ = try await service.completeWorkout(
-                session.id,
-                totalVolume: totalVolume,
-                avgRpe: averageRPE,
-                avgPain: averagePain,
-                durationMinutes: durationMinutes
-            )
+            // BUILD 265: Use different completion method based on session type
+            if isPrescribedSession, let prescribedId = prescribedSessionId {
+                // Prescribed sessions are in the sessions table
+                try await service.completePrescribedSession(
+                    prescribedId,
+                    totalVolume: totalVolume,
+                    avgRpe: averageRPE,
+                    avgPain: averagePain,
+                    durationMinutes: durationMinutes
+                )
+            } else {
+                // Manual sessions are in the manual_sessions table
+                _ = try await service.completeWorkout(
+                    session.id,
+                    totalVolume: totalVolume,
+                    avgRpe: averageRPE,
+                    avgPain: averagePain,
+                    durationMinutes: durationMinutes
+                )
+            }
 
             DebugLogger.shared.success("MANUAL_WORKOUT", """
                 Workout completed:

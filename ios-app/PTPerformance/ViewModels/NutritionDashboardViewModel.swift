@@ -22,6 +22,7 @@ class NutritionDashboardViewModel: ObservableObject {
     @Published var goalProgress: NutritionGoalProgress?
     @Published var weeklyTrends: [WeeklyNutritionTrend] = []
     @Published var todaysLogs: [NutritionLog] = []
+    @Published var todaysPlannedMeals: [MealPlanItem] = []  // BUILD 244: Today's planned meals
     @Published var macroDistribution: MacroDistribution?
     @Published var activeGoal: NutritionGoal?
 
@@ -34,6 +35,7 @@ class NutritionDashboardViewModel: ObservableObject {
     // MARK: - Private Properties
 
     private let nutritionService = NutritionService.shared
+    private let mealPlanService = MealPlanService.shared  // BUILD 244: For today's planned meals
     private let supabase = PTSupabaseClient.shared
 
     // MARK: - Computed Properties
@@ -217,6 +219,18 @@ class NutritionDashboardViewModel: ObservableObject {
         } catch {
             #if DEBUG
             print("🍎 [NUTRITION VM] ✗ Active goal error: \(error)")
+            #endif
+        }
+
+        // BUILD 244: Fetch today's planned meals from active meal plan
+        do {
+            todaysPlannedMeals = try await mealPlanService.fetchTodaysMeals(patientId: patientId)
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✓ Today's planned meals loaded: \(todaysPlannedMeals.count) meals")
+            #endif
+        } catch {
+            #if DEBUG
+            print("🍎 [NUTRITION VM] ✗ Today's planned meals error: \(error)")
             #endif
         }
 

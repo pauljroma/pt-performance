@@ -10,6 +10,10 @@ class TodaySessionViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
+    // BUILD 269: Daily workout tracking
+    @Published var completedTodayCount: Int = 0
+    @Published var todaysCompletedWorkouts: [TodayWorkoutSummary] = []
+
     private let supabase = PTSupabaseClient.shared
 
     /// Patient ID for current session (derived from Supabase auth)
@@ -63,6 +67,10 @@ class TodaySessionViewModel: ObservableObject {
             #if DEBUG
             print("✅ [TodaySession] Supabase fetch succeeded")
             #endif
+
+            // BUILD 269: Also fetch today's completed workouts count
+            await fetchTodaysCompletedWorkouts()
+
             isLoading = false
         } catch let error {
             logger.log("❌ Supabase fetch failed", level: .error)
@@ -411,6 +419,115 @@ class TodaySessionViewModel: ObservableObject {
     /// Refresh data
     func refresh() async {
         await fetchTodaySession()
+        await fetchTodaysCompletedWorkouts()
+    }
+
+    // MARK: - BUILD 269: Today's Completed Workouts Counter
+
+    /// Fetch all workouts completed today (both prescribed and manual)
+    func fetchTodaysCompletedWorkouts() async {
+        guard let patientId = supabase.userId else { return }
+
+        let logger = DebugLogger.shared
+        logger.log("📊 Fetching today's completed workouts...")
+
+        // Get today's date range
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+
+        let formatter = ISO8601DateFormatter()
+        let todayStr = formatter.string(from: today)
+        let tomorrowStr = formatter.string(from: tomorrow)
+
+        var workouts: [TodayWorkoutSummary] = []
+
+        // 1. Fetch completed prescribed sessions for today
+        do {
+            let response = try await supabase.client
+                .from("sessions")
+                .select("id, name, completed_at, duration_minutes, total_volume")
+                .eq("completed", value: true)
+                .gte("completed_at", value: todayStr)
+                .lt("completed_at", value: tomorrowStr)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let prescribedSessions = try decoder.decode([CompletedSessionRow].self, from: response.data)
+
+            for session in prescribedSessions {
+                if let uuid = UUID(uuidString: session.id) {
+                    let completedAt: Date
+                    if let completedAtStr = session.completed_at {
+                        completedAt = formatter.date(from: completedAtStr) ?? Date()
+                    } else {
+                        completedAt = Date()
+                    }
+
+                    workouts.append(TodayWorkoutSummary(
+                        id: uuid,
+                        name: session.name,
+                        completedAt: completedAt,
+                        durationMinutes: session.duration_minutes,
+                        totalVolume: session.total_volume,
+                        exerciseCount: 0,  // Would need separate query
+                        isPrescribed: true
+                    ))
+                }
+            }
+            logger.log("📊 Found \(prescribedSessions.count) prescribed sessions completed today", level: .success)
+        } catch {
+            logger.log("⚠️ Failed to fetch prescribed sessions: \(error.localizedDescription)", level: .warning)
+        }
+
+        // 2. Fetch completed manual sessions for today
+        do {
+            let response = try await supabase.client
+                .from("manual_sessions")
+                .select("id, name, completed_at, duration_minutes, total_volume")
+                .eq("patient_id", value: patientId)
+                .eq("completed", value: true)
+                .gte("completed_at", value: todayStr)
+                .lt("completed_at", value: tomorrowStr)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let manualSessions = try decoder.decode([CompletedManualSessionRow].self, from: response.data)
+
+            for session in manualSessions {
+                if let uuid = UUID(uuidString: session.id) {
+                    let completedAt: Date
+                    if let completedAtStr = session.completed_at {
+                        completedAt = formatter.date(from: completedAtStr) ?? Date()
+                    } else {
+                        completedAt = Date()
+                    }
+
+                    workouts.append(TodayWorkoutSummary(
+                        id: uuid,
+                        name: session.name,
+                        completedAt: completedAt,
+                        durationMinutes: session.duration_minutes,
+                        totalVolume: session.total_volume,
+                        exerciseCount: 0,
+                        isPrescribed: false
+                    ))
+                }
+            }
+            logger.log("📊 Found \(manualSessions.count) manual sessions completed today", level: .success)
+        } catch {
+            logger.log("⚠️ Failed to fetch manual sessions: \(error.localizedDescription)", level: .warning)
+        }
+
+        // Sort by completion time (newest first)
+        workouts.sort { $0.completedAt > $1.completedAt }
+
+        await MainActor.run {
+            self.todaysCompletedWorkouts = workouts
+            self.completedTodayCount = workouts.count
+        }
+
+        logger.log("📊 Total workouts completed today: \(workouts.count)", level: .success)
     }
 
     // MARK: - Build 33: Session Completion
@@ -657,4 +774,49 @@ struct ExerciseLogRecord: Codable {
     let pain_score: Int?
     let notes: String?  // Added: returned by SELECT *
     let created_at: Date?  // Added: returned by SELECT *
+}
+
+// MARK: - BUILD 269: Today's Workout Summary
+
+/// Summary of a completed workout for today's counter
+struct TodayWorkoutSummary: Identifiable {
+    let id: UUID
+    let name: String
+    let completedAt: Date
+    let durationMinutes: Int?
+    let totalVolume: Double?
+    let exerciseCount: Int
+    let isPrescribed: Bool  // true = prescribed session, false = manual workout
+}
+
+/// Codable struct for fetching completed prescribed sessions
+struct CompletedSessionRow: Codable {
+    let id: String
+    let name: String
+    let completed_at: String?
+    let duration_minutes: Int?
+    let total_volume: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case completed_at
+        case duration_minutes
+        case total_volume
+    }
+}
+
+/// Codable struct for fetching completed manual sessions
+struct CompletedManualSessionRow: Codable {
+    let id: String
+    let name: String
+    let completed_at: String?
+    let duration_minutes: Int?
+    let total_volume: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case completed_at
+        case duration_minutes
+        case total_volume
+    }
 }

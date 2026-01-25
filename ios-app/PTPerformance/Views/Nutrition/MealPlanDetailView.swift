@@ -26,10 +26,8 @@ struct MealPlanDetailView: View {
                 // Plan Summary Card
                 planSummaryCard
 
-                // Day Selector (for weekly plans)
-                if plan.planType == .weekly {
-                    daySelector
-                }
+                // Day Selector (for all plans to filter by day)
+                daySelector
 
                 // Meals List
                 mealsSection
@@ -153,7 +151,7 @@ struct MealPlanDetailView: View {
     private var mealsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(plan.planType == .weekly ? selectedDay.displayName : "Today's Meals")
+                Text(selectedDay.displayName)
                     .font(.headline)
                 Spacer()
                 Text("\(totalCalories) cal")
@@ -209,10 +207,18 @@ struct MealPlanDetailView: View {
     // MARK: - Computed Properties
 
     private var filteredMeals: [MealPlanItem] {
-        if plan.planType == .weekly {
-            return meals.filter { $0.dayOfWeek == selectedDay }
+        // Filter by selected day, but also include meals with nil dayOfWeek
+        // (legacy meals created before day tracking was added)
+        let today = DayOfWeek.today
+        return meals.filter { meal in
+            if let mealDay = meal.dayOfWeek {
+                // Meal has a specific day assigned
+                return mealDay == selectedDay
+            } else {
+                // Legacy meal with no day - show on today only
+                return selectedDay == today
+            }
         }
-        return meals
     }
 
     private var totalCalories: Int {
@@ -232,7 +238,15 @@ struct MealPlanDetailView: View {
     }
 
     private func mealsForDay(_ day: DayOfWeek) -> [MealPlanItem] {
-        meals.filter { $0.dayOfWeek == day }
+        let today = DayOfWeek.today
+        return meals.filter { meal in
+            if let mealDay = meal.dayOfWeek {
+                return mealDay == day
+            } else {
+                // Legacy meals with no day - count them for today only
+                return day == today
+            }
+        }
     }
 
     // MARK: - Data Loading

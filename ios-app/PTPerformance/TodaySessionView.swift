@@ -250,6 +250,11 @@ struct TodaySessionView: View {
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                // BUILD 269: Today's completed workouts counter
+                if viewModel.completedTodayCount > 0 {
+                    completedTodaySection
+                }
+
                 // Readiness Section
                 readinessSection
 
@@ -265,6 +270,84 @@ struct TodaySessionView: View {
                 Spacer()
             }
             .padding()
+        }
+    }
+
+    // BUILD 269: Section showing today's completed workouts
+    @ViewBuilder
+    private var completedTodaySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.title2)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    if let lastWorkout = viewModel.todaysCompletedWorkouts.first {
+                        Text("Last: \(lastWorkout.name)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .background(Color.green.opacity(0.1))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
+            )
+
+            // List of completed workouts today
+            if viewModel.todaysCompletedWorkouts.count > 0 {
+                ForEach(viewModel.todaysCompletedWorkouts) { workout in
+                    HStack(spacing: 12) {
+                        Image(systemName: workout.isPrescribed ? "clipboard.fill" : "dumbbell.fill")
+                            .foregroundColor(workout.isPrescribed ? .blue : .orange)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(workout.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+
+                            HStack(spacing: 8) {
+                                if let duration = workout.durationMinutes {
+                                    Text("\(duration) min")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                if let volume = workout.totalVolume, volume > 0 {
+                                    Text(volume >= 1000 ? String(format: "%.1fk lbs", volume / 1000) : "\(Int(volume)) lbs")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Text(workout.completedAt, style: .time)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(8)
+                }
+            }
         }
     }
 

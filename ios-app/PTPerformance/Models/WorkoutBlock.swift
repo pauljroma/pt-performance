@@ -1,55 +1,14 @@
+//
+//  WorkoutBlock.swift
+//  PTPerformance
+//
+//  BUILD 240: Manual Workout Entry
+//
+
 import Foundation
 import SwiftUI
 
-/// Represents a workout block containing a group of related exercises
-struct WorkoutBlock: Codable, Identifiable, Hashable {
-    let id: UUID
-    let name: String
-    let blockType: WorkoutBlockType
-    let sequence: Int
-    let exercises: [TemplateExercise]
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case blockType = "block_type"
-        case sequence
-        case exercises
-    }
-
-    init(id: UUID = UUID(), name: String, blockType: WorkoutBlockType, sequence: Int, exercises: [TemplateExercise] = []) {
-        self.id = id
-        self.name = name
-        self.blockType = blockType
-        self.sequence = sequence
-        self.exercises = exercises
-    }
-
-    /// Convenience initializer for creating blocks from template data
-    init(name: String, exercises: [TemplateExercise]) {
-        self.id = UUID()
-        self.name = name
-        self.blockType = WorkoutBlockType.inferFromName(name)
-        self.sequence = 0
-        self.exercises = exercises
-    }
-
-    var exerciseCount: Int {
-        exercises.count
-    }
-
-    var displayName: String {
-        name.isEmpty ? blockType.displayName : name
-    }
-
-    var icon: String {
-        blockType.icon
-    }
-
-    var color: Color {
-        blockType.color
-    }
-}
+// MARK: - Workout Block Type
 
 /// Types of workout blocks for organizing exercises
 enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
@@ -155,7 +114,6 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
         }
     }
 
-    /// BUILD 220: Workout block order (warm-up first, recovery last)
     var sortOrder: Int {
         switch self {
         case .cardio:
@@ -213,6 +171,138 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
     }
 }
 
+// MARK: - Block Exercise
+
+/// Represents an exercise within a workout block
+struct BlockExercise: Codable, Identifiable, Hashable {
+    let id: UUID
+    let name: String
+    let sets: Int?
+    let reps: String?
+    let duration: String?
+    let rpe: Int?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case sets
+        case reps
+        case duration
+        case rpe
+        case notes
+    }
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        sets: Int? = nil,
+        reps: String? = nil,
+        duration: String? = nil,
+        rpe: Int? = nil,
+        notes: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.sets = sets
+        self.reps = reps
+        self.duration = duration
+        self.rpe = rpe
+        self.notes = notes
+    }
+
+    var setsRepsDisplay: String {
+        if let sets = sets, let reps = reps {
+            return "\(sets) x \(reps)"
+        } else if let sets = sets {
+            return "\(sets) sets"
+        } else if let duration = duration {
+            return duration
+        }
+        return ""
+    }
+
+    // MARK: - Backward Compatibility Properties
+
+    /// Alias for sets (for compatibility with code expecting prescribedSets)
+    var prescribedSets: Int? { sets }
+
+    /// Alias for reps (for compatibility with code expecting prescribedReps)
+    var prescribedReps: String? { reps }
+
+    /// Load is not stored in BlockExercise (always nil)
+    var prescribedLoad: Double? { nil }
+
+    /// Load unit is not stored in BlockExercise (always nil)
+    var loadUnit: String? { nil }
+
+    /// Rest period is not stored in BlockExercise (always nil)
+    var restPeriodSeconds: Int? { nil }
+}
+
+// MARK: - Workout Block
+
+/// Represents a workout block containing a group of related exercises
+struct WorkoutBlock: Codable, Identifiable, Hashable {
+    let id: UUID
+    let name: String
+    let blockType: WorkoutBlockType
+    let sequence: Int
+    let exercises: [BlockExercise]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case blockType = "block_type"
+        case sequence
+        case exercises
+    }
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        blockType: WorkoutBlockType,
+        sequence: Int,
+        exercises: [BlockExercise] = []
+    ) {
+        self.id = id
+        self.name = name
+        self.blockType = blockType
+        self.sequence = sequence
+        self.exercises = exercises
+    }
+
+    /// Convenience initializer for creating blocks from template data
+    init(name: String, exercises: [BlockExercise]) {
+        self.id = UUID()
+        self.name = name
+        self.blockType = WorkoutBlockType.inferFromName(name)
+        self.sequence = 0
+        self.exercises = exercises
+    }
+
+    var exerciseCount: Int {
+        exercises.count
+    }
+
+    var displayName: String {
+        name.isEmpty ? blockType.displayName : name
+    }
+
+    var icon: String {
+        blockType.icon
+    }
+
+    var color: Color {
+        blockType.color
+    }
+}
+
+// MARK: - Type Alias
+
+/// JSONB structure for workout blocks stored in templates
+typealias WorkoutBlocks = [WorkoutBlock]
+
 // MARK: - Sample Data
 
 extension WorkoutBlock {
@@ -220,21 +310,21 @@ extension WorkoutBlock {
         WorkoutBlock(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
             name: "Warm Up",
-            blockType: .dynamicStretch,
+            blockType: WorkoutBlockType.dynamicStretch,
             sequence: 1,
             exercises: []
         ),
         WorkoutBlock(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
             name: "Main Workout",
-            blockType: .push,
+            blockType: WorkoutBlockType.push,
             sequence: 2,
             exercises: []
         ),
         WorkoutBlock(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
             name: "Cool Down",
-            blockType: .recovery,
+            blockType: WorkoutBlockType.recovery,
             sequence: 3,
             exercises: []
         )

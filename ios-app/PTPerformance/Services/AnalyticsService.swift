@@ -44,6 +44,7 @@ struct WeeklyAdherence: Codable, Identifiable {
 }
 
 /// Session summary for history list
+/// BUILD 269: Added completion metrics for history display
 struct SessionSummary: Codable, Identifiable {
     let id: String
     let sessionNumber: Int
@@ -51,6 +52,11 @@ struct SessionSummary: Codable, Identifiable {
     let completed: Bool
     let exerciseCount: Int
     let avgPainScore: Double?
+    // BUILD 269: Additional fields for completed session display
+    let completedAt: Date?
+    let totalVolume: Double?
+    let avgRpe: Double?
+    let durationMinutes: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -59,6 +65,10 @@ struct SessionSummary: Codable, Identifiable {
         case completed
         case exerciseCount = "exercise_count"
         case avgPainScore = "avg_pain_score"
+        case completedAt = "completed_at"
+        case totalVolume = "total_volume"
+        case avgRpe = "avg_rpe"
+        case durationMinutes = "duration_minutes"
     }
 }
 
@@ -107,7 +117,8 @@ class AnalyticsService {
         return adherence
     }
 
-    /// Fetch recent session summaries
+    /// Fetch recent completed session summaries for history view
+    /// BUILD 269: Filter to only show completed sessions in history
     func fetchRecentSessions(patientId: String, limit: Int = 10) async throws -> [SessionSummary] {
         let response = try await supabase.client
             .from("vw_patient_sessions")
@@ -117,10 +128,15 @@ class AnalyticsService {
                 session_date,
                 completed,
                 exercise_count,
-                avg_pain_score
+                avg_pain_score,
+                completed_at,
+                total_volume,
+                avg_rpe,
+                duration_minutes
             """)
             .eq("patient_id", value: patientId)
-            .order("session_number", ascending: false)
+            .eq("completed", value: true)  // BUILD 269: Only show completed sessions
+            .order("completed_at", ascending: false)  // BUILD 269: Order by completion time
             .limit(limit)
             .execute()
 

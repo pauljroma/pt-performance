@@ -134,6 +134,32 @@ struct CreateManualExerciseLogInput: Codable {
     }
 }
 
+/// BUILD 258: Input for logging prescribed exercise (session_exercise_id reference)
+struct CreatePrescribedExerciseLogInput: Codable {
+    let sessionExerciseId: UUID
+    let patientId: UUID
+    let actualSets: Int
+    let actualReps: [Int]
+    let actualLoad: Double?
+    let loadUnit: String?
+    let rpe: Int
+    let painScore: Int
+    let notes: String?
+    let loggedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case rpe, notes
+        case sessionExerciseId = "session_exercise_id"
+        case patientId = "patient_id"
+        case actualSets = "actual_sets"
+        case actualReps = "actual_reps"
+        case actualLoad = "actual_load"
+        case loadUnit = "load_unit"
+        case painScore = "pain_score"
+        case loggedAt = "logged_at"
+    }
+}
+
 /// Input for completing a workout session
 struct CompleteWorkoutInput: Codable {
     let completed: Bool
@@ -276,7 +302,7 @@ class ManualWorkoutService: ObservableObject {
         let logger = DebugLogger.shared
         logger.log("Saving template '\(name)' for patient: \(patientId)", level: .diagnostic)
 
-        let input = CreatePatientTemplateInput(
+        let input = CreatePatientTemplateDTO(
             patientId: patientId,
             name: name,
             description: description,
@@ -616,6 +642,49 @@ class ManualWorkoutService: ObservableObject {
         }
     }
 
+    /// BUILD 265: Complete a prescribed session (in sessions table)
+    func completePrescribedSession(
+        _ sessionId: UUID,
+        totalVolume: Double?,
+        avgRpe: Double?,
+        avgPain: Double?,
+        durationMinutes: Int?
+    ) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Completing prescribed session: \(sessionId)", level: .diagnostic)
+
+        do {
+            let now = ISO8601DateFormatter().string(from: Date())
+
+            // Use a simpler struct for the sessions table which has different columns
+            struct CompletePrescribedInput: Codable {
+                let completed: Bool
+                let completedAt: String
+
+                enum CodingKeys: String, CodingKey {
+                    case completed
+                    case completedAt = "completed_at"
+                }
+            }
+
+            let updateInput = CompletePrescribedInput(
+                completed: true,
+                completedAt: now
+            )
+
+            try await supabase.client
+                .from("sessions")
+                .update(updateInput)
+                .eq("id", value: sessionId.uuidString)
+                .execute()
+
+            logger.log("Prescribed session completed successfully", level: .success)
+        } catch {
+            logger.log("Failed to complete prescribed session: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
     /// Fetch a manual session by ID
     func fetchManualSession(_ sessionId: UUID) async throws -> ManualSession {
         let logger = DebugLogger.shared
@@ -732,6 +801,48 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Manual exercise logged successfully to exercise_logs", level: .success)
         } catch {
             logger.log("Failed to log exercise: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    /// BUILD 258: Log exercise completion in a prescribed session
+    func logPrescribedExercise(
+        sessionExerciseId: UUID,
+        patientId: UUID,
+        actualSets: Int,
+        actualReps: [Int],
+        actualLoad: Double?,
+        loadUnit: String? = "lbs",
+        rpe: Int,
+        painScore: Int,
+        notes: String?
+    ) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Logging prescribed exercise: \(sessionExerciseId)", level: .diagnostic)
+
+        let formatter = ISO8601DateFormatter()
+        let input = CreatePrescribedExerciseLogInput(
+            sessionExerciseId: sessionExerciseId,
+            patientId: patientId,
+            actualSets: actualSets,
+            actualReps: actualReps,
+            actualLoad: actualLoad,
+            loadUnit: loadUnit,
+            rpe: rpe,
+            painScore: painScore,
+            notes: notes,
+            loggedAt: formatter.string(from: Date())
+        )
+
+        do {
+            try await supabase.client
+                .from("exercise_logs")
+                .insert(input)
+                .execute()
+
+            logger.log("Prescribed exercise logged successfully to exercise_logs", level: .success)
+        } catch {
+            logger.log("Failed to log prescribed exercise: \(error.localizedDescription)", level: .error)
             throw error
         }
     }

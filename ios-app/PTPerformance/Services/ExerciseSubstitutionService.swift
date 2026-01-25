@@ -288,10 +288,10 @@ struct ExerciseSubstitutionItem: Codable {
 struct IntensityAdjustment: Codable {
     let exerciseId: String
     let exerciseName: String
-    let originalSets: Int
-    let adjustedSets: Int
-    let originalReps: Int
-    let adjustedReps: Int
+    let originalSets: Int?
+    let adjustedSets: Int?
+    let originalReps: Int?
+    let adjustedReps: Int?
     let originalRpe: Int?
     let adjustedRpe: Int?
     let reason: String

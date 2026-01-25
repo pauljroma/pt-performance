@@ -1,4 +1,13 @@
+//
+//  ManualSession.swift
+//  PTPerformance
+//
+//  BUILD 240: Manual Workout Entry
+//
+
 import Foundation
+
+// MARK: - Manual Session
 
 /// Represents a manually logged workout session
 /// Maps to manual_sessions table in Supabase
@@ -18,8 +27,8 @@ struct ManualSession: Codable, Identifiable, Equatable {
     let durationMinutes: Int?
     let createdAt: Date
 
-    // Exercises for this manual session (loaded separately or joined)
-    var exercises: [ManualSessionExercise] = []
+    /// Exercises for this manual session (loaded separately or joined)
+    var exercises: [ManualSessionExercise]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -36,7 +45,67 @@ struct ManualSession: Codable, Identifiable, Equatable {
         case avgPain = "avg_pain"
         case durationMinutes = "duration_minutes"
         case createdAt = "created_at"
-        // exercises is NOT in CodingKeys - will use default value
+        case exercises
+    }
+
+    init(
+        id: UUID = UUID(),
+        patientId: UUID,
+        name: String? = nil,
+        notes: String? = nil,
+        sourceTemplateId: UUID? = nil,
+        sourceTemplateType: String? = nil,
+        startedAt: Date? = nil,
+        completedAt: Date? = nil,
+        completed: Bool = false,
+        totalVolume: Double? = nil,
+        avgRpe: Double? = nil,
+        avgPain: Double? = nil,
+        durationMinutes: Int? = nil,
+        createdAt: Date = Date(),
+        exercises: [ManualSessionExercise] = []
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.name = name
+        self.notes = notes
+        self.sourceTemplateId = sourceTemplateId
+        self.sourceTemplateType = sourceTemplateType
+        self.startedAt = startedAt
+        self.completedAt = completedAt
+        self.completed = completed
+        self.totalVolume = totalVolume
+        self.avgRpe = avgRpe
+        self.avgPain = avgPain
+        self.durationMinutes = durationMinutes
+        self.createdAt = createdAt
+        self.exercises = exercises
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        patientId = try container.decode(UUID.self, forKey: .patientId)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        sourceTemplateId = try container.decodeIfPresent(UUID.self, forKey: .sourceTemplateId)
+        sourceTemplateType = try container.decodeIfPresent(String.self, forKey: .sourceTemplateType)
+        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt)
+        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
+        completed = try container.decodeIfPresent(Bool.self, forKey: .completed) ?? false
+        totalVolume = try container.decodeIfPresent(Double.self, forKey: .totalVolume)
+        avgRpe = try container.decodeIfPresent(Double.self, forKey: .avgRpe)
+        avgPain = try container.decodeIfPresent(Double.self, forKey: .avgPain)
+        durationMinutes = try container.decodeIfPresent(Int.self, forKey: .durationMinutes)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        exercises = try container.decodeIfPresent([ManualSessionExercise].self, forKey: .exercises) ?? []
+    }
+
+    // MARK: - Computed Properties
+
+    /// Whether the session is currently in progress (started but not completed)
+    var isInProgress: Bool {
+        startedAt != nil && !completed && completedAt == nil
     }
 
     var isCompleted: Bool {
@@ -44,7 +113,10 @@ struct ManualSession: Codable, Identifiable, Equatable {
     }
 
     var completionStatus: String {
-        isCompleted ? "Completed" : "In Progress"
+        if isInProgress {
+            return "In Progress"
+        }
+        return isCompleted ? "Completed" : "Not Started"
     }
 
     var dateDisplay: String {
@@ -77,72 +149,90 @@ struct ManualSession: Codable, Identifiable, Equatable {
         }
         return "\(Int(volume)) lbs"
     }
+
+    static func == (lhs: ManualSession, rhs: ManualSession) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
-/// Represents an exercise within a manual workout session
-/// Maps to manual_session_exercises table in Supabase
-struct ManualSessionExercise: Codable, Identifiable, Hashable {
-    let id: UUID
-    let manualSessionId: UUID
-    let exerciseTemplateId: UUID?
-    let exerciseName: String
-    let blockName: String?
-    let sequence: Int
-    let targetSets: Int?
-    let targetReps: String?
-    let targetLoad: Double?
-    let loadUnit: String?
-    let restPeriodSeconds: Int?
-    let notes: String?
-    let createdAt: Date
+// MARK: - Create Manual Session DTO
 
-    // Transient properties for tracking logged exercise data during workout execution
-    // These are NOT persisted to database - they're stored in exercise_logs table
-    var actualSets: Int?
-    var actualReps: [Int]?
-    var actualLoad: Double?
-    var rpe: Double?
-    var painScore: Double?
+/// Data transfer object for creating a manual session
+struct CreateManualSessionDTO: Codable {
+    let patientId: UUID
+    let name: String?
+    let notes: String?
+    let sourceTemplateId: UUID?
+    let sourceTemplateType: String?
+    let startedAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id
-        case manualSessionId = "manual_session_id"
-        case exerciseTemplateId = "exercise_template_id"
-        case exerciseName = "exercise_name"
-        case blockName = "block_name"
-        case sequence
-        case targetSets = "target_sets"
-        case targetReps = "target_reps"
-        case targetLoad = "target_load"
-        case loadUnit = "load_unit"
-        case restPeriodSeconds = "rest_period_seconds"
+        case patientId = "patient_id"
+        case name
         case notes
-        case createdAt = "created_at"
-        // Transient properties NOT in CodingKeys - they won't be encoded/decoded
+        case sourceTemplateId = "source_template_id"
+        case sourceTemplateType = "source_template_type"
+        case startedAt = "started_at"
     }
 
-    var name: String {
-        exerciseName
-    }
-
-    var blockType: String? {
-        blockName
-    }
-
-    var repsDisplay: String {
-        targetReps ?? "0"
-    }
-
-    var loadDisplay: String {
-        if let load = targetLoad, let unit = loadUnit {
-            return "\(Int(load)) \(unit)"
-        }
-        return "Bodyweight"
-    }
-
-    var setsDisplay: String {
-        "\(targetSets ?? 0) sets"
+    init(
+        patientId: UUID,
+        name: String? = nil,
+        notes: String? = nil,
+        sourceTemplateId: UUID? = nil,
+        sourceTemplateType: String? = nil,
+        startedAt: Date? = nil
+    ) {
+        self.patientId = patientId
+        self.name = name
+        self.notes = notes
+        self.sourceTemplateId = sourceTemplateId
+        self.sourceTemplateType = sourceTemplateType
+        self.startedAt = startedAt
     }
 }
 
-// Input models are defined in ManualWorkoutService.swift
+// MARK: - Update Manual Session DTO
+
+/// Data transfer object for updating a manual session
+struct UpdateManualSessionDTO: Codable {
+    let name: String?
+    let notes: String?
+    let completedAt: Date?
+    let completed: Bool?
+    let totalVolume: Double?
+    let avgRpe: Double?
+    let avgPain: Double?
+    let durationMinutes: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case notes
+        case completedAt = "completed_at"
+        case completed
+        case totalVolume = "total_volume"
+        case avgRpe = "avg_rpe"
+        case avgPain = "avg_pain"
+        case durationMinutes = "duration_minutes"
+    }
+
+    init(
+        name: String? = nil,
+        notes: String? = nil,
+        completedAt: Date? = nil,
+        completed: Bool? = nil,
+        totalVolume: Double? = nil,
+        avgRpe: Double? = nil,
+        avgPain: Double? = nil,
+        durationMinutes: Int? = nil
+    ) {
+        self.name = name
+        self.notes = notes
+        self.completedAt = completedAt
+        self.completed = completed
+        self.totalVolume = totalVolume
+        self.avgRpe = avgRpe
+        self.avgPain = avgPain
+        self.durationMinutes = durationMinutes
+    }
+}

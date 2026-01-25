@@ -127,21 +127,15 @@ class ManualWorkoutCreatorViewModel: ObservableObject {
         for blockType in WorkoutBlockType.allCases {
             guard let exercises = blocks[blockType], !exercises.isEmpty else { continue }
 
-            let templateExercises = exercises.enumerated().map { index, exercise in
-                TemplateExercise(
+            let blockExercises = exercises.enumerated().map { index, exercise in
+                BlockExercise(
                     id: UUID(),
-                    exerciseTemplateId: exercise.exerciseTemplateId,
                     name: exercise.name,
-                    sequence: index + 1,
-                    prescribedSets: exercise.sets,
-                    prescribedReps: exercise.reps,
-                    prescribedLoad: exercise.load,
-                    loadUnit: exercise.loadUnit,
-                    restPeriodSeconds: exercise.restSeconds,
-                    notes: exercise.notes,
-                    category: exercise.category,
-                    bodyRegion: exercise.bodyRegion,
-                    videoUrl: exercise.videoUrl
+                    sets: exercise.sets,
+                    reps: exercise.reps,
+                    duration: nil,
+                    rpe: nil,
+                    notes: exercise.notes
                 )
             }
 
@@ -150,7 +144,7 @@ class ManualWorkoutCreatorViewModel: ObservableObject {
                 name: blockType.displayName,
                 blockType: blockType,
                 sequence: sequence,
-                exercises: templateExercises
+                exercises: blockExercises
             )
 
             result.append(block)

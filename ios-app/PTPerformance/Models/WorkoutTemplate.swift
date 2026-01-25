@@ -2,515 +2,11 @@
 //  WorkoutTemplate.swift
 //  PTPerformance
 //
-//  Created by Build 46 Swarm Agent 2
+//  BUILD 240: Manual Workout Entry
 //  Models for workout template system
 //
 
 import Foundation
-
-// MARK: - Workout Blocks JSONB Structure
-
-/// JSONB structure for workout blocks stored in templates
-typealias WorkoutBlocks = [WorkoutBlock]
-
-// MARK: - System Workout Template
-
-/// Wrapper for JSONB blocks structure: {"blocks": [...]}
-struct BlocksWrapper: Codable {
-    let blocks: [DatabaseBlock]
-}
-
-/// Represents a system-defined workout template
-/// Maps to system_workout_templates table in Supabase
-/// Note: The `exercises` JSONB column contains {"blocks": [...]} wrapper
-struct SystemWorkoutTemplate: Codable, Identifiable {
-    let id: UUID
-    let name: String
-    let description: String?
-    let category: String?
-    let difficulty: String?
-    let durationMinutes: Int?
-    let exerciseBlocks: [DatabaseBlock]  // Decoded from {"blocks": [...]} wrapper
-    let tags: [String]?
-    let sourceFile: String?
-    let createdAt: Date?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case description
-        case category
-        case difficulty
-        case durationMinutes = "duration_minutes"
-        case exercises
-        case tags
-        case sourceFile = "source_file"
-        case createdAt = "created_at"
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        description = try container.decodeIfPresent(String.self, forKey: .description)
-        category = try container.decodeIfPresent(String.self, forKey: .category)
-        difficulty = try container.decodeIfPresent(String.self, forKey: .difficulty)
-        durationMinutes = try container.decodeIfPresent(Int.self, forKey: .durationMinutes)
-        tags = try container.decodeIfPresent([String].self, forKey: .tags)
-        sourceFile = try container.decodeIfPresent(String.self, forKey: .sourceFile)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
-
-        // Decode exercises - handle both {"blocks": [...]} wrapper and direct [...] array
-        if let wrapper = try? container.decodeIfPresent(BlocksWrapper.self, forKey: .exercises) {
-            exerciseBlocks = wrapper.blocks
-        } else if let directBlocks = try? container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises) {
-            exerciseBlocks = directBlocks
-        } else {
-            exerciseBlocks = []
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encodeIfPresent(description, forKey: .description)
-        try container.encodeIfPresent(category, forKey: .category)
-        try container.encodeIfPresent(difficulty, forKey: .difficulty)
-        try container.encodeIfPresent(durationMinutes, forKey: .durationMinutes)
-        try container.encode(BlocksWrapper(blocks: exerciseBlocks), forKey: .exercises)
-        try container.encodeIfPresent(tags, forKey: .tags)
-        try container.encodeIfPresent(sourceFile, forKey: .sourceFile)
-        try container.encodeIfPresent(createdAt, forKey: .createdAt)
-    }
-
-    var durationDisplay: String? {
-        guard let minutes = durationMinutes else { return nil }
-        if minutes >= 60 {
-            let hours = minutes / 60
-            let remainingMinutes = minutes % 60
-            if remainingMinutes > 0 {
-                return "\(hours)h\(remainingMinutes)m"  // More compact format
-            }
-            return "\(hours)hr"
-        }
-        return "\(minutes)m"  // Compact format for phone
-    }
-
-    /// Total exercise count across all blocks
-    var exerciseCount: Int {
-        exerciseBlocks.reduce(0) { $0 + $1.exercises.count }
-    }
-
-    var difficultyDisplay: String {
-        difficulty?.capitalized ?? "Moderate"
-    }
-
-    /// Convert database blocks to WorkoutBlocks for UI display
-    var blocks: WorkoutBlocks {
-        exerciseBlocks.sorted { $0.sequence < $1.sequence }.map { dbBlock in
-            let templateExercises = dbBlock.exercises.map { dbExercise in
-                TemplateExercise(
-                    id: dbExercise.id ?? UUID(),
-                    exerciseTemplateId: dbExercise.exerciseTemplateId ?? UUID(),
-                    name: dbExercise.name ?? "Unknown",
-                    sequence: dbExercise.sequence ?? 0,
-                    prescribedSets: dbExercise.prescribedSets ?? 3,
-                    prescribedReps: dbExercise.prescribedReps,
-                    prescribedLoad: nil,
-                    loadUnit: nil,
-                    restPeriodSeconds: nil,
-                    notes: dbExercise.notes
-                )
-            }
-            return WorkoutBlock(
-                id: dbBlock.id ?? UUID(),
-                name: dbBlock.name,
-                blockType: WorkoutBlockType(rawValue: dbBlock.blockType ?? "") ?? .inferFromName(dbBlock.name),
-                sequence: dbBlock.sequence,
-                exercises: templateExercises
-            )
-        }
-    }
-}
-
-/// Represents a block as stored in the database JSONB
-struct DatabaseBlock: Codable {
-    let id: UUID?
-    let name: String
-    let blockType: String?
-    let sequence: Int
-    let exercises: [DatabaseExercise]
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case blockType = "block_type"
-        case sequence
-        case exercises
-    }
-
-    init(id: UUID? = nil, name: String, blockType: String?, sequence: Int, exercises: [DatabaseExercise]) {
-        self.id = id
-        self.name = name
-        self.blockType = blockType
-        self.sequence = sequence
-        self.exercises = exercises
-    }
-}
-
-/// Represents an exercise within a database block
-/// Handles both formats:
-///   - System templates: {"name": "...", "sets": 3, "reps": "10", ...}
-///   - Prescribed sessions: {"name": "...", "prescribed_sets": 3, "prescribed_reps": "10", ...}
-struct DatabaseExercise: Codable {
-    let id: UUID?
-    let exerciseTemplateId: UUID?
-    let name: String?
-    let sequence: Int?
-    let prescribedSets: Int?
-    let prescribedReps: String?
-    let notes: String?
-    let rpe: Int?
-    let duration: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case exerciseTemplateId = "exercise_template_id"
-        case name
-        case sequence
-        case prescribedSets = "prescribed_sets"
-        case prescribedReps = "prescribed_reps"
-        case notes
-        case rpe
-        case duration
-        // Alternate keys for system templates
-        case sets
-        case reps
-    }
-
-    init(id: UUID? = nil, exerciseTemplateId: UUID?, name: String?, sequence: Int?, prescribedSets: Int?, prescribedReps: String?, notes: String?, rpe: Int? = nil, duration: String? = nil) {
-        self.id = id
-        self.exerciseTemplateId = exerciseTemplateId
-        self.name = name
-        self.sequence = sequence
-        self.prescribedSets = prescribedSets
-        self.prescribedReps = prescribedReps
-        self.notes = notes
-        self.rpe = rpe
-        self.duration = duration
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        id = try container.decodeIfPresent(UUID.self, forKey: .id)
-        exerciseTemplateId = try container.decodeIfPresent(UUID.self, forKey: .exerciseTemplateId)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
-        sequence = try container.decodeIfPresent(Int.self, forKey: .sequence)
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        rpe = try container.decodeIfPresent(Int.self, forKey: .rpe)
-        duration = try container.decodeIfPresent(String.self, forKey: .duration)
-
-        // Handle sets: try prescribed_sets first, then sets
-        if let sets = try container.decodeIfPresent(Int.self, forKey: .prescribedSets) {
-            prescribedSets = sets
-        } else if let sets = try container.decodeIfPresent(Int.self, forKey: .sets) {
-            prescribedSets = sets
-        } else {
-            prescribedSets = nil
-        }
-
-        // Handle reps: try prescribed_reps first, then reps (can be String or Int)
-        if let reps = try container.decodeIfPresent(String.self, forKey: .prescribedReps) {
-            prescribedReps = reps
-        } else if let reps = try container.decodeIfPresent(String.self, forKey: .reps) {
-            prescribedReps = reps
-        } else if let repsInt = try container.decodeIfPresent(Int.self, forKey: .reps) {
-            prescribedReps = String(repsInt)
-        } else if let repsInt = try container.decodeIfPresent(Int.self, forKey: .prescribedReps) {
-            prescribedReps = String(repsInt)
-        } else {
-            prescribedReps = nil
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(id, forKey: .id)
-        try container.encodeIfPresent(exerciseTemplateId, forKey: .exerciseTemplateId)
-        try container.encodeIfPresent(name, forKey: .name)
-        try container.encodeIfPresent(sequence, forKey: .sequence)
-        try container.encodeIfPresent(prescribedSets, forKey: .prescribedSets)
-        try container.encodeIfPresent(prescribedReps, forKey: .prescribedReps)
-        try container.encodeIfPresent(notes, forKey: .notes)
-        try container.encodeIfPresent(rpe, forKey: .rpe)
-        try container.encodeIfPresent(duration, forKey: .duration)
-    }
-}
-
-/// Raw exercise data from database JSONB
-struct TemplateExerciseData: Codable {
-    let exerciseTemplateId: UUID?
-    let exerciseName: String?
-    let name: String?
-    let blockName: String?
-    let sequence: Int?
-    let targetSets: Int?
-    let targetReps: String?
-    let targetLoad: Double?
-    let loadUnit: String?
-    let restPeriodSeconds: Int?
-    let notes: String?
-    // Legacy fields
-    let sets: Int?
-    let reps: Int?
-    let load: Double?
-    let rest: Int?
-
-    enum CodingKeys: String, CodingKey {
-        case exerciseTemplateId = "exercise_template_id"
-        case exerciseName = "exercise_name"
-        case name
-        case blockName = "block_name"
-        case sequence
-        case targetSets = "target_sets"
-        case targetReps = "target_reps"
-        case targetLoad = "target_load"
-        case loadUnit = "load_unit"
-        case restPeriodSeconds = "rest_period_seconds"
-        case notes
-        case sets, reps, load, rest
-    }
-
-    init(
-        exerciseTemplateId: UUID? = nil,
-        exerciseName: String? = nil,
-        name: String? = nil,
-        blockName: String? = nil,
-        sequence: Int? = nil,
-        targetSets: Int? = nil,
-        targetReps: String? = nil,
-        targetLoad: Double? = nil,
-        loadUnit: String? = nil,
-        restPeriodSeconds: Int? = nil,
-        notes: String? = nil,
-        sets: Int? = nil,
-        reps: Int? = nil,
-        load: Double? = nil,
-        rest: Int? = nil
-    ) {
-        self.exerciseTemplateId = exerciseTemplateId
-        self.exerciseName = exerciseName
-        self.name = name
-        self.blockName = blockName
-        self.sequence = sequence
-        self.targetSets = targetSets
-        self.targetReps = targetReps
-        self.targetLoad = targetLoad
-        self.loadUnit = loadUnit
-        self.restPeriodSeconds = restPeriodSeconds
-        self.notes = notes
-        self.sets = sets
-        self.reps = reps
-        self.load = load
-        self.rest = rest
-    }
-}
-
-// MARK: - Flat Patient Exercise (Legacy Format)
-
-/// Flat exercise format for patient templates (legacy structure)
-/// Used when exercises are stored directly without blocks
-struct FlatPatientExercise: Codable {
-    let id: UUID?
-    let exerciseTemplateId: UUID?
-    let name: String?
-    let sequence: Int?
-    let prescribedSets: Int?
-    let prescribedReps: String?
-    let targetSets: Int?
-    let targetReps: String?
-    let targetLoad: Double?
-    let loadUnit: String?
-    let notes: String?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case exerciseTemplateId = "exercise_template_id"
-        case name
-        case sequence
-        case prescribedSets = "prescribed_sets"
-        case prescribedReps = "prescribed_reps"
-        case targetSets = "target_sets"
-        case targetReps = "target_reps"
-        case targetLoad = "target_load"
-        case loadUnit = "load_unit"
-        case notes
-    }
-}
-
-// MARK: - Patient Workout Template
-
-/// Represents a patient-specific workout template (customized from system template or created by clinician)
-/// Maps to patient_workout_templates table in Supabase
-/// Note: The `exercises` JSONB column can contain:
-///   1. Block format: `[{name: "Block", sequence: 0, exercises: [...]}]`
-///   2. Flat format: `[{name: "Exercise Name", prescribed_sets: 3, ...}]` (legacy)
-struct PatientWorkoutTemplate: Codable, Identifiable {
-    let id: UUID
-    let patientId: UUID
-    let name: String
-    let description: String?
-    let category: String?
-    let exercises: [DatabaseBlock]?  // Optional - may be null or empty
-    let usageCount: Int?  // Optional - may be null in database
-    let createdAt: Date?
-    let updatedAt: Date?  // Added back - exists in database schema
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case patientId = "patient_id"
-        case name
-        case description
-        case category
-        case exercises
-        case usageCount = "usage_count"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
-
-    /// Custom decoder to handle both block format and flat exercise format
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        patientId = try container.decode(UUID.self, forKey: .patientId)
-        name = try container.decode(String.self, forKey: .name)
-        description = try container.decodeIfPresent(String.self, forKey: .description)
-        category = try container.decodeIfPresent(String.self, forKey: .category)
-        usageCount = try container.decodeIfPresent(Int.self, forKey: .usageCount)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
-        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt)
-
-        // Try to decode exercises - support both block format and flat format
-        if let blocks = try? container.decodeIfPresent([DatabaseBlock].self, forKey: .exercises) {
-            // Block format: [{name: "Block", exercises: [...]}]
-            exercises = blocks
-        } else if let flatExercises = try? container.decodeIfPresent([FlatPatientExercise].self, forKey: .exercises) {
-            // Flat format: [{name: "Exercise", prescribed_sets: 3, ...}]
-            // Wrap in a single "Main" block
-            var dbExercises: [DatabaseExercise] = []
-            for (index, flat) in flatExercises.enumerated() {
-                let exerciseId = flat.id ?? UUID()
-                let exerciseSeq = flat.sequence ?? index
-                let exerciseSets = flat.prescribedSets ?? flat.targetSets ?? 3
-                let exerciseReps = flat.prescribedReps ?? flat.targetReps
-                let dbExercise = DatabaseExercise(
-                    id: exerciseId,
-                    exerciseTemplateId: flat.exerciseTemplateId,
-                    name: flat.name,
-                    sequence: exerciseSeq,
-                    prescribedSets: exerciseSets,
-                    prescribedReps: exerciseReps,
-                    notes: flat.notes
-                )
-                dbExercises.append(dbExercise)
-            }
-            let mainBlock = DatabaseBlock(
-                id: UUID(),
-                name: "Main",
-                blockType: "strength",
-                sequence: 0,
-                exercises: dbExercises
-            )
-            exercises = [mainBlock]
-        } else {
-            // No exercises or null
-            exercises = nil
-        }
-    }
-
-    /// Total exercise count across all blocks
-    var exerciseCount: Int {
-        (exercises ?? []).reduce(0) { $0 + $1.exercises.count }
-    }
-
-    /// Convert database blocks to WorkoutBlocks for UI display
-    var blocks: WorkoutBlocks {
-        (exercises ?? []).sorted { $0.sequence < $1.sequence }.map { dbBlock in
-            let templateExercises = dbBlock.exercises.map { dbExercise in
-                TemplateExercise(
-                    id: dbExercise.id ?? UUID(),
-                    exerciseTemplateId: dbExercise.exerciseTemplateId ?? UUID(),
-                    name: dbExercise.name ?? "Unknown",
-                    sequence: dbExercise.sequence ?? 0,
-                    prescribedSets: dbExercise.prescribedSets ?? 3,
-                    prescribedReps: dbExercise.prescribedReps,
-                    prescribedLoad: nil,
-                    loadUnit: nil,
-                    restPeriodSeconds: nil,
-                    notes: dbExercise.notes
-                )
-            }
-            return WorkoutBlock(
-                id: dbBlock.id ?? UUID(),
-                name: dbBlock.name,
-                blockType: WorkoutBlockType(rawValue: dbBlock.blockType ?? "") ?? .inferFromName(dbBlock.name),
-                sequence: dbBlock.sequence,
-                exercises: templateExercises
-            )
-        }
-    }
-}
-
-// MARK: - Create Patient Template Input
-
-/// Input model for creating a patient workout template
-struct CreatePatientTemplateInput: Codable {
-    let patientId: UUID
-    let name: String
-    let description: String?
-    let category: String?
-    let exercises: [DatabaseBlock]  // Stores blocks with nested exercises
-
-    enum CodingKeys: String, CodingKey {
-        case patientId = "patient_id"
-        case name
-        case description
-        case category
-        case exercises
-    }
-
-    /// Initialize from WorkoutBlocks
-    init(patientId: UUID, name: String, description: String?, category: String? = nil, blocks: WorkoutBlocks) {
-        self.patientId = patientId
-        self.name = name
-        self.description = description
-        self.category = category
-
-        // Convert WorkoutBlocks to DatabaseBlocks
-        self.exercises = blocks.enumerated().map { index, block in
-            let dbExercises = block.exercises.map { exercise in
-                DatabaseExercise(
-                    id: exercise.id,
-                    exerciseTemplateId: exercise.exerciseTemplateId,
-                    name: exercise.name,
-                    sequence: exercise.sequence,
-                    prescribedSets: exercise.prescribedSets,
-                    prescribedReps: exercise.prescribedReps,
-                    notes: exercise.notes
-                )
-            }
-            return DatabaseBlock(
-                id: block.id,
-                name: block.name,
-                blockType: block.blockType.rawValue,
-                sequence: index,
-                exercises: dbExercises
-            )
-        }
-    }
-}
 
 // MARK: - Workout Template
 
@@ -847,6 +343,77 @@ struct TemplateExercise: Codable, Identifiable, Hashable {
         } else {
             return "\(seconds)s rest"
         }
+    }
+}
+
+// MARK: - Template Exercise Data
+
+/// Raw exercise data from database JSONB
+struct TemplateExerciseData: Codable {
+    let exerciseTemplateId: UUID?
+    let exerciseName: String?
+    let name: String?
+    let blockName: String?
+    let sequence: Int?
+    let targetSets: Int?
+    let targetReps: String?
+    let targetLoad: Double?
+    let loadUnit: String?
+    let restPeriodSeconds: Int?
+    let notes: String?
+    // Legacy fields
+    let sets: Int?
+    let reps: Int?
+    let load: Double?
+    let rest: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case exerciseTemplateId = "exercise_template_id"
+        case exerciseName = "exercise_name"
+        case name
+        case blockName = "block_name"
+        case sequence
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case targetLoad = "target_load"
+        case loadUnit = "load_unit"
+        case restPeriodSeconds = "rest_period_seconds"
+        case notes
+        case sets, reps, load, rest
+    }
+
+    init(
+        exerciseTemplateId: UUID? = nil,
+        exerciseName: String? = nil,
+        name: String? = nil,
+        blockName: String? = nil,
+        sequence: Int? = nil,
+        targetSets: Int? = nil,
+        targetReps: String? = nil,
+        targetLoad: Double? = nil,
+        loadUnit: String? = nil,
+        restPeriodSeconds: Int? = nil,
+        notes: String? = nil,
+        sets: Int? = nil,
+        reps: Int? = nil,
+        load: Double? = nil,
+        rest: Int? = nil
+    ) {
+        self.exerciseTemplateId = exerciseTemplateId
+        self.exerciseName = exerciseName
+        self.name = name
+        self.blockName = blockName
+        self.sequence = sequence
+        self.targetSets = targetSets
+        self.targetReps = targetReps
+        self.targetLoad = targetLoad
+        self.loadUnit = loadUnit
+        self.restPeriodSeconds = restPeriodSeconds
+        self.notes = notes
+        self.sets = sets
+        self.reps = reps
+        self.load = load
+        self.rest = rest
     }
 }
 

@@ -20,6 +20,7 @@ struct NutritionLog: Codable, Identifiable {
     let totalFatG: Double?
     let totalFiberG: Double?
     let notes: String?
+    let description: String?  // BUILD 244: Added for DB compatibility
     let photoUrl: String?
     let createdAt: Date?
     let updatedAt: Date?
@@ -36,6 +37,7 @@ struct NutritionLog: Codable, Identifiable {
         case totalFatG = "total_fat_g"
         case totalFiberG = "total_fiber_g"
         case notes
+        case description
         case photoUrl = "photo_url"
         case createdAt = "created_at"
         case updatedAt = "updated_at"

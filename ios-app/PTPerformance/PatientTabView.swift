@@ -7,6 +7,7 @@ struct PatientTabView: View {
     var body: some View {
         TabView {
             TodaySessionView()
+                .environmentObject(supabase)  // BUILD 265: Pass supabase environment object
                 .tabItem {
                     Label("Today", systemImage: "list.bullet")
                 }

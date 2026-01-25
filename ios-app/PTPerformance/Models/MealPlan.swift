@@ -34,7 +34,7 @@ struct MealPlan: Codable, Identifiable {
         case createdBy = "created_by"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
-        case items
+        case items = "meal_plan_items"  // Supabase nested query returns table name
     }
 }
 

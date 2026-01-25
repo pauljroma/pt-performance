@@ -189,7 +189,7 @@ struct AddMealSheet: View {
 
         let dto = CreateMealPlanItemDTO(
             mealPlanId: planId.uuidString,
-            dayOfWeek: planType == .weekly ? selectedDay.rawValue : nil,
+            dayOfWeek: selectedDay.rawValue,  // Always store day for filtering
             mealType: mealType.rawValue,
             mealTime: timeString,
             foodItems: foodItems,

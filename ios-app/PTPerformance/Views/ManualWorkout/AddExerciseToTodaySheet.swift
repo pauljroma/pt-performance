@@ -253,8 +253,9 @@ class AddExerciseViewModel: ObservableObject {
         isAdding = true
 
         do {
-            // Get today's scheduled session
+            // Step 1: Try scheduled_sessions first
             let today = ISO8601DateFormatter().string(from: Date()).prefix(10)
+            var sessionId: String? = nil
 
             let scheduledResponse = try await supabase.client
                 .from("scheduled_sessions")
@@ -270,9 +271,51 @@ class AddExerciseViewModel: ObservableObject {
             }
 
             let scheduled = try JSONDecoder().decode([ScheduledRow].self, from: scheduledResponse.data)
+            sessionId = scheduled.first?.session_id
 
-            guard let sessionId = scheduled.first?.session_id else {
-                errorMessage = "No session scheduled for today"
+            // Step 2: Fallback to program-based session lookup
+            if sessionId == nil {
+                #if DEBUG
+                print("📱 [AddToToday] No scheduled session, trying program-based lookup")
+                #endif
+
+                struct ProgramSession: Codable {
+                    let id: String
+                    let name: String
+                }
+
+                let programResponse = try await supabase.client
+                    .from("sessions")
+                    .select("""
+                        id,
+                        name,
+                        phases!inner(
+                            id,
+                            programs!inner(
+                                id,
+                                patient_id,
+                                status
+                            )
+                        )
+                    """)
+                    .eq("phases.programs.patient_id", value: patientId)
+                    .eq("phases.programs.status", value: "active")
+                    .order("sequence", ascending: true)
+                    .limit(1)
+                    .execute()
+
+                let programSessions = try JSONDecoder().decode([ProgramSession].self, from: programResponse.data)
+                sessionId = programSessions.first?.id
+
+                if let id = sessionId {
+                    #if DEBUG
+                    print("✅ [AddToToday] Found program-based session: \(id)")
+                    #endif
+                }
+            }
+
+            guard let sessionId = sessionId else {
+                errorMessage = "No active session found for today. Make sure you have an active program assigned."
                 showError = true
                 isAdding = false
                 return
@@ -318,7 +361,9 @@ class AddExerciseViewModel: ObservableObject {
                 .insert(newExercise)
                 .execute()
 
-            DebugLogger.shared.log("Added exercise \(exercise.name) to session \(sessionId)", level: .success)
+#if DEBUG
+            print("✅ [AddToToday] Added exercise \(exercise.name) to session \(sessionId)")
+            #endif
             isAdding = false
 
         } catch {

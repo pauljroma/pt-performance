@@ -159,6 +159,8 @@ class MealPlanService {
 
     /// Fetch a single meal plan with items
     func fetchMealPlan(id: UUID) async throws -> MealPlan? {
+        logger.info("MEAL PLAN", "Fetching meal plan by ID: \(id)")
+
         let response = try await supabase.client
             .from("meal_plans")
             .select("*, meal_plan_items(*)")
@@ -166,8 +168,13 @@ class MealPlanService {
             .limit(1)
             .execute()
 
+        if let json = String(data: response.data, encoding: .utf8) {
+            logger.info("MEAL PLAN", "Fetch plan response: \(json)")
+        }
+
         let decoder = createFlexibleDecoder()
         let plans = try decoder.decode([MealPlan].self, from: response.data)
+        logger.success("MEAL PLAN", "Decoded plan with \(plans.first?.items?.count ?? 0) items")
         return plans.first
     }
 
@@ -292,6 +299,8 @@ class MealPlanService {
 
     /// Add a meal to a plan
     func addMealToPlan(_ item: CreateMealPlanItemDTO) async throws -> MealPlanItem {
+        logger.info("MEAL PLAN", "Adding meal to plan: \(item.mealPlanId), type: \(item.mealType)")
+
         // Use the DTO directly since it's already Codable
         let response = try await supabase.client
             .from("meal_plan_items")
@@ -300,8 +309,14 @@ class MealPlanService {
             .single()
             .execute()
 
+        if let json = String(data: response.data, encoding: .utf8) {
+            logger.info("MEAL PLAN", "Insert meal response: \(json)")
+        }
+
         let decoder = createFlexibleDecoder()
-        return try decoder.decode(MealPlanItem.self, from: response.data)
+        let result = try decoder.decode(MealPlanItem.self, from: response.data)
+        logger.success("MEAL PLAN", "Added meal item: \(result.id)")
+        return result
     }
 
     /// Update a meal plan item (simplified - use sequence update only)

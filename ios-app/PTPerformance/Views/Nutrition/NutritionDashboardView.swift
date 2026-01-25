@@ -12,12 +12,16 @@ struct NutritionDashboardView: View {
     @StateObject private var viewModel = NutritionDashboardViewModel()
     @State private var showMealLogSheet = false
     @State private var selectedMealType: MealType = .lunch
+    @State private var showAIRecommendation = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 // Today's Progress Card
                 todayProgressCard
+
+                // AI Meal Suggestion Card
+                aiSuggestionCard
 
                 // Macro Distribution
                 macroDistributionCard
@@ -61,6 +65,15 @@ struct NutritionDashboardView: View {
         .sheet(isPresented: $viewModel.showGoalSheet) {
             NavigationStack {
                 NutritionGoalView()
+            }
+        }
+        .sheet(isPresented: $showAIRecommendation) {
+            NavigationStack {
+                if let patientId = UUID(uuidString: PTSupabaseClient.shared.userId ?? "") {
+                    NutritionRecommendationView(patientId: patientId)
+                } else {
+                    Text("Please log in to use AI recommendations")
+                }
             }
         }
         .alert("Error", isPresented: $viewModel.showError) {
@@ -127,6 +140,41 @@ struct NutritionDashboardView: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5)
+    }
+
+    // MARK: - AI Suggestion Card
+
+    private var aiSuggestionCard: some View {
+        Button {
+            showAIRecommendation = true
+        } label: {
+            HStack(spacing: 16) {
+                Image(systemName: "sparkles")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Meal Suggestion")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Get personalized recommendations based on your goals and today's meals")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Macro Distribution
@@ -205,34 +253,69 @@ struct NutritionDashboardView: View {
                 Text("Today's Meals")
                     .font(.headline)
                 Spacer()
-                if !viewModel.todaysLogs.isEmpty {
-                    Text("\(viewModel.todaysLogs.count) logged")
+                let totalCount = viewModel.todaysLogs.count + viewModel.todaysPlannedMeals.count
+                if totalCount > 0 {
+                    Text("\(viewModel.todaysLogs.count) logged, \(viewModel.todaysPlannedMeals.count) planned")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
 
-            if viewModel.todaysLogs.isEmpty {
+            // BUILD 244: Show planned meals from meal plan
+            if !viewModel.todaysPlannedMeals.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Planned")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+
+                    ForEach(viewModel.todaysPlannedMeals) { meal in
+                        PlannedMealRow(meal: meal)
+                    }
+                }
+
+                if !viewModel.todaysLogs.isEmpty {
+                    Divider()
+                }
+            }
+
+            // Logged meals
+            if !viewModel.todaysLogs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    if !viewModel.todaysPlannedMeals.isEmpty {
+                        Text("Logged")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+
+                    ForEach(viewModel.todaysLogs) { log in
+                        MealLogRow(log: log) {
+                            Task {
+                                await viewModel.deleteLog(log)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Empty state
+            if viewModel.todaysLogs.isEmpty && viewModel.todaysPlannedMeals.isEmpty {
                 HStack {
                     Spacer()
                     VStack(spacing: 8) {
                         Image(systemName: "fork.knife")
                             .font(.largeTitle)
                             .foregroundColor(.secondary)
-                        Text("No meals logged yet")
+                        Text("No meals planned or logged")
                             .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text("Go to Meal Plans to create a meal plan")
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 20)
                     Spacer()
-                }
-            } else {
-                ForEach(viewModel.todaysLogs) { log in
-                    MealLogRow(log: log) {
-                        Task {
-                            await viewModel.deleteLog(log)
-                        }
-                    }
                 }
             }
         }
@@ -308,6 +391,66 @@ struct QuickLogButton: View {
     }
 }
 
+// MARK: - Planned Meal Row (BUILD 244)
+
+struct PlannedMealRow: View {
+    let meal: MealPlanItem
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: meal.mealType.icon)
+                        .foregroundColor(.blue)
+                    Text(meal.mealType.displayName)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    if let time = meal.mealTime {
+                        Spacer()
+                        Text(time)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                if let recipeName = meal.recipeName {
+                    Text(recipeName)
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                }
+
+                HStack(spacing: 8) {
+                    if let cal = meal.estimatedCalories {
+                        Text("\(cal) cal")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    if let protein = meal.estimatedProteinG {
+                        Text("P: \(Int(protein))g")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                if !meal.foodItems.isEmpty {
+                    Text(meal.foodItems.map { $0.name }.joined(separator: ", "))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "calendar")
+                .font(.caption)
+                .foregroundColor(.blue.opacity(0.5))
+        }
+        .padding(.vertical, 8)
+    }
+}
+
 // MARK: - Meal Log Row
 
 struct MealLogRow: View {
@@ -320,7 +463,7 @@ struct MealLogRow: View {
                 HStack {
                     if let mealType = log.mealType {
                         Image(systemName: mealType.icon)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.green)
                         Text(mealType.displayName)
                             .font(.subheadline)
                             .fontWeight(.medium)
