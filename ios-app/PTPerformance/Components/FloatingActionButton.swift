@@ -12,7 +12,7 @@ import UIKit
 struct FloatingActionButton: View {
     // MARK: - Callbacks
 
-    let onAddToToday: () -> Void
+    let onAddToToday: (() -> Void)?  // BUILD 259: Made optional
     let onNewWorkout: () -> Void
     let onFromLibrary: () -> Void
 
@@ -71,18 +71,21 @@ struct FloatingActionButton: View {
                         removal: .opacity
                     ))
 
-                    menuItem(
-                        title: "Add to Today",
-                        icon: "plus.circle",
-                        action: {
-                            collapse()
-                            onAddToToday()
-                        }
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+                    // BUILD 259: Only show "Add to Today" if callback is provided
+                    if let addToToday = onAddToToday {
+                        menuItem(
+                            title: "Add to Today",
+                            icon: "plus.circle",
+                            action: {
+                                collapse()
+                                addToToday()
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .opacity),
+                            removal: .opacity
+                        ))
+                    }
                 }
 
                 // Main FAB button

@@ -8,6 +8,21 @@
 import SwiftUI
 import Combine
 
+// MARK: - BUILD 260: Local Exercise Template for Picker
+
+/// Local struct for exercise templates used in the picker (Identifiable with UUID)
+struct PickerExerciseTemplate: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let category: String?
+    let bodyRegion: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, category
+        case bodyRegion = "body_region"
+    }
+}
+
 // MARK: - View Model
 
 /// View Model for managing manual workout execution state and logic
@@ -41,9 +56,14 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // MARK: - Private Properties
 
     private let service: ManualWorkoutService
-    private let patientId: UUID
+    let patientId: UUID  // BUILD 260: Made internal for exercise picker
     private var timerCancellable: AnyCancellable?
     private var startTime: Date?
+
+    // BUILD 258: Support for prescribed sessions
+    private var isPrescribedSession: Bool = false
+    private var prescribedSessionId: UUID?
+    private var prescribedExerciseIdMap: [UUID: UUID] = [:]  // ManualSessionExercise.id -> session_exercise_id
 
     // MARK: - Computed Properties
 
@@ -164,6 +184,61 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         self.exercises = exercises.sorted { $0.sequence < $1.sequence }
         self.patientId = patientId
         self.service = service
+        self.isPrescribedSession = false
+
+        // Initialize with first exercise defaults
+        if let firstExercise = self.exercises.first {
+            setupInputFields(for: firstExercise)
+        }
+    }
+
+    /// BUILD 258: Initialize from a prescribed Session with Exercise array
+    init(prescribedSession: Session, exercises: [Exercise], patientId: UUID, service: ManualWorkoutService = ManualWorkoutService()) {
+        // Create a wrapper ManualSession from the prescribed Session
+        self.session = ManualSession(
+            id: prescribedSession.id,
+            patientId: patientId,
+            name: prescribedSession.name,
+            notes: prescribedSession.notes,
+            sourceTemplateId: nil,
+            sourceTemplateType: nil,
+            startedAt: Date(),
+            completedAt: nil,
+            completed: false,
+            totalVolume: nil,
+            avgRpe: nil,
+            avgPain: nil,
+            durationMinutes: nil,
+            createdAt: Date()
+        )
+
+        // Convert Exercise to ManualSessionExercise and track mapping
+        var exerciseMap: [UUID: UUID] = [:]
+        self.exercises = exercises.enumerated().map { index, exercise in
+            let manualExerciseId = UUID()
+            exerciseMap[manualExerciseId] = exercise.id  // Map to original session_exercise_id
+            return ManualSessionExercise(
+                id: manualExerciseId,
+                manualSessionId: prescribedSession.id,
+                exerciseTemplateId: exercise.exercise_template_id,
+                exerciseName: exercise.exercise_name ?? "Exercise",
+                blockName: exercise.movement_pattern,
+                sequence: exercise.sequence ?? index,
+                targetSets: exercise.prescribed_sets,
+                targetReps: exercise.prescribed_reps,
+                targetLoad: exercise.prescribed_load,
+                loadUnit: exercise.load_unit,
+                restPeriodSeconds: exercise.rest_period_seconds,
+                notes: exercise.notes,
+                createdAt: Date()
+            )
+        }.sorted { $0.sequence < $1.sequence }
+
+        self.patientId = patientId
+        self.service = service
+        self.isPrescribedSession = true
+        self.prescribedSessionId = prescribedSession.id
+        self.prescribedExerciseIdMap = exerciseMap
 
         // Initialize with first exercise defaults
         if let firstExercise = self.exercises.first {
@@ -260,22 +335,38 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            // Log the exercise
-            try await service.logManualExercise(
-                manualSessionExerciseId: exercise.id,
-                patientId: patientId,
-                actualSets: actualSets,
-                actualReps: Array(repsPerSet.prefix(actualSets)),
-                actualLoad: Double(actualLoad),
-                loadUnit: loadUnit,
-                rpe: Int(rpe),
-                painScore: Int(painScore),
-                notes: notes.isEmpty ? nil : notes
-            )
+            // BUILD 258: Log to appropriate table based on session type
+            if isPrescribedSession, let originalId = prescribedExerciseIdMap[exercise.id] {
+                // Log to exercise_logs with session_exercise_id
+                try await service.logPrescribedExercise(
+                    sessionExerciseId: originalId,
+                    patientId: patientId,
+                    actualSets: actualSets,
+                    actualReps: Array(repsPerSet.prefix(actualSets)),
+                    actualLoad: Double(actualLoad),
+                    loadUnit: loadUnit,
+                    rpe: Int(rpe),
+                    painScore: Int(painScore),
+                    notes: notes.isEmpty ? nil : notes
+                )
+            } else {
+                // Log to exercise_logs with manual_session_exercise_id
+                try await service.logManualExercise(
+                    manualSessionExerciseId: exercise.id,
+                    patientId: patientId,
+                    actualSets: actualSets,
+                    actualReps: Array(repsPerSet.prefix(actualSets)),
+                    actualLoad: Double(actualLoad),
+                    loadUnit: loadUnit,
+                    rpe: Int(rpe),
+                    painScore: Int(painScore),
+                    notes: notes.isEmpty ? nil : notes
+                )
+            }
 
             completedExerciseIds.insert(exercise.id)
 
-            DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' completed")
+            DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' completed")
 
             isLoading = false
             moveToNextExercise()
@@ -309,6 +400,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     }
 
     // BUILD 216: Quick complete exercise with prescribed values
+    // BUILD 258: Updated to support both prescribed and manual sessions
     func quickCompleteExercise(_ exercise: ManualSessionExercise) async {
         isLoading = true
         errorMessage = nil
@@ -319,21 +411,36 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
             let repsPerSet = Array(repeating: Int(exercise.targetReps ?? "10") ?? 10, count: sets)
             let load = exercise.targetLoad
 
-            try await service.logManualExercise(
-                manualSessionExerciseId: exercise.id,
-                patientId: patientId,
-                actualSets: sets,
-                actualReps: repsPerSet,
-                actualLoad: load,
-                loadUnit: exercise.loadUnit ?? "lbs",
-                rpe: 5,  // Default RPE for quick complete
-                painScore: 0,  // Default no pain for quick complete
-                notes: nil
-            )
+            // BUILD 258: Log to appropriate table based on session type
+            if isPrescribedSession, let originalId = prescribedExerciseIdMap[exercise.id] {
+                try await service.logPrescribedExercise(
+                    sessionExerciseId: originalId,
+                    patientId: patientId,
+                    actualSets: sets,
+                    actualReps: repsPerSet,
+                    actualLoad: load,
+                    loadUnit: exercise.loadUnit ?? "lbs",
+                    rpe: 5,
+                    painScore: 0,
+                    notes: nil
+                )
+            } else {
+                try await service.logManualExercise(
+                    manualSessionExerciseId: exercise.id,
+                    patientId: patientId,
+                    actualSets: sets,
+                    actualReps: repsPerSet,
+                    actualLoad: load,
+                    loadUnit: exercise.loadUnit ?? "lbs",
+                    rpe: 5,
+                    painScore: 0,
+                    notes: nil
+                )
+            }
 
             completedExerciseIds.insert(exercise.id)
 
-            DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' quick completed")
+            DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' quick completed")
 
             isLoading = false
 
@@ -402,6 +509,37 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         }
         actualSets = newCount
     }
+
+    // MARK: - BUILD 260: Exercise Management
+
+    /// Replace an exercise with a substitute
+    func replaceExercise(_ oldExercise: ManualSessionExercise, with newExercise: ManualSessionExercise) {
+        if let index = exercises.firstIndex(where: { $0.id == oldExercise.id }) {
+            exercises[index] = newExercise
+            DebugLogger.shared.log("🔄 Replaced exercise \(oldExercise.exerciseName) with \(newExercise.exerciseName)", level: .success)
+        }
+    }
+
+    /// Add an exercise from a template
+    func addExerciseFromTemplate(_ template: PickerExerciseTemplate) {
+        let newExercise = ManualSessionExercise(
+            id: UUID(),
+            manualSessionId: session.id,
+            exerciseTemplateId: template.id,
+            exerciseName: template.name,
+            blockName: template.category,
+            sequence: exercises.count,
+            targetSets: 3,
+            targetReps: "10",
+            targetLoad: nil,
+            loadUnit: "lbs",
+            restPeriodSeconds: 90,
+            notes: nil,
+            createdAt: Date()
+        )
+        exercises.append(newExercise)
+        DebugLogger.shared.log("➕ Added exercise: \(template.name)", level: .success)
+    }
 }
 
 // MARK: - Main View
@@ -413,6 +551,13 @@ struct ManualWorkoutExecutionView: View {
     @State private var showEndEarlyConfirmation = false
     @State private var expandedExercises: Set<UUID> = []  // BUILD 216: Track expanded exercises
     let onComplete: (() -> Void)?
+
+    // BUILD 260: Exercise detail, AI substitution, and add exercise
+    @State private var showExerciseDetail = false
+    @State private var selectedExerciseForDetail: ManualSessionExercise?
+    @State private var showAISubstitution = false
+    @State private var selectedExerciseForSubstitution: ManualSessionExercise?
+    @State private var showAddExercise = false
 
     init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
@@ -429,6 +574,16 @@ struct ManualWorkoutExecutionView: View {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
             session: session,
             exercises: [],  // Will be loaded by ViewModel
+            patientId: patientId
+        ))
+        self.onComplete = onComplete
+    }
+
+    /// BUILD 258: Initialize from a prescribed Session for unified workout execution
+    init(prescribedSession: Session, exercises: [Exercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
+        _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
+            prescribedSession: prescribedSession,
+            exercises: exercises,
             patientId: patientId
         ))
         self.onComplete = onComplete
@@ -512,6 +667,39 @@ struct ManualWorkoutExecutionView: View {
                 }
             } message: {
                 Text("Great job! You've completed all exercises.")
+            }
+            // BUILD 260: Exercise detail sheet
+            .sheet(isPresented: $showExerciseDetail) {
+                if let exercise = selectedExerciseForDetail {
+                    ExerciseInfoSheet(exercise: exercise)
+                }
+            }
+            // BUILD 260: AI substitution sheet
+            .sheet(isPresented: $showAISubstitution) {
+                if let exercise = selectedExerciseForSubstitution {
+                    NavigationView {
+                        AISubstitutionSheetForManual(
+                            exercise: exercise,
+                            patientId: viewModel.patientId,
+                            onSubstitutionApplied: { newExercise in
+                                // Replace the exercise in the workout
+                                viewModel.replaceExercise(exercise, with: newExercise)
+                                showAISubstitution = false
+                            }
+                        )
+                    }
+                }
+            }
+            // BUILD 260: Add exercise sheet
+            .sheet(isPresented: $showAddExercise) {
+                NavigationView {
+                    ExercisePickerForWorkout(
+                        onExerciseSelected: { template in
+                            viewModel.addExerciseFromTemplate(template)
+                            showAddExercise = false
+                        }
+                    )
+                }
             }
             .onAppear {
                 viewModel.startTimer()
@@ -830,33 +1018,72 @@ struct ManualWorkoutExecutionView: View {
 
     private func currentExerciseCard(_ exercise: ManualSessionExercise) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Exercise Header
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Current Exercise")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            // Exercise Header with Action Buttons
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Current Exercise")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
 
-                // Use notes as display name if exercise name is just a number (strength block)
-                let currentDisplayName = {
-                    let name = exercise.exerciseName ?? "Exercise"
-                    return name.count <= 2 && Int(name) != nil
-                        ? (exercise.notes ?? name)
-                        : name
-                }()
-                Text(currentDisplayName)
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    // Use notes as display name if exercise name is just a number (strength block)
+                    let currentDisplayName = {
+                        let name = exercise.exerciseName
+                        return name.count <= 2 && Int(name) != nil
+                            ? (exercise.notes ?? name)
+                            : name
+                    }()
+                    Text(currentDisplayName)
+                        .font(.title2)
+                        .fontWeight(.bold)
 
-                // Target prescription
-                HStack(spacing: 16) {
-                    Label("\(exercise.targetSets ?? 3) sets", systemImage: "number")
-                    Label("\(exercise.targetReps ?? "10") reps", systemImage: "repeat")
-                    if let load = exercise.targetLoad, let unit = exercise.loadUnit {
-                        Label("\(Int(load)) \(unit)", systemImage: "scalemass")
+                    // Target prescription
+                    HStack(spacing: 16) {
+                        Label("\(exercise.targetSets ?? 3) sets", systemImage: "number")
+                        Label("\(exercise.targetReps ?? "10") reps", systemImage: "repeat")
+                        if let load = exercise.targetLoad, let unit = exercise.loadUnit {
+                            Label("\(Int(load)) \(unit)", systemImage: "scalemass")
+                        }
                     }
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                 }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+
+                Spacer()
+
+                // BUILD 260: Action buttons (info, swap, add)
+                HStack(spacing: 12) {
+                    // Exercise info button
+                    Button {
+                        selectedExerciseForDetail = exercise
+                        showExerciseDetail = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                    }
+                    .accessibilityLabel("Exercise details")
+
+                    // AI substitute button
+                    Button {
+                        selectedExerciseForSubstitution = exercise
+                        showAISubstitution = true
+                    } label: {
+                        Image(systemName: "arrow.triangle.swap")
+                            .font(.title2)
+                            .foregroundColor(.orange)
+                    }
+                    .accessibilityLabel("Find substitute")
+
+                    // Add exercise button
+                    Button {
+                        showAddExercise = true
+                    } label: {
+                        Image(systemName: "plus.circle")
+                            .font(.title2)
+                            .foregroundColor(.green)
+                    }
+                    .accessibilityLabel("Add exercise")
+                }
             }
 
             Divider()
@@ -1182,6 +1409,270 @@ struct ManualWorkoutExecutionView: View {
         case 5...6: return .orange
         case 7...10: return .red
         default: return .gray
+        }
+    }
+}
+
+// MARK: - BUILD 260: Exercise Info Sheet
+
+/// Simple exercise detail view for manual workout exercises
+struct ExerciseInfoSheet: View {
+    let exercise: ManualSessionExercise
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Exercise Name
+                    Text(exercise.exerciseName)
+                        .font(.title)
+                        .fontWeight(.bold)
+
+                    // Block type if available
+                    if let block = exercise.blockName {
+                        Label(block, systemImage: "square.grid.2x2")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Divider()
+
+                    // Target prescription
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Target")
+                            .font(.headline)
+
+                        HStack(spacing: 20) {
+                            VStack {
+                                Text("\(exercise.targetSets ?? 3)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Text("Sets")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            VStack {
+                                Text(exercise.targetReps ?? "10")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Text("Reps")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            if let load = exercise.targetLoad {
+                                VStack {
+                                    Text("\(Int(load))")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    Text(exercise.loadUnit ?? "lbs")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+
+                    // Notes if available
+                    if let notes = exercise.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Notes")
+                                .font(.headline)
+                            Text(notes)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Rest period
+                    if let rest = exercise.restPeriodSeconds {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Rest Period")
+                                .font(.headline)
+                            Label("\(rest) seconds", systemImage: "timer")
+                                .font(.body)
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Exercise Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - BUILD 260: AI Substitution Sheet for Manual Workouts
+
+/// Simplified AI substitution request for manual workout exercises
+struct AISubstitutionSheetForManual: View {
+    let exercise: ManualSessionExercise
+    let patientId: UUID
+    let onSubstitutionApplied: (ManualSessionExercise) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var reason = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(spacing: 20) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Find Alternative for:")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Text(exercise.exerciseName)
+                    .font(.title2)
+                    .fontWeight(.bold)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+
+            // Reason buttons
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Why do you need a substitute?")
+                    .font(.headline)
+
+                VStack(spacing: 12) {
+                    reasonButton(icon: "figure.run", text: "Injury/Pain", value: "injury")
+                    reasonButton(icon: "dumbbell", text: "No Equipment", value: "equipment")
+                    reasonButton(icon: "clock", text: "Too Difficult", value: "difficulty")
+                    reasonButton(icon: "arrow.triangle.swap", text: "Want Variety", value: "variety")
+                }
+            }
+            .padding(.horizontal)
+
+            if let error = errorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+                    .font(.caption)
+                    .padding(.horizontal)
+            }
+
+            Spacer()
+
+            // Note about feature
+            Text("AI substitution will suggest an alternative exercise based on your needs.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            // Cancel button
+            Button("Cancel") {
+                dismiss()
+            }
+            .padding()
+        }
+        .navigationTitle("Find Substitute")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func reasonButton(icon: String, text: String, value: String) -> some View {
+        Button {
+            reason = value
+            // TODO: Call AI service and create substitute
+            // For now, just dismiss
+            dismiss()
+        } label: {
+            HStack {
+                Image(systemName: icon)
+                    .frame(width: 24)
+                Text(text)
+                Spacer()
+                if reason == value {
+                    Image(systemName: "checkmark")
+                }
+            }
+            .padding()
+            .background(reason == value ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - BUILD 260: Exercise Picker for Adding to Workout
+
+/// Simple exercise picker to add exercises during a workout
+struct ExercisePickerForWorkout: View {
+    let onExerciseSelected: (PickerExerciseTemplate) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    @State private var templates: [PickerExerciseTemplate] = []
+    @State private var isLoading = false
+    @EnvironmentObject var supabase: PTSupabaseClient
+
+    var filteredTemplates: [PickerExerciseTemplate] {
+        if searchText.isEmpty {
+            return templates
+        }
+        return templates.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    var body: some View {
+        VStack {
+            if isLoading {
+                ProgressView("Loading exercises...")
+            } else {
+                List(filteredTemplates) { template in
+                    Button {
+                        onExerciseSelected(template)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(template.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            if let category = template.category {
+                                Text(category.capitalized)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .searchable(text: $searchText, prompt: "Search exercises")
+            }
+        }
+        .navigationTitle("Add Exercise")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") { dismiss() }
+            }
+        }
+        .task {
+            await loadTemplates()
+        }
+    }
+
+    private func loadTemplates() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let response = try await supabase.client
+                .from("exercise_templates")
+                .select("id, name, category, body_region")
+                .order("name")
+                .limit(200)
+                .execute()
+
+            templates = try JSONDecoder().decode([PickerExerciseTemplate].self, from: response.data)
+        } catch {
+            print("Failed to load exercise templates: \(error)")
         }
     }
 }
