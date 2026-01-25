@@ -17,6 +17,9 @@ struct ProgramViewerView: View {
                         await viewModel.fetchProgram(for: patientId)
                     }
                 }
+            } else if viewModel.program == nil {
+                // BUILD 283: Show "No Program" state when patient has no program
+                noProgramView
             } else {
                 programContent
             }
@@ -32,6 +35,48 @@ struct ProgramViewerView: View {
         }
         .task {
             await viewModel.fetchProgram(for: patientId)
+        }
+    }
+
+    // BUILD 283: Empty state when patient has no program
+    private var noProgramView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            Image(systemName: "doc.badge.plus")
+                .font(.system(size: 64))
+                .foregroundColor(.secondary)
+
+            Text("No Program Assigned")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("This patient doesn't have a rehabilitation program yet. Create a program to get started.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            // TODO: Add "Create Program" button that navigates to ProgramBuilderView
+            // For now, show instructions
+            VStack(alignment: .leading, spacing: 8) {
+                Text("To create a program:")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("1. Go to Program Builder")
+                Text("2. Select this patient")
+                Text("3. Design phases and sessions")
+                Text("4. Add exercises to each session")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .padding(.horizontal, 32)
+
+            Spacer()
         }
     }
 
