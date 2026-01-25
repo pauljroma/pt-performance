@@ -643,6 +643,7 @@ class ManualWorkoutService: ObservableObject {
     }
 
     /// BUILD 265: Complete a prescribed session (in sessions table)
+    /// BUILD 272: Include all metrics in update
     func completePrescribedSession(
         _ sessionId: UUID,
         totalVolume: Double?,
@@ -652,24 +653,37 @@ class ManualWorkoutService: ObservableObject {
     ) async throws {
         let logger = DebugLogger.shared
         logger.log("Completing prescribed session: \(sessionId)", level: .diagnostic)
+        logger.log("  Volume: \(totalVolume ?? 0), RPE: \(avgRpe ?? 0), Pain: \(avgPain ?? 0), Duration: \(durationMinutes ?? 0) min", level: .diagnostic)
 
         do {
             let now = ISO8601DateFormatter().string(from: Date())
 
-            // Use a simpler struct for the sessions table which has different columns
+            // BUILD 272: Include all metrics in the update
             struct CompletePrescribedInput: Codable {
                 let completed: Bool
                 let completedAt: String
+                let totalVolume: Double?
+                let avgRpe: Double?
+                let avgPain: Double?
+                let durationMinutes: Int?
 
                 enum CodingKeys: String, CodingKey {
                     case completed
                     case completedAt = "completed_at"
+                    case totalVolume = "total_volume"
+                    case avgRpe = "avg_rpe"
+                    case avgPain = "avg_pain"
+                    case durationMinutes = "duration_minutes"
                 }
             }
 
             let updateInput = CompletePrescribedInput(
                 completed: true,
-                completedAt: now
+                completedAt: now,
+                totalVolume: totalVolume,
+                avgRpe: avgRpe,
+                avgPain: avgPain,
+                durationMinutes: durationMinutes
             )
 
             try await supabase.client
@@ -678,7 +692,7 @@ class ManualWorkoutService: ObservableObject {
                 .eq("id", value: sessionId.uuidString)
                 .execute()
 
-            logger.log("Prescribed session completed successfully", level: .success)
+            logger.log("Prescribed session completed successfully with all metrics", level: .success)
         } catch {
             logger.log("Failed to complete prescribed session: \(error.localizedDescription)", level: .error)
             throw error

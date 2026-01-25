@@ -443,17 +443,30 @@ class TodaySessionViewModel: ObservableObject {
         var workouts: [TodayWorkoutSummary] = []
 
         // 1. Fetch completed prescribed sessions for today
+        // BUILD 271: Use vw_patient_sessions view which includes patient_id
         do {
             let response = try await supabase.client
-                .from("sessions")
-                .select("id, name, completed_at, duration_minutes, total_volume")
+                .from("vw_patient_sessions")
+                .select("id, phase_name, program_name, completed_at, duration_minutes, total_volume, exercise_count")
+                .eq("patient_id", value: patientId)
                 .eq("completed", value: true)
                 .gte("completed_at", value: todayStr)
                 .lt("completed_at", value: tomorrowStr)
                 .execute()
 
+            // Custom struct for view response
+            struct PrescribedSessionRow: Codable {
+                let id: String
+                let phase_name: String?
+                let program_name: String?
+                let completed_at: String?
+                let duration_minutes: Int?
+                let total_volume: Double?
+                let exercise_count: Int?
+            }
+
             let decoder = JSONDecoder()
-            let prescribedSessions = try decoder.decode([CompletedSessionRow].self, from: response.data)
+            let prescribedSessions = try decoder.decode([PrescribedSessionRow].self, from: response.data)
 
             for session in prescribedSessions {
                 if let uuid = UUID(uuidString: session.id) {
@@ -464,13 +477,16 @@ class TodaySessionViewModel: ObservableObject {
                         completedAt = Date()
                     }
 
+                    // Use phase_name or program_name as display name
+                    let displayName = session.phase_name ?? session.program_name ?? "Workout"
+
                     workouts.append(TodayWorkoutSummary(
                         id: uuid,
-                        name: session.name,
+                        name: displayName,
                         completedAt: completedAt,
                         durationMinutes: session.duration_minutes,
                         totalVolume: session.total_volume,
-                        exerciseCount: 0,  // Would need separate query
+                        exerciseCount: session.exercise_count ?? 0,
                         isPrescribed: true
                     ))
                 }
