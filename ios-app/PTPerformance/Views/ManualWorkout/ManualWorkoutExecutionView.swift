@@ -548,6 +548,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 struct ManualWorkoutExecutionView: View {
     @StateObject private var viewModel: ManualWorkoutExecutionViewModel
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 261: For exercise picker sheet
     @State private var showEndEarlyConfirmation = false
     @State private var expandedExercises: Set<UUID> = []  // BUILD 216: Track expanded exercises
     let onComplete: (() -> Void)?
@@ -700,6 +701,7 @@ struct ManualWorkoutExecutionView: View {
                         }
                     )
                 }
+                .environmentObject(supabase)  // BUILD 261: Pass environment object to sheet
             }
             .onAppear {
                 viewModel.startTimer()
