@@ -28,13 +28,14 @@ class ProgramViewModel: ObservableObject {
         logger.log("🏋️ Starting fetchProgram for patient: \(patientId)")
 
         do {
-            // 1. Fetch program
+            // 1. Fetch program(s) - BUILD 283: Handle 0 or multiple programs gracefully
             logger.log("🏋️ Step 1: Fetching program...")
             let programResponse = try await supabase.client
                 .from("programs")
                 .select()
                 .eq("patient_id", value: patientId)
-                .single()
+                .order("created_at", ascending: false)  // Most recent first
+                .limit(1)
                 .execute()
 
             logger.log("🏋️ Program response size: \(programResponse.data.count) bytes")
@@ -45,7 +46,20 @@ class ProgramViewModel: ObservableObject {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
-            program = try decoder.decode(Program.self, from: programResponse.data)
+            // Decode as array and get first
+            let programs = try decoder.decode([Program].self, from: programResponse.data)
+
+            guard let firstProgram = programs.first else {
+                logger.log("No program found for patient", level: .warning)
+                self.program = nil
+                self.phases = []
+                self.sessionsByPhase = [:]
+                self.exercisesBySession = [:]
+                isLoading = false
+                return  // No program - exit gracefully without error
+            }
+
+            program = firstProgram
             logger.log("✅ Program decoded successfully: \(program?.name ?? "unknown")", level: .success)
 
             guard let programId = program?.id else {
