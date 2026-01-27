@@ -116,7 +116,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         let grouped = Dictionary(grouping: exercises) { $0.blockType ?? "General" }
         // Sort by workout block order, not alphabetically
         return grouped.sorted { WorkoutBlockType.sortOrder(for: $0.key) < WorkoutBlockType.sortOrder(for: $1.key) }
-            .map { ($0.key, $0.value.sorted { $0.sequence < $1.sequence }) }
+            .map { ($0.key, $0.value.sorted { ($0.sequence, $0.id.uuidString) < ($1.sequence, $1.id.uuidString) }) }
     }
 
     /// Check if a block is completed

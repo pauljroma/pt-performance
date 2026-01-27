@@ -56,12 +56,41 @@ class SessionSummaryViewModel: ObservableObject {
                 This prevents retrieving logs from other completions of the same session
                 """)
 
-            // Build query with time-based filtering
+            // BUILD 286: Query via session_exercises join instead of session_id
+            // exercise_logs use session_exercise_id (FK to session_exercises.id),
+            // NOT session_id directly. First get the exercise IDs for this session.
+            let exerciseIdsResponse = try await supabase.client
+                .from("session_exercises")
+                .select("id")
+                .eq("session_id", value: session.id)
+                .execute()
+
+            struct SessionExerciseId: Codable { let id: String }
+            let exerciseIds = try JSONDecoder().decode([SessionExerciseId].self, from: exerciseIdsResponse.data)
+            let ids = exerciseIds.map { $0.id }
+
+            DebugLogger.shared.info("SESSION_SUMMARY", "Found \(ids.count) session_exercise IDs for session \(session.id)")
+
+            guard !ids.isEmpty else {
+                DebugLogger.shared.warning("SESSION_SUMMARY", "No session_exercises found for session \(session.id)")
+                summary = SessionSummaryData(
+                    exercisesCompleted: 0,
+                    totalVolume: 0,
+                    duration: 0,
+                    prCount: 0,
+                    complianceScore: 0,
+                    motivationalMessage: "No exercises found for this session."
+                )
+                isLoading = false
+                return
+            }
+
+            // Query exercise_logs for these session_exercise_ids
             var query = supabase.client
                 .from("exercise_logs")
                 .select("*")
                 .eq("patient_id", value: patientId)
-                .eq("session_id", value: session.id.uuidString)
+                .in("session_exercise_id", values: ids)
 
             // Add time range filters if available to scope to THIS session completion only
             if let startedAt = session.started_at {

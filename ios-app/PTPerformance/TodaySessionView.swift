@@ -161,7 +161,10 @@ struct TodaySessionView: View {
             }
         }
         .task {
-            await viewModel.fetchTodaySession()
+            // Only fetch on initial load; onComplete callbacks handle refresh after workouts
+            if viewModel.session == nil && !viewModel.isLoading {
+                await viewModel.fetchTodaySession()
+            }
             await loadTodayReadiness()
         }
         .onDisappear {

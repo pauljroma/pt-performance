@@ -398,6 +398,7 @@ class TodaySessionViewModel: ObservableObject {
             """)
             .eq("session_id", value: session.id)
             .order("sequence", ascending: true)
+            .order("id", ascending: true)
             .execute()
 
         logger.log("📱 Exercises response size: \(response.data.count) bytes")
