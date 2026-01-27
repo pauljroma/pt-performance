@@ -12,14 +12,8 @@ struct PatientTabView: View {
                     Label("Today", systemImage: "list.bullet")
                 }
 
-            // BUILD 113: Use real HistoryView with pain trends (was placeholder)
             if let patientId = supabase.userId {
                 HistoryView(patientId: patientId)
-                    .tabItem {
-                        Label("History", systemImage: "clock.arrow.circlepath")
-                    }
-            } else {
-                PatientHistoryView()
                     .tabItem {
                         Label("History", systemImage: "clock.arrow.circlepath")
                     }
