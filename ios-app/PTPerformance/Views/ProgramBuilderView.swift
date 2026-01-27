@@ -48,6 +48,20 @@ struct ProgramBuilderFormView: View {
 
     var body: some View {
         Form {
+            Section("Program Type") {
+                Picker("Type", selection: $viewModel.selectedProgramType) {
+                    ForEach(ProgramType.allCases) { type in
+                        Label(type.displayName, systemImage: type.icon)
+                            .tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text(viewModel.selectedProgramType.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             Section("Program Details") {
                 // Program name with validation
                 VStack(alignment: .leading, spacing: 4) {
@@ -75,7 +89,7 @@ struct ProgramBuilderFormView: View {
 
                 ProtocolSelector(
                     selectedProtocol: $viewModel.selectedProtocol,
-                    protocols: viewModel.availableProtocols
+                    protocols: viewModel.filteredProtocols
                 )
                 .accessibilityLabel("Protocol Selector")
                 .accessibilityHint("Choose a therapy protocol for this program")

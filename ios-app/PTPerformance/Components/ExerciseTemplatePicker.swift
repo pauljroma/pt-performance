@@ -17,7 +17,7 @@ struct ExerciseTemplatePicker: View {
     @State private var selectedCategory: String = "All"
     @State private var isLoading = false
     @State private var error: String?
-    @State private var selectedTemplateIds = Set<String>()
+    @State private var selectedTemplateIds = Set<UUID>()
 
     private let logger = DebugLogger.shared
 
@@ -229,9 +229,10 @@ struct ExerciseTemplatePicker: View {
 
     private func createExerciseFromTemplate(_ template: ExerciseTemplateData, sequence: Int) -> Exercise {
         // Create an exercise from the template with default values
+        // session_id uses a placeholder UUID — it will be replaced when the session is persisted
         Exercise(
-            id: UUID().uuidString,
-            session_id: "temp-session",  // This will be set when the session is created
+            id: UUID(),
+            session_id: UUID(),
             exercise_template_id: template.id,
             sequence: sequence,
             prescribed_sets: 3,

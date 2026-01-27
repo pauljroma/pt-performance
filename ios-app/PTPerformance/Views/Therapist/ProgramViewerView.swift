@@ -115,6 +115,20 @@ struct ProgramHeaderView: View {
                 .font(.title2)
                 .bold()
 
+            // Program type badge
+            HStack(spacing: 4) {
+                Image(systemName: program.resolvedProgramType.icon)
+                    .font(.caption2)
+                Text(program.resolvedProgramType.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(program.resolvedProgramType.color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(program.resolvedProgramType.color.opacity(0.15))
+            .cornerRadius(8)
+
             HStack {
                 Label("Target: \(program.targetLevel)", systemImage: "target")
                 Spacer()

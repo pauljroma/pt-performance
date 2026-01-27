@@ -138,6 +138,23 @@ enum MockData {
         }
     }
 
+    // MARK: - Program Type Data (BUILD 294)
+
+    /// Program type identifiers for filtering and creation
+    enum ProgramTypes {
+        static let rehab = "rehab"
+        static let performance = "performance"
+        static let lifestyle = "lifestyle"
+        static let all = [rehab, performance, lifestyle]
+    }
+
+    /// Sample program names by type for testing program type workflows
+    enum ProgramTypeNames {
+        static let rehabKnee = "ACL Rehab Program"
+        static let performancePower = "Explosive Power Training"
+        static let lifestyleWellness = "Daily Wellness Routine"
+    }
+
     /// Program phase names
     enum PhaseNames {
         static let foundation = "Foundation Phase"

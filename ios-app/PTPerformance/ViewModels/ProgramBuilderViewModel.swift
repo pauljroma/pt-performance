@@ -9,6 +9,15 @@ import SwiftUI
 @MainActor
 class ProgramBuilderViewModel: ObservableObject {
     @Published var programName: String = ""
+    @Published var selectedProgramType: ProgramType = .rehab {
+        didSet {
+            // Clear protocol selection when type changes since it may no longer be valid
+            if selectedProtocol != nil {
+                selectedProtocol = nil
+                phases = []
+            }
+        }
+    }
     @Published var selectedProtocol: TherapyProtocol? {
         didSet {
             if let therapyProtocol = selectedProtocol {
@@ -110,6 +119,12 @@ class ProgramBuilderViewModel: ObservableObject {
         guard let therapyProtocol = selectedProtocol else { return true }
         return phases.count < therapyProtocol.constraints.maxPhases
     }
+
+    /// Protocols filtered by the selected program type
+    var filteredProtocols: [TherapyProtocol] {
+        let allowed = selectedProgramType.allowedProtocolCategories
+        return availableProtocols.filter { allowed.contains($0.category) }
+    }
     
     func loadProtocols() async {
         isLoadingProtocols = true
@@ -197,7 +212,8 @@ class ProgramBuilderViewModel: ObservableObject {
                 patientId: patientId,
                 name: programName.trimmingCharacters(in: .whitespacesAndNewlines),
                 targetLevel: targetLevel,
-                durationWeeks: totalWeeks
+                durationWeeks: totalWeeks,
+                programType: selectedProgramType.rawValue
             )
 
             logger.log("📝 Inserting program into programs table...", level: .diagnostic)
@@ -393,12 +409,14 @@ struct CreateProgramInput: Codable {
     let name: String
     let targetLevel: String
     let durationWeeks: Int
+    let programType: String
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
         case name
         case targetLevel = "target_level"
         case durationWeeks = "duration_weeks"
+        case programType = "program_type"
     }
 }
 

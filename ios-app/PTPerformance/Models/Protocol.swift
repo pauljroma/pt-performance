@@ -23,6 +23,8 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         case strengthBuilding = "strength_building"
         case painManagement = "pain_management"
         case throwing = "throwing"
+        case performance = "performance"
+        case lifestyle = "lifestyle"
     }
     
     struct ProtocolPhase: Codable, Hashable {
@@ -407,11 +409,507 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         createdAt: Date()
     )
 
+    static let performanceExplosive = TherapyProtocol(
+        id: UUID(),
+        name: "Athletic Performance: Explosive Power",
+        description: "8-week program focused on explosive power development for athletes",
+        category: .performance,
+        durationWeeks: 8,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Strength Base",
+                order: 1,
+                durationWeeks: 3,
+                goals: [
+                    "Compound lifts",
+                    "Moderate intensity",
+                    "Build work capacity"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "core",
+                    "accessory"
+                ],
+                prohibitedExercises: ["max_effort_plyometrics"],
+                restrictions: [
+                    "Focus on compound lifts",
+                    "Moderate intensity (70-80%)",
+                    "Build work capacity foundation"
+                ],
+                progressionCriteria: [
+                    "Complete ≥85% of prescribed sessions",
+                    "Pain < 3/10",
+                    "Solid compound lift technique"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Power Development",
+                order: 2,
+                durationWeeks: 3,
+                goals: [
+                    "Plyometrics",
+                    "Olympic lift variations",
+                    "Contrast training"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "plyometric",
+                    "explosive",
+                    "olympic_lifts"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Introduce plyometrics progressively",
+                    "Olympic lift variations at moderate load",
+                    "Contrast training pairs"
+                ],
+                progressionCriteria: [
+                    "Complete ≥85% of prescribed sessions",
+                    "Pain < 3/10",
+                    "Power output improving"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 3: Speed & Peaking",
+                order: 3,
+                durationWeeks: 2,
+                goals: [
+                    "Sport-specific power",
+                    "Velocity work"
+                ],
+                allowedExerciseCategories: [
+                    "compound_lower",
+                    "compound_upper",
+                    "plyometric",
+                    "explosive",
+                    "sport_specific",
+                    "velocity"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Reduce volume",
+                    "Maximize velocity and power output",
+                    "Sport-specific movement patterns"
+                ],
+                progressionCriteria: [
+                    "Pain < 3/10",
+                    "Peak power metrics achieved",
+                    "Sport-specific readiness"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 3,
+            maxPhases: 3,
+            canSkipPhases: false,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "compound_lower",
+                "compound_upper",
+                "plyometric"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 3,
+            minAdherencePercent: 0.85
+        ),
+        createdAt: Date()
+    )
+
+    static let performanceEndurance = TherapyProtocol(
+        id: UUID(),
+        name: "Athletic Performance: Endurance",
+        description: "6-week endurance building program for sport-specific conditioning",
+        category: .performance,
+        durationWeeks: 6,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Aerobic Base",
+                order: 1,
+                durationWeeks: 2,
+                goals: [
+                    "Steady-state cardio",
+                    "Light resistance",
+                    "Build work capacity"
+                ],
+                allowedExerciseCategories: [
+                    "cardio",
+                    "endurance",
+                    "light_resistance",
+                    "mobility"
+                ],
+                prohibitedExercises: ["max_effort_sprints"],
+                restrictions: [
+                    "Steady-state cardio focus",
+                    "Light resistance only",
+                    "Build aerobic base"
+                ],
+                progressionCriteria: [
+                    "Complete ≥80% of prescribed sessions",
+                    "Pain < 4/10",
+                    "Aerobic base established"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Threshold Training",
+                order: 2,
+                durationWeeks: 2,
+                goals: [
+                    "Interval training",
+                    "Tempo work",
+                    "Lactate threshold"
+                ],
+                allowedExerciseCategories: [
+                    "cardio",
+                    "endurance",
+                    "interval_training",
+                    "tempo",
+                    "resistance"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Interval training progression",
+                    "Tempo work at threshold pace",
+                    "Monitor heart rate zones"
+                ],
+                progressionCriteria: [
+                    "Complete ≥80% of prescribed sessions",
+                    "Pain < 4/10",
+                    "Threshold pace improving"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 3: Race-Specific",
+                order: 3,
+                durationWeeks: 2,
+                goals: [
+                    "Sport-specific conditioning",
+                    "Taper"
+                ],
+                allowedExerciseCategories: [
+                    "cardio",
+                    "endurance",
+                    "sport_specific",
+                    "taper",
+                    "active_recovery"
+                ],
+                prohibitedExercises: [],
+                restrictions: [
+                    "Sport-specific conditioning focus",
+                    "Progressive taper",
+                    "Recovery prioritized"
+                ],
+                progressionCriteria: [
+                    "Pain < 4/10",
+                    "Race-specific readiness",
+                    "Freshness and confidence"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 3,
+            maxPhases: 3,
+            canSkipPhases: false,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "cardio",
+                "endurance"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 4,
+            minAdherencePercent: 0.80
+        ),
+        createdAt: Date()
+    )
+
+    static let lifestyleWellness = TherapyProtocol(
+        id: UUID(),
+        name: "Lifestyle: Daily Wellness",
+        description: "4-week gentle wellness routine focused on mobility, light strength, and daily movement habits",
+        category: .lifestyle,
+        durationWeeks: 4,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Foundation Habits",
+                order: 1,
+                durationWeeks: 2,
+                goals: [
+                    "Basic mobility",
+                    "Walking",
+                    "Bodyweight movements",
+                    "Establish routine"
+                ],
+                allowedExerciseCategories: [
+                    "mobility",
+                    "bodyweight",
+                    "walking",
+                    "stretching"
+                ],
+                prohibitedExercises: ["heavy_resistance"],
+                restrictions: [
+                    "Gentle movements only",
+                    "Focus on habit formation",
+                    "Daily consistency over intensity"
+                ],
+                progressionCriteria: [
+                    "Complete ≥60% of prescribed sessions",
+                    "Pain < 5/10",
+                    "Routine established"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Habit Consolidation",
+                order: 2,
+                durationWeeks: 2,
+                goals: [
+                    "Progressive volume",
+                    "Consistency building"
+                ],
+                allowedExerciseCategories: [
+                    "mobility",
+                    "bodyweight",
+                    "walking",
+                    "stretching",
+                    "light_resistance"
+                ],
+                prohibitedExercises: ["heavy_resistance"],
+                restrictions: [
+                    "Progressive volume increase",
+                    "Maintain consistency",
+                    "Listen to body"
+                ],
+                progressionCriteria: [
+                    "Complete ≥60% of prescribed sessions",
+                    "Pain < 5/10",
+                    "Habits consolidated"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 2,
+            maxPhases: 3,
+            canSkipPhases: true,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "mobility",
+                "bodyweight"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 5,
+            minAdherencePercent: 0.60
+        ),
+        createdAt: Date()
+    )
+
+    static let lifestyleActiveAging = TherapyProtocol(
+        id: UUID(),
+        name: "Lifestyle: Active Aging",
+        description: "6-week program for maintaining strength, balance, and mobility as you age",
+        category: .lifestyle,
+        durationWeeks: 6,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Balance & Stability",
+                order: 1,
+                durationWeeks: 2,
+                goals: [
+                    "Balance exercises",
+                    "Fall prevention",
+                    "Proprioception"
+                ],
+                allowedExerciseCategories: [
+                    "balance",
+                    "functional_strength",
+                    "mobility",
+                    "proprioception"
+                ],
+                prohibitedExercises: ["heavy_resistance", "high_impact"],
+                restrictions: [
+                    "Balance exercises with support available",
+                    "Fall prevention focus",
+                    "Proprioception training"
+                ],
+                progressionCriteria: [
+                    "Complete ≥70% of prescribed sessions",
+                    "Pain < 4/10",
+                    "Improved balance confidence"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Strength & Function",
+                order: 2,
+                durationWeeks: 2,
+                goals: [
+                    "Functional strength",
+                    "Daily task simulation"
+                ],
+                allowedExerciseCategories: [
+                    "balance",
+                    "functional_strength",
+                    "mobility",
+                    "light_resistance",
+                    "daily_function"
+                ],
+                prohibitedExercises: ["heavy_resistance", "high_impact"],
+                restrictions: [
+                    "Functional movement patterns",
+                    "Simulate daily activities",
+                    "Progressive resistance with caution"
+                ],
+                progressionCriteria: [
+                    "Complete ≥70% of prescribed sessions",
+                    "Pain < 4/10",
+                    "Improved functional strength"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 3: Independence & Vitality",
+                order: 3,
+                durationWeeks: 2,
+                goals: [
+                    "Combined training",
+                    "Confidence building"
+                ],
+                allowedExerciseCategories: [
+                    "balance",
+                    "functional_strength",
+                    "mobility",
+                    "light_resistance",
+                    "daily_function",
+                    "combined_training"
+                ],
+                prohibitedExercises: ["heavy_resistance", "high_impact"],
+                restrictions: [
+                    "Combined balance and strength work",
+                    "Build independence",
+                    "Celebrate progress"
+                ],
+                progressionCriteria: [
+                    "Complete ≥70% of prescribed sessions",
+                    "Pain < 4/10",
+                    "Confidence and independence improved"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 3,
+            maxPhases: 4,
+            canSkipPhases: true,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "balance",
+                "functional_strength"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 4,
+            minAdherencePercent: 0.70
+        ),
+        createdAt: Date()
+    )
+
+    static let lifestyleStressRelief = TherapyProtocol(
+        id: UUID(),
+        name: "Lifestyle: Stress Relief & Recovery",
+        description: "4-week stress management program combining breathwork, mobility, and active recovery",
+        category: .lifestyle,
+        durationWeeks: 4,
+        phases: [
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 1: Breathwork & Mobility",
+                order: 1,
+                durationWeeks: 2,
+                goals: [
+                    "Breathing exercises",
+                    "Yoga-inspired flows",
+                    "Gentle stretching"
+                ],
+                allowedExerciseCategories: [
+                    "mobility",
+                    "breathing",
+                    "yoga",
+                    "stretching"
+                ],
+                prohibitedExercises: ["high_intensity", "heavy_resistance"],
+                restrictions: [
+                    "Breathing exercises daily",
+                    "Yoga-inspired flows",
+                    "Gentle stretching only"
+                ],
+                progressionCriteria: [
+                    "Complete ≥60% of prescribed sessions",
+                    "Pain < 5/10",
+                    "Breathwork routine established"
+                ]
+            ),
+            ProtocolPhase(
+                id: UUID(),
+                name: "Phase 2: Active Recovery",
+                order: 2,
+                durationWeeks: 2,
+                goals: [
+                    "Light movement",
+                    "Foam rolling",
+                    "Progressive relaxation"
+                ],
+                allowedExerciseCategories: [
+                    "mobility",
+                    "breathing",
+                    "foam_rolling",
+                    "active_recovery",
+                    "relaxation"
+                ],
+                prohibitedExercises: ["high_intensity", "heavy_resistance"],
+                restrictions: [
+                    "Light movement only",
+                    "Foam rolling and self-massage",
+                    "Progressive relaxation techniques"
+                ],
+                progressionCriteria: [
+                    "Complete ≥60% of prescribed sessions",
+                    "Pain < 5/10",
+                    "Stress management skills developed"
+                ]
+            )
+        ],
+        constraints: ProtocolConstraints(
+            minPhases: 2,
+            maxPhases: 2,
+            canSkipPhases: false,
+            canModifyDuration: true,
+            requiredExerciseTypes: [
+                "mobility",
+                "breathing"
+            ],
+            prohibitedExercises: [],
+            maxPainLevel: 5,
+            minAdherencePercent: 0.60
+        ),
+        createdAt: Date()
+    )
+
     // Sample data for picker/testing
     static let sampleProtocols = [
         throwingOnRamp,
         shoulderRehab,
         strengthFoundation,
-        winterLift
+        winterLift,
+        performanceExplosive,
+        performanceEndurance,
+        lifestyleWellness,
+        lifestyleActiveAging,
+        lifestyleStressRelief
     ]
 }

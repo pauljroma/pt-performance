@@ -91,7 +91,7 @@ struct RMCalculator {
     static func strengthTargets(
         oneRM: Double,
         week: Int,
-        programType: ProgramType = .strength
+        programType: TrainingFocus = .strength
     ) -> StrengthTarget {
         let intensity = progressiveIntensity(week: week, programType: programType)
         let targetLoad = oneRM * intensity
@@ -110,7 +110,7 @@ struct RMCalculator {
     // MARK: - Private Helpers
 
     /// Progressive intensity by week for 8-week program
-    private static func progressiveIntensity(week: Int, programType: ProgramType) -> Double {
+    private static func progressiveIntensity(week: Int, programType: TrainingFocus) -> Double {
         switch programType {
         case .strength:
             // Progressive overload: 60% → 85%
@@ -155,7 +155,7 @@ struct RMCalculator {
     }
 
     /// Target reps based on intensity and program type
-    private static func targetReps(for intensity: Double, programType: ProgramType) -> Int {
+    private static func targetReps(for intensity: Double, programType: TrainingFocus) -> Int {
         switch programType {
         case .strength:
             switch intensity {
@@ -177,7 +177,7 @@ struct RMCalculator {
     }
 
     /// Target sets based on program type
-    private static func targetSets(for programType: ProgramType) -> Int {
+    private static func targetSets(for programType: TrainingFocus) -> Int {
         switch programType {
         case .strength: return 3     // 3-5 sets for strength
         case .hypertrophy: return 4  // 3-4 sets for hypertrophy
@@ -209,7 +209,7 @@ struct StrengthTarget {
 }
 
 /// Program type
-enum ProgramType {
+enum TrainingFocus {
     case strength      // Focus: max strength (high intensity, low reps)
     case hypertrophy   // Focus: muscle growth (moderate intensity, moderate reps)
     case power         // Focus: explosive power (low-moderate intensity, low reps)

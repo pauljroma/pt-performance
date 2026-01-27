@@ -9,6 +9,7 @@ struct TherapistProgramsView: View {
     @State private var editingProgramId: String?
     @State private var editingPatientId: UUID?
     @State private var showEditor = false
+    @State private var selectedTypeFilter: ProgramType? = nil
 
     var body: some View {
         NavigationStack {
@@ -102,23 +103,54 @@ struct TherapistProgramsView: View {
     }
 
     private var programsList: some View {
-        List(viewModel.programs) { program in
-            ProgramListCard(program: program)
-                .swipeActions(edge: .trailing) {
-                    Button {
-                        // Navigate to editor
-                        if let patientId = UUID(uuidString: program.patientId) {
-                            showProgramEditor(programId: program.id, patientId: patientId)
+        VStack(spacing: 0) {
+            filterBar
+
+            List(filteredPrograms) { program in
+                ProgramListCard(program: program)
+                    .swipeActions(edge: .trailing) {
+                        Button {
+                            // Navigate to editor
+                            if let patientId = UUID(uuidString: program.patientId) {
+                                showProgramEditor(programId: program.id, patientId: patientId)
+                            }
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
                         }
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
+                        .tint(.blue)
                     }
-                    .tint(.blue)
-                }
-                .onTapGesture {
-                    selectedProgram = program
-                }
+                    .onTapGesture {
+                        selectedProgram = program
+                    }
+            }
         }
+    }
+
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterChip(label: "All", isSelected: selectedTypeFilter == nil) {
+                    selectedTypeFilter = nil
+                }
+                ForEach(ProgramType.allCases) { type in
+                    FilterChip(
+                        label: type.displayName,
+                        icon: type.icon,
+                        color: type.color,
+                        isSelected: selectedTypeFilter == type
+                    ) {
+                        selectedTypeFilter = type
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.vertical, 8)
+    }
+
+    private var filteredPrograms: [ProgramListItem] {
+        guard let filter = selectedTypeFilter else { return viewModel.programs }
+        return viewModel.programs.filter { $0.resolvedProgramType == filter }
     }
 
     private func showProgramEditor(programId: String, patientId: UUID) {
@@ -139,6 +171,20 @@ struct ProgramListCard: View {
             Text(program.programName)
                 .font(.headline)
                 .foregroundColor(.primary)
+
+            // Program type badge
+            HStack(spacing: 4) {
+                Image(systemName: program.resolvedProgramType.icon)
+                    .font(.caption2)
+                Text(program.resolvedProgramType.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(program.resolvedProgramType.color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(program.resolvedProgramType.color.opacity(0.15))
+            .cornerRadius(8)
 
             // Patient name
             HStack {
@@ -204,6 +250,7 @@ class ProgramsListViewModel: ObservableObject {
                     target_level,
                     duration_weeks,
                     created_at,
+                    program_type,
                     patients!inner(
                         first_name,
                         last_name
@@ -238,10 +285,16 @@ struct ProgramListItem: Codable, Identifiable {
     let targetLevel: String
     let durationWeeks: Int
     let createdAt: Date?
+    let programType: ProgramType?
     let patient: PatientInfo
 
     var patientName: String {
         "\(patient.firstName) \(patient.lastName)"
+    }
+
+    /// Resolved program type (defaults to .rehab for legacy programs)
+    var resolvedProgramType: ProgramType {
+        programType ?? .rehab
     }
 
     struct PatientInfo: Codable {
@@ -261,6 +314,7 @@ struct ProgramListItem: Codable, Identifiable {
         case targetLevel = "target_level"
         case durationWeeks = "duration_weeks"
         case createdAt = "created_at"
+        case programType = "program_type"
         case patient = "patients"
     }
 }

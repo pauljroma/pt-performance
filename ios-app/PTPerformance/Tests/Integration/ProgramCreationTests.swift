@@ -397,6 +397,216 @@ class ProgramCreationTests: XCTestCase {
         _ = try? await task1.value
     }
 
+    // MARK: - Program Type Tests (BUILD 294)
+
+    func testCreateProgramWithRehabType() async throws {
+        // Given
+        viewModel.programName = "Rehab Type Test Program"
+        viewModel.programType = "rehab"
+        viewModel.phases = [
+            ProgramPhase(
+                name: "Rehab Phase 1",
+                durationWeeks: 4,
+                sessions: [],
+                order: 1
+            )
+        ]
+
+        // When
+        let programId = try await viewModel.createProgram(patientId: nil)
+
+        // Then
+        XCTAssertFalse(programId.isEmpty)
+
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("id", value: programId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let program = try decoder.decode(Program.self, from: response.data)
+
+        XCTAssertEqual(program.name, "Rehab Type Test Program")
+        XCTAssertEqual(program.programType, "rehab")
+    }
+
+    func testCreateProgramWithPerformanceType() async throws {
+        // Given
+        viewModel.programName = "Performance Type Test Program"
+        viewModel.programType = "performance"
+        viewModel.phases = [
+            ProgramPhase(
+                name: "Performance Phase 1",
+                durationWeeks: 6,
+                sessions: [],
+                order: 1
+            )
+        ]
+
+        // When
+        let programId = try await viewModel.createProgram(patientId: nil)
+
+        // Then
+        XCTAssertFalse(programId.isEmpty)
+
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("id", value: programId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let program = try decoder.decode(Program.self, from: response.data)
+
+        XCTAssertEqual(program.name, "Performance Type Test Program")
+        XCTAssertEqual(program.programType, "performance")
+    }
+
+    func testCreateProgramWithLifestyleType() async throws {
+        // Given
+        viewModel.programName = "Lifestyle Type Test Program"
+        viewModel.programType = "lifestyle"
+        viewModel.phases = [
+            ProgramPhase(
+                name: "Lifestyle Phase 1",
+                durationWeeks: 8,
+                sessions: [],
+                order: 1
+            )
+        ]
+
+        // When
+        let programId = try await viewModel.createProgram(patientId: nil)
+
+        // Then
+        XCTAssertFalse(programId.isEmpty)
+
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("id", value: programId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let program = try decoder.decode(Program.self, from: response.data)
+
+        XCTAssertEqual(program.name, "Lifestyle Type Test Program")
+        XCTAssertEqual(program.programType, "lifestyle")
+    }
+
+    func testProgramTypeDefaultsToRehabWhenOmitted() async throws {
+        // Given: Create program without explicitly setting programType
+        viewModel.programName = "Default Type Test Program"
+        viewModel.phases = [
+            ProgramPhase(
+                name: "Default Phase",
+                durationWeeks: 4,
+                sessions: [],
+                order: 1
+            )
+        ]
+
+        // When
+        let programId = try await viewModel.createProgram(patientId: nil)
+
+        // Then: Verify it defaults to rehab
+        XCTAssertFalse(programId.isEmpty)
+
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("id", value: programId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let program = try decoder.decode(Program.self, from: response.data)
+
+        XCTAssertEqual(program.name, "Default Type Test Program")
+        XCTAssertEqual(program.programType, "rehab", "Program type should default to 'rehab' when not specified")
+    }
+
+    func testFilterProgramsByType() async throws {
+        // Given: Create programs of different types
+        viewModel.programName = "Filter Test Rehab"
+        viewModel.programType = "rehab"
+        viewModel.phases = [
+            ProgramPhase(name: "Phase 1", durationWeeks: 2, sessions: [], order: 1)
+        ]
+        let rehabId = try await viewModel.createProgram(patientId: nil)
+        XCTAssertFalse(rehabId.isEmpty)
+
+        // Reset view model for next creation
+        viewModel = ProgramBuilderViewModel(supabase: supabase)
+        viewModel.programName = "Filter Test Performance"
+        viewModel.programType = "performance"
+        viewModel.phases = [
+            ProgramPhase(name: "Phase 1", durationWeeks: 2, sessions: [], order: 1)
+        ]
+        let performanceId = try await viewModel.createProgram(patientId: nil)
+        XCTAssertFalse(performanceId.isEmpty)
+
+        // When: Query programs filtered by program_type = "rehab"
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("program_type", value: "rehab")
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let programs = try decoder.decode([Program].self, from: response.data)
+
+        // Then: All returned programs should have rehab type
+        XCTAssertFalse(programs.isEmpty, "Should return at least one rehab program")
+        for program in programs {
+            XCTAssertEqual(program.programType, "rehab", "Filtered programs should all be rehab type")
+        }
+    }
+
+    func testProgramTypePersistedInSupabase() async throws {
+        // Given: Create a program with a specific type
+        viewModel.programName = "Persistence Test Program"
+        viewModel.programType = "performance"
+        viewModel.phases = [
+            ProgramPhase(
+                name: "Persistence Phase",
+                durationWeeks: 3,
+                sessions: [],
+                order: 1
+            )
+        ]
+
+        // When: Create and then re-fetch
+        let programId = try await viewModel.createProgram(patientId: nil)
+        XCTAssertFalse(programId.isEmpty)
+
+        // Re-fetch from Supabase to verify persistence
+        let response = try await supabase.client
+            .from("programs")
+            .select()
+            .eq("id", value: programId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let program = try decoder.decode(Program.self, from: response.data)
+
+        // Then: Type should be persisted correctly
+        XCTAssertEqual(program.id, programId)
+        XCTAssertEqual(program.name, "Persistence Test Program")
+        XCTAssertEqual(program.programType, "performance", "Program type 'performance' should persist in Supabase")
+    }
+
     // MARK: - Cleanup
 
     override func tearDownWithError() throws {

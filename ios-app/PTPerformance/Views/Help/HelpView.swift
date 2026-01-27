@@ -106,7 +106,7 @@ struct HelpView: View {
                     HStack(spacing: 12) {
                         // All categories chip
                         FilterChip(
-                            title: "All",
+                            label: "All",
                             icon: "square.stack.3d.up.fill",
                             isSelected: selectedCategory == nil
                         ) {
@@ -116,10 +116,10 @@ struct HelpView: View {
                         // Category chips
                         ForEach(HelpCategory.allCases, id: \.self) { category in
                             FilterChip(
-                                title: category.rawValue,
+                                label: category.rawValue,
                                 icon: category.icon,
-                                isSelected: selectedCategory == category,
-                                color: categoryColor(category)
+                                color: categoryColor(category),
+                                isSelected: selectedCategory == category
                             ) {
                                 selectedCategory = category
                             }
@@ -278,30 +278,3 @@ struct ArticleRowView: View {
     }
 }
 
-// MARK: - Filter Chip
-
-struct FilterChip: View {
-    let title: String
-    let icon: String
-    let isSelected: Bool
-    var color: Color = .blue
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption)
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isSelected ? color : Color(.systemGray5))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}

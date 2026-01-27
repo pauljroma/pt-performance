@@ -193,7 +193,8 @@ struct PhaseSessionsView: View {
                 targetLevel: "intermediate",
                 durationWeeks: 8,
                 createdAt: Date(),
-                status: "active"
+                status: "active",
+                programType: nil
             )
         )
     }

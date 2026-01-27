@@ -230,14 +230,11 @@ struct EditSessionView: View {
             let templates = try decoder.decode([ExerciseTemplateData].self, from: result.data)
 
             // Convert to Exercise format for picker
-            availableExercises = templates.compactMap { template -> Exercise? in
-                guard let templateUUID = UUID(uuidString: template.id) else {
-                    return nil
-                }
-                return Exercise(
-                    id: templateUUID,
+            availableExercises = templates.map { template in
+                Exercise(
+                    id: template.id,
                     session_id: UUID(),  // Placeholder for templates
-                    exercise_template_id: templateUUID,
+                    exercise_template_id: template.id,
                     sequence: nil,
                     prescribed_sets: 3,
                     prescribed_reps: "10",
@@ -246,14 +243,16 @@ struct EditSessionView: View {
                     rest_period_seconds: 90,
                     notes: nil,
                     exercise_templates: Exercise.ExerciseTemplate(
-                        id: templateUUID,
+                        id: template.id,
                         name: template.name,
                         category: template.category,
-                        body_region: template.body_region,
-                        videoUrl: nil,
-                        videoThumbnailUrl: nil,
-                        videoDuration: nil,
-                        formCues: nil,
+                        body_region: template.bodyRegion,
+                        videoUrl: template.videoUrl,
+                        videoThumbnailUrl: template.videoThumbnailUrl,
+                        videoDuration: template.videoDuration,
+                        formCues: template.formCues?.map { cue in
+                            Exercise.ExerciseTemplate.FormCue(cue: cue.cue, timestamp: cue.timestamp)
+                        },
                         techniqueCues: nil,
                         commonMistakes: nil,
                         safetyNotes: nil
@@ -379,12 +378,6 @@ struct UpdateSessionInput: Codable {
     }
 }
 
-struct ExerciseTemplateData: Codable {
-    let id: String
-    let name: String
-    let category: String?
-    let body_region: String?
-}
 
 #Preview {
     NavigationView {
