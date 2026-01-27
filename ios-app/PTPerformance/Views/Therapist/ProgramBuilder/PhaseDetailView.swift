@@ -82,7 +82,8 @@ struct PhaseDetailView: View {
         .navigationTitle("Edit Phase")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showSessionBuilder) {
-            if let index = editingSessionIndex {
+            if let index = editingSessionIndex,
+               phase.sessions.indices.contains(index) {
                 SessionBuilderSheet(
                     session: $phase.sessions[index],
                     isPresented: $showSessionBuilder
@@ -108,6 +109,11 @@ struct PhaseDetailView: View {
     }
 
     private func deleteSession(at offsets: IndexSet) {
+        // Clear stale index to prevent $phase.sessions[index] out-of-bounds crash
+        if let index = editingSessionIndex, offsets.contains(index) {
+            editingSessionIndex = nil
+            showSessionBuilder = false
+        }
         phase.sessions.remove(atOffsets: offsets)
     }
 }

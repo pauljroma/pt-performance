@@ -97,16 +97,18 @@ struct ProgramBuilderFormView: View {
 
             Section {
                 ForEach(viewModel.phases.indices, id: \.self) { index in
-                    NavigationLink {
-                        PhaseDetailView(phase: $viewModel.phases[index])
-                    } label: {
-                        PhaseRowView(
-                            phase: viewModel.phases[index],
-                            constraints: viewModel.selectedProtocol?.constraints
-                        )
+                    if viewModel.phases.indices.contains(index) {
+                        NavigationLink {
+                            PhaseDetailView(phase: $viewModel.phases[index])
+                        } label: {
+                            PhaseRowView(
+                                phase: viewModel.phases[index],
+                                constraints: viewModel.selectedProtocol?.constraints
+                            )
+                        }
+                        .accessibilityLabel("Phase \(index + 1): \(viewModel.phases[index].name)")
+                        .accessibilityHint("Edit this phase")
                     }
-                    .accessibilityLabel("Phase \(index + 1): \(viewModel.phases[index].name)")
-                    .accessibilityHint("Edit this phase")
                 }
                 .onDelete(perform: viewModel.deletePhase)
 

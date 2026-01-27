@@ -320,7 +320,7 @@ struct ExerciseCompactRow: View {
             }
 
             // Sets rows
-            ForEach(0..<actualSets, id: \.self) { index in
+            ForEach(0..<min(actualSets, actualReps.count), id: \.self) { index in
                 HStack {
                     Text("\(index + 1)")
                         .frame(width: 40, alignment: .leading)
