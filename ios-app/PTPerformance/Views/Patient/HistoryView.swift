@@ -46,8 +46,9 @@ struct HistoryView: View {
                     }
 
                     // BUILD 219: Combined workout history (prescribed + manual)
+                    // BUILD 296: Added NavigationLink → SessionDetailView (ACP-588)
                     if !viewModel.allWorkouts.isEmpty {
-                        RecentWorkoutsSection(workouts: viewModel.allWorkouts)
+                        RecentWorkoutsSection(workouts: viewModel.allWorkouts, patientId: patientId)
                     } else if viewModel.summaryStats != nil {
                         EmptyDataSection(
                             title: "No Workouts Yet",
@@ -354,6 +355,7 @@ struct SessionRow: View {
 
 struct RecentWorkoutsSection: View {
     let workouts: [WorkoutHistoryItem]
+    let patientId: String
 
     var body: some View {
         VStack(spacing: 12) {
@@ -363,7 +365,10 @@ struct RecentWorkoutsSection: View {
 
             VStack(spacing: 12) {
                 ForEach(workouts) { workout in
-                    WorkoutHistoryRow(workout: workout)
+                    NavigationLink(destination: SessionDetailView(workout: workout, patientId: patientId)) {
+                        WorkoutHistoryRow(workout: workout)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -445,13 +450,19 @@ struct WorkoutHistoryRow: View {
 
             Spacer()
 
-            // Completion status
-            if workout.isCompleted {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-            } else {
-                Image(systemName: "circle")
-                    .foregroundColor(.gray)
+            // Completion status + chevron
+            VStack(spacing: 4) {
+                if workout.isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                } else {
+                    Image(systemName: "circle")
+                        .foregroundColor(.gray)
+                }
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .padding()

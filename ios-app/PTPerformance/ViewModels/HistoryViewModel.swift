@@ -29,7 +29,7 @@ enum WorkoutHistoryItem: Identifiable {
     var name: String {
         switch self {
         case .prescribed(let session):
-            return "Session \(session.sessionNumber ?? 0)"
+            return "Session \(session.sessionNumber)"
         case .manual(let workout):
             return workout.displayName
         }
@@ -69,8 +69,8 @@ enum WorkoutHistoryItem: Identifiable {
 
     var volume: Double? {
         switch self {
-        case .prescribed:
-            return nil
+        case .prescribed(let session):
+            return session.totalVolume
         case .manual(let workout):
             return workout.totalVolume
         }
@@ -78,8 +78,8 @@ enum WorkoutHistoryItem: Identifiable {
 
     var duration: Int? {
         switch self {
-        case .prescribed:
-            return nil
+        case .prescribed(let session):
+            return session.durationMinutes
         case .manual(let workout):
             return workout.durationMinutes
         }

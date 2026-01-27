@@ -515,6 +515,146 @@ class AnalyticsService {
 
         return longestStreak
     }
+
+    // MARK: - BUILD 296: Session Detail (ACP-588)
+
+    /// Fetch exercise logs for a prescribed session with exercise names
+    func fetchSessionExerciseLogs(sessionId: String, patientId: String) async throws -> [ExerciseLogDetail] {
+        // Query exercise_logs joined through session_exercises to get exercise names
+        let response = try await supabase.client
+            .from("exercise_logs")
+            .select("""
+                id,
+                actual_sets,
+                actual_reps,
+                actual_load,
+                load_unit,
+                rpe,
+                pain_score,
+                notes,
+                logged_at,
+                session_exercises!inner(
+                    exercise_templates!inner(
+                        exercise_name,
+                        id,
+                        video_url
+                    )
+                )
+            """)
+            .eq("patient_id", value: patientId)
+            .eq("session_exercises.session_id", value: sessionId)
+            .order("logged_at", ascending: true)
+            .execute()
+
+        // Custom decoder for the nested join response
+        struct ExerciseLogJoined: Codable {
+            let id: UUID
+            let actual_sets: Int
+            let actual_reps: [Int]
+            let actual_load: Double?
+            let load_unit: String?
+            let rpe: Int
+            let pain_score: Int
+            let notes: String?
+            let logged_at: Date
+            let session_exercises: SessionExerciseJoin
+
+            struct SessionExerciseJoin: Codable {
+                let exercise_templates: ExerciseTemplateJoin
+            }
+
+            struct ExerciseTemplateJoin: Codable {
+                let exercise_name: String
+                let id: UUID
+                let video_url: String?
+            }
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let joined = try decoder.decode([ExerciseLogJoined].self, from: response.data)
+
+        return joined.map { log in
+            ExerciseLogDetail(
+                id: log.id.uuidString,
+                exerciseName: log.session_exercises.exercise_templates.exercise_name,
+                actualSets: log.actual_sets,
+                actualReps: log.actual_reps,
+                actualLoad: log.actual_load,
+                loadUnit: log.load_unit,
+                rpe: log.rpe,
+                painScore: log.pain_score,
+                notes: log.notes,
+                loggedAt: log.logged_at,
+                exerciseTemplateId: log.session_exercises.exercise_templates.id.uuidString,
+                videoUrl: log.session_exercises.exercise_templates.video_url
+            )
+        }
+    }
+
+    /// Fetch exercises for a manual workout
+    func fetchManualWorkoutExercises(workoutId: UUID) async throws -> [ExerciseLogDetail] {
+        let response = try await supabase.client
+            .from("manual_session_exercises")
+            .select("""
+                id,
+                exercise_name,
+                target_sets,
+                target_reps,
+                target_load,
+                load_unit,
+                notes,
+                created_at,
+                exercise_template_id
+            """)
+            .eq("manual_session_id", value: workoutId)
+            .order("sequence", ascending: true)
+            .execute()
+
+        struct ManualExerciseRow: Codable {
+            let id: UUID
+            let exercise_name: String
+            let target_sets: Int?
+            let target_reps: String?
+            let target_load: Double?
+            let load_unit: String?
+            let notes: String?
+            let created_at: Date
+            let exercise_template_id: UUID?
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let rows = try decoder.decode([ManualExerciseRow].self, from: response.data)
+
+        return rows.map { row in
+            // Parse target_reps string into [Int] array
+            let repsArray: [Int]
+            if let repsStr = row.target_reps {
+                let parsed = repsStr.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                repsArray = parsed.isEmpty ? (row.target_sets.map { Array(repeating: Int(repsStr) ?? 0, count: $0) } ?? []) : parsed
+            } else {
+                repsArray = []
+            }
+
+            return ExerciseLogDetail(
+                id: row.id.uuidString,
+                exerciseName: row.exercise_name,
+                actualSets: row.target_sets ?? 0,
+                actualReps: repsArray,
+                actualLoad: row.target_load,
+                loadUnit: row.load_unit,
+                rpe: 0,
+                painScore: 0,
+                notes: row.notes,
+                loggedAt: row.created_at,
+                exerciseTemplateId: row.exercise_template_id?.uuidString,
+                videoUrl: nil
+            )
+        }
+    }
 }
 
 // MARK: - Analytics Error
