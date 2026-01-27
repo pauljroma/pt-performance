@@ -11,6 +11,7 @@ import SwiftUI
 struct CreateTemplateView: View {
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
 
     @State private var templateName = ""
     @State private var templateDescription = ""
@@ -106,10 +107,10 @@ struct CreateTemplateView: View {
 
             if creationMode == .fromProgram {
                 // Program selector
-                // TODO: Implement program picker
-                Text("Select a program to convert into a template")
+                Text("Program picker coming soon")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .italic()
             }
         } header: {
             Text("Creation Mode")
@@ -254,19 +255,38 @@ struct CreateTemplateView: View {
         isCreating = true
         errorMessage = nil
 
-        // TODO: Replace with actual API call via TemplatesService
-        // Simulate API delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            if creationMode == .fromScratch {
-                // Create empty template
-                print("Creating template from scratch: \(templateName)")
-            } else if let program = selectedProgram {
-                // Convert program to template
-                print("Creating template from program: \(program.name)")
-            }
+        Task {
+            do {
+                guard let userId = appState.userId else {
+                    await MainActor.run {
+                        errorMessage = "You must be logged in to create a template."
+                        isCreating = false
+                    }
+                    return
+                }
 
-            isCreating = false
-            showingSuccessAlert = true
+                let _ = try await TemplatesService.shared.createTemplate(
+                    name: templateName,
+                    description: templateDescription.isEmpty ? nil : templateDescription,
+                    category: selectedCategory,
+                    difficultyLevel: selectedDifficulty,
+                    durationWeeks: durationWeeks,
+                    createdBy: userId,
+                    isPublic: isPublic,
+                    tags: tags
+                )
+
+                await MainActor.run {
+                    isCreating = false
+                    showingSuccessAlert = true
+                }
+            } catch {
+                ErrorLogger.shared.logError(error, context: "CreateTemplateView.createTemplate")
+                await MainActor.run {
+                    isCreating = false
+                    errorMessage = error.localizedDescription
+                }
+            }
         }
     }
 }

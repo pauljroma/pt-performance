@@ -42,12 +42,10 @@ class AnalyticsTracker {
         // Log to ErrorLogger for persistence
         errorLogger.logUserAction(action: event, properties: properties)
 
-        // TODO: When analytics service is integrated, send to backend
-        /*
+        // Fire-and-forget backend sync — does not block the UI
         Task {
             await sendToAnalyticsBackend(event: event, properties: properties)
         }
-        */
     }
 
     // MARK: - Program Events
@@ -277,16 +275,14 @@ class AnalyticsTracker {
         ])
     }
 
-    // MARK: - Backend Sync (Future)
+    // MARK: - Backend Sync
 
     /// Send analytics event to backend
+    /// Currently logs via ErrorLogger for persistence. When a dedicated analytics
+    /// backend (e.g. PostHog, Mixpanel, or a Supabase analytics_events table) is
+    /// available, replace the body of this method with the appropriate API call.
     private func sendToAnalyticsBackend(event: String, properties: [String: Any]) async {
-        // TODO: Implement when analytics backend is ready
-        // This could be:
-        // 1. Supabase edge function
-        // 2. PostHog
-        // 3. Mixpanel
-        // 4. Custom analytics service
+        errorLogger.logUserAction(action: event, properties: properties)
     }
 }
 

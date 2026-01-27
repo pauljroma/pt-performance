@@ -10,6 +10,8 @@ import SwiftUI
 
 struct TemplateLibraryView: View {
 
+    @EnvironmentObject var appState: AppState
+
     @State private var templates: [WorkoutTemplate] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -208,7 +210,7 @@ struct TemplateLibraryView: View {
             let matchesDifficulty = selectedDifficulty == nil || template.difficultyLevel == selectedDifficulty
 
             // My templates filter
-            let matchesOwnership = !showMyTemplatesOnly || true // TODO: Check if current user is creator
+            let matchesOwnership = !showMyTemplatesOnly || template.createdBy.uuidString == appState.userId
 
             return matchesSearch && matchesCategory && matchesDifficulty && matchesOwnership
         }
@@ -220,16 +222,16 @@ struct TemplateLibraryView: View {
         isLoading = true
         errorMessage = nil
 
-        // TODO: Replace with actual API call via TemplatesService
-        // Simulate API delay
-        try? await Task.sleep(nanoseconds: 500_000_000)
-
-        // Mock data for preview
-        templates = [
-            .sample,
-            .sampleStrength,
-            .sampleMobility
-        ]
+        do {
+            if let userId = appState.userId {
+                templates = try await TemplatesService.shared.fetchTemplates(for: userId)
+            } else {
+                templates = try await TemplatesService.shared.fetchPopularTemplates()
+            }
+        } catch {
+            ErrorLogger.shared.logError(error, context: "TemplateLibraryView.loadTemplates")
+            errorMessage = error.localizedDescription
+        }
 
         isLoading = false
     }

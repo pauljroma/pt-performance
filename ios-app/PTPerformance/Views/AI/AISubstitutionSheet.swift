@@ -206,8 +206,8 @@ struct AISubstitutionSheet: View {
                 equipmentAvailable = []
                 intensityPreference = "standard"
             } else if reason.contains("Injury or pain") {
-                // Recovery mode - but equipment function won't help with pain-based substitutions
-                // TODO: Need different edge function for injury/pain substitutions
+                // NOTE: Using general substitution with recovery intensity for injury/pain cases
+                // — a dedicated injury/pain edge function enhancement is pending
                 equipmentAvailable = []
                 intensityPreference = "recovery"
             } else {

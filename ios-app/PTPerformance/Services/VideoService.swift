@@ -173,7 +173,6 @@ class VideoService {
         watchDuration: Int?,
         completed: Bool
     ) async throws {
-        // TODO: Call Supabase log_video_view function
         let supabase = PTSupabaseClient.shared.client
 
         do {

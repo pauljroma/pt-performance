@@ -58,15 +58,30 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Filtered sessions by selected category (if any)
     var filteredSessions: [WorkoutTimer] {
-        guard selectedCategory != nil else {
+        guard let selectedCategory else {
             return sessions
         }
 
-        // Filter sessions based on template category
+        // Filter sessions by mapping the template's TimerType to a TimerCategory
         return sessions.filter { session in
-            // TODO: Add category to IntervalTemplate or TimerPreset
-            // For now, return all sessions
-            return true
+            guard let templateId = session.templateId,
+                  let template = templates[templateId] else {
+                // Sessions without a template cannot be categorized — exclude from filtered results
+                return false
+            }
+            return categoryForTimerType(template.type) == selectedCategory
+        }
+    }
+
+    /// Maps a TimerType to the closest TimerCategory for filtering purposes
+    private func categoryForTimerType(_ type: TimerType) -> TimerCategory {
+        switch type {
+        case .tabata, .amrap:
+            return .cardio
+        case .emom, .intervals:
+            return .strength
+        case .custom:
+            return .cardio
         }
     }
 

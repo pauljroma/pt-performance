@@ -16,7 +16,7 @@ struct TemplateDetailView: View {
     @State private var phases: [TemplatePhaseDetail] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var expandedPhaseIds: Set<String> = []
+    @State private var expandedPhaseIds: Set<UUID> = []
     @State private var showingAssignSheet = false
 
     var body: some View {
@@ -230,21 +230,19 @@ struct TemplateDetailView: View {
         isLoading = true
         errorMessage = nil
 
-        // TODO: Replace with actual API call via TemplatesService
-        // Simulate API delay
-        try? await Task.sleep(nanoseconds: 500_000_000)
-
-        // Mock data for preview
-        phases = [
-            TemplatePhaseDetail(
-                phase: .sample,
-                sessions: [.sample]
+        do {
+            let detail = try await TemplatesService.shared.fetchTemplateDetails(
+                templateId: template.id.uuidString
             )
-        ]
+            phases = detail.phases
 
-        // Expand first phase by default
-        if let firstPhase = phases.first {
-            expandedPhaseIds.insert(firstPhase.id)
+            // Expand first phase by default
+            if let firstPhase = phases.first {
+                expandedPhaseIds.insert(firstPhase.id)
+            }
+        } catch {
+            ErrorLogger.shared.logError(error, context: "TemplateDetailView.loadTemplateDetails")
+            errorMessage = error.localizedDescription
         }
 
         isLoading = false
