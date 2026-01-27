@@ -16,6 +16,11 @@ class TodaySessionViewModel: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
+    /// BUILD 290: Offline status passthrough for views (ACP-600)
+    var isOffline: Bool {
+        supabase.isOffline
+    }
+
     /// Patient ID for current session (derived from Supabase auth)
     var patientId: UUID? {
         guard let userIdString = supabase.userId else { return nil }
@@ -36,6 +41,12 @@ class TodaySessionViewModel: ObservableObject {
         let rpe: Int
         let pain_score: Int
         let notes: String?
+    }
+
+    /// BUILD 290: Codable wrapper for offline caching of today's session data (ACP-600)
+    private struct CachedTodaySession: Codable {
+        let session: Session?
+        let exercises: [Exercise]
     }
 
     /// Fetch today's session for the authenticated patient
@@ -68,6 +79,11 @@ class TodaySessionViewModel: ObservableObject {
             print("✅ [TodaySession] Supabase fetch succeeded")
             #endif
 
+            // BUILD 290: Cache session data for offline use (ACP-600)
+            let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
+            supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
+            logger.log("💾 Cached today's session for offline use", level: .success)
+
             // BUILD 269: Also fetch today's completed workouts count
             await fetchTodaysCompletedWorkouts()
 
@@ -80,15 +96,30 @@ class TodaySessionViewModel: ObservableObject {
             print("   Error: \(error.localizedDescription)")
             #endif
 
-            errorMessage = """
-            Failed to load today's session.
+            // BUILD 290: Serve cached data when offline (ACP-600)
+            if supabase.isOffline,
+               let cached = supabase.getCachedData(
+                   forKey: "today_session_\(patientId)",
+                   type: CachedTodaySession.self
+               ) {
+                self.session = cached.session
+                self.exercises = cached.exercises
+                logger.log("📦 Serving cached session data (offline mode)", level: .success)
+                #if DEBUG
+                print("📦 [TodaySession] Serving cached data - session: \(cached.session?.name ?? "nil"), exercises: \(cached.exercises.count)")
+                #endif
+                // Don't set errorMessage - OfflineBanner handles offline indication
+            } else {
+                errorMessage = """
+                Failed to load today's session.
 
-            Please check:
-            • Your internet connection
-            • That you have an active program assigned
+                Please check:
+                • Your internet connection
+                • That you have an active program assigned
 
-            Error: \(error.localizedDescription)
-            """
+                Error: \(error.localizedDescription)
+                """
+            }
             isLoading = false
         }
 

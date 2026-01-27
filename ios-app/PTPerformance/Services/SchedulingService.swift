@@ -203,6 +203,25 @@ class SchedulingService {
         }
     }
 
+    /// Fetch available program sessions for scheduling
+    /// Returns sessions from the patient's active programs
+    func fetchAvailableProgramSessions(for patientId: String) async throws -> [Session] {
+        do {
+            let sessions: [Session] = try await supabase
+                .from("sessions")
+                .select("*, phases!inner(*, programs!inner(id, patient_id, status))")
+                .eq("phases.programs.patient_id", value: patientId)
+                .eq("phases.programs.status", value: "active")
+                .order("sequence", ascending: true)
+                .execute()
+                .value
+            return sessions
+        } catch {
+            errorLogger.logError(error, context: "fetchAvailableProgramSessions(patient=\(patientId))")
+            throw SchedulingError.fetchFailed(error)
+        }
+    }
+
     // MARK: - Helper Methods
 
     private func validateSessionForPatient(sessionId: String, patientId: String) async throws {

@@ -253,7 +253,6 @@ struct ScheduleSessionView: View {
     // MARK: - Actions
 
     private func loadAvailableSessions() {
-        // BUILD 286: Wire to SchedulingService (ACP-595)
         isLoading = true
         errorMessage = nil
 
@@ -266,14 +265,7 @@ struct ScheduleSessionView: View {
                     }
                     return
                 }
-                let sessions: [Session] = try await PTSupabaseClient.shared.client
-                    .from("sessions")
-                    .select("*, phases!inner(*, programs!inner(id, patient_id, status))")
-                    .eq("phases.programs.patient_id", value: patientId)
-                    .eq("phases.programs.status", value: "active")
-                    .order("sequence", ascending: true)
-                    .execute()
-                    .value
+                let sessions = try await SchedulingService.shared.fetchAvailableProgramSessions(for: patientId)
                 await MainActor.run {
                     availableSessions = sessions
                     isLoading = false

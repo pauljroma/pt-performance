@@ -16,12 +16,19 @@ class VideoService {
 
     static let shared = VideoService()
 
-    private init() {}
+    private init() {
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        cacheDirectory = cachesDir.appendingPathComponent("VideoCache", isDirectory: true)
+        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
 
-    // MARK: - Dependencies
+    // MARK: - Properties
 
     private let cache = URLCache.shared
     private let errorLogger = ErrorLogger.shared
+    private let fileManager = FileManager.default
+    private let cacheDirectory: URL
+    private let maxCacheSize: Int64 = 500_000_000  // 500MB (videos are larger)
 
     // MARK: - Video Loading
 
@@ -29,48 +36,127 @@ class VideoService {
     /// - Parameter url: The video URL
     /// - Returns: Cached or remote URL for AVPlayer
     func loadVideo(from url: URL) async throws -> URL {
-        // For remote videos, just return the URL
-        // AVPlayer handles its own caching
-        return url
+        // Check disk cache first
+        let cachedURL = cacheFileURL(for: url)
+        if fileManager.fileExists(atPath: cachedURL.path) {
+            return cachedURL
+        }
 
-        // TODO: Implement local caching for offline playback
-        // For now, rely on AVPlayer's built-in caching
+        // Not cached — return remote URL; AVPlayer handles streaming
+        return url
     }
 
     /// Preload a video for offline viewing
     /// - Parameter url: The video URL
     func preloadVideo(from url: URL) async throws {
-        // Use AVAssetDownloadTask for HLS videos
-        // or URLSession.shared.downloadTask for MP4s
+        let cachedURL = cacheFileURL(for: url)
 
-        // TODO: Implement download and local storage
-        // For now, this is a placeholder
+        // Skip if already cached
+        guard !fileManager.fileExists(atPath: cachedURL.path) else { return }
+
+        // Download video data
+        let (data, response) = try await URLSession.shared.data(from: url)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw VideoError.downloadFailed(
+                NSError(domain: "VideoService", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Download returned non-200 status"])
+            )
+        }
+
+        // Save to disk cache
+        try data.write(to: cachedURL)
+
+        // Check cache size and cleanup if over limit
+        let currentSize = getCacheSize()
+        if currentSize > maxCacheSize {
+            cleanupOldCache()
+        }
     }
 
     /// Check if a video is cached locally
     /// - Parameter url: The video URL
     /// - Returns: Whether the video is available offline
     func isVideoCached(url: URL) -> Bool {
-        // TODO: Check local storage
-        return false
+        let cachedURL = cacheFileURL(for: url)
+        return fileManager.fileExists(atPath: cachedURL.path)
     }
 
     /// Delete cached video
     /// - Parameter url: The video URL
     func deleteCachedVideo(url: URL) throws {
-        // TODO: Remove from local storage
+        let cachedURL = cacheFileURL(for: url)
+        if fileManager.fileExists(atPath: cachedURL.path) {
+            try fileManager.removeItem(at: cachedURL)
+        }
     }
 
     /// Get total cache size
     /// - Returns: Cache size in bytes
     func getCacheSize() -> Int64 {
-        // TODO: Calculate total video cache size
-        return 0
+        var totalSize: Int64 = 0
+
+        guard let enumerator = fileManager.enumerator(
+            at: cacheDirectory,
+            includingPropertiesForKeys: [.fileSizeKey]
+        ) else {
+            return 0
+        }
+
+        for case let fileURL as URL in enumerator {
+            if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                totalSize += Int64(fileSize)
+            }
+        }
+
+        return totalSize
     }
 
     /// Clear all cached videos
     func clearCache() throws {
-        // TODO: Remove all cached videos
+        try fileManager.removeItem(at: cacheDirectory)
+        try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
+
+    // MARK: - Private Helpers
+
+    private func cacheFileURL(for url: URL) -> URL {
+        let filename = String(url.absoluteString.hashValue)
+        return cacheDirectory.appendingPathComponent(filename)
+    }
+
+    private func cleanupOldCache() {
+        guard let enumerator = fileManager.enumerator(
+            at: cacheDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey]
+        ) else {
+            return
+        }
+
+        var files: [(url: URL, date: Date, size: Int64)] = []
+
+        for case let fileURL as URL in enumerator {
+            if let values = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
+               let date = values.contentModificationDate,
+               let size = values.fileSize {
+                files.append((url: fileURL, date: date, size: Int64(size)))
+            }
+        }
+
+        // Sort by date (oldest first)
+        files.sort { $0.date < $1.date }
+
+        // Remove oldest files until under the limit
+        var currentSize = files.reduce(0) { $0 + $1.size }
+
+        for file in files {
+            if currentSize <= maxCacheSize {
+                break
+            }
+            try? fileManager.removeItem(at: file.url)
+            currentSize -= file.size
+        }
     }
 
     // MARK: - Video Logging
