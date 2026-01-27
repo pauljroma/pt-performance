@@ -194,7 +194,7 @@ struct SessionDisclosureView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Session \(session.sessionNumber)")
+                    Text("Session \(session.sessionNumber ?? 0)")
                         .font(.subheadline)
                         .bold()
 

@@ -102,7 +102,7 @@ class ProgramViewModel: ObservableObject {
 
                 // 4. Fetch exercises for each session
                 for session in sessions {
-                    logger.log("🏋️ Step 4: Fetching exercises for session \(session.sessionNumber)")
+                    logger.log("🏋️ Step 4: Fetching exercises for session \(session.sessionNumber ?? 0)")
                     let exercisesResponse = try await supabase.client
                         .from("session_exercises")
                         .select("""
@@ -127,7 +127,7 @@ class ProgramViewModel: ObservableObject {
 
                     let exercises = try decoder.decode([ProgramExercise].self, from: exercisesResponse.data)
                     exercisesBySession[session.id.uuidString] = exercises
-                    logger.log("✅ Decoded \(exercises.count) exercises for session \(session.sessionNumber)", level: .success)
+                    logger.log("✅ Decoded \(exercises.count) exercises for session \(session.sessionNumber ?? 0)", level: .success)
                 }
             }
 

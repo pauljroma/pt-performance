@@ -259,7 +259,7 @@ class ExportService {
             .foregroundColor: UIColor.label
         ]
 
-        let headerText = "Session \(session.sessionNumber) - \(dateString(session.sessionDate))"
+        let headerText = "Session \(session.sessionNumber ?? 0) - \(dateString(session.sessionDate))"
         let headerSize = headerText.size(withAttributes: headerAttributes)
         let headerRect = CGRect(
             x: margin,

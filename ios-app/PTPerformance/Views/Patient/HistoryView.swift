@@ -324,7 +324,7 @@ struct SessionRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Session \(session.sessionNumber)")
+                Text("Session \(session.sessionNumber ?? 0)")
                     .font(.headline)
 
                 Text(session.sessionDate, style: .date)

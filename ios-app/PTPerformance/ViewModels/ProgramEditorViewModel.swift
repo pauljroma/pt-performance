@@ -472,7 +472,7 @@ class ProgramEditorViewModel: ObservableObject {
 
                     // Step 4: Load exercises for each session
                     for session in sessions {
-                        logger.log("📥 Step 4: Fetching exercises for session \(session.sessionNumber)", level: .diagnostic)
+                        logger.log("📥 Step 4: Fetching exercises for session \(session.sessionNumber ?? 0)", level: .diagnostic)
 
                         do {
                             let exercisesResponse = try await supabase.client
@@ -494,9 +494,9 @@ class ProgramEditorViewModel: ObservableObject {
                                 .execute()
 
                             let exercises = try decoder.decode([SessionExercise].self, from: exercisesResponse.data)
-                            logger.log("✅ Loaded \(exercises.count) exercises for session \(session.sessionNumber)", level: .success)
+                            logger.log("✅ Loaded \(exercises.count) exercises for session \(session.sessionNumber ?? 0)", level: .success)
                         } catch {
-                            logger.log("⚠️ Failed to load exercises for session \(session.sessionNumber): \(error)", level: .diagnostic)
+                            logger.log("⚠️ Failed to load exercises for session \(session.sessionNumber ?? 0): \(error)", level: .diagnostic)
                             // Continue loading other sessions even if one fails
                         }
                     }

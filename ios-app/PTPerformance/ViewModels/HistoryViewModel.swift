@@ -29,7 +29,7 @@ enum WorkoutHistoryItem: Identifiable {
     var name: String {
         switch self {
         case .prescribed(let session):
-            return "Session \(session.sessionNumber)"
+            return "Session \(session.sessionNumber ?? 0)"
         case .manual(let workout):
             return workout.displayName
         }

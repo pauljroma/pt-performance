@@ -51,7 +51,7 @@ struct Phase: Codable, Identifiable {
 struct ProgramSession: Codable, Identifiable {
     let id: UUID
     let phaseId: UUID
-    let sessionNumber: Int
+    let sessionNumber: Int?
     let sessionDate: Date?
     let completed: Bool?  // Optional - may not exist in database
     let exerciseCount: Int?
