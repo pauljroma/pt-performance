@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-01-27T18:00:00Z",
+  "task": "BUILD 289 - Production Readiness Swarm",
+  "swarm_plan": ".swarms/BUILD_289_PRODUCTION_READINESS.yaml",
+  "linear_issues": ["ACP-599", "ACP-592", "ACP-601"],
+  "estimate": {
+    "agents": 3,
+    "phases": 2,
+    "parallel_in_phase_1": 2,
+    "sequential_in_phase_2": 1,
+    "estimated_time_minutes": 25,
+    "estimated_cost_usd": 4.50,
+    "breakdown": {
+      "agent_1_sentry_spm": {
+        "task": "Add sentry-cocoa SPM package to Xcode project",
+        "estimated_minutes": 10,
+        "complexity": "medium",
+        "risk": "pbxproj editing may need manual verification"
+      },
+      "agent_2_exercise_content": {
+        "task": "Verify and populate exercise template content in Supabase",
+        "estimated_minutes": 8,
+        "complexity": "low-medium",
+        "risk": "migration application depends on Supabase access"
+      },
+      "agent_3_qa_build": {
+        "task": "QA build, archive, deploy Build 289 to TestFlight",
+        "estimated_minutes": 12,
+        "complexity": "low",
+        "risk": "archive time depends on clean build speed"
+      }
+    },
+    "risk_factors": [
+      "Sentry SPM addition via pbxproj editing (not Xcode GUI)",
+      "Supabase migration application requires dashboard or CLI access",
+      "Build archive time ~5 minutes"
+    ],
+    "reuse_potential": "All Sentry service files already fully implemented, just need SDK package"
+  }
+}

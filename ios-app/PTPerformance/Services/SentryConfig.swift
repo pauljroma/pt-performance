@@ -115,11 +115,9 @@ enum SentryConfig {
             options.environment = environment
             options.releaseName = releaseName
             options.tracesSampleRate = NSNumber(value: tracesSampleRate)
-            options.profilesSampleRate = NSNumber(value: 0.1)
             options.enableAutoSessionTracking = enableAutoSessionTracking
             options.enableAutoBreadcrumbTracking = enableAutoBreadcrumbTracking
             options.enableNetworkTracking = true
-            options.enableFileIOTracking = true
             options.attachStacktrace = attachStacktrace
             options.attachScreenshot = true
             options.attachViewHierarchy = true

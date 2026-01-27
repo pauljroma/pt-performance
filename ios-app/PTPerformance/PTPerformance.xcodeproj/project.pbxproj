@@ -924,6 +924,8 @@
 			name = PTPerformance;
 			packageProductDependencies = (
 				AA2222222222222222222222 /* Supabase */,
+				BB4444444444444444444444 /* Sentry */,
+				BB5555555555555555555555 /* SentrySwiftUI */,
 			);
 			productName = PTPerformance;
 			productReference = FDE3C68F9A1C2FB6F12879FD /* PTPerformance.app */;
@@ -945,6 +947,7 @@
 			name = PTPerformanceUITests;
 			packageProductDependencies = (
 				AA2222222222222222222222 /* Supabase */,
+				BB6666666666666666666666 /* Sentry */,
 			);
 			productName = PTPerformanceUITests;
 			productReference = 7902B3EBC8C120F08E43914C /* PTPerformanceUITests.xctest */;
@@ -966,6 +969,7 @@
 			name = PTPerformanceTests;
 			packageProductDependencies = (
 				AA2222222222222222222222 /* Supabase */,
+				BB7777777777777777777777 /* Sentry */,
 			);
 			productName = PTPerformanceTests;
 			productReference = 57A89540A9070BF9C6624971 /* PTPerformanceTests.xctest */;
@@ -992,6 +996,7 @@
 			minimizedProjectReferenceProxies = 0;
 			packageReferences = (
 				AA1111111111111111111111 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 50A2CB50BA7CA9076ABC3945 /* Products */;
@@ -1263,8 +1268,8 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 188;
-				DEVELOPMENT_TEAM = V9L3BZN3ZT;
+				CURRENT_PROJECT_VERSION = 289;
+				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1287,8 +1292,8 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 188;
-				DEVELOPMENT_TEAM = V9L3BZN3ZT;
+				CURRENT_PROJECT_VERSION = 289;
+				DEVELOPMENT_TEAM = 5NNLBL74XR;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1498,6 +1503,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1505,6 +1518,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA1111111111111111111111 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		BB4444444444444444444444 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		BB5555555555555555555555 /* SentrySwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = SentrySwiftUI;
+		};
+		BB6666666666666666666666 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		BB7777777777777777777777 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB3333333333333333333333 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

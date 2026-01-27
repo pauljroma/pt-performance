@@ -1,0 +1,104 @@
+name: "BUILD 289 - Production Readiness Swarm"
+description: "Final production preparation: Sentry SDK, exercise content verification, QA build"
+created: "2026-01-27"
+build: 289
+
+linear_issues:
+  - ACP-599: Integrate Sentry error monitoring
+  - ACP-592: Populate exercise_templates with video URLs and technique cues
+  - ACP-601: QA Build + Full Regression Testing
+
+status_summary:
+  total_linear_issues: 102
+  done: 26
+  remaining_mvp: 5  # ACP-592, 599, 600, 601, 602
+  deferred_post_mvp: ACP-600 (offline caching)
+
+current_state:
+  sentry:
+    - All 4 service files FULLY implemented (zero TODOs)
+    - SentryConfig.swift, ErrorLogger.swift, PerformanceMonitor.swift, SecurityMonitor.swift
+    - PTPerformanceApp.swift has initialization wired (line 12)
+    - Code uses "#if canImport(Sentry)" for conditional compilation
+    - MISSING: sentry-cocoa SPM package NOT in project
+    - MISSING: Production SENTRY_DSN environment variable
+  exercise_templates:
+    - 30+ exercises have technique_cues seeded (migration 20251217)
+    - 50+ exercises have video_url set to Supabase Storage paths (migration 20251219)
+    - Test data migration adds sample videos (migration 20260111)
+    - UNKNOWN: Which migrations are actually applied to production DB
+  ios_app:
+    - Build 288 on TestFlight
+    - Zero compile warnings, zero duplicate pbxproj entries
+    - Dead code removed, minor TODOs resolved
+    - ~28,000 lines across 150+ Swift files
+
+phases:
+  - phase: 1
+    name: "Sentry SDK Integration"
+    agents:
+      - id: "agent-1"
+        task: "Add sentry-cocoa SPM package to Xcode project"
+        scope: |
+          1. Add sentry-cocoa (https://github.com/getsentry/sentry-cocoa) as SPM dependency
+             - Edit PTPerformance.xcodeproj/project.pbxproj to add XCRemoteSwiftPackageReference
+             - Add package product reference to main target
+             - Version: latest stable (11.x)
+          2. Verify build compiles with Sentry imported
+          3. Verify SentryConfig.initialize() now has real SDK to call
+          4. Add SENTRY_DSN to build configuration (Info.plist or build settings)
+        files:
+          - PTPerformance.xcodeproj/project.pbxproj
+          - PTPerformance.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+        verification: "xcodebuild clean build succeeds with Sentry imported"
+
+  - phase: 2
+    name: "Exercise Content Verification"
+    agents:
+      - id: "agent-2"
+        task: "Verify and enhance exercise template data"
+        scope: |
+          1. Check which exercise template migrations are applied to production DB
+          2. If technique_cues migration (20251217) not applied, apply it
+          3. If video URL migration (20251219) not applied, apply it
+          4. Verify at least 50 exercises have non-placeholder video_url
+          5. Verify at least 30 exercises have technique_cues
+          6. If any gaps, write supplementary migration
+        files:
+          - supabase/migrations/20251217000000_add_exercise_technique_fields.sql
+          - supabase/migrations/20251219130000_update_exercise_video_urls.sql
+          - supabase/migrations/20260111000004_populate_test_exercise_data.sql
+        verification: "Query exercise_templates returns populated video_url and technique_cues"
+
+  - phase: 3
+    name: "QA Build + Deploy"
+    agents:
+      - id: "agent-3"
+        task: "Build, verify, and deploy to TestFlight"
+        scope: |
+          1. Increment build number to 289
+          2. Clean build environment
+          3. Archive and export IPA
+          4. Upload to TestFlight
+          5. Verify upload success
+          6. Commit build number change
+        depends_on: ["agent-1"]
+        files:
+          - PTPerformance/Info.plist
+        verification: "Build 289 appears in App Store Connect"
+
+estimated:
+  agents: 3
+  phases: 3
+  parallel_agents: 2  # Agents 1 and 2 run in parallel, Agent 3 sequential
+
+post_swarm:
+  remaining_for_launch:
+    - ACP-600: "Basic offline caching (DEFERRED - post-MVP)"
+    - ACP-602: "App Store Prep & Submission (manual - screenshots, metadata)"
+  notes: |
+    After this swarm:
+    - Sentry error monitoring will be ACTIVE in production builds
+    - Exercise content will be verified and populated
+    - Build 289 on TestFlight with full production infrastructure
+    - Only App Store prep remains for launch
