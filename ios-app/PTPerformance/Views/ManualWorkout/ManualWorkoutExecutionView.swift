@@ -682,13 +682,14 @@ struct ManualWorkoutExecutionView: View {
             } message: {
                 Text("Great job! You've completed all exercises.")
             }
-            // BUILD 260: Exercise detail sheet
+            // BUILD 285: Exercise detail sheet with video + technique cues
             .sheet(isPresented: $showExerciseDetail) {
                 if let exercise = selectedExerciseForDetail {
                     ExerciseInfoSheet(exercise: exercise)
+                        .environmentObject(supabase)
                 }
             }
-            // BUILD 260: AI substitution sheet
+            // BUILD 285: AI substitution sheet with real alternative lookup
             .sheet(isPresented: $showAISubstitution) {
                 if let exercise = selectedExerciseForSubstitution {
                     NavigationView {
@@ -696,12 +697,12 @@ struct ManualWorkoutExecutionView: View {
                             exercise: exercise,
                             patientId: viewModel.patientId,
                             onSubstitutionApplied: { newExercise in
-                                // Replace the exercise in the workout
                                 viewModel.replaceExercise(exercise, with: newExercise)
                                 showAISubstitution = false
                             }
                         )
                     }
+                    .environmentObject(supabase)
                 }
             }
             // BUILD 260: Add exercise sheet
@@ -1428,90 +1429,186 @@ struct ManualWorkoutExecutionView: View {
     }
 }
 
-// MARK: - BUILD 260: Exercise Info Sheet
+// MARK: - BUILD 285: Exercise Info Sheet (with video, technique cues, safety notes)
 
-/// Simple exercise detail view for manual workout exercises
+/// Full exercise detail view that fetches template data for video + technique tips
 struct ExerciseInfoSheet: View {
     let exercise: ManualSessionExercise
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var supabase: PTSupabaseClient
+
+    @State private var template: Exercise.ExerciseTemplate?
+    @State private var isLoading = true
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Exercise Name
-                    Text(exercise.exerciseName)
-                        .font(.title)
-                        .fontWeight(.bold)
+                    // Exercise Name & Metadata
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(exercise.exerciseName)
+                            .font(.title)
+                            .fontWeight(.bold)
 
-                    // Block type if available
-                    if let block = exercise.blockName {
-                        Label(block, systemImage: "square.grid.2x2")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Divider()
-
-                    // Target prescription
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Target")
-                            .font(.headline)
-
-                        HStack(spacing: 20) {
-                            VStack {
-                                Text("\(exercise.targetSets ?? 3)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                Text("Sets")
+                        HStack(spacing: 12) {
+                            if let block = exercise.blockName {
+                                Label(block.capitalized, systemImage: "square.grid.2x2")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.1))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(6)
                             }
-
-                            VStack {
-                                Text(exercise.targetReps ?? "10")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                Text("Reps")
+                            if let category = template?.category {
+                                Label(category.capitalized, systemImage: "tag")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.purple.opacity(0.1))
+                                    .foregroundColor(.purple)
+                                    .cornerRadius(6)
                             }
-
-                            if let load = exercise.targetLoad {
-                                VStack {
-                                    Text("\(Int(load))")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                    Text(exercise.loadUnit ?? "lbs")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
+                            if let bodyRegion = template?.body_region {
+                                Label(bodyRegion.capitalized, systemImage: "figure.arms.open")
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.green.opacity(0.1))
+                                    .foregroundColor(.green)
+                                    .cornerRadius(6)
                             }
                         }
                     }
 
-                    // Notes if available
+                    // Video Player
+                    if let videoUrl = template?.videoUrl, !videoUrl.isEmpty {
+                        VideoPlayerView(videoUrl: videoUrl)
+                            .frame(height: 220)
+                            .cornerRadius(12)
+                    }
+
+                    // Target Prescription
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Prescription")
+                            .font(.headline)
+
+                        HStack(spacing: 24) {
+                            exerciseStatBox(value: "\(exercise.targetSets ?? 3)", label: "Sets")
+                            exerciseStatBox(value: exercise.targetReps ?? "10", label: "Reps")
+                            if let load = exercise.targetLoad {
+                                exerciseStatBox(value: "\(Int(load))", label: exercise.loadUnit ?? "lbs")
+                            }
+                            if let rest = exercise.restPeriodSeconds {
+                                exerciseStatBox(value: "\(rest)s", label: "Rest")
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+
+                    // Technique Cues
+                    if let cues = template?.techniqueCues,
+                       !cues.setup.isEmpty || !cues.execution.isEmpty || !cues.breathing.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Technique Guide")
+                                .font(.headline)
+                            ExerciseCuesCard(techniqueCues: cues)
+                        }
+                    }
+
+                    // Form Cues (with video timestamps)
+                    if let formCues = template?.formCues, !formCues.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Form Cues")
+                                .font(.headline)
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                ForEach(Array(formCues.enumerated()), id: \.offset) { index, cue in
+                                    HStack(alignment: .top, spacing: 10) {
+                                        Text("\(index + 1).")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.blue)
+                                            .frame(width: 24)
+
+                                        Text(cue.cue)
+                                            .font(.subheadline)
+
+                                        Spacer()
+
+                                        if let time = cue.displayTime {
+                                            Text(time)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 2)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(4)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+
+                    // Common Mistakes
+                    if let mistakes = template?.commonMistakes, !mistakes.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Common Mistakes", systemImage: "exclamationmark.triangle")
+                                .font(.headline)
+                                .foregroundColor(.orange)
+
+                            Text(mistakes)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.08))
+                        .cornerRadius(12)
+                    }
+
+                    // Safety Notes
+                    if let safety = template?.safetyNotes, !safety.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Safety Notes", systemImage: "shield.checkered")
+                                .font(.headline)
+                                .foregroundColor(.red)
+
+                            Text(safety)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.red.opacity(0.08))
+                        .cornerRadius(12)
+                    }
+
+                    // Exercise Notes
                     if let notes = exercise.notes, !notes.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Notes")
                                 .font(.headline)
                             Text(notes)
-                                .font(.body)
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
                     }
 
-                    // Rest period
-                    if let rest = exercise.restPeriodSeconds {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Rest Period")
-                                .font(.headline)
-                            Label("\(rest) seconds", systemImage: "timer")
-                                .font(.body)
+                    // Loading state
+                    if isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView("Loading exercise details...")
+                                .font(.caption)
+                            Spacer()
                         }
+                        .padding()
                     }
-
-                    Spacer()
                 }
                 .padding()
             }
@@ -1522,104 +1619,288 @@ struct ExerciseInfoSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .task {
+                await fetchTemplateData()
+            }
         }
+    }
+
+    private func exerciseStatBox(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(minWidth: 50)
+    }
+
+    private func fetchTemplateData() async {
+        guard let templateId = exercise.exerciseTemplateId else {
+            isLoading = false
+            return
+        }
+
+        do {
+            let response = try await supabase.client
+                .from("exercise_templates")
+                .select("id, name, category, body_region, video_url, video_thumbnail_url, video_duration, form_cues, technique_cues, common_mistakes, safety_notes")
+                .eq("id", value: templateId.uuidString)
+                .limit(1)
+                .execute()
+
+            let templates = try JSONDecoder().decode([Exercise.ExerciseTemplate].self, from: response.data)
+            template = templates.first
+        } catch {
+            DebugLogger.shared.error("EXERCISE_INFO", "Failed to fetch template: \(error.localizedDescription)")
+        }
+        isLoading = false
     }
 }
 
-// MARK: - BUILD 260: AI Substitution Sheet for Manual Workouts
+// MARK: - BUILD 285: AI Substitution Sheet (queries real alternatives)
 
-/// Simplified AI substitution request for manual workout exercises
+/// Exercise substitution that queries exercise_templates for same-category alternatives
 struct AISubstitutionSheetForManual: View {
     let exercise: ManualSessionExercise
     let patientId: UUID
     let onSubstitutionApplied: (ManualSessionExercise) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var supabase: PTSupabaseClient
     @State private var reason = ""
+    @State private var alternatives: [PickerExerciseTemplate] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showAlternatives = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Find Alternative for:")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                Text(exercise.exerciseName)
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Find Alternative for:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(exercise.exerciseName)
+                        .font(.title2)
+                        .fontWeight(.bold)
 
-            // Reason buttons
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Why do you need a substitute?")
-                    .font(.headline)
-
-                VStack(spacing: 12) {
-                    reasonButton(icon: "figure.run", text: "Injury/Pain", value: "injury")
-                    reasonButton(icon: "dumbbell", text: "No Equipment", value: "equipment")
-                    reasonButton(icon: "clock", text: "Too Difficult", value: "difficulty")
-                    reasonButton(icon: "arrow.triangle.swap", text: "Want Variety", value: "variety")
+                    if let block = exercise.blockName {
+                        Label(block.capitalized, systemImage: "square.grid.2x2")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange.opacity(0.1))
+                            .foregroundColor(.orange)
+                            .cornerRadius(6)
+                    }
                 }
-            }
-            .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let error = errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.caption)
-                    .padding(.horizontal)
-            }
+                if !showAlternatives {
+                    // Step 1: Reason selection
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Why do you need a substitute?")
+                            .font(.headline)
 
-            Spacer()
+                        VStack(spacing: 12) {
+                            substitutionReasonButton(icon: "bandage", text: "Injury / Pain", value: "injury")
+                            substitutionReasonButton(icon: "dumbbell", text: "Equipment Unavailable", value: "equipment")
+                            substitutionReasonButton(icon: "gauge.with.needle.fill", text: "Too Difficult", value: "difficulty")
+                            substitutionReasonButton(icon: "arrow.triangle.swap", text: "Want Variety", value: "variety")
+                        }
+                    }
+                } else {
+                    // Step 2: Show alternatives
+                    if isLoading {
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("Finding alternatives...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                    } else if alternatives.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                            Text("No alternatives found")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("Try a different reason or add an exercise manually.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                    } else {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("Select Alternative")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(alternatives.count) found")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
 
-            // Note about feature
-            Text("AI substitution will suggest an alternative exercise based on your needs.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                            ForEach(alternatives) { alt in
+                                Button {
+                                    applySubstitution(alt)
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(alt.name)
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(.primary)
+                                            HStack(spacing: 8) {
+                                                if let category = alt.category {
+                                                    Text(category.capitalized)
+                                                        .font(.caption)
+                                                        .foregroundColor(.blue)
+                                                }
+                                                if let region = alt.bodyRegion {
+                                                    Text(region.capitalized)
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            }
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.right.circle.fill")
+                                            .foregroundColor(.orange)
+                                    }
+                                    .padding()
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(10)
+                                }
+                            }
+                        }
 
-            // Cancel button
-            Button("Cancel") {
-                dismiss()
+                        Button {
+                            showAlternatives = false
+                            alternatives = []
+                            reason = ""
+                        } label: {
+                            HStack {
+                                Image(systemName: "chevron.left")
+                                Text("Back to reasons")
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+
+                if let error = errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
             }
             .padding()
         }
         .navigationTitle("Find Substitute")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") { dismiss() }
+            }
+        }
     }
 
-    private func reasonButton(icon: String, text: String, value: String) -> some View {
+    private func substitutionReasonButton(icon: String, text: String, value: String) -> some View {
         Button {
             reason = value
-            // TODO: Call AI service and create substitute
-            // For now, just dismiss
-            dismiss()
+            showAlternatives = true
+            Task {
+                await fetchAlternatives()
+            }
         } label: {
             HStack {
                 Image(systemName: icon)
                     .frame(width: 24)
+                    .foregroundColor(.orange)
                 Text(text)
+                    .foregroundColor(.primary)
                 Spacer()
-                if reason == value {
-                    Image(systemName: "checkmark")
-                }
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
             }
             .padding()
-            .background(reason == value ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .background(Color(.systemGray6))
             .cornerRadius(10)
         }
         .buttonStyle(.plain)
     }
+
+    private func fetchAlternatives() async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Query exercise_templates for same category, excluding current exercise
+            var query = supabase.client
+                .from("exercise_templates")
+                .select("id, name, category, body_region")
+
+            // Filter by same category if available
+            if let blockName = exercise.blockName {
+                query = query.eq("category", value: blockName.lowercased())
+            }
+
+            let response = try await query
+                .order("name")
+                .limit(30)
+                .execute()
+
+            var results = try JSONDecoder().decode([PickerExerciseTemplate].self, from: response.data)
+
+            // Exclude the current exercise by template ID and name
+            if let templateId = exercise.exerciseTemplateId {
+                results = results.filter { $0.id != templateId }
+            }
+            results = results.filter { $0.name.lowercased() != exercise.exerciseName.lowercased() }
+
+            alternatives = results
+        } catch {
+            errorMessage = "Failed to find alternatives"
+            DebugLogger.shared.error("SUBSTITUTION", "Failed to fetch alternatives: \(error.localizedDescription)")
+        }
+        isLoading = false
+    }
+
+    private func applySubstitution(_ template: PickerExerciseTemplate) {
+        let newExercise = ManualSessionExercise(
+            id: UUID(),
+            manualSessionId: exercise.manualSessionId,
+            exerciseTemplateId: template.id,
+            exerciseName: template.name,
+            blockName: exercise.blockName,
+            sequence: exercise.sequence,
+            targetSets: exercise.targetSets,
+            targetReps: exercise.targetReps,
+            targetLoad: exercise.targetLoad,
+            loadUnit: exercise.loadUnit,
+            restPeriodSeconds: exercise.restPeriodSeconds,
+            notes: "Substituted for \(exercise.exerciseName) (\(reason))",
+            createdAt: Date()
+        )
+        onSubstitutionApplied(newExercise)
+    }
 }
 
-// MARK: - BUILD 260: Exercise Picker for Adding to Workout
+// MARK: - BUILD 285: Exercise Picker with Category Filters
 
-/// Simple exercise picker to add exercises during a workout
+/// Exercise picker with category filter chips and body region badges
 struct ExercisePickerForWorkout: View {
     let onExerciseSelected: (PickerExerciseTemplate) -> Void
 
@@ -1627,35 +1908,105 @@ struct ExercisePickerForWorkout: View {
     @State private var searchText = ""
     @State private var templates: [PickerExerciseTemplate] = []
     @State private var isLoading = false
+    @State private var selectedCategory: String? = nil
     @EnvironmentObject var supabase: PTSupabaseClient
 
+    private let categories = ["All", "Push", "Pull", "Hinge", "Squat", "Lunge", "Core", "Cardio", "Mobility"]
+
     var filteredTemplates: [PickerExerciseTemplate] {
-        if searchText.isEmpty {
-            return templates
+        var results = templates
+
+        if let category = selectedCategory {
+            results = results.filter { ($0.category ?? "").localizedCaseInsensitiveContains(category) }
         }
-        return templates.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+
+        if !searchText.isEmpty {
+            results = results.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+
+        return results
     }
 
     var body: some View {
-        VStack {
-            if isLoading {
-                ProgressView("Loading exercises...")
-            } else {
-                List(filteredTemplates) { template in
-                    Button {
-                        onExerciseSelected(template)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(template.name)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            if let category = template.category {
-                                Text(category.capitalized)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+        VStack(spacing: 0) {
+            // Category filter chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(categories, id: \.self) { category in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedCategory = category == "All" ? nil : category
                             }
+                        } label: {
+                            Text(category)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    (selectedCategory == nil && category == "All") || selectedCategory == category
+                                    ? Color.blue
+                                    : Color(.systemGray5)
+                                )
+                                .foregroundColor(
+                                    (selectedCategory == nil && category == "All") || selectedCategory == category
+                                    ? .white
+                                    : .primary
+                                )
+                                .cornerRadius(16)
                         }
-                        .padding(.vertical, 4)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+
+            Divider()
+
+            if isLoading {
+                Spacer()
+                ProgressView("Loading exercises...")
+                Spacer()
+            } else {
+                List {
+                    Text("\(filteredTemplates.count) exercises")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .listRowSeparator(.hidden)
+
+                    ForEach(filteredTemplates) { template in
+                        Button {
+                            onExerciseSelected(template)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(template.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.primary)
+                                    HStack(spacing: 8) {
+                                        if let category = template.category {
+                                            Text(category.capitalized)
+                                                .font(.caption2)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(Color.blue.opacity(0.7))
+                                                .cornerRadius(4)
+                                        }
+                                        if let region = template.bodyRegion {
+                                            Text(region.capitalized)
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                }
+                                Spacer()
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
                 }
                 .searchable(text: $searchText, prompt: "Search exercises")
@@ -1682,12 +2033,12 @@ struct ExercisePickerForWorkout: View {
                 .from("exercise_templates")
                 .select("id, name, category, body_region")
                 .order("name")
-                .limit(200)
+                .limit(500)
                 .execute()
 
             templates = try JSONDecoder().decode([PickerExerciseTemplate].self, from: response.data)
         } catch {
-            print("Failed to load exercise templates: \(error)")
+            DebugLogger.shared.error("EXERCISE_PICKER", "Failed to load templates: \(error.localizedDescription)")
         }
     }
 }
