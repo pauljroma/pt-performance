@@ -55,7 +55,7 @@ struct ProgramBuilderFormView: View {
                         .textInputAutocapitalization(.words)
                         .accessibilityLabel("Program Name")
                         .accessibilityHint("Enter a name for the program between 3 and 100 characters")
-                        .onChange(of: viewModel.programName) { newValue in
+                        .onChange(of: viewModel.programName) { _, newValue in
                             programNameValidation = ValidationHelpers.validateProgramName(newValue)
                         }
 

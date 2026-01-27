@@ -58,7 +58,7 @@ class TimerHistoryViewModel: ObservableObject {
 
     /// Filtered sessions by selected category (if any)
     var filteredSessions: [WorkoutTimer] {
-        guard let category = selectedCategory else {
+        guard selectedCategory != nil else {
             return sessions
         }
 
@@ -88,12 +88,12 @@ class TimerHistoryViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(
+    @MainActor init(
         patientId: UUID,
-        timerService: IntervalTimerService = .shared
+        timerService: IntervalTimerService? = nil
     ) {
         self.patientId = patientId
-        self.timerService = timerService
+        self.timerService = timerService ?? .shared
     }
 
     // MARK: - Load History

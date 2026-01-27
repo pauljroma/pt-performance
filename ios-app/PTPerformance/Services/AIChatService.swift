@@ -42,7 +42,7 @@ class AIChatService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        let athleteId = await PTSupabaseClient.shared.userId ?? ""
+        let athleteId = PTSupabaseClient.shared.userId ?? ""
 
         // Call AI chat completion Edge Function
         let requestBody = [
@@ -105,7 +105,7 @@ class AIChatService: ObservableObject {
 
     func loadHistory() async {
         do {
-            let athleteId = await PTSupabaseClient.shared.userId.flatMap { UUID(uuidString: $0) } ?? UUID()
+            let athleteId = PTSupabaseClient.shared.userId.flatMap { UUID(uuidString: $0) } ?? UUID()
 
             // Get latest session
             let sessionResponse = try await supabase.client

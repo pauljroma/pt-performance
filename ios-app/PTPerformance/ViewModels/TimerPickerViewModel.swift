@@ -92,12 +92,12 @@ class TimerPickerViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(
+    @MainActor init(
         patientId: UUID,
-        timerService: IntervalTimerService = .shared
+        timerService: IntervalTimerService? = nil
     ) {
         self.patientId = patientId
-        self.timerService = timerService
+        self.timerService = timerService ?? .shared
     }
 
     // MARK: - Load Presets

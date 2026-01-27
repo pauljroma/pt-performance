@@ -12,7 +12,7 @@ import Supabase
 /// Service for calling AI exercise substitution edge function
 @MainActor
 class ExerciseSubstitutionService: ObservableObject {
-    private let client: PTSupabaseClient
+    nonisolated(unsafe) private let client: PTSupabaseClient
 
     // MARK: - Published State
 

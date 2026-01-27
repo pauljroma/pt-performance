@@ -23,7 +23,7 @@ struct PatientListView: View {
         }
         .navigationTitle("Patients")
         .searchable(text: $viewModel.searchText, prompt: "Search patients")
-        .onChange(of: viewModel.searchText) { _ in
+        .onChange(of: viewModel.searchText) {
             viewModel.applyFilters()
         }
         .toolbar {

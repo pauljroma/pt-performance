@@ -32,7 +32,7 @@ struct NutritionHistoryView: View {
                 )
                 .datePickerStyle(.graphical)
                 .padding(.horizontal)
-                .onChange(of: selectedDate) { _ in
+                .onChange(of: selectedDate) {
                     Task {
                         await loadLogs()
                     }

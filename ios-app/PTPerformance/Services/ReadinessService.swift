@@ -6,7 +6,7 @@ import Supabase
 /// Uses database functions for automatic score calculation
 @MainActor
 class ReadinessService: ObservableObject {
-    private let client: PTSupabaseClient
+    nonisolated(unsafe) private let client: PTSupabaseClient
     @Published var isLoading: Bool = false
     @Published var error: Error?
 
@@ -124,7 +124,6 @@ class ReadinessService: ObservableObject {
                 .execute()
 
             // Decode as Double
-            let decoder = JSONDecoder()
             guard let scoreString = String(data: response.data, encoding: .utf8),
                   let score = Double(scoreString) else {
                 throw ReadinessError.scoreCalculationFailed

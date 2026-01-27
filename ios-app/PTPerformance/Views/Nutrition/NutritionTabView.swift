@@ -155,7 +155,7 @@ struct FoodLibraryView: View {
                     .foregroundColor(.secondary)
                 TextField("Search foods...", text: $searchText)
                     .textFieldStyle(.plain)
-                    .onChange(of: searchText) { _ in
+                    .onChange(of: searchText) {
                         searchFoods()
                     }
 

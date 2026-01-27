@@ -183,7 +183,7 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
 
 extension ScheduledSession {
     static var sample: ScheduledSession {
-        var session = ScheduledSession.__createDirectly(
+        let session = ScheduledSession.__createDirectly(
             id: UUID(),
             patientId: UUID(),
             sessionId: UUID(),
@@ -200,7 +200,7 @@ extension ScheduledSession {
     }
 
     static var sampleCompleted: ScheduledSession {
-        var session = ScheduledSession.__createDirectly(
+        let session = ScheduledSession.__createDirectly(
             id: UUID(),
             patientId: UUID(),
             sessionId: UUID(),

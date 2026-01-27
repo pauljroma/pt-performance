@@ -84,7 +84,7 @@ struct AccessibleFormField: View {
                 .accessibilityLabel("Error: \(errorMessage)")
             }
         }
-        .onChange(of: text) { newValue in
+        .onChange(of: text) { _, newValue in
             if !hasStartedEditing && !newValue.isEmpty {
                 hasStartedEditing = true
             }
@@ -97,7 +97,7 @@ struct AccessibleFormField: View {
                 onValidationChange?(result)
             }
         }
-        .onChange(of: isFocused) { focused in
+        .onChange(of: isFocused) { _, focused in
             if focused && !hasStartedEditing {
                 hasStartedEditing = true
             }

@@ -166,7 +166,7 @@ struct MarkdownText: View {
         let lines = markdown.components(separatedBy: .newlines)
         var skipNext = false
 
-        for (index, line) in lines.enumerated() {
+        for (_, line) in lines.enumerated() {
             if skipNext {
                 skipNext = false
                 continue

@@ -256,7 +256,7 @@ struct EditPhaseView: View {
                     logger.log("✅ Session deleted successfully", level: .success)
 
                     // Remove from local array
-                    await MainActor.run {
+                    _ = await MainActor.run {
                         sessions.remove(at: index)
                     }
                 } catch {

@@ -64,7 +64,7 @@ struct AIChatView: View {
                 .onAppear {
                     scrollProxy = proxy
                 }
-                .onChange(of: chatService.messages.count) { _ in
+                .onChange(of: chatService.messages.count) {
                     if let lastMessage = chatService.messages.last {
                         withAnimation {
                             proxy.scrollTo(lastMessage.id, anchor: .bottom)

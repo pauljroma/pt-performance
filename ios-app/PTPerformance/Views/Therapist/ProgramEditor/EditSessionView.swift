@@ -312,7 +312,7 @@ struct EditSessionView: View {
 
                     logger.log("✅ Exercise deleted successfully", level: .success)
 
-                    await MainActor.run {
+                    _ = await MainActor.run {
                         exercises.remove(at: index)
                     }
                 } catch {

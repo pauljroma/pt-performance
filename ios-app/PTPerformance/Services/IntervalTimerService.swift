@@ -18,7 +18,7 @@ class IntervalTimerService: ObservableObject {
 
     static let shared = IntervalTimerService()
 
-    private let client: PTSupabaseClient
+    nonisolated(unsafe) private let client: PTSupabaseClient
 
     // MARK: - Published State
 
@@ -54,7 +54,7 @@ class IntervalTimerService: ObservableObject {
 
     // MARK: - Initialization
 
-    private nonisolated init(client: PTSupabaseClient = .shared) {
+    private init(client: PTSupabaseClient = .shared) {
         self.client = client
         setupAudio()
     }
@@ -424,7 +424,7 @@ class IntervalTimerService: ObservableObject {
         triggerHaptic(.success)
 
         // Update database
-        guard let session = activeSession, let template = activeTemplate else { return }
+        guard let session = activeSession, let _ = activeTemplate else { return }
 
         do {
             // Update workout_timers record

@@ -819,5 +819,4 @@ private struct PresetDetailView: View {
 
 #Preview("iPad") {
     TimerPickerView(patientId: UUID())
-        .previewDevice("iPad Pro (12.9-inch) (6th generation)")
 }

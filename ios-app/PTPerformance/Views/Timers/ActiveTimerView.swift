@@ -64,7 +64,7 @@ struct ActiveTimerView: View {
         .onReceive(timerPublisher) { _ in
             viewModel.update()
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             handleScenePhaseChange(newPhase)
         }
         .onAppear {

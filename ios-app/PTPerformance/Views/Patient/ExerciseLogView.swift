@@ -73,7 +73,7 @@ struct ExerciseLogView: View {
                         .accessibilityLabel("Sets completed")
                         .accessibilityValue("\(actualSets) sets")
                         .accessibilityHint("Adjust number of sets completed")
-                        .onChange(of: actualSets) { newValue in
+                        .onChange(of: actualSets) { _, newValue in
                             // Adjust reps array
                             if repsPerSet.count < newValue {
                                 repsPerSet.append(contentsOf: Array(repeating: 10, count: newValue - repsPerSet.count))
@@ -138,7 +138,7 @@ struct ExerciseLogView: View {
                                 .keyboardType(.decimalPad)
                                 .accessibilityLabel("Weight used")
                                 .accessibilityHint("Enter the weight you used for this exercise")
-                                .onChange(of: actualLoad) { newValue in
+                                .onChange(of: actualLoad) { _, newValue in
                                     if !newValue.isEmpty {
                                         weightValidation = ValidationHelpers.validateExerciseWeight(newValue)
                                     } else {

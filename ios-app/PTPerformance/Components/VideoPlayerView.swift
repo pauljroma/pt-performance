@@ -153,7 +153,7 @@ struct VideoPlayerView: View {
             playerController.setupPlayer(with: videoUrl)
             startControlsTimer()
         }
-        .onChange(of: showControls) { isShowing in
+        .onChange(of: showControls) { _, isShowing in
             if isShowing {
                 startControlsTimer()
             }

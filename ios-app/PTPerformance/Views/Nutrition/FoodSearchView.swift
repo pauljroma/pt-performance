@@ -88,7 +88,7 @@ struct FoodSearchView: View {
             TextField("Search foods...", text: $searchText)
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
-                .onChange(of: searchText) { _ in
+                .onChange(of: searchText) {
                     performSearch()
                 }
 

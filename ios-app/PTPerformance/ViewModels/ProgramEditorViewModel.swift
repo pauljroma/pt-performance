@@ -432,8 +432,8 @@ class ProgramEditorViewModel: ObservableObject {
 
             // Populate UI state from program
             programName = loadedProgram.name
-            targetLevel = loadedProgram.targetLevel ?? "Intermediate"
-            durationWeeks = loadedProgram.durationWeeks ?? 8
+            targetLevel = loadedProgram.targetLevel
+            durationWeeks = loadedProgram.durationWeeks
 
             logger.log("✅ Program loaded: \(loadedProgram.name)", level: .success)
 

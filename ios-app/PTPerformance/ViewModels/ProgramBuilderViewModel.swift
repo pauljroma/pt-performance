@@ -115,17 +115,12 @@ class ProgramBuilderViewModel: ObservableObject {
         isLoadingProtocols = true
         createError = nil
 
-        do {
-            // For MVP, use sample protocols
-            // In production, fetch from Supabase:
-            // let response = try await supabase.from("protocol_templates").select().execute()
+        // For MVP, use sample protocols
+        // In production, fetch from Supabase:
+        // let response = try await supabase.from("protocol_templates").select().execute()
 
-            availableProtocols = TherapyProtocol.sampleProtocols
-            isLoadingProtocols = false
-        } catch {
-            createError = "Failed to load protocols. Please try again."
-            isLoadingProtocols = false
-        }
+        availableProtocols = TherapyProtocol.sampleProtocols
+        isLoadingProtocols = false
     }
     
     func loadProtocolPhases(_ therapyProtocol: TherapyProtocol) {

@@ -93,7 +93,7 @@ struct ProgramViewerView: View {
                     HStack {
                         Text("Phase \(phase.phaseNumber): \(phase.name)")
                         Spacer()
-                        Text("\(phase.durationWeeks) weeks")
+                        Text("\(phase.durationWeeks.map { "\($0)" } ?? "—") weeks")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

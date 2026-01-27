@@ -177,7 +177,7 @@ struct NoteCard: View {
 
                 Spacer()
 
-                if let sessionId = note.sessionId {
+                if note.sessionId != nil {
                     Label("Session", systemImage: "calendar")
                         .font(.caption)
                         .foregroundColor(.secondary)

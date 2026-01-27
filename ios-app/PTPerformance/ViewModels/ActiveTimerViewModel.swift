@@ -115,12 +115,12 @@ class ActiveTimerViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(
-        timerService: IntervalTimerService = .shared,
-        backgroundManager: BackgroundTimerManager = .shared
+    @MainActor init(
+        timerService: IntervalTimerService? = nil,
+        backgroundManager: BackgroundTimerManager? = nil
     ) {
-        self.timerService = timerService
-        self.backgroundManager = backgroundManager
+        self.timerService = timerService ?? .shared
+        self.backgroundManager = backgroundManager ?? .shared
     }
 
     // MARK: - Load Active Timer

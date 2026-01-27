@@ -38,7 +38,7 @@ struct AuthView: View {
                             .keyboardType(.emailAddress)
                             .accessibilityLabel("Email")
                             .accessibilityHint("Enter your email address")
-                            .onChange(of: email) { newValue in
+                            .onChange(of: email) { _, newValue in
                                 if !newValue.isEmpty {
                                     emailValidation = ValidationHelpers.validateEmail(newValue)
                                 } else {
@@ -65,7 +65,7 @@ struct AuthView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .accessibilityLabel("Password")
                             .accessibilityHint("Enter your password, at least 8 characters with 1 uppercase letter and 1 number")
-                            .onChange(of: password) { newValue in
+                            .onChange(of: password) { _, newValue in
                                 if !newValue.isEmpty {
                                     passwordValidation = ValidationHelpers.validatePassword(newValue)
                                 } else {

@@ -383,7 +383,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         guard let exercise = currentExercise else { return }
 
         skippedExerciseIds.insert(exercise.id)
-        DebugLogger.shared.info("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' skipped")
+        DebugLogger.shared.info("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' skipped")
 
         moveToNextExercise()
     }
@@ -391,7 +391,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // BUILD 216: Skip a specific exercise (not just current)
     func skipExercise(_ exercise: ManualSessionExercise) {
         skippedExerciseIds.insert(exercise.id)
-        DebugLogger.shared.info("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName ?? "Unknown")' skipped")
+        DebugLogger.shared.info("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' skipped")
 
         // If this was the current exercise, move to next
         if currentExercise?.id == exercise.id {
@@ -650,7 +650,7 @@ struct ManualWorkoutExecutionView: View {
                 viewModel.startTimer()
                 DebugLogger.shared.log("🏋️ Timer started", level: .success)
             }
-            .onChange(of: viewModel.isWorkoutCompleted) { isCompleted in
+            .onChange(of: viewModel.isWorkoutCompleted) { _, isCompleted in
                 // Call onComplete when workout finishes
                 if isCompleted {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -966,7 +966,7 @@ struct ManualWorkoutExecutionView: View {
                     Button {
                         Task {
                             await viewModel.quickCompleteExercise(exercise)
-                            withAnimation {
+                            _ = withAnimation {
                                 expandedExercises.remove(exercise.id)
                             }
                         }
@@ -1006,7 +1006,7 @@ struct ManualWorkoutExecutionView: View {
                     // Skip button
                     Button {
                         viewModel.skipExercise(exercise)
-                        withAnimation {
+                        _ = withAnimation {
                             expandedExercises.remove(exercise.id)
                         }
                     } label: {
