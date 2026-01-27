@@ -303,14 +303,23 @@ struct CalendarView: View {
     }
 
     private func loadScheduledSessions() {
-        // TODO: Replace with actual API call via SchedulingService
+        // BUILD 286: Wire to SchedulingService (ACP-595)
         isLoading = true
 
-        // Simulate API delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Sample data for preview
-            scheduledSessions = []
-            isLoading = false
+        Task {
+            do {
+                guard let patientId = PTSupabaseClient.shared.userId else {
+                    await MainActor.run { isLoading = false }
+                    return
+                }
+                let sessions = try await SchedulingService.shared.fetchScheduledSessions(for: patientId)
+                await MainActor.run {
+                    scheduledSessions = sessions
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run { isLoading = false }
+            }
         }
     }
 }

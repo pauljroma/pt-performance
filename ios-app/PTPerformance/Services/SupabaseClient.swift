@@ -12,6 +12,7 @@ class PTSupabaseClient: ObservableObject {
     @Published var currentUser: Supabase.User?
     @Published var userRole: UserRole?
     @Published var userId: String?
+    @Published var isOffline = false
 
     // BUILD 251: Shared flexible decoder for all Supabase queries
     static let flexibleDecoder: JSONDecoder = {

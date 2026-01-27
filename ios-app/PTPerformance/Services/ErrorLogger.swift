@@ -7,6 +7,9 @@
 
 import Foundation
 import os.log
+#if canImport(Sentry)
+import Sentry
+#endif
 
 /// Centralized error logging service for the application
 /// Integrates with system logging and can be extended with Sentry when available
@@ -39,15 +42,14 @@ class ErrorLogger {
 
         logger.info("User context set: userId=\(userId), userType=\(userType)")
 
-        // TODO: When Sentry is added, update Sentry user context here
-        /*
+        #if canImport(Sentry)
         SentrySDK.configureScope { scope in
             let user = Sentry.User(userId: userId)
             user.email = email
             user.data = ["userType": userType]
             scope.setUser(user)
         }
-        */
+        #endif
     }
 
     /// Clear user context (e.g., on logout)
@@ -57,12 +59,11 @@ class ErrorLogger {
         self.currentUserId = nil
         self.currentUserType = nil
 
-        // TODO: When Sentry is added, clear Sentry user context here
-        /*
+        #if canImport(Sentry)
         SentrySDK.configureScope { scope in
             scope.setUser(nil)
         }
-        */
+        #endif
     }
 
     // MARK: - User Actions
@@ -86,16 +87,12 @@ class ErrorLogger {
 
         logger.info("\(logMessage)")
 
-        // TODO: When Sentry is added, send breadcrumb
-        /*
-        let breadcrumb = Breadcrumb(
-            level: .info,
-            category: "user.action"
-        )
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .info, category: "user.action")
         breadcrumb.message = action
         breadcrumb.data = properties
         SentrySDK.addBreadcrumb(breadcrumb)
-        */
+        #endif
     }
 
     // MARK: - Error Logging
@@ -115,8 +112,7 @@ class ErrorLogger {
 
         logger.error("\(logMessage)")
 
-        // TODO: When Sentry is added, capture error
-        /*
+        #if canImport(Sentry)
         SentrySDK.capture(error: error) { scope in
             if let context = context {
                 scope.setContext(value: ["context": context], key: "error_context")
@@ -125,7 +121,7 @@ class ErrorLogger {
             scope.setTag(value: function, key: "function")
             scope.setTag(value: String(line), key: "line")
         }
-        */
+        #endif
     }
 
     /// Log a warning message
@@ -133,10 +129,11 @@ class ErrorLogger {
         let fileName = (file as NSString).lastPathComponent
         logger.warning("\(fileName):\(function):\(line) - \(message)")
 
-        // TODO: When Sentry is added, capture message
-        /*
-        SentrySDK.capture(message: message, level: .warning)
-        */
+        #if canImport(Sentry)
+        SentrySDK.capture(message: message) { scope in
+            scope.setLevel(.warning)
+        }
+        #endif
     }
 
     /// Log an info message
@@ -167,8 +164,7 @@ class ErrorLogger {
 
         logger.error("\(logMessage)")
 
-        // TODO: When Sentry is added, capture with network context
-        /*
+        #if canImport(Sentry)
         SentrySDK.capture(error: error) { scope in
             var context: [String: Any] = [:]
             if let url = url {
@@ -179,7 +175,7 @@ class ErrorLogger {
             }
             scope.setContext(value: context, key: "network")
         }
-        */
+        #endif
     }
 
     // MARK: - Database Errors
@@ -198,8 +194,7 @@ class ErrorLogger {
 
         logger.error("\(logMessage)")
 
-        // TODO: When Sentry is added, capture with database context
-        /*
+        #if canImport(Sentry)
         SentrySDK.capture(error: error) { scope in
             var context: [String: Any] = [:]
             if let table = table {
@@ -210,7 +205,7 @@ class ErrorLogger {
             }
             scope.setContext(value: context, key: "database")
         }
-        */
+        #endif
     }
 
     // MARK: - Session Info

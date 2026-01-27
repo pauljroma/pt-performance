@@ -253,15 +253,37 @@ struct ScheduleSessionView: View {
     // MARK: - Actions
 
     private func loadAvailableSessions() {
-        // TODO: Replace with actual API call via SchedulingService
+        // BUILD 286: Wire to SchedulingService (ACP-595)
         isLoading = true
         errorMessage = nil
 
-        // Simulate API delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Mock data - in production, load from active program
-            availableSessions = []
-            isLoading = false
+        Task {
+            do {
+                guard let patientId = PTSupabaseClient.shared.userId else {
+                    await MainActor.run {
+                        errorMessage = "Not logged in"
+                        isLoading = false
+                    }
+                    return
+                }
+                let sessions: [Session] = try await PTSupabaseClient.shared.client
+                    .from("sessions")
+                    .select("*, phases!inner(*, programs!inner(id, patient_id, status))")
+                    .eq("phases.programs.patient_id", value: patientId)
+                    .eq("phases.programs.status", value: "active")
+                    .order("sequence", ascending: true)
+                    .execute()
+                    .value
+                await MainActor.run {
+                    availableSessions = sessions
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to load sessions: \(error.localizedDescription)"
+                    isLoading = false
+                }
+            }
         }
     }
 
@@ -271,29 +293,33 @@ struct ScheduleSessionView: View {
         isLoading = true
         errorMessage = nil
 
-        // TODO: Replace with actual API call via SchedulingService
-        // Create ScheduledSession object
-        let scheduledSession = ScheduledSession(
-            id: UUID().uuidString,
-            patientId: "current-patient-id", // TODO: Get from auth
-            sessionId: session.id,
-            scheduledDate: selectedDate,
-            scheduledTime: selectedTime,
-            status: .scheduled,
-            completedAt: nil,
-            reminderSent: false,
-            notes: notes.isEmpty ? nil : notes,
-            createdAt: Date(),
-            updatedAt: Date()
-        )
-
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            isLoading = false
-            showingConfirmation = true
-
-            // In production, handle success/error from API
-            print("Scheduled session: \(scheduledSession)")
+        // BUILD 286: Wire to SchedulingService (ACP-595)
+        Task {
+            do {
+                guard let patientId = PTSupabaseClient.shared.userId else {
+                    await MainActor.run {
+                        errorMessage = "Not logged in"
+                        isLoading = false
+                    }
+                    return
+                }
+                let _ = try await SchedulingService.shared.scheduleSession(
+                    patientId: patientId,
+                    sessionId: session.id,
+                    date: selectedDate,
+                    time: selectedTime,
+                    notes: notes.isEmpty ? nil : notes
+                )
+                await MainActor.run {
+                    isLoading = false
+                    showingConfirmation = true
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    isLoading = false
+                }
+            }
         }
     }
 }

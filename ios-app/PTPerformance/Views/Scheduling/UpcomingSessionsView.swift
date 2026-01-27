@@ -201,26 +201,31 @@ struct UpcomingSessionsView: View {
         isLoading = true
         errorMessage = nil
 
-        // TODO: Replace with actual API call via SchedulingService
-        // Simulate API delay
-        try? await Task.sleep(nanoseconds: 500_000_000)
-
-        // Mock data for preview
-        scheduledSessions = [
-            ScheduledSession.sample,
-            ScheduledSession.sampleCompleted
-        ]
-
+        // BUILD 286: Wire to SchedulingService (ACP-595)
+        do {
+            guard let patientId = PTSupabaseClient.shared.userId else {
+                errorMessage = "Not logged in"
+                isLoading = false
+                return
+            }
+            scheduledSessions = try await SchedulingService.shared.fetchUpcomingSessions(for: patientId)
+        } catch {
+            errorMessage = "Failed to load sessions: \(error.localizedDescription)"
+        }
         isLoading = false
     }
 
     private func cancelSession(_ session: ScheduledSession) {
-        // TODO: Replace with actual API call via SchedulingService
-        print("Cancelling session: \(session.id)")
-
-        // Update local state
-        if let index = scheduledSessions.firstIndex(where: { $0.id == session.id }) {
-            scheduledSessions.remove(at: index)
+        // BUILD 286: Wire to SchedulingService (ACP-595)
+        Task {
+            do {
+                try await SchedulingService.shared.cancelSession(scheduledSessionId: session.id)
+                if let index = scheduledSessions.firstIndex(where: { $0.id == session.id }) {
+                    scheduledSessions.remove(at: index)
+                }
+            } catch {
+                errorMessage = "Failed to cancel: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -232,25 +237,16 @@ struct UpcomingSessionsView: View {
     }
 
     private func markAsCompleted(_ session: ScheduledSession) {
-        // TODO: Replace with actual API call via SchedulingService
-        print("Marking session as completed: \(session.id)")
-
-        // Update local state
-        if let index = scheduledSessions.firstIndex(where: { $0.id == session.id }) {
-            // In production, this would update via API
-            scheduledSessions[index] = ScheduledSession(
-                id: session.id,
-                patientId: session.patientId,
-                sessionId: session.sessionId,
-                scheduledDate: session.scheduledDate,
-                scheduledTime: session.scheduledTime,
-                status: .completed,
-                completedAt: Date(),
-                reminderSent: session.reminderSent,
-                notes: session.notes,
-                createdAt: session.createdAt,
-                updatedAt: Date()
-            )
+        // BUILD 286: Wire to SchedulingService (ACP-595)
+        Task {
+            do {
+                let updated = try await SchedulingService.shared.completeSession(scheduledSessionId: session.id)
+                if let index = scheduledSessions.firstIndex(where: { $0.id == session.id }) {
+                    scheduledSessions[index] = updated
+                }
+            } catch {
+                errorMessage = "Failed to complete: \(error.localizedDescription)"
+            }
         }
     }
 }

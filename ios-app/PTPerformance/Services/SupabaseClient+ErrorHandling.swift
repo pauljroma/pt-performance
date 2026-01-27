@@ -128,26 +128,59 @@ extension PTSupabaseClient {
 
 extension PTSupabaseClient {
 
-    /// Check if a cached version of data exists for offline use
-    /// This is a placeholder for future offline caching implementation
+    /// BUILD 286: UserDefaults-based offline caching (ACP-600)
+    private static let cachePrefix = "pt_offline_cache_"
+    private static let cacheTimestampPrefix = "pt_cache_ts_"
+    private static let maxCacheAge: TimeInterval = 24 * 60 * 60 // 24 hours
+
+    /// Check if a cached version of data exists and is not expired
     func hasCachedData<T>(forKey key: String, type: T.Type) -> Bool {
-        // TODO: Implement local caching with UserDefaults or Core Data
-        // For now, return false (no offline support yet)
-        return false
+        let cacheKey = Self.cachePrefix + key
+        guard UserDefaults.standard.data(forKey: cacheKey) != nil else { return false }
+
+        // Check cache age
+        let tsKey = Self.cacheTimestampPrefix + key
+        let cachedAt = UserDefaults.standard.double(forKey: tsKey)
+        if cachedAt > 0 {
+            let age = Date().timeIntervalSince1970 - cachedAt
+            return age < Self.maxCacheAge
+        }
+        return true
     }
 
     /// Get cached data for offline use
-    /// This is a placeholder for future offline caching implementation
     func getCachedData<T: Codable>(forKey key: String, type: T.Type) -> T? {
-        // TODO: Implement local caching with UserDefaults or Core Data
-        // For now, return nil
-        return nil
+        let cacheKey = Self.cachePrefix + key
+        guard let data = UserDefaults.standard.data(forKey: cacheKey) else { return nil }
+
+        do {
+            return try Self.flexibleDecoder.decode(T.self, from: data)
+        } catch {
+            ErrorLogger.shared.logWarning("Failed to decode cached data for \(key): \(error.localizedDescription)")
+            return nil
+        }
     }
 
     /// Cache data for offline use
-    /// This is a placeholder for future offline caching implementation
     func cacheData<T: Codable>(_ data: T, forKey key: String) {
-        // TODO: Implement local caching with UserDefaults or Core Data
-        // For now, do nothing
+        let cacheKey = Self.cachePrefix + key
+        let tsKey = Self.cacheTimestampPrefix + key
+
+        do {
+            let encoded = try JSONEncoder().encode(data)
+            UserDefaults.standard.set(encoded, forKey: cacheKey)
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: tsKey)
+        } catch {
+            ErrorLogger.shared.logWarning("Failed to cache data for \(key): \(error.localizedDescription)")
+        }
+    }
+
+    /// Clear all cached data
+    func clearCache() {
+        let defaults = UserDefaults.standard
+        let allKeys = defaults.dictionaryRepresentation().keys
+        for key in allKeys where key.hasPrefix(Self.cachePrefix) || key.hasPrefix(Self.cacheTimestampPrefix) {
+            defaults.removeObject(forKey: key)
+        }
     }
 }

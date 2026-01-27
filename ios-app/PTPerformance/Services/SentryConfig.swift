@@ -6,8 +6,9 @@
 //
 
 import Foundation
-// TODO: Add Sentry package dependency via Xcode
-// import Sentry
+#if canImport(Sentry)
+import Sentry
+#endif
 
 /// Sentry configuration for error and performance monitoring
 enum SentryConfig {
@@ -103,86 +104,61 @@ enum SentryConfig {
     /// Initialize Sentry SDK
     /// Call this in PTPerformanceApp.init()
     static func initialize() {
-        // TODO: Uncomment when Sentry package is added
-        /*
+        #if canImport(Sentry)
+        guard !dsn.isEmpty else {
+            print("[Sentry] No DSN configured, skipping initialization")
+            return
+        }
+
         SentrySDK.start { options in
             options.dsn = dsn
             options.environment = environment
             options.releaseName = releaseName
-
-            // Performance monitoring
-            options.tracesSampleRate = tracesSampleRate
-
-            // Enable profiling for performance insights
-            options.profilesSampleRate = 0.1 // Profile 10% of transactions
-
-            // Session tracking
+            options.tracesSampleRate = NSNumber(value: tracesSampleRate)
+            options.profilesSampleRate = NSNumber(value: 0.1)
             options.enableAutoSessionTracking = enableAutoSessionTracking
             options.enableAutoBreadcrumbTracking = enableAutoBreadcrumbTracking
-
-            // Enable network tracking
             options.enableNetworkTracking = true
             options.enableFileIOTracking = true
-
-            // Error tracking
             options.attachStacktrace = attachStacktrace
-            options.attachScreenshot = true // Capture screenshots on errors
-            options.attachViewHierarchy = true // Capture view hierarchy
+            options.attachScreenshot = true
+            options.attachViewHierarchy = true
 
-            // Privacy filters
             options.beforeSend = { event in
                 return filterSensitiveData(event)
             }
 
-            // Configure tags for filtering
-            options.setTag(value: UIDevice.current.model, key: "device_model")
-            options.setTag(value: UIDevice.current.systemVersion, key: "os_version")
-
-            // Debug logging
             #if DEBUG
             options.debug = true
             #endif
         }
 
-        print("[Sentry] Initialized with environment: \(environment), release: \(releaseName)")
-        print("[Sentry] Alert Thresholds:")
-        print("  - Crash Rate: \(AlertThresholds.crashRatePercent)%")
-        print("  - Error Rate: \(AlertThresholds.errorRatePerSession) per session")
-        print("  - Slow Transactions: >\(AlertThresholds.slowTransactionSeconds)s")
-        */
-
-        print("[Sentry] Configuration ready (SDK not yet integrated)")
-        print("  Environment: \(environment)")
-        print("  Release: \(releaseName)")
-        print("  Traces Sample Rate: \(tracesSampleRate)")
-        print("\n[Sentry] Alert Thresholds Configured:")
-        print("  - Crash Rate: \(AlertThresholds.crashRatePercent)%")
-        print("  - Error Rate: \(AlertThresholds.errorRatePerSession) errors/session")
-        print("  - Slow Transactions: >\(AlertThresholds.slowTransactionSeconds)s")
-        print("  - API Error Rate: \(AlertThresholds.apiErrorRatePercent)%")
-        print("  - Memory Usage: >\(AlertThresholds.memoryUsageMB)MB")
-        print("  - App Launch: >\(AlertThresholds.appLaunchTimeSeconds)s (p95)")
+        print("[Sentry] Initialized: env=\(environment), release=\(releaseName)")
+        #else
+        print("[Sentry] SDK not installed. Add sentry-cocoa SPM package to enable.")
+        print("  Environment: \(environment), Release: \(releaseName)")
+        #endif
     }
 
     // MARK: - Privacy Filtering
 
-    /// Filter sensitive data from Sentry events
-    private static func filterSensitiveData(_ event: Any) -> Any? {
-        // TODO: Implement when Sentry is added
-        /*
-        // Remove email addresses, tokens, passwords
-        if var user = event.user {
-            user.email = nil // Don't track emails for privacy
+    #if canImport(Sentry)
+    /// Filter sensitive data from Sentry events (HIPAA compliance)
+    private static func filterSensitiveData(_ event: Event) -> Event? {
+        // Remove email addresses for privacy
+        if event.user != nil {
+            event.user?.email = nil
         }
-
-        // Remove sensitive request data
-        if var request = event.request {
-            // Remove auth headers
-            request.headers?.removeValue(forKey: "Authorization")
-            request.headers?.removeValue(forKey: "Cookie")
+        // Remove auth headers from request data
+        if event.request != nil {
+            event.request?.headers?.removeValue(forKey: "Authorization")
+            event.request?.headers?.removeValue(forKey: "Cookie")
         }
-        */
-
         return event
     }
+    #else
+    private static func filterSensitiveData(_ event: Any) -> Any? {
+        return event
+    }
+    #endif
 }

@@ -1,51 +1,15 @@
 import SwiftUI
-// TODO: Add Sentry package dependency via Xcode for error monitoring
-// import Sentry
+#if canImport(Sentry)
+import Sentry
+#endif
 
 @main
 struct PTPerformanceApp: App {
     @StateObject private var appState = AppState()
 
     init() {
-        // TODO: Re-enable Sentry initialization once package is added
-        /*
-        // Initialize Sentry for error monitoring and performance tracking
-        SentrySDK.start { options in
-            // Get DSN from environment or configuration
-            // For now, this should be set via build configuration
-            #if DEBUG
-            options.dsn = "" // Leave empty for debug builds
-            options.debug = true
-            options.environment = "development"
-            #else
-            // Production DSN should be injected via build configuration
-            options.dsn = ProcessInfo.processInfo.environment["SENTRY_DSN"] ?? ""
-            options.environment = "production"
-            #endif
-
-            // Enable performance monitoring
-            options.tracesSampleRate = 1.0 // Capture 100% of transactions for monitoring
-
-            // Enable automatic breadcrumbs
-            options.enableAutoSessionTracking = true
-            options.enableAutoBreadcrumbTracking = true
-
-            // Attach stack traces to all messages
-            options.attachStacktrace = true
-
-            // Set release version
-            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                options.releaseName = "\(version) (\(build))"
-            }
-
-            // Filter out sensitive data
-            options.beforeSend = { event in
-                // Remove any sensitive data from event
-                return event
-            }
-        }
-        */
+        // BUILD 286: Initialize Sentry error monitoring (ACP-599)
+        SentryConfig.initialize()
 
         // Track app launch performance
         PerformanceMonitor.shared.trackAppLaunch()

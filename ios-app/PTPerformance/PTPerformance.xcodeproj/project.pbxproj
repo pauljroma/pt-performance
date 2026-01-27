@@ -12,6 +12,7 @@
 		0108EBEC9F81766B5512218B /* FoodDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F4AF3C62738571E3211EC6 /* FoodDetailSheet.swift */; };
 		024DA731A558610BD7D550A7 /* DailyReadiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7127FCD23086968E2A78BD /* DailyReadiness.swift */; };
 		0330BEAA8DAF80F3E107F63C /* AccountDeletionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9970FD9F2B70FC28FEED524D /* AccountDeletionViewModel.swift */; };
+		046E5B4CF4A00CA9244D9DE0 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9C8603D0EE3B6ABE22F262 /* AppError.swift */; };
 		04CA58485DE0C9E205CA030E /* MealPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF14323F085D289326FB948 /* MealPlanService.swift */; };
 		060E8CEA80079F0A00AC3DD6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25683FB4E5ED67007D98BFC6 /* Foundation.framework */; };
 		061C8FAFFE0772CF2D727B50 /* SessionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29508805106C0ED0628FA76F /* SessionNote.swift */; };
@@ -78,6 +79,7 @@
 		57CD33FDA5C2F33701E9BAAD /* SystemWorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3545656A41FF7848FEEA16 /* SystemWorkoutTemplate.swift */; };
 		5A388B6360F336179E35A404 /* PatientDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8D6AEA2A25E7B269D26551 /* PatientDetailViewModel.swift */; };
 		5DF97B67DEEC1C433560E0D7 /* ShakeGestureModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1D83A37030AB2AD23DBFC /* ShakeGestureModifier.swift */; };
+		5E16A33AF87FE62FE449C940 /* SentryConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E96888D96F8311E759D8FDF8 /* SentryConfig.swift */; };
 		6185FBC71214432EBD68551C /* NotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F1A7C7823FDACD84517D91 /* NotesService.swift */; };
 		61B07397DE7184A5590C057F /* FormValidationIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4E3028BD90CF6F1AE97A72 /* FormValidationIndicator.swift */; };
 		626CCFE57E02A2FE6F8FEDA1 /* ShakeGestureModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC842B39A8111D1D9DB1A81 /* ShakeGestureModifier.swift */; };
@@ -94,6 +96,7 @@
 		6FB4E7F756FB09A1CC963E44 /* TimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 505B7D7566D2960387C3AACE /* TimerState.swift */; };
 		711FC6CA9885D15C614F6C4E /* ManualSessionExercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E99E0AA8D49746DDC8F9A4A /* ManualSessionExercise.swift */; };
 		7500EE0C9EDFC3D864086786 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25683FB4E5ED67007D98BFC6 /* Foundation.framework */; };
+		76420B3CC09BED72B113A8FD /* NetworkRetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E0AD4509FFFD331EA3ACAE /* NetworkRetry.swift */; };
 		773957432A54606E04F334B6 /* ReadinessDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B7F69F0084CCEEC7DB36 /* ReadinessDashboardViewModel.swift */; };
 		773E28E5252F45286C5D1098 /* DebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA7CED7E38302E671332AEE /* DebugLogger.swift */; };
 		77C3D3B1F9BE1FDFE6D7CBD9 /* NutritionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8C310CF4E7D836728016BE /* NutritionService.swift */; };
@@ -164,6 +167,7 @@
 		DC51AF5DE9DECCF27F18AD73 /* DebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF51E7399A0D301959EDEFD1 /* DebugLogger.swift */; };
 		DD256E779BCC53A288448541 /* FoodItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D43B4AA8B18B874D2C07252A /* FoodItem.swift */; };
 		E18A330E79DA0683AA8A1434 /* StrengthTargetsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 816965BAE78972A40B18CB2A /* StrengthTargetsCard.swift */; };
+		E222D4D048E251E3CB677200 /* SchedulingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C529C325D3A1AD9EBB7210C8 /* SchedulingService.swift */; };
 		E2307DF6763BBB26A6991617 /* ScheduledSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF728BD9042D051B5C97C2BF /* ScheduledSession.swift */; };
 		E351F292DA0C86DBEB7F750E /* TimerPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A0B58F8F8881CBC2F1402F /* TimerPickerView.swift */; };
 		E5AEFB7945076DD32208EB7E /* Protocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7EFF2F37D2E1CEF59CB1828 /* Protocol.swift */; };
@@ -177,6 +181,7 @@
 		EDCE6031C8F19DB88545FEE7 /* PhaseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F94BB5E3D2AA5EDFD49882B /* PhaseDetailView.swift */; };
 		EEC637F7D655C1BD723DAD79 /* PainTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CC6FAA1F28AE12355F9DE2E /* PainTrendChart.swift */; };
 		F013ED4BE1E395A92117E834 /* Exercise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 682DED0E86B98C7567338361 /* Exercise.swift */; };
+		F310511EC988AAE13EF4AB0E /* SupabaseClient+ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D3E30BB5F4E3EC42BC3B48 /* SupabaseClient+ErrorHandling.swift */; };
 		F3E34D4582618ABD5EA8F120 /* NutritionLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E2C0E76777430A9A333D933 /* NutritionLog.swift */; };
 		F444DBF356DAA19A1018EBFD /* ReadinessCheckInViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC80688219EB4F0B8ECD24C /* ReadinessCheckInViewModel.swift */; };
 		F5F5EF187089D13DFFC79E05 /* PerformanceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F66BBFDBDFCD9201A6268B6 /* PerformanceMonitor.swift */; };
@@ -221,6 +226,7 @@
 		1AAF05D0AEDBCCB113CDCC99 /* Patient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Patient.swift; path = Models/Patient.swift; sourceTree = "<group>"; };
 		1DC842B39A8111D1D9DB1A81 /* ShakeGestureModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShakeGestureModifier.swift; path = Views/Components/ShakeGestureModifier.swift; sourceTree = "<group>"; };
 		1E123CB91391490648D4B9C2 /* RMCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RMCalculator.swift; path = Utils/RMCalculator.swift; sourceTree = "<group>"; };
+		1E9C8603D0EE3B6ABE22F262 /* AppError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppError.swift; path = Utils/AppError.swift; sourceTree = "<group>"; };
 		20003E0BC66EF3C56E385B7D /* DebugLogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DebugLogView.swift; path = Views/Settings/DebugLogView.swift; sourceTree = "<group>"; };
 		206E65F52D4BE1EE4DD52A2A /* WorkloadFlag.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkloadFlag.swift; path = Models/WorkloadFlag.swift; sourceTree = "<group>"; };
 		244E3F97C9163153AA3E7C96 /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingCoordinator.swift; path = Services/OnboardingCoordinator.swift; sourceTree = "<group>"; };
@@ -230,6 +236,7 @@
 		292A62CC96BBEDCE6A7FE00A /* TimerHistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerHistoryView.swift; path = Views/Timers/TimerHistoryView.swift; sourceTree = "<group>"; };
 		29508805106C0ED0628FA76F /* SessionNote.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionNote.swift; path = Models/SessionNote.swift; sourceTree = "<group>"; };
 		2982418A5AC71F63D7E6B56A /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingView.swift; path = Views/Onboarding/OnboardingView.swift; sourceTree = "<group>"; };
+		29D3E30BB5F4E3EC42BC3B48 /* SupabaseClient+ErrorHandling.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "SupabaseClient+ErrorHandling.swift"; path = "Services/SupabaseClient+ErrorHandling.swift"; sourceTree = "<group>"; };
 		2A30035269856F4225A24E5D /* FoodDatabaseService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodDatabaseService.swift; path = Services/FoodDatabaseService.swift; sourceTree = "<group>"; };
 		2A7549ED60F9CE15F10060E3 /* TodaySessionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TodaySessionView.swift; sourceTree = "<group>"; };
 		2C4192E361011BC89D74709A /* AuthView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
@@ -341,6 +348,8 @@
 		C3037AA78D9293536758CFB1 /* ManualWorkoutCreatorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ManualWorkoutCreatorView.swift; path = Views/ManualWorkout/ManualWorkoutCreatorView.swift; sourceTree = "<group>"; };
 		C391431A7CD2ABD7DA784287 /* OnboardingPage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingPage.swift; path = Views/Onboarding/OnboardingPage.swift; sourceTree = "<group>"; };
 		C4638C50C645284BC7AD7AEE /* NutritionGoalsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionGoalsView.swift; path = Views/Nutrition/NutritionGoalsView.swift; sourceTree = "<group>"; };
+		C4E0AD4509FFFD331EA3ACAE /* NetworkRetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NetworkRetry.swift; path = Services/NetworkRetry.swift; sourceTree = "<group>"; };
+		C529C325D3A1AD9EBB7210C8 /* SchedulingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SchedulingService.swift; path = Services/SchedulingService.swift; sourceTree = "<group>"; };
 		C6720EA3A04F4513838F2088 /* ExerciseTechniqueView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseTechniqueView.swift; path = Views/Exercise/ExerciseTechniqueView.swift; sourceTree = "<group>"; };
 		C7A596D693B0C25AA205924D /* ReadinessDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessDashboardView.swift; path = Views/Readiness/ReadinessDashboardView.swift; sourceTree = "<group>"; };
 		C8167F47BA9D9ECFAA3134AD /* ErrorStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ErrorStateView.swift; path = Utils/ErrorStateView.swift; sourceTree = "<group>"; };
@@ -369,6 +378,7 @@
 		E7120FEB65917B42F9936735 /* ReadinessService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessService.swift; path = Services/ReadinessService.swift; sourceTree = "<group>"; };
 		E7F4AF3C62738571E3211EC6 /* FoodDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodDetailSheet.swift; path = Views/Nutrition/FoodDetailSheet.swift; sourceTree = "<group>"; };
 		E9371A40E9E69411CA1DA637 /* ProgramCreationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramCreationTests.swift; path = Tests/Integration/ProgramCreationTests.swift; sourceTree = "<group>"; };
+		E96888D96F8311E759D8FDF8 /* SentryConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SentryConfig.swift; path = Services/SentryConfig.swift; sourceTree = "<group>"; };
 		EAC4FD9CD89D3C22FF539952 /* DeviceHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DeviceHelper.swift; path = Utils/DeviceHelper.swift; sourceTree = "<group>"; };
 		EB9FEFE9736A9550947CA7DB /* AddCustomFoodView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddCustomFoodView.swift; path = Views/Nutrition/AddCustomFoodView.swift; sourceTree = "<group>"; };
 		ECC80688219EB4F0B8ECD24C /* ReadinessCheckInViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessCheckInViewModel.swift; path = ViewModels/ReadinessCheckInViewModel.swift; sourceTree = "<group>"; };
@@ -617,6 +627,10 @@
 				6B8C310CF4E7D836728016BE /* NutritionService.swift */,
 				2A30035269856F4225A24E5D /* FoodDatabaseService.swift */,
 				7CF14323F085D289326FB948 /* MealPlanService.swift */,
+				E96888D96F8311E759D8FDF8 /* SentryConfig.swift */,
+				29D3E30BB5F4E3EC42BC3B48 /* SupabaseClient+ErrorHandling.swift */,
+				C529C325D3A1AD9EBB7210C8 /* SchedulingService.swift */,
+				C4E0AD4509FFFD331EA3ACAE /* NetworkRetry.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -720,6 +734,7 @@
 			isa = PBXGroup;
 			children = (
 				4B59D8AD08E0E73806B2BA66 /* ValidationHelpers.swift */,
+				1E9C8603D0EE3B6ABE22F262 /* AppError.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -1239,6 +1254,11 @@
 				389CE0154C59BA991169A6B6 /* ActiveTimerView.swift in Sources */,
 				DAB38426271B7794D7FFDB88 /* TimerPickerView.swift in Sources */,
 				E60494A3551140E2647E1CAF /* TimerHistoryView.swift in Sources */,
+				5E16A33AF87FE62FE449C940 /* SentryConfig.swift in Sources */,
+				F310511EC988AAE13EF4AB0E /* SupabaseClient+ErrorHandling.swift in Sources */,
+				E222D4D048E251E3CB677200 /* SchedulingService.swift in Sources */,
+				046E5B4CF4A00CA9244D9DE0 /* AppError.swift in Sources */,
+				76420B3CC09BED72B113A8FD /* NetworkRetry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -743,12 +743,39 @@ class TodaySessionViewModel: ObservableObject {
             // Notify therapist if pain > 5
             if pain > 5 {
                 logger.log("⚠️  High pain level (\(pain)) - therapist notification triggered", level: .warning)
-                // TODO: Implement therapist notification
+                // BUILD 286: Notify therapist of high pain (ACP-597)
+                Task {
+                    await notifyTherapistOfHighPain(exerciseName: exercise.exercise_name ?? "Unknown", painLevel: pain)
+                }
             }
 
         } catch {
             logger.log("❌ Failed to save exercise log: \(error.localizedDescription)", level: .error)
             errorMessage = "Failed to save exercise log. Please try again."
+        }
+    }
+
+    /// BUILD 286: Notify therapist when patient reports pain > 5 (ACP-597)
+    private func notifyTherapistOfHighPain(exerciseName: String, painLevel: Int) async {
+        let logger = DebugLogger.shared
+        guard let patientId = supabase.userId else { return }
+
+        do {
+            let notification: [String: String] = [
+                "patient_id": patientId,
+                "notification_type": "high_pain",
+                "title": "High Pain Alert",
+                "message": "Patient reported pain level \(painLevel)/10 during \(exerciseName)",
+                "severity": painLevel >= 8 ? "critical" : "warning"
+            ]
+
+            try await supabase.client.functions.invoke(
+                "send-session-reminders",
+                options: .init(body: notification)
+            )
+            logger.log("✅ Therapist notified of high pain for \(exerciseName)", level: .success)
+        } catch {
+            logger.log("⚠️  Failed to notify therapist: \(error.localizedDescription)", level: .warning)
         }
     }
 }

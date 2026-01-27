@@ -215,9 +215,9 @@ struct TodaySessionView: View {
                 sessionContent
             }
 
-            // BUILD 259: Simplified FAB - just New Workout and From Library
+            // BUILD 286: Re-enabled Add to Today FAB option (ACP-591)
             FloatingActionButton(
-                onAddToToday: nil,  // Removed - all editing happens in execution view
+                onAddToToday: { showAddToTodayPicker = true },
                 onNewWorkout: {
                     showWorkoutCreator = true
                 },

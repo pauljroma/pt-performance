@@ -23,6 +23,8 @@ struct TimerHistoryView: View {
     @State private var selectedType: TimerType?
     @State private var showDeleteConfirmation: UUID?
 
+    @Environment(\.dismiss) private var dismiss
+
     // MARK: - Initialization
 
     init(patientId: UUID) {
@@ -69,7 +71,19 @@ struct TimerHistoryView: View {
                 }
                 Button("Delete", role: .destructive) {
                     if let sessionId = showDeleteConfirmation {
-                        // TODO: Implement delete functionality
+                        // BUILD 286: Delete timer session from database (ACP-596)
+                        Task {
+                            do {
+                                try await PTSupabaseClient.shared.client
+                                    .from("workout_timers")
+                                    .delete()
+                                    .eq("id", value: sessionId)
+                                    .execute()
+                                await viewModel.refresh()
+                            } catch {
+                                DebugLogger.shared.error("TIMER_HISTORY", "Failed to delete: \(error.localizedDescription)")
+                            }
+                        }
                         showDeleteConfirmation = nil
                     }
                 }
@@ -403,7 +417,8 @@ struct TimerHistoryView: View {
             HStack(spacing: 12) {
                 // Repeat session button
                 Button(action: {
-                    // TODO: Navigate to timer with this template
+                    // BUILD 286: Dismiss to return to timer picker (ACP-596)
+                    dismiss()
                 }) {
                     Label("Repeat", systemImage: "arrow.clockwise")
                         .font(.subheadline)
@@ -417,7 +432,14 @@ struct TimerHistoryView: View {
 
                 // Share button (optional)
                 Button(action: {
-                    // TODO: Share session summary
+                    // BUILD 286: Share session summary (ACP-596)
+                    let summary = "Completed workout - \(session.formattedDuration) | \(session.roundsCompleted) rounds"
+                    let activityVC = UIActivityViewController(activityItems: [summary], applicationActivities: nil)
+                    if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = scene.windows.first,
+                       let rootVC = window.rootViewController {
+                        rootVC.present(activityVC, animated: true)
+                    }
                 }) {
                     Label("Share", systemImage: "square.and.arrow.up")
                         .font(.subheadline)
@@ -459,7 +481,8 @@ struct TimerHistoryView: View {
             }
 
             Button(action: {
-                // TODO: Navigate to TimerPickerView
+                // BUILD 286: Dismiss to return to timer picker (ACP-596)
+                dismiss()
             }) {
                 Text("Start Your First Workout")
                     .font(.headline)

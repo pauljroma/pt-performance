@@ -8,6 +8,9 @@
 
 import Foundation
 import SwiftUI
+#if canImport(Sentry)
+import Sentry
+#endif
 
 /// Monitors security events and failed login attempts
 final class SecurityMonitor: ObservableObject {
@@ -149,17 +152,17 @@ final class SecurityMonitor: ObservableObject {
     }
 
     private func sendSecurityAlert(email: String, event: String, details: [String: Any]) async {
-        // In production, integrate with Sentry
-        // For now, log locally
-        print("[SecurityMonitor] 🚨 SECURITY ALERT: \(event)")
+        print("[SecurityMonitor] SECURITY ALERT: \(event)")
         print("[SecurityMonitor] Email: \(email)")
         print("[SecurityMonitor] Details: \(details)")
 
-        // TODO: Integrate with Sentry SDK
-        // Sentry.captureMessage("Security Alert: \(event)", level: .warning) { scope in
-        //     scope.setContext(value: details, key: "security_event")
-        //     scope.setUser(User(email: email))
-        // }
+        #if canImport(Sentry)
+        SentrySDK.capture(message: "Security Alert: \(event)") { scope in
+            scope.setLevel(.warning)
+            scope.setContext(value: details, key: "security_event")
+            scope.setTag(value: event, key: "security_event_type")
+        }
+        #endif
     }
 
     // MARK: - Public Helpers

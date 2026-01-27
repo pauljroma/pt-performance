@@ -7,6 +7,9 @@
 
 import Foundation
 import os.log
+#if canImport(Sentry)
+import Sentry
+#endif
 
 /// Performance monitoring service for tracking app launch time, view load times, and other metrics
 class PerformanceMonitor {
@@ -58,14 +61,10 @@ class PerformanceMonitor {
             "duration_ms": Int(launchDuration * 1000)
         ])
 
-        // TODO: When Sentry is added, track as performance metric
-        /*
-        let transaction = SentrySDK.startTransaction(
-            name: "app.launch",
-            operation: "app.lifecycle"
-        )
+        #if canImport(Sentry)
+        let transaction = SentrySDK.startTransaction(name: "app.launch", operation: "app.lifecycle")
         transaction.finish()
-        */
+        #endif
     }
 
     /// Get app launch duration in milliseconds
@@ -102,14 +101,10 @@ class PerformanceMonitor {
             ErrorLogger.shared.logWarning("Slow view load: \(viewName) took \(Int(duration * 1000))ms")
         }
 
-        // TODO: When Sentry is added, track as performance metric
-        /*
-        let transaction = SentrySDK.startTransaction(
-            name: "view.load.\(viewName)",
-            operation: "ui.load"
-        )
+        #if canImport(Sentry)
+        let transaction = SentrySDK.startTransaction(name: "view.load.\(viewName)", operation: "ui.load")
         transaction.finish()
-        */
+        #endif
     }
 
     /// Get view load duration in milliseconds
@@ -156,17 +151,13 @@ class PerformanceMonitor {
             ErrorLogger.shared.logWarning("Slow database query: \(queryName) took \(Int(duration * 1000))ms")
         }
 
-        // TODO: When Sentry is added, track as performance metric
-        /*
-        let transaction = SentrySDK.startTransaction(
-            name: "db.query.\(queryName)",
-            operation: "db.query"
-        )
+        #if canImport(Sentry)
+        let transaction = SentrySDK.startTransaction(name: "db.query.\(queryName)", operation: "db.query")
         if let count = recordCount {
             transaction.setData(value: count, key: "record_count")
         }
         transaction.finish()
-        */
+        #endif
     }
 
     // MARK: - Network Request Tracking
@@ -220,17 +211,13 @@ class PerformanceMonitor {
             ErrorLogger.shared.logWarning("Slow network request: \(requestName) took \(Int(duration * 1000))ms")
         }
 
-        // TODO: When Sentry is added, track as performance metric
-        /*
-        let transaction = SentrySDK.startTransaction(
-            name: "http.\(requestName)",
-            operation: "http.request"
-        )
+        #if canImport(Sentry)
+        let transaction = SentrySDK.startTransaction(name: "http.\(requestName)", operation: "http.request")
         if let status = statusCode {
             transaction.setData(value: status, key: "status_code")
         }
         transaction.finish()
-        */
+        #endif
     }
 
     // MARK: - Custom Operation Tracking
@@ -255,14 +242,10 @@ class PerformanceMonitor {
 
         logger.info("Operation \(operationName) completed in \(String(format: "%.2f", duration * 1000))ms")
 
-        // TODO: When Sentry is added, track as performance metric
-        /*
-        let transaction = SentrySDK.startTransaction(
-            name: "op.\(operationName)",
-            operation: "custom"
-        )
+        #if canImport(Sentry)
+        let transaction = SentrySDK.startTransaction(name: "op.\(operationName)", operation: "custom")
         transaction.finish()
-        */
+        #endif
     }
 
     // MARK: - Memory Tracking
