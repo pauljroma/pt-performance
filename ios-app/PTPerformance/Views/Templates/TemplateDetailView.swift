@@ -388,7 +388,7 @@ struct SessionDetailRow: View {
                             .foregroundColor(.secondary)
                             .frame(width: 20, alignment: .leading)
 
-                        Text(session.exercises[index].exerciseId) // TODO: Fetch exercise name
+                        Text(session.exercises[index].name)
                             .font(.caption)
 
                         Spacer()
@@ -436,24 +436,41 @@ struct AssignTemplateSheet: View {
     let template: WorkoutTemplate
 
     @Environment(\.dismiss) private var dismiss
+    @State private var patients: [Patient] = []
     @State private var selectedPatient: Patient?
     @State private var programName: String = ""
     @State private var startDate = Date()
     @State private var isAssigning = false
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationView {
             Form {
                 Section("Patient") {
-                    // TODO: Patient picker
-                    Text("Patient selection coming soon")
-                        .foregroundColor(.secondary)
+                    if patients.isEmpty {
+                        ProgressView("Loading patients...")
+                    } else {
+                        Picker("Select Patient", selection: $selectedPatient) {
+                            Text("Choose a patient").tag(nil as Patient?)
+                            ForEach(patients) { patient in
+                                Text(patient.fullName).tag(patient as Patient?)
+                            }
+                        }
+                    }
                 }
 
                 Section("Program Details") {
                     TextField("Program Name", text: $programName)
 
                     DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                }
+
+                if let errorMessage {
+                    Section {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
                 }
 
                 Section {
@@ -476,16 +493,45 @@ struct AssignTemplateSheet: View {
                     }
                 }
             }
+            .task {
+                await loadPatients()
+            }
+        }
+    }
+
+    private func loadPatients() async {
+        do {
+            let response: [Patient] = try await PTSupabaseClient.shared.client
+                .from("patients")
+                .select("*")
+                .order("last_name", ascending: true)
+                .execute()
+                .value
+            patients = response
+        } catch {
+            errorMessage = "Failed to load patients"
         }
     }
 
     private func assignTemplate() {
+        guard let patient = selectedPatient else { return }
         isAssigning = true
+        errorMessage = nil
 
-        // TODO: Call TemplatesService to create program from template
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            isAssigning = false
-            dismiss()
+        Task {
+            do {
+                let _ = try await TemplatesService.shared.createProgramFromTemplate(
+                    templateId: template.id.uuidString,
+                    patientId: patient.id.uuidString,
+                    programName: programName,
+                    startDate: startDate
+                )
+                isAssigning = false
+                dismiss()
+            } catch {
+                isAssigning = false
+                errorMessage = "Failed to assign: \(error.localizedDescription)"
+            }
         }
     }
 }

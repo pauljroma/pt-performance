@@ -230,8 +230,6 @@ struct UpcomingSessionsView: View {
     }
 
     private func rescheduleSession(_ session: ScheduledSession) {
-        // TODO: Show reschedule sheet
-        print("Rescheduling session: \(session.id)")
         selectedSession = session
         showingScheduleSheet = true
     }
@@ -280,7 +278,7 @@ struct UpcomingSessionRow: View {
 
             // Session details
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.sessionId) // TODO: Replace with session name
+                Text(session.displayName)
                     .font(.subheadline)
                     .fontWeight(.semibold)
 

@@ -461,9 +461,12 @@ struct ReadinessDashboardView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // TODO: Add navigation to check-in form when available
-            // Button("Complete Check-in") { }
-            //     .buttonStyle(.borderedProminent)
+            NavigationLink {
+                ReadinessCheckInView(patientId: patientId)
+            } label: {
+                Text("Complete Check-in")
+            }
+            .buttonStyle(.borderedProminent)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)

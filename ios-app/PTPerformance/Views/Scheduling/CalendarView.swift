@@ -419,7 +419,7 @@ struct ScheduledSessionRow: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.sessionId) // TODO: Replace with session name
+                Text(session.displayName)
                     .font(.subheadline)
                     .fontWeight(.medium)
 

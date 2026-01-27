@@ -6,6 +6,7 @@ struct ProgramViewerView: View {
 
     @StateObject private var viewModel = ProgramViewModel()
     @Environment(\.dismiss) private var dismiss
+    @State private var showingProgramBuilder = false
 
     var body: some View {
         Group {
@@ -57,24 +58,15 @@ struct ProgramViewerView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
-            // TODO: Add "Create Program" button that navigates to ProgramBuilderView
-            // For now, show instructions
-            VStack(alignment: .leading, spacing: 8) {
-                Text("To create a program:")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
-                Text("1. Go to Program Builder")
-                Text("2. Select this patient")
-                Text("3. Design phases and sessions")
-                Text("4. Add exercises to each session")
+            Button {
+                showingProgramBuilder = true
+            } label: {
+                Label("Create Program", systemImage: "plus.circle.fill")
             }
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-            .padding(.horizontal, 32)
+            .buttonStyle(.borderedProminent)
+            .sheet(isPresented: $showingProgramBuilder) {
+                ProgramBuilderView(patientId: UUID(uuidString: patientId))
+            }
 
             Spacer()
         }

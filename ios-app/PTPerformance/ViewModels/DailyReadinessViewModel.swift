@@ -68,8 +68,11 @@ class DailyReadinessViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        // TODO: Get actual patient ID from auth session
-        let patientId = "00000000-0000-0000-0000-000000000001"
+        guard let patientId = PTSupabaseClient.shared.userId else {
+            errorMessage = "Not signed in"
+            isLoading = false
+            return
+        }
 
         let input = ReadinessInput(
             sleepHours: sleepHours,
@@ -98,8 +101,7 @@ class DailyReadinessViewModel: ObservableObject {
 
     /// Fetch today's readiness check-in if it exists
     func fetchTodayReadiness() async {
-        // TODO: Get actual patient ID from auth session
-        let patientId = "00000000-0000-0000-0000-000000000001"
+        guard let patientId = PTSupabaseClient.shared.userId else { return }
 
         do {
             if let readiness = try await readinessService.fetchTodayReadiness(patientId: patientId) {

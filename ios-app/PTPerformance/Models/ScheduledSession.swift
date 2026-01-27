@@ -134,6 +134,16 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
         scheduledDateTime < Date() && status == .scheduled
     }
 
+    // Computed property: Display name (uses notes or formatted date since session name requires join)
+    var displayName: String {
+        if let notes = notes, !notes.isEmpty {
+            return notes
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return "\(formatter.string(from: scheduledDate)) Session"
+    }
+
     // Computed property: Formatted date string
     var formattedDate: String {
         let formatter = DateFormatter()
