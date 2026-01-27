@@ -15,6 +15,16 @@ struct TherapistTabView: View {
                     Label("Programs", systemImage: "doc.richtext")
                 }
 
+            TherapistSchedulingView()
+                .tabItem {
+                    Label("Schedule", systemImage: "calendar")
+                }
+
+            TherapistReportingView()
+                .tabItem {
+                    Label("Reports", systemImage: "chart.bar")
+                }
+
             TherapistSettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
