@@ -110,36 +110,6 @@ final class ConfigTests: XCTestCase {
             "Build number should not be empty")
     }
 
-    // MARK: - Demo Credentials Tests
-
-    func testDemoPatientCredentials() {
-        XCTAssertFalse(Config.Demo.patientEmail.isEmpty,
-            "Demo patient email should not be empty")
-
-        XCTAssertTrue(Config.Demo.patientEmail.contains("@"),
-            "Demo patient email should be valid email format")
-
-        XCTAssertFalse(Config.Demo.patientPassword.isEmpty,
-            "Demo patient password should not be empty")
-
-        XCTAssertGreaterThan(Config.Demo.patientPassword.count, 8,
-            "Demo patient password should be reasonably strong")
-    }
-
-    func testDemoTherapistCredentials() {
-        XCTAssertFalse(Config.Demo.therapistEmail.isEmpty,
-            "Demo therapist email should not be empty")
-
-        XCTAssertTrue(Config.Demo.therapistEmail.contains("@"),
-            "Demo therapist email should be valid email format")
-
-        XCTAssertFalse(Config.Demo.therapistPassword.isEmpty,
-            "Demo therapist password should not be empty")
-
-        XCTAssertGreaterThan(Config.Demo.therapistPassword.count, 8,
-            "Demo therapist password should be reasonably strong")
-    }
-
     // MARK: - Environment Variable Tests
 
     func testBackendURLCanBeOverridden() {

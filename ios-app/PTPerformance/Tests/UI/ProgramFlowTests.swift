@@ -348,11 +348,11 @@ final class ProgramFlowTests: XCTestCase {
         let emailField = app.textFields["Email"]
         if emailField.waitForExistence(timeout: 5) {
             emailField.tap()
-            emailField.typeText("demo-therapist@ptperformance.app")
+            emailField.typeText(MockData.TestTherapist.email)
 
             let passwordField = app.secureTextFields["Password"]
             passwordField.tap()
-            passwordField.typeText("demo-therapist-2025")
+            passwordField.typeText(MockData.TestTherapist.password)
 
             let loginButton = app.buttons["Log In"]
             loginButton.tap()

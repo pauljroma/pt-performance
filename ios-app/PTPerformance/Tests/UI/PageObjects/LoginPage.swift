@@ -176,20 +176,20 @@ struct LoginPage {
             .tapLogin()
     }
 
-    /// Login as demo patient
+    /// Login as test patient
     func loginAsDemoPatient() {
         login(
-            email: MockData.DemoPatient.email,
-            password: MockData.DemoPatient.password,
+            email: MockData.TestPatient.email,
+            password: MockData.TestPatient.password,
             as: "Patient"
         )
     }
 
-    /// Login as demo therapist
+    /// Login as test therapist
     func loginAsDemoTherapist() {
         login(
-            email: MockData.DemoTherapist.email,
-            password: MockData.DemoTherapist.password,
+            email: MockData.TestTherapist.email,
+            password: MockData.TestTherapist.password,
             as: "Therapist"
         )
     }

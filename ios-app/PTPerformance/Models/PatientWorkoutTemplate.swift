@@ -117,26 +117,44 @@ struct PatientWorkoutTemplate: Codable, Identifiable {
 
     /// Convert database blocks to WorkoutBlocks for UI display
     var blocks: [WorkoutBlock] {
-        (exercises ?? []).sorted { $0.sequence < $1.sequence }.map { dbBlock in
-            let blockExercises = dbBlock.exercises.map { dbExercise in
-                BlockExercise(
-                    id: dbExercise.id ?? UUID(),
-                    name: dbExercise.name ?? "Unknown",
-                    sets: dbExercise.prescribedSets,
-                    reps: dbExercise.prescribedReps,
-                    duration: dbExercise.duration,
-                    rpe: dbExercise.rpe,
-                    notes: dbExercise.notes
-                )
-            }
+        (exercises ?? []).sorted { $0.sequence < $1.sequence }.enumerated().map { blockIndex, dbBlock in
+            let blockExercises = dbBlock.exercises
+                .enumerated()
+                .sorted { lhs, rhs in
+                    let lSeq = lhs.element.sequence ?? lhs.offset
+                    let rSeq = rhs.element.sequence ?? rhs.offset
+                    return lSeq < rSeq
+                }
+                .map { exerciseIndex, dbExercise in
+                    BlockExercise(
+                        id: dbExercise.id ?? deterministicUUID(blockIndex: blockIndex, exerciseIndex: exerciseIndex),
+                        name: dbExercise.name ?? "Unknown",
+                        sets: dbExercise.prescribedSets,
+                        reps: dbExercise.prescribedReps,
+                        duration: dbExercise.duration,
+                        rpe: dbExercise.rpe,
+                        notes: dbExercise.notes
+                    )
+                }
             return WorkoutBlock(
-                id: dbBlock.id ?? UUID(),
+                id: dbBlock.id ?? deterministicUUID(blockIndex: blockIndex, exerciseIndex: -1),
                 name: dbBlock.name,
                 blockType: WorkoutBlockType(rawValue: dbBlock.blockType ?? "") ?? WorkoutBlockType.inferFromName(dbBlock.name),
                 sequence: dbBlock.sequence,
                 exercises: blockExercises
             )
         }
+    }
+
+    /// Generate a deterministic UUID from template ID + indices to avoid SwiftUI instability
+    private func deterministicUUID(blockIndex: Int, exerciseIndex: Int) -> UUID {
+        let seed = "\(id)-block\(blockIndex)-ex\(exerciseIndex)"
+        let hash = seed.utf8.reduce(into: [UInt8](repeating: 0, count: 16)) { result, byte in
+            let idx = Int(byte) % 16
+            result[idx] = result[idx] &+ byte
+        }
+        return UUID(uuid: (hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], hash[6], hash[7],
+                           hash[8], hash[9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]))
     }
 }
 

@@ -138,12 +138,12 @@ class BaseUITest: XCTestCase {
 
     // MARK: - Common Test Flows
 
-    /// Login as demo patient
+    /// Login as test patient
     func loginAsDemoPatient() {
         TestHelpers.performLogin(
             in: app,
-            email: MockData.DemoPatient.email,
-            password: MockData.DemoPatient.password,
+            email: MockData.TestPatient.email,
+            password: MockData.TestPatient.password,
             userType: "Patient"
         )
 
@@ -152,12 +152,12 @@ class BaseUITest: XCTestCase {
         TestHelpers.assertExists(dashboard, named: "Patient Dashboard")
     }
 
-    /// Login as demo therapist
+    /// Login as test therapist
     func loginAsDemoTherapist() {
         TestHelpers.performLogin(
             in: app,
-            email: MockData.DemoTherapist.email,
-            password: MockData.DemoTherapist.password,
+            email: MockData.TestTherapist.email,
+            password: MockData.TestTherapist.password,
             userType: "Therapist"
         )
 

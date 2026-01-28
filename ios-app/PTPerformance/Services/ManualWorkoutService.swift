@@ -735,6 +735,7 @@ class ManualWorkoutService: ObservableObject {
                 .select()
                 .eq("manual_session_id", value: sessionId.uuidString)
                 .order("sequence", ascending: true)
+                .order("created_at", ascending: true)
                 .execute()
 
             let decoder = JSONDecoder()

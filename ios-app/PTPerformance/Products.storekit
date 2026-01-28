@@ -1,0 +1,86 @@
+{
+  "identifier" : "PTPerformance Products",
+  "nonRenewableSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6740147039",
+    "_developerTeamID" : "V9L3BZN3ZT"
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21586498",
+      "localizations" : [
+        {
+          "description" : "Full access to all PT Performance features",
+          "displayName" : "PT Performance Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "PTPerformance Premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6740147040",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full access to History, Analytics, AI Coach, Nutrition, Readiness, and Learn",
+              "displayName" : "Monthly Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.ptperformance.app.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Premium",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "59.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6740147041",
+          "introductoryOffer" : {
+            "internalID" : "6740147042",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Full access to all features — save 50% vs monthly",
+              "displayName" : "Annual Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.ptperformance.app.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual Premium",
+          "subscriptionGroupID" : "21586498",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

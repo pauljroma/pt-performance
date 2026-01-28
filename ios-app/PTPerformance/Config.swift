@@ -18,14 +18,11 @@ enum Config {
     static let appVersion = "1.0"
     static let buildNumber = "88"
 
-    // MARK: - Demo Credentials
-
-    enum Demo {
-        static let patientEmail = "demo-athlete@ptperformance.app"
-        static let patientPassword = "demo-patient-2025"
-
-        static let therapistEmail = "demo-pt@ptperformance.app"
-        static let therapistPassword = "demo-therapist-2025"
+    // MARK: - Subscription Products
+    enum Subscription {
+        static let monthlyProductID = "com.ptperformance.app.monthly"
+        static let annualProductID = "com.ptperformance.app.annual"
+        static let groupID = "PTPerformance Premium"
     }
 
     // MARK: - WHOOP Integration (Build 40)

@@ -1,0 +1,183 @@
+-- ============================================================================
+-- CREATE BODY COMPOSITIONS TABLE - ACP-510 / ACP-509
+-- ============================================================================
+-- Tracks patient body composition measurements over time including weight,
+-- body fat, muscle mass, BMI, and circumference measurements.
+--
+-- Date: 2026-01-27
+-- Linear: ACP-510, ACP-509
+-- ============================================================================
+
+-- =====================================================
+-- Body Compositions Table
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS body_compositions (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id uuid NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    recorded_at timestamptz NOT NULL DEFAULT now(),
+
+    -- Weight & composition
+    weight_lb numeric(6,2) CHECK (weight_lb > 0 AND weight_lb < 1000),
+    body_fat_percent numeric(5,2) CHECK (body_fat_percent >= 0 AND body_fat_percent <= 100),
+    muscle_mass_lb numeric(6,2) CHECK (muscle_mass_lb > 0 AND muscle_mass_lb < 1000),
+    bmi numeric(5,2) CHECK (bmi > 0 AND bmi < 100),
+
+    -- Circumference measurements (inches)
+    waist_in numeric(5,2) CHECK (waist_in > 0 AND waist_in < 200),
+    chest_in numeric(5,2) CHECK (chest_in > 0 AND chest_in < 200),
+    arm_in numeric(5,2) CHECK (arm_in > 0 AND arm_in < 100),
+    leg_in numeric(5,2) CHECK (leg_in > 0 AND leg_in < 200),
+
+    -- Notes
+    notes text,
+
+    -- Metadata
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- =====================================================
+-- Indexes
+-- =====================================================
+
+CREATE INDEX idx_body_compositions_patient_id
+    ON body_compositions(patient_id);
+
+CREATE INDEX idx_body_compositions_recorded_at
+    ON body_compositions(recorded_at DESC);
+
+CREATE INDEX idx_body_compositions_patient_recorded
+    ON body_compositions(patient_id, recorded_at DESC);
+
+-- =====================================================
+-- Comments
+-- =====================================================
+
+COMMENT ON TABLE body_compositions IS 'Patient body composition measurements tracked over time';
+COMMENT ON COLUMN body_compositions.patient_id IS 'Patient who recorded this measurement';
+COMMENT ON COLUMN body_compositions.recorded_at IS 'Timestamp when the measurement was taken';
+COMMENT ON COLUMN body_compositions.weight_lb IS 'Body weight in pounds';
+COMMENT ON COLUMN body_compositions.body_fat_percent IS 'Body fat percentage (0-100)';
+COMMENT ON COLUMN body_compositions.muscle_mass_lb IS 'Muscle mass in pounds';
+COMMENT ON COLUMN body_compositions.bmi IS 'Body Mass Index';
+COMMENT ON COLUMN body_compositions.waist_in IS 'Waist circumference in inches';
+COMMENT ON COLUMN body_compositions.chest_in IS 'Chest circumference in inches';
+COMMENT ON COLUMN body_compositions.arm_in IS 'Arm circumference in inches';
+COMMENT ON COLUMN body_compositions.leg_in IS 'Leg circumference in inches';
+COMMENT ON COLUMN body_compositions.notes IS 'Optional notes about this measurement';
+
+-- =====================================================
+-- Row-Level Security (RLS)
+-- =====================================================
+
+ALTER TABLE body_compositions ENABLE ROW LEVEL SECURITY;
+
+-- Patients can view their own body composition data
+CREATE POLICY "Patients can view their own body composition data"
+    ON body_compositions FOR SELECT
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can insert their own body composition data
+CREATE POLICY "Patients can insert their own body composition data"
+    ON body_compositions FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can delete their own body composition data
+CREATE POLICY "Patients can delete their own body composition data"
+    ON body_compositions FOR DELETE
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can update their own body composition data
+CREATE POLICY "Patients can update their own body composition data"
+    ON body_compositions FOR UPDATE
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    )
+    WITH CHECK (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Therapists can view body composition data of their assigned patients
+CREATE POLICY "Therapists can view patient body composition data"
+    ON body_compositions FOR SELECT
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients
+            WHERE therapist_id IN (
+                SELECT id FROM therapists WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+-- Service role has full access
+CREATE POLICY "Service role can manage all body composition data"
+    ON body_compositions FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- =====================================================
+-- Grant Permissions
+-- =====================================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON body_compositions TO authenticated;
+GRANT ALL ON body_compositions TO service_role;
+
+-- =====================================================
+-- Verification
+-- =====================================================
+
+DO $$
+DECLARE
+    v_count integer;
+BEGIN
+    SELECT COUNT(*) INTO v_count FROM body_compositions;
+
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'BODY COMPOSITIONS TABLE CREATED - ACP-510 / ACP-509';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Table: body_compositions (% existing entries)', v_count;
+    RAISE NOTICE '';
+    RAISE NOTICE 'Columns:';
+    RAISE NOTICE '  - id (uuid PK)';
+    RAISE NOTICE '  - patient_id (uuid FK -> patients)';
+    RAISE NOTICE '  - recorded_at (timestamptz)';
+    RAISE NOTICE '  - weight_lb, body_fat_percent, muscle_mass_lb, bmi';
+    RAISE NOTICE '  - waist_in, chest_in, arm_in, leg_in';
+    RAISE NOTICE '  - notes, created_at';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Indexes:';
+    RAISE NOTICE '  - idx_body_compositions_patient_id';
+    RAISE NOTICE '  - idx_body_compositions_recorded_at';
+    RAISE NOTICE '  - idx_body_compositions_patient_recorded';
+    RAISE NOTICE '';
+    RAISE NOTICE 'RLS Policies:';
+    RAISE NOTICE '  - Patients: Full CRUD on own data';
+    RAISE NOTICE '  - Therapists: Read-only access';
+    RAISE NOTICE '  - Service role: Full access';
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+END $$;

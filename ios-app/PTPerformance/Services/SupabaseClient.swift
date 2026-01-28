@@ -118,37 +118,25 @@ class PTSupabaseClient: ObservableObject {
 
         // Fetch user role from database
         await fetchUserRole(userId: session.user.id.uuidString)
-    }
 
-    /// Sign in as demo patient (John Brebbia)
-    func signInAsDemoPatient() async throws {
-        // Demo patient credentials
-        let email = "demo-athlete@ptperformance.app"
-        let password = "demo-patient-2025"
-
-        try await signIn(email: email, password: password)
-    }
-
-    /// Sign in as demo therapist (Sarah Thompson)
-    func signInAsDemoTherapist() async throws {
-        // Demo therapist credentials
-        let email = "demo-pt@ptperformance.app"
-        let password = "demo-therapist-2025"
-
-        try await signIn(email: email, password: password)
-    }
-
-    /// Sign in as Nic Roma (demo patient with Winter Lift program)
-    func signInAsNicRoma() async throws {
-        // Nic Roma credentials
-        let email = "nic-demo@ptperformance.app"
-        let password = "demo-patient-2025"
-
-        try await signIn(email: email, password: password)
+        // If no role found, auto-register as patient (handles edge case where
+        // registration failed during signup or user was created via Apple Sign-in)
+        if userRole == nil {
+            let userId = session.user.id.uuidString
+            let userEmail = session.user.email ?? email
+            try? await registerPatient(
+                userId: userId,
+                email: userEmail,
+                fullName: userEmail.components(separatedBy: "@").first ?? "Patient",
+                authProvider: "email"
+            )
+            await fetchUserRole(userId: userId)
+        }
     }
 
     /// Fetch user role from database (patient or therapist)
-    private func fetchUserRole(userId: String) async {
+    /// Looks up by user_id first (exact match), then falls back to email for legacy records
+    func fetchUserRole(userId: String) async {
         // Get user email from auth session
         guard let userEmail = currentUser?.email else {
             print("❌ No user email available")
@@ -156,44 +144,122 @@ class PTSupabaseClient: ObservableObject {
         }
 
         do {
-            // Check if user is a patient (lookup by email)
-            let patientResponse: [AuthPatient] = try await client
+            // First: look up patient by user_id (exact match to Supabase auth user)
+            let patientByAuthId: [AuthPatient] = try await client
+                .from("patients")
+                .select()
+                .eq("user_id", value: userId)
+                .execute()
+                .value
+
+            if !patientByAuthId.isEmpty {
+                await MainActor.run {
+                    self.userRole = .patient
+                    self.userId = patientByAuthId[0].id.uuidString
+                }
+                print("✅ Found patient by user_id: \(patientByAuthId[0].first_name) \(patientByAuthId[0].last_name)")
+                return
+            }
+
+            // Second: look up therapist by user_id
+            let therapistByAuthId: [AuthTherapist] = try await client
+                .from("therapists")
+                .select()
+                .eq("user_id", value: userId)
+                .execute()
+                .value
+
+            if !therapistByAuthId.isEmpty {
+                await MainActor.run {
+                    self.userRole = .therapist
+                    self.userId = therapistByAuthId[0].id.uuidString
+                }
+                print("✅ Found therapist by user_id: \(therapistByAuthId[0].first_name) \(therapistByAuthId[0].last_name)")
+                return
+            }
+
+            // Fallback: look up by email for legacy records without user_id
+            let patientByEmail: [AuthPatient] = try await client
                 .from("patients")
                 .select()
                 .eq("email", value: userEmail)
                 .execute()
                 .value
 
-            if !patientResponse.isEmpty {
+            if !patientByEmail.isEmpty {
                 await MainActor.run {
                     self.userRole = .patient
-                    self.userId = patientResponse[0].id.uuidString
+                    self.userId = patientByEmail[0].id.uuidString
                 }
-                print("✅ Found patient: \(patientResponse[0].first_name) \(patientResponse[0].last_name)")
+                print("✅ Found patient by email (legacy): \(patientByEmail[0].first_name) \(patientByEmail[0].last_name)")
                 return
             }
 
-            // Check if user is a therapist (lookup by email)
-            let therapistResponse: [AuthTherapist] = try await client
+            let therapistByEmail: [AuthTherapist] = try await client
                 .from("therapists")
                 .select()
                 .eq("email", value: userEmail)
                 .execute()
                 .value
 
-            if !therapistResponse.isEmpty {
+            if !therapistByEmail.isEmpty {
                 await MainActor.run {
                     self.userRole = .therapist
-                    self.userId = therapistResponse[0].id.uuidString
+                    self.userId = therapistByEmail[0].id.uuidString
                 }
-                print("✅ Found therapist: \(therapistResponse[0].first_name) \(therapistResponse[0].last_name)")
+                print("✅ Found therapist by email (legacy): \(therapistByEmail[0].first_name) \(therapistByEmail[0].last_name)")
                 return
             }
 
-            print("⚠️ User not found in patients or therapists table for email: \(userEmail)")
+            print("⚠️ User not found in patients or therapists table for userId: \(userId), email: \(userEmail)")
         } catch {
             print("❌ Error fetching user role: \(error.localizedDescription)")
         }
+    }
+
+    /// Sign up with email and password
+    func signUp(email: String, password: String, fullName: String) async throws {
+        let session = try await client.auth.signUp(email: email, password: password)
+        await MainActor.run {
+            self.currentSession = session.session
+            self.currentUser = session.session?.user
+        }
+        if let userId = session.session?.user.id.uuidString,
+           let userEmail = session.session?.user.email {
+            try await registerPatient(userId: userId, email: userEmail, fullName: fullName, authProvider: "email")
+        }
+        if let userId = session.session?.user.id.uuidString {
+            await fetchUserRole(userId: userId)
+        }
+    }
+
+    /// Sign in with Apple via Supabase
+    /// Note: Does NOT call fetchUserRole() — caller must handle role detection
+    /// after any registration step to avoid race conditions with new users.
+    func signInWithApple(idToken: String, nonce: String) async throws {
+        let session = try await client.auth.signInWithIdToken(
+            credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
+        )
+        await MainActor.run {
+            self.currentSession = session
+            self.currentUser = session.user
+        }
+    }
+
+    /// Register patient via edge function
+    func registerPatient(userId: String, email: String, fullName: String, authProvider: String) async throws {
+        let body: [String: String] = [
+            "userId": userId, "email": email, "fullName": fullName, "authProvider": authProvider
+        ]
+        _ = try await client.functions.invoke("register-patient", options: .init(body: body))
+    }
+
+    /// Reset password
+    func resetPassword(email: String) async throws {
+        try await client.auth.resetPasswordForEmail(
+            email,
+            redirectTo: URL(string: "ptperformance://reset-password")
+        )
     }
 
     /// Sign out
@@ -213,19 +279,19 @@ class PTSupabaseClient: ObservableObject {
     /// Simplified patient model for authentication lookup
     private struct AuthPatient: Codable {
         let id: UUID
-        let auth_user_id: UUID?
-        let therapist_id: UUID
+        let user_id: UUID?
+        let therapist_id: UUID?
         let first_name: String
         let last_name: String
-        let email: String
-        let sport: String
+        let email: String?
+        let sport: String?
         let position: String?
     }
 
     /// Simplified therapist model for authentication lookup
     private struct AuthTherapist: Codable {
         let id: UUID
-        let auth_user_id: UUID?
+        let user_id: UUID?
         let first_name: String
         let last_name: String
         let email: String

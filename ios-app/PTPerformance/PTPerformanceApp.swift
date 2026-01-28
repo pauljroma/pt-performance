@@ -6,6 +6,7 @@ import Sentry
 @main
 struct PTPerformanceApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var storeKit = StoreKitService.shared
 
     init() {
         // BUILD 286: Initialize Sentry error monitoring (ACP-599)
@@ -30,8 +31,33 @@ struct PTPerformanceApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(storeKit)
                 .onAppear {
                     PerformanceMonitor.shared.finishAppLaunch()
+                }
+                .task {
+                    await storeKit.loadProducts()
+                    await storeKit.updateSubscriptionStatus()
+                }
+                .onOpenURL { url in
+                    // Handle auth deep links (e.g., password reset: ptperformance://reset-password#access_token=...)
+                    Task {
+                        do {
+                            let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
+                            await MainActor.run {
+                                appState.isAuthenticated = true
+                                appState.userId = session.user.id.uuidString
+                            }
+                            await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
+                            await MainActor.run {
+                                if let role = PTSupabaseClient.shared.userRole {
+                                    appState.userRole = role
+                                }
+                            }
+                        } catch {
+                            print("Failed to handle deep link: \(error.localizedDescription)")
+                        }
+                    }
                 }
         }
     }

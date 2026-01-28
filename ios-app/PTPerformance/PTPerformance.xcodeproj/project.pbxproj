@@ -14,9 +14,9 @@
 		0330BEAA8DAF80F3E107F63C /* AccountDeletionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9970FD9F2B70FC28FEED524D /* AccountDeletionViewModel.swift */; };
 		046E5B4CF4A00CA9244D9DE0 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E9C8603D0EE3B6ABE22F262 /* AppError.swift */; };
 		04CA58485DE0C9E205CA030E /* MealPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF14323F085D289326FB948 /* MealPlanService.swift */; };
+		0553CF7FDE02943C52F1F7E4 /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3598B3EDA62EC5F65FE2C635 /* GoalDetailView.swift */; };
 		060E8CEA80079F0A00AC3DD6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25683FB4E5ED67007D98BFC6 /* Foundation.framework */; };
 		061C8FAFFE0772CF2D727B50 /* SessionNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29508805106C0ED0628FA76F /* SessionNote.swift */; };
-		063BFD4174A66BA6F8C7810A /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4192E361011BC89D74709A /* AuthView.swift */; };
 		06D6D14B8F774E79330D9057 /* ExerciseDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD22CCA056A1F11036717AFF /* ExerciseDetailSheet.swift */; };
 		09AA371F76F5425F233E35A6 /* SubstitutionFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D761AF17E693443D80FBF5 /* SubstitutionFilteringTests.swift */; };
 		09C8A4A2205F749EA8756143 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F9EF1BBDEA3F049635053A /* ConfigTests.swift */; };
@@ -27,21 +27,27 @@
 		0D3EDBFEFC6A9E4CFF8F87B0 /* TodaySessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7549ED60F9CE15F10060E3 /* TodaySessionView.swift */; };
 		0E273420E1DE65F2A52916BE /* TimerPickerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0527B0A31E85CC13C72CBB27 /* TimerPickerViewModel.swift */; };
 		0FAB31FAA586AF94311A8048 /* ReadinessService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7120FEB65917B42F9936735 /* ReadinessService.swift */; };
+		11B26595FC3F8035D3E69F77 /* PatientGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AEFFFE24807F9B6D9AD866 /* PatientGoal.swift */; };
 		11C233EC23A0B27763568DEB /* SessionSummaryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCB7B7A9A7E5CEB56D91445 /* SessionSummaryViewModel.swift */; };
 		11CEF736F8AA32E3ABFB6EF6 /* TimerHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F48E8D3C266486E7468820 /* TimerHistoryViewModel.swift */; };
 		129E29BA4EFBB72627A9A936 /* AddCustomFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9FEFE9736A9550947CA7DB /* AddCustomFoodView.swift */; };
 		13BA1B17B926C5367F94CC34 /* NutritionDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043CA2AD3C85568EB8EAC3FE /* NutritionDashboardViewModel.swift */; };
+		13EA123F4E123E460BF9306B /* BodyCompositionTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD068F7B2017A63788611CF3 /* BodyCompositionTimelineView.swift */; };
 		14624193389EF4FA2A6A40F2 /* EditPhaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7FAB778BD8FEFD54164396 /* EditPhaseView.swift */; };
+		164B582DB1AA3DC2E582F3BC /* TherapistLinkingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC6A0C2EEC32B9A004A8B36 /* TherapistLinkingViewModel.swift */; };
 		178005971B308FEF68A893E2 /* TimerPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E429ADA2A79D11C2ED12A19B /* TimerPreset.swift */; };
 		181B755F1C05E230B769353C /* TodaySessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794EEDE3A21803B787A0126 /* TodaySessionViewModelTests.swift */; };
 		190F3EE7315749F7BD38C946 /* LoadingStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342C6F5A2722465E3D611FD8 /* LoadingStateView.swift */; };
 		19572BEACECD3FE200F64659 /* ExerciseEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEE28FE0B63E2C86C0AF2CC /* ExerciseEditorView.swift */; };
 		19C8FCEDC78CBD376342B359 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF4F53F3C0940183B05DE211 /* SessionManager.swift */; };
+		1C2C5C017728A3D366BD996C /* PremiumLockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C7B98B007DF43DC46908DD /* PremiumLockedView.swift */; };
 		1E4E2C3FF52A1744AB6B9839 /* ManualSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE07A8E72DFA98075AD82F5 /* ManualSession.swift */; };
 		20C167D58206FA47744A6AD5 /* ExerciseLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C9CA7D0D42DF95009AA74E /* ExerciseLogView.swift */; };
 		245523466685D1599CDE07A2 /* NutritionRecommendationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B269BB9BFE39E7F35DCBD1F4 /* NutritionRecommendationView.swift */; };
 		281742C1CCB37857F1887385 /* WorkloadFlag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206E65F52D4BE1EE4DD52A2A /* WorkloadFlag.swift */; };
 		2AA79EC00B4D06CEE03B4C1F /* ReadinessCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336F804A02D4CC72290A629C /* ReadinessCheckInView.swift */; };
+		2B1C30E71F072BE3793ED592 /* OneRepMaxCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F44E8DDF5B81263A064CBD /* OneRepMaxCalculatorView.swift */; };
+		2B2CB7A9848547E0C53D6BEB /* PatientGoalsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C72897C98856CBAF00FD87 /* PatientGoalsViewModel.swift */; };
 		2D5E56077E6DF2E7701F163A /* TherapistDashboardPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283261F8EAFC591C8D6B232B /* TherapistDashboardPage.swift */; };
 		2E1556A815767018B30F402F /* AIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF44290C2C252B2B43CDBC3F /* AIChatView.swift */; };
 		2E309B913F4EC6B37C32FA69 /* SessionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE13C2D92E344A2B85FA9A0 /* SessionDetail.swift */; };
@@ -56,6 +62,7 @@
 		3520F4CEA3D21F8A87ACC0B1 /* ExerciseTemplatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39FD67540A888717956EAD7 /* ExerciseTemplatePicker.swift */; };
 		35712A1D213533B855F4E730 /* CreateMealPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87873795BD597AB38C00025 /* CreateMealPlanView.swift */; };
 		35DA1BB8AC6C9FBC6DDF5682 /* NutritionGoalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30420D29D2992FB01850837E /* NutritionGoalViewModel.swift */; };
+		365DEDC3747D98DA2A5E79CD /* PatientGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802C07B8B55FA9DC231E4D4F /* PatientGoalsView.swift */; };
 		369B033B7D78C732FFD34658 /* TimerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C55A8BEE2C0DB38218D3D1 /* TimerType.swift */; };
 		37ABF2D88CFDA41B5CC0B5B7 /* ManualWorkoutExecutionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176BA88124744259D43F65A4 /* ManualWorkoutExecutionView.swift */; };
 		3836951D0A609170E9B7C329 /* ReadinessDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A596D693B0C25AA205924D /* ReadinessDashboardView.swift */; };
@@ -63,13 +70,17 @@
 		39B2B3C34FD7A97C4ED4F5F2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F064A7082F5926EC81ED1A08 /* LaunchScreen.storyboard */; };
 		39BBE72C2BDC501D6A46C999 /* Patient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF05D0AEDBCCB113CDCC99 /* Patient.swift */; };
 		39C37593F88C20E07AE18F5B /* ChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDF50654E063338CD3931AF /* ChartData.swift */; };
+		3AA143F51B29816FDDD3685C /* PasswordResetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539700247DDC3054E3613552 /* PasswordResetView.swift */; };
 		3BFCE6F0698C93B9611064A3 /* ErrorStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8167F47BA9D9ECFAA3134AD /* ErrorStateView.swift */; };
 		3CB267362053D2D18DC09C70 /* ExerciseCompactRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3F8906C22F6F0651CAE701 /* ExerciseCompactRow.swift */; };
+		3D1F4BC0EA67708836A8F733 /* AuthLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21C9762DD4B50B8D6B2B85B /* AuthLandingView.swift */; };
+		3D5BBEBFC2F3374E243AA23A /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF95FECB41E410A7707306D3 /* SubscriptionView.swift */; };
 		3E76D9F310C885D3D80443AE /* ProgramStructureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0645F64DA229FE0293C30709 /* ProgramStructureView.swift */; };
 		41CFACE7C1E66AEF416A6EAD /* TherapistProgramsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B794B919F1A4455B85CAE0C5 /* TherapistProgramsPage.swift */; };
 		43F3BFFB92BAC8A580C43D9E /* PatientWorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4F3F4B2D1DC43A50AAF791 /* PatientWorkoutTemplate.swift */; };
 		47A43DAE5C2F05879D6B569C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25683FB4E5ED67007D98BFC6 /* Foundation.framework */; };
 		47FA37F1DB3C47F0E2855160 /* TherapistTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A46406372400B25ED6C979 /* TherapistTabView.swift */; };
+		4818EF18FDC520E2BE395EDF /* BodyCompositionEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9F0ED05F0247315D5CDD8A /* BodyCompositionEntryView.swift */; };
 		4959650C0EB9787929CCB359 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C8FB5C9F9409F966CC2CE2 /* SessionDetailView.swift */; };
 		4B407E4F53BD60DEC347B98B /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FB115926A946B4E42F05D3C /* HelpView.swift */; };
 		4C5C4B79C18B4810918230F0 /* HelpContentLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E704F37E47AD4175ACCB2D6B /* HelpContentLoader.swift */; };
@@ -84,6 +95,7 @@
 		57CD33FDA5C2F33701E9BAAD /* SystemWorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3545656A41FF7848FEEA16 /* SystemWorkoutTemplate.swift */; };
 		5A0C25FF1952E216582D6747 /* ProgramType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF2B4C07A85CB86A0C0C45F /* ProgramType.swift */; };
 		5A388B6360F336179E35A404 /* PatientDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8D6AEA2A25E7B269D26551 /* PatientDetailViewModel.swift */; };
+		5D13BD05BAA67CAC19575FC1 /* StoreKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869B54B8A462D5FC628691A1 /* StoreKitService.swift */; };
 		5DF97B67DEEC1C433560E0D7 /* ShakeGestureModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB1D83A37030AB2AD23DBFC /* ShakeGestureModifier.swift */; };
 		5E16A33AF87FE62FE449C940 /* SentryConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = E96888D96F8311E759D8FDF8 /* SentryConfig.swift */; };
 		6185FBC71214432EBD68551C /* NotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F1A7C7823FDACD84517D91 /* NotesService.swift */; };
@@ -106,6 +118,7 @@
 		77C3D3B1F9BE1FDFE6D7CBD9 /* NutritionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B8C310CF4E7D836728016BE /* NutritionService.swift */; };
 		7870165E16EF7A101E7212C7 /* FoodPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F009CFB2245B175357450EBC /* FoodPickerView.swift */; };
 		7A99A58ED693BDF457ADD825 /* SessionSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 332B1770B92F8B08622E2FC3 /* SessionSummaryView.swift */; };
+		7B4A05A6EFBB081952F30EBE /* WorkingWeightCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4751909FAB89099D42C8ACA7 /* WorkingWeightCalculatorView.swift */; };
 		7BEF5C7E321FDB0687A88197 /* ActiveTimerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E58F2EF0107EBDD9B22D69BC /* ActiveTimerViewModel.swift */; };
 		7D361BC80F6D67730CE2E93A /* ExerciseLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF8ED0D86F3B9A564796FE9 /* ExerciseLogService.swift */; };
 		7E176BB301F037619C5800A6 /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC104C96622E4C0E41A8CD0 /* NotesView.swift */; };
@@ -114,18 +127,25 @@
 		806DE1F99711F755A54F6E66 /* NutritionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 834A28BA2B36CE50DBDC2F3A /* NutritionHistoryView.swift */; };
 		82687C15D71BF6FD296D1D7F /* ProgramBuilderPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601B828C6CDBF120047B3080 /* ProgramBuilderPage.swift */; };
 		860ABFC3C3675CCFC5638E00 /* IntervalTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4797A320142A261AF69642D /* IntervalTimerService.swift */; };
+		87A749CBBCB11E315F0390FE /* AddGoalSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40725642EF7DC9808CD01A13 /* AddGoalSheet.swift */; };
 		8A66AC5C2C525CF8C08C878C /* ExerciseTechniqueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6720EA3A04F4513838F2088 /* ExerciseTechniqueView.swift */; };
 		8B1620E316ECEC7AE3B0C8AE /* PatientListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796EB686D0CC90AE91E0ED9F /* PatientListViewModel.swift */; };
 		8BEF8064D3117521421C469A /* TimerInputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F7AA85C886A30471AED1FA /* TimerInputModels.swift */; };
+		8EFD49B43F6293B00B8A1C2B /* BodyCompositionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10EA35EA369C1325C88EAD8 /* BodyCompositionViewModel.swift */; };
 		931EDC0BC7BC20F9B6B80AFC /* ErrorLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BB5B1B5967D50CE5D20853 /* ErrorLogger.swift */; };
+		941C59D3BEA803F78CA702BF /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */; };
+		95504C2743929481A0AD631E /* BodyComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF914077489DC856BE5FC03 /* BodyComposition.swift */; };
 		98DE59524D81B6D767D71250 /* AccountDeletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08DFE3BCB1DE5FB5F39FEA07 /* AccountDeletionView.swift */; };
+		9A1EA49A755E83BB9BE97F1D /* AppleSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F72362E3F4B9ACC494B4702 /* AppleSignInService.swift */; };
 		9A347740241291B1BEBD7911 /* TodaySessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC5B0665941D6DABEA4F251 /* TodaySessionViewModel.swift */; };
 		9C7A380D4C89B062BCED4F82 /* EditSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033992406545E8F6C257745C /* EditSessionView.swift */; };
+		9EFAAB352B8EFB621B6E13E6 /* CalculatorsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC90C5D6AE9523EB1397A6B /* CalculatorsMenuView.swift */; };
 		A34ACCA0E0C375F5D57DF72C /* AccessibleFormField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D87CDED3B02CEBC0668D665 /* AccessibleFormField.swift */; };
 		A58CBDB6C9CD5A8801B525ED /* HelpCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C5072DD2DB73C6D07FEAE9 /* HelpCategoryView.swift */; };
 		A60244E778089FABD803D9F6 /* SupabaseIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93EA5E56D78BD2B26B74969 /* SupabaseIntegrationTests.swift */; };
 		A9927572D0EBB7DB9A29731F /* ManualWorkoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1180F8DC8DD269B5CD7FE5B9 /* ManualWorkoutService.swift */; };
 		AA0B1EED47B259338B990C8F /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A42F1BC33B4A97F336E28544 /* HistoryView.swift */; };
+		AA51422E02652CB931E6C4DB /* EmailSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C1AC4F421D26EBBD7004B5 /* EmailSignInView.swift */; };
 		ACD7D628B0F64777F370F7C7 /* TherapistProgramTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EDBC433B4F2ED66A4ABA639 /* TherapistProgramTypeTests.swift */; };
 		AD1EF47FB4C6732D5BADCE4A /* PrivacyNoticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55981C4C3B400E980AC9FD9 /* PrivacyNoticeView.swift */; };
 		AD775388157378C50E39270C /* WorkoutTemplateLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3F5F6DB25029F81277B46F /* WorkoutTemplateLibraryView.swift */; };
@@ -162,6 +182,7 @@
 		D25C7C243D636911378F935D /* ExerciseTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D706586DA86BF4B6409E4743 /* ExerciseTemplate.swift */; };
 		D296AC6B875764BF71126EBF /* AISafetyAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3D82442E8F3646F3095C88F /* AISafetyAlert.swift */; };
 		D775701AACDA92B838530605 /* AIChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9529E515F1D588719F588 /* AIChatService.swift */; };
+		D8BECAA1F123057D98A0A45F /* TherapistLinkingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C953413CEBD7B736201CCBE /* TherapistLinkingView.swift */; };
 		D98C561273CE3159C4642252 /* AISubstitutionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F298BE51B0A440791D34521E /* AISubstitutionSheet.swift */; };
 		D9B87F0579566F2EA5E2581B /* HelpContent.json in Resources */ = {isa = PBXBuildFile; fileRef = A9739D7D33E2C49C9FAAFA44 /* HelpContent.json */; };
 		D9C68B5C67C19B2E71B789D0 /* SessionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B3CE5A907B7C4168A85BEEB /* SessionEditorView.swift */; };
@@ -237,9 +258,9 @@
 		29D3E30BB5F4E3EC42BC3B48 /* SupabaseClient+ErrorHandling.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "SupabaseClient+ErrorHandling.swift"; path = "Services/SupabaseClient+ErrorHandling.swift"; sourceTree = "<group>"; };
 		2A30035269856F4225A24E5D /* FoodDatabaseService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodDatabaseService.swift; path = Services/FoodDatabaseService.swift; sourceTree = "<group>"; };
 		2A7549ED60F9CE15F10060E3 /* TodaySessionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TodaySessionView.swift; sourceTree = "<group>"; };
-		2C4192E361011BC89D74709A /* AuthView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		2D7C05E02AB83FE35EE7E6A7 /* SessionBuilderSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionBuilderSheet.swift; path = Views/Therapist/ProgramBuilder/SessionBuilderSheet.swift; sourceTree = "<group>"; };
 		2F082E31EE982E85C7EB4901 /* PatientListViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientListViewModelTests.swift; path = Tests/Unit/PatientListViewModelTests.swift; sourceTree = "<group>"; };
+		2F72362E3F4B9ACC494B4702 /* AppleSignInService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppleSignInService.swift; path = Services/AppleSignInService.swift; sourceTree = "<group>"; };
 		2FB115926A946B4E42F05D3C /* HelpView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HelpView.swift; path = Views/Help/HelpView.swift; sourceTree = SOURCE_ROOT; };
 		2FDF50654E063338CD3931AF /* ChartData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ChartData.swift; path = Models/ChartData.swift; sourceTree = "<group>"; };
 		30420D29D2992FB01850837E /* NutritionGoalViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionGoalViewModel.swift; path = ViewModels/NutritionGoalViewModel.swift; sourceTree = "<group>"; };
@@ -248,17 +269,21 @@
 		336F804A02D4CC72290A629C /* ReadinessCheckInView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessCheckInView.swift; path = Views/Readiness/ReadinessCheckInView.swift; sourceTree = "<group>"; };
 		342C6F5A2722465E3D611FD8 /* LoadingStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LoadingStateView.swift; path = Utils/LoadingStateView.swift; sourceTree = "<group>"; };
 		34988911E8A0920578FF2ADA /* PatientListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientListView.swift; path = Views/Therapist/PatientListView.swift; sourceTree = "<group>"; };
+		3598B3EDA62EC5F65FE2C635 /* GoalDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/GoalDetailView.swift; sourceTree = "<group>"; };
 		36C8FB5C9F9409F966CC2CE2 /* SessionDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionDetailView.swift; path = Views/Patient/SessionDetailView.swift; sourceTree = "<group>"; };
 		396B6D1845DF43AD30A3A5AC /* AdherenceChart.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdherenceChart.swift; path = Components/Charts/AdherenceChart.swift; sourceTree = "<group>"; };
+		3C953413CEBD7B736201CCBE /* TherapistLinkingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistLinkingView.swift; path = Views/Patient/TherapistLinkingView.swift; sourceTree = "<group>"; };
 		3D4E3028BD90CF6F1AE97A72 /* FormValidationIndicator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FormValidationIndicator.swift; path = Components/FormValidationIndicator.swift; sourceTree = "<group>"; };
 		3E2C0E76777430A9A333D933 /* NutritionLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionLog.swift; path = Models/NutritionLog.swift; sourceTree = "<group>"; };
 		3FC5B0665941D6DABEA4F251 /* TodaySessionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodaySessionViewModel.swift; path = ViewModels/TodaySessionViewModel.swift; sourceTree = "<group>"; };
+		40725642EF7DC9808CD01A13 /* AddGoalSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/AddGoalSheet.swift; sourceTree = "<group>"; };
 		42C5072DD2DB73C6D07FEAE9 /* HelpCategoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HelpCategoryView.swift; path = Views/Help/HelpCategoryView.swift; sourceTree = SOURCE_ROOT; };
 		44D202A416FF82AAB4C71558 /* ReadinessService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessService.swift; path = Services/ReadinessService.swift; sourceTree = "<group>"; };
 		45265367B9713ECDAD036921 /* NutritionAnalytics.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionAnalytics.swift; path = Models/NutritionAnalytics.swift; sourceTree = "<group>"; };
 		455A1EE954020D691F5AC585 /* TherapistReportingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistReportingView.swift; path = Views/Therapist/TherapistReportingView.swift; sourceTree = "<group>"; };
 		46C731539D09D56302ACAFBD /* ProgramBuilderViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramBuilderViewModel.swift; path = ViewModels/ProgramBuilderViewModel.swift; sourceTree = "<group>"; };
 		470B7A86BE4846D706A780DC /* QuickLogMealSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = QuickLogMealSheet.swift; path = Views/Nutrition/QuickLogMealSheet.swift; sourceTree = "<group>"; };
+		4751909FAB89099D42C8ACA7 /* WorkingWeightCalculatorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/WorkingWeightCalculatorView.swift; sourceTree = "<group>"; };
 		4B59D8AD08E0E73806B2BA66 /* ValidationHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationHelpers.swift; path = Utils/ValidationHelpers.swift; sourceTree = "<group>"; };
 		4CB1D83A37030AB2AD23DBFC /* ShakeGestureModifier.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ShakeGestureModifier.swift; path = Views/Components/ShakeGestureModifier.swift; sourceTree = "<group>"; };
 		4F62DDEAB098C9900B98516B /* SupabaseClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SupabaseClient.swift; path = Services/SupabaseClient.swift; sourceTree = "<group>"; };
@@ -266,6 +291,7 @@
 		505B7D7566D2960387C3AACE /* TimerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerState.swift; path = Models/TimerState.swift; sourceTree = "<group>"; };
 		50F9EF1BBDEA3F049635053A /* ConfigTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConfigTests.swift; path = Tests/Unit/ConfigTests.swift; sourceTree = "<group>"; };
 		5201DBA17A51B7D6D5AEC67C /* CustomTimerBuilderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CustomTimerBuilderView.swift; sourceTree = "<group>"; };
+		539700247DDC3054E3613552 /* PasswordResetView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PasswordResetView.swift; path = Views/Auth/PasswordResetView.swift; sourceTree = "<group>"; };
 		55F0B7F69F0084CCEEC7DB36 /* ReadinessDashboardViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessDashboardViewModel.swift; path = ViewModels/ReadinessDashboardViewModel.swift; sourceTree = "<group>"; };
 		57A89540A9070BF9C6624971 /* PTPerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PTPerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		59A46406372400B25ED6C979 /* TherapistTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TherapistTabView.swift; sourceTree = "<group>"; };
@@ -289,6 +315,8 @@
 		6E3A15C8EF1FB64F1AE885EB /* OnboardingCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingCoordinator.swift; path = Services/OnboardingCoordinator.swift; sourceTree = "<group>"; };
 		6EDBC433B4F2ED66A4ABA639 /* TherapistProgramTypeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistProgramTypeTests.swift; path = Tests/UI/TherapistProgramTypeTests.swift; sourceTree = "<group>"; };
 		7699258DC5FBA1AA7C7674A7 /* DebugLogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DebugLogView.swift; path = Views/Settings/DebugLogView.swift; sourceTree = "<group>"; };
+		76AEFFFE24807F9B6D9AD866 /* PatientGoal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Models/PatientGoal.swift; sourceTree = "<group>"; };
+		78C72897C98856CBAF00FD87 /* PatientGoalsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModels/PatientGoalsViewModel.swift; sourceTree = "<group>"; };
 		7902B3EBC8C120F08E43914C /* PTPerformanceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PTPerformanceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		796EB686D0CC90AE91E0ED9F /* PatientListViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientListViewModel.swift; path = ViewModels/PatientListViewModel.swift; sourceTree = "<group>"; };
 		7AE13C2D92E344A2B85FA9A0 /* SessionDetail.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionDetail.swift; path = Models/SessionDetail.swift; sourceTree = "<group>"; };
@@ -297,11 +325,14 @@
 		7D7127FCD23086968E2A78BD /* DailyReadiness.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DailyReadiness.swift; path = Models/DailyReadiness.swift; sourceTree = "<group>"; };
 		7E3F8906C22F6F0651CAE701 /* ExerciseCompactRow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseCompactRow.swift; path = Components/ExerciseCompactRow.swift; sourceTree = "<group>"; };
 		7EC104C96622E4C0E41A8CD0 /* NotesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotesView.swift; path = Views/Therapist/NotesView.swift; sourceTree = "<group>"; };
+		7EC6A0C2EEC32B9A004A8B36 /* TherapistLinkingViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistLinkingViewModel.swift; path = ViewModels/TherapistLinkingViewModel.swift; sourceTree = "<group>"; };
+		802C07B8B55FA9DC231E4D4F /* PatientGoalsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/PatientGoalsView.swift; sourceTree = "<group>"; };
 		816965BAE78972A40B18CB2A /* StrengthTargetsCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StrengthTargetsCard.swift; path = Components/StrengthTargetsCard.swift; sourceTree = "<group>"; };
 		82C4A76AFF912D5204771E30 /* WorkoutTimer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutTimer.swift; path = Models/WorkoutTimer.swift; sourceTree = "<group>"; };
 		834A28BA2B36CE50DBDC2F3A /* NutritionHistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionHistoryView.swift; path = Views/Nutrition/NutritionHistoryView.swift; sourceTree = "<group>"; };
 		8439E85AFF8CBFE541FDD253 /* ExerciseInfoSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseInfoSheet.swift; path = Views/Patient/ExerciseInfoSheet.swift; sourceTree = "<group>"; };
 		845A857A24D024FED064FD03 /* PatientDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientDetailView.swift; path = Views/Therapist/PatientDetailView.swift; sourceTree = "<group>"; };
+		869B54B8A462D5FC628691A1 /* StoreKitService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StoreKitService.swift; path = Services/StoreKitService.swift; sourceTree = "<group>"; };
 		86F1A7C7823FDACD84517D91 /* NotesService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NotesService.swift; path = Services/NotesService.swift; sourceTree = "<group>"; };
 		883442AF6E7D2B77A6A5CC09 /* ProgramEditorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramEditorView.swift; path = Views/Therapist/ProgramEditor/ProgramEditorView.swift; sourceTree = "<group>"; };
 		8875A4F1C17A2CCDD1664F26 /* ExerciseLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseLog.swift; path = Models/ExerciseLog.swift; sourceTree = "<group>"; };
@@ -312,6 +343,7 @@
 		9049CC7582B309DB5855BD75 /* IntervalTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IntervalTemplate.swift; path = Models/IntervalTemplate.swift; sourceTree = "<group>"; };
 		90F7AA85C886A30471AED1FA /* TimerInputModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerInputModels.swift; path = Models/TimerInputModels.swift; sourceTree = "<group>"; };
 		93D1AB6320C0DF2F0AA9318D /* ProgramEditorViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramEditorViewModel.swift; path = ViewModels/ProgramEditorViewModel.swift; sourceTree = "<group>"; };
+		945172B3B3207F84A97C35C3 /* Products.storekit */ = {isa = PBXFileReference; includeInIndex = 1; path = Products.storekit; sourceTree = "<group>"; };
 		9970FD9F2B70FC28FEED524D /* AccountDeletionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccountDeletionViewModel.swift; path = ViewModels/AccountDeletionViewModel.swift; sourceTree = "<group>"; };
 		9AC8B3DD31839F42DA825A54 /* ExerciseCuesCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseCuesCard.swift; path = Components/ExerciseCuesCard.swift; sourceTree = "<group>"; };
 		9B74830762F9924242B7E48F /* WorkloadFlagBanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkloadFlagBanner.swift; path = Components/WorkloadFlagBanner.swift; sourceTree = "<group>"; };
@@ -326,6 +358,7 @@
 		A93EA5E56D78BD2B26B74969 /* SupabaseIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SupabaseIntegrationTests.swift; path = Tests/Integration/SupabaseIntegrationTests.swift; sourceTree = "<group>"; };
 		A9739D7D33E2C49C9FAAFA44 /* HelpContent.json */ = {isa = PBXFileReference; includeInIndex = 1; name = HelpContent.json; path = Resources/HelpContent.json; sourceTree = SOURCE_ROOT; };
 		A9CDF9CE466705E3FF6DC230 /* ReadinessScore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessScore.swift; path = Models/ReadinessScore.swift; sourceTree = "<group>"; };
+		A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistrationView.swift; path = Views/Auth/RegistrationView.swift; sourceTree = "<group>"; };
 		AA257D9FB6E905FECF6B2AAF /* OnboardingPage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingPage.swift; path = Views/Onboarding/OnboardingPage.swift; sourceTree = "<group>"; };
 		AAF2B4C07A85CB86A0C0C45F /* ProgramType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramType.swift; path = Models/ProgramType.swift; sourceTree = "<group>"; };
 		AB3B1C166058FC733628EF61 /* NutritionTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionTabView.swift; path = Views/Nutrition/NutritionTabView.swift; sourceTree = "<group>"; };
@@ -352,22 +385,29 @@
 		C4638C50C645284BC7AD7AEE /* NutritionGoalsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionGoalsView.swift; path = Views/Nutrition/NutritionGoalsView.swift; sourceTree = "<group>"; };
 		C4E0AD4509FFFD331EA3ACAE /* NetworkRetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NetworkRetry.swift; path = Services/NetworkRetry.swift; sourceTree = "<group>"; };
 		C529C325D3A1AD9EBB7210C8 /* SchedulingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SchedulingService.swift; path = Services/SchedulingService.swift; sourceTree = "<group>"; };
+		C5C1AC4F421D26EBBD7004B5 /* EmailSignInView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EmailSignInView.swift; path = Views/Auth/EmailSignInView.swift; sourceTree = "<group>"; };
 		C6720EA3A04F4513838F2088 /* ExerciseTechniqueView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseTechniqueView.swift; path = Views/Exercise/ExerciseTechniqueView.swift; sourceTree = "<group>"; };
 		C7A596D693B0C25AA205924D /* ReadinessDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessDashboardView.swift; path = Views/Readiness/ReadinessDashboardView.swift; sourceTree = "<group>"; };
 		C8167F47BA9D9ECFAA3134AD /* ErrorStateView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ErrorStateView.swift; path = Utils/ErrorStateView.swift; sourceTree = "<group>"; };
 		CAA21F762554C73A48E16264 /* FloatingActionButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FloatingActionButton.swift; path = Components/FloatingActionButton.swift; sourceTree = "<group>"; };
 		CB3F5F6DB25029F81277B46F /* WorkoutTemplateLibraryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutTemplateLibraryView.swift; path = Views/ManualWorkout/WorkoutTemplateLibraryView.swift; sourceTree = "<group>"; };
+		CC0B959AE470AD93E1105184 /* PTPerformance.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = PTPerformance.entitlements; sourceTree = "<group>"; };
 		CC52FE0D2699E652B8D61304 /* NutritionGoalView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionGoalView.swift; path = Views/Nutrition/NutritionGoalView.swift; sourceTree = "<group>"; };
+		CD068F7B2017A63788611CF3 /* BodyCompositionTimelineView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/BodyCompositionTimelineView.swift; sourceTree = "<group>"; };
 		D43B4AA8B18B874D2C07252A /* FoodItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodItem.swift; path = Models/FoodItem.swift; sourceTree = "<group>"; };
 		D706586DA86BF4B6409E4743 /* ExerciseTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseTemplate.swift; path = Models/ExerciseTemplate.swift; sourceTree = "<group>"; };
 		D72109F3A342C783B9FF3651 /* TherapistDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TherapistDashboardView.swift; sourceTree = "<group>"; };
 		D9D9529E515F1D588719F588 /* AIChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AIChatService.swift; sourceTree = "<group>"; };
+		D9F44E8DDF5B81263A064CBD /* OneRepMaxCalculatorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/OneRepMaxCalculatorView.swift; sourceTree = "<group>"; };
 		DBE07A8E72DFA98075AD82F5 /* ManualSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ManualSession.swift; path = Models/ManualSession.swift; sourceTree = "<group>"; };
 		DF0A787837EE5C13254D8AF7 /* MealLogViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MealLogViewModel.swift; path = ViewModels/MealLogViewModel.swift; sourceTree = "<group>"; };
+		DF9F0ED05F0247315D5CDD8A /* BodyCompositionEntryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/BodyCompositionEntryView.swift; sourceTree = "<group>"; };
 		DFA7CED7E38302E671332AEE /* DebugLogger.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DebugLogger.swift; path = Services/DebugLogger.swift; sourceTree = "<group>"; };
+		DFF914077489DC856BE5FC03 /* BodyComposition.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Models/BodyComposition.swift; sourceTree = "<group>"; };
 		E0D761AF17E693443D80FBF5 /* SubstitutionFilteringTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubstitutionFilteringTests.swift; path = PTPerformanceTests/SubstitutionFilteringTests.swift; sourceTree = "<group>"; };
 		E18FB286414F344FB5C8632C /* ExercisePickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExercisePickerView.swift; path = Views/Therapist/ProgramEditor/ExercisePickerView.swift; sourceTree = "<group>"; };
 		E1D64E882BF6B294250CD18E /* ContextualHelpButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContextualHelpButton.swift; path = Utils/ContextualHelpButton.swift; sourceTree = SOURCE_ROOT; };
+		E21C9762DD4B50B8D6B2B85B /* AuthLandingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AuthLandingView.swift; path = Views/Auth/AuthLandingView.swift; sourceTree = "<group>"; };
 		E24B70464F2A6C5EF78437FF /* PatientFlag.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientFlag.swift; path = Models/PatientFlag.swift; sourceTree = "<group>"; };
 		E29232DFEB4EE7041295ED33 /* SecurityMonitor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SecurityMonitor.swift; path = Services/SecurityMonitor.swift; sourceTree = "<group>"; };
 		E2E69C6E79C780776257AAB4 /* WorkoutTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutTemplate.swift; path = Models/WorkoutTemplate.swift; sourceTree = "<group>"; };
@@ -375,6 +415,7 @@
 		E4F203BAB56648899B1DCD85 /* PatientTabView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PatientTabView.swift; sourceTree = "<group>"; };
 		E55BF03257AD69E4DC5E338B /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E58F2EF0107EBDD9B22D69BC /* ActiveTimerViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ActiveTimerViewModel.swift; path = ViewModels/ActiveTimerViewModel.swift; sourceTree = "<group>"; };
+		E5C7B98B007DF43DC46908DD /* PremiumLockedView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PremiumLockedView.swift; path = Views/Patient/PremiumLockedView.swift; sourceTree = "<group>"; };
 		E704F37E47AD4175ACCB2D6B /* HelpContentLoader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HelpContentLoader.swift; path = Services/HelpContentLoader.swift; sourceTree = "<group>"; };
 		E7120FEB65917B42F9936735 /* ReadinessService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessService.swift; path = Services/ReadinessService.swift; sourceTree = "<group>"; };
 		E7F4AF3C62738571E3211EC6 /* FoodDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodDetailSheet.swift; path = Views/Nutrition/FoodDetailSheet.swift; sourceTree = "<group>"; };
@@ -386,6 +427,7 @@
 		EE2D4F4A42C4CA0EE0CD1EA8 /* Program.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Program.swift; path = Models/Program.swift; sourceTree = "<group>"; };
 		F009CFB2245B175357450EBC /* FoodPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodPickerView.swift; path = Views/Nutrition/FoodPickerView.swift; sourceTree = "<group>"; };
 		F064A7082F5926EC81ED1A08 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		F10EA35EA369C1325C88EAD8 /* BodyCompositionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModels/BodyCompositionViewModel.swift; sourceTree = "<group>"; };
 		F1C18D78C8D8F85C98C55043 /* Config.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		F298BE51B0A440791D34521E /* AISubstitutionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/AI/AISubstitutionSheet.swift; sourceTree = "<group>"; };
 		F4797A320142A261AF69642D /* IntervalTimerService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IntervalTimerService.swift; path = Services/IntervalTimerService.swift; sourceTree = "<group>"; };
@@ -398,9 +440,11 @@
 		FD22CCA056A1F11036717AFF /* ExerciseDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseDetailSheet.swift; path = Views/AI/ExerciseDetailSheet.swift; sourceTree = "<group>"; };
 		FD2527A4FAF6E4462E1D6711 /* HistoryViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HistoryViewModel.swift; path = ViewModels/HistoryViewModel.swift; sourceTree = "<group>"; };
 		FD8D6AEA2A25E7B269D26551 /* PatientDetailViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientDetailViewModel.swift; path = ViewModels/PatientDetailViewModel.swift; sourceTree = "<group>"; };
+		FDC90C5D6AE9523EB1397A6B /* CalculatorsMenuView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/Patient/CalculatorsMenuView.swift; sourceTree = "<group>"; };
 		FDE3C68F9A1C2FB6F12879FD /* PTPerformance.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PTPerformance.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEEE28FE0B63E2C86C0AF2CC /* ExerciseEditorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseEditorView.swift; path = Views/Therapist/ProgramEditor/ExerciseEditorView.swift; sourceTree = "<group>"; };
 		FF4F53F3C0940183B05DE211 /* SessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SessionManager.swift; path = Services/SessionManager.swift; sourceTree = "<group>"; };
+		FF95FECB41E410A7707306D3 /* SubscriptionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SubscriptionView.swift; path = Views/Patient/SubscriptionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -493,6 +537,7 @@
 				C6DF5EEE2A284FBE369F72E9 /* AI */,
 				05133782DD446E80051454D1 /* Nutrition */,
 				FE7C819B479245414048A200 /* Patient */,
+				DBB291473E7D7A9AC0039807 /* Auth */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -544,7 +589,6 @@
 			children = (
 				50A2CB50BA7CA9076ABC3945 /* Products */,
 				9C8A284D65B32E67650B2125 /* Frameworks */,
-				2C4192E361011BC89D74709A /* AuthView.swift */,
 				396B6D1845DF43AD30A3A5AC /* AdherenceChart.swift */,
 				6CC6FAA1F28AE12355F9DE2E /* PainTrendChart.swift */,
 				5A2E66B09656C5C7F105B522 /* ProtocolSelector.swift */,
@@ -610,6 +654,8 @@
 				334C040BDE7FA13F4C3DA896 /* Services */,
 				583D8DED3E4448C3181772A3 /* ViewModels */,
 				0F41BD644942D338BA2B4613 /* Views */,
+				CC0B959AE470AD93E1105184 /* PTPerformance.entitlements */,
+				945172B3B3207F84A97C35C3 /* Products.storekit */,
 			);
 			name = PTPerformance;
 			sourceTree = "<group>";
@@ -631,6 +677,8 @@
 				29D3E30BB5F4E3EC42BC3B48 /* SupabaseClient+ErrorHandling.swift */,
 				C529C325D3A1AD9EBB7210C8 /* SchedulingService.swift */,
 				C4E0AD4509FFFD331EA3ACAE /* NetworkRetry.swift */,
+				2F72362E3F4B9ACC494B4702 /* AppleSignInService.swift */,
+				869B54B8A462D5FC628691A1 /* StoreKitService.swift */,
 			);
 			name = Services;
 			sourceTree = "<group>";
@@ -719,6 +767,7 @@
 				30420D29D2992FB01850837E /* NutritionGoalViewModel.swift */,
 				B43C55D1E2F8C597A8D3EF3D /* SessionDetailViewModel.swift */,
 				A7DE9C1169A54DDD3A929D20 /* ExerciseInfoViewModel.swift */,
+				7EC6A0C2EEC32B9A004A8B36 /* TherapistLinkingViewModel.swift */,
 			);
 			name = ViewModels;
 			sourceTree = "<group>";
@@ -728,6 +777,8 @@
 			children = (
 				3290A4C1384A4262AA34836F /* SessionSummaryViewModel.swift */,
 				9CCB7B7A9A7E5CEB56D91445 /* SessionSummaryViewModel.swift */,
+				F10EA35EA369C1325C88EAD8 /* BodyCompositionViewModel.swift */,
+				78C72897C98856CBAF00FD87 /* PatientGoalsViewModel.swift */,
 			);
 			name = ViewModels;
 			sourceTree = "<group>";
@@ -825,6 +876,8 @@
 				E2E69C6E79C780776257AAB4 /* WorkoutTemplate.swift */,
 				AAF2B4C07A85CB86A0C0C45F /* ProgramType.swift */,
 				D706586DA86BF4B6409E4743 /* ExerciseTemplate.swift */,
+				DFF914077489DC856BE5FC03 /* BodyComposition.swift */,
+				76AEFFFE24807F9B6D9AD866 /* PatientGoal.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -917,8 +970,27 @@
 			isa = PBXGroup;
 			children = (
 				332B1770B92F8B08622E2FC3 /* SessionSummaryView.swift */,
+				DF9F0ED05F0247315D5CDD8A /* BodyCompositionEntryView.swift */,
+				CD068F7B2017A63788611CF3 /* BodyCompositionTimelineView.swift */,
+				D9F44E8DDF5B81263A064CBD /* OneRepMaxCalculatorView.swift */,
+				4751909FAB89099D42C8ACA7 /* WorkingWeightCalculatorView.swift */,
+				FDC90C5D6AE9523EB1397A6B /* CalculatorsMenuView.swift */,
+				802C07B8B55FA9DC231E4D4F /* PatientGoalsView.swift */,
+				40725642EF7DC9808CD01A13 /* AddGoalSheet.swift */,
+				3598B3EDA62EC5F65FE2C635 /* GoalDetailView.swift */,
 			);
 			name = Patient;
+			sourceTree = "<group>";
+		};
+		DBB291473E7D7A9AC0039807 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				E21C9762DD4B50B8D6B2B85B /* AuthLandingView.swift */,
+				A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */,
+				C5C1AC4F421D26EBBD7004B5 /* EmailSignInView.swift */,
+				539700247DDC3054E3613552 /* PasswordResetView.swift */,
+			);
+			name = Auth;
 			sourceTree = "<group>";
 		};
 		DCB2FAFF3E1BA60CF20493CF /* UI */ = {
@@ -964,6 +1036,9 @@
 			children = (
 				36C8FB5C9F9409F966CC2CE2 /* SessionDetailView.swift */,
 				8439E85AFF8CBFE541FDD253 /* ExerciseInfoSheet.swift */,
+				FF95FECB41E410A7707306D3 /* SubscriptionView.swift */,
+				E5C7B98B007DF43DC46908DD /* PremiumLockedView.swift */,
+				3C953413CEBD7B736201CCBE /* TherapistLinkingView.swift */,
 			);
 			name = Patient;
 			sourceTree = "<group>";
@@ -1120,7 +1195,6 @@
 				D296AC6B875764BF71126EBF /* AISafetyAlert.swift in Sources */,
 				D98C561273CE3159C4642252 /* AISubstitutionSheet.swift in Sources */,
 				D775701AACDA92B838530605 /* AIChatService.swift in Sources */,
-				063BFD4174A66BA6F8C7810A /* AuthView.swift in Sources */,
 				6C499BB99CE20AC62D049124 /* AdherenceChart.swift in Sources */,
 				EEC637F7D655C1BD723DAD79 /* PainTrendChart.swift in Sources */,
 				E5D0A9386B4201E884642156 /* ProtocolSelector.swift in Sources */,
@@ -1285,6 +1359,28 @@
 				2F96F3CB321320CE26F6FB71 /* ExerciseInfoViewModel.swift in Sources */,
 				4959650C0EB9787929CCB359 /* SessionDetailView.swift in Sources */,
 				E19145C47669893C954E21CD /* ExerciseInfoSheet.swift in Sources */,
+				3D1F4BC0EA67708836A8F733 /* AuthLandingView.swift in Sources */,
+				941C59D3BEA803F78CA702BF /* RegistrationView.swift in Sources */,
+				AA51422E02652CB931E6C4DB /* EmailSignInView.swift in Sources */,
+				3AA143F51B29816FDDD3685C /* PasswordResetView.swift in Sources */,
+				9A1EA49A755E83BB9BE97F1D /* AppleSignInService.swift in Sources */,
+				5D13BD05BAA67CAC19575FC1 /* StoreKitService.swift in Sources */,
+				3D5BBEBFC2F3374E243AA23A /* SubscriptionView.swift in Sources */,
+				1C2C5C017728A3D366BD996C /* PremiumLockedView.swift in Sources */,
+				D8BECAA1F123057D98A0A45F /* TherapistLinkingView.swift in Sources */,
+				164B582DB1AA3DC2E582F3BC /* TherapistLinkingViewModel.swift in Sources */,
+				95504C2743929481A0AD631E /* BodyComposition.swift in Sources */,
+				8EFD49B43F6293B00B8A1C2B /* BodyCompositionViewModel.swift in Sources */,
+				4818EF18FDC520E2BE395EDF /* BodyCompositionEntryView.swift in Sources */,
+				13EA123F4E123E460BF9306B /* BodyCompositionTimelineView.swift in Sources */,
+				2B1C30E71F072BE3793ED592 /* OneRepMaxCalculatorView.swift in Sources */,
+				7B4A05A6EFBB081952F30EBE /* WorkingWeightCalculatorView.swift in Sources */,
+				9EFAAB352B8EFB621B6E13E6 /* CalculatorsMenuView.swift in Sources */,
+				11B26595FC3F8035D3E69F77 /* PatientGoal.swift in Sources */,
+				2B2CB7A9848547E0C53D6BEB /* PatientGoalsViewModel.swift in Sources */,
+				365DEDC3747D98DA2A5E79CD /* PatientGoalsView.swift in Sources */,
+				87A749CBBCB11E315F0390FE /* AddGoalSheet.swift in Sources */,
+				0553CF7FDE02943C52F1F7E4 /* GoalDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1343,6 +1439,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 289;
@@ -1367,6 +1464,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = PTPerformance/PTPerformance.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 289;

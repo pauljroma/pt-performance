@@ -13,20 +13,6 @@ enum MockData {
 
     // MARK: - User Credentials
 
-    /// Demo patient account credentials
-    enum DemoPatient {
-        static let email = "demo-athlete@ptperformance.app"
-        static let password = "demo-patient-2025"
-        static let name = "Demo Athlete"
-    }
-
-    /// Demo therapist account credentials
-    enum DemoTherapist {
-        static let email = "demo-therapist@ptperformance.app"
-        static let password = "demo-therapist-2025"
-        static let name = "Demo Therapist"
-    }
-
     /// Test patient account (for destructive testing)
     enum TestPatient {
         static let email = "test-patient@ptperformance.app"
@@ -370,7 +356,7 @@ enum MockData {
         static let valid = [
             "SecurePassword123!",
             "TestPass2025",
-            "demo-patient-2025"
+            "ValidPass2025!"
         ]
 
         static let invalid = [
