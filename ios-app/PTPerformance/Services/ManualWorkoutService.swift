@@ -644,8 +644,10 @@ class ManualWorkoutService: ObservableObject {
 
     /// BUILD 265: Complete a prescribed session (in sessions table)
     /// BUILD 272: Include all metrics in update
+    /// BUILD 309: Added startedAt parameter for accurate session duration and summary filtering
     func completePrescribedSession(
         _ sessionId: UUID,
+        startedAt: Date?,
         totalVolume: Double?,
         avgRpe: Double?,
         avgPain: Double?,
@@ -656,11 +658,13 @@ class ManualWorkoutService: ObservableObject {
         logger.log("  Volume: \(totalVolume ?? 0), RPE: \(avgRpe ?? 0), Pain: \(avgPain ?? 0), Duration: \(durationMinutes ?? 0) min", level: .diagnostic)
 
         do {
-            let now = ISO8601DateFormatter().string(from: Date())
+            let formatter = ISO8601DateFormatter()
+            let now = formatter.string(from: Date())
 
-            // BUILD 272: Include all metrics in the update
+            // BUILD 309: Include started_at for proper session summary time-based filtering
             struct CompletePrescribedInput: Codable {
                 let completed: Bool
+                let startedAt: String?
                 let completedAt: String
                 let totalVolume: Double?
                 let avgRpe: Double?
@@ -669,6 +673,7 @@ class ManualWorkoutService: ObservableObject {
 
                 enum CodingKeys: String, CodingKey {
                     case completed
+                    case startedAt = "started_at"
                     case completedAt = "completed_at"
                     case totalVolume = "total_volume"
                     case avgRpe = "avg_rpe"
@@ -679,6 +684,7 @@ class ManualWorkoutService: ObservableObject {
 
             let updateInput = CompletePrescribedInput(
                 completed: true,
+                startedAt: startedAt.map { formatter.string(from: $0) },
                 completedAt: now,
                 totalVolume: totalVolume,
                 avgRpe: avgRpe,

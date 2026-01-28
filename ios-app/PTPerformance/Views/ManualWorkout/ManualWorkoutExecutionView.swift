@@ -112,11 +112,20 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 
     /// Group exercises by block type for block-based navigation
     /// BUILD 220: Sort by proper workout order (warm-up first, recovery last)
+    /// BUILD 309: Added secondary sort by block name to prevent unstable category header reordering
     var exercisesByBlock: [(blockType: String, exercises: [ManualSessionExercise])] {
         let grouped = Dictionary(grouping: exercises) { $0.blockType ?? "General" }
-        // Sort by workout block order, not alphabetically
-        return grouped.sorted { WorkoutBlockType.sortOrder(for: $0.key) < WorkoutBlockType.sortOrder(for: $1.key) }
-            .map { ($0.key, $0.value.sorted { ($0.sequence, $0.id.uuidString) < ($1.sequence, $1.id.uuidString) }) }
+        // Sort by workout block order with secondary sort by name for stability
+        return grouped.sorted { lhs, rhs in
+            let order1 = WorkoutBlockType.sortOrder(for: lhs.key)
+            let order2 = WorkoutBlockType.sortOrder(for: rhs.key)
+            if order1 != order2 {
+                return order1 < order2
+            }
+            // Secondary sort by block name for stable ordering when sort orders match
+            return lhs.key < rhs.key
+        }
+        .map { ($0.key, $0.value.sorted { ($0.sequence, $0.id.uuidString) < ($1.sequence, $1.id.uuidString) }) }
     }
 
     /// Check if a block is completed
@@ -471,10 +480,12 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 
         do {
             // BUILD 265: Use different completion method based on session type
+            // BUILD 309: Pass startTime for proper session summary filtering
             if isPrescribedSession, let prescribedId = prescribedSessionId {
                 // Prescribed sessions are in the sessions table
                 try await service.completePrescribedSession(
                     prescribedId,
+                    startedAt: startTime,
                     totalVolume: totalVolume,
                     avgRpe: averageRPE,
                     avgPain: averagePain,
@@ -572,6 +583,9 @@ struct ManualWorkoutExecutionView: View {
     @State private var showAISubstitution = false
     @State private var selectedExerciseForSubstitution: ManualSessionExercise?
     @State private var showAddExercise = false
+
+    // BUILD 309: Collapsible RPE/Pain section - hidden by default for simplified logging
+    @State private var showAdvancedOptions = false
 
     init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
@@ -1167,67 +1181,92 @@ struct ManualWorkoutExecutionView: View {
                 }
             }
 
-            // RPE Slider
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("RPE (Rate of Perceived Exertion)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+            // BUILD 309: Collapsible RPE/Pain section - hidden by default for simplified logging
+            DisclosureGroup(
+                isExpanded: $showAdvancedOptions,
+                content: {
+                    VStack(spacing: 16) {
+                        // RPE Slider
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("RPE (Rate of Perceived Exertion)")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
 
-                    Spacer()
+                                Spacer()
 
-                    Text("\(Int(viewModel.rpe))")
-                        .font(.headline)
-                        .foregroundColor(rpeColor(Int(viewModel.rpe)))
+                                Text("\(Int(viewModel.rpe))")
+                                    .font(.headline)
+                                    .foregroundColor(rpeColor(Int(viewModel.rpe)))
+                            }
+
+                            Slider(value: $viewModel.rpe, in: 1...10, step: 1)
+                                .accentColor(rpeColor(Int(viewModel.rpe)))
+
+                            HStack {
+                                Text("Easy")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Maximum")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        // Pain Score Slider
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Pain Score")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+
+                                Spacer()
+
+                                Text("\(Int(viewModel.painScore))")
+                                    .font(.headline)
+                                    .foregroundColor(painColor(Int(viewModel.painScore)))
+                            }
+
+                            Slider(value: $viewModel.painScore, in: 0...10, step: 1)
+                                .accentColor(painColor(Int(viewModel.painScore)))
+
+                            HStack {
+                                Text("No Pain")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("Severe")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            if Int(viewModel.painScore) > 5 {
+                                Label("High pain - Your therapist will be notified", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
+                },
+                label: {
+                    HStack {
+                        Image(systemName: "slider.horizontal.3")
+                            .foregroundColor(.secondary)
+                        Text("Exertion & Pain")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Spacer()
+                        if !showAdvancedOptions {
+                            Text("RPE: \(Int(viewModel.rpe)) | Pain: \(Int(viewModel.painScore))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
-
-                Slider(value: $viewModel.rpe, in: 1...10, step: 1)
-                    .accentColor(rpeColor(Int(viewModel.rpe)))
-
-                HStack {
-                    Text("Easy")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("Maximum")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            // Pain Score Slider
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Pain Score")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Spacer()
-
-                    Text("\(Int(viewModel.painScore))")
-                        .font(.headline)
-                        .foregroundColor(painColor(Int(viewModel.painScore)))
-                }
-
-                Slider(value: $viewModel.painScore, in: 0...10, step: 1)
-                    .accentColor(painColor(Int(viewModel.painScore)))
-
-                HStack {
-                    Text("No Pain")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("Severe")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                if Int(viewModel.painScore) > 5 {
-                    Label("High pain - Your therapist will be notified", systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                }
-            }
+            )
+            .tint(.secondary)
 
             // Notes
             VStack(alignment: .leading, spacing: 8) {

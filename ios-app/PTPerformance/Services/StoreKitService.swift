@@ -19,9 +19,16 @@ class StoreKitService: ObservableObject {
 
     @Published var products: [Product] = []
     @Published var purchasedProductIDs: Set<String> = []
-    @Published var subscriptionStatus: SubscriptionStatus = .none
+    @Published var subscriptionStatus: SubscriptionStatus = .none {
+        didSet { updateIsPremium() }
+    }
     @Published var isLoading: Bool = false
-    @Published var debugPremiumOverride: Bool? = nil
+    @Published var debugPremiumOverride: Bool? = nil {
+        didSet { updateIsPremium() }
+    }
+
+    // BUILD 309: Changed isPremium from computed to @Published for reliable SwiftUI updates
+    @Published private(set) var isPremium: Bool = false
 
     // MARK: - Subscription Status
 
@@ -45,11 +52,15 @@ class StoreKitService: ObservableObject {
         }
     }
 
-    // MARK: - Computed Properties
+    // MARK: - Premium Status Update
 
-    var isPremium: Bool {
-        if let override = debugPremiumOverride { return override }
-        return subscriptionStatus == .active || subscriptionStatus == .gracePeriod
+    /// BUILD 309: Update isPremium whenever override or subscription status changes
+    private func updateIsPremium() {
+        if let override = debugPremiumOverride {
+            isPremium = override
+        } else {
+            isPremium = subscriptionStatus == .active || subscriptionStatus == .gracePeriod
+        }
     }
 
     var monthlyProduct: Product? {
