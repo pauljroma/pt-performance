@@ -7,7 +7,7 @@ struct TodaySessionView: View {
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
-    @State private var showSessionSummary = false
+    // BUILD 307: Removed showSessionSummary bool - use sheet(item:) pattern instead
     @State private var isCompletingSession = false
     @State private var completionError: String?
     @State private var showReadinessCheckIn = false
@@ -56,13 +56,10 @@ struct TodaySessionView: View {
         .sheet(isPresented: $showDebugLogs) {
             DebugLogView()
         }
-        .sheet(isPresented: $showSessionSummary) {
-            // BUILD 174: Use completedSession which has correct started_at/completed_at
-            // Previously used viewModel.session which could be wrong session after fetchTodaySession()
-            if let session = completedSession {
-                SessionSummaryView(session: session)
-                    .environmentObject(appState)  // BUILD 263: Pass environment object to sheet
-            }
+        // BUILD 307: Use sheet(item:) pattern to prevent black screen when session is nil
+        .sheet(item: $completedSession) { session in
+            SessionSummaryView(session: session)
+                .environmentObject(appState)
         }
         .sheet(isPresented: $showReadinessCheckIn, onDismiss: {
             // BUILD 127: Reload readiness data after check-in submission
@@ -807,12 +804,9 @@ struct TodaySessionView: View {
                     )
                 }
 
-                // View summary
+                // View summary - BUILD 307: sheet(item:) shows when completedSession is set
                 Button(action: {
-                    if let session = viewModel.session {
-                        completedSession = session
-                        showSessionSummary = true
-                    }
+                    completedSession = viewModel.session
                 }) {
                     HStack {
                         Image(systemName: "chart.bar.fill")
@@ -860,10 +854,9 @@ struct TodaySessionView: View {
 
         switch result {
         case .success(let session):
-            // BUILD 174: Store the completed session with correct started_at/completed_at
+            // BUILD 307: sheet(item:) shows automatically when completedSession is set
             completedSession = session
             isCompletingSession = false
-            showSessionSummary = true
         case .failure(let error):
             isCompletingSession = false
             completionError = "Failed to complete session: \(error.localizedDescription)"

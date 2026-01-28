@@ -89,6 +89,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     // MARK: - Filtered Templates
     // BUILD 275: Added stable sorting to prevent reordering while viewing
 
+    // BUILD 307: Added secondary sort by ID for stable ordering (prevents timer-linked refresh reordering)
     var filteredSystemTemplates: [SystemWorkoutTemplate] {
         systemTemplates
             .filter { template in
@@ -101,7 +102,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
 
                 return matchesSearch && matchesCategory
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+                if nameComparison != .orderedSame {
+                    return nameComparison == .orderedAscending
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 
     var filteredPatientTemplates: [PatientWorkoutTemplate] {
@@ -113,7 +120,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
 
                 return matchesSearch
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+                if nameComparison != .orderedSame {
+                    return nameComparison == .orderedAscending
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 
     // BUILD 282: Favorite system templates
@@ -126,7 +139,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                     template.description?.localizedCaseInsensitiveContains(searchText) == true
                 return matchesSearch
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+                if nameComparison != .orderedSame {
+                    return nameComparison == .orderedAscending
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 
     // BUILD 282: Favorite patient templates
@@ -139,7 +158,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                     template.description?.localizedCaseInsensitiveContains(searchText) == true
                 return matchesSearch
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+                if nameComparison != .orderedSame {
+                    return nameComparison == .orderedAscending
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 
     // BUILD 282: Trainer recommendations filtered
@@ -151,7 +176,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                     template.description?.localizedCaseInsensitiveContains(searchText) == true
                 return matchesSearch
             }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            .sorted { lhs, rhs in
+                let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
+                if nameComparison != .orderedSame {
+                    return nameComparison == .orderedAscending
+                }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
     }
 
     // BUILD 282: Check if template is favorited

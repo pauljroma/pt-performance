@@ -102,7 +102,9 @@ struct PatientTabView: View {
 struct PatientSettingsView: View {
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var supabase = PTSupabaseClient.shared
-    @StateObject private var storeKit = StoreKitService.shared
+    // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
+    // Previously @StateObject created separate observation, so toggle didn't update tabs
+    @EnvironmentObject var storeKit: StoreKitService
 
     var body: some View {
         NavigationStack {
