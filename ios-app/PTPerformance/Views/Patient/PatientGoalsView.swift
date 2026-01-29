@@ -182,7 +182,7 @@ struct PatientGoalsView: View {
                 } else {
                     ForEach(filteredGoals) { goal in
                         NavigationLink {
-                            GoalDetailView(goal: goal, viewModel: viewModel)
+                            GoalProgressView(goal: goal, viewModel: viewModel)
                         } label: {
                             GoalRowView(goal: goal)
                         }
@@ -194,6 +194,13 @@ struct PatientGoalsView: View {
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
+
+                            Button {
+                                // Navigate to detail/edit view
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            .tint(.blue)
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             if goal.status == .active {
@@ -205,6 +212,33 @@ struct PatientGoalsView: View {
                                     Label("Complete", systemImage: "checkmark.circle.fill")
                                 }
                                 .tint(.green)
+                            }
+                        }
+                        .contextMenu {
+                            Button {
+                                // View progress details
+                            } label: {
+                                Label("View Progress", systemImage: "chart.line.uptrend.xyaxis")
+                            }
+
+                            if goal.status == .active {
+                                Button {
+                                    Task {
+                                        await viewModel.updateStatus(goalId: goal.id, status: .completed)
+                                    }
+                                } label: {
+                                    Label("Mark Complete", systemImage: "checkmark.circle.fill")
+                                }
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                Task {
+                                    await viewModel.deleteGoal(goalId: goal.id)
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                     }
@@ -224,41 +258,25 @@ struct PatientGoalsView: View {
     // MARK: - Summary Card
 
     private var summaryCard: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 24) {
-                // Circular Progress Ring
-                ZStack {
-                    // Background ring
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                        .frame(width: 80, height: 80)
-
-                    // Progress ring
-                    Circle()
-                        .trim(from: 0, to: viewModel.overallProgress)
-                        .stroke(
-                            AngularGradient(
-                                gradient: Gradient(colors: [.blue, .green, .blue]),
-                                center: .center
-                            ),
-                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                        )
-                        .frame(width: 80, height: 80)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.8), value: viewModel.overallProgress)
-
-                    // Percentage text
-                    Text("\(Int(viewModel.overallProgress * 100))%")
-                        .font(.system(.title3, design: .rounded))
-                        .fontWeight(.bold)
-                }
+        VStack(spacing: Spacing.md) {
+            HStack(spacing: Spacing.lg) {
+                // Enhanced Progress Ring with milestones
+                GoalProgressRing(
+                    progress: viewModel.overallProgress,
+                    category: .custom, // Use custom for overall progress
+                    size: 90,
+                    lineWidth: 10,
+                    showMilestones: true,
+                    showPercentage: true,
+                    animated: true
+                )
 
                 // Stats
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("\(viewModel.completedGoals.count) of \(viewModel.goals.count) achieved")
                         .font(.headline)
 
-                    HStack(spacing: 16) {
+                    HStack(spacing: Spacing.md) {
                         Label("\(viewModel.activeGoals.count) active", systemImage: "flame.fill")
                             .font(.caption)
                             .foregroundColor(.orange)
@@ -267,40 +285,75 @@ struct PatientGoalsView: View {
                             .font(.caption)
                             .foregroundColor(.green)
                     }
+
+                    // Overall milestone indicator
+                    if let milestone = GoalMilestone.highestAchieved(for: viewModel.overallProgress) {
+                        HStack(spacing: 4) {
+                            Image(systemName: milestone.icon)
+                                .font(.caption)
+                            Text("Reached \(milestone.displayText)")
+                                .font(.caption)
+                        }
+                        .foregroundColor(milestone.color)
+                        .padding(.top, 2)
+                    }
                 }
 
                 Spacer()
             }
             .padding()
+
+            // Quick milestone summary
+            if !viewModel.activeGoals.isEmpty {
+                HStack(spacing: Spacing.sm) {
+                    ForEach(GoalMilestone.allCases) { milestone in
+                        VStack(spacing: 2) {
+                            Image(systemName: milestone.icon)
+                                .font(.caption2)
+                                .foregroundColor(viewModel.overallProgress >= milestone.fraction ? milestone.color : .gray.opacity(0.4))
+
+                            Text(milestone.displayText)
+                                .font(.system(size: 9))
+                                .foregroundColor(viewModel.overallProgress >= milestone.fraction ? milestone.color : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom, Spacing.sm)
+            }
         }
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.systemBackground))
                 .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
         )
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 }
 
 // MARK: - Goal Row View
 
-/// A single goal row in the list
+/// A single goal row in the list with enhanced visual progress indicators
 struct GoalRowView: View {
     let goal: PatientGoal
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Category Icon
-            Image(systemName: goal.category.icon)
-                .font(.title3)
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(goal.category.color)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+        HStack(spacing: Spacing.md) {
+            // Progress Ring (replaces static category icon)
+            GoalProgressRing(
+                progress: goal.progress,
+                category: goal.category,
+                size: 56,
+                lineWidth: 5,
+                showMilestones: false,
+                showPercentage: true,
+                animated: false
+            )
 
             // Content
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(goal.title)
                     .font(.headline)
                     .lineLimit(1)
@@ -312,43 +365,80 @@ struct GoalRowView: View {
                         .lineLimit(2)
                 }
 
-                // Progress Bar
+                // Enhanced Progress Bar with milestone markers
                 if goal.targetValue != nil {
-                    ProgressView(value: goal.progress)
-                        .tint(progressColor(for: goal.progress))
+                    GoalRowProgressBar(progress: goal.progress)
                 }
 
-                HStack(spacing: 8) {
-                    // Target date
+                HStack(spacing: Spacing.xs) {
+                    // Category badge
+                    CategoryBadge(category: goal.category)
+
+                    // Target date badge
                     if let days = goal.daysRemaining {
-                        Label(
-                            days >= 0 ? "\(days)d left" : "\(abs(days))d overdue",
-                            systemImage: "calendar"
-                        )
-                        .font(.caption2)
-                        .foregroundColor(days >= 0 ? .secondary : .red)
+                        DeadlineBadge(days: days)
                     }
 
                     Spacer()
 
-                    // Category badge
-                    Text(goal.category.displayName)
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(goal.category.color.opacity(0.15))
-                        .foregroundColor(goal.category.color)
-                        .clipShape(Capsule())
+                    // Completion indicator
+                    if goal.isCompleted {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
+    }
+}
+
+/// Enhanced progress bar with milestone markers for goal rows
+struct GoalRowProgressBar: View {
+    let progress: Double
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Background track
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 4)
+
+                // Progress fill
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(progressGradient)
+                    .frame(width: geometry.size.width * min(progress, 1.0), height: 4)
+
+                // Milestone markers
+                ForEach(GoalMilestone.allCases) { milestone in
+                    Circle()
+                        .fill(progress >= milestone.fraction ? milestone.color : Color.gray.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                        .position(
+                            x: geometry.size.width * milestone.fraction,
+                            y: 2
+                        )
+                }
+            }
+        }
+        .frame(height: 6)
+    }
+
+    private var progressGradient: LinearGradient {
+        let color = progressColor(for: progress)
+        return LinearGradient(
+            colors: [color.opacity(0.7), color],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
     }
 
     private func progressColor(for value: Double) -> Color {
         if value >= 1.0 { return .green }
-        if value >= 0.5 { return .blue }
+        if value >= 0.75 { return .blue }
+        if value >= 0.5 { return .cyan }
         return .orange
     }
 }
