@@ -139,6 +139,7 @@ struct PatientSettingsView: View {
     // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
     // Previously @StateObject created separate observation, so toggle didn't update tabs
     @EnvironmentObject var storeKit: StoreKitService
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack {
@@ -236,6 +237,21 @@ struct PatientSettingsView: View {
                 }
 
                 Section("Account") {
+                    Button {
+                        Task {
+                            await logout()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .foregroundColor(.blue)
+                            Text("Log Out")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .accessibilityLabel("Log Out")
+                    .accessibilityHint("Signs you out of the app")
+
                     NavigationLink {
                         AccountDeletionView()
                     } label: {
@@ -274,6 +290,21 @@ struct PatientSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+        }
+    }
+
+    // MARK: - Logout
+
+    private func logout() async {
+        do {
+            try await PTSupabaseClient.shared.signOut()
+            await MainActor.run {
+                appState.isAuthenticated = false
+                appState.userRole = nil
+                appState.userId = nil
+            }
+        } catch {
+            print("Logout error: \(error.localizedDescription)")
         }
     }
 }
