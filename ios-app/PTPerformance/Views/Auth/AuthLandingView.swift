@@ -143,6 +143,54 @@ struct AuthLandingView: View {
 
                 Spacer()
 
+                // MARK: - Demo Login (Development Only)
+                #if DEBUG
+                VStack(spacing: 12) {
+                    Divider()
+                        .padding(.vertical, 8)
+
+                    Text("Demo Accounts")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 12) {
+                        // Demo Patient
+                        Button(action: {
+                            loginAsDemoPatient()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "person.fill")
+                                    .font(.caption)
+                                Text("Demo Patient")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.green.opacity(0.15))
+                            .foregroundColor(.green)
+                            .cornerRadius(8)
+                        }
+
+                        // Demo Therapist
+                        Button(action: {
+                            loginAsDemoTherapist()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "stethoscope")
+                                    .font(.caption)
+                                Text("Demo Therapist")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.purple.opacity(0.15))
+                            .foregroundColor(.purple)
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+                #endif
+
                 // MARK: - Footer
                 Text("By continuing, you agree to our Terms of Service and Privacy Policy.")
                     .font(.caption2)
@@ -190,6 +238,40 @@ struct AuthLandingView: View {
             }
         }
     }
+
+    // MARK: - Demo Login Functions (DEBUG only)
+
+    #if DEBUG
+    /// Login as demo patient (John Brebbia) - bypasses auth for testing
+    private func loginAsDemoPatient() {
+        // Demo patient UUID from seed data
+        let demoPatientId = "00000000-0000-0000-0000-000000000001"
+
+        appState.userId = demoPatientId
+        appState.userRole = .patient
+        appState.isAuthenticated = true
+
+        // Start session monitoring
+        SessionManager.shared.startMonitoring()
+
+        print("[Demo] Logged in as demo patient: John Brebbia (\(demoPatientId))")
+    }
+
+    /// Login as demo therapist (Sarah Thompson) - bypasses auth for testing
+    private func loginAsDemoTherapist() {
+        // Demo therapist UUID from seed data
+        let demoTherapistId = "00000000-0000-0000-0000-000000000100"
+
+        appState.userId = demoTherapistId
+        appState.userRole = .therapist
+        appState.isAuthenticated = true
+
+        // Start session monitoring
+        SessionManager.shared.startMonitoring()
+
+        print("[Demo] Logged in as demo therapist: Sarah Thompson (\(demoTherapistId))")
+    }
+    #endif
 }
 
 #Preview {
