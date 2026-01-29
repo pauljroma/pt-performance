@@ -18,9 +18,30 @@ struct TemplateLibraryView: View {
     @State private var searchText = ""
     @State private var selectedCategory: WorkoutTemplate.TemplateCategory?
     @State private var selectedDifficulty: WorkoutTemplate.DifficultyLevel?
+    @State private var selectedDurationRange: DurationRange? = nil
     @State private var showMyTemplatesOnly = false
     @State private var selectedTemplate: WorkoutTemplate?
     @State private var showingCreateSheet = false
+
+    /// Duration range filter options
+    enum DurationRange: String, CaseIterable {
+        case short = "< 4 weeks"
+        case medium = "4-8 weeks"
+        case long = "8-12 weeks"
+        case extended = "12+ weeks"
+
+        var displayName: String { rawValue }
+
+        func matches(weeks: Int?) -> Bool {
+            guard let weeks = weeks else { return false }
+            switch self {
+            case .short: return weeks < 4
+            case .medium: return weeks >= 4 && weeks <= 8
+            case .long: return weeks > 8 && weeks <= 12
+            case .extended: return weeks > 12
+            }
+        }
+    }
 
     var body: some View {
         NavigationView {
@@ -122,6 +143,21 @@ struct TemplateLibraryView: View {
                             }
                         )
                     }
+
+                    Divider()
+                        .frame(height: 24)
+
+                    // Duration range filters
+                    ForEach(DurationRange.allCases, id: \.self) { range in
+                        FilterChip(
+                            title: range.displayName,
+                            icon: "calendar",
+                            isSelected: selectedDurationRange == range,
+                            action: {
+                                selectedDurationRange = selectedDurationRange == range ? nil : range
+                            }
+                        )
+                    }
                 }
                 .padding(.horizontal)
             }
@@ -161,7 +197,7 @@ struct TemplateLibraryView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            if !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil {
+            if !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil || selectedDurationRange != nil {
                 Text("Try adjusting your filters")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -170,6 +206,7 @@ struct TemplateLibraryView: View {
                     searchText = ""
                     selectedCategory = nil
                     selectedDifficulty = nil
+                    selectedDurationRange = nil
                     showMyTemplatesOnly = false
                 }
                 .buttonStyle(.bordered)
@@ -209,10 +246,13 @@ struct TemplateLibraryView: View {
             // Difficulty filter
             let matchesDifficulty = selectedDifficulty == nil || template.difficultyLevel == selectedDifficulty
 
+            // Duration range filter
+            let matchesDuration = selectedDurationRange == nil || selectedDurationRange?.matches(weeks: template.durationWeeks) == true
+
             // My templates filter
             let matchesOwnership = !showMyTemplatesOnly || template.createdBy.uuidString == appState.userId
 
-            return matchesSearch && matchesCategory && matchesDifficulty && matchesOwnership
+            return matchesSearch && matchesCategory && matchesDifficulty && matchesDuration && matchesOwnership
         }
     }
 

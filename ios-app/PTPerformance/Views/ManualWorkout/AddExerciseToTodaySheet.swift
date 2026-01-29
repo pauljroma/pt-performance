@@ -35,6 +35,40 @@ struct AddExerciseToTodaySheet: View {
             .cornerRadius(10)
             .padding()
 
+            // Category filter chips
+            if !viewModel.availableCategories.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        FilterChip(label: "All Categories", isSelected: viewModel.selectedCategory == nil) {
+                            viewModel.selectedCategory = nil
+                        }
+                        ForEach(viewModel.availableCategories, id: \.self) { category in
+                            FilterChip(label: category, isSelected: viewModel.selectedCategory == category) {
+                                viewModel.selectedCategory = viewModel.selectedCategory == category ? nil : category
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.bottom, 4)
+            }
+
+            // Body region filter chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    FilterChip(label: "All Regions", color: .green, isSelected: viewModel.selectedBodyRegion == nil) {
+                        viewModel.selectedBodyRegion = nil
+                    }
+                    ForEach(viewModel.bodyRegions, id: \.self) { region in
+                        FilterChip(label: region, color: .green, isSelected: viewModel.selectedBodyRegion == region) {
+                            viewModel.selectedBodyRegion = viewModel.selectedBodyRegion == region ? nil : region
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding(.bottom, 8)
+
             // Exercise list
             if viewModel.isLoading {
                 Spacer()
@@ -48,9 +82,20 @@ struct AddExerciseToTodaySheet: View {
                         .foregroundColor(.secondary)
                     Text("No exercises found")
                         .font(.headline)
-                    Text("Try a different search term")
+                    Text(viewModel.selectedCategory != nil || viewModel.selectedBodyRegion != nil
+                        ? "Try adjusting your filters"
+                        : "Try a different search term")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+
+                    // Clear filters button
+                    if viewModel.selectedCategory != nil || viewModel.selectedBodyRegion != nil {
+                        Button("Clear Filters") {
+                            viewModel.selectedCategory = nil
+                            viewModel.selectedBodyRegion = nil
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
                 Spacer()
             } else {
@@ -201,6 +246,8 @@ struct AddExercisePickerRow: View {
 class AddExerciseViewModel: ObservableObject {
     @Published var exercises: [AddExerciseItem] = []
     @Published var searchText = ""
+    @Published var selectedCategory: String? = nil
+    @Published var selectedBodyRegion: String? = nil
     @Published var selectedExercise: AddExerciseItem?
     @Published var targetSets = 3
     @Published var targetReps = 10
@@ -211,15 +258,41 @@ class AddExerciseViewModel: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
+    /// Available categories extracted from exercises
+    var availableCategories: [String] {
+        let cats = Set(exercises.compactMap { $0.category?.capitalized })
+        return cats.sorted()
+    }
+
+    /// Available body regions for filtering
+    let bodyRegions = ["Upper", "Lower", "Core", "Full Body"]
+
     var filteredExercises: [AddExerciseItem] {
-        if searchText.isEmpty {
-            return exercises
+        var result = exercises
+
+        // Category filter
+        if let category = selectedCategory {
+            result = result.filter { $0.category?.localizedCaseInsensitiveCompare(category) == .orderedSame }
         }
-        return exercises.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.category?.localizedCaseInsensitiveContains(searchText) == true ||
-            $0.bodyRegion?.localizedCaseInsensitiveContains(searchText) == true
+
+        // Body region filter
+        if let region = selectedBodyRegion {
+            result = result.filter { exercise in
+                guard let bodyRegion = exercise.bodyRegion else { return false }
+                return bodyRegion.localizedCaseInsensitiveContains(region)
+            }
         }
+
+        // Search text filter
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText) ||
+                $0.category?.localizedCaseInsensitiveContains(searchText) == true ||
+                $0.bodyRegion?.localizedCaseInsensitiveContains(searchText) == true
+            }
+        }
+
+        return result
     }
 
     func loadExercises() async {

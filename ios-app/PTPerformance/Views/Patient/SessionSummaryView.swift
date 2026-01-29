@@ -1,67 +1,59 @@
 import SwiftUI
 
 /// Session Summary View - Build 60: Enhanced with PRs and motivational messages
+/// BUILD 311: Shows stored session metrics (from completion) instead of recalculating
 /// Shows metrics after completing a session: exercises, volume, duration, PRs, compliance
 struct SessionSummaryView: View {
     let session: Session
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
-    @StateObject private var viewModel = SessionSummaryViewModel()
+
+    // BUILD 311: Use session's stored metrics directly instead of recalculating
+    // This prevents showing wrong data when exercise logs are from different sessions/times
+    private var hasStoredMetrics: Bool {
+        session.duration_minutes != nil || session.total_volume != nil
+    }
+
+    // BUILD 311: Motivational messages based on workout performance
+    private var motivationalMessage: String {
+        let messages = [
+            "Great work completing your session!",
+            "Another workout in the books!",
+            "You're building strength one session at a time!",
+            "Consistency is key - keep it up!",
+            "Well done on finishing today's workout!"
+        ]
+        // Use session ID to pick a consistent message
+        let index = abs(session.id.hashValue) % messages.count
+        return messages[index]
+    }
 
     var body: some View {
         NavigationView {
-            ZStack {
-                if viewModel.isLoading {
-                    ProgressView("Calculating stats...")
-                } else if let error = viewModel.errorMessage {
-                    ErrorStateView.genericError(message: error) {
-                        Task {
-                            if let patientId = appState.userId {
-                                await viewModel.calculateSummary(for: session, patientId: patientId)
-                            }
-                        }
-                    }
-                } else {
-                    summaryContent
-                }
-            }
-            .navigationTitle("Summary")
-            .navigationBarTitleDisplayMode(.inline)
-            .task {
-                if let patientId = appState.userId {
-                    await viewModel.calculateSummary(for: session, patientId: patientId)
-                }
-            }
-        }
-    }
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Success Header
+                    VStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 64))
+                            .foregroundColor(.green)
 
-    @ViewBuilder
-    private var summaryContent: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Success Header
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 64))
-                        .foregroundColor(.green)
+                        Text("Session Complete!")
+                            .font(.title)
+                            .bold()
 
-                    Text("Session Complete!")
-                        .font(.title)
-                        .bold()
-
-                    Text(session.name)
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-
-                    if let completedAt = session.completed_at {
-                        Text(formatDate(completedAt))
-                            .font(.subheadline)
+                        Text(session.name)
+                            .font(.title3)
                             .foregroundColor(.secondary)
-                    }
 
-                    // Motivational Message
-                    if let summary = viewModel.summary {
-                        Text(summary.motivationalMessage)
+                        if let completedAt = session.completed_at {
+                            Text(formatDate(completedAt))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Motivational Message
+                        Text(motivationalMessage)
                             .font(.body)
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
@@ -71,100 +63,85 @@ struct SessionSummaryView: View {
                             .padding(.horizontal)
                             .padding(.top, 8)
                     }
-                }
-                .padding(.top, 32)
+                    .padding(.top, 32)
 
-                // Stats Grid
-                if let summary = viewModel.summary {
+                    // BUILD 311: Stats Grid using stored session metrics
                     LazyVGrid(columns: [
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 16) {
-                        StatCard(
-                            title: "Exercises",
-                            value: "\(summary.exercisesCompleted)",
-                            icon: "list.bullet",
-                            color: .blue
-                        )
-
-                        StatCard(
-                            title: "PRs",
-                            value: "\(summary.prCount)",
-                            icon: "star.fill",
-                            color: summary.prCount > 0 ? .yellow : .gray
-                        )
-
+                        // Volume
                         StatCard(
                             title: "Volume",
-                            value: summary.volumeFormatted,
+                            value: formatVolume(session.total_volume ?? 0),
                             icon: "scalemass.fill",
                             color: .purple
                         )
 
+                        // Duration
                         StatCard(
                             title: "Duration",
-                            value: summary.durationFormatted,
+                            value: formatDuration(session.duration_minutes ?? 0),
                             icon: "clock.fill",
                             color: .orange
                         )
+
+                        // RPE (if tracked)
+                        if let rpe = session.avg_rpe {
+                            StatCard(
+                                title: "Avg RPE",
+                                value: String(format: "%.1f", rpe),
+                                icon: "bolt.fill",
+                                color: rpeColor(rpe)
+                            )
+                        }
+
+                        // Pain (if tracked)
+                        if let pain = session.avg_pain {
+                            StatCard(
+                                title: "Avg Pain",
+                                value: String(format: "%.1f", pain),
+                                icon: "hand.raised.fill",
+                                color: painColor(pain)
+                            )
+                        }
                     }
                     .padding(.horizontal)
 
-                    // Compliance Score
-                    VStack(spacing: 12) {
-                        Text("Compliance Score")
+                    // Done Button
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Text("Done")
                             .font(.headline)
-
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 15)
-                                .frame(width: 120, height: 120)
-
-                            Circle()
-                                .trim(from: 0, to: summary.complianceScore / 100)
-                                .stroke(complianceColor(summary.complianceScore), lineWidth: 15)
-                                .frame(width: 120, height: 120)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut, value: summary.complianceScore)
-
-                            VStack(spacing: 4) {
-                                Text(summary.complianceFormatted)
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(complianceColor(summary.complianceScore))
-
-                                Text("achieved")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
                     }
-                    .padding(.vertical, 16)
-                }
+                    .padding(.horizontal)
+                    .padding(.top, 16)
 
-                // Legacy metrics (if calculated server-side)
-                if viewModel.summary == nil {
-                    legacyMetricsView
+                    Spacer()
                 }
-
-                // Done Button
-                Button(action: {
-                    dismiss()
-                }) {
-                    Text("Done")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                .padding(.top, 16)
-
-                Spacer()
             }
+            .navigationTitle("Summary")
+            .navigationBarTitleDisplayMode(.inline)
         }
+    }
+
+    // BUILD 311: Format duration in human-readable form
+    private func formatDuration(_ minutes: Int) -> String {
+        if minutes >= 60 {
+            let hours = minutes / 60
+            let mins = minutes % 60
+            if mins == 0 {
+                return "\(hours)h"
+            }
+            return "\(hours)h \(mins)m"
+        }
+        return "\(minutes) min"
     }
 
     // Legacy metrics view (Build 33 format)

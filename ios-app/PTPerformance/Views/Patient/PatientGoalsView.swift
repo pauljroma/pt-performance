@@ -44,6 +44,8 @@ struct PatientGoalsView: View {
         Group {
             if viewModel.isLoading && viewModel.goals.isEmpty {
                 loadingView
+            } else if let error = viewModel.error, viewModel.goals.isEmpty {
+                errorStateView(error: error)
             } else if viewModel.goals.isEmpty {
                 emptyStateView
             } else {
@@ -78,13 +80,18 @@ struct PatientGoalsView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .progressViewStyle(CircularProgressViewStyle())
-            Text("Loading goals...")
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GoalsLoadingView()
+    }
+
+    // MARK: - Error State View
+
+    private func errorStateView(error: AppError) -> some View {
+        ErrorStateView.genericError(
+            message: error.recoverySuggestion ?? "Failed to load goals. Please try again.",
+            retry: {
+                Task { await viewModel.retryLoadGoals() }
+            }
+        )
     }
 
     // MARK: - Empty State View
@@ -144,17 +151,18 @@ struct PatientGoalsView: View {
             }
             .listRowBackground(Color.clear)
 
-            // Error Message
-            if let errorMessage = viewModel.errorMessage {
+            // Error Message with Retry
+            if let error = viewModel.error {
                 Section {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .font(.subheadline)
-                    }
+                    CompactErrorView(
+                        message: error.recoverySuggestion ?? "An error occurred.",
+                        retry: error.shouldRetry ? {
+                            Task { await viewModel.retryLoadGoals() }
+                        } : nil
+                    )
                 }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
             }
 
             // Goals

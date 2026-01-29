@@ -113,13 +113,13 @@ struct AddGoalSheet: View {
                     Text("Timeline")
                 }
 
-                // MARK: - Error Message
-                if let errorMessage = viewModel.errorMessage {
+                // MARK: - Error Message (BUILD 314: Updated to use AppError)
+                if let error = viewModel.error {
                     Section {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundColor(.red)
-                            Text(errorMessage)
+                            Text(error.localizedDescription)
                                 .foregroundColor(.red)
                                 .font(.subheadline)
                         }
@@ -141,7 +141,7 @@ struct AddGoalSheet: View {
                     Button {
                         Task {
                             guard let uuid = patientUUID else {
-                                viewModel.errorMessage = "Unable to identify patient. Please sign in again."
+                                viewModel.error = .notAuthenticated
                                 return
                             }
                             await viewModel.saveGoal(patientId: uuid)

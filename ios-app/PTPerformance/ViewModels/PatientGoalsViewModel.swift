@@ -17,8 +17,11 @@ class PatientGoalsViewModel: ObservableObject {
     @Published var goals: [PatientGoal] = []
     @Published var isLoading = false
     @Published var isSaving = false
-    @Published var errorMessage: String?
+    @Published var error: AppError?
     @Published var showingSuccessAlert = false
+
+    /// Track the last patient ID for retry functionality
+    private var lastPatientId: UUID?
 
     // MARK: - Form Fields
 
@@ -88,7 +91,8 @@ class PatientGoalsViewModel: ObservableObject {
     /// Fetch all goals for the given patient, ordered by created_at descending
     func loadGoals(patientId: UUID) async {
         isLoading = true
-        errorMessage = nil
+        error = nil
+        lastPatientId = patientId
 
         do {
             let fetchedGoals: [PatientGoal] = try await supabase.client
@@ -104,15 +108,27 @@ class PatientGoalsViewModel: ObservableObject {
             #if DEBUG
             print("[PatientGoals] Loaded \(fetchedGoals.count) goals for patient \(patientId)")
             #endif
-        } catch {
-            errorMessage = "Failed to load goals. Please try again."
-            ErrorLogger.shared.logError(error, context: "Load Patient Goals")
+        } catch let catchError {
+            error = AppError.from(catchError)
+            ErrorLogger.shared.logError(catchError, context: "Load Patient Goals")
             #if DEBUG
-            print("[PatientGoals] Error loading goals: \(error.localizedDescription)")
+            print("[PatientGoals] Error loading goals: \(catchError.localizedDescription)")
             #endif
         }
 
         isLoading = false
+    }
+
+    /// Retry loading goals with the last used patient ID
+    func retryLoadGoals() async {
+        guard let patientId = lastPatientId else {
+            // Fallback to getting patient ID from Supabase
+            if let idString = patientId, let uuid = UUID(uuidString: idString) {
+                await loadGoals(patientId: uuid)
+            }
+            return
+        }
+        await loadGoals(patientId: patientId)
     }
 
     // MARK: - Create Goal
@@ -122,12 +138,12 @@ class PatientGoalsViewModel: ObservableObject {
         // Validate title
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else {
-            errorMessage = "Please enter a goal title."
+            error = AppError.invalidInput("Title")
             return
         }
 
         isSaving = true
-        errorMessage = nil
+        error = nil
 
         do {
             let targetValue = Double(targetValueText)
@@ -161,11 +177,11 @@ class PatientGoalsViewModel: ObservableObject {
             #if DEBUG
             print("[PatientGoals] Goal created: \(trimmedTitle)")
             #endif
-        } catch {
-            errorMessage = "Failed to save goal. Please try again."
-            ErrorLogger.shared.logError(error, context: "Save Patient Goal")
+        } catch let catchError {
+            error = AppError.from(catchError)
+            ErrorLogger.shared.logError(catchError, context: "Save Patient Goal")
             #if DEBUG
-            print("[PatientGoals] Error saving goal: \(error.localizedDescription)")
+            print("[PatientGoals] Error saving goal: \(catchError.localizedDescription)")
             #endif
         }
 
@@ -177,7 +193,7 @@ class PatientGoalsViewModel: ObservableObject {
     /// Update the current_value for a specific goal
     func updateProgress(goalId: UUID, newValue: Double) async {
         isSaving = true
-        errorMessage = nil
+        error = nil
 
         do {
             let now = ISO8601DateFormatter().string(from: Date())
@@ -198,9 +214,9 @@ class PatientGoalsViewModel: ObservableObject {
             #if DEBUG
             print("[PatientGoals] Progress updated for goal \(goalId): \(newValue)")
             #endif
-        } catch {
-            errorMessage = "Failed to update progress."
-            ErrorLogger.shared.logError(error, context: "Update Goal Progress")
+        } catch let catchError {
+            error = AppError.from(catchError)
+            ErrorLogger.shared.logError(catchError, context: "Update Goal Progress")
         }
 
         isSaving = false
@@ -211,7 +227,7 @@ class PatientGoalsViewModel: ObservableObject {
     /// Update the status of a specific goal
     func updateStatus(goalId: UUID, status: GoalStatus) async {
         isSaving = true
-        errorMessage = nil
+        error = nil
 
         do {
             let now = ISO8601DateFormatter().string(from: Date())
@@ -231,9 +247,9 @@ class PatientGoalsViewModel: ObservableObject {
             #if DEBUG
             print("[PatientGoals] Status updated for goal \(goalId): \(status.rawValue)")
             #endif
-        } catch {
-            errorMessage = "Failed to update goal status."
-            ErrorLogger.shared.logError(error, context: "Update Goal Status")
+        } catch let catchError {
+            error = AppError.from(catchError)
+            ErrorLogger.shared.logError(catchError, context: "Update Goal Status")
         }
 
         isSaving = false
@@ -244,7 +260,7 @@ class PatientGoalsViewModel: ObservableObject {
     /// Delete a goal by its ID
     func deleteGoal(goalId: UUID) async {
         isSaving = true
-        errorMessage = nil
+        error = nil
 
         do {
             try await supabase.client
@@ -259,9 +275,9 @@ class PatientGoalsViewModel: ObservableObject {
             #if DEBUG
             print("[PatientGoals] Goal deleted: \(goalId)")
             #endif
-        } catch {
-            errorMessage = "Failed to delete goal."
-            ErrorLogger.shared.logError(error, context: "Delete Patient Goal")
+        } catch let catchError {
+            error = AppError.from(catchError)
+            ErrorLogger.shared.logError(catchError, context: "Delete Patient Goal")
         }
 
         isSaving = false

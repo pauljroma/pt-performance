@@ -15,8 +15,12 @@ struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var selectedCategory: String = "All"
+    @State private var selectedBodyRegion: String = "All"
     @State private var isAdding = false
     @State private var error: String?
+
+    /// Available body regions for filtering
+    private let bodyRegionOptions = ["All", "Upper", "Lower", "Core", "Full Body"]
 
     private var categories: [String] {
         var cats = Set<String>()
@@ -35,6 +39,14 @@ struct ExercisePickerView: View {
         if selectedCategory != "All" {
             exercises = exercises.filter { exercise in
                 exercise.exercise_templates?.category?.capitalized == selectedCategory
+            }
+        }
+
+        // Filter by body region
+        if selectedBodyRegion != "All" {
+            exercises = exercises.filter { exercise in
+                guard let bodyRegion = exercise.exercise_templates?.body_region else { return false }
+                return bodyRegion.localizedCaseInsensitiveContains(selectedBodyRegion)
             }
         }
 
@@ -77,7 +89,40 @@ struct ExercisePickerView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 8)
+                }
+
+                // Body region filter
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(bodyRegionOptions, id: \.self) { region in
+                            Button {
+                                selectedBodyRegion = region
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: bodyRegionIcon(for: region))
+                                        .font(.caption)
+                                    Text(region)
+                                        .font(.subheadline)
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(
+                                    selectedBodyRegion == region
+                                        ? Color.green
+                                        : Color.gray.opacity(0.2)
+                                )
+                                .foregroundColor(
+                                    selectedBodyRegion == region
+                                        ? .white
+                                        : .primary
+                                )
+                                .cornerRadius(20)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
 
@@ -91,10 +136,19 @@ struct ExercisePickerView: View {
                             Text("No exercises found")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            if !searchText.isEmpty {
-                                Text("Try adjusting your search")
+                            if !searchText.isEmpty || selectedCategory != "All" || selectedBodyRegion != "All" {
+                                Text("Try adjusting your search or filters")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+
+                                if selectedCategory != "All" || selectedBodyRegion != "All" {
+                                    Button("Clear Filters") {
+                                        selectedCategory = "All"
+                                        selectedBodyRegion = "All"
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .font(.caption)
+                                }
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -153,6 +207,16 @@ struct ExercisePickerView: View {
                     Text(error)
                 }
             }
+        }
+    }
+
+    private func bodyRegionIcon(for region: String) -> String {
+        switch region.lowercased() {
+        case "upper": return "figure.arms.open"
+        case "lower": return "figure.walk"
+        case "core": return "figure.core.training"
+        case "full body": return "figure.strengthtraining.traditional"
+        default: return "list.bullet"
         }
     }
 

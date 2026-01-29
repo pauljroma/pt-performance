@@ -5,45 +5,41 @@ struct PatientTabView: View {
     @StateObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
 
+    // BUILD 312: Computed property to ensure views re-evaluate on premium change
+    private var premiumKey: String {
+        "premium-\(storeKit.isPremium)"
+    }
+
     var body: some View {
+        // BUILD 312: Force TabView to re-render when premium status changes
         TabView {
             TodaySessionView()
-                .environmentObject(supabase)  // BUILD 265: Pass supabase environment object
+                .environmentObject(supabase)
                 .tabItem {
                     Label("Today", systemImage: "list.bullet")
                 }
 
             if let patientId = supabase.userId {
-                Group {
-                    if storeKit.isPremium {
-                        HistoryView(patientId: patientId)
-                    } else {
-                        PremiumLockedView(feature: "History", icon: "clock.arrow.circlepath", description: "Track all your sessions and see your workout history")
-                            .environmentObject(storeKit)
-                    }
-                }
+                premiumGatedView(
+                    premium: { HistoryView(patientId: patientId) },
+                    locked: { PremiumLockedView(feature: "History", icon: "clock.arrow.circlepath", description: "Track all your sessions and see your workout history") }
+                )
                 .tabItem {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
             }
 
-            // BUILD 123: Restored Readiness tab with live score preview
             if let patientIdString = supabase.userId,
                let patientId = UUID(uuidString: patientIdString) {
-                Group {
-                    if storeKit.isPremium {
-                        ReadinessCheckInView(patientId: patientId)
-                    } else {
-                        PremiumLockedView(feature: "Readiness", icon: "battery.100", description: "Daily readiness check-ins and recovery scoring")
-                            .environmentObject(storeKit)
-                    }
-                }
+                premiumGatedView(
+                    premium: { ReadinessCheckInView(patientId: patientId) },
+                    locked: { PremiumLockedView(feature: "Readiness", icon: "battery.100", description: "Daily readiness check-ins and recovery scoring") }
+                )
                 .tabItem {
                     Label("Readiness", systemImage: "battery.100")
                 }
             }
 
-            // BUILD 123: Restored Timer tab
             if let patientIdString = supabase.userId,
                let patientId = UUID(uuidString: patientIdString) {
                 TimerPickerView(patientId: patientId)
@@ -52,48 +48,54 @@ struct PatientTabView: View {
                     }
             }
 
-            // BUILD 223: Full Nutrition tab with dashboard, meal plans, and food library
-            Group {
-                if storeKit.isPremium {
-                    NutritionTabView()
-                } else {
-                    PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Meal plans, food tracking, and nutrition guidance")
-                        .environmentObject(storeKit)
-                }
-            }
+            premiumGatedView(
+                premium: { NutritionTabView() },
+                locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Meal plans, food tracking, and nutrition guidance") }
+            )
             .tabItem {
                 Label("Nutrition", systemImage: "fork.knife")
             }
 
-            Group {
-                if storeKit.isPremium {
-                    AIChatView()
-                } else {
-                    PremiumLockedView(feature: "AI Assistant", icon: "brain.head.profile", description: "AI-powered exercise recommendations and coaching")
-                        .environmentObject(storeKit)
-                }
-            }
+            premiumGatedView(
+                premium: { AIChatView() },
+                locked: { PremiumLockedView(feature: "AI Assistant", icon: "brain.head.profile", description: "AI-powered exercise recommendations and coaching") }
+            )
             .tabItem {
                 Label("AI Assistant", systemImage: "brain.head.profile")
             }
 
-            Group {
-                if storeKit.isPremium {
-                    HelpView()
-                } else {
-                    PremiumLockedView(feature: "Learn", icon: "book.fill", description: "Educational content and exercise technique guides")
-                        .environmentObject(storeKit)
-                }
-            }
+            premiumGatedView(
+                premium: { HelpView() },
+                locked: { PremiumLockedView(feature: "Learn", icon: "book.fill", description: "Educational content and exercise technique guides") }
+            )
             .tabItem {
                 Label("Learn", systemImage: "book.fill")
             }
 
             PatientSettingsView()
+                .environmentObject(storeKit)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
         }
+        .id(premiumKey)  // BUILD 312: Force TabView rebuild with string key
+    }
+
+    // BUILD 312: Helper function to create premium-gated views with proper IDs
+    @ViewBuilder
+    private func premiumGatedView<Premium: View, Locked: View>(
+        @ViewBuilder premium: () -> Premium,
+        @ViewBuilder locked: () -> Locked
+    ) -> some View {
+        Group {
+            if storeKit.isPremium {
+                premium()
+            } else {
+                locked()
+                    .environmentObject(storeKit)
+            }
+        }
+        .id(premiumKey)  // Force each tab to rebuild on premium change
     }
 }
 

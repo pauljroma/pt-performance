@@ -43,11 +43,20 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // Current exercise input fields
     @Published var actualSets: Int = 0
     @Published var repsPerSet: [Int] = []
-    @Published var actualLoad: String = ""
+    // BUILD 312: Per-set weight input (weight varies per set like reps)
+    @Published var weightPerSet: [Double] = []
     @Published var loadUnit: String = "lbs"
     @Published var rpe: Double = 5.0
     @Published var painScore: Double = 0.0
     @Published var notes: String = ""
+
+    // BUILD 312: Computed average load for saving to database (backward compatibility)
+    var actualLoad: Double? {
+        guard !weightPerSet.isEmpty else { return nil }
+        let nonZeroWeights = weightPerSet.filter { $0 > 0 }
+        guard !nonZeroWeights.isEmpty else { return nil }
+        return nonZeroWeights.reduce(0, +) / Double(nonZeroWeights.count)
+    }
 
     // Exercise completion tracking
     @Published var completedExerciseIds: Set<UUID> = []
@@ -304,9 +313,12 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     // MARK: - Exercise Navigation
 
     func setupInputFields(for exercise: ManualSessionExercise) {
-        actualSets = exercise.targetSets ?? 3
-        repsPerSet = Array(repeating: Int(exercise.targetReps ?? "10") ?? 10, count: exercise.targetSets ?? 3)
-        actualLoad = exercise.targetLoad != nil ? String(format: "%.0f", exercise.targetLoad!) : ""
+        let sets = exercise.targetSets ?? 3
+        actualSets = sets
+        repsPerSet = Array(repeating: Int(exercise.targetReps ?? "10") ?? 10, count: sets)
+        // BUILD 312: Initialize weight per set with target load
+        let defaultWeight = exercise.targetLoad ?? 0
+        weightPerSet = Array(repeating: defaultWeight, count: sets)
         loadUnit = exercise.loadUnit ?? "lbs"
         rpe = 5.0
         painScore = 0.0
@@ -345,6 +357,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 
         do {
             // BUILD 258: Log to appropriate table based on session type
+            // BUILD 312: actualLoad is now computed from weightPerSet array
             if isPrescribedSession, let originalId = prescribedExerciseIdMap[exercise.id] {
                 // Log to exercise_logs with session_exercise_id
                 try await service.logPrescribedExercise(
@@ -352,7 +365,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
                     patientId: patientId,
                     actualSets: actualSets,
                     actualReps: Array(repsPerSet.prefix(actualSets)),
-                    actualLoad: Double(actualLoad),
+                    actualLoad: actualLoad,
                     loadUnit: loadUnit,
                     rpe: Int(rpe),
                     painScore: Int(painScore),
@@ -365,7 +378,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
                     patientId: patientId,
                     actualSets: actualSets,
                     actualReps: Array(repsPerSet.prefix(actualSets)),
-                    actualLoad: Double(actualLoad),
+                    actualLoad: actualLoad,
                     loadUnit: loadUnit,
                     rpe: Int(rpe),
                     painScore: Int(painScore),
@@ -520,16 +533,19 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Reps Array Management
+    // MARK: - Reps and Weight Array Management
 
     func updateSetsCount(_ newCount: Int) {
         let previousCount = repsPerSet.count
         if newCount > previousCount {
-            // Add more sets with default reps
+            // Add more sets with default reps and weights
             let defaultReps = repsPerSet.last ?? 10
+            let defaultWeight = weightPerSet.last ?? 0
             repsPerSet.append(contentsOf: Array(repeating: defaultReps, count: newCount - previousCount))
+            weightPerSet.append(contentsOf: Array(repeating: defaultWeight, count: newCount - previousCount))
         } else if newCount < previousCount {
             repsPerSet = Array(repsPerSet.prefix(newCount))
+            weightPerSet = Array(weightPerSet.prefix(newCount))
         }
         actualSets = newCount
     }
@@ -1161,16 +1177,14 @@ struct ManualWorkoutExecutionView: View {
                 }
             }
 
-            // Load Input
+            // BUILD 312: Weight Per Set Input (like reps, weight varies per set)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Weight Used")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
                 HStack {
-                    TextField("Load", text: $viewModel.actualLoad)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(.roundedBorder)
+                    Text("Weight Per Set")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Spacer()
 
                     Picker("Unit", selection: $viewModel.loadUnit) {
                         Text("lbs").tag("lbs")
@@ -1178,6 +1192,33 @@ struct ManualWorkoutExecutionView: View {
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 100)
+                }
+
+                ForEach(0..<viewModel.actualSets, id: \.self) { index in
+                    HStack {
+                        Text("Set \(index + 1)")
+                            .font(.subheadline)
+
+                        Spacer()
+
+                        TextField("Weight", value: Binding(
+                            get: { viewModel.weightPerSet[safe: index] ?? 0 },
+                            set: { newValue in
+                                if index < viewModel.weightPerSet.count {
+                                    viewModel.weightPerSet[index] = newValue
+                                }
+                            }
+                        ), format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                        .textFieldStyle(.roundedBorder)
+
+                        Text(viewModel.loadUnit)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .frame(width: 30)
+                    }
                 }
             }
 

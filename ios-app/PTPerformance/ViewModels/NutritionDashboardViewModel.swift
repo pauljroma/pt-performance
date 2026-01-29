@@ -14,7 +14,7 @@ class NutritionDashboardViewModel: ObservableObject {
     // MARK: - Published Properties
 
     @Published var isLoading = false
-    @Published var error: String?
+    @Published var error: AppError?
     @Published var showError = false
 
     // Dashboard Data
@@ -155,7 +155,7 @@ class NutritionDashboardViewModel: ObservableObject {
         }
 
         guard let patientId = patientId else {
-            error = "Not logged in"
+            error = AppError.notAuthenticated
             showError = true
             return
         }
@@ -269,8 +269,8 @@ class NutritionDashboardViewModel: ObservableObject {
                 todaySummary = try await nutritionService.fetchDailySummary(patientId: patientId, date: Date())
                 macroDistribution = try await nutritionService.fetchMacroDistribution(patientId: patientId, date: Date())
             }
-        } catch {
-            self.error = "Failed to delete log: \(error.localizedDescription)"
+        } catch let catchError {
+            self.error = AppError.from(catchError)
             self.showError = true
         }
     }
@@ -289,6 +289,14 @@ class NutritionDashboardViewModel: ObservableObject {
 
     // BUILD 279: Force refresh for pull-to-refresh
     func forceRefresh() async {
+        hasLoadedInitialData = false
+        await loadDashboard()
+    }
+
+    /// Retry loading dashboard after an error
+    func retryLoadDashboard() async {
+        error = nil
+        showError = false
         hasLoadedInitialData = false
         await loadDashboard()
     }

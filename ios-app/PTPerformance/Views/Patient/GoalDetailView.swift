@@ -366,12 +366,12 @@ struct GoalDetailView: View {
                 .buttonStyle(.bordered)
             }
 
-            // Error message
-            if let errorMessage = viewModel.errorMessage {
+            // Error message (BUILD 314: Updated to use AppError)
+            if let error = viewModel.error {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.red)
-                    Text(errorMessage)
+                    Text(error.localizedDescription)
                         .foregroundColor(.red)
                         .font(.subheadline)
                 }

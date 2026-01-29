@@ -202,11 +202,18 @@ struct TodaySessionView: View {
 
     // MARK: - Shared Content
 
+    // MARK: - Loading View
+
+    @ViewBuilder
+    private var loadingView: some View {
+        TodaySessionLoadingView()
+    }
+
     @ViewBuilder
     private var exerciseListContent: some View {
         ZStack {
             if viewModel.isLoading {
-                ProgressView("Loading today's session...")
+                loadingView
             } else if let errorMessage = viewModel.errorMessage {
                 errorStateView(errorMessage)
             } else if viewModel.session == nil {

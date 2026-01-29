@@ -15,27 +15,12 @@ struct NutritionDashboardView: View {
     @State private var showAIRecommendation = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Today's Progress Card
-                todayProgressCard
-
-                // AI Meal Suggestion Card
-                aiSuggestionCard
-
-                // Macro Distribution
-                macroDistributionCard
-
-                // Quick Log Buttons
-                quickLogSection
-
-                // Today's Meals
-                todaysMealsSection
-
-                // Weekly Trend
-                weeklyTrendSection
+        Group {
+            if viewModel.isLoading && viewModel.todaySummary == nil {
+                loadingView
+            } else {
+                dashboardContent
             }
-            .padding()
         }
         .navigationTitle("Nutrition")
         .toolbar {
@@ -80,7 +65,41 @@ struct NutritionDashboardView: View {
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(viewModel.error ?? "An error occurred")
+            Text(viewModel.error?.localizedDescription ?? "An error occurred")
+        }
+    }
+
+    // MARK: - Loading View
+
+    @ViewBuilder
+    private var loadingView: some View {
+        NutritionDashboardLoadingView()
+    }
+
+    // MARK: - Dashboard Content
+
+    private var dashboardContent: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Today's Progress Card
+                todayProgressCard
+
+                // AI Meal Suggestion Card
+                aiSuggestionCard
+
+                // Macro Distribution
+                macroDistributionCard
+
+                // Quick Log Buttons
+                quickLogSection
+
+                // Today's Meals
+                todaysMealsSection
+
+                // Weekly Trend
+                weeklyTrendSection
+            }
+            .padding()
         }
     }
 

@@ -54,12 +54,15 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Premium Status Update
 
-    /// BUILD 309: Update isPremium whenever override or subscription status changes
+    /// BUILD 312: Update isPremium whenever override or subscription status changes
     private func updateIsPremium() {
+        let oldValue = isPremium
         if let override = debugPremiumOverride {
             isPremium = override
+            print("[StoreKitService] Premium override: \(override) (was: \(oldValue))")
         } else {
             isPremium = subscriptionStatus == .active || subscriptionStatus == .gracePeriod
+            print("[StoreKitService] Premium from subscription: \(isPremium) (status: \(subscriptionStatus), was: \(oldValue))")
         }
     }
 
