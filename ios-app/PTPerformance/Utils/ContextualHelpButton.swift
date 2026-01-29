@@ -20,6 +20,8 @@ struct ContextualHelpButton: View {
                 .font(.system(size: 20))
                 .foregroundColor(.blue)
         }
+        .accessibilityLabel("Help")
+        .accessibilityHint("Opens help and support articles")
         .sheet(isPresented: $showHelp) {
             if let articleId = articleId {
                 HelpArticleDeepLinkView(articleId: articleId)

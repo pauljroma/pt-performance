@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import UIKit
 
 /// Full-screen countdown timer view with phase tracking and controls
 /// Displays huge timer with 0.1s precision, phase indicators, and progress
@@ -42,6 +43,10 @@ struct ActiveTimerView: View {
         // Start timer immediately
         Task {
             try? await timerService.startTimer(template: template, patientId: patientId)
+            // Haptic feedback for timer start
+            await MainActor.run {
+                HapticFeedback.medium()
+            }
         }
     }
 
@@ -74,11 +79,19 @@ struct ActiveTimerView: View {
         .onDisappear {
             keepScreenAwake(false)
         }
+        .onChange(of: viewModel.state) { oldState, newState in
+            // Haptic feedback for timer completion
+            if newState == .completed && oldState != .completed {
+                HapticFeedback.success()
+            }
+        }
         .alert("Stop Timer?", isPresented: $showStopConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Stop & Save", role: .destructive) {
                 Task {
                     await viewModel.stopTimer()
+                    // Haptic feedback for timer stop
+                    HapticFeedback.warning()
                     showCompletionScreen = true
                 }
             }
@@ -177,6 +190,7 @@ struct ActiveTimerView: View {
                         value: isLastThreeSeconds
                     )
                     .accessibilityLabel("Time remaining: \(viewModel.formattedTimeRemaining)")
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1) // Limit max size for layout
             }
 
             // Template name
@@ -195,8 +209,12 @@ struct ActiveTimerView: View {
             Button(action: {
                 if viewModel.canPause {
                     viewModel.pauseTimer()
+                    // Haptic feedback for pause
+                    HapticFeedback.medium()
                 } else if viewModel.canResume {
                     viewModel.resumeTimer()
+                    // Haptic feedback for resume
+                    HapticFeedback.medium()
                 }
             }) {
                 Image(systemName: viewModel.canPause ? "pause.circle.fill" : "play.circle.fill")
@@ -242,11 +260,13 @@ struct ActiveTimerView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 120))
                     .foregroundColor(.white)
+                    .accessibilityHidden(true)
 
                 // Title
                 Text("Workout Complete!")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
+                    .accessibilityAddTraits(.isHeader)
 
                 // Stats
                 VStack(spacing: 20) {
@@ -274,6 +294,8 @@ struct ActiveTimerView: View {
                         .padding(.horizontal, 40)
                 }
                 .padding(.bottom, 40)
+                .accessibilityLabel("Save and Close")
+                .accessibilityHint("Saves your workout and returns to timer selection")
             }
         }
     }

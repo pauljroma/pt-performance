@@ -43,6 +43,7 @@ struct ReadinessDashboardView: View {
         .navigationTitle("Readiness Trends")
         .navigationBarTitleDisplayMode(.large)
         .refreshable {
+            HapticFeedback.light()
             await viewModel.refresh()
         }
         .task {

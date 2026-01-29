@@ -461,41 +461,43 @@ struct TimerHistoryView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "figure.run")
-                .font(.system(size: 80))
-                .foregroundColor(.gray)
-                .accessibilityHidden(true)
-
-            VStack(spacing: 8) {
-                Text(emptyStateMessage)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-
-                Text("Start your first workout to see your progress here")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-
-            Button(action: {
-                // BUILD 286: Dismiss to return to timer picker (ACP-596)
-                dismiss()
-            }) {
-                Text("Start Your First Workout")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 16)
-                    .background(Color.blue)
-                    .cornerRadius(12)
-            }
-            .accessibilityLabel("Start your first workout")
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(
+            title: emptyStateTitle,
+            message: emptyStateDescription,
+            icon: "clock.arrow.circlepath",
+            iconColor: .blue,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Start a Workout",
+                icon: "play.circle.fill",
+                action: {
+                    // Dismiss to return to timer picker
+                    dismiss()
+                }
+            )
+        )
         .background(Color(.systemGroupedBackground))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(emptyStateTitle). \(emptyStateDescription)")
+    }
+
+    private var emptyStateTitle: String {
+        if !searchText.isEmpty {
+            return "No Matching Sessions"
+        } else if let type = selectedType {
+            return "No \(type.displayName) Sessions"
+        } else {
+            return "No Timer History"
+        }
+    }
+
+    private var emptyStateDescription: String {
+        if !searchText.isEmpty {
+            return "No sessions match '\(searchText)'. Try a different search term or clear the filter."
+        } else if selectedType != nil {
+            return "You haven't completed any sessions of this type yet. Start a workout to begin tracking your progress."
+        } else {
+            return "Your completed timer sessions will appear here. Track your workout intervals, rest periods, and see your progress over time."
+        }
     }
 
     // MARK: - Filter Menu
@@ -562,16 +564,6 @@ struct TimerHistoryView: View {
             Calendar.current.isDate(session.startedAt, inSameDayAs: date)
         }
         return sessions.sorted { $0.startedAt > $1.startedAt }
-    }
-
-    private var emptyStateMessage: String {
-        if !searchText.isEmpty {
-            return "No sessions match '\(searchText)'"
-        } else if let type = selectedType {
-            return "No \(type.displayName) sessions yet"
-        } else {
-            return "No timer sessions yet"
-        }
     }
 
     // MARK: - Helper Methods

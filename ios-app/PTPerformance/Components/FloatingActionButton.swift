@@ -135,6 +135,7 @@ struct FloatingActionButton: View {
                     .font(.system(size: 18))
                     .foregroundColor(.blue)
                     .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -145,6 +146,20 @@ struct FloatingActionButton: View {
             )
         }
         .accessibilityLabel(title)
+        .accessibilityHint(menuItemHint(for: title))
+    }
+
+    private func menuItemHint(for title: String) -> String {
+        switch title {
+        case "Add to Today":
+            return "Adds an exercise to today's workout"
+        case "New Workout":
+            return "Creates a new custom workout"
+        case "From Library":
+            return "Selects a workout from your saved templates"
+        default:
+            return ""
+        }
     }
 
     // MARK: - Actions

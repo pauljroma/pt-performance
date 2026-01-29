@@ -388,6 +388,7 @@ struct GoalDetailView: View {
 
     private var deleteSection: some View {
         Button(role: .destructive) {
+            HapticFeedback.warning()
             showingDeleteConfirmation = true
         } label: {
             Label("Delete Goal", systemImage: "trash")

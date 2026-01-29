@@ -367,6 +367,7 @@ struct ReadinessCheckInView: View {
                         .font(.title.bold())
                         .foregroundColor(.white)
                 }
+                .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.liveScoreCategory.displayName)
@@ -387,6 +388,9 @@ struct ReadinessCheckInView: View {
             .padding()
             .background(viewModel.liveScoreCategory.color.opacity(0.1))
             .cornerRadius(12)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Live readiness score preview: \(viewModel.liveScoreFormatted), \(viewModel.liveScoreCategory.displayName)")
+            .accessibilityHint("Score updates automatically as you adjust the sliders")
         }
     }
 

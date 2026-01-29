@@ -34,6 +34,9 @@ struct AdherenceChart: View {
             }
         }
         .frame(width: size, height: size)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Adherence chart")
+        .accessibilityValue("\(Int(adherencePercentage)) percent complete")
     }
 
     private var adherenceColor: Color {
@@ -72,12 +75,17 @@ struct WeeklyAdherenceChart: View {
                         .bold()
                         .foregroundColor(barColor(week.adherencePercentage))
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Week \(week.weekNumber)")
+                .accessibilityValue("\(Int(week.adherencePercentage)) percent adherence")
             }
         }
         .frame(height: height + 40)
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Weekly adherence chart")
     }
 
     private func barColor(_ percentage: Double) -> Color {
@@ -108,6 +116,7 @@ struct AdherenceCompactCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Adherence")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
 
                 HStack {
                     Text("\(adherence.completedSessions)/\(adherence.totalSessions)")
@@ -128,6 +137,8 @@ struct AdherenceCompactCard: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Adherence: \(adherence.completedSessions) of \(adherence.totalSessions) sessions completed, \(Int(adherence.adherencePercentage)) percent completion rate")
     }
 }
 

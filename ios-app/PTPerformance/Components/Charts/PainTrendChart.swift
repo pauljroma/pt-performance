@@ -7,6 +7,13 @@ struct PainTrendChart: View {
     var showThreshold: Bool = true
     var height: CGFloat = 200
 
+    private var accessibilitySummary: String {
+        guard !dataPoints.isEmpty else { return "No pain data available" }
+        let latestScore = dataPoints.last?.painScore ?? 0
+        let avgScore = dataPoints.map { $0.painScore }.reduce(0, +) / Double(dataPoints.count)
+        return "Pain trend chart showing \(dataPoints.count) data points. Latest score: \(Int(latestScore)) out of 10. Average: \(String(format: "%.1f", avgScore)) out of 10"
+    }
+
     var body: some View {
         Chart {
             ForEach(dataPoints) { point in
@@ -76,6 +83,9 @@ struct PainTrendChart: View {
             }
         }
         .frame(height: height)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Pain Trend Chart")
+        .accessibilityValue(accessibilitySummary)
     }
 }
 

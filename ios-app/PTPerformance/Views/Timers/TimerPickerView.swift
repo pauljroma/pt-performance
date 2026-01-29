@@ -80,6 +80,7 @@ struct TimerPickerView: View {
                 await viewModel.loadPresets()
             }
             .refreshable {
+                HapticFeedback.light()
                 await viewModel.refresh()
             }
             .alert("Error", isPresented: $viewModel.showError) {
@@ -417,6 +418,7 @@ struct TimerPickerView: View {
                     .foregroundColor(.secondary)
             }
             .accessibilityLabel("Close")
+            .accessibilityHint("Returns to the previous screen")
         }
     }
 
@@ -475,8 +477,7 @@ struct TimerPickerView: View {
         }
 
         // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
+        HapticFeedback.light()
     }
 
     private func handlePresetDoubleTap(_ preset: TimerPreset) {
@@ -485,8 +486,7 @@ struct TimerPickerView: View {
         handleStartTimer()
 
         // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        HapticFeedback.medium()
     }
 
     private func handlePresetLongPress(_ preset: TimerPreset) {
@@ -495,12 +495,14 @@ struct TimerPickerView: View {
         showPresetDetail = true
 
         // Haptic feedback
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
+        HapticFeedback.heavy()
     }
 
     private func handleStartTimer() {
         guard let preset = selectedPreset else { return }
+
+        // Haptic feedback for starting timer
+        HapticFeedback.medium()
 
         Task {
             await viewModel.startTimer(with: preset)

@@ -211,27 +211,32 @@ struct TodaySessionView: View {
 
     @ViewBuilder
     private var exerciseListContent: some View {
-        ZStack {
-            if viewModel.isLoading {
-                loadingView
-            } else if let errorMessage = viewModel.errorMessage {
-                errorStateView(errorMessage)
-            } else if viewModel.session == nil {
-                noSessionView
-            } else {
-                sessionContent
-            }
+        VStack(spacing: 0) {
+            // Offline banner at the top - shows when offline or has pending sync items
+            OfflineBanner()
 
-            // BUILD 286: Re-enabled Add to Today FAB option (ACP-591)
-            FloatingActionButton(
-                onAddToToday: { showAddToTodayPicker = true },
-                onNewWorkout: {
-                    showWorkoutCreator = true
-                },
-                onFromLibrary: {
-                    showTemplateLibrary = true
+            ZStack {
+                if viewModel.isLoading {
+                    loadingView
+                } else if let errorMessage = viewModel.errorMessage {
+                    errorStateView(errorMessage)
+                } else if viewModel.session == nil {
+                    noSessionView
+                } else {
+                    sessionContent
                 }
-            )
+
+                // BUILD 286: Re-enabled Add to Today FAB option (ACP-591)
+                FloatingActionButton(
+                    onAddToToday: { showAddToTodayPicker = true },
+                    onNewWorkout: {
+                        showWorkoutCreator = true
+                    },
+                    onFromLibrary: {
+                        showTemplateLibrary = true
+                    }
+                )
+            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -239,6 +244,8 @@ struct TodaySessionView: View {
                     Image(systemName: "ant.circle")
                         .foregroundColor(.orange)
                 }
+                .accessibilityLabel("Debug logs")
+                .accessibilityHint("Opens debug log viewer")
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -253,6 +260,8 @@ struct TodaySessionView: View {
                         Image(systemName: "arrow.clockwise")
                     }
                     .disabled(viewModel.isLoading)
+                    .accessibilityLabel("Refresh")
+                    .accessibilityHint("Refreshes today's session data")
                 }
             }
         }
@@ -294,6 +303,7 @@ struct TodaySessionView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
                     .font(.title2)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
@@ -316,6 +326,8 @@ struct TodaySessionView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.green.opacity(0.3), lineWidth: 1)
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
 
             // List of completed workouts today
             if viewModel.todaysCompletedWorkouts.count > 0 {
@@ -441,6 +453,8 @@ struct TodaySessionView: View {
                 .foregroundColor(.white)
                 .cornerRadius(12)
             }
+            .accessibilityLabel("Start Workout")
+            .accessibilityHint("Begins today's prescribed workout session")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -524,9 +538,13 @@ struct TodaySessionView: View {
 
                 Image(systemName: "chevron.right")
                     .foregroundColor(.gray)
+                    .accessibilityHidden(true)
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Readiness score \(String(format: "%.0f", score)) out of 100, \(category.displayName)")
+        .accessibilityHint("Opens readiness dashboard with detailed trends")
     }
 
     @ViewBuilder
@@ -536,6 +554,7 @@ struct TodaySessionView: View {
                 Image(systemName: "heart.text.square")
                     .font(.title2)
                     .foregroundColor(.blue)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("How are you feeling today?")
@@ -550,6 +569,7 @@ struct TodaySessionView: View {
             }
 
             Button(action: {
+                HapticFeedback.light()
                 showReadinessCheckIn = true
             }) {
                 HStack {
@@ -563,6 +583,8 @@ struct TodaySessionView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
+            .accessibilityLabel("Check In Now")
+            .accessibilityHint("Opens daily readiness check-in form")
         }
     }
 
@@ -639,9 +661,11 @@ struct TodaySessionView: View {
     }
 
     private func startWorkout() {
+        // Haptic feedback for starting workout
+        HapticFeedback.medium()
         // BUILD 258: Launch unified workout execution view
         showUnifiedWorkoutExecution = true
-        DebugLogger.shared.log("🏋️ Launching unified workout execution view")
+        DebugLogger.shared.log("Launching unified workout execution view")
     }
 
     @ViewBuilder
@@ -777,6 +801,7 @@ struct TodaySessionView: View {
 
                 // Start another workout from library
                 Button(action: {
+                    HapticFeedback.light()
                     showTemplateLibrary = true
                 }) {
                     HStack {
@@ -790,9 +815,12 @@ struct TodaySessionView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
+                .accessibilityLabel("Browse Workout Library")
+                .accessibilityHint("Opens saved workout templates")
 
                 // Create custom workout
                 Button(action: {
+                    HapticFeedback.light()
                     showWorkoutCreator = true
                 }) {
                     HStack {
@@ -810,6 +838,8 @@ struct TodaySessionView: View {
                             .stroke(Color.green, lineWidth: 1)
                     )
                 }
+                .accessibilityLabel("Create Custom Workout")
+                .accessibilityHint("Opens workout builder to create a new workout")
 
                 // View summary - BUILD 307: sheet(item:) shows when completedSession is set
                 Button(action: {
@@ -823,6 +853,8 @@ struct TodaySessionView: View {
                     .foregroundColor(.blue)
                 }
                 .padding(.top, 8)
+                .accessibilityLabel("View Session Summary")
+                .accessibilityHint("Shows detailed summary of completed workout")
             }
         }
         .padding(24)
@@ -1071,6 +1103,8 @@ struct ExerciseDetailView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
+                .accessibilityLabel("View Technique Guide")
+                .accessibilityHint("Shows video and instructions for proper exercise form")
 
                 Spacer()
 

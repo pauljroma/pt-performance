@@ -518,12 +518,22 @@ struct ErrorView: View {
 // MARK: - Empty States
 
 struct EmptyHistoryView: View {
+    var onStartSession: (() -> Void)?
+
     var body: some View {
-        ContentUnavailableView {
-            Label("No History Yet", systemImage: "clock.badge.questionmark")
-        } description: {
-            Text("Complete your first session to start tracking your progress and recovery")
-        }
+        EmptyStateView(
+            title: "No History Yet",
+            message: "Complete your first session to start tracking your progress and recovery journey. Your pain trends, adherence, and workout history will appear here.",
+            icon: "clock.arrow.circlepath",
+            iconColor: .blue,
+            action: onStartSession.map { action in
+                EmptyStateView.EmptyStateAction(
+                    title: "Start First Session",
+                    icon: "play.circle.fill",
+                    action: action
+                )
+            }
+        )
         .padding()
     }
 }

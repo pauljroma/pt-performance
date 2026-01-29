@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 /// ViewModel for managing patient goals and progress tracking
 @MainActor
@@ -238,6 +239,13 @@ class PatientGoalsViewModel: ObservableObject {
                 .update(update)
                 .eq("id", value: goalId.uuidString)
                 .execute()
+
+            // Haptic feedback for goal status changes
+            if status == .completed {
+                HapticFeedback.success()
+            } else {
+                HapticFeedback.medium()
+            }
 
             // Reload to reflect changes
             if let pid = patientId, let patientUUID = UUID(uuidString: pid) {

@@ -10,13 +10,14 @@ import AuthenticationServices
 import CryptoKit
 
 @MainActor
-class AppleSignInService: NSObject, ObservableObject {
+final class AppleSignInService: NSObject, ObservableObject {
     static let shared = AppleSignInService()
 
     /// The current cryptographic nonce used for the active sign-in request
     private var currentNonce: String?
 
     /// Continuation for bridging delegate callbacks to async/await
+    /// Using MainActor-isolated storage ensures thread-safe access from nonisolated delegate methods
     private var continuation: CheckedContinuation<Void, Error>?
 
     override private init() {
@@ -84,30 +85,34 @@ class AppleSignInService: NSObject, ObservableObject {
 
 extension AppleSignInService: ASAuthorizationControllerDelegate {
 
-    nonisolated func authorizationController(
+    func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
-        Task { @MainActor in
-            guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-                self.continuation?.resume(throwing: AppleSignInError.invalidCredential)
-                self.continuation = nil
-                return
-            }
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            self.continuation?.resume(throwing: AppleSignInError.invalidCredential)
+            self.continuation = nil
+            return
+        }
 
-            guard let idTokenData = appleIDCredential.identityToken,
-                  let idTokenString = String(data: idTokenData, encoding: .utf8) else {
-                self.continuation?.resume(throwing: AppleSignInError.missingIdentityToken)
-                self.continuation = nil
-                return
-            }
+        guard let idTokenData = appleIDCredential.identityToken,
+              let idTokenString = String(data: idTokenData, encoding: .utf8) else {
+            self.continuation?.resume(throwing: AppleSignInError.missingIdentityToken)
+            self.continuation = nil
+            return
+        }
 
-            guard let nonce = self.currentNonce else {
-                self.continuation?.resume(throwing: AppleSignInError.missingNonce)
-                self.continuation = nil
-                return
-            }
+        guard let nonce = self.currentNonce else {
+            self.continuation?.resume(throwing: AppleSignInError.missingNonce)
+            self.continuation = nil
+            return
+        }
 
+        // Capture continuation before starting async work
+        let capturedContinuation = self.continuation
+        self.continuation = nil
+
+        Task { @MainActor [weak self] in
             do {
                 // Sign in with Supabase using the Apple ID token
                 try await PTSupabaseClient.shared.signInWithApple(idToken: idTokenString, nonce: nonce)
@@ -115,8 +120,7 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 let supabase = PTSupabaseClient.shared
                 guard let userId = supabase.currentUser?.id.uuidString,
                       let userEmail = supabase.currentUser?.email else {
-                    self.continuation?.resume(throwing: AppleSignInError.invalidCredential)
-                    self.continuation = nil
+                    capturedContinuation?.resume(throwing: AppleSignInError.invalidCredential)
                     return
                 }
 
@@ -148,31 +152,28 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                     await supabase.fetchUserRole(userId: userId)
                 }
 
-                self.continuation?.resume()
-                self.continuation = nil
+                capturedContinuation?.resume()
             } catch {
-                self.continuation?.resume(throwing: error)
-                self.continuation = nil
+                capturedContinuation?.resume(throwing: error)
             }
         }
     }
 
-    nonisolated func authorizationController(
+    func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithError error: Error
     ) {
-        Task { @MainActor in
-            self.continuation?.resume(throwing: error)
-            self.continuation = nil
-        }
+        self.continuation?.resume(throwing: error)
+        self.continuation = nil
     }
 }
 
 // MARK: - ASAuthorizationControllerPresentationContextProviding
 
 extension AppleSignInService: ASAuthorizationControllerPresentationContextProviding {
-    nonisolated func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         // Return the key window for presenting the Apple Sign-in sheet
+        // This method is called on main thread by the framework, safe to access UIApplication here
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = scene.windows.first(where: { $0.isKeyWindow }) else {
             return UIWindow()

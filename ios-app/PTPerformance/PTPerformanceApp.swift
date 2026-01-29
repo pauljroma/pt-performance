@@ -38,6 +38,9 @@ struct PTPerformanceApp: App {
                 .task {
                     await storeKit.loadProducts()
                     await storeKit.updateSubscriptionStatus()
+
+                    // Sync any pending offline exercise logs on app launch
+                    await OfflineQueueManager.shared.syncPendingLogs()
                 }
                 .onOpenURL { url in
                     // Handle auth deep links (e.g., password reset: ptperformance://reset-password#access_token=...)

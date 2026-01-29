@@ -29,6 +29,35 @@ struct ExerciseLog: Codable, Identifiable {
         case notes
         case completed
     }
+
+    /// Memberwise initializer for creating placeholder logs (e.g., offline queue)
+    init(
+        id: UUID,
+        sessionExerciseId: UUID,
+        patientId: UUID,
+        loggedAt: Date,
+        actualSets: Int,
+        actualReps: [Int],
+        actualLoad: Double?,
+        loadUnit: String?,
+        rpe: Int,
+        painScore: Int,
+        notes: String?,
+        completed: Bool
+    ) {
+        self.id = id
+        self.sessionExerciseId = sessionExerciseId
+        self.patientId = patientId
+        self.loggedAt = loggedAt
+        self.actualSets = actualSets
+        self.actualReps = actualReps
+        self.actualLoad = actualLoad
+        self.loadUnit = loadUnit
+        self.rpe = rpe
+        self.painScore = painScore
+        self.notes = notes
+        self.completed = completed
+    }
 }
 
 /// Input model for creating a new exercise log

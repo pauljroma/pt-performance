@@ -30,6 +30,8 @@ struct NutritionDashboardView: View {
                 } label: {
                     Image(systemName: "target")
                 }
+                .accessibilityLabel("Nutrition Goals")
+                .accessibilityHint("Opens nutrition goal settings")
             }
         }
         .task {
@@ -110,6 +112,7 @@ struct NutritionDashboardView: View {
             HStack {
                 Text("Today's Progress")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 if viewModel.hasLoggedToday {
                     Text("\(viewModel.mealsLoggedToday) meals")
@@ -131,11 +134,15 @@ struct NutritionDashboardView: View {
 
                 ProgressView(value: viewModel.calorieProgress)
                     .tint(viewModel.calorieProgress >= 1.0 ? .green : .blue)
+                    .accessibilityLabel("Calorie progress")
+                    .accessibilityValue("\(Int(viewModel.calorieProgress * 100)) percent")
 
                 Text("\(viewModel.remainingCalories) remaining")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Calories: \(viewModel.caloriesToday) of \(viewModel.calorieGoal), \(viewModel.remainingCalories) remaining")
 
             // Protein Progress
             VStack(alignment: .leading, spacing: 8) {
@@ -150,11 +157,15 @@ struct NutritionDashboardView: View {
 
                 ProgressView(value: viewModel.proteinProgress)
                     .tint(viewModel.proteinProgress >= 1.0 ? .green : .orange)
+                    .accessibilityLabel("Protein progress")
+                    .accessibilityValue("\(Int(viewModel.proteinProgress * 100)) percent")
 
                 Text("\(Int(viewModel.remainingProtein))g remaining")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Protein: \(Int(viewModel.proteinToday)) grams of \(Int(viewModel.proteinGoal)) grams, \(Int(viewModel.remainingProtein)) grams remaining")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -172,6 +183,7 @@ struct NutritionDashboardView: View {
                 Image(systemName: "sparkles")
                     .font(.title2)
                     .foregroundColor(.blue)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("AI Meal Suggestion")
@@ -189,12 +201,15 @@ struct NutritionDashboardView: View {
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
             .padding()
             .background(Color.blue.opacity(0.1))
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("AI Meal Suggestion")
+        .accessibilityHint("Get personalized meal recommendations based on your goals")
     }
 
     // MARK: - Macro Distribution
@@ -204,6 +219,7 @@ struct NutritionDashboardView: View {
             HStack {
                 Text("Macros")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
             }
 
@@ -227,6 +243,8 @@ struct NutritionDashboardView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(data.macro.displayName): \(Int(data.grams)) grams, \(Int(data.percent)) percent of total")
                 }
             }
             .frame(maxWidth: .infinity)
@@ -321,21 +339,9 @@ struct NutritionDashboardView: View {
 
             // Empty state
             if viewModel.todaysLogs.isEmpty && viewModel.todaysPlannedMeals.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Image(systemName: "fork.knife")
-                            .font(.largeTitle)
-                            .foregroundColor(.secondary)
-                        Text("No meals planned or logged")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Text("Go to Meal Plans to create a meal plan")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 20)
-                    Spacer()
+                NutritionEmptyMealsView {
+                    selectedMealType = .breakfast
+                    showMealLogSheet = true
                 }
             }
         }
@@ -408,6 +414,8 @@ struct QuickLogButton: View {
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Log \(mealType.displayName)")
+        .accessibilityHint("Opens meal logging form for \(mealType.displayName.lowercased())")
     }
 }
 
@@ -416,12 +424,30 @@ struct QuickLogButton: View {
 struct PlannedMealRow: View {
     let meal: MealPlanItem
 
+    private var accessibilityDescription: String {
+        var description = "Planned \(meal.mealType.displayName)"
+        if let time = meal.mealTime {
+            description += " at \(time)"
+        }
+        if let recipeName = meal.recipeName {
+            description += ", \(recipeName)"
+        }
+        if let cal = meal.estimatedCalories {
+            description += ", \(cal) calories"
+        }
+        if let protein = meal.estimatedProteinG {
+            description += ", \(Int(protein)) grams protein"
+        }
+        return description
+    }
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: meal.mealType.icon)
                         .foregroundColor(.blue)
+                        .accessibilityHidden(true)
                     Text(meal.mealType.displayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
@@ -466,8 +492,11 @@ struct PlannedMealRow: View {
             Image(systemName: "calendar")
                 .font(.caption)
                 .foregroundColor(.blue.opacity(0.5))
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
     }
 }
 
@@ -484,6 +513,7 @@ struct MealLogRow: View {
                     if let mealType = log.mealType {
                         Image(systemName: mealType.icon)
                             .foregroundColor(.green)
+                            .accessibilityHidden(true)
                         Text(mealType.displayName)
                             .font(.subheadline)
                             .fontWeight(.medium)
@@ -505,6 +535,8 @@ struct MealLogRow: View {
                         .lineLimit(1)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(log.mealType?.displayName ?? "Meal"), \(log.totalCalories ?? 0) calories, \(Int(log.totalProteinG ?? 0)) grams protein")
 
             Button(role: .destructive) {
                 onDelete()
@@ -512,8 +544,55 @@ struct MealLogRow: View {
                 Image(systemName: "trash")
                     .font(.caption)
             }
+            .accessibilityLabel("Delete meal")
+            .accessibilityHint("Removes this meal from your log")
         }
         .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Empty State for Meals Section
+
+struct NutritionEmptyMealsView: View {
+    let onLogMeal: () -> Void
+
+    var body: some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "fork.knife.circle")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+                .accessibilityHidden(true)
+
+            VStack(spacing: Spacing.xs) {
+                Text("No Meals Logged Today")
+                    .font(.headline)
+
+                Text("Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: {
+                HapticFeedback.medium()
+                onLogMeal()
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Log Your First Meal")
+                }
+                .font(.subheadline.weight(.semibold))
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(CornerRadius.md)
+            }
+            .accessibilityLabel("Log Your First Meal")
+            .accessibilityHint("Opens meal logging form to start tracking your nutrition")
+        }
+        .padding(.vertical, Spacing.lg)
+        .frame(maxWidth: .infinity)
     }
 }
 

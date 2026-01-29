@@ -5,6 +5,9 @@ struct PatientTabView: View {
     @StateObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
 
+    // Track selected tab for haptic feedback
+    @State private var selectedTab: Int = 0
+
     // BUILD 312: Computed property to ensure views re-evaluate on premium change
     private var premiumKey: String {
         "premium-\(storeKit.isPremium)"
@@ -12,12 +15,15 @@ struct PatientTabView: View {
 
     var body: some View {
         // BUILD 312: Force TabView to re-render when premium status changes
-        TabView {
+        TabView(selection: $selectedTab) {
             TodaySessionView()
                 .environmentObject(supabase)
                 .tabItem {
                     Label("Today", systemImage: "list.bullet")
                 }
+                .tag(0)
+                .accessibilityLabel("Today's Session")
+                .accessibilityHint("View and start today's workout")
 
             if let patientId = supabase.userId {
                 premiumGatedView(
@@ -27,6 +33,9 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
+                .tag(1)
+                .accessibilityLabel("Workout History")
+                .accessibilityHint("View past workouts and progress")
             }
 
             if let patientIdString = supabase.userId,
@@ -38,6 +47,9 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("Readiness", systemImage: "battery.100")
                 }
+                .tag(2)
+                .accessibilityLabel("Daily Readiness")
+                .accessibilityHint("Check in with your daily wellness metrics")
             }
 
             if let patientIdString = supabase.userId,
@@ -46,6 +58,9 @@ struct PatientTabView: View {
                     .tabItem {
                         Label("Timers", systemImage: "timer")
                     }
+                    .tag(3)
+                    .accessibilityLabel("Workout Timers")
+                    .accessibilityHint("Access interval timers and stopwatch")
             }
 
             premiumGatedView(
@@ -55,6 +70,9 @@ struct PatientTabView: View {
             .tabItem {
                 Label("Nutrition", systemImage: "fork.knife")
             }
+            .tag(4)
+            .accessibilityLabel("Nutrition Tracking")
+            .accessibilityHint("Log meals and track macros")
 
             premiumGatedView(
                 premium: { AIChatView() },
@@ -63,6 +81,9 @@ struct PatientTabView: View {
             .tabItem {
                 Label("AI Assistant", systemImage: "brain.head.profile")
             }
+            .tag(5)
+            .accessibilityLabel("AI Assistant")
+            .accessibilityHint("Get AI-powered exercise recommendations")
 
             premiumGatedView(
                 premium: { HelpView() },
@@ -71,14 +92,24 @@ struct PatientTabView: View {
             .tabItem {
                 Label("Learn", systemImage: "book.fill")
             }
+            .tag(6)
+            .accessibilityLabel("Learning Center")
+            .accessibilityHint("Access educational content and exercise guides")
 
             PatientSettingsView()
                 .environmentObject(storeKit)
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
+                .tag(7)
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Manage app settings and account")
         }
         .id(premiumKey)  // BUILD 312: Force TabView rebuild with string key
+        .onChange(of: selectedTab) { _, _ in
+            // Haptic feedback for tab switching
+            HapticFeedback.selectionChanged()
+        }
     }
 
     // BUILD 312: Helper function to create premium-gated views with proper IDs
@@ -154,10 +185,13 @@ struct PatientSettingsView: View {
                         HStack {
                             Image(systemName: "questionmark.circle")
                                 .foregroundColor(.blue)
+                                .accessibilityHidden(true)
                             Text("View Tutorial")
                                 .foregroundColor(.primary)
                         }
                     }
+                    .accessibilityLabel("View Tutorial")
+                    .accessibilityHint("Replays the app introduction walkthrough")
                 }
 
                 Section("Privacy & Data") {
@@ -221,14 +255,20 @@ struct PatientSettingsView: View {
                         HStack {
                             Image(systemName: storeKit.isPremium ? "lock.open.fill" : "lock.fill")
                                 .foregroundColor(storeKit.isPremium ? .green : .gray)
+                                .accessibilityHidden(true)
                             Text("Premium Features")
                         }
                     }
+                    .accessibilityLabel("Premium Features")
+                    .accessibilityValue(storeKit.isPremium ? "Enabled" : "Disabled")
+                    .accessibilityHint("Toggle to test premium features")
                     if storeKit.debugPremiumOverride != nil {
                         Button("Reset to Real Status") {
                             storeKit.debugPremiumOverride = nil
                         }
                         .foregroundColor(.blue)
+                        .accessibilityLabel("Reset to Real Status")
+                        .accessibilityHint("Removes debug override and uses actual subscription status")
                     }
                 }
             }

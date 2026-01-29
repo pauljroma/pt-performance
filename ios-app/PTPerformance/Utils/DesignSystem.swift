@@ -405,6 +405,27 @@ extension View {
                 y: shadow.y
             )
     }
+
+    // MARK: - Accessibility Extensions
+
+    /// Combines accessibility label and hint for icon buttons
+    func accessibleIconButton(label: String, hint: String? = nil) -> some View {
+        self
+            .accessibilityLabel(label)
+            .accessibilityHint(hint ?? "")
+            .accessibilityAddTraits(.isButton)
+    }
+
+    /// Makes a section header accessible
+    func accessibleHeader() -> some View {
+        self.accessibilityAddTraits(.isHeader)
+    }
+
+    /// Ensures text scales with Dynamic Type up to a maximum size
+    /// Useful for timer displays and other large fixed-size text that shouldn't grow too large
+    func dynamicTypeSize(maximum: DynamicTypeSize) -> some View {
+        self.dynamicTypeSize(...maximum)
+    }
 }
 
 // MARK: - Empty State View
@@ -428,11 +449,13 @@ struct EmptyStateView: View {
             Image(systemName: icon)
                 .font(.system(size: 64))
                 .foregroundColor(iconColor)
+                .accessibilityHidden(true)
 
             VStack(spacing: Spacing.xs) {
                 Text(title)
                     .font(.title2)
                     .bold()
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(message)
                     .font(.body)
@@ -449,6 +472,7 @@ struct EmptyStateView: View {
                     HStack {
                         if let icon = action.icon {
                             Image(systemName: icon)
+                                .accessibilityHidden(true)
                         }
                         Text(action.title)
                     }
@@ -459,10 +483,12 @@ struct EmptyStateView: View {
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
+                .accessibilityLabel(action.title)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+        .accessibilityElement(children: .contain)
     }
 }
 

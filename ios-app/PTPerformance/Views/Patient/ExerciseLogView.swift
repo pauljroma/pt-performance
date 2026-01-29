@@ -25,6 +25,7 @@ struct ExerciseLogView: View {
     // UI state
     @State private var isSubmitting = false
     @State private var showSuccess = false
+    @State private var showQueuedOffline = false  // New: for offline queue feedback
     @State private var errorMessage: String?
     @State private var showError = false
     @State private var showTechniqueGuide = false
@@ -270,6 +271,13 @@ struct ExerciseLogView: View {
             } message: {
                 Text("Your exercise has been logged successfully!")
             }
+            .alert("Saved Offline", isPresented: $showQueuedOffline) {
+                Button("OK") {
+                    dismiss()
+                }
+            } message: {
+                Text("Your exercise log has been saved and will sync automatically when you're back online.")
+            }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) { }
             } message: {
@@ -354,7 +362,12 @@ struct ExerciseLogView: View {
 
                 await MainActor.run {
                     isSubmitting = false
-                    showSuccess = true
+                    // Check if it was queued offline vs synced immediately
+                    if service.wasQueuedOffline {
+                        showQueuedOffline = true
+                    } else {
+                        showSuccess = true
+                    }
                 }
             } catch {
                 DebugLogger.shared.error("EXERCISE_SAVE", """
@@ -367,8 +380,13 @@ struct ExerciseLogView: View {
 
                 await MainActor.run {
                     isSubmitting = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    // Check if error was handled by offline queue
+                    if service.wasQueuedOffline {
+                        showQueuedOffline = true
+                    } else {
+                        errorMessage = error.localizedDescription
+                        showError = true
+                    }
                 }
             }
         }

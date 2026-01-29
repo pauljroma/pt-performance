@@ -259,21 +259,41 @@ struct LearningView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Articles Found", systemImage: "magnifyingglass")
-        } description: {
-            Text("Try adjusting your search or browse by category")
-        } actions: {
-            Button("Clear Search") {
-                searchText = ""
-                selectedCategory = nil
+        VStack(spacing: Spacing.lg) {
+            if !searchText.isEmpty || selectedCategory != nil {
+                // Search/filter empty state
+                EmptyStateView(
+                    title: "No Articles Found",
+                    message: searchText.isEmpty
+                        ? "No articles in the \(selectedCategory?.rawValue ?? "") category yet. Try browsing other categories."
+                        : "No articles match '\(searchText)'. Try different keywords or browse by category.",
+                    icon: "magnifyingglass",
+                    iconColor: .secondary,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: {
+                            searchText = ""
+                            selectedCategory = nil
+                        }
+                    )
+                )
+            } else {
+                // No articles at all empty state
+                EmptyStateView(
+                    title: "Learning Center",
+                    message: "Educational articles about baseball training, performance, recovery, and injury prevention will appear here. Check back soon for new content.",
+                    icon: "book.closed.fill",
+                    iconColor: .blue,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Browse Categories",
+                        icon: "square.grid.2x2",
+                        action: {
+                            showCategoryBrowser = true
+                        }
+                    )
+                )
             }
-            .buttonStyle(.borderedProminent)
-
-            Button("Browse Categories") {
-                showCategoryBrowser = true
-            }
-            .buttonStyle(.bordered)
         }
     }
 

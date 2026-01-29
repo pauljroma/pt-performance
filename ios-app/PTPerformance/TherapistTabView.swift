@@ -37,6 +37,9 @@ struct TherapistTabView: View {
 
 struct TherapistSettingsView: View {
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @EnvironmentObject var appState: AppState
+    @State private var showingLogoutConfirmation = false
+    @State private var isLoggingOut = false
 
     var body: some View {
         NavigationStack {
@@ -53,8 +56,52 @@ struct TherapistSettingsView: View {
                         }
                     }
                 }
+
+                Section("Account") {
+                    Button(role: .destructive) {
+                        showingLogoutConfirmation = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Log Out")
+                            Spacer()
+                            if isLoggingOut {
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(isLoggingOut)
+                }
             }
             .navigationTitle("Settings")
+            .alert("Log Out", isPresented: $showingLogoutConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Log Out", role: .destructive) {
+                    performLogout()
+                }
+            } message: {
+                Text("Are you sure you want to log out?")
+            }
+        }
+    }
+
+    private func performLogout() {
+        isLoggingOut = true
+        Task {
+            do {
+                try await PTSupabaseClient.shared.signOut()
+                await MainActor.run {
+                    appState.isAuthenticated = false
+                    appState.userRole = nil
+                    appState.userId = nil
+                    isLoggingOut = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoggingOut = false
+                }
+                print("Logout failed: \(error.localizedDescription)")
+            }
         }
     }
 }

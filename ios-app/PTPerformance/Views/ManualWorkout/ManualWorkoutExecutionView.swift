@@ -388,6 +388,9 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 
             completedExerciseIds.insert(exercise.id)
 
+            // Haptic feedback for exercise completion
+            HapticFeedback.success()
+
             DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' completed")
 
             isLoading = false
@@ -462,6 +465,9 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 
             completedExerciseIds.insert(exercise.id)
 
+            // Haptic feedback for quick exercise completion
+            HapticFeedback.success()
+
             DebugLogger.shared.success("MANUAL_WORKOUT", "Exercise '\(exercise.exerciseName)' quick completed")
 
             isLoading = false
@@ -514,6 +520,9 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
                     durationMinutes: durationMinutes
                 )
             }
+
+            // Haptic feedback for workout completion
+            HapticFeedback.success()
 
             DebugLogger.shared.success("MANUAL_WORKOUT", """
                 Workout completed:

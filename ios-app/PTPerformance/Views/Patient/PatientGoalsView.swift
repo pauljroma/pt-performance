@@ -124,6 +124,7 @@ struct PatientGoalsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .refreshable {
+            HapticFeedback.light()
             guard let uuid = patientUUID else { return }
             await viewModel.loadGoals(patientId: uuid)
         }
@@ -214,6 +215,7 @@ struct PatientGoalsView: View {
         }
         .listStyle(.insetGrouped)
         .refreshable {
+            HapticFeedback.light()
             guard let uuid = patientUUID else { return }
             await viewModel.loadGoals(patientId: uuid)
         }
