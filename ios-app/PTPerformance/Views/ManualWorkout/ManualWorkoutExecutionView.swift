@@ -1157,39 +1157,10 @@ struct ManualWorkoutExecutionView: View {
                 .accessibilityValue("\(viewModel.actualSets) sets")
             }
 
-            // Reps Per Set Input
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Reps Per Set")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-
-                ForEach(0..<viewModel.actualSets, id: \.self) { index in
-                    HStack {
-                        Text("Set \(index + 1)")
-                            .font(.subheadline)
-
-                        Spacer()
-
-                        TextField("Reps", value: Binding(
-                            get: { viewModel.repsPerSet[safe: index] ?? 0 },
-                            set: { newValue in
-                                if index < viewModel.repsPerSet.count {
-                                    viewModel.repsPerSet[index] = newValue
-                                }
-                            }
-                        ), format: .number)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 60)
-                        .textFieldStyle(.roundedBorder)
-                    }
-                }
-            }
-
-            // BUILD 312: Weight Per Set Input (like reps, weight varies per set)
+            // BUILD 317: Combined Reps & Weight Per Set Input (side by side)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Weight Per Set")
+                    Text("Sets")
                         .font(.subheadline)
                         .fontWeight(.medium)
 
@@ -1203,12 +1174,52 @@ struct ManualWorkoutExecutionView: View {
                     .frame(width: 100)
                 }
 
+                // Header row
+                HStack {
+                    Text("Set")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 40, alignment: .leading)
+
+                    Spacer()
+
+                    Text("Reps")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60)
+
+                    Text("Weight")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 80)
+
+                    Text(viewModel.loadUnit)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 30)
+                }
+
                 ForEach(0..<viewModel.actualSets, id: \.self) { index in
                     HStack {
-                        Text("Set \(index + 1)")
+                        Text("\(index + 1)")
                             .font(.subheadline)
+                            .fontWeight(.medium)
+                            .frame(width: 40, alignment: .leading)
 
                         Spacer()
+
+                        TextField("Reps", value: Binding(
+                            get: { viewModel.repsPerSet[safe: index] ?? 0 },
+                            set: { newValue in
+                                if index < viewModel.repsPerSet.count {
+                                    viewModel.repsPerSet[index] = newValue
+                                }
+                            }
+                        ), format: .number)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.center)
+                        .frame(width: 60)
+                        .textFieldStyle(.roundedBorder)
 
                         TextField("Weight", value: Binding(
                             get: { viewModel.weightPerSet[safe: index] ?? 0 },
@@ -1219,7 +1230,7 @@ struct ManualWorkoutExecutionView: View {
                             }
                         ), format: .number)
                         .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
+                        .multilineTextAlignment(.center)
                         .frame(width: 80)
                         .textFieldStyle(.roundedBorder)
 

@@ -195,17 +195,32 @@ struct RegistrationView: View {
                 fullName: fullName.trimmingCharacters(in: .whitespacesAndNewlines)
             )
 
-            // Start session monitoring (HIPAA automatic logoff requirement)
-            SessionManager.shared.startMonitoring()
-
-            // Update app state after successful registration
-            // New registrations are always patients (therapists are added separately)
             let supabase = PTSupabaseClient.shared
-            await MainActor.run {
-                appState.userRole = supabase.userRole ?? .patient
-                appState.userId = supabase.userId
-                appState.isAuthenticated = true
-                isLoading = false
+
+            // BUILD 317: Check if we have a valid session (no email confirmation required)
+            // or if email confirmation is needed
+            if supabase.currentSession != nil {
+                // Start session monitoring (HIPAA automatic logoff requirement)
+                SessionManager.shared.startMonitoring()
+
+                // Update app state after successful registration
+                await MainActor.run {
+                    appState.userRole = supabase.userRole ?? .patient
+                    appState.userId = supabase.userId
+                    appState.isAuthenticated = true
+                    isLoading = false
+                }
+            } else {
+                // Email confirmation required - show message and return to login
+                await MainActor.run {
+                    errorMessage = "Account created! Please check your email to verify your account, then sign in."
+                    isLoading = false
+                    // Clear form
+                    fullName = ""
+                    email = ""
+                    password = ""
+                    confirmPassword = ""
+                }
             }
         } catch {
             await MainActor.run {

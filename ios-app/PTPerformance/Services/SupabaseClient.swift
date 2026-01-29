@@ -218,18 +218,32 @@ class PTSupabaseClient: ObservableObject {
     }
 
     /// Sign up with email and password
+    /// BUILD 317: Fixed to handle both immediate session and email confirmation flows
     func signUp(email: String, password: String, fullName: String) async throws {
-        let session = try await client.auth.signUp(email: email, password: password)
-        await MainActor.run {
-            self.currentSession = session.session
-            self.currentUser = session.session?.user
-        }
-        if let userId = session.session?.user.id.uuidString,
-           let userEmail = session.session?.user.email {
+        let response = try await client.auth.signUp(email: email, password: password)
+
+        // If we got an immediate session (no email confirmation required)
+        if let session = response.session {
+            await MainActor.run {
+                self.currentSession = session
+                self.currentUser = session.user
+            }
+            let userId = session.user.id.uuidString
+            let userEmail = session.user.email ?? email
             try await registerPatient(userId: userId, email: userEmail, fullName: fullName, authProvider: "email")
-        }
-        if let userId = session.session?.user.id.uuidString {
             await fetchUserRole(userId: userId)
+        } else {
+            // Email confirmation required - session is nil but user was created
+            // Still register the patient so they exist when they confirm email
+            let user = response.user
+            let userId = user.id.uuidString
+            let userEmail = user.email ?? email
+            try await registerPatient(userId: userId, email: userEmail, fullName: fullName, authProvider: "email")
+            await MainActor.run {
+                self.userRole = .patient
+                self.userId = userId
+            }
+            print("[Auth] User registered, awaiting email confirmation")
         }
     }
 

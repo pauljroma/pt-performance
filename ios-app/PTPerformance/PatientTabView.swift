@@ -8,13 +8,11 @@ struct PatientTabView: View {
     // Track selected tab for haptic feedback
     @State private var selectedTab: Int = 0
 
-    // BUILD 312: Computed property to ensure views re-evaluate on premium change
-    private var premiumKey: String {
-        "premium-\(storeKit.isPremium)"
-    }
+    // BUILD 317: State-based refresh trigger for premium changes
+    @State private var premiumRefreshID = UUID()
 
     var body: some View {
-        // BUILD 312: Force TabView to re-render when premium status changes
+        // BUILD 317: Force TabView to re-render when premium status changes
         TabView(selection: $selectedTab) {
             TodaySessionView()
                 .environmentObject(supabase)
@@ -105,28 +103,31 @@ struct PatientTabView: View {
                 .accessibilityLabel("Settings")
                 .accessibilityHint("Manage app settings and account")
         }
-        .id(premiumKey)  // BUILD 312: Force TabView rebuild with string key
+        .id(premiumRefreshID)  // BUILD 317: Force TabView rebuild with UUID
         .onChange(of: selectedTab) { _, _ in
             // Haptic feedback for tab switching
             HapticFeedback.selectionChanged()
         }
+        .onChange(of: storeKit.isPremium) { _, newValue in
+            // BUILD 317: Force complete TabView rebuild when premium changes
+            print("[PatientTabView] Premium changed to: \(newValue), refreshing tabs")
+            premiumRefreshID = UUID()
+        }
     }
 
-    // BUILD 312: Helper function to create premium-gated views with proper IDs
+    // BUILD 317: Helper function to create premium-gated views
     @ViewBuilder
     private func premiumGatedView<Premium: View, Locked: View>(
         @ViewBuilder premium: () -> Premium,
         @ViewBuilder locked: () -> Locked
     ) -> some View {
-        Group {
-            if storeKit.isPremium {
-                premium()
-            } else {
-                locked()
-                    .environmentObject(storeKit)
-            }
+        // BUILD 317: Direct conditional without Group wrapper for cleaner state
+        if storeKit.isPremium {
+            premium()
+        } else {
+            locked()
+                .environmentObject(storeKit)
         }
-        .id(premiumKey)  // Force each tab to rebuild on premium change
     }
 }
 
