@@ -143,8 +143,7 @@ struct AuthLandingView: View {
 
                 Spacer()
 
-                // MARK: - Demo Login (Development Only)
-                #if DEBUG
+                // MARK: - Demo Login (For Testing)
                 VStack(spacing: 12) {
                     Divider()
                         .padding(.vertical, 8)
@@ -189,7 +188,6 @@ struct AuthLandingView: View {
                         }
                     }
                 }
-                #endif
 
                 // MARK: - Footer
                 Text("By continuing, you agree to our Terms of Service and Privacy Policy.")
@@ -239,9 +237,8 @@ struct AuthLandingView: View {
         }
     }
 
-    // MARK: - Demo Login Functions (DEBUG only)
+    // MARK: - Demo Login Functions
 
-    #if DEBUG
     /// Login as demo patient (John Brebbia) - bypasses auth for testing
     private func loginAsDemoPatient() {
         // Demo patient UUID from seed data
@@ -271,7 +268,6 @@ struct AuthLandingView: View {
 
         print("[Demo] Logged in as demo therapist: Sarah Thompson (\(demoTherapistId))")
     }
-    #endif
 }
 
 #Preview {
