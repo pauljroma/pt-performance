@@ -93,23 +93,65 @@ class TherapistReportingViewModel: ObservableObject {
     }
 }
 
+// MARK: - Report View Mode
+
+enum ReportViewMode: String, CaseIterable {
+    case reports = "Reports"
+    case caseloadGrid = "Caseload Grid"
+
+    var icon: String {
+        switch self {
+        case .reports: return "chart.bar.doc.horizontal"
+        case .caseloadGrid: return "square.grid.2x2"
+        }
+    }
+}
+
 // MARK: - TherapistReportingView
 
 struct TherapistReportingView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = TherapistReportingViewModel()
+    @State private var selectedMode: ReportViewMode = .reports
+    @State private var selectedPatient: Patient?
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
+    // Responsive grid columns: 3 on iPad, 2 on iPhone
+    private var gridColumns: [GridItem] {
+        let columnCount = horizontalSizeClass == .regular ? 3 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: 12), count: columnCount)
+    }
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                if viewModel.isLoading && viewModel.patients.isEmpty {
-                    ProgressView("Loading reports...")
-                } else if let error = viewModel.errorMessage, viewModel.patients.isEmpty {
-                    errorView(message: error)
-                } else if viewModel.patients.isEmpty {
-                    emptyStateView
-                } else {
-                    reportContent
+            VStack(spacing: 0) {
+                // Segmented control for view mode
+                Picker("View Mode", selection: $selectedMode) {
+                    ForEach(ReportViewMode.allCases, id: \.self) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+
+                // Content based on selected mode
+                ZStack {
+                    if viewModel.isLoading && viewModel.patients.isEmpty {
+                        ProgressView("Loading...")
+                    } else if let error = viewModel.errorMessage, viewModel.patients.isEmpty {
+                        errorView(message: error)
+                    } else if viewModel.patients.isEmpty {
+                        emptyStateView
+                    } else {
+                        switch selectedMode {
+                        case .reports:
+                            reportContent
+                        case .caseloadGrid:
+                            caseloadGridContent
+                        }
+                    }
                 }
             }
             .navigationTitle("Reports")
@@ -124,6 +166,9 @@ struct TherapistReportingView: View {
                 } else {
                     viewModel.errorMessage = "Unable to identify therapist. Please sign in again."
                 }
+            }
+            .navigationDestination(item: $selectedPatient) { patient in
+                PatientDetailView(patient: patient)
             }
         }
     }
@@ -148,6 +193,52 @@ struct TherapistReportingView: View {
                 }
             }
             .padding()
+        }
+    }
+
+    // MARK: - Caseload Grid Content
+
+    private var caseloadGridContent: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                // Summary bar at top
+                CaseloadStatusSummary(patients: viewModel.patients)
+                    .padding(.horizontal)
+
+                // Legend
+                CaseloadStatusLegend()
+
+                // Patient grid
+                LazyVGrid(columns: gridColumns, spacing: 12) {
+                    ForEach(sortedPatientsByStatus) { patient in
+                        CaseloadStatusCard(patient: patient) {
+                            selectedPatient = patient
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding(.vertical)
+        }
+    }
+
+    /// Patients sorted by status priority (critical first, then attention, then good)
+    private var sortedPatientsByStatus: [Patient] {
+        viewModel.patients.sorted { lhs, rhs in
+            let lhsPriority = statusPriority(lhs.calculatedStatus)
+            let rhsPriority = statusPriority(rhs.calculatedStatus)
+            if lhsPriority != rhsPriority {
+                return lhsPriority < rhsPriority
+            }
+            return lhs.fullName < rhs.fullName
+        }
+    }
+
+    private func statusPriority(_ status: PatientStatus) -> Int {
+        switch status {
+        case .critical: return 0
+        case .attention: return 1
+        case .good: return 2
         }
     }
 

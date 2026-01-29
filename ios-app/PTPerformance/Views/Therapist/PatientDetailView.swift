@@ -7,6 +7,7 @@ struct PatientDetailView: View {
     @StateObject private var viewModel: PatientDetailViewModel
     @State private var showProgramViewer = false
     @State private var showAddNote = false
+    @State private var showProgressReport = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -101,6 +102,17 @@ struct PatientDetailView: View {
         }
         .navigationTitle(patient.fullName)
         .navigationBarTitleDisplayMode(shouldUseSplitView ? .inline : .large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showProgressReport = true
+                } label: {
+                    Image(systemName: "doc.text.magnifyingglass")
+                }
+                .accessibilityLabel("Progress Report")
+                .accessibilityHint("View detailed progress report for this patient")
+            }
+        }
         .refreshable {
             await viewModel.fetchData(for: patient.id.uuidString)
         }
@@ -115,6 +127,11 @@ struct PatientDetailView: View {
         .sheet(isPresented: $showAddNote) {
             NavigationView {
                 NotesView(patientId: patient.id.uuidString)
+            }
+        }
+        .sheet(isPresented: $showProgressReport) {
+            NavigationView {
+                PatientProgressReportView(patient: patient)
             }
         }
     }

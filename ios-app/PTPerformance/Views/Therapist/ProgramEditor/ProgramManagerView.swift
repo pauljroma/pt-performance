@@ -103,7 +103,7 @@ struct ProgramRowView: View {
                     .font(.headline)
                 Spacer()
                 if let status = program.status {
-                    StatusBadge(status: status)
+                    ProgramStatusBadge(status: status)
                 }
             }
 
@@ -132,7 +132,7 @@ struct ProgramRowView: View {
     }
 }
 
-struct StatusBadge: View {
+struct ProgramStatusBadge: View {
     let status: String
 
     var body: some View {

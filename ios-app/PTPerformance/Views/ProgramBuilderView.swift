@@ -46,6 +46,11 @@ struct ProgramBuilderFormView: View {
     // Validation state
     @State private var programNameValidation: ValidationResult?
 
+    // Template library state
+    @State private var showTemplateLibrary = false
+    @State private var showSaveTemplateSheet = false
+    @StateObject private var templateViewModel = ProgramTemplateViewModel()
+
     var body: some View {
         Form {
             Section("Program Type") {
@@ -144,7 +149,30 @@ struct ProgramBuilderFormView: View {
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
-                ContextualHelpButton(articleId: nil)
+                HStack(spacing: 16) {
+                    // Templates button
+                    Menu {
+                        Button {
+                            showTemplateLibrary = true
+                        } label: {
+                            Label("Browse Templates", systemImage: "doc.on.doc")
+                        }
+
+                        if !viewModel.phases.isEmpty {
+                            Button {
+                                showSaveTemplateSheet = true
+                            } label: {
+                                Label("Save as Template", systemImage: "square.and.arrow.down")
+                            }
+                        }
+                    } label: {
+                        Label("Templates", systemImage: "doc.on.doc")
+                    }
+                    .accessibilityLabel("Templates")
+                    .accessibilityHint("Browse or save program templates")
+
+                    ContextualHelpButton(articleId: nil)
+                }
             }
 
             ToolbarItem(placement: .confirmationAction) {
@@ -166,6 +194,45 @@ struct ProgramBuilderFormView: View {
                 .accessibilityLabel("Create Program")
                 .accessibilityHint(isProgramValid ? "Create the program with current details" : "Complete all required fields to create program")
             }
+        }
+        .sheet(isPresented: $showTemplateLibrary) {
+            ProgramTemplateLibraryView { template in
+                // Apply template to current program
+                applyTemplate(template)
+            }
+        }
+        .sheet(isPresented: $showSaveTemplateSheet) {
+            ProgramSaveTemplateSheet(
+                viewModel: templateViewModel,
+                programName: viewModel.programName,
+                programType: viewModel.selectedProgramType,
+                phases: viewModel.phases
+            )
+        }
+    }
+
+    // MARK: - Template Application
+
+    private func applyTemplate(_ template: ProgramTemplate) {
+        // Set program type from template
+        viewModel.selectedProgramType = template.programType
+
+        // Clear protocol selection since we're using a template
+        viewModel.selectedProtocol = nil
+
+        // Convert template phases to program phases
+        viewModel.phases = template.phases.map { templatePhase in
+            ProgramPhase(
+                name: templatePhase.name,
+                durationWeeks: templatePhase.durationWeeks,
+                sessions: [],
+                order: templatePhase.order
+            )
+        }
+
+        // Suggest a program name based on template
+        if viewModel.programName.isEmpty {
+            viewModel.programName = template.name.replacingOccurrences(of: " Template", with: "")
         }
     }
 

@@ -9,9 +9,13 @@ import SwiftUI
 
 struct TherapistDashboardView: View {
     @StateObject private var viewModel = PatientListViewModel()
+    @StateObject private var schedulingViewModel = TherapistSchedulingViewModel()
     @State private var selectedPatient: Patient?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
+    @State private var showAddPatient = false
+    @State private var showCreateProgram = false
+    @State private var showReports = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
@@ -30,10 +34,21 @@ struct TherapistDashboardView: View {
         .sheet(isPresented: $showDebugLogs) {
             DebugLogView()
         }
+        .sheet(isPresented: $showAddPatient) {
+            AddPatientPlaceholderView()
+        }
+        .sheet(isPresented: $showCreateProgram) {
+            CreateProgramPlaceholderView()
+        }
+        .sheet(isPresented: $showReports) {
+            TherapistReportingView()
+                .environmentObject(appState)
+        }
         .task {
             if let therapistId = appState.userId {
                 await viewModel.loadPatients(therapistId: therapistId)
                 await viewModel.loadActiveFlags(therapistId: therapistId)
+                await schedulingViewModel.loadAllSessions(therapistId: therapistId)
             } else {
                 // SECURITY: Do NOT load patients without therapist ID
                 // This prevents unauthorized access to patient data
@@ -94,6 +109,20 @@ struct TherapistDashboardView: View {
     private var patientListContent: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // KPI Section at the top
+                DashboardKPISection(
+                    patients: viewModel.patients,
+                    activeFlags: viewModel.activeFlags,
+                    upcomingSessions: schedulingViewModel.sessions,
+                    onAddPatient: { showAddPatient = true },
+                    onCreateProgram: { showCreateProgram = true },
+                    onViewReports: { showReports = true },
+                    onSessionTap: { item in
+                        handlePatientSelection(item.patient)
+                    }
+                )
+                .padding(.top)
+
                 // Active Alerts Section
                 if !viewModel.activeFlags.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
@@ -109,7 +138,6 @@ struct TherapistDashboardView: View {
                         }
                         .padding(.horizontal)
                     }
-                    .padding(.top)
                 }
 
                 // Patient List
@@ -148,6 +176,7 @@ struct TherapistDashboardView: View {
         .refreshable {
             if let therapistId = appState.userId {
                 await viewModel.refresh(therapistId: therapistId)
+                await schedulingViewModel.refresh(therapistId: therapistId)
             } else {
                 // SECURITY: Do NOT refresh without therapist ID
                 // This prevents unauthorized access to patient data
@@ -230,3 +259,90 @@ struct PatientCardView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
+
+// MARK: - Placeholder Views for Quick Actions
+
+/// Placeholder view for Add Patient action
+/// Replace with actual implementation when available
+struct AddPatientPlaceholderView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image(systemName: "person.badge.plus")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+
+                Text("Add Patient")
+                    .font(.title)
+                    .fontWeight(.bold)
+
+                Text("Patient registration form coming soon.\nThis feature will allow you to add new patients to your caseload.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Add Patient")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Placeholder view for Create Program action
+/// Replace with actual implementation when available
+struct CreateProgramPlaceholderView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image(systemName: "doc.badge.plus")
+                    .font(.system(size: 60))
+                    .foregroundColor(.green)
+
+                Text("Create Program")
+                    .font(.title)
+                    .fontWeight(.bold)
+
+                Text("Program builder coming soon.\nThis feature will allow you to create custom rehabilitation programs for your patients.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Create Program")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#if DEBUG
+struct TherapistDashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        TherapistDashboardView()
+            .environmentObject(AppState())
+    }
+}
+#endif

@@ -6,6 +6,9 @@ struct PatientListView: View {
 
     @StateObject private var viewModel = PatientListViewModel()
     @State private var showFilterSheet = false
+    @State private var showBulkAssignmentSheet = false
+    @State private var showExportShareSheet = false
+    @State private var exportedSummary: String = ""
 
     var body: some View {
         ZStack {
@@ -20,21 +23,91 @@ struct PatientListView: View {
             } else {
                 patientList
             }
+
+            // Floating action bar when patients are selected
+            if viewModel.isSelectionModeActive && viewModel.selectedCount > 0 {
+                VStack {
+                    Spacer()
+                    BulkActionBar(
+                        selectedCount: viewModel.selectedCount,
+                        onAssignProgram: {
+                            showBulkAssignmentSheet = true
+                        },
+                        onExportSummary: {
+                            exportedSummary = viewModel.generateBulkSummary(patientIds: viewModel.selectedPatientIds)
+                            showExportShareSheet = true
+                        },
+                        onClearSelection: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                viewModel.deselectAll()
+                            }
+                            HapticFeedback.light()
+                        }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.selectedCount > 0)
+            }
         }
-        .navigationTitle("Patients")
+        .navigationTitle(viewModel.isSelectionModeActive ? "\(viewModel.selectedCount) Selected" : "Patients")
         .searchable(text: $viewModel.searchText, prompt: "Search patients")
         .onChange(of: viewModel.searchText) {
             viewModel.applyFilters()
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showFilterSheet = true }) {
-                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+            // Leading toolbar items
+            ToolbarItem(placement: .navigationBarLeading) {
+                if viewModel.isSelectionModeActive {
+                    Button(viewModel.allFilteredPatientsSelected ? "Deselect All" : "Select All") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            if viewModel.allFilteredPatientsSelected {
+                                viewModel.deselectAll()
+                            } else {
+                                viewModel.selectAll()
+                            }
+                        }
+                        HapticFeedback.selectionChanged()
+                    }
+                    .accessibilityLabel(viewModel.allFilteredPatientsSelected ? "Deselect all patients" : "Select all patients")
                 }
+            }
+
+            // Trailing toolbar items
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if !viewModel.isSelectionModeActive {
+                    Button(action: { showFilterSheet = true }) {
+                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                    .accessibilityLabel("Filter patients")
+                }
+
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.toggleSelectionMode()
+                    }
+                    HapticFeedback.medium()
+                }) {
+                    Text(viewModel.isSelectionModeActive ? "Done" : "Select")
+                }
+                .accessibilityLabel(viewModel.isSelectionModeActive ? "Exit selection mode" : "Enter selection mode")
             }
         }
         .sheet(isPresented: $showFilterSheet) {
             FilterSheet(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showBulkAssignmentSheet) {
+            BulkProgramAssignmentSheet(
+                viewModel: viewModel,
+                therapistId: therapistId,
+                onDismiss: {
+                    showBulkAssignmentSheet = false
+                }
+            )
+        }
+        .sheet(isPresented: $showExportShareSheet) {
+            ShareSheet(items: [exportedSummary])
         }
         .refreshable {
             await viewModel.refresh(therapistId: therapistId)
@@ -54,8 +127,21 @@ struct PatientListView: View {
                 )
             } else {
                 ForEach(viewModel.filteredPatients) { patient in
-                    NavigationLink(destination: PatientDetailView(patient: patient)) {
-                        PatientRowCard(patient: patient)
+                    if viewModel.isSelectionModeActive {
+                        SelectablePatientRow(
+                            patient: patient,
+                            isSelected: viewModel.isSelected(patientId: patient.id),
+                            onToggle: {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    viewModel.toggleSelection(patientId: patient.id)
+                                }
+                                HapticFeedback.selectionChanged()
+                            }
+                        )
+                    } else {
+                        NavigationLink(destination: PatientDetailView(patient: patient)) {
+                            PatientRowCard(patient: patient)
+                        }
                     }
                 }
             }
@@ -63,6 +149,94 @@ struct PatientListView: View {
         .listStyle(.plain)
     }
 }
+
+// MARK: - Selectable Patient Row
+
+/// Patient row with selection checkbox for multi-select mode
+struct SelectablePatientRow: View {
+    let patient: Patient
+    let isSelected: Bool
+    let onToggle: () -> Void
+
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(spacing: 12) {
+                // Selection checkbox
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .blue : .gray)
+                    .accessibilityLabel(isSelected ? "Selected" : "Not selected")
+
+                // Patient card content
+                PatientRowCard(patient: patient)
+            }
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(patient.fullName), \(isSelected ? "selected" : "not selected")")
+        .accessibilityHint("Double tap to \(isSelected ? "deselect" : "select") this patient")
+    }
+}
+
+// MARK: - Bulk Action Bar
+
+/// Floating action bar displayed when patients are selected
+struct BulkActionBar: View {
+    let selectedCount: Int
+    let onAssignProgram: () -> Void
+    let onExportSummary: () -> Void
+    let onClearSelection: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Selected count
+            Text("\(selectedCount) selected")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            // Action buttons
+            Button(action: {
+                HapticFeedback.medium()
+                onAssignProgram()
+            }) {
+                Label("Assign Program", systemImage: "doc.badge.plus")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .accessibilityLabel("Assign program to \(selectedCount) patients")
+
+            Button(action: {
+                HapticFeedback.medium()
+                onExportSummary()
+            }) {
+                Label("Export", systemImage: "square.and.arrow.up")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .accessibilityLabel("Export summary for \(selectedCount) patients")
+
+            Button(action: onClearSelection) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+            .accessibilityLabel("Clear selection")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+        )
+    }
+}
+
+// ShareSheet is defined in Utils/ShareSheet.swift
 
 // MARK: - Patient Row Card
 

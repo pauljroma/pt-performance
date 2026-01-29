@@ -18,6 +18,23 @@ class PatientListViewModel: ObservableObject {
     @Published var selectedFlagFilter: FlagFilter = .all
     @Published var selectedSport: String? = nil
 
+    // MARK: - Multi-Select State
+
+    /// Whether multi-select mode is active
+    @Published var isSelectionModeActive = false
+
+    /// Set of selected patient IDs
+    @Published var selectedPatientIds: Set<UUID> = []
+
+    /// Available programs for bulk assignment
+    @Published var availablePrograms: [DatabaseProgramTemplate] = []
+
+    /// Loading state for bulk operations
+    @Published var isBulkOperationInProgress = false
+
+    /// Error message for bulk operations
+    @Published var bulkOperationError: String?
+
     private let supabase = PTSupabaseClient.shared
 
     enum FlagFilter: String, CaseIterable {
@@ -195,5 +212,256 @@ class PatientListViewModel: ObservableObject {
 
     func patient(for patientId: UUID) -> Patient? {
         patients.first { $0.id == patientId }
+    }
+
+    // MARK: - Multi-Select Operations
+
+    /// Toggle selection mode on/off
+    func toggleSelectionMode() {
+        isSelectionModeActive.toggle()
+        if !isSelectionModeActive {
+            // Clear selections when exiting selection mode
+            selectedPatientIds.removeAll()
+        }
+    }
+
+    /// Toggle selection state for a specific patient
+    /// - Parameter patientId: The UUID of the patient to toggle
+    func toggleSelection(patientId: UUID) {
+        if selectedPatientIds.contains(patientId) {
+            selectedPatientIds.remove(patientId)
+        } else {
+            selectedPatientIds.insert(patientId)
+        }
+    }
+
+    /// Check if a patient is selected
+    /// - Parameter patientId: The UUID of the patient to check
+    /// - Returns: True if the patient is selected
+    func isSelected(patientId: UUID) -> Bool {
+        selectedPatientIds.contains(patientId)
+    }
+
+    /// Select all currently filtered patients
+    func selectAll() {
+        selectedPatientIds = Set(filteredPatients.map { $0.id })
+    }
+
+    /// Deselect all patients
+    func deselectAll() {
+        selectedPatientIds.removeAll()
+    }
+
+    /// Get the list of selected patients
+    var selectedPatients: [Patient] {
+        patients.filter { selectedPatientIds.contains($0.id) }
+    }
+
+    /// Number of selected patients
+    var selectedCount: Int {
+        selectedPatientIds.count
+    }
+
+    /// Whether all filtered patients are selected
+    var allFilteredPatientsSelected: Bool {
+        !filteredPatients.isEmpty && filteredPatients.allSatisfy { selectedPatientIds.contains($0.id) }
+    }
+
+    // MARK: - Bulk Operations
+
+    /// Load available program templates for bulk assignment
+    func loadAvailablePrograms(therapistId: String) async {
+        let logger = DebugLogger.shared
+
+        do {
+            logger.log("Loading program templates for bulk assignment...")
+
+            let response = try await supabase.client
+                .from("program_templates")
+                .select()
+                .eq("therapist_id", value: therapistId)
+                .order("name", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            decoder.dateDecodingStrategy = .iso8601
+
+            if let jsonString = String(data: response.data, encoding: .utf8),
+               jsonString != "[]" && !jsonString.isEmpty {
+                availablePrograms = try decoder.decode([DatabaseProgramTemplate].self, from: response.data)
+                logger.log("Loaded \(availablePrograms.count) program templates", level: .success)
+            } else {
+                availablePrograms = []
+                logger.log("No program templates found", level: .diagnostic)
+            }
+        } catch {
+            logger.log("Failed to load program templates: \(error.localizedDescription)", level: .error)
+            availablePrograms = []
+        }
+    }
+
+    /// Assign a program to multiple patients
+    /// - Parameters:
+    ///   - programTemplateId: The UUID of the program template to assign
+    ///   - patientIds: Set of patient IDs to assign the program to
+    ///   - therapistId: The therapist performing the assignment
+    func bulkAssignProgram(programTemplateId: UUID, patientIds: Set<UUID>, therapistId: String) async -> Bool {
+        let logger = DebugLogger.shared
+        isBulkOperationInProgress = true
+        bulkOperationError = nil
+
+        defer { isBulkOperationInProgress = false }
+
+        logger.log("Starting bulk program assignment for \(patientIds.count) patients...")
+
+        // Create program assignments for each patient
+        var successCount = 0
+        var failedPatients: [String] = []
+
+        for patientId in patientIds {
+            do {
+                // Create a new program for the patient based on the template
+                let programData = PatientProgramInsert(
+                    patientId: patientId.uuidString,
+                    templateId: programTemplateId.uuidString,
+                    therapistId: therapistId,
+                    status: "active",
+                    createdAt: ISO8601DateFormatter().string(from: Date())
+                )
+
+                try await supabase.client
+                    .from("patient_programs")
+                    .insert(programData)
+                    .execute()
+
+                successCount += 1
+                logger.log("Assigned program to patient \(patientId)", level: .success)
+            } catch {
+                let patientName = patients.first { $0.id == patientId }?.fullName ?? patientId.uuidString
+                failedPatients.append(patientName)
+                logger.log("Failed to assign program to patient \(patientId): \(error.localizedDescription)", level: .error)
+            }
+        }
+
+        if failedPatients.isEmpty {
+            logger.log("Bulk assignment completed successfully for \(successCount) patients", level: .success)
+            return true
+        } else if successCount > 0 {
+            bulkOperationError = "Assigned to \(successCount) patients. Failed for: \(failedPatients.joined(separator: ", "))"
+            return true
+        } else {
+            bulkOperationError = "Failed to assign program to any patients"
+            return false
+        }
+    }
+
+    /// Generate a summary export for selected patients
+    /// - Parameter patientIds: Set of patient IDs to include in the summary
+    /// - Returns: A formatted summary string
+    func generateBulkSummary(patientIds: Set<UUID>) -> String {
+        let selectedPatients = patients.filter { patientIds.contains($0.id) }
+
+        guard !selectedPatients.isEmpty else {
+            return "No patients selected."
+        }
+
+        var summary = "PT Performance - Patient Summary\n"
+        summary += "Generated: \(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .short))\n"
+        summary += "Total Patients: \(selectedPatients.count)\n"
+        summary += String(repeating: "=", count: 50) + "\n\n"
+
+        // Group by sport if available
+        let patientsBySport = Dictionary(grouping: selectedPatients) { $0.sport ?? "No Sport" }
+
+        for (sport, sportPatients) in patientsBySport.sorted(by: { $0.key < $1.key }) {
+            summary += "[\(sport)]\n"
+
+            for patient in sportPatients.sorted(by: { $0.lastName < $1.lastName }) {
+                summary += "  - \(patient.fullName)"
+
+                if let position = patient.position {
+                    summary += " (\(position))"
+                }
+
+                if let adherence = patient.adherencePercentage {
+                    summary += " | Adherence: \(Int(adherence))%"
+                }
+
+                if let flagCount = patient.flagCount, flagCount > 0 {
+                    summary += " | Flags: \(flagCount)"
+                    if patient.hasHighSeverityFlags {
+                        summary += " (HIGH)"
+                    }
+                }
+
+                summary += "\n"
+            }
+            summary += "\n"
+        }
+
+        // Summary statistics
+        summary += String(repeating: "-", count: 50) + "\n"
+        summary += "Statistics:\n"
+
+        let avgAdherence = selectedPatients.compactMap { $0.adherencePercentage }.reduce(0, +) / Double(max(1, selectedPatients.compactMap { $0.adherencePercentage }.count))
+        if avgAdherence > 0 {
+            summary += "  Average Adherence: \(Int(avgAdherence))%\n"
+        }
+
+        let totalFlags = selectedPatients.compactMap { $0.flagCount }.reduce(0, +)
+        let highSeverityFlags = selectedPatients.compactMap { $0.highSeverityFlagCount }.reduce(0, +)
+        summary += "  Total Flags: \(totalFlags) (\(highSeverityFlags) high severity)\n"
+
+        return summary
+    }
+
+    /// Clear selection and exit selection mode
+    func clearSelectionAndExit() {
+        selectedPatientIds.removeAll()
+        isSelectionModeActive = false
+    }
+}
+
+// MARK: - Database Program Template Model
+
+/// A template for creating programs from database (used in bulk assignment)
+/// Note: Different from Models/ProgramTemplate which is for local template library storage
+struct DatabaseProgramTemplate: Codable, Identifiable {
+    let id: UUID
+    let therapistId: UUID
+    let name: String
+    let description: String?
+    let durationWeeks: Int
+    let programType: ProgramType?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case therapistId = "therapist_id"
+        case name
+        case description
+        case durationWeeks = "duration_weeks"
+        case programType = "program_type"
+        case createdAt = "created_at"
+    }
+}
+
+// MARK: - Patient Program Insert Model
+
+/// Data structure for inserting a patient program assignment
+struct PatientProgramInsert: Codable {
+    let patientId: String
+    let templateId: String
+    let therapistId: String
+    let status: String
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case templateId = "template_id"
+        case therapistId = "therapist_id"
+        case status
+        case createdAt = "created_at"
     }
 }
