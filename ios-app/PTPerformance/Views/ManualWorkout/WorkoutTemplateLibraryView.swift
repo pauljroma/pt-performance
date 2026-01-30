@@ -21,14 +21,36 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     @Published var isLoadingPatient = false
     @Published var isLoadingRecommendations = false  // BUILD 282
     @Published var errorMessage: String?
-    @Published var searchText = ""
-    @Published var selectedCategory: TemplateCategory?
+    @Published var searchText = "" {
+        didSet { updateFilteredTemplates() }
+    }
+    @Published var selectedCategory: TemplateCategory? {
+        didSet { updateFilteredTemplates() }
+    }
     @Published var selectedTemplate: AnyWorkoutTemplate?
     @Published var showingPreview = false
 
     // BUILD 282: Favorites tracking
-    @Published var favoriteSystemIds: Set<UUID> = []
-    @Published var favoritePatientIds: Set<UUID> = []
+    @Published var favoriteSystemIds: Set<UUID> = [] {
+        didSet { updateFilteredTemplates() }
+    }
+    @Published var favoritePatientIds: Set<UUID> = [] {
+        didSet { updateFilteredTemplates() }
+    }
+
+    // MARK: - Cached Filtered Arrays (Performance Optimization)
+    // Pre-computed to avoid re-computation on every view render
+    @Published private(set) var cachedFilteredSystemTemplates: [SystemWorkoutTemplate] = []
+    @Published private(set) var cachedFilteredPatientTemplates: [PatientWorkoutTemplate] = []
+    @Published private(set) var cachedFavoriteSystemTemplates: [SystemWorkoutTemplate] = []
+    @Published private(set) var cachedFavoritePatientTemplates: [PatientWorkoutTemplate] = []
+    @Published private(set) var cachedFilteredTrainerRecommendations: [SystemWorkoutTemplate] = []
+
+    // MARK: - Pagination Support
+    private static let pageSize = 20
+    @Published var displayedSystemTemplateCount = 20
+    @Published var displayedTrainerRecommendationCount = 20
+    @Published var isLoadingMore = false
 
     // MARK: - Dependencies
 
@@ -40,6 +62,61 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     init(patientId: UUID, service: ManualWorkoutService = ManualWorkoutService()) {
         self.patientId = patientId
         self.service = service
+    }
+
+    // MARK: - Update Cached Filtered Templates
+    // Called when search, category, or favorites change
+
+    private func updateFilteredTemplates() {
+        // Reset pagination when filters change
+        displayedSystemTemplateCount = Self.pageSize
+        displayedTrainerRecommendationCount = Self.pageSize
+
+        // Update all cached arrays
+        cachedFilteredSystemTemplates = computeFilteredSystemTemplates()
+        cachedFilteredPatientTemplates = computeFilteredPatientTemplates()
+        cachedFavoriteSystemTemplates = computeFavoriteSystemTemplates()
+        cachedFavoritePatientTemplates = computeFavoritePatientTemplates()
+        cachedFilteredTrainerRecommendations = computeFilteredTrainerRecommendations()
+    }
+
+    // MARK: - Load More Support
+
+    func loadMoreSystemTemplates() {
+        guard !isLoadingMore else { return }
+        let totalAvailable = cachedFilteredSystemTemplates.count
+        if displayedSystemTemplateCount < totalAvailable {
+            isLoadingMore = true
+            displayedSystemTemplateCount = min(displayedSystemTemplateCount + Self.pageSize, totalAvailable)
+            isLoadingMore = false
+        }
+    }
+
+    func loadMoreTrainerRecommendations() {
+        guard !isLoadingMore else { return }
+        let totalAvailable = cachedFilteredTrainerRecommendations.count
+        if displayedTrainerRecommendationCount < totalAvailable {
+            isLoadingMore = true
+            displayedTrainerRecommendationCount = min(displayedTrainerRecommendationCount + Self.pageSize, totalAvailable)
+            isLoadingMore = false
+        }
+    }
+
+    // Paginated accessors
+    var paginatedSystemTemplates: [SystemWorkoutTemplate] {
+        Array(cachedFilteredSystemTemplates.prefix(displayedSystemTemplateCount))
+    }
+
+    var paginatedTrainerRecommendations: [SystemWorkoutTemplate] {
+        Array(cachedFilteredTrainerRecommendations.prefix(displayedTrainerRecommendationCount))
+    }
+
+    var hasMoreSystemTemplates: Bool {
+        displayedSystemTemplateCount < cachedFilteredSystemTemplates.count
+    }
+
+    var hasMoreTrainerRecommendations: Bool {
+        displayedTrainerRecommendationCount < cachedFilteredTrainerRecommendations.count
     }
 
     // MARK: - Template Categories
@@ -86,11 +163,12 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Filtered Templates
+    // MARK: - Filtered Templates Computation
     // BUILD 275: Added stable sorting to prevent reordering while viewing
+    // Performance: These are called once when data changes, results cached in @Published properties
 
     // BUILD 331: Sort by display_order first (intended sequence), then name as tiebreaker
-    var filteredSystemTemplates: [SystemWorkoutTemplate] {
+    private func computeFilteredSystemTemplates() -> [SystemWorkoutTemplate] {
         systemTemplates
             .filter { template in
                 let matchesSearch = searchText.isEmpty ||
@@ -118,7 +196,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
             }
     }
 
-    var filteredPatientTemplates: [PatientWorkoutTemplate] {
+    private func computeFilteredPatientTemplates() -> [PatientWorkoutTemplate] {
         patientTemplates
             .filter { template in
                 let matchesSearch = searchText.isEmpty ||
@@ -137,7 +215,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     }
 
     // BUILD 282/331: Favorite system templates sorted by display_order
-    var favoriteSystemTemplates: [SystemWorkoutTemplate] {
+    private func computeFavoriteSystemTemplates() -> [SystemWorkoutTemplate] {
         systemTemplates
             .filter { favoriteSystemIds.contains($0.id) }
             .filter { template in
@@ -161,7 +239,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     }
 
     // BUILD 282: Favorite patient templates
-    var favoritePatientTemplates: [PatientWorkoutTemplate] {
+    private func computeFavoritePatientTemplates() -> [PatientWorkoutTemplate] {
         patientTemplates
             .filter { favoritePatientIds.contains($0.id) }
             .filter { template in
@@ -180,7 +258,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     }
 
     // BUILD 282/331: Trainer recommendations filtered, sorted by display_order
-    var filteredTrainerRecommendations: [SystemWorkoutTemplate] {
+    private func computeFilteredTrainerRecommendations() -> [SystemWorkoutTemplate] {
         trainerRecommendations
             .filter { template in
                 let matchesSearch = searchText.isEmpty ||
@@ -227,11 +305,12 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            // Fetch ALL templates - filtering is done locally via filteredSystemTemplates
+            // Fetch ALL templates - filtering is done locally via cachedFilteredSystemTemplates
             systemTemplates = try await service.fetchSystemTemplates(
                 category: nil,
                 search: nil
             )
+            updateFilteredTemplates()
             isLoadingSystem = false
         } catch {
             errorMessage = "Failed to load system templates: \(error.localizedDescription)"
@@ -245,6 +324,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
 
         do {
             patientTemplates = try await service.fetchPatientTemplates(patientId: patientId)
+            updateFilteredTemplates()
             isLoadingPatient = false
         } catch {
             errorMessage = "Failed to load your templates: \(error.localizedDescription)"
@@ -278,6 +358,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
         isLoadingRecommendations = true
         do {
             trainerRecommendations = try await service.fetchTrainerRecommendations(patientId: patientId)
+            updateFilteredTemplates()
             isLoadingRecommendations = false
         } catch {
             // Silently handle - recommendations are optional
@@ -578,9 +659,9 @@ struct WorkoutTemplateLibraryView: View {
 
     private var myWorkoutsTab: some View {
         Group {
-            let favoriteSystem = viewModel.favoriteSystemTemplates
-            let favoritePatient = viewModel.favoritePatientTemplates
-            let userCreated = viewModel.filteredPatientTemplates.filter { !viewModel.favoritePatientIds.contains($0.id) }
+            let favoriteSystem = viewModel.cachedFavoriteSystemTemplates
+            let favoritePatient = viewModel.cachedFavoritePatientTemplates
+            let userCreated = viewModel.cachedFilteredPatientTemplates.filter { !viewModel.favoritePatientIds.contains($0.id) }
 
             if viewModel.isLoadingSystem && viewModel.systemTemplates.isEmpty {
                 loadingView
@@ -607,26 +688,31 @@ struct WorkoutTemplateLibraryView: View {
         Group {
             if viewModel.isLoadingRecommendations && viewModel.trainerRecommendations.isEmpty {
                 loadingView
-            } else if viewModel.filteredTrainerRecommendations.isEmpty {
+            } else if viewModel.cachedFilteredTrainerRecommendations.isEmpty {
                 emptyStateView(
                     title: "No PT/Trainer Workouts",
                     message: "Workouts recommended by your trainer will appear here",
                     showClearButton: false
                 )
             } else {
-                templateGrid(templates: viewModel.filteredTrainerRecommendations.map { AnyWorkoutTemplate(systemTemplate: $0) }, showFavoriteButton: true)
+                paginatedTemplateGrid(
+                    templates: viewModel.paginatedTrainerRecommendations.map { AnyWorkoutTemplate(systemTemplate: $0) },
+                    showFavoriteButton: true,
+                    hasMore: viewModel.hasMoreTrainerRecommendations,
+                    onLoadMore: { viewModel.loadMoreTrainerRecommendations() }
+                )
             }
         }
     }
 
     // MARK: - Full Library Tab (BUILD 282)
-    // Shows: All 535 system templates
+    // Shows: All 535 system templates (paginated for performance)
 
     private var fullLibraryTab: some View {
         Group {
             if viewModel.isLoadingSystem && viewModel.systemTemplates.isEmpty {
                 loadingView
-            } else if viewModel.filteredSystemTemplates.isEmpty {
+            } else if viewModel.cachedFilteredSystemTemplates.isEmpty {
                 emptyStateView(
                     title: "No Templates Found",
                     message: viewModel.searchText.isEmpty && viewModel.selectedCategory == nil
@@ -635,7 +721,12 @@ struct WorkoutTemplateLibraryView: View {
                     showClearButton: !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil
                 )
             } else {
-                templateGrid(templates: viewModel.filteredSystemTemplates.map { AnyWorkoutTemplate(systemTemplate: $0) }, showFavoriteButton: true)
+                paginatedTemplateGrid(
+                    templates: viewModel.paginatedSystemTemplates.map { AnyWorkoutTemplate(systemTemplate: $0) },
+                    showFavoriteButton: true,
+                    hasMore: viewModel.hasMoreSystemTemplates,
+                    onLoadMore: { viewModel.loadMoreSystemTemplates() }
+                )
             }
         }
     }
@@ -684,8 +775,83 @@ struct WorkoutTemplateLibraryView: View {
         }
     }
 
+    // MARK: - Paginated Template Grid
+    // Performance optimization: Shows first 20 items, loads more on scroll
+
+    private func paginatedTemplateGrid(
+        templates: [AnyWorkoutTemplate],
+        showFavoriteButton: Bool = false,
+        hasMore: Bool,
+        onLoadMore: @escaping () -> Void
+    ) -> some View {
+        ScrollView {
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 12),
+                GridItem(.flexible(), spacing: 12)
+            ], spacing: 12) {
+                ForEach(templates) { template in
+                    TemplateCardView(
+                        template: template,
+                        isFavorite: viewModel.isFavorite(template),
+                        showFavoriteButton: showFavoriteButton,
+                        onFavoriteToggle: {
+                            Task {
+                                if template.isSystemTemplate {
+                                    await viewModel.toggleFavoriteSystem(template.id)
+                                } else {
+                                    await viewModel.toggleFavoritePatient(template.id)
+                                }
+                            }
+                        }
+                    )
+                    .onTapGesture {
+                        if template.isSystemTemplate {
+                            if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
+                                viewModel.selectSystemTemplate(systemTemplate)
+                            }
+                        } else {
+                            if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
+                                viewModel.selectPatientTemplate(patientTemplate)
+                            }
+                        }
+                    }
+                }
+
+                // Load more trigger
+                if hasMore {
+                    Color.clear
+                        .frame(height: 1)
+                        .onAppear {
+                            onLoadMore()
+                        }
+
+                    HStack {
+                        Spacer()
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                                .padding()
+                        } else {
+                            Button("Load More") {
+                                onLoadMore()
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                            .padding()
+                        }
+                        Spacer()
+                    }
+                }
+            }
+            .padding()
+        }
+        .refreshable {
+            await viewModel.loadAllTemplates()
+        }
+    }
+
     // MARK: - My Workouts Grid (BUILD 282)
     // Shows favorites and user-created templates in sections
+    // Performance: Uses LazyVStack for lazy loading of sections
 
     private func myWorkoutsGrid(
         favoriteSystemTemplates: [SystemWorkoutTemplate],
@@ -693,10 +859,10 @@ struct WorkoutTemplateLibraryView: View {
         userCreatedTemplates: [PatientWorkoutTemplate]
     ) -> some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 // Favorites Section
                 if !favoriteSystemTemplates.isEmpty || !favoritePatientTemplates.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "heart.fill")
                                 .foregroundColor(.red)
@@ -755,7 +921,7 @@ struct WorkoutTemplateLibraryView: View {
 
                 // User Created Section
                 if !userCreatedTemplates.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "person.fill")
                                 .foregroundColor(.blue)

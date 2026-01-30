@@ -269,7 +269,14 @@ struct TemplateSelectionRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack {
+            HStack(spacing: 12) {
+                // Exercise thumbnail with caching
+                ExerciseThumbnailImage(
+                    thumbnailUrl: template.videoThumbnailUrl,
+                    exerciseName: template.name,
+                    size: 50
+                )
+
                 VStack(alignment: .leading, spacing: 6) {
                     Text(template.name)
                         .font(.subheadline)

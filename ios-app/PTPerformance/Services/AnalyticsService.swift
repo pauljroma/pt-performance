@@ -147,6 +147,35 @@ class AnalyticsService {
         return sessions
     }
 
+    /// Fetch recent completed sessions with pagination support
+    func fetchRecentSessionsPaginated(patientId: String, limit: Int = 20, offset: Int = 0) async throws -> [SessionSummary] {
+        let response = try await supabase.client
+            .from("vw_patient_sessions")
+            .select("""
+                id,
+                session_number,
+                session_date,
+                completed,
+                exercise_count,
+                avg_pain_score,
+                completed_at,
+                total_volume,
+                avg_rpe,
+                duration_minutes
+            """)
+            .eq("patient_id", value: patientId)
+            .eq("completed", value: true)
+            .order("completed_at", ascending: false)
+            .range(from: offset, to: offset + limit - 1)
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let sessions = try decoder.decode([SessionSummary].self, from: response.data)
+        return sessions
+    }
+
     // MARK: - BUILD 219: Manual Workout History
 
     /// Summary of a completed manual workout for history display
@@ -231,6 +260,66 @@ class AnalyticsService {
         let rawSessions = try decoder.decode([ManualSessionWithCount].self, from: response.data)
 
         // Map to ManualWorkoutSummary
+        return rawSessions.map { raw in
+            ManualWorkoutSummary(
+                id: raw.id,
+                name: raw.name,
+                completedAt: raw.completed_at,
+                createdAt: raw.created_at,
+                completed: raw.completed,
+                totalVolume: raw.total_volume,
+                avgRpe: raw.avg_rpe,
+                avgPain: raw.avg_pain,
+                durationMinutes: raw.duration_minutes,
+                exerciseCount: raw.manual_session_exercises?.first?.count
+            )
+        }
+    }
+
+    /// Fetch recent completed manual workouts with pagination support
+    func fetchRecentManualWorkoutsPaginated(patientId: String, limit: Int = 20, offset: Int = 0) async throws -> [ManualWorkoutSummary] {
+        let response = try await supabase.client
+            .from("manual_sessions")
+            .select("""
+                id,
+                name,
+                completed_at,
+                created_at,
+                completed,
+                total_volume,
+                avg_rpe,
+                avg_pain,
+                duration_minutes,
+                manual_session_exercises(count)
+            """)
+            .eq("patient_id", value: patientId)
+            .eq("completed", value: true)
+            .order("completed_at", ascending: false)
+            .range(from: offset, to: offset + limit - 1)
+            .execute()
+
+        struct ManualSessionWithCount: Codable {
+            let id: UUID
+            let name: String?
+            let completed_at: Date?
+            let created_at: Date
+            let completed: Bool
+            let total_volume: Double?
+            let avg_rpe: Double?
+            let avg_pain: Double?
+            let duration_minutes: Int?
+            let manual_session_exercises: [CountResult]?
+
+            struct CountResult: Codable {
+                let count: Int
+            }
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let rawSessions = try decoder.decode([ManualSessionWithCount].self, from: response.data)
+
         return rawSessions.map { raw in
             ManualWorkoutSummary(
                 id: raw.id,

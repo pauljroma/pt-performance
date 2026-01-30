@@ -86,7 +86,7 @@ enum WorkoutHistoryItem: Identifiable {
     }
 }
 
-/// ViewModel for History view
+/// ViewModel for History view with pagination support
 @MainActor
 class HistoryViewModel: ObservableObject {
     @Published var painTrend: [PainDataPoint] = []
@@ -97,6 +97,15 @@ class HistoryViewModel: ObservableObject {
 
     @Published var isLoading = false
     @Published var errorMessage: String?
+
+    // MARK: - Pagination State
+    @Published var hasMoreWorkouts = true
+    @Published var isLoadingMore = false
+
+    private var currentSessionsPage = 0
+    private var currentManualPage = 0
+    private let pageSize = 20
+    private var cachedPatientId: String?
 
     private let analyticsService: AnalyticsService
 
@@ -126,17 +135,26 @@ class HistoryViewModel: ObservableObject {
         self.analyticsService = analyticsService
     }
 
-    /// Fetch all history data
+    /// Fetch initial history data with pagination
     func fetchData(for patientId: String) async {
         isLoading = true
         errorMessage = nil
+        cachedPatientId = patientId
+
+        // Reset pagination state
+        currentSessionsPage = 0
+        currentManualPage = 0
+        hasMoreWorkouts = true
+        recentSessions = []
+        manualWorkouts = []
 
         do {
             // Fetch all data in parallel (including manual workouts)
+            // Initial load uses pageSize for workouts
             async let painTask = analyticsService.fetchPainTrend(patientId: patientId, days: 14)
             async let adherenceTask = analyticsService.fetchAdherence(patientId: patientId, days: 30)
-            async let sessionsTask = analyticsService.fetchRecentSessions(patientId: patientId, limit: 10)
-            async let manualTask = analyticsService.fetchRecentManualWorkouts(patientId: patientId, limit: 10)
+            async let sessionsTask = analyticsService.fetchRecentSessions(patientId: patientId, limit: pageSize)
+            async let manualTask = analyticsService.fetchRecentManualWorkouts(patientId: patientId, limit: pageSize)
             async let statsTask = analyticsService.fetchSummaryStats(patientId: patientId)
 
             let (pain, adh, sessions, manual, stats) = try await (painTask, adherenceTask, sessionsTask, manualTask, statsTask)
@@ -147,10 +165,55 @@ class HistoryViewModel: ObservableObject {
             manualWorkouts = manual
             summaryStats = stats
 
+            // Check if there might be more data
+            hasMoreWorkouts = sessions.count >= pageSize || manual.count >= pageSize
+
             isLoading = false
         } catch {
             errorMessage = error.localizedDescription
             isLoading = false
+        }
+    }
+
+    /// Load more workouts for pagination
+    func loadMoreWorkouts() async {
+        guard hasMoreWorkouts && !isLoadingMore else { return }
+        guard let patientId = cachedPatientId else { return }
+
+        isLoadingMore = true
+
+        do {
+            // Increment pages and fetch next batch
+            currentSessionsPage += 1
+            currentManualPage += 1
+
+            let offset = currentSessionsPage * pageSize
+
+            async let sessionsTask = analyticsService.fetchRecentSessionsPaginated(
+                patientId: patientId,
+                limit: pageSize,
+                offset: offset
+            )
+            async let manualTask = analyticsService.fetchRecentManualWorkoutsPaginated(
+                patientId: patientId,
+                limit: pageSize,
+                offset: offset
+            )
+
+            let (newSessions, newManual) = try await (sessionsTask, manualTask)
+
+            // Append new data
+            recentSessions.append(contentsOf: newSessions)
+            manualWorkouts.append(contentsOf: newManual)
+
+            // Check if we've reached the end
+            hasMoreWorkouts = newSessions.count >= pageSize || newManual.count >= pageSize
+
+            isLoadingMore = false
+        } catch {
+            // Don't show error for pagination failures, just stop loading
+            isLoadingMore = false
+            hasMoreWorkouts = false
         }
     }
 

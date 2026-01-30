@@ -133,6 +133,40 @@ struct ExerciseProgressView: View {
                         }
                     )
                 }
+
+                // Pagination: Load More button or loading indicator
+                // Only show when not searching (pagination applies to full list)
+                if searchText.isEmpty && viewModel.hasMoreExercises {
+                    if viewModel.isLoadingMore {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                            Text("Loading more...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                    } else {
+                        Button(action: {
+                            Task {
+                                await viewModel.loadMoreExercises()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.down.circle")
+                                Text("Load More Exercises")
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.accentColor)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        }
+                    }
+                }
             }
             .padding()
         }
@@ -615,6 +649,14 @@ class ExerciseProgressViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    // MARK: - Pagination State
+    @Published var hasMoreExercises = true
+    @Published var isLoadingMore = false
+
+    private var currentPage = 0
+    private let pageSize = 20
+    private var cachedPatientId: String?
+
     private let supabase = PTSupabaseClient.shared
     private let logger = DebugLogger.shared
 
@@ -635,13 +677,20 @@ class ExerciseProgressViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        // Reset pagination state
+        currentPage = 0
+        hasMoreExercises = true
+        exercises = []
+        cachedPatientId = patientId
+
         do {
-            // BUILD 333: Fetch from vw_exercise_history view
+            // BUILD 333: Fetch from vw_exercise_history view with pagination
             let response: [ExerciseHistoryRecord] = try await supabase.client
                 .from("vw_exercise_history")
                 .select()
                 .eq("patient_id", value: patientId)
                 .order("last_performed", ascending: false)
+                .limit(pageSize)
                 .execute()
                 .value
 
@@ -674,11 +723,75 @@ class ExerciseProgressViewModel: ObservableObject {
                 )
             }
 
+            // Check if there might be more data
+            hasMoreExercises = response.count >= pageSize
+
             isLoading = false
         } catch {
             logger.log("ExerciseProgress: Error fetching data: \(error.localizedDescription)", level: .error)
             errorMessage = "Failed to load exercise history"
             isLoading = false
+        }
+    }
+
+    /// Load more exercises for pagination
+    func loadMoreExercises() async {
+        guard hasMoreExercises && !isLoadingMore else { return }
+        guard let patientId = cachedPatientId else { return }
+
+        isLoadingMore = true
+
+        do {
+            currentPage += 1
+            let offset = currentPage * pageSize
+
+            let response: [ExerciseHistoryRecord] = try await supabase.client
+                .from("vw_exercise_history")
+                .select()
+                .eq("patient_id", value: patientId)
+                .order("last_performed", ascending: false)
+                .range(from: offset, to: offset + pageSize - 1)
+                .execute()
+                .value
+
+            logger.log("ExerciseProgress: Loaded \(response.count) more exercises", level: .diagnostic)
+
+            // Append new exercises
+            let newExercises = response.map { record in
+                ExerciseProgressItem(
+                    id: record.exerciseName,
+                    exerciseId: record.exerciseTemplateId ?? record.exerciseName,
+                    exerciseName: record.exerciseName,
+                    dataPoints: [],
+                    trend: determineTrend(from: record.improvementRatio),
+                    averageWeight: record.avgWeight ?? 0,
+                    totalVolume: record.totalVolume ?? 0,
+                    sessionCount: record.sessionCount,
+                    lastPerformed: record.lastPerformed,
+                    improvementPercentage: record.improvementRatio ?? 0,
+                    personalRecord: record.maxWeight.map { weight in
+                        PersonalRecord(
+                            exerciseId: record.exerciseTemplateId ?? record.exerciseName,
+                            exerciseName: record.exerciseName,
+                            recordType: .maxWeight,
+                            value: weight,
+                            achievedDate: record.lastPerformed ?? Date(),
+                            previousRecord: nil
+                        )
+                    },
+                    recentHistory: []
+                )
+            }
+            exercises.append(contentsOf: newExercises)
+
+            // Check if we've reached the end
+            hasMoreExercises = response.count >= pageSize
+
+            isLoadingMore = false
+        } catch {
+            logger.log("ExerciseProgress: Error loading more: \(error.localizedDescription)", level: .error)
+            isLoadingMore = false
+            hasMoreExercises = false
         }
     }
 

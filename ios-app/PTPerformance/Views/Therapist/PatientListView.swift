@@ -245,15 +245,13 @@ struct PatientRowCard: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Avatar
-            Circle()
-                .fill(avatarColor)
-                .frame(width: 50, height: 50)
-                .overlay(
-                    Text(patient.firstName.prefix(1) + patient.lastName.prefix(1))
-                        .font(.headline)
-                        .foregroundColor(.white)
-                )
+            // Avatar - uses cached image if profile image exists
+            ProfileAvatarImage(
+                profileImageUrl: patient.profileImageUrl,
+                firstName: patient.firstName,
+                lastName: patient.lastName,
+                size: 50
+            )
 
             // Patient info
             VStack(alignment: .leading, spacing: 4) {
@@ -305,12 +303,6 @@ struct PatientRowCard: View {
                 .foregroundColor(.gray)
         }
         .padding(.vertical, 8)
-    }
-
-    private var avatarColor: Color {
-        let colors: [Color] = [.blue, .purple, .green, .orange, .pink, .indigo]
-        let index = abs(patient.id.hashValue) % colors.count
-        return colors[index]
     }
 
     private func adherenceColor(_ percentage: Double) -> Color {

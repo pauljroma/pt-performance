@@ -11,6 +11,7 @@ struct Patient: Codable, Identifiable, Hashable {
     let position: String?
     let injuryType: String?
     let targetLevel: String?
+    let profileImageUrl: String?
     let createdAt: Date
     let flagCount: Int?
     let highSeverityFlagCount: Int?
@@ -52,6 +53,7 @@ struct Patient: Codable, Identifiable, Hashable {
             position: "Pitcher",
             injuryType: "Tommy John Recovery",
             targetLevel: "MLB",
+            profileImageUrl: nil,
             createdAt: Date(),
             flagCount: 0,
             highSeverityFlagCount: 0,
@@ -68,6 +70,7 @@ struct Patient: Codable, Identifiable, Hashable {
             position: "Guard",
             injuryType: "ACL Recovery",
             targetLevel: "College",
+            profileImageUrl: nil,
             createdAt: Date(),
             flagCount: 1,
             highSeverityFlagCount: 0,
@@ -86,6 +89,7 @@ struct Patient: Codable, Identifiable, Hashable {
         case position
         case injuryType = "injury_type"
         case targetLevel = "target_level"
+        case profileImageUrl = "profile_image_url"
         case createdAt = "created_at"
         case flagCount = "flag_count"
         case highSeverityFlagCount = "high_severity_flag_count"

@@ -130,6 +130,39 @@ struct ExerciseHistorySheet: View {
             ForEach(viewModel.sessions) { session in
                 SessionHistoryRow(session: session)
             }
+
+            // Pagination: Load More button or loading indicator
+            if viewModel.hasMoreSessions {
+                if viewModel.isLoadingMore {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                        Text("Loading more...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                } else {
+                    Button(action: {
+                        Task {
+                            await viewModel.loadMoreSessions()
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.down.circle")
+                            Text("Load More Sessions")
+                        }
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.accentColor)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                }
+            }
         }
     }
 
@@ -238,6 +271,16 @@ class ExerciseHistorySheetViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var loadUnit: String = "lbs"
 
+    // MARK: - Pagination State
+    @Published var hasMoreSessions = true
+    @Published var isLoadingMore = false
+
+    private var currentPage = 0
+    private let pageSize = 20
+    private var cachedExerciseName: String?
+    private var cachedPatientId: String?
+    private var globalMaxWeight: Double = 0
+
     private let supabase = PTSupabaseClient.shared
     private let logger = DebugLogger.shared
 
@@ -255,6 +298,13 @@ class ExerciseHistorySheetViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        // Reset pagination state
+        currentPage = 0
+        hasMoreSessions = true
+        sessions = []
+        cachedExerciseName = exerciseName
+        cachedPatientId = patientId
+
         do {
             // BUILD 333: Query manual_session_exercises joined with manual_sessions
             // Using direct query instead of RPC for simpler parameter handling
@@ -265,14 +315,14 @@ class ExerciseHistorySheetViewModel: ObservableObject {
                 .eq("manual_sessions.patient_id", value: patientId)
                 .not("manual_sessions.completed_at", operator: .is, value: "null")
                 .order("manual_sessions.completed_at", ascending: false)
-                .limit(10)
+                .limit(pageSize)
                 .execute()
                 .value
 
             logger.log("ExerciseHistory: Fetched \(response.count) sessions for '\(exerciseName)'", level: .diagnostic)
 
             // Find max weight for PR calculation
-            let maxWeightInHistory = response.compactMap { $0.weight }.max() ?? 0
+            globalMaxWeight = response.compactMap { $0.weight }.max() ?? 0
 
             // Convert to display model
             sessions = response.map { record in
@@ -284,7 +334,7 @@ class ExerciseHistorySheetViewModel: ObservableObject {
                     weight: record.weight,
                     loadUnit: record.loadUnit,
                     notes: record.notes,
-                    isPersonalRecord: (record.weight ?? 0) > 0 && record.weight == maxWeightInHistory
+                    isPersonalRecord: (record.weight ?? 0) > 0 && record.weight == globalMaxWeight
                 )
             }
 
@@ -293,11 +343,83 @@ class ExerciseHistorySheetViewModel: ObservableObject {
                 loadUnit = firstUnit
             }
 
+            // Check if there might be more data
+            hasMoreSessions = response.count >= pageSize
+
             isLoading = false
         } catch {
             logger.log("ExerciseHistory: Error fetching history: \(error.localizedDescription)", level: .error)
             errorMessage = "Unable to load exercise history"
             isLoading = false
+        }
+    }
+
+    /// Load more sessions for pagination
+    func loadMoreSessions() async {
+        guard hasMoreSessions && !isLoadingMore else { return }
+        guard let exerciseName = cachedExerciseName, let patientId = cachedPatientId else { return }
+
+        isLoadingMore = true
+
+        do {
+            currentPage += 1
+            let offset = currentPage * pageSize
+
+            let response: [ExerciseSessionHistoryRecord] = try await supabase.client
+                .from("manual_session_exercises")
+                .select("*, manual_sessions!inner(patient_id, completed_at)")
+                .eq("exercise_name", value: exerciseName)
+                .eq("manual_sessions.patient_id", value: patientId)
+                .not("manual_sessions.completed_at", operator: .is, value: "null")
+                .order("manual_sessions.completed_at", ascending: false)
+                .range(from: offset, to: offset + pageSize - 1)
+                .execute()
+                .value
+
+            logger.log("ExerciseHistory: Loaded \(response.count) more sessions", level: .diagnostic)
+
+            // Update global max weight if new records have higher weight
+            let newMaxWeight = response.compactMap { $0.weight }.max() ?? 0
+            if newMaxWeight > globalMaxWeight {
+                globalMaxWeight = newMaxWeight
+                // Re-mark PRs in existing sessions
+                sessions = sessions.map { session in
+                    ExerciseSessionHistory(
+                        id: session.id,
+                        date: session.date,
+                        sets: session.sets,
+                        reps: session.reps,
+                        weight: session.weight,
+                        loadUnit: session.loadUnit,
+                        notes: session.notes,
+                        isPersonalRecord: (session.weight ?? 0) > 0 && session.weight == globalMaxWeight
+                    )
+                }
+            }
+
+            // Append new sessions
+            let newSessions = response.map { record in
+                ExerciseSessionHistory(
+                    id: record.id,
+                    date: record.sessionDate ?? Date(),
+                    sets: record.sets,
+                    reps: record.reps,
+                    weight: record.weight,
+                    loadUnit: record.loadUnit,
+                    notes: record.notes,
+                    isPersonalRecord: (record.weight ?? 0) > 0 && record.weight == globalMaxWeight
+                )
+            }
+            sessions.append(contentsOf: newSessions)
+
+            // Check if we've reached the end
+            hasMoreSessions = response.count >= pageSize
+
+            isLoadingMore = false
+        } catch {
+            logger.log("ExerciseHistory: Error loading more: \(error.localizedDescription)", level: .error)
+            isLoadingMore = false
+            hasMoreSessions = false
         }
     }
 }

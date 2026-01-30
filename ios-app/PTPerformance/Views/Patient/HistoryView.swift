@@ -48,7 +48,17 @@ struct HistoryView: View {
                     // BUILD 219: Combined workout history (prescribed + manual)
                     // BUILD 296: Added NavigationLink → SessionDetailView (ACP-588)
                     if !viewModel.allWorkouts.isEmpty {
-                        RecentWorkoutsSection(workouts: viewModel.allWorkouts, patientId: patientId)
+                        RecentWorkoutsSection(
+                            workouts: viewModel.allWorkouts,
+                            patientId: patientId,
+                            hasMoreWorkouts: viewModel.hasMoreWorkouts,
+                            isLoadingMore: viewModel.isLoadingMore,
+                            onLoadMore: {
+                                Task {
+                                    await viewModel.loadMoreWorkouts()
+                                }
+                            }
+                        )
                     } else if viewModel.summaryStats != nil {
                         EmptyDataSection(
                             title: "No Workouts Yet",
@@ -356,6 +366,9 @@ struct SessionRow: View {
 struct RecentWorkoutsSection: View {
     let workouts: [WorkoutHistoryItem]
     let patientId: String
+    var hasMoreWorkouts: Bool = false
+    var isLoadingMore: Bool = false
+    var onLoadMore: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -369,6 +382,37 @@ struct RecentWorkoutsSection: View {
                         WorkoutHistoryRow(workout: workout)
                     }
                     .buttonStyle(.plain)
+                }
+
+                // Pagination: Load More button or loading indicator
+                if hasMoreWorkouts {
+                    if isLoadingMore {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                            Text("Loading more...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                    } else {
+                        Button(action: {
+                            onLoadMore?()
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.down.circle")
+                                Text("Load More Workouts")
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.accentColor)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        }
+                    }
                 }
             }
         }

@@ -390,6 +390,7 @@ struct PatientDetailView_Previews: PreviewProvider {
                 position: "Pitcher",
                 injuryType: "Elbow UCL",
                 targetLevel: "MLB",
+                profileImageUrl: nil,
                 createdAt: Date(),
                 flagCount: 2,
                 highSeverityFlagCount: 1,

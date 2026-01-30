@@ -875,6 +875,7 @@ struct PatientProgressReportView_Previews: PreviewProvider {
                 position: "Pitcher",
                 injuryType: "Tommy John Recovery",
                 targetLevel: "MLB",
+                profileImageUrl: nil,
                 createdAt: Date(),
                 flagCount: 0,
                 highSeverityFlagCount: 0,
