@@ -33,6 +33,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
     let tags: [String]?
     let sourceFile: String?
     let createdAt: Date?
+    let displayOrder: Int?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -45,6 +46,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         case tags
         case sourceFile = "source_file"
         case createdAt = "created_at"
+        case displayOrder = "display_order"
     }
 
     init(
@@ -57,7 +59,8 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         exerciseBlocks: [DatabaseBlock] = [],
         tags: [String]? = nil,
         sourceFile: String? = nil,
-        createdAt: Date? = nil
+        createdAt: Date? = nil,
+        displayOrder: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -69,6 +72,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         self.tags = tags
         self.sourceFile = sourceFile
         self.createdAt = createdAt
+        self.displayOrder = displayOrder
     }
 
     init(from decoder: Decoder) throws {
@@ -82,6 +86,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         tags = try container.decodeIfPresent([String].self, forKey: .tags)
         sourceFile = try container.decodeIfPresent(String.self, forKey: .sourceFile)
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt)
+        displayOrder = try container.decodeIfPresent(Int.self, forKey: .displayOrder)
 
         // Decode exercises - handle multiple formats:
         // 1. {"blocks": [...]} wrapper structure
@@ -150,6 +155,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
         try container.encodeIfPresent(tags, forKey: .tags)
         try container.encodeIfPresent(sourceFile, forKey: .sourceFile)
         try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(displayOrder, forKey: .displayOrder)
     }
 
     // MARK: - Computed Properties

@@ -89,7 +89,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
     // MARK: - Filtered Templates
     // BUILD 275: Added stable sorting to prevent reordering while viewing
 
-    // BUILD 307: Added secondary sort by ID for stable ordering (prevents timer-linked refresh reordering)
+    // BUILD 331: Sort by display_order first (intended sequence), then name as tiebreaker
     var filteredSystemTemplates: [SystemWorkoutTemplate] {
         systemTemplates
             .filter { template in
@@ -103,6 +103,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                 return matchesSearch && matchesCategory
             }
             .sorted { lhs, rhs in
+                // Sort by display_order first (intended workout sequence)
+                let lhsOrder = lhs.displayOrder ?? Int.max
+                let rhsOrder = rhs.displayOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
+                // Tiebreaker: alphabetical by name
                 let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
                 if nameComparison != .orderedSame {
                     return nameComparison == .orderedAscending
@@ -129,7 +136,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
             }
     }
 
-    // BUILD 282: Favorite system templates
+    // BUILD 282/331: Favorite system templates sorted by display_order
     var favoriteSystemTemplates: [SystemWorkoutTemplate] {
         systemTemplates
             .filter { favoriteSystemIds.contains($0.id) }
@@ -140,6 +147,11 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                 return matchesSearch
             }
             .sorted { lhs, rhs in
+                let lhsOrder = lhs.displayOrder ?? Int.max
+                let rhsOrder = rhs.displayOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
                 let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
                 if nameComparison != .orderedSame {
                     return nameComparison == .orderedAscending
@@ -167,7 +179,7 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
             }
     }
 
-    // BUILD 282: Trainer recommendations filtered
+    // BUILD 282/331: Trainer recommendations filtered, sorted by display_order
     var filteredTrainerRecommendations: [SystemWorkoutTemplate] {
         trainerRecommendations
             .filter { template in
@@ -177,6 +189,11 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
                 return matchesSearch
             }
             .sorted { lhs, rhs in
+                let lhsOrder = lhs.displayOrder ?? Int.max
+                let rhsOrder = rhs.displayOrder ?? Int.max
+                if lhsOrder != rhsOrder {
+                    return lhsOrder < rhsOrder
+                }
                 let nameComparison = lhs.name.localizedCaseInsensitiveCompare(rhs.name)
                 if nameComparison != .orderedSame {
                     return nameComparison == .orderedAscending
