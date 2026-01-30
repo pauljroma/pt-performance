@@ -17,6 +17,7 @@ struct ExerciseHistorySheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = ExerciseHistorySheetViewModel()
+    @AppStorage("preferredWeightUnit") private var preferredWeightUnit: String = "lbs"
 
     var body: some View {
         NavigationView {
@@ -128,7 +129,7 @@ struct ExerciseHistorySheet: View {
                 .padding(.horizontal, 4)
 
             ForEach(viewModel.sessions) { session in
-                SessionHistoryRow(session: session)
+                SessionHistoryRow(session: session, fallbackUnit: preferredWeightUnit)
             }
 
             // Pagination: Load More button or loading indicator
@@ -168,11 +169,16 @@ struct ExerciseHistorySheet: View {
 
     // MARK: - Helpers
 
+    /// Returns the appropriate unit to display - prefers data unit, falls back to user preference
+    private var displayUnit: String {
+        viewModel.loadUnit.isEmpty ? preferredWeightUnit : viewModel.loadUnit
+    }
+
     private func formatWeight(_ weight: Double) -> String {
         if weight == floor(weight) {
-            return "\(Int(weight)) \(viewModel.loadUnit)"
+            return "\(Int(weight)) \(displayUnit)"
         }
-        return String(format: "%.1f %@", weight, viewModel.loadUnit)
+        return String(format: "%.1f %@", weight, displayUnit)
     }
 }
 
@@ -209,6 +215,7 @@ private struct StatCard: View {
 
 private struct SessionHistoryRow: View {
     let session: ExerciseSessionHistory
+    let fallbackUnit: String
 
     var body: some View {
         HStack {
@@ -254,7 +261,7 @@ private struct SessionHistoryRow: View {
     }
 
     private func formatWeight(_ weight: Double, unit: String?) -> String {
-        let unitStr = unit ?? "lbs"
+        let unitStr = unit ?? fallbackUnit
         if weight == floor(weight) {
             return "\(Int(weight)) \(unitStr)"
         }
@@ -269,7 +276,7 @@ class ExerciseHistorySheetViewModel: ObservableObject {
     @Published var sessions: [ExerciseSessionHistory] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var loadUnit: String = "lbs"
+    @Published var loadUnit: String = ""
 
     // MARK: - Pagination State
     @Published var hasMoreSessions = true

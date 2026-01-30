@@ -20,6 +20,7 @@ struct ExerciseProgressView: View {
     @State private var searchText = ""
     @State private var sortOption: ExerciseSortOption = .mostRecent
     @State private var expandedExerciseId: String?
+    @AppStorage("preferredWeightUnit") private var preferredWeightUnit: String = "lbs"
 
     var body: some View {
         NavigationStack {
@@ -128,9 +129,19 @@ struct ExerciseProgressView: View {
                                     expandedExerciseId = nil
                                 } else {
                                     expandedExerciseId = exercise.id
+                                    // BUILD 333: Fetch time-series data when expanding
+                                    if !viewModel.hasTimeSeriesData(for: exercise.id) {
+                                        Task {
+                                            await viewModel.fetchExerciseTimeSeriesData(
+                                                exerciseId: exercise.id,
+                                                exerciseName: exercise.exerciseName
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        },
+                        fallbackUnit: preferredWeightUnit
                     )
                 }
 
@@ -294,6 +305,7 @@ struct ExerciseProgressRow: View {
     let exercise: ExerciseProgressItem
     let isExpanded: Bool
     let onTap: () -> Void
+    var fallbackUnit: String = "lbs"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -363,7 +375,7 @@ struct ExerciseProgressRow: View {
 
             // Expanded detail view
             if isExpanded {
-                ExerciseProgressDetailView(exercise: exercise)
+                ExerciseProgressDetailView(exercise: exercise, fallbackUnit: fallbackUnit)
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -384,14 +396,23 @@ struct ExerciseProgressRow: View {
 
 struct ExerciseProgressDetailView: View {
     let exercise: ExerciseProgressItem
+    var fallbackUnit: String = "lbs"
+
+    /// Returns the appropriate unit to display - prefers data unit, falls back to user preference
+    private var displayUnit: String {
+        exercise.loadUnit ?? fallbackUnit
+    }
 
     var body: some View {
         VStack(spacing: Spacing.md) {
             Divider()
 
-            // Progress Chart
+            // Progress Chart - show loading state if no data points yet
             if !exercise.dataPoints.isEmpty {
                 progressChart
+            } else {
+                // BUILD 333: Loading state while fetching time-series data
+                chartLoadingPlaceholder
             }
 
             // Personal Record Badge
@@ -408,6 +429,32 @@ struct ExerciseProgressDetailView: View {
             summaryStats
         }
         .padding([.horizontal, .bottom])
+    }
+
+    // MARK: - Chart Loading Placeholder
+
+    private var chartLoadingPlaceholder: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Progress Over Time")
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            HStack {
+                Spacer()
+                VStack(spacing: Spacing.sm) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                    Text("Loading chart data...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            .frame(height: 180)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(8)
     }
 
     // MARK: - Progress Chart
@@ -435,7 +482,7 @@ struct ExerciseProgressDetailView: View {
                     .symbolSize(30)
                 }
             }
-            .chartYAxisLabel("Weight (lbs)")
+            .chartYAxisLabel("Weight (\(displayUnit))")
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 7)) { value in
                     AxisGridLine()
@@ -523,7 +570,7 @@ struct ExerciseProgressDetailView: View {
                     Spacer()
 
                     if let weight = session.weight {
-                        Text(String(format: "%.1f lbs", weight))
+                        Text(String(format: "%.1f %@", weight, session.loadUnit ?? displayUnit))
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
@@ -552,7 +599,7 @@ struct ExerciseProgressDetailView: View {
         HStack(spacing: Spacing.md) {
             StatItem(
                 label: "Avg Weight",
-                value: String(format: "%.1f lbs", exercise.averageWeight)
+                value: String(format: "%.1f %@", exercise.averageWeight, displayUnit)
             )
 
             Divider()
@@ -618,6 +665,7 @@ struct ExerciseProgressItem: Identifiable {
     let improvementPercentage: Double
     let personalRecord: PersonalRecord?
     let recentHistory: [ExerciseSessionRecord]
+    let loadUnit: String?
 
     var hasPersonalRecord: Bool {
         personalRecord != nil
@@ -639,6 +687,7 @@ struct ExerciseSessionRecord: Identifiable {
     let weight: Double?
     let volume: Double
     let isPersonalRecord: Bool
+    let loadUnit: String?
 }
 
 // MARK: - View Model
@@ -653,11 +702,17 @@ class ExerciseProgressViewModel: ObservableObject {
     @Published var hasMoreExercises = true
     @Published var isLoadingMore = false
 
+    // MARK: - Time-Series Data Cache
+    /// Cache for loaded time-series data, keyed by exercise ID
+    private var timeSeriesCache: [String: [ExerciseDataPoint]] = [:]
+    private var recentHistoryCache: [String: [ExerciseSessionRecord]] = [:]
+
     private var currentPage = 0
     private let pageSize = 20
     private var cachedPatientId: String?
 
     private let supabase = PTSupabaseClient.shared
+    private let analyticsService = AnalyticsService.shared
     private let logger = DebugLogger.shared
 
     var totalPersonalRecords: Int {
@@ -719,7 +774,8 @@ class ExerciseProgressViewModel: ObservableObject {
                             previousRecord: nil
                         )
                     },
-                    recentHistory: []  // Would need separate query
+                    recentHistory: [],  // Would need separate query
+                    loadUnit: record.loadUnit
                 )
             }
 
@@ -779,7 +835,8 @@ class ExerciseProgressViewModel: ObservableObject {
                             previousRecord: nil
                         )
                     },
-                    recentHistory: []
+                    recentHistory: [],
+                    loadUnit: record.loadUnit
                 )
             }
             exercises.append(contentsOf: newExercises)
@@ -800,6 +857,95 @@ class ExerciseProgressViewModel: ObservableObject {
         if ratio > 0.05 { return .increasing }
         if ratio < -0.05 { return .decreasing }
         return .stable
+    }
+
+    // MARK: - BUILD 333: Time-Series Data Fetching
+
+    /// Fetch time-series data for a specific exercise (called when row is expanded)
+    /// - Parameters:
+    ///   - exerciseId: The exercise item ID
+    ///   - exerciseName: The exercise name to query
+    func fetchExerciseTimeSeriesData(exerciseId: String, exerciseName: String) async {
+        guard let patientId = cachedPatientId else { return }
+
+        // Check cache first
+        if timeSeriesCache[exerciseId] != nil {
+            // Data already loaded, update the exercise item
+            updateExerciseWithCachedData(exerciseId: exerciseId)
+            return
+        }
+
+        do {
+            // Fetch time-series data points for charting
+            let dataPoints = try await analyticsService.fetchExerciseProgressTimeSeries(
+                patientId: patientId,
+                exerciseName: exerciseName,
+                limit: 50
+            )
+
+            // Convert to ExerciseDataPoint for chart display
+            let chartDataPoints = dataPoints.map { point in
+                ExerciseDataPoint(
+                    date: point.date,
+                    weight: point.weight,
+                    reps: point.reps,
+                    sets: point.sets,
+                    volume: point.volume
+                )
+            }
+
+            // Fetch recent history
+            let recentHistory = try await analyticsService.fetchExerciseRecentHistory(
+                patientId: patientId,
+                exerciseName: exerciseName,
+                limit: 10
+            )
+
+            // Cache the data
+            timeSeriesCache[exerciseId] = chartDataPoints
+            recentHistoryCache[exerciseId] = recentHistory
+
+            // Update the exercise item with the fetched data
+            updateExerciseWithCachedData(exerciseId: exerciseId)
+
+            logger.log("ExerciseProgress: Loaded \(chartDataPoints.count) data points for \(exerciseName)", level: .diagnostic)
+
+        } catch {
+            logger.log("ExerciseProgress: Failed to fetch time-series data for \(exerciseName): \(error.localizedDescription)", level: .error)
+        }
+    }
+
+    /// Update an exercise item with cached time-series data
+    private func updateExerciseWithCachedData(exerciseId: String) {
+        guard let index = exercises.firstIndex(where: { $0.id == exerciseId }) else { return }
+
+        let existingExercise = exercises[index]
+        let dataPoints = timeSeriesCache[exerciseId] ?? []
+        let recentHistory = recentHistoryCache[exerciseId] ?? []
+
+        // Create updated exercise item with the loaded data
+        let updatedExercise = ExerciseProgressItem(
+            id: existingExercise.id,
+            exerciseId: existingExercise.exerciseId,
+            exerciseName: existingExercise.exerciseName,
+            dataPoints: dataPoints,
+            trend: existingExercise.trend,
+            averageWeight: existingExercise.averageWeight,
+            totalVolume: existingExercise.totalVolume,
+            sessionCount: existingExercise.sessionCount,
+            lastPerformed: existingExercise.lastPerformed,
+            improvementPercentage: existingExercise.improvementPercentage,
+            personalRecord: existingExercise.personalRecord,
+            recentHistory: recentHistory,
+            loadUnit: existingExercise.loadUnit
+        )
+
+        exercises[index] = updatedExercise
+    }
+
+    /// Check if time-series data is loaded for an exercise
+    func hasTimeSeriesData(for exerciseId: String) -> Bool {
+        return timeSeriesCache[exerciseId] != nil
     }
 }
 
@@ -994,7 +1140,8 @@ struct ExerciseProgressView_Previews: PreviewProvider {
             lastPerformed: Date(),
             improvementPercentage: 0.15,
             personalRecord: PersonalRecord.sample,
-            recentHistory: sampleRecentHistory
+            recentHistory: sampleRecentHistory,
+            loadUnit: "lbs"
         )
     }
 
@@ -1028,7 +1175,8 @@ struct ExerciseProgressView_Previews: PreviewProvider {
                 reps: 5,
                 weight: weight,
                 volume: weight * 5.0 * 3.0,
-                isPersonalRecord: i == 0
+                isPersonalRecord: i == 0,
+                loadUnit: "lbs"
             ))
         }
         return records

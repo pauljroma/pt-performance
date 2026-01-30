@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var modeService = ModeService.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @State private var showPrivacyNotice = false
     @State private var isCheckingSession = true
@@ -28,6 +29,7 @@ struct RootView: View {
                     })
                 } else if appState.userRole == .patient {
                     PatientTabView()
+                        .withModeTheme()  // ACP-479: Apply mode-specific theming
                 } else if appState.userRole == .therapist {
                     TherapistTabView()
                 } else {
@@ -75,6 +77,11 @@ struct RootView: View {
                 appState.userRole = supabase.userRole ?? .patient
                 appState.isAuthenticated = true
                 isCheckingSession = false
+            }
+
+            // ACP-479: Load patient mode after session restore
+            if supabase.userRole == .patient {
+                await modeService.loadPatientMode()
             }
 
             // Start session monitoring for restored sessions

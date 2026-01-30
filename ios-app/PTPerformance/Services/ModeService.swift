@@ -138,22 +138,22 @@ class ModeService: ObservableObject {
 
     /// Change patient mode (therapist only - calls edge function)
     func changePatientMode(patientId: String, newMode: Mode, reason: String?) async throws {
-        let response = try await supabase.client.functions.invoke(
-            "change-patient-mode",
-            options: .init(
-                body: [
-                    "patient_id": patientId,
-                    "new_mode": newMode.rawValue,
-                    "reason": reason ?? ""
-                ]
+        do {
+            try await supabase.client.functions.invoke(
+                "change-patient-mode",
+                options: .init(
+                    body: [
+                        "patient_id": patientId,
+                        "new_mode": newMode.rawValue,
+                        "reason": reason ?? ""
+                    ]
+                )
             )
-        )
-
-        if response.status != 200 {
+        } catch {
             throw NSError(
                 domain: "ModeService",
-                code: response.status,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to change mode"]
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to change mode: \(error.localizedDescription)"]
             )
         }
 

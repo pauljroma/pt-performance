@@ -112,6 +112,7 @@ class FeatureVisibilityViewModel: ObservableObject {
 }
 
 /// Tab bar item definition
+@MainActor
 struct TabBarItem: Identifiable {
     let id = UUID()
     let title: String
@@ -135,7 +136,7 @@ struct HistorySection: Identifiable {
 /// SwiftUI View extension for conditional feature visibility
 extension View {
     /// Show this view only if feature is enabled
-    @ViewBuilder
+    @MainActor @ViewBuilder
     func visibleIf(_ featureKey: FeatureKey) -> some View {
         if ModeService.shared.isFeatureEnabled(featureKey) {
             self
@@ -143,7 +144,7 @@ extension View {
     }
 
     /// Show this view only if feature is enabled (with alternative view)
-    @ViewBuilder
+    @MainActor @ViewBuilder
     func visibleIf(_ featureKey: FeatureKey, else alternativeView: @escaping () -> some View) -> some View {
         if ModeService.shared.isFeatureEnabled(featureKey) {
             self

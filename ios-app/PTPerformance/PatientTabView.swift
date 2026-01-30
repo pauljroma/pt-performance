@@ -3,6 +3,7 @@ import SwiftUI
 struct PatientTabView: View {
     @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @ObservedObject private var supabase = PTSupabaseClient.shared
+    @ObservedObject private var modeService = ModeService.shared  // ACP-479: Mode awareness
     @EnvironmentObject var storeKit: StoreKitService
 
     // Track selected tab for haptic feedback
@@ -145,6 +146,7 @@ struct PatientTabView: View {
 struct PatientSettingsView: View {
     @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @ObservedObject private var supabase = PTSupabaseClient.shared
+    @ObservedObject private var modeService = ModeService.shared  // ACP-479: Mode awareness
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
     // Previously @StateObject created separate observation, so toggle didn't update tabs
@@ -174,6 +176,23 @@ struct PatientSettingsView: View {
             return therapistLinkingVM.therapistName ?? "Linked"
         } else {
             return "Not linked"
+        }
+    }
+
+    // ACP-479: Mode theme color
+    private var modeThemeColor: Color {
+        ModeTheme.theme(for: modeService.currentMode).primaryColor
+    }
+
+    // ACP-479: Mode badge text
+    private var modeBadgeText: String {
+        switch modeService.currentMode {
+        case .rehab:
+            return "PT-SET"
+        case .strength:
+            return "PT-SET"
+        case .performance:
+            return "PT-SET"
         }
     }
 
@@ -214,6 +233,47 @@ struct PatientSettingsView: View {
                                 .foregroundColor(.primary)
                         }
                     }
+                }
+
+                // ACP-479: Training Mode indicator (PT-controlled)
+                Section("Training Mode") {
+                    HStack {
+                        Image(systemName: modeService.currentMode.iconName)
+                            .font(.title2)
+                            .foregroundColor(modeThemeColor)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(modeService.currentMode.displayName)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            Text(modeService.currentMode.description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        // Mode badge
+                        Text(modeBadgeText)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(modeThemeColor.opacity(0.15))
+                            .foregroundColor(modeThemeColor)
+                            .cornerRadius(4)
+                    }
+                    .padding(.vertical, 4)
+
+                    // Primary metrics for current mode
+                    HStack(spacing: 12) {
+                        ForEach(modeService.currentMode.primaryMetrics, id: \.self) { metric in
+                            Text(metric)
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(4)
+                        }
+                    }
+                    .padding(.vertical, 2)
                 }
 
                 Section("Help & Support") {
