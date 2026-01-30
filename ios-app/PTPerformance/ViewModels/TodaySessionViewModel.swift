@@ -277,16 +277,23 @@ class TodaySessionViewModel: ObservableObject {
         if let sessionId = sessionId {
             logger.log("📱 Fetching scheduled session by ID: \(sessionId)")
             do {
+                // BUILD 325: Use limit(1) instead of .single() to avoid "Cannot coerce" error
+                // when query returns empty or multiple rows
                 let response = try await supabase.client
                     .from("sessions")
                     .select("*")
                     .eq("id", value: sessionId)
-                    .single()
+                    .limit(1)
                     .execute()
 
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .iso8601
-                let session = try decoder.decode(Session.self, from: response.data)
+                let sessions = try decoder.decode([Session].self, from: response.data)
+
+                guard let session = sessions.first else {
+                    logger.log("⚠️ No session found with ID: \(sessionId)", level: .warning)
+                    throw NSError(domain: "TodaySessionViewModel", code: 404, userInfo: [NSLocalizedDescriptionKey: "Session not found"])
+                }
 
                 logger.log("✅ Found scheduled session: \(session.name) (ID: \(session.id))", level: .success)
                 #if DEBUG

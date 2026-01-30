@@ -1,0 +1,662 @@
+-- Migration: Seed Core Workout Templates for Demo Patients
+-- Build: 325 - Fix Demo Patient Issues
+-- Agent: 3
+-- Purpose: Ensure workout library has accessible, well-organized templates
+--
+-- This migration seeds 10 foundational workout templates with clear names
+-- and comprehensive exercise blocks that match the system_workout_templates schema.
+
+BEGIN;
+
+-- ============================================================================
+-- 1. Upper Body Strength
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d',
+    'Upper Body Strength',
+    'Complete upper body workout targeting chest, back, shoulders, and arms. Great for building strength and muscle definition.',
+    'upper',
+    'intermediate',
+    45,
+    '{
+        "blocks": [
+            {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "11111111-1111-1111-1111-111111111112", "name": "Arm Circles", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "20 each direction", "notes": "Start with small circles, gradually increase size"},
+                    {"id": "11111111-1111-1111-1111-111111111113", "name": "Band Pull-Aparts", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "15", "notes": "Light resistance, focus on squeezing shoulder blades"},
+                    {"id": "11111111-1111-1111-1111-111111111114", "name": "Push-Up to Downward Dog", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "8", "notes": "Dynamic movement to warm up shoulders and chest"}
+                ]
+            },
+            {
+                "id": "11111111-1111-1111-1111-111111111121",
+                "name": "Strength - Push",
+                "block_type": "push",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "11111111-1111-1111-1111-111111111122", "name": "Bench Press", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "8-10", "notes": "Control the descent, explosive press"},
+                    {"id": "11111111-1111-1111-1111-111111111123", "name": "Overhead Press", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "Keep core tight, press straight up"},
+                    {"id": "11111111-1111-1111-1111-111111111124", "name": "Incline Dumbbell Press", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "30-45 degree incline, full range of motion"}
+                ]
+            },
+            {
+                "id": "11111111-1111-1111-1111-111111111131",
+                "name": "Strength - Pull",
+                "block_type": "pull",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "11111111-1111-1111-1111-111111111132", "name": "Pull-Ups or Lat Pulldown", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "8-12", "notes": "Full extension at bottom, chin over bar at top"},
+                    {"id": "11111111-1111-1111-1111-111111111133", "name": "Seated Cable Row", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Squeeze shoulder blades together at peak contraction"},
+                    {"id": "11111111-1111-1111-1111-111111111134", "name": "Face Pulls", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "High pull to face, external rotation at end"}
+                ]
+            },
+            {
+                "id": "11111111-1111-1111-1111-111111111141",
+                "name": "Accessory Work",
+                "block_type": "functional",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "11111111-1111-1111-1111-111111111142", "name": "Bicep Curls", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Controlled tempo, no swinging"},
+                    {"id": "11111111-1111-1111-1111-111111111143", "name": "Tricep Pushdowns", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Keep elbows pinned to sides"},
+                    {"id": "11111111-1111-1111-1111-111111111144", "name": "Lateral Raises", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "Light weight, control throughout"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{upper_body,strength,push,pull,chest,back,shoulders,arms,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 2. Lower Body Focus
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e',
+    'Lower Body Focus',
+    'Comprehensive lower body session targeting quads, hamstrings, glutes, and calves. Builds leg strength and power.',
+    'lower',
+    'intermediate',
+    50,
+    '{
+        "blocks": [
+            {
+                "id": "22222222-2222-2222-2222-222222222211",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "22222222-2222-2222-2222-222222222212", "name": "Bike or Row", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "5 minutes", "notes": "Light effort to increase heart rate"},
+                    {"id": "22222222-2222-2222-2222-222222222213", "name": "Leg Swings", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "15 each leg", "notes": "Front-to-back and side-to-side"},
+                    {"id": "22222222-2222-2222-2222-222222222214", "name": "Bodyweight Squats", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "15", "notes": "Full depth, control the movement"}
+                ]
+            },
+            {
+                "id": "22222222-2222-2222-2222-222222222221",
+                "name": "Main Strength",
+                "block_type": "strength",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "22222222-2222-2222-2222-222222222222", "name": "Back Squat", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "6-8", "notes": "Below parallel, drive through heels"},
+                    {"id": "22222222-2222-2222-2222-222222222223", "name": "Romanian Deadlift", "sequence": 2, "prescribed_sets": 4, "prescribed_reps": "10", "notes": "Hinge at hips, slight knee bend, feel hamstring stretch"},
+                    {"id": "22222222-2222-2222-2222-222222222224", "name": "Walking Lunges", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12 each leg", "notes": "Control balance, knee tracks over toe"}
+                ]
+            },
+            {
+                "id": "22222222-2222-2222-2222-222222222231",
+                "name": "Accessory Work",
+                "block_type": "functional",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "22222222-2222-2222-2222-222222222232", "name": "Leg Press", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Full range of motion, don't lock knees"},
+                    {"id": "22222222-2222-2222-2222-222222222233", "name": "Leg Curls", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Controlled tempo, squeeze at top"},
+                    {"id": "22222222-2222-2222-2222-222222222234", "name": "Calf Raises", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "Pause at top, full stretch at bottom"}
+                ]
+            },
+            {
+                "id": "22222222-2222-2222-2222-222222222241",
+                "name": "Finisher",
+                "block_type": "cardio",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "22222222-2222-2222-2222-222222222242", "name": "Goblet Squats", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "20", "notes": "Light weight, high reps for burn"},
+                    {"id": "22222222-2222-2222-2222-222222222243", "name": "Foam Roll Legs", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "5 minutes", "notes": "Quads, hamstrings, calves, IT band"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{lower_body,legs,strength,squats,deadlifts,glutes,hamstrings,quads,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 3. Full Body Circuit
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'c3d4e5f6-a7b8-6c7d-0e1f-2a3b4c5d6e7f',
+    'Full Body Circuit',
+    'High-intensity full body circuit that combines strength and cardio. Perfect for maximizing calorie burn and building endurance.',
+    'full_body',
+    'intermediate',
+    40,
+    '{
+        "blocks": [
+            {
+                "id": "33333333-3333-3333-3333-333333333311",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "33333333-3333-3333-3333-333333333312", "name": "Jumping Jacks", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "30", "notes": "Get heart rate up"},
+                    {"id": "33333333-3333-3333-3333-333333333313", "name": "High Knees", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "20 each", "notes": "Drive knees up explosively"},
+                    {"id": "33333333-3333-3333-3333-333333333314", "name": "Arm Circles", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "15 each direction", "notes": "Warm up shoulders"}
+                ]
+            },
+            {
+                "id": "33333333-3333-3333-3333-333333333321",
+                "name": "Circuit Round 1",
+                "block_type": "functional",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "33333333-3333-3333-3333-333333333322", "name": "Goblet Squats", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "Moderate weight, full depth"},
+                    {"id": "33333333-3333-3333-3333-333333333323", "name": "Push-Ups", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Chest to floor, full lockout"},
+                    {"id": "33333333-3333-3333-3333-333333333324", "name": "Dumbbell Rows", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12 each", "notes": "Keep back flat, pull to hip"},
+                    {"id": "33333333-3333-3333-3333-333333333325", "name": "Mountain Climbers", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "30 seconds", "notes": "Fast pace, core tight"}
+                ]
+            },
+            {
+                "id": "33333333-3333-3333-3333-333333333331",
+                "name": "Circuit Round 2",
+                "block_type": "functional",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "33333333-3333-3333-3333-333333333332", "name": "Reverse Lunges", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "10 each", "notes": "Step back, drive up through front heel"},
+                    {"id": "33333333-3333-3333-3333-333333333333", "name": "Dumbbell Shoulder Press", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Press straight up, control down"},
+                    {"id": "33333333-3333-3333-3333-333333333334", "name": "Plank", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "45 seconds", "notes": "Keep body straight, don't sag"},
+                    {"id": "33333333-3333-3333-3333-333333333335", "name": "Burpees", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "Full extension at top"}
+                ]
+            },
+            {
+                "id": "33333333-3333-3333-3333-333333333341",
+                "name": "Cool Down",
+                "block_type": "static_stretch",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "33333333-3333-3333-3333-333333333342", "name": "Child Pose", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "60 seconds", "notes": "Breathe deeply, relax"},
+                    {"id": "33333333-3333-3333-3333-333333333343", "name": "Quad Stretch", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "30 seconds each", "notes": "Hold steady stretch"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{full_body,circuit,hiit,cardio,strength,conditioning,fat_loss,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 4. Mobility & Recovery
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'd4e5f6a7-b8c9-7d8e-1f2a-3b4c5d6e7f8a',
+    'Mobility & Recovery',
+    'Active recovery session focused on improving flexibility, joint mobility, and reducing muscle tension. Perfect for rest days.',
+    'mobility',
+    'beginner',
+    35,
+    '{
+        "blocks": [
+            {
+                "id": "44444444-4444-4444-4444-444444444411",
+                "name": "Foam Rolling",
+                "block_type": "recovery",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "44444444-4444-4444-4444-444444444412", "name": "Foam Roll Quads", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "90 seconds", "notes": "Roll slowly, pause on tender spots"},
+                    {"id": "44444444-4444-4444-4444-444444444413", "name": "Foam Roll IT Band", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Can be intense, go slowly"},
+                    {"id": "44444444-4444-4444-4444-444444444414", "name": "Foam Roll Lats", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Arm overhead, roll side to side"},
+                    {"id": "44444444-4444-4444-4444-444444444415", "name": "Foam Roll Thoracic Spine", "sequence": 4, "prescribed_sets": 1, "prescribed_reps": "2 minutes", "notes": "Arms crossed, extend over roller"}
+                ]
+            },
+            {
+                "id": "44444444-4444-4444-4444-444444444421",
+                "name": "Dynamic Mobility",
+                "block_type": "dynamic_stretch",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "44444444-4444-4444-4444-444444444422", "name": "Cat-Cow", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Flow smoothly between positions"},
+                    {"id": "44444444-4444-4444-4444-444444444423", "name": "World Greatest Stretch", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "5 each side", "notes": "Lunge, rotate, reach - full sequence"},
+                    {"id": "44444444-4444-4444-4444-444444444424", "name": "Hip Circles", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "10 each direction", "notes": "Big controlled circles"},
+                    {"id": "44444444-4444-4444-4444-444444444425", "name": "Shoulder Pass-Throughs", "sequence": 4, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Use band or stick, wide grip"}
+                ]
+            },
+            {
+                "id": "44444444-4444-4444-4444-444444444431",
+                "name": "Static Stretching",
+                "block_type": "static_stretch",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "44444444-4444-4444-4444-444444444432", "name": "Pigeon Pose", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "90 seconds each", "notes": "Deep hip stretch, breathe through it"},
+                    {"id": "44444444-4444-4444-4444-444444444433", "name": "Seated Hamstring Stretch", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Hinge at hips, keep back flat"},
+                    {"id": "44444444-4444-4444-4444-444444444434", "name": "Thread the Needle", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Great for thoracic rotation"},
+                    {"id": "44444444-4444-4444-4444-444444444435", "name": "90-90 Hip Stretch", "sequence": 4, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Switch sides, stay upright"}
+                ]
+            },
+            {
+                "id": "44444444-4444-4444-4444-444444444441",
+                "name": "Breathing & Relaxation",
+                "block_type": "recovery",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "44444444-4444-4444-4444-444444444442", "name": "Box Breathing", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "5 rounds", "notes": "4 seconds inhale, hold, exhale, hold"},
+                    {"id": "44444444-4444-4444-4444-444444444443", "name": "Supine Spinal Twist", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "60 seconds each", "notes": "Relax into the stretch"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{mobility,recovery,flexibility,stretching,foam_rolling,rest_day,beginner}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 5. Core Strength
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'e5f6a7b8-c9d0-8e9f-2a3b-4c5d6e7f8a9b',
+    'Core Strength',
+    'Targeted core workout building strength and stability. Covers all core muscles including abs, obliques, and lower back.',
+    'strength',
+    'intermediate',
+    30,
+    '{
+        "blocks": [
+            {
+                "id": "55555555-5555-5555-5555-555555555511",
+                "name": "Activation",
+                "block_type": "dynamic_stretch",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "55555555-5555-5555-5555-555555555512", "name": "Dead Bug", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "10 each", "notes": "Keep lower back pressed to floor"},
+                    {"id": "55555555-5555-5555-5555-555555555513", "name": "Bird Dog", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "10 each", "notes": "Extend opposite arm and leg, hold balance"},
+                    {"id": "55555555-5555-5555-5555-555555555514", "name": "Cat-Cow", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "10", "notes": "Warm up the spine"}
+                ]
+            },
+            {
+                "id": "55555555-5555-5555-5555-555555555521",
+                "name": "Core Circuit 1",
+                "block_type": "functional",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "55555555-5555-5555-5555-555555555522", "name": "Plank", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "45 seconds", "notes": "Straight line from head to heels"},
+                    {"id": "55555555-5555-5555-5555-555555555523", "name": "Russian Twists", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "20 total", "notes": "Touch floor on each side, control rotation"},
+                    {"id": "55555555-5555-5555-5555-555555555524", "name": "Leg Raises", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Keep lower back pressed down"},
+                    {"id": "55555555-5555-5555-5555-555555555525", "name": "Mountain Climbers", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "30 seconds", "notes": "Fast pace, core tight"}
+                ]
+            },
+            {
+                "id": "55555555-5555-5555-5555-555555555531",
+                "name": "Core Circuit 2",
+                "block_type": "functional",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "55555555-5555-5555-5555-555555555532", "name": "Side Plank", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "30 seconds each", "notes": "Stack feet or stagger, hips up"},
+                    {"id": "55555555-5555-5555-5555-555555555533", "name": "Bicycle Crunches", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "20 total", "notes": "Opposite elbow to knee, control pace"},
+                    {"id": "55555555-5555-5555-5555-555555555534", "name": "Reverse Crunches", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "Lift hips off floor, don't swing"},
+                    {"id": "55555555-5555-5555-5555-555555555535", "name": "Hollow Body Hold", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "30 seconds", "notes": "Press lower back to floor, arms and legs extended"}
+                ]
+            },
+            {
+                "id": "55555555-5555-5555-5555-555555555541",
+                "name": "Stability Finish",
+                "block_type": "functional",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "55555555-5555-5555-5555-555555555542", "name": "Pallof Press", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "12 each side", "notes": "Anti-rotation, press and hold"},
+                    {"id": "55555555-5555-5555-5555-555555555543", "name": "Superman Hold", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "30 seconds", "notes": "Lift arms and legs, squeeze glutes"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{core,abs,obliques,stability,plank,strength,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 6. Push Day
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'f6a7b8c9-d0e1-9f0a-3b4c-5d6e7f8a9b0c',
+    'Push Day',
+    'Traditional push day focusing on chest, shoulders, and triceps. Part of a Push/Pull/Legs split routine.',
+    'push',
+    'intermediate',
+    50,
+    '{
+        "blocks": [
+            {
+                "id": "66666666-6666-6666-6666-666666666611",
+                "name": "Warm-Up",
+                "block_type": "dynamic_stretch",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "66666666-6666-6666-6666-666666666612", "name": "Arm Circles", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "15 each", "notes": "Warm up shoulders"},
+                    {"id": "66666666-6666-6666-6666-666666666613", "name": "Band Pull-Aparts", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "15", "notes": "Activate rear delts"},
+                    {"id": "66666666-6666-6666-6666-666666666614", "name": "Light Push-Ups", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Prepare pushing muscles"}
+                ]
+            },
+            {
+                "id": "66666666-6666-6666-6666-666666666621",
+                "name": "Heavy Compound",
+                "block_type": "push",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "66666666-6666-6666-6666-666666666622", "name": "Barbell Bench Press", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "6-8", "notes": "Main lift, controlled descent, explosive press"},
+                    {"id": "66666666-6666-6666-6666-666666666623", "name": "Overhead Press", "sequence": 2, "prescribed_sets": 4, "prescribed_reps": "8", "notes": "Strict form, no leg drive"},
+                    {"id": "66666666-6666-6666-6666-666666666624", "name": "Incline Dumbbell Press", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "30-degree incline, full range"}
+                ]
+            },
+            {
+                "id": "66666666-6666-6666-6666-666666666631",
+                "name": "Accessory",
+                "block_type": "push",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "66666666-6666-6666-6666-666666666632", "name": "Cable Flyes", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Squeeze at peak contraction"},
+                    {"id": "66666666-6666-6666-6666-666666666633", "name": "Lateral Raises", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "Light weight, controlled movement"},
+                    {"id": "66666666-6666-6666-6666-666666666634", "name": "Tricep Pushdowns", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Keep elbows stationary"},
+                    {"id": "66666666-6666-6666-6666-666666666635", "name": "Overhead Tricep Extension", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Full stretch at bottom"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{push,chest,shoulders,triceps,bench_press,strength,ppl,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 7. Pull Day
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'a7b8c9d0-e1f2-0a1b-4c5d-6e7f8a9b0c1d',
+    'Pull Day',
+    'Complete pull day targeting back and biceps. Part of a Push/Pull/Legs split routine.',
+    'pull',
+    'intermediate',
+    50,
+    '{
+        "blocks": [
+            {
+                "id": "77777777-7777-7777-7777-777777777711",
+                "name": "Warm-Up",
+                "block_type": "dynamic_stretch",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "77777777-7777-7777-7777-777777777712", "name": "Band Face Pulls", "sequence": 1, "prescribed_sets": 2, "prescribed_reps": "15", "notes": "Light resistance, warm up rear delts"},
+                    {"id": "77777777-7777-7777-7777-777777777713", "name": "Scapular Push-Ups", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Protract and retract shoulder blades"},
+                    {"id": "77777777-7777-7777-7777-777777777714", "name": "Cat-Cow", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "10", "notes": "Mobilize thoracic spine"}
+                ]
+            },
+            {
+                "id": "77777777-7777-7777-7777-777777777721",
+                "name": "Heavy Compound",
+                "block_type": "pull",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "77777777-7777-7777-7777-777777777722", "name": "Deadlift", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "5", "notes": "Brace core, drive through heels"},
+                    {"id": "77777777-7777-7777-7777-777777777723", "name": "Pull-Ups or Lat Pulldown", "sequence": 2, "prescribed_sets": 4, "prescribed_reps": "8-10", "notes": "Full range of motion"},
+                    {"id": "77777777-7777-7777-7777-777777777724", "name": "Barbell Row", "sequence": 3, "prescribed_sets": 4, "prescribed_reps": "8", "notes": "Keep back flat, pull to lower chest"}
+                ]
+            },
+            {
+                "id": "77777777-7777-7777-7777-777777777731",
+                "name": "Accessory",
+                "block_type": "pull",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "77777777-7777-7777-7777-777777777732", "name": "Seated Cable Row", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Squeeze shoulder blades together"},
+                    {"id": "77777777-7777-7777-7777-777777777733", "name": "Face Pulls", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "15", "notes": "External rotation at end"},
+                    {"id": "77777777-7777-7777-7777-777777777734", "name": "Barbell Curls", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "No swinging, controlled tempo"},
+                    {"id": "77777777-7777-7777-7777-777777777735", "name": "Hammer Curls", "sequence": 4, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Targets brachialis and forearms"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{pull,back,biceps,deadlift,rows,lats,strength,ppl,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 8. Leg Day
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'b8c9d0e1-f2a3-1b2c-5d6e-7f8a9b0c1d2e',
+    'Leg Day',
+    'Comprehensive leg workout for the Push/Pull/Legs split. Targets quads, hamstrings, glutes, and calves.',
+    'legs',
+    'intermediate',
+    55,
+    '{
+        "blocks": [
+            {
+                "id": "88888888-8888-8888-8888-888888888811",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "88888888-8888-8888-8888-888888888812", "name": "Bike or Row", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "5 minutes", "notes": "Light effort, increase blood flow"},
+                    {"id": "88888888-8888-8888-8888-888888888813", "name": "Leg Swings", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "15 each", "notes": "Front-back and side-side"},
+                    {"id": "88888888-8888-8888-8888-888888888814", "name": "Goblet Squats", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Light weight, practice form"}
+                ]
+            },
+            {
+                "id": "88888888-8888-8888-8888-888888888821",
+                "name": "Heavy Compound",
+                "block_type": "strength",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "88888888-8888-8888-8888-888888888822", "name": "Back Squat", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "6-8", "notes": "Below parallel, drive through heels"},
+                    {"id": "88888888-8888-8888-8888-888888888823", "name": "Romanian Deadlift", "sequence": 2, "prescribed_sets": 4, "prescribed_reps": "10", "notes": "Hip hinge, feel hamstring stretch"},
+                    {"id": "88888888-8888-8888-8888-888888888824", "name": "Bulgarian Split Squat", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "10 each", "notes": "Rear foot elevated, control descent"}
+                ]
+            },
+            {
+                "id": "88888888-8888-8888-8888-888888888831",
+                "name": "Accessory",
+                "block_type": "functional",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "88888888-8888-8888-8888-888888888832", "name": "Leg Press", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Full range, dont lock knees"},
+                    {"id": "88888888-8888-8888-8888-888888888833", "name": "Leg Curls", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "12", "notes": "Controlled tempo"},
+                    {"id": "88888888-8888-8888-8888-888888888834", "name": "Walking Lunges", "sequence": 3, "prescribed_sets": 3, "prescribed_reps": "12 each", "notes": "Long stride, control balance"},
+                    {"id": "88888888-8888-8888-8888-888888888835", "name": "Calf Raises", "sequence": 4, "prescribed_sets": 4, "prescribed_reps": "15", "notes": "Full stretch, pause at top"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{legs,squats,deadlifts,glutes,hamstrings,quads,calves,ppl,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 9. Cardio & Conditioning
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'c9d0e1f2-a3b4-2c3d-6e7f-8a9b0c1d2e3f',
+    'Cardio & Conditioning',
+    'High-intensity cardio and conditioning workout. Builds endurance, burns calories, and improves cardiovascular fitness.',
+    'cardio',
+    'intermediate',
+    35,
+    '{
+        "blocks": [
+            {
+                "id": "99999999-9999-9999-9999-999999999911",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "99999999-9999-9999-9999-999999999912", "name": "Light Jog or Bike", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "3 minutes", "notes": "Easy pace to elevate heart rate"},
+                    {"id": "99999999-9999-9999-9999-999999999913", "name": "Dynamic Stretches", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "2 minutes", "notes": "Leg swings, arm circles, torso twists"},
+                    {"id": "99999999-9999-9999-9999-999999999914", "name": "High Knees", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "20 each", "notes": "Increase intensity gradually"}
+                ]
+            },
+            {
+                "id": "99999999-9999-9999-9999-999999999921",
+                "name": "HIIT Circuit",
+                "block_type": "cardio",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "99999999-9999-9999-9999-999999999922", "name": "Burpees", "sequence": 1, "prescribed_sets": 4, "prescribed_reps": "30 seconds", "notes": "Rest 15 seconds between sets"},
+                    {"id": "99999999-9999-9999-9999-999999999923", "name": "Jump Squats", "sequence": 2, "prescribed_sets": 4, "prescribed_reps": "30 seconds", "notes": "Explosive jump, soft landing"},
+                    {"id": "99999999-9999-9999-9999-999999999924", "name": "Mountain Climbers", "sequence": 3, "prescribed_sets": 4, "prescribed_reps": "30 seconds", "notes": "Fast pace, core tight"},
+                    {"id": "99999999-9999-9999-9999-999999999925", "name": "Jumping Lunges", "sequence": 4, "prescribed_sets": 4, "prescribed_reps": "30 seconds", "notes": "Switch legs in air"}
+                ]
+            },
+            {
+                "id": "99999999-9999-9999-9999-999999999931",
+                "name": "Finisher",
+                "block_type": "cardio",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "99999999-9999-9999-9999-999999999932", "name": "Rowing or Bike Sprint", "sequence": 1, "prescribed_sets": 5, "prescribed_reps": "30 seconds", "notes": "Max effort, 30 seconds rest between"},
+                    {"id": "99999999-9999-9999-9999-999999999933", "name": "Plank Hold", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "60 seconds", "notes": "Recover while building core strength"}
+                ]
+            },
+            {
+                "id": "99999999-9999-9999-9999-999999999941",
+                "name": "Cool Down",
+                "block_type": "static_stretch",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "99999999-9999-9999-9999-999999999942", "name": "Walking", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "3 minutes", "notes": "Bring heart rate down gradually"},
+                    {"id": "99999999-9999-9999-9999-999999999943", "name": "Full Body Stretch", "sequence": 2, "prescribed_sets": 1, "prescribed_reps": "5 minutes", "notes": "Focus on worked muscles"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{cardio,hiit,conditioning,endurance,fat_loss,sprints,intermediate}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 10. Beginner Full Body
+-- ============================================================================
+INSERT INTO system_workout_templates (
+    id, name, description, category, difficulty,
+    duration_minutes, exercises, tags, source_file, created_at
+) VALUES (
+    'd0e1f2a3-b4c5-3d4e-7f8a-9b0c1d2e3f4a',
+    'Beginner Full Body',
+    'Perfect starting point for fitness beginners. Covers all major movement patterns with focus on form and building a foundation.',
+    'full_body',
+    'beginner',
+    40,
+    '{
+        "blocks": [
+            {
+                "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa011",
+                "name": "Warm-Up",
+                "block_type": "cardio",
+                "sequence": 1,
+                "exercises": [
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa012", "name": "March in Place", "sequence": 1, "prescribed_sets": 1, "prescribed_reps": "2 minutes", "notes": "Get moving, elevate heart rate"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa013", "name": "Arm Circles", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "10 each direction", "notes": "Loosen up shoulders"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa014", "name": "Bodyweight Squats", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Practice form, sit back into heels"}
+                ]
+            },
+            {
+                "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa021",
+                "name": "Lower Body",
+                "block_type": "strength",
+                "sequence": 2,
+                "exercises": [
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa022", "name": "Goblet Squats", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "Hold weight at chest, squat to depth you can control"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa023", "name": "Dumbbell Romanian Deadlift", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "10", "notes": "Light weight, hinge at hips, slight knee bend"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa024", "name": "Reverse Lunges", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "8 each", "notes": "Step back, lower with control"}
+                ]
+            },
+            {
+                "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa031",
+                "name": "Upper Body",
+                "block_type": "strength",
+                "sequence": 3,
+                "exercises": [
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa032", "name": "Push-Ups (or Modified)", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "8-10", "notes": "Use knees if needed, maintain plank position"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa033", "name": "Dumbbell Rows", "sequence": 2, "prescribed_sets": 3, "prescribed_reps": "10 each", "notes": "Support on bench, pull to hip"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa034", "name": "Dumbbell Shoulder Press", "sequence": 3, "prescribed_sets": 2, "prescribed_reps": "10", "notes": "Seated or standing, press straight up"}
+                ]
+            },
+            {
+                "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa041",
+                "name": "Core & Finish",
+                "block_type": "functional",
+                "sequence": 4,
+                "exercises": [
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa042", "name": "Plank", "sequence": 1, "prescribed_sets": 3, "prescribed_reps": "20-30 seconds", "notes": "Keep body straight, don't let hips sag"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa043", "name": "Dead Bug", "sequence": 2, "prescribed_sets": 2, "prescribed_reps": "8 each", "notes": "Lower back stays pressed to floor"},
+                    {"id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa044", "name": "Light Stretching", "sequence": 3, "prescribed_sets": 1, "prescribed_reps": "5 minutes", "notes": "Stretch all major muscle groups"}
+                ]
+            }
+        ]
+    }'::jsonb,
+    '{beginner,full_body,foundation,basic,newbie,starter,easy}',
+    'build_325_seed.sql',
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- VERIFICATION
+-- ============================================================================
+
+DO $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO v_count
+    FROM system_workout_templates
+    WHERE source_file = 'build_325_seed.sql';
+
+    RAISE NOTICE 'Build 325 seeded % workout templates', v_count;
+
+    IF v_count < 10 THEN
+        RAISE WARNING 'Expected 10 templates, only % were inserted (some may have already existed)', v_count;
+    END IF;
+END $$;
+
+COMMIT;
