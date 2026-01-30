@@ -10,8 +10,15 @@ import SwiftUI
 
 struct WorkoutPickerView: View {
     @StateObject private var viewModel = WorkoutPickerViewModel()
+    @EnvironmentObject var appState: AppState
+
+    // BUILD 328: Use sheet(item:) pattern for reliable first-tap behavior
     @State private var selectedTemplate: SystemWorkoutTemplate?
-    @State private var showingTemplateDetail: Bool = false
+
+    // BUILD 328: Workout execution state
+    @State private var createdSession: ManualSession?
+    @State private var isCreatingSession: Bool = false
+    @State private var creationError: String?
 
     var body: some View {
         NavigationStack {
@@ -205,8 +212,8 @@ struct WorkoutPickerView: View {
                             } else {
                                 ForEach(viewModel.recommendations) { template in
                                     WorkoutRecommendationCard(template: template) {
+                                        // BUILD 328: Direct assignment triggers sheet(item:)
                                         selectedTemplate = template
-                                        showingTemplateDetail = true
                                     }
                                 }
                             }
@@ -232,10 +239,117 @@ struct WorkoutPickerView: View {
             .task {
                 await viewModel.loadTemplatesIfNeeded()
             }
-            .sheet(isPresented: $showingTemplateDetail) {
-                if let template = selectedTemplate {
-                    WorkoutTemplateDetailSheet(template: template)
+            // BUILD 328: Use sheet(item:) pattern for reliable first-tap behavior
+            .sheet(item: $selectedTemplate) { template in
+                WorkoutTemplateDetailSheet(
+                    template: template,
+                    isCreating: isCreatingSession,
+                    onStartWorkout: {
+                        startWorkout(from: template)
+                    },
+                    onDismiss: {
+                        selectedTemplate = nil
+                    }
+                )
+            }
+            // BUILD 328: Full screen workout execution
+            .fullScreenCover(item: $createdSession) { session in
+                if let patientId = appState.userId,
+                   let patientUUID = UUID(uuidString: patientId) {
+                    ManualWorkoutExecutionView(
+                        session: session,
+                        patientId: patientUUID,
+                        onComplete: {
+                            createdSession = nil
+                            selectedTemplate = nil
+                        }
+                    )
                 }
+            }
+            .alert("Error", isPresented: Binding(
+                get: { creationError != nil },
+                set: { if !$0 { creationError = nil } }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                if let error = creationError {
+                    Text(error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Workout Creation
+
+    private func startWorkout(from template: SystemWorkoutTemplate) {
+        guard let patientId = appState.userId,
+              let patientUUID = UUID(uuidString: patientId) else {
+            creationError = "Unable to start workout: User not found"
+            return
+        }
+
+        isCreatingSession = true
+        creationError = nil
+
+        Task {
+            await createSession(from: template, patientId: patientUUID)
+        }
+    }
+
+    private func createSession(from template: SystemWorkoutTemplate, patientId: UUID) async {
+        let service = ManualWorkoutService()
+        let logger = DebugLogger.shared
+
+        do {
+            logger.log("QuickPick: Creating session from template: \(template.name)", level: .diagnostic)
+
+            // 1. Create manual session
+            let session = try await service.createManualSession(
+                name: template.name,
+                patientId: patientId,
+                sourceTemplateId: template.id,
+                sourceTemplateType: .system
+            )
+
+            logger.log("QuickPick: Session created: \(session.id)", level: .success)
+
+            // 2. Add exercises from template blocks
+            for (blockIndex, block) in template.blocks.enumerated() {
+                for (exerciseIndex, exercise) in block.exercises.enumerated() {
+                    let sequence = (blockIndex * 100) + exerciseIndex
+
+                    let input = AddManualSessionExerciseInput(
+                        manualSessionId: session.id,
+                        exerciseTemplateId: nil, // Templates don't have valid FK references
+                        exerciseName: exercise.name,
+                        blockName: block.name,
+                        sequence: sequence,
+                        targetSets: exercise.sets ?? 3,
+                        targetReps: exercise.reps ?? "10",
+                        targetLoad: nil,
+                        loadUnit: nil,
+                        restPeriodSeconds: nil,
+                        notes: exercise.notes
+                    )
+
+                    _ = try await service.addExercise(to: session.id, exercise: input)
+                }
+            }
+
+            logger.log("QuickPick: Added \(template.exerciseCount) exercises to session", level: .success)
+
+            // 3. Dismiss sheet and show workout execution
+            await MainActor.run {
+                isCreatingSession = false
+                selectedTemplate = nil
+                createdSession = session
+            }
+
+        } catch {
+            logger.log("QuickPick: Failed to create session: \(error.localizedDescription)", level: .error)
+            await MainActor.run {
+                isCreatingSession = false
+                creationError = "Failed to start workout: \(error.localizedDescription)"
             }
         }
     }
@@ -391,6 +505,10 @@ private struct WorkoutRecommendationCard: View {
 
 private struct WorkoutTemplateDetailSheet: View {
     let template: SystemWorkoutTemplate
+    let isCreating: Bool
+    let onStartWorkout: () -> Void
+    let onDismiss: () -> Void
+
     @Environment(\.dismiss) private var dismiss
     @State private var showingStartConfirmation: Bool = false
 
@@ -468,24 +586,29 @@ private struct WorkoutTemplateDetailSheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") {
+                        onDismiss()
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingStartConfirmation = true
-                    } label: {
-                        Text("Start")
-                            .fontWeight(.semibold)
+                    if isCreating {
+                        ProgressView()
+                    } else {
+                        Button {
+                            showingStartConfirmation = true
+                        } label: {
+                            Text("Start")
+                                .fontWeight(.semibold)
+                        }
                     }
                 }
             }
             .alert("Start Workout?", isPresented: $showingStartConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Start") {
-                    // TODO: Navigate to workout execution
-                    dismiss()
+                    // BUILD 328: Actually start the workout
+                    onStartWorkout()
                 }
             } message: {
                 Text("Begin \(template.name)?")
@@ -496,4 +619,5 @@ private struct WorkoutTemplateDetailSheet: View {
 
 #Preview {
     WorkoutPickerView()
+        .environmentObject(AppState())
 }
