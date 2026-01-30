@@ -121,7 +121,7 @@ struct SystemWorkoutTemplate: Codable, Identifiable {
                 name: blockName,
                 blockType: WorkoutBlockType.inferFromName(blockName).rawValue,
                 sequence: index,
-                exercises: exercises.map { flat in
+                exercises: exercises.sorted { ($0.sequence ?? 0) < ($1.sequence ?? 0) }.map { flat in
                     DatabaseExercise(
                         id: UUID(),
                         exerciseTemplateId: flat.exerciseTemplateId,

@@ -436,6 +436,7 @@ class TodaySessionViewModel: ObservableObject {
             """)
             .eq("session_id", value: session.id)
             .order("sequence", ascending: true)
+            .order("created_at", ascending: true)
             .order("id", ascending: true)
             .execute()
 

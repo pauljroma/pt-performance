@@ -39,6 +39,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
     @Published var showError = false
     @Published var showCompletionConfirmation = false
     @Published var isWorkoutCompleted = false
+    @Published var isTimerVisible: Bool = true
 
     // Current exercise input fields
     @Published var actualSets: Int = 0
@@ -134,7 +135,12 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
             // Secondary sort by block name for stable ordering when sort orders match
             return lhs.key < rhs.key
         }
-        .map { ($0.key, $0.value.sorted { ($0.sequence, $0.id.uuidString) < ($1.sequence, $1.id.uuidString) }) }
+        .map { ($0.key, $0.value.sorted { lhs, rhs in
+            if lhs.sequence != rhs.sequence {
+                return lhs.sequence < rhs.sequence
+            }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }) }
     }
 
     /// Check if a block is completed
@@ -801,21 +807,40 @@ struct ManualWorkoutExecutionView: View {
         VStack(spacing: 12) {
             // Timer and Progress Row
             HStack {
-                // Elapsed Time
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Time")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                // Elapsed Time (conditionally visible, but always tracked)
+                if viewModel.isTimerVisible {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Time")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock.fill")
-                            .foregroundColor(.blue)
-                        Text(viewModel.elapsedTimeDisplay)
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .monospacedDigit()
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.fill")
+                                .foregroundColor(.blue)
+                            Text(viewModel.elapsedTimeDisplay)
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .monospacedDigit()
+                        }
                     }
                 }
+
+                Spacer()
+
+                // Timer visibility toggle button
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewModel.isTimerVisible.toggle()
+                    }
+                } label: {
+                    Image(systemName: viewModel.isTimerVisible ? "eye.fill" : "eye.slash.fill")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .padding(8)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(8)
+                }
+                .accessibilityLabel(viewModel.isTimerVisible ? "Hide timer" : "Show timer")
 
                 Spacer()
 
