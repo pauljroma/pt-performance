@@ -18,26 +18,57 @@ struct SubscriptionView: View {
 
                     // MARK: - Header
                     VStack(spacing: 12) {
-                        Image(systemName: "star.fill")
+                        Image(systemName: storeKit.isPremium ? "checkmark.seal.fill" : "star.fill")
                             .font(.system(size: 48))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [.blue, .purple],
+                                    colors: storeKit.isPremium ? [.green, .blue] : [.blue, .purple],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                             .padding(.top, 16)
 
-                        Text("Unlock Premium")
+                        Text(storeKit.isPremium ? "Premium Active" : "Unlock Premium")
                             .font(.largeTitle)
                             .fontWeight(.bold)
 
-                        Text("Get the most out of your training with premium features")
+                        Text(storeKit.isPremium
+                            ? "You have access to all premium features"
+                            : "Get the most out of your training with premium features")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
+                    }
+
+                    // MARK: - Current Plan Status
+                    if storeKit.isPremium {
+                        VStack(spacing: 8) {
+                            HStack {
+                                Image(systemName: "crown.fill")
+                                    .foregroundColor(.yellow)
+                                Text("Current Plan")
+                                    .font(.headline)
+                            }
+
+                            Text(currentPlanDescription)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            if storeKit.subscriptionStatus == .gracePeriod {
+                                Text("Billing issue - please update payment method")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color(.systemGray6))
+                        )
+                        .padding(.horizontal)
                     }
 
                     // MARK: - Feature List
@@ -75,71 +106,73 @@ struct SubscriptionView: View {
                     }
                     .padding(.horizontal)
 
-                    // MARK: - Pricing Cards
-                    if !storeKit.products.isEmpty {
-                        VStack(spacing: 12) {
-                            if let annual = storeKit.annualProduct {
-                                PricingCard(
-                                    product: annual,
-                                    name: "Annual",
-                                    badge: "Best Value",
-                                    subtitle: "7-day free trial",
-                                    isSelected: selectedProduct?.id == annual.id
-                                )
-                                .onTapGesture {
-                                    selectedProduct = annual
+                    // MARK: - Pricing Cards (only show when not subscribed)
+                    if !storeKit.isPremium {
+                        if !storeKit.products.isEmpty {
+                            VStack(spacing: 12) {
+                                if let annual = storeKit.annualProduct {
+                                    PricingCard(
+                                        product: annual,
+                                        name: "Annual",
+                                        badge: "Best Value",
+                                        subtitle: "7-day free trial",
+                                        isSelected: selectedProduct?.id == annual.id
+                                    )
+                                    .onTapGesture {
+                                        selectedProduct = annual
+                                    }
                                 }
-                            }
 
-                            if let monthly = storeKit.monthlyProduct {
-                                PricingCard(
-                                    product: monthly,
-                                    name: "Monthly",
-                                    badge: nil,
-                                    subtitle: nil,
-                                    isSelected: selectedProduct?.id == monthly.id
-                                )
-                                .onTapGesture {
-                                    selectedProduct = monthly
+                                if let monthly = storeKit.monthlyProduct {
+                                    PricingCard(
+                                        product: monthly,
+                                        name: "Monthly",
+                                        badge: nil,
+                                        subtitle: nil,
+                                        isSelected: selectedProduct?.id == monthly.id
+                                    )
+                                    .onTapGesture {
+                                        selectedProduct = monthly
+                                    }
                                 }
                             }
+                            .padding(.horizontal)
+                        } else if storeKit.isLoading {
+                            ProgressView("Loading plans...")
+                                .padding()
                         }
-                        .padding(.horizontal)
-                    } else if storeKit.isLoading {
-                        ProgressView("Loading plans...")
-                            .padding()
-                    }
 
-                    // MARK: - Purchase Button
-                    if let product = selectedProduct {
-                        Button {
-                            Task {
-                                await purchaseSelected()
-                            }
-                        } label: {
-                            HStack {
-                                if isPurchasing {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text(purchaseButtonTitle(for: product))
-                                        .fontWeight(.semibold)
+                        // MARK: - Purchase Button
+                        if let product = selectedProduct {
+                            Button {
+                                Task {
+                                    await purchaseSelected()
                                 }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                            } label: {
+                                HStack {
+                                    if isPurchasing {
+                                        ProgressView()
+                                            .tint(.white)
+                                    } else {
+                                        Text(purchaseButtonTitle(for: product))
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [.blue, .purple],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(14)
+                                .foregroundColor(.white)
+                                .cornerRadius(14)
+                            }
+                            .disabled(isPurchasing)
+                            .padding(.horizontal)
                         }
-                        .disabled(isPurchasing)
-                        .padding(.horizontal)
                     }
 
                     // MARK: - Error Message
@@ -189,6 +222,18 @@ struct SubscriptionView: View {
             if selectedProduct == nil {
                 selectedProduct = storeKit.annualProduct
             }
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var currentPlanDescription: String {
+        if storeKit.purchasedProductIDs.contains("com.ptperformance.app.annual") {
+            return "Annual Premium - $59.99/year"
+        } else if storeKit.purchasedProductIDs.contains("com.ptperformance.app.monthly") {
+            return "Monthly Premium - $9.99/month"
+        } else {
+            return "Premium Subscription"
         }
     }
 

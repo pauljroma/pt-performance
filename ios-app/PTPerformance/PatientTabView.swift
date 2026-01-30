@@ -136,10 +136,37 @@ struct PatientTabView: View {
 struct PatientSettingsView: View {
     @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @StateObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
     // Previously @StateObject created separate observation, so toggle didn't update tabs
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
+
+    // MARK: - Computed Properties
+
+    /// Current subscription plan display text
+    private var subscriptionPlanText: String {
+        if storeKit.isPremium {
+            if storeKit.purchasedProductIDs.contains("com.ptperformance.app.annual") {
+                return "Annual Premium"
+            } else if storeKit.purchasedProductIDs.contains("com.ptperformance.app.monthly") {
+                return "Monthly Premium"
+            } else {
+                return "Premium Active"
+            }
+        } else {
+            return "Free Plan"
+        }
+    }
+
+    /// Therapist link status display text
+    private var therapistLinkStatusText: String {
+        if therapistLinkingVM.isLinked {
+            return therapistLinkingVM.therapistName ?? "Linked"
+        } else {
+            return "Not linked"
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -217,8 +244,13 @@ struct PatientSettingsView: View {
                         HStack {
                             Image(systemName: "star.fill")
                                 .foregroundColor(.yellow)
-                            Text("Manage Subscription")
-                                .foregroundColor(.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Manage Subscription")
+                                    .foregroundColor(.primary)
+                                Text(subscriptionPlanText)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                 }
@@ -228,10 +260,15 @@ struct PatientSettingsView: View {
                         TherapistLinkingView()
                     } label: {
                         HStack {
-                            Image(systemName: "person.2.fill")
-                                .foregroundColor(.blue)
-                            Text("Therapist Linking")
-                                .foregroundColor(.primary)
+                            Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
+                                .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Therapist Linking")
+                                    .foregroundColor(.primary)
+                                Text(therapistLinkStatusText)
+                                    .font(.caption)
+                                    .foregroundColor(therapistLinkingVM.isLinked ? .green : .secondary)
+                            }
                         }
                     }
                 }
@@ -290,6 +327,10 @@ struct PatientSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .task {
+                // Fetch therapist link status on view appear
+                await therapistLinkingVM.checkLinkStatus()
+            }
         }
     }
 

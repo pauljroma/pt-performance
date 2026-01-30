@@ -4,6 +4,10 @@ import UIKit
 struct TherapistLinkingView: View {
     @StateObject private var viewModel = TherapistLinkingViewModel()
     @State private var showUnlinkConfirmation = false
+    @State private var showCopiedToast = false
+
+    // Timer for countdown updates
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         List {
@@ -75,10 +79,14 @@ struct TherapistLinkingView: View {
                                 .foregroundColor(.blue)
                                 .textSelection(.enabled)
 
-                            if let expiresAt = viewModel.codeExpiresAt {
-                                Text("Expires: \(expiresAt, style: .relative)")
-                                    .font(.caption2)
-                                    .foregroundColor(.orange)
+                            if let timeRemaining = viewModel.timeRemaining {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock")
+                                        .font(.caption2)
+                                    Text("Expires in \(timeRemaining)")
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(timeRemaining == "Expired" ? .red : .orange)
                             }
                         }
                         .padding(.vertical, 4)
@@ -86,12 +94,19 @@ struct TherapistLinkingView: View {
                         HStack {
                             Button {
                                 UIPasteboard.general.string = code
+                                showCopiedToast = true
+
+                                // Hide toast after 2 seconds
+                                Task {
+                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    showCopiedToast = false
+                                }
                             } label: {
-                                Label("Copy", systemImage: "doc.on.doc")
+                                Label(showCopiedToast ? "Copied!" : "Copy", systemImage: showCopiedToast ? "checkmark" : "doc.on.doc")
                             }
                             .buttonStyle(.bordered)
 
-                            ShareLink(item: code) {
+                            ShareLink(item: "My PT Performance linking code is: \(code)") {
                                 Label("Share", systemImage: "square.and.arrow.up")
                             }
                             .buttonStyle(.bordered)
@@ -114,6 +129,11 @@ struct TherapistLinkingView: View {
         .navigationTitle("Therapist Linking")
         .task {
             await viewModel.checkLinkStatus()
+        }
+        .onReceive(timer) { _ in
+            // Force UI update for countdown timer
+            // The timeRemaining computed property will recalculate
+            viewModel.objectWillChange.send()
         }
     }
 }

@@ -8,6 +8,7 @@
 import Foundation
 import AuthenticationServices
 import CryptoKit
+import UIKit
 
 @MainActor
 final class AppleSignInService: NSObject, ObservableObject {
@@ -20,8 +21,11 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Using MainActor-isolated storage ensures thread-safe access from nonisolated delegate methods
     private var continuation: CheckedContinuation<Void, Error>?
 
+    private let logger = DebugLogger.shared
+
     override private init() {
         super.init()
+        logger.info("AppleSignIn", "AppleSignInService initialized")
     }
 
     // MARK: - Public API
@@ -29,12 +33,16 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Initiates Sign in with Apple flow
     /// - Throws: Error if sign-in fails or is cancelled
     func signIn() async throws {
+        logger.info("AppleSignIn", "Starting Sign in with Apple flow")
+
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.continuation = cont
 
             let nonce = randomNonceString()
             self.currentNonce = nonce
             let hashedNonce = sha256(nonce)
+
+            self.logger.diagnostic("AppleSignIn: Generated nonce, presenting authorization sheet")
 
             let appleIDProvider = ASAuthorizationAppleIDProvider()
             let request = appleIDProvider.createRequest()
@@ -89,7 +97,11 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
+        let logger = DebugLogger.shared
+        logger.info("AppleSignIn", "Authorization completed, processing credential")
+
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            logger.error("AppleSignIn", "Invalid credential type received")
             self.continuation?.resume(throwing: AppleSignInError.invalidCredential)
             self.continuation = nil
             return
@@ -97,16 +109,20 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
 
         guard let idTokenData = appleIDCredential.identityToken,
               let idTokenString = String(data: idTokenData, encoding: .utf8) else {
+            logger.error("AppleSignIn", "Missing identity token in credential")
             self.continuation?.resume(throwing: AppleSignInError.missingIdentityToken)
             self.continuation = nil
             return
         }
 
         guard let nonce = self.currentNonce else {
+            logger.error("AppleSignIn", "Nonce was not set for this request")
             self.continuation?.resume(throwing: AppleSignInError.missingNonce)
             self.continuation = nil
             return
         }
+
+        logger.diagnostic("AppleSignIn: Received valid ID token, authenticating with Supabase")
 
         // Capture continuation before starting async work
         let capturedContinuation = self.continuation
@@ -116,10 +132,12 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
             do {
                 // Sign in with Supabase using the Apple ID token
                 try await PTSupabaseClient.shared.signInWithApple(idToken: idTokenString, nonce: nonce)
+                logger.success("AppleSignIn", "Supabase authentication successful")
 
                 let supabase = PTSupabaseClient.shared
                 guard let userId = supabase.currentUser?.id.uuidString,
                       let userEmail = supabase.currentUser?.email else {
+                    logger.error("AppleSignIn", "User ID or email missing after Supabase auth")
                     capturedContinuation?.resume(throwing: AppleSignInError.invalidCredential)
                     return
                 }
@@ -140,6 +158,7 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 // If no role found, register as patient (handles first sign-in AND
                 // cases where prior registration failed)
                 if supabase.userRole == nil {
+                    logger.info("AppleSignIn", "No existing role found, registering as patient")
                     let name = displayName.isEmpty
                         ? (userEmail.components(separatedBy: "@").first ?? "Patient")
                         : displayName
@@ -152,8 +171,10 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                     await supabase.fetchUserRole(userId: userId)
                 }
 
+                logger.success("AppleSignIn", "Sign in complete for user: \(userId)")
                 capturedContinuation?.resume()
             } catch {
+                logger.error("AppleSignIn", "Authentication failed: \(error.localizedDescription)")
                 capturedContinuation?.resume(throwing: error)
             }
         }
@@ -163,6 +184,27 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithError error: Error
     ) {
+        let logger = DebugLogger.shared
+        if let authError = error as? ASAuthorizationError {
+            switch authError.code {
+            case .canceled:
+                logger.info("AppleSignIn", "User cancelled sign in")
+            case .failed:
+                logger.error("AppleSignIn", "Authorization failed: \(error.localizedDescription)")
+            case .invalidResponse:
+                logger.error("AppleSignIn", "Invalid response from Apple")
+            case .notHandled:
+                logger.error("AppleSignIn", "Authorization not handled")
+            case .notInteractive:
+                logger.error("AppleSignIn", "Non-interactive authorization failed")
+            case .unknown:
+                logger.error("AppleSignIn", "Unknown authorization error")
+            @unknown default:
+                logger.error("AppleSignIn", "Unrecognized error code: \(authError.code)")
+            }
+        } else {
+            logger.error("AppleSignIn", "Authorization error: \(error.localizedDescription)")
+        }
         self.continuation?.resume(throwing: error)
         self.continuation = nil
     }

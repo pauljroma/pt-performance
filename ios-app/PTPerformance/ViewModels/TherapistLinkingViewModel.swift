@@ -18,6 +18,27 @@ class TherapistLinkingViewModel: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
+    // MARK: - Computed Properties
+
+    /// Time remaining until the linking code expires
+    var timeRemaining: String? {
+        guard let expiresAt = codeExpiresAt else { return nil }
+
+        let now = Date()
+        let interval = expiresAt.timeIntervalSince(now)
+
+        guard interval > 0 else { return "Expired" }
+
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
+    }
+
     // MARK: - Codable Response Types
 
     private struct PatientLink: Codable {
