@@ -16,6 +16,12 @@ class TodaySessionViewModel: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
 
+    // MARK: - Request Deduplication
+    /// Task tracking for fetchTodaySession to prevent concurrent duplicate calls
+    private var fetchSessionTask: Task<Void, Never>?
+    /// Task tracking for fetchTodaysCompletedWorkouts to prevent concurrent duplicate calls
+    private var fetchCompletedWorkoutsTask: Task<Void, Never>?
+
     /// BUILD 290: Offline status passthrough for views (ACP-600)
     var isOffline: Bool {
         supabase.isOffline
@@ -50,79 +56,100 @@ class TodaySessionViewModel: ObservableObject {
     }
 
     /// Fetch today's session for the authenticated patient
+    /// Uses request deduplication to prevent concurrent duplicate API calls
     func fetchTodaySession() async {
-        let logger = DebugLogger.shared
-        isLoading = true
-        errorMessage = nil
+        // Cancel any existing fetch to prevent duplicate concurrent requests
+        fetchSessionTask?.cancel()
 
-        guard let patientId = supabase.userId else {
-            logger.log("❌ No patient ID available", level: .error)
-            errorMessage = "We couldn't find your account. Please sign out and sign back in to continue."
-            isLoading = false
-            return
-        }
+        // Create new task for this fetch
+        fetchSessionTask = Task {
+            let logger = DebugLogger.shared
+            isLoading = true
+            errorMessage = nil
 
-        logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
-        #if DEBUG
-        print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
-        #endif
-
-        do {
-            // Fetch directly from Supabase (backend API not deployed yet)
-            logger.log("📱 Fetching from Supabase...")
-            #if DEBUG
-            print("📱 [TodaySession] Fetching from Supabase...")
-            #endif
-            try await fetchFromSupabase(patientId: patientId)
-            logger.log("✅ Supabase fetch succeeded", level: .success)
-            #if DEBUG
-            print("✅ [TodaySession] Supabase fetch succeeded")
-            #endif
-
-            // BUILD 290: Cache session data for offline use (ACP-600)
-            let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
-            supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
-            logger.log("💾 Cached today's session for offline use", level: .success)
-
-            // BUILD 269: Also fetch today's completed workouts count
-            await fetchTodaysCompletedWorkouts()
-
-            isLoading = false
-        } catch let error {
-            logger.log("❌ Supabase fetch failed", level: .error)
-            logger.log("   Error: \(error.localizedDescription)", level: .error)
-            #if DEBUG
-            print("❌ [TodaySession] Supabase fetch failed")
-            print("   Error: \(error.localizedDescription)")
-            #endif
-
-            // BUILD 290: Serve cached data when offline (ACP-600)
-            if supabase.isOffline,
-               let cached = supabase.getCachedData(
-                   forKey: "today_session_\(patientId)",
-                   type: CachedTodaySession.self
-               ) {
-                self.session = cached.session
-                self.exercises = cached.exercises
-                logger.log("📦 Serving cached session data (offline mode)", level: .success)
-                #if DEBUG
-                print("📦 [TodaySession] Serving cached data - session: \(cached.session?.name ?? "nil"), exercises: \(cached.exercises.count)")
-                #endif
-                // Don't set errorMessage - OfflineBanner handles offline indication
-            } else {
-                errorMessage = """
-                We couldn't load your workout for today.
-
-                Here's what you can try:
-                • Check your internet connection
-                • Pull down to refresh
-                • Make sure you have a program assigned by your therapist
-
-                If this keeps happening, contact your therapist for help.
-                """
+            guard let patientId = supabase.userId else {
+                logger.log("❌ No patient ID available", level: .error)
+                errorMessage = "We couldn't find your account. Please sign out and sign back in to continue."
+                isLoading = false
+                return
             }
-            isLoading = false
+
+            logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
+            #if DEBUG
+            print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
+            #endif
+
+            do {
+                // Check for cancellation before network call
+                try Task.checkCancellation()
+
+                // Fetch directly from Supabase (backend API not deployed yet)
+                logger.log("📱 Fetching from Supabase...")
+                #if DEBUG
+                print("📱 [TodaySession] Fetching from Supabase...")
+                #endif
+                try await fetchFromSupabase(patientId: patientId)
+
+                // Check for cancellation after network call
+                try Task.checkCancellation()
+
+                logger.log("✅ Supabase fetch succeeded", level: .success)
+                #if DEBUG
+                print("✅ [TodaySession] Supabase fetch succeeded")
+                #endif
+
+                // BUILD 290: Cache session data for offline use (ACP-600)
+                let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
+                supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
+                logger.log("💾 Cached today's session for offline use", level: .success)
+
+                // BUILD 269: Also fetch today's completed workouts count
+                await fetchTodaysCompletedWorkouts()
+
+                isLoading = false
+            } catch is CancellationError {
+                // Task was cancelled, don't update state
+                logger.log("⏹️ fetchTodaySession cancelled (superseded by new request)", level: .warning)
+                return
+            } catch let error {
+                logger.log("❌ Supabase fetch failed", level: .error)
+                logger.log("   Error: \(error.localizedDescription)", level: .error)
+                #if DEBUG
+                print("❌ [TodaySession] Supabase fetch failed")
+                print("   Error: \(error.localizedDescription)")
+                #endif
+
+                // BUILD 290: Serve cached data when offline (ACP-600)
+                if supabase.isOffline,
+                   let cached = supabase.getCachedData(
+                       forKey: "today_session_\(patientId)",
+                       type: CachedTodaySession.self
+                   ) {
+                    self.session = cached.session
+                    self.exercises = cached.exercises
+                    logger.log("📦 Serving cached session data (offline mode)", level: .success)
+                    #if DEBUG
+                    print("📦 [TodaySession] Serving cached data - session: \(cached.session?.name ?? "nil"), exercises: \(cached.exercises.count)")
+                    #endif
+                    // Don't set errorMessage - OfflineBanner handles offline indication
+                } else {
+                    errorMessage = """
+                    We couldn't load your workout for today.
+
+                    Here's what you can try:
+                    • Check your internet connection
+                    • Pull down to refresh
+                    • Make sure you have a program assigned by your therapist
+
+                    If this keeps happening, contact your therapist for help.
+                    """
+                }
+                isLoading = false
+            }
         }
+
+        // Await the task completion
+        await fetchSessionTask?.value
 
         // NOTE: Backend API with Edge Functions not yet deployed
         // To enable backend API, uncomment the code below and comment out the Supabase-only code above:
@@ -467,36 +494,29 @@ class TodaySessionViewModel: ObservableObject {
     // MARK: - BUILD 269: Today's Completed Workouts Counter
 
     /// Fetch all workouts completed today (both prescribed and manual)
+    /// Uses request deduplication to prevent concurrent duplicate API calls
+    /// Performance optimized: Uses async let to parallelize both database queries
     func fetchTodaysCompletedWorkouts() async {
-        guard let patientId = supabase.userId else { return }
+        // Cancel any existing fetch to prevent duplicate concurrent requests
+        fetchCompletedWorkoutsTask?.cancel()
 
-        let logger = DebugLogger.shared
-        logger.log("📊 Fetching today's completed workouts...")
+        // Create new task for this fetch
+        fetchCompletedWorkoutsTask = Task {
+            guard let patientId = supabase.userId else { return }
 
-        // Get today's date range
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+            let logger = DebugLogger.shared
+            logger.log("📊 Fetching today's completed workouts...")
 
-        let formatter = ISO8601DateFormatter()
-        let todayStr = formatter.string(from: today)
-        let tomorrowStr = formatter.string(from: tomorrow)
+            // Get today's date range
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
 
-        var workouts: [TodayWorkoutSummary] = []
+            let formatter = ISO8601DateFormatter()
+            let todayStr = formatter.string(from: today)
+            let tomorrowStr = formatter.string(from: tomorrow)
 
-        // 1. Fetch completed prescribed sessions for today
-        // BUILD 271: Use vw_patient_sessions view which includes patient_id
-        do {
-            let response = try await supabase.client
-                .from("vw_patient_sessions")
-                .select("id, phase_name, program_name, completed_at, duration_minutes, total_volume, exercise_count")
-                .eq("patient_id", value: patientId)
-                .eq("completed", value: true)
-                .gte("completed_at", value: todayStr)
-                .lt("completed_at", value: tomorrowStr)
-                .execute()
-
-            // Custom struct for view response
+            // Custom struct for prescribed session view response
             struct PrescribedSessionRow: Codable {
                 let id: String
                 let phase_name: String?
@@ -507,9 +527,72 @@ class TodaySessionViewModel: ObservableObject {
                 let exercise_count: Int?
             }
 
-            let decoder = JSONDecoder()
-            let prescribedSessions = try decoder.decode([PrescribedSessionRow].self, from: response.data)
+            // Check for cancellation before network calls
+            guard !Task.isCancelled else {
+                logger.log("⏹️ fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .warning)
+                return
+            }
 
+            // Helper function to fetch prescribed sessions
+            func fetchPrescribedSessions() async -> [PrescribedSessionRow] {
+                do {
+                    let response = try await supabase.client
+                        .from("vw_patient_sessions")
+                        .select("id, phase_name, program_name, completed_at, duration_minutes, total_volume, exercise_count")
+                        .eq("patient_id", value: patientId)
+                        .eq("completed", value: true)
+                        .gte("completed_at", value: todayStr)
+                        .lt("completed_at", value: tomorrowStr)
+                        .execute()
+
+                    let decoder = JSONDecoder()
+                    let sessions = try decoder.decode([PrescribedSessionRow].self, from: response.data)
+                    logger.log("📊 Found \(sessions.count) prescribed sessions completed today", level: .success)
+                    return sessions
+                } catch {
+                    logger.log("⚠️ Failed to fetch prescribed sessions: \(error.localizedDescription)", level: .warning)
+                    return []
+                }
+            }
+
+            // Helper function to fetch manual sessions
+            func fetchManualSessions() async -> [CompletedManualSessionRow] {
+                do {
+                    let response = try await supabase.client
+                        .from("manual_sessions")
+                        .select("id, name, completed_at, duration_minutes, total_volume")
+                        .eq("patient_id", value: patientId)
+                        .eq("completed", value: true)
+                        .gte("completed_at", value: todayStr)
+                        .lt("completed_at", value: tomorrowStr)
+                        .execute()
+
+                    let decoder = JSONDecoder()
+                    let sessions = try decoder.decode([CompletedManualSessionRow].self, from: response.data)
+                    logger.log("📊 Found \(sessions.count) manual sessions completed today", level: .success)
+                    return sessions
+                } catch {
+                    logger.log("⚠️ Failed to fetch manual sessions: \(error.localizedDescription)", level: .warning)
+                    return []
+                }
+            }
+
+            // Execute both queries in parallel using async let
+            async let prescribedTask = fetchPrescribedSessions()
+            async let manualTask = fetchManualSessions()
+
+            // Await both results concurrently
+            let (prescribedSessions, manualSessions) = await (prescribedTask, manualTask)
+
+            // Check for cancellation after network calls
+            guard !Task.isCancelled else {
+                logger.log("⏹️ fetchTodaysCompletedWorkouts cancelled (superseded by new request)", level: .warning)
+                return
+            }
+
+            var workouts: [TodayWorkoutSummary] = []
+
+            // Process prescribed sessions
             for session in prescribedSessions {
                 if let uuid = UUID(uuidString: session.id) {
                     let completedAt: Date
@@ -533,25 +616,8 @@ class TodaySessionViewModel: ObservableObject {
                     ))
                 }
             }
-            logger.log("📊 Found \(prescribedSessions.count) prescribed sessions completed today", level: .success)
-        } catch {
-            logger.log("⚠️ Failed to fetch prescribed sessions: \(error.localizedDescription)", level: .warning)
-        }
 
-        // 2. Fetch completed manual sessions for today
-        do {
-            let response = try await supabase.client
-                .from("manual_sessions")
-                .select("id, name, completed_at, duration_minutes, total_volume")
-                .eq("patient_id", value: patientId)
-                .eq("completed", value: true)
-                .gte("completed_at", value: todayStr)
-                .lt("completed_at", value: tomorrowStr)
-                .execute()
-
-            let decoder = JSONDecoder()
-            let manualSessions = try decoder.decode([CompletedManualSessionRow].self, from: response.data)
-
+            // Process manual sessions
             for session in manualSessions {
                 if let uuid = UUID(uuidString: session.id) {
                     let completedAt: Date
@@ -572,20 +638,18 @@ class TodaySessionViewModel: ObservableObject {
                     ))
                 }
             }
-            logger.log("📊 Found \(manualSessions.count) manual sessions completed today", level: .success)
-        } catch {
-            logger.log("⚠️ Failed to fetch manual sessions: \(error.localizedDescription)", level: .warning)
-        }
 
-        // Sort by completion time (newest first)
-        workouts.sort { $0.completedAt > $1.completedAt }
+            // Sort by completion time (newest first)
+            workouts.sort { $0.completedAt > $1.completedAt }
 
-        await MainActor.run {
             self.todaysCompletedWorkouts = workouts
             self.completedTodayCount = workouts.count
+
+            logger.log("📊 Total workouts completed today: \(workouts.count)", level: .success)
         }
 
-        logger.log("📊 Total workouts completed today: \(workouts.count)", level: .success)
+        // Await the task completion
+        await fetchCompletedWorkoutsTask?.value
     }
 
     // MARK: - Build 33: Session Completion

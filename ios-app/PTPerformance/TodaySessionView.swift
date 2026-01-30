@@ -125,10 +125,11 @@ struct TodaySessionView: View {
                     onComplete: {
                         createdManualSession = nil
                         selectedWorkoutTemplate = nil
-                        // BUILD 275: Refresh completed workouts FIRST, then fetch next session
+                        // BUILD 275: Refresh completed workouts and fetch next session in parallel
                         Task {
-                            await viewModel.fetchTodaysCompletedWorkouts()
-                            await viewModel.fetchTodaySession()
+                            async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
+                            async let sessionTask: () = viewModel.fetchTodaySession()
+                            _ = await (completedTask, sessionTask)
                         }
                     }
                 )
@@ -147,10 +148,11 @@ struct TodaySessionView: View {
                         isWorkoutStarted = false
                         timer?.invalidate()
                         timer = nil
-                        // BUILD 275: Refresh completed workouts FIRST, then fetch next session
+                        // BUILD 275: Refresh completed workouts and fetch next session in parallel
                         Task {
-                            await viewModel.fetchTodaysCompletedWorkouts()
-                            await viewModel.fetchTodaySession()
+                            async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
+                            async let sessionTask: () = viewModel.fetchTodaySession()
+                            _ = await (completedTask, sessionTask)
                         }
                     }
                 )

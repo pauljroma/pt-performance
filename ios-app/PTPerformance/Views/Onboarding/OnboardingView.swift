@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Main onboarding view with page navigation
 struct OnboardingView: View {
-    @StateObject private var coordinator = OnboardingCoordinator.shared
+    @ObservedObject private var coordinator = OnboardingCoordinator.shared
     @State private var currentPage = 0
     @Environment(\.dismiss) private var dismiss
 

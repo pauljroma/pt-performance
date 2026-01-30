@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @State private var showPrivacyNotice = false
     @State private var isCheckingSession = true

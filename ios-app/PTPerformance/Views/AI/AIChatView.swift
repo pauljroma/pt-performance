@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AIChatView: View {
-    @StateObject private var chatService = AIChatService.shared
+    @ObservedObject private var chatService = AIChatService.shared
     @State private var messageText = ""
     @State private var scrollProxy: ScrollViewProxy?
 

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TherapistTabView: View {
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
 
     var body: some View {
         TabView {
@@ -36,7 +36,7 @@ struct TherapistTabView: View {
 // MARK: - Therapist Settings View
 
 struct TherapistSettingsView: View {
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @EnvironmentObject var appState: AppState
     @State private var showingLogoutConfirmation = false
     @State private var isLoggingOut = false

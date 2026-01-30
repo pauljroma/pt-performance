@@ -6,7 +6,7 @@ import Sentry
 @main
 struct PTPerformanceApp: App {
     @StateObject private var appState = AppState()
-    @StateObject private var storeKit = StoreKitService.shared
+    @ObservedObject private var storeKit = StoreKitService.shared
 
     init() {
         // BUILD 286: Initialize Sentry error monitoring (ACP-599)

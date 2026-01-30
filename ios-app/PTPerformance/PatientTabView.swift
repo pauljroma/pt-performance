@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct PatientTabView: View {
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @StateObject private var supabase = PTSupabaseClient.shared
+    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
 
     // Track selected tab for haptic feedback
@@ -143,8 +143,8 @@ struct PatientTabView: View {
 // MARK: - Patient Settings View
 
 struct PatientSettingsView: View {
-    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @StateObject private var supabase = PTSupabaseClient.shared
+    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @ObservedObject private var supabase = PTSupabaseClient.shared
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
     // Previously @StateObject created separate observation, so toggle didn't update tabs
