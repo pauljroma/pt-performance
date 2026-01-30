@@ -244,9 +244,13 @@ struct AuthLandingView: View {
         // Demo patient UUID from seed data
         let demoPatientId = "00000000-0000-0000-0000-000000000001"
 
+        // Set both appState AND supabase client (view models read from supabase)
         appState.userId = demoPatientId
         appState.userRole = .patient
         appState.isAuthenticated = true
+
+        supabase.userId = demoPatientId
+        supabase.userRole = .patient
 
         // Start session monitoring
         SessionManager.shared.startMonitoring()
@@ -259,9 +263,13 @@ struct AuthLandingView: View {
         // Demo therapist UUID from seed data
         let demoTherapistId = "00000000-0000-0000-0000-000000000100"
 
+        // Set both appState AND supabase client (view models read from supabase)
         appState.userId = demoTherapistId
         appState.userRole = .therapist
         appState.isAuthenticated = true
+
+        supabase.userId = demoTherapistId
+        supabase.userRole = .therapist
 
         // Start session monitoring
         SessionManager.shared.startMonitoring()
