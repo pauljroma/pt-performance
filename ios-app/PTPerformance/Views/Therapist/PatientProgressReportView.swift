@@ -356,7 +356,7 @@ struct PatientProgressReportView: View {
         .task {
             await viewModel.fetchData(for: patient.id.uuidString, days: selectedDateRange.rawValue)
         }
-        .onChange(of: selectedDateRange) { newValue in
+        .onChange(of: selectedDateRange) { _, newValue in
             Task {
                 await viewModel.fetchData(for: patient.id.uuidString, days: newValue.rawValue)
             }

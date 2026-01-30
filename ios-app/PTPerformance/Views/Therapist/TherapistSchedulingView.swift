@@ -322,19 +322,38 @@ struct TherapistSchedulingView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Sessions", systemImage: "calendar.badge.exclamationmark")
-        } description: {
-            switch viewModel.selectedFilter {
-            case .all:
-                Text("No scheduled sessions found across your caseload.")
-            case .upcoming:
-                Text("No upcoming sessions. All sessions may be completed or cancelled.")
-            case .completed:
-                Text("No completed sessions found.")
-            case .cancelled:
-                Text("No cancelled sessions found.")
-            }
+        let (title, message) = emptyStateContent
+        return EmptyStateView(
+            title: title,
+            message: message,
+            icon: "calendar.badge.clock",
+            iconColor: .orange,
+            action: nil
+        )
+    }
+
+    private var emptyStateContent: (title: String, message: String) {
+        switch viewModel.selectedFilter {
+        case .all:
+            return (
+                "No Sessions Found",
+                "No scheduled sessions found across your caseload. Sessions will appear here when patients schedule appointments."
+            )
+        case .upcoming:
+            return (
+                "No Upcoming Sessions",
+                "All sessions have been completed or cancelled. Check back when new sessions are scheduled."
+            )
+        case .completed:
+            return (
+                "No Completed Sessions",
+                "Completed sessions will appear here after patients finish their scheduled appointments."
+            )
+        case .cancelled:
+            return (
+                "No Cancelled Sessions",
+                "No sessions have been cancelled. This is a good sign for patient engagement."
+            )
         }
     }
 

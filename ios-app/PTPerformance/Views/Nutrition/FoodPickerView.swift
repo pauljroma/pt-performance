@@ -28,7 +28,7 @@ struct FoodPickerView: View {
                     .foregroundColor(.secondary)
                 TextField("Search foods...", text: $searchText)
                     .textFieldStyle(.plain)
-                    .onChange(of: searchText) {
+                    .onChange(of: searchText) { _, _ in
                         searchFoods()
                     }
 

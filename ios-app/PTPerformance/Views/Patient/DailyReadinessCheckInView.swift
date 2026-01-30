@@ -32,7 +32,7 @@ struct DailyReadinessCheckInView: View {
                                 .foregroundColor(.secondary)
                         }
                         Slider(value: $sleepHours, in: 3...12, step: 0.5)
-                            .onChange(of: sleepHours) { _ in
+                            .onChange(of: sleepHours) { _, _ in
                                 updatePreview()
                             }
                     }
@@ -44,7 +44,7 @@ struct DailyReadinessCheckInView: View {
                         Text("Good (4)").tag(4)
                         Text("Excellent (5)").tag(5)
                     }
-                    .onChange(of: sleepQuality) { _ in
+                    .onChange(of: sleepQuality) { _, _ in
                         updatePreview()
                     }
                 }
@@ -58,7 +58,7 @@ struct DailyReadinessCheckInView: View {
                         Text("Good (4)").tag(4)
                         Text("Excellent (5)").tag(5)
                     }
-                    .onChange(of: subjectiveReadiness) { _ in
+                    .onChange(of: subjectiveReadiness) { _, _ in
                         updatePreview()
                     }
                 }
@@ -67,7 +67,7 @@ struct DailyReadinessCheckInView: View {
                 Section(header: Text("Soreness & Pain")) {
                     // Arm Soreness Toggle
                     Toggle("Arm Soreness", isOn: $armSoreness)
-                        .onChange(of: armSoreness) { _ in
+                        .onChange(of: armSoreness) { _, _ in
                             updatePreview()
                         }
 
@@ -78,7 +78,7 @@ struct DailyReadinessCheckInView: View {
                             Text("Moderate (2)").tag(2)
                             Text("Severe (3)").tag(3)
                         }
-                        .onChange(of: armSorenessSeverity) { _ in
+                        .onChange(of: armSorenessSeverity) { _, _ in
                             updatePreview()
                         }
                     }

@@ -278,30 +278,17 @@ struct BodyCompositionTimelineView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "figure.stand")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-
-            Text("No Body Composition Data")
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            Text("Track your weight, body fat, and measurements over time.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-
-            Button {
-                showingEntrySheet = true
-            } label: {
-                Label("Add First Entry", systemImage: "plus")
-                    .fontWeight(.semibold)
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(
+            title: "No Body Composition Data",
+            message: "Start tracking your weight, body fat percentage, and muscle mass to visualize your fitness journey over time.",
+            icon: "figure.arms.open",
+            iconColor: .blue,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Add First Entry",
+                icon: "plus.circle.fill",
+                action: { showingEntrySheet = true }
+            )
+        )
     }
 
     // MARK: - Helper Methods

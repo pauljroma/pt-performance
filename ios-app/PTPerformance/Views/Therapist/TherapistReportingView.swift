@@ -335,10 +335,12 @@ struct TherapistReportingView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        ContentUnavailableView(
-            "No Patients Yet",
-            systemImage: "chart.bar.doc.horizontal",
-            description: Text("Reports will appear once patients have been added to your caseload.")
+        EmptyStateView(
+            title: "No Patient Reports",
+            message: "Reports and analytics will appear here once patients are assigned to your caseload. Track adherence, progress trends, and patient outcomes.",
+            icon: "chart.bar.doc.horizontal",
+            iconColor: .purple,
+            action: nil
         )
     }
 

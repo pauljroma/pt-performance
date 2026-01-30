@@ -89,10 +89,12 @@ struct ProgramTemplateLibraryView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        ContentUnavailableView(
-            "No Templates",
-            systemImage: "doc.on.doc",
-            description: Text("Save programs as templates to reuse them later. Templates help you quickly create consistent programs for similar patient needs.")
+        EmptyStateView(
+            title: "No Program Templates",
+            message: "Save your programs as templates to reuse them with multiple patients. Templates help you create consistent, evidence-based programs efficiently.",
+            icon: "doc.on.doc.fill",
+            iconColor: .blue,
+            action: nil
         )
     }
 

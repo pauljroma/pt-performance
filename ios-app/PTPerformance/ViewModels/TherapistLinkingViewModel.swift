@@ -62,7 +62,7 @@ class TherapistLinkingViewModel: ObservableObject {
         errorMessage = nil
 
         guard let patientId = supabase.userId else {
-            errorMessage = "No patient ID available"
+            errorMessage = "We couldn't find your account. Please sign out and sign back in."
             isLoading = false
             return
         }
@@ -83,7 +83,7 @@ class TherapistLinkingViewModel: ObservableObject {
                 therapistName = nil
             }
         } catch {
-            errorMessage = "Failed to check link status: \(error.localizedDescription)"
+            errorMessage = "We couldn't check your therapist connection. Please try again later."
         }
 
         isLoading = false
@@ -117,7 +117,7 @@ class TherapistLinkingViewModel: ObservableObject {
         errorMessage = nil
 
         guard let patientId = supabase.userId else {
-            errorMessage = "No patient ID available"
+            errorMessage = "We couldn't find your account. Please sign out and sign back in."
             isLoading = false
             return
         }
@@ -142,7 +142,7 @@ class TherapistLinkingViewModel: ObservableObject {
             formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             codeExpiresAt = formatter.date(from: decoded.expiresAt)
         } catch {
-            errorMessage = "Failed to generate code: \(error.localizedDescription)"
+            errorMessage = "We couldn't create your linking code. Please check your connection and try again."
         }
 
         isLoading = false
@@ -155,7 +155,7 @@ class TherapistLinkingViewModel: ObservableObject {
         errorMessage = nil
 
         guard let patientId = supabase.userId else {
-            errorMessage = "No patient ID available"
+            errorMessage = "We couldn't find your account. Please sign out and sign back in."
             isLoading = false
             return
         }
@@ -177,7 +177,7 @@ class TherapistLinkingViewModel: ObservableObject {
             linkingCode = nil
             codeExpiresAt = nil
         } catch {
-            errorMessage = "Failed to unlink therapist: \(error.localizedDescription)"
+            errorMessage = "We couldn't disconnect from your therapist. Please try again later."
         }
 
         isLoading = false

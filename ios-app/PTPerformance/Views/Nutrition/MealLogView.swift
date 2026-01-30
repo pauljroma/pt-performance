@@ -121,7 +121,7 @@ struct MealLogView: View {
 
             TextField("Search foods...", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
-                .onChange(of: viewModel.searchText) {
+                .onChange(of: viewModel.searchText) { _, _ in
                     viewModel.searchFoods()
                 }
 

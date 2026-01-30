@@ -40,7 +40,7 @@ struct FormValidationIndicator: View {
         }
         .font(.system(size: 16))
         .scaleEffect(scale)
-        .onChange(of: validationResult) {
+        .onChange(of: validationResult) { _, _ in
             // Animate when validation state changes
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                 scale = 1.0

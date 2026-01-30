@@ -75,29 +75,23 @@ struct AddExerciseToTodaySheet: View {
                 ProgressView("Loading exercises...")
                 Spacer()
             } else if viewModel.filteredExercises.isEmpty {
-                Spacer()
-                VStack(spacing: 12) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary)
-                    Text("No exercises found")
-                        .font(.headline)
-                    Text(viewModel.selectedCategory != nil || viewModel.selectedBodyRegion != nil
-                        ? "Try adjusting your filters"
-                        : "Try a different search term")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    // Clear filters button
-                    if viewModel.selectedCategory != nil || viewModel.selectedBodyRegion != nil {
-                        Button("Clear Filters") {
+                let hasFilters = viewModel.selectedCategory != nil || viewModel.selectedBodyRegion != nil
+                EmptyStateView(
+                    title: "No Exercises Found",
+                    message: hasFilters
+                        ? "No exercises match your current filters. Try adjusting your category or body region selection."
+                        : "No exercises match your search. Try a different search term.",
+                    icon: "figure.run",
+                    iconColor: .secondary,
+                    action: hasFilters ? EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: {
                             viewModel.selectedCategory = nil
                             viewModel.selectedBodyRegion = nil
                         }
-                        .buttonStyle(.bordered)
-                    }
-                }
-                Spacer()
+                    ) : nil
+                )
             } else {
                 List(viewModel.filteredExercises) { exercise in
                     AddExercisePickerRow(

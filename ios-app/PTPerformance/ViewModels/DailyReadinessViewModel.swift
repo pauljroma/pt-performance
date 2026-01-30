@@ -69,7 +69,7 @@ class DailyReadinessViewModel: ObservableObject {
         errorMessage = nil
 
         guard let patientId = PTSupabaseClient.shared.userId else {
-            errorMessage = "Not signed in"
+            errorMessage = "Please sign in to submit your readiness check-in."
             isLoading = false
             return
         }

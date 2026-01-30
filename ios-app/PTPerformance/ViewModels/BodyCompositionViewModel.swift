@@ -108,7 +108,7 @@ class BodyCompositionViewModel: ObservableObject {
             entries = results
             isLoading = false
         } catch {
-            errorMessage = "Failed to load entries: \(error.localizedDescription)"
+            errorMessage = "We couldn't load your measurements. Please check your connection and try again."
             isLoading = false
             ErrorLogger.shared.logError(error, context: "Load Body Composition Entries")
         }
@@ -126,36 +126,36 @@ class BodyCompositionViewModel: ObservableObject {
 
         // Validate numeric fields
         if !weightLb.isEmpty, Double(weightLb) == nil {
-            errorMessage = "Invalid weight value."
+            errorMessage = "Please enter a valid number for weight (e.g., 150)."
             return
         }
         if !bodyFatPercent.isEmpty, Double(bodyFatPercent) == nil {
-            errorMessage = "Invalid body fat percentage."
+            errorMessage = "Please enter a valid number for body fat percentage (e.g., 15.5)."
             return
         }
         if !muscleMassLb.isEmpty, Double(muscleMassLb) == nil {
-            errorMessage = "Invalid muscle mass value."
+            errorMessage = "Please enter a valid number for muscle mass (e.g., 120)."
             return
         }
         if !waistIn.isEmpty, Double(waistIn) == nil {
-            errorMessage = "Invalid waist measurement."
+            errorMessage = "Please enter a valid number for waist measurement (e.g., 32)."
             return
         }
         if !chestIn.isEmpty, Double(chestIn) == nil {
-            errorMessage = "Invalid chest measurement."
+            errorMessage = "Please enter a valid number for chest measurement (e.g., 40)."
             return
         }
         if !armIn.isEmpty, Double(armIn) == nil {
-            errorMessage = "Invalid arm measurement."
+            errorMessage = "Please enter a valid number for arm measurement (e.g., 14)."
             return
         }
         if !legIn.isEmpty, Double(legIn) == nil {
-            errorMessage = "Invalid leg measurement."
+            errorMessage = "Please enter a valid number for leg measurement (e.g., 22)."
             return
         }
 
         guard let patientUUID = UUID(uuidString: patientId) else {
-            errorMessage = "Invalid patient ID."
+            errorMessage = "We couldn't identify your account. Please try signing out and back in."
             return
         }
 
@@ -200,7 +200,7 @@ class BodyCompositionViewModel: ObservableObject {
             await loadEntries(patientId: patientId)
         } catch {
             isSaving = false
-            errorMessage = "Failed to save: \(error.localizedDescription)"
+            errorMessage = "We couldn't save your measurements. Please check your connection and try again."
             ErrorLogger.shared.logError(error, context: "Save Body Composition Entry")
         }
     }
@@ -219,7 +219,7 @@ class BodyCompositionViewModel: ObservableObject {
             // Remove from local array
             entries.removeAll { $0.id == id }
         } catch {
-            errorMessage = "Failed to delete: \(error.localizedDescription)"
+            errorMessage = "We couldn't delete this entry. Please try again."
             ErrorLogger.shared.logError(error, context: "Delete Body Composition Entry")
         }
     }

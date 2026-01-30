@@ -45,16 +45,13 @@ struct ExerciseHistorySheet: View {
                     }
                     .padding()
                 } else if viewModel.sessions.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary.opacity(0.5))
-                        Text("No History Yet")
-                            .font(.headline)
-                        Text("Complete some sessions with this exercise to see your history here.")
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
+                    EmptyStateView(
+                        title: "No History Yet",
+                        message: "Complete workouts with this exercise to track your progress. Weight, reps, and performance trends will appear here.",
+                        icon: "chart.line.uptrend.xyaxis",
+                        iconColor: .blue,
+                        action: nil
+                    )
                     .padding()
                 } else {
                     historyContent

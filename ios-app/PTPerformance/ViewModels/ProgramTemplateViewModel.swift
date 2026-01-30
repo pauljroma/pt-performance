@@ -85,7 +85,7 @@ class ProgramTemplateViewModel: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             templates = try decoder.decode([ProgramTemplate].self, from: data)
         } catch {
-            errorMessage = "Failed to load templates: \(error.localizedDescription)"
+            errorMessage = "We couldn't load your templates. Using default templates instead."
             // Fall back to sample templates on error
             templates = ProgramTemplate.sampleTemplates
         }
@@ -99,7 +99,7 @@ class ProgramTemplateViewModel: ObservableObject {
             let data = try encoder.encode(templates)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
         } catch {
-            errorMessage = "Failed to save templates: \(error.localizedDescription)"
+            errorMessage = "We couldn't save your templates. Please try again."
         }
     }
 
@@ -112,7 +112,7 @@ class ProgramTemplateViewModel: ObservableObject {
         createdBy: String? = nil
     ) {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Template name cannot be empty"
+            errorMessage = "Please enter a name for your template."
             return
         }
 
@@ -144,7 +144,7 @@ class ProgramTemplateViewModel: ObservableObject {
     /// Update an existing template
     func updateTemplate(_ template: ProgramTemplate) {
         guard let index = templates.firstIndex(where: { $0.id == template.id }) else {
-            errorMessage = "Template not found"
+            errorMessage = "We couldn't find that template. It may have been deleted."
             return
         }
 

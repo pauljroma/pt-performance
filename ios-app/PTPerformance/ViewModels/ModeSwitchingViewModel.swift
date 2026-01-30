@@ -80,7 +80,7 @@ class ModeSwitchingViewModel: ObservableObject {
             #if DEBUG
             print("❌ Failed to load patient mode: \(error)")
             #endif
-            errorMessage = "Failed to load patient mode"
+            errorMessage = "We couldn't load the patient's current mode. Please try again."
             showingError = true
         }
     }

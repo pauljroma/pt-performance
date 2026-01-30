@@ -177,7 +177,7 @@ struct GoalProgressRing: View {
                 animatedProgress = min(progress, 1.0)
             }
         }
-        .onChange(of: progress) { newValue in
+        .onChange(of: progress) { _, newValue in
             let oldProgress = animatedProgress
             withAnimation(.easeOut(duration: 0.5)) {
                 animatedProgress = min(newValue, 1.0)

@@ -134,17 +134,17 @@ class ExerciseSubstitutionService: ObservableObject {
                 } else {
                     DebugLogger.shared.error("SUBSTITUTION", "Error body (raw): \(data.count) bytes, unable to decode as UTF-8")
                 }
-                let errorMessage = "Failed to get exercise substitutions: HTTP \(statusCode)"
+                let errorMessage = "We couldn't get exercise alternatives right now. Please try again later."
                 self.error = errorMessage
                 throw functionsError
             case .relayError:
                 DebugLogger.shared.error("SUBSTITUTION", "Edge function relay error")
-                let errorMessage = "Failed to get exercise substitutions: Relay error"
+                let errorMessage = "We couldn't connect to our servers. Please check your internet connection."
                 self.error = errorMessage
                 throw functionsError
             }
         } catch {
-            let errorMessage = "Failed to get exercise substitutions: \(error.localizedDescription)"
+            let errorMessage = "We couldn't get exercise alternatives. Please check your connection and try again."
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
             DebugLogger.shared.error("SUBSTITUTION", "Error type: \(type(of: error))")
             DebugLogger.shared.error("SUBSTITUTION", "Full error: \(error)")
@@ -158,7 +158,7 @@ class ExerciseSubstitutionService: ObservableObject {
     func applySubstitution() async throws {
         guard let recommendationId = currentRecommendationId else {
             throw NSError(domain: "ExerciseSubstitutionService", code: 1, userInfo: [
-                NSLocalizedDescriptionKey: "No recommendation ID available. Please get suggestions first."
+                NSLocalizedDescriptionKey: "Please get exercise suggestions first before applying changes."
             ])
         }
 
@@ -185,7 +185,7 @@ class ExerciseSubstitutionService: ObservableObject {
             substitutions = []
 
         } catch {
-            let errorMessage = "Failed to apply substitution: \(error.localizedDescription)"
+            let errorMessage = "We couldn't apply the exercise change. Please try again."
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
             throw error
         }

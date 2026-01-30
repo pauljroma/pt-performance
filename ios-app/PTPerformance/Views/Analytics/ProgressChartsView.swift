@@ -200,70 +200,53 @@ struct ProgressChartsView: View {
     }
 
     private var strengthEmptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.md) {
             Image(systemName: "figure.strengthtraining.traditional")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.3))
+                .font(.system(size: 48))
+                .foregroundColor(.green.opacity(0.6))
 
             Text("No Strength Data")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            Text("Log weighted exercises to track your strength progression over time. Your personal records and improvement trends will appear here.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-
-            Text("Complete weighted exercises to track your strength progression")
-                .font(.caption)
-                .foregroundColor(.secondary.opacity(0.8))
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, Spacing.md)
         }
-        .frame(height: 200)
+        .frame(height: 220)
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.lg)
         .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary.opacity(0.3))
-
-            Text("No Analytics Data")
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            Text("Complete workouts to see your progress analytics")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        EmptyStateView(
+            title: "No Analytics Data Yet",
+            message: "Complete your first workout to start tracking your progress. Volume trends, strength gains, and performance insights will appear here.",
+            icon: "chart.bar.xaxis",
+            iconColor: .blue,
+            action: nil
+        )
+        .padding(.vertical, 40)
     }
 
     // MARK: - Not Signed In View
 
     private var notSignedInView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "person.crop.circle.badge.exclamationmark")
-                .font(.system(size: 64))
-                .foregroundColor(.orange.opacity(0.5))
-
-            Text("Sign In Required")
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            Text("Sign in to view your progress analytics")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        EmptyStateView(
+            title: "Sign In Required",
+            message: "Sign in to your account to view your progress analytics, track workout volume, and monitor strength gains.",
+            icon: "person.crop.circle.badge.exclamationmark",
+            iconColor: .orange,
+            action: nil
+        )
+        .padding(.vertical, 40)
     }
 
     // MARK: - Section Error View

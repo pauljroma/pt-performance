@@ -36,7 +36,7 @@ final class AccountDeletionViewModel: ObservableObject {
 
     func deleteAccount() async {
         guard isFormValid else {
-            errorMessage = "Please enter your password and type 'DELETE' to confirm"
+            errorMessage = "To confirm deletion, please enter your password and type 'DELETE' in the confirmation field."
             return
         }
 
@@ -106,7 +106,7 @@ final class AccountDeletionViewModel: ObservableObject {
         if let deletionError = error as? AccountDeletionError {
             return deletionError.localizedDescription
         }
-        return "Failed to delete account. Please try again or contact support."
+        return "We couldn't delete your account right now. Please try again or contact support for help."
     }
 
     func cancelDeletion() async throws {
@@ -133,11 +133,11 @@ enum AccountDeletionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notAuthenticated:
-            return "You must be logged in to delete your account"
+            return "Please sign in to delete your account."
         case .invalidPassword:
-            return "Invalid password. Please try again."
+            return "The password you entered is incorrect. Please try again."
         case .deletionFailed:
-            return "Failed to delete account. Please contact support."
+            return "We couldn't delete your account. Please contact support for assistance."
         }
     }
 }

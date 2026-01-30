@@ -447,31 +447,28 @@ struct ReadinessDashboardView: View {
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-
-            VStack(spacing: 8) {
-                Text("No Readiness Data")
-                    .font(.title2.bold())
-
-                Text("Complete daily check-ins to see your readiness trends and statistics.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
+        EmptyStateView(
+            title: "No Readiness Data",
+            message: "Complete daily check-ins to track your readiness levels. View trends, identify patterns, and optimize your training based on how you feel.",
+            icon: "heart.text.square",
+            iconColor: .green,
+            action: nil
+        )
+        .overlay(alignment: .bottom) {
             NavigationLink {
                 ReadinessCheckInView(patientId: patientId)
             } label: {
-                Text("Complete Check-in")
+                Label("Complete Check-in", systemImage: "plus.circle.fill")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.md)
+                    .background(Color.green)
+                    .cornerRadius(CornerRadius.md)
             }
-            .buttonStyle(.borderedProminent)
+            .padding(.bottom, 60)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.top, 100)
+        .padding(.top, 40)
     }
 }
 

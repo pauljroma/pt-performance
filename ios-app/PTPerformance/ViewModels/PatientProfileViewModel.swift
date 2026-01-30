@@ -191,13 +191,13 @@ class PatientProfileViewModel: ObservableObject {
     /// Save updated profile to database
     func saveProfile() async {
         guard let patientId = patientId else {
-            errorMessage = "Patient ID not found"
+            errorMessage = "We couldn't identify your profile. Please try signing out and back in."
             return
         }
 
         // Validate before saving
         guard validate() else {
-            errorMessage = "Please fix validation errors before saving"
+            errorMessage = "Please correct the highlighted fields before saving."
             return
         }
 
@@ -303,7 +303,7 @@ class PatientProfileViewModel: ObservableObject {
             #if DEBUG
             print("❌ [PatientProfile] Error saving profile: \(error.localizedDescription)")
             #endif
-            errorMessage = "Failed to save profile. Please try again."
+            errorMessage = "We couldn't save your profile changes. Please check your connection and try again."
             ErrorLogger.shared.logError(error, context: "Save Patient Profile")
         }
 

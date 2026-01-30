@@ -300,7 +300,7 @@ class TimerPickerViewModel: ObservableObject {
     /// Quick start timer with currently selected preset
     func quickStart() async {
         guard let preset = selectedPreset else {
-            errorMessage = "No preset selected"
+            errorMessage = "Please select a timer preset first, then tap Start."
             showError = true
             return
         }
@@ -431,7 +431,7 @@ extension TimerPickerViewModel {
         )
 
         vm.showError = true
-        vm.errorMessage = "Failed to load timer presets"
+        vm.errorMessage = "Unable to load timer options. Pull down to refresh."
 
         return vm
     }

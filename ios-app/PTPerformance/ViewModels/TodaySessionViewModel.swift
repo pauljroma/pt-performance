@@ -57,7 +57,7 @@ class TodaySessionViewModel: ObservableObject {
 
         guard let patientId = supabase.userId else {
             logger.log("❌ No patient ID available", level: .error)
-            errorMessage = "No patient ID available. Please log in again."
+            errorMessage = "We couldn't find your account. Please sign out and sign back in to continue."
             isLoading = false
             return
         }
@@ -111,13 +111,14 @@ class TodaySessionViewModel: ObservableObject {
                 // Don't set errorMessage - OfflineBanner handles offline indication
             } else {
                 errorMessage = """
-                Failed to load today's session.
+                We couldn't load your workout for today.
 
-                Please check:
-                • Your internet connection
-                • That you have an active program assigned
+                Here's what you can try:
+                • Check your internet connection
+                • Pull down to refresh
+                • Make sure you have a program assigned by your therapist
 
-                Error: \(error.localizedDescription)
+                If this keeps happening, contact your therapist for help.
                 """
             }
             isLoading = false
@@ -167,13 +168,14 @@ class TodaySessionViewModel: ObservableObject {
                 #endif
 
                 errorMessage = """
-                Failed to load today's session.
+                We couldn't load your workout for today.
 
-                Please check:
-                • Your internet connection
-                • That you have an active program assigned
+                Here's what you can try:
+                • Check your internet connection
+                • Pull down to refresh
+                • Make sure you have a program assigned by your therapist
 
-                Error: \(supabaseError.localizedDescription)
+                If this keeps happening, contact your therapist for help.
                 """
                 isLoading = false
             }
@@ -791,7 +793,7 @@ class TodaySessionViewModel: ObservableObject {
 
         } catch {
             logger.log("❌ Failed to save exercise log: \(error.localizedDescription)", level: .error)
-            errorMessage = "Failed to save exercise log. Please try again."
+            errorMessage = "We couldn't save your exercise progress. Please try again, and don't worry - your workout is still going strong!"
         }
     }
 

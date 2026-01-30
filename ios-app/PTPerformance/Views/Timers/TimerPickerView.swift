@@ -328,57 +328,38 @@ struct TimerPickerView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "timer")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-
-            Text("No Timer Presets Found")
-                .font(.title2)
-                .fontWeight(.semibold)
-
+        Group {
             if viewModel.isSearching {
-                Text("Try adjusting your search or filter")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    withAnimation {
-                        viewModel.clearSearch()
-                        viewModel.clearCategoryFilter()
-                    }
-                } label: {
-                    Text("Clear Filters")
-                        .font(.headline)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
+                EmptyStateView(
+                    title: "No Timers Found",
+                    message: "No timer presets match your search criteria. Try adjusting your search term or clearing filters.",
+                    icon: "magnifyingglass",
+                    iconColor: .secondary,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: {
+                            withAnimation {
+                                viewModel.clearSearch()
+                                viewModel.clearCategoryFilter()
+                            }
+                        }
+                    )
+                )
             } else {
-                Text("Create your first custom timer")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                Button {
-                    showCustomBuilder = true
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Create Timer")
-                    }
-                    .font(.headline)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                }
+                EmptyStateView(
+                    title: "No Timer Presets",
+                    message: "Create custom timers for rest intervals, HIIT workouts, or stretching routines to enhance your training sessions.",
+                    icon: "timer",
+                    iconColor: .orange,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Create Timer",
+                        icon: "plus.circle.fill",
+                        action: { showCustomBuilder = true }
+                    )
+                )
             }
         }
-        .padding()
     }
 
     // MARK: - Toolbar

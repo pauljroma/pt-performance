@@ -188,46 +188,41 @@ struct TemplateLibraryView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
+        let hasFilters = !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil || selectedDurationRange != nil
 
-            Text("No Templates Found")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            if !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil || selectedDurationRange != nil {
-                Text("Try adjusting your filters")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-
-                Button("Clear Filters") {
-                    searchText = ""
-                    selectedCategory = nil
-                    selectedDifficulty = nil
-                    selectedDurationRange = nil
-                    showMyTemplatesOnly = false
-                }
-                .buttonStyle(.bordered)
+        return Group {
+            if hasFilters {
+                EmptyStateView(
+                    title: "No Matching Templates",
+                    message: "No templates match your current filters. Try adjusting your search criteria or clearing the filters.",
+                    icon: "doc.text.magnifyingglass",
+                    iconColor: .secondary,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: {
+                            searchText = ""
+                            selectedCategory = nil
+                            selectedDifficulty = nil
+                            selectedDurationRange = nil
+                            showMyTemplatesOnly = false
+                        }
+                    )
+                )
             } else {
-                Text("Create your first template to get started")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                Button(action: { showingCreateSheet = true }) {
-                    Label("Create Template", systemImage: "plus.circle.fill")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                }
+                EmptyStateView(
+                    title: "No Templates Yet",
+                    message: "Create workout templates to save and reuse your favorite routines. Templates make it easy to start workouts quickly.",
+                    icon: "rectangle.stack.fill",
+                    iconColor: .blue,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Create Template",
+                        icon: "plus.circle.fill",
+                        action: { showingCreateSheet = true }
+                    )
+                )
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Filtered Templates

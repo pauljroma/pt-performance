@@ -183,7 +183,7 @@ class ReadinessDashboardViewModel: ObservableObject {
             currentScore = trendData.first?.readinessScore
 
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "We couldn't load your readiness history. Please check your connection and try again."
             showError = true
         }
 

@@ -202,19 +202,21 @@ struct MealPlanView: View {
             }
 
             if todaysMeals.isEmpty {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Image(systemName: "fork.knife")
-                            .font(.title)
-                            .foregroundColor(.secondary)
-                        Text("No meals planned")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding()
-                    Spacer()
+                VStack(spacing: Spacing.sm) {
+                    Image(systemName: "fork.knife.circle")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary.opacity(0.6))
+
+                    Text("No Meals Planned")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text("Add meals to your plan for this day")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
             } else {
                 ForEach(todaysMeals) { meal in
                     MealPlanItemRow(item: meal)
@@ -235,10 +237,22 @@ struct MealPlanView: View {
                 .font(.headline)
 
             if mealPlans.isEmpty {
-                Text("No meal plans created yet")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding()
+                VStack(spacing: Spacing.sm) {
+                    Image(systemName: "doc.text.below.ecg")
+                        .font(.system(size: 36))
+                        .foregroundColor(.green.opacity(0.6))
+
+                    Text("No Meal Plans Yet")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text("Create a meal plan to organize your nutrition and track your daily intake")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
             } else {
                 ForEach(mealPlans) { plan in
                     NavigationLink(destination: MealPlanDetailView(plan: plan)) {

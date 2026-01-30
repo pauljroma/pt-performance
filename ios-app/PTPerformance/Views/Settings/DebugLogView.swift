@@ -173,7 +173,7 @@ struct DebugLogView: View {
                 }
                 .padding(.vertical, 8)
             }
-            .onChange(of: logger.messages.count) {
+            .onChange(of: logger.messages.count) { _, _ in
                 if let lastMessage = logger.messages.last, searchText.isEmpty, selectedFilter == .all {
                     withAnimation {
                         proxy.scrollTo(lastMessage.id, anchor: .bottom)

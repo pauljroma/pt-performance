@@ -127,7 +127,7 @@ class WorkoutPickerViewModel: ObservableObject {
             logger.log("QuickPick: Loaded \(allTemplates.count) templates", level: .success)
         } catch {
             logger.log("QuickPick: Failed to load templates: \(error.localizedDescription)", level: .error)
-            errorMessage = "Failed to load workouts"
+            errorMessage = "We couldn't load workout options. Please check your connection and try again."
         }
     }
 
@@ -143,7 +143,7 @@ class WorkoutPickerViewModel: ObservableObject {
         await loadTemplatesIfNeeded()
 
         guard !allTemplates.isEmpty else {
-            errorMessage = "No workouts available"
+            errorMessage = "No workouts match your preferences. Try adjusting your filters or duration."
             isLoading = false
             return
         }

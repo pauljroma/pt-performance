@@ -76,7 +76,7 @@ class PatientListViewModel: ObservableObject {
         // Therapists must ONLY see their assigned patients
         guard let therapistId = therapistId else {
             logger.log("❌ SECURITY VIOLATION: loadPatients called without therapist_id", level: .error)
-            errorMessage = "Security Error: Therapist ID is required to view patients"
+            errorMessage = "Unable to verify your account. Please sign out and sign back in to view your patients."
             patients = []  // SECURITY: Never show patients without proper authorization
             return
         }
@@ -133,7 +133,7 @@ class PatientListViewModel: ObservableObject {
             @unknown default:
                 logger.log("Unknown decoding error: \(decodingError)", level: .error)
             }
-            errorMessage = "Failed to load patients. Please check your internet connection and try again."
+            errorMessage = "We couldn't load your patient list. Please check your internet connection and try again."
             patients = []  // SECURITY: Never fall back to sample data - show empty list on error
             logger.log("⚠️ Set patients to empty array due to decoding error (security)", level: .error)
         } catch {
@@ -141,7 +141,7 @@ class PatientListViewModel: ObservableObject {
             logger.log("Error type: \(type(of: error))", level: .error)
             logger.log("Error description: \(error.localizedDescription)", level: .error)
             logger.log("Error: \(error)", level: .error)
-            errorMessage = "Failed to load patients: \(error.localizedDescription)"
+            errorMessage = "We couldn't load your patient list. Please check your connection and try again."
             patients = []  // SECURITY: Never fall back to sample data - show empty list on error
             logger.log("⚠️ Set patients to empty array due to error (security)", level: .error)
         }
@@ -351,7 +351,7 @@ class PatientListViewModel: ObservableObject {
             bulkOperationError = "Assigned to \(successCount) patients. Failed for: \(failedPatients.joined(separator: ", "))"
             return true
         } else {
-            bulkOperationError = "Failed to assign program to any patients"
+            bulkOperationError = "We couldn't assign the program. Please check your connection and try again."
             return false
         }
     }

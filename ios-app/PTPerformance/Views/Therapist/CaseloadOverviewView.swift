@@ -270,10 +270,12 @@ struct CaseloadOverviewView: View {
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        ContentUnavailableView(
-            "No Patients",
-            systemImage: "person.3.fill",
-            description: Text("Your caseload will appear here once patients have been added.")
+        EmptyStateView(
+            title: "No Patients Yet",
+            message: "Your patient caseload will appear here once patients have been assigned to you. Each patient's status, adherence, and progress will be visible at a glance.",
+            icon: "person.3.fill",
+            iconColor: .blue,
+            action: nil
         )
     }
 

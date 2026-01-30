@@ -132,7 +132,7 @@ class TimerHistoryViewModel: ObservableObject {
             calculateWeeklyStats()
 
         } catch {
-            errorMessage = "Failed to load timer history: \(error.localizedDescription)"
+            errorMessage = "We couldn't load your timer history. Please check your connection and try again."
             showError = true
             #if DEBUG
             print("❌ Error loading timer history: \(error)")

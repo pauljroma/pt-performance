@@ -53,7 +53,7 @@ struct PatientListView: View {
         }
         .navigationTitle(viewModel.isSelectionModeActive ? "\(viewModel.selectedCount) Selected" : "Patients")
         .searchable(text: $viewModel.searchText, prompt: "Search patients")
-        .onChange(of: viewModel.searchText) {
+        .onChange(of: viewModel.searchText) { _, _ in
             viewModel.applyFilters()
         }
         .toolbar {

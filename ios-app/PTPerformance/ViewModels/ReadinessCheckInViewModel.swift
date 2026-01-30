@@ -168,7 +168,7 @@ class ReadinessCheckInViewModel: ObservableObject {
             showSuccess = false
 
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "We couldn't save your check-in. Please check your connection and try again."
             showError = true
         }
 

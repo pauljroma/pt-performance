@@ -88,7 +88,7 @@ struct FoodSearchView: View {
             TextField("Search foods...", text: $searchText)
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
-                .onChange(of: searchText) {
+                .onChange(of: searchText) { _, _ in
                     performSearch()
                 }
 
@@ -152,30 +152,17 @@ struct FoodSearchView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-
-            Text("No foods found")
-                .font(.headline)
-
-            Text("Try a different search term or add a custom food")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-
-            Button {
-                showAddCustomFood = true
-            } label: {
-                Label("Add Custom Food", systemImage: "plus.circle.fill")
-            }
-
-            Spacer()
-        }
-        .padding()
+        EmptyStateView(
+            title: "No Foods Found",
+            message: "No foods match your search. Try a different term or create a custom food entry with your own nutritional values.",
+            icon: "takeoutbag.and.cup.and.straw",
+            iconColor: .orange,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Add Custom Food",
+                icon: "plus.circle.fill",
+                action: { showAddCustomFood = true }
+            )
+        )
     }
 
     // MARK: - Results List

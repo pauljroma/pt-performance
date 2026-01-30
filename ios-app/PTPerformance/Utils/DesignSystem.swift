@@ -157,7 +157,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .cornerRadius(CornerRadius.md)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: AnimationDuration.quick), value: configuration.isPressed)
-            .onChange(of: configuration.isPressed) { isPressed in
+            .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed {
                     HapticFeedback.light()
                 }
@@ -182,7 +182,7 @@ struct SecondaryButtonStyle: ButtonStyle {
             .cornerRadius(CornerRadius.md)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: AnimationDuration.quick), value: configuration.isPressed)
-            .onChange(of: configuration.isPressed) { isPressed in
+            .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed {
                     HapticFeedback.light()
                 }
@@ -204,7 +204,7 @@ struct DestructiveButtonStyle: ButtonStyle {
             .cornerRadius(CornerRadius.md)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: AnimationDuration.quick), value: configuration.isPressed)
-            .onChange(of: configuration.isPressed) { isPressed in
+            .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed {
                     HapticFeedback.medium()
                 }
@@ -328,7 +328,7 @@ struct ShakeAnimation: ViewModifier {
     func body(content: Content) -> some View {
         content
             .offset(x: offset)
-            .onChange(of: trigger) { _ in
+            .onChange(of: trigger) { _, _ in
                 withAnimation(.default) {
                     offset = 10
                 }
