@@ -29,6 +29,7 @@ struct ExerciseLogView: View {
     @State private var errorMessage: String?
     @State private var showError = false
     @State private var showTechniqueGuide = false
+    @State private var showExerciseHistory = false  // BUILD 333: Exercise history lookup
 
     var body: some View {
         NavigationView {
@@ -51,20 +52,37 @@ struct ExerciseLogView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 
-                        // View Technique button
-                        Button {
-                            showTechniqueGuide = true
-                        } label: {
-                            HStack {
-                                Image(systemName: "info.circle.fill")
-                                Text("View Technique Guide")
-                                    .fontWeight(.medium)
+                        // View Technique and History buttons
+                        HStack(spacing: 16) {
+                            Button {
+                                showTechniqueGuide = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "info.circle.fill")
+                                    Text("Technique")
+                                        .fontWeight(.medium)
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.blue)
                             }
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .accessibilityLabel("View Technique Guide")
+                            .accessibilityHint("Open guide with exercise instructions and form tips")
+
+                            // BUILD 333: View Exercise History button
+                            Button {
+                                showExerciseHistory = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "chart.line.uptrend.xyaxis")
+                                    Text("History")
+                                        .fontWeight(.medium)
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(.green)
+                            }
+                            .accessibilityLabel("View Exercise History")
+                            .accessibilityHint("View your past performance on this exercise")
                         }
-                        .accessibilityLabel("View Technique Guide")
-                        .accessibilityHint("Open guide with exercise instructions and form tips")
                     }
                 }
 
@@ -286,6 +304,13 @@ struct ExerciseLogView: View {
             // BUILD 174: Add missing sheet for technique guide with video
             .sheet(isPresented: $showTechniqueGuide) {
                 ExerciseTechniqueView(exercise: exercise)
+            }
+            // BUILD 333: Add sheet for exercise history lookup
+            .sheet(isPresented: $showExerciseHistory) {
+                ExerciseHistorySheet(
+                    exerciseName: exercise.exercise_name ?? "Exercise",
+                    patientId: patientId
+                )
             }
             .onAppear {
                 // Initialize validation arrays

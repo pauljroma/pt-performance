@@ -615,7 +615,8 @@ class ExerciseProgressViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let analyticsService = AnalyticsService.shared
+    private let supabase = PTSupabaseClient.shared
+    private let logger = DebugLogger.shared
 
     var totalPersonalRecords: Int {
         exercises.filter { $0.hasPersonalRecord }.count
@@ -635,35 +636,89 @@ class ExerciseProgressViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            // Fetch exercise trends from analytics service
-            let volumeData = try await analyticsService.calculateVolumeData(
-                for: patientId,
-                period: .threeMonths
-            )
+            // BUILD 333: Fetch from vw_exercise_history view
+            let response: [ExerciseHistoryRecord] = try await supabase.client
+                .from("vw_exercise_history")
+                .select()
+                .eq("patient_id", value: patientId)
+                .order("last_performed", ascending: false)
+                .execute()
+                .value
 
-            // Group data by exercise and create progress items
-            // Note: In a full implementation, this would use a dedicated endpoint
-            // that returns exercise-specific data grouped by exercise name
-            let exerciseItems = await buildExerciseProgressItems(patientId: patientId)
+            logger.log("ExerciseProgress: Fetched \(response.count) exercises for patient", level: .diagnostic)
 
-            exercises = exerciseItems
+            // Convert to display items
+            exercises = response.map { record in
+                ExerciseProgressItem(
+                    id: record.exerciseName,
+                    exerciseId: record.exerciseTemplateId ?? record.exerciseName,
+                    exerciseName: record.exerciseName,
+                    dataPoints: [],  // Would need separate query for time-series data
+                    trend: determineTrend(from: record.improvementRatio),
+                    averageWeight: record.avgWeight ?? 0,
+                    totalVolume: record.totalVolume ?? 0,
+                    sessionCount: record.sessionCount,
+                    lastPerformed: record.lastPerformed,
+                    improvementPercentage: record.improvementRatio ?? 0,
+                    personalRecord: record.maxWeight.map { weight in
+                        PersonalRecord(
+                            exerciseId: record.exerciseTemplateId ?? record.exerciseName,
+                            exerciseName: record.exerciseName,
+                            recordType: .maxWeight,
+                            value: weight,
+                            achievedDate: record.lastPerformed ?? Date(),
+                            previousRecord: nil
+                        )
+                    },
+                    recentHistory: []  // Would need separate query
+                )
+            }
+
             isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
+            logger.log("ExerciseProgress: Error fetching data: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to load exercise history"
             isLoading = false
         }
     }
 
-    private func buildExerciseProgressItems(patientId: String) async -> [ExerciseProgressItem] {
-        // This would typically call a backend endpoint that returns
-        // exercise progress data grouped by exercise.
-        // For now, we return sample data structure that matches the expected format.
+    private func determineTrend(from ratio: Double?) -> ExerciseTrend.TrendDirection {
+        guard let ratio = ratio else { return .stable }
+        if ratio > 0.05 { return .increasing }
+        if ratio < -0.05 { return .decreasing }
+        return .stable
+    }
+}
 
-        // In production, this would be:
-        // let response = try await analyticsService.fetchExerciseProgressData(patientId: patientId)
-        // return response.map { ... }
+// MARK: - Exercise History Database Record
 
-        return []
+private struct ExerciseHistoryRecord: Codable {
+    let patientId: String
+    let exerciseName: String
+    let exerciseTemplateId: String?
+    let sessionCount: Int
+    let lastPerformed: Date?
+    let firstPerformed: Date?
+    let avgWeight: Double?
+    let maxWeight: Double?
+    let minWeight: Double?
+    let totalVolume: Double?
+    let improvementRatio: Double?
+    let loadUnit: String?
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case exerciseName = "exercise_name"
+        case exerciseTemplateId = "exercise_template_id"
+        case sessionCount = "session_count"
+        case lastPerformed = "last_performed"
+        case firstPerformed = "first_performed"
+        case avgWeight = "avg_weight"
+        case maxWeight = "max_weight"
+        case minWeight = "min_weight"
+        case totalVolume = "total_volume"
+        case improvementRatio = "improvement_ratio"
+        case loadUnit = "load_unit"
     }
 }
 
