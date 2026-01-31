@@ -103,7 +103,9 @@ class PTSupabaseClient: ObservableObject {
             // Fetch user role from database
             await fetchUserRole(userId: session.user.id.uuidString)
         } catch {
+            #if DEBUG
             print("No existing session: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -139,7 +141,9 @@ class PTSupabaseClient: ObservableObject {
     func fetchUserRole(userId: String) async {
         // Get user email from auth session
         guard let userEmail = currentUser?.email else {
+            #if DEBUG
             print("❌ No user email available")
+            #endif
             return
         }
 
@@ -157,7 +161,9 @@ class PTSupabaseClient: ObservableObject {
                     self.userRole = .patient
                     self.userId = patientByAuthId[0].id.uuidString
                 }
+                #if DEBUG
                 print("✅ Found patient by user_id: \(patientByAuthId[0].first_name) \(patientByAuthId[0].last_name)")
+                #endif
                 return
             }
 
@@ -174,7 +180,9 @@ class PTSupabaseClient: ObservableObject {
                     self.userRole = .therapist
                     self.userId = therapistByAuthId[0].id.uuidString
                 }
+                #if DEBUG
                 print("✅ Found therapist by user_id: \(therapistByAuthId[0].first_name) \(therapistByAuthId[0].last_name)")
+                #endif
                 return
             }
 
@@ -191,7 +199,9 @@ class PTSupabaseClient: ObservableObject {
                     self.userRole = .patient
                     self.userId = patientByEmail[0].id.uuidString
                 }
+                #if DEBUG
                 print("✅ Found patient by email (legacy): \(patientByEmail[0].first_name) \(patientByEmail[0].last_name)")
+                #endif
                 return
             }
 
@@ -207,13 +217,19 @@ class PTSupabaseClient: ObservableObject {
                     self.userRole = .therapist
                     self.userId = therapistByEmail[0].id.uuidString
                 }
+                #if DEBUG
                 print("✅ Found therapist by email (legacy): \(therapistByEmail[0].first_name) \(therapistByEmail[0].last_name)")
+                #endif
                 return
             }
 
+            #if DEBUG
             print("⚠️ User not found in patients or therapists table for userId: \(userId), email: \(userEmail)")
+            #endif
         } catch {
+            #if DEBUG
             print("❌ Error fetching user role: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -243,7 +259,9 @@ class PTSupabaseClient: ObservableObject {
                 self.userRole = .patient
                 self.userId = userId
             }
+            #if DEBUG
             print("[Auth] User registered, awaiting email confirmation")
+            #endif
         }
     }
 

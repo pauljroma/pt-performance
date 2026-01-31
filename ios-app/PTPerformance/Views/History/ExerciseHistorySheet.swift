@@ -5,6 +5,9 @@
 //  BUILD 333: Quick exercise history lookup sheet
 //  Shows recent sessions for a specific exercise with performance data
 //
+//  BUILD 339: Added Estimated 1RM display using RMCalculator (ACP-512)
+//  Calculates 1RM from best weight x reps using Epley/Brzycki/Lombardi average
+//
 
 import SwiftUI
 
@@ -92,6 +95,7 @@ struct ExerciseHistorySheet: View {
 
     private var statsSummary: some View {
         VStack(spacing: 12) {
+            // First row: Sessions, Max Weight, Avg Weight
             HStack(spacing: 16) {
                 StatCard(
                     title: "Sessions",
@@ -115,6 +119,15 @@ struct ExerciseHistorySheet: View {
                         icon: "chart.bar"
                     )
                 }
+            }
+
+            // BUILD 339: Estimated 1RM row (ACP-512)
+            if let estimated1RM = viewModel.estimated1RM {
+                Estimated1RMCard(
+                    estimated1RM: estimated1RM,
+                    formula: viewModel.bestSession1RMFormula,
+                    unit: displayUnit
+                )
             }
         }
         .padding(.bottom, 8)
@@ -211,6 +224,83 @@ private struct StatCard: View {
     }
 }
 
+// MARK: - Estimated 1RM Card (BUILD 339 / ACP-512)
+
+private struct Estimated1RMCard: View {
+    let estimated1RM: Double
+    let formula: String?
+    let unit: String
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.title2)
+                            .foregroundColor(.purple)
+
+                        Text("Estimated 1RM")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+
+                    if let formula = formula {
+                        Text(formula)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                Text(formatWeight(estimated1RM))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.purple)
+            }
+
+            // Percentage breakdown (compact)
+            HStack(spacing: 0) {
+                ForEach(percentageBreakdown, id: \.label) { item in
+                    VStack(spacing: 2) {
+                        Text(formatWeight(estimated1RM * item.percentage))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .monospacedDigit()
+                        Text(item.label)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private var percentageBreakdown: [(label: String, percentage: Double)] {
+        [
+            ("90%", 0.90),
+            ("80%", 0.80),
+            ("70%", 0.70),
+            ("60%", 0.60)
+        ]
+    }
+
+    private func formatWeight(_ weight: Double) -> String {
+        // Round to nearest 2.5 for plate loading
+        let rounded = (weight / 2.5).rounded() * 2.5
+        if rounded == floor(rounded) {
+            return "\(Int(rounded)) \(unit)"
+        }
+        return String(format: "%.1f %@", rounded, unit)
+    }
+}
+
 // MARK: - Session History Row
 
 private struct SessionHistoryRow: View {
@@ -299,6 +389,85 @@ class ExerciseHistorySheetViewModel: ObservableObject {
         let weights = sessions.compactMap { $0.weight }.filter { $0 > 0 }
         guard !weights.isEmpty else { return nil }
         return weights.reduce(0, +) / Double(weights.count)
+    }
+
+    // MARK: - Estimated 1RM (BUILD 339 / ACP-512)
+
+    /// Estimated 1RM using average of Epley, Brzycki, Lombardi formulas
+    /// Calculated from the session with the highest estimated 1RM potential
+    var estimated1RM: Double? {
+        guard !sessions.isEmpty else { return nil }
+
+        // Find session with highest estimated 1RM
+        var bestEstimate: Double = 0
+        for session in sessions {
+            guard let weight = session.weight, weight > 0 else { continue }
+            // Parse reps from string (handle "8" or "8-10" format)
+            guard let reps = parseReps(session.reps), reps > 0 else { continue }
+
+            let estimate = RMCalculator.average(weight: weight, reps: reps)
+            if estimate > bestEstimate {
+                bestEstimate = estimate
+            }
+        }
+
+        return bestEstimate > 0 ? bestEstimate : nil
+    }
+
+    /// Description of the session used for 1RM calculation
+    var bestSession1RMFormula: String? {
+        guard !sessions.isEmpty else { return nil }
+
+        var bestSession: ExerciseSessionHistory?
+        var bestEstimate: Double = 0
+
+        for session in sessions {
+            guard let weight = session.weight, weight > 0 else { continue }
+            guard let reps = parseReps(session.reps), reps > 0 else { continue }
+
+            let estimate = RMCalculator.average(weight: weight, reps: reps)
+            if estimate > bestEstimate {
+                bestEstimate = estimate
+                bestSession = session
+            }
+        }
+
+        guard let session = bestSession,
+              let weight = session.weight,
+              let reps = parseReps(session.reps) else { return nil }
+
+        if weight == floor(weight) {
+            return "Based on \(Int(weight)) x \(reps) reps"
+        }
+        return "Based on \(String(format: "%.1f", weight)) x \(reps) reps"
+    }
+
+    /// Parse reps from string format (e.g., "8", "8-10", "10/10/8")
+    private func parseReps(_ repsString: String?) -> Int? {
+        guard let reps = repsString, !reps.isEmpty else { return nil }
+
+        // Try direct integer parsing
+        if let value = Int(reps) {
+            return value
+        }
+
+        // Handle range format "8-10" -> take first number
+        if reps.contains("-") {
+            let parts = reps.split(separator: "-")
+            if let first = parts.first, let value = Int(first) {
+                return value
+            }
+        }
+
+        // Handle slash format "10/10/8" -> take first number
+        if reps.contains("/") {
+            let parts = reps.split(separator: "/")
+            if let first = parts.first, let value = Int(first) {
+                return value
+            }
+        }
+
+        return nil
     }
 
     func fetchHistory(for exerciseName: String, patientId: String) async {

@@ -19,20 +19,11 @@ struct AISubstitutionSheet: View {
     @StateObject private var substitutionService = ExerciseSubstitutionService()
     @Environment(\.dismiss) var dismiss
 
-    // BUILD 186: Filter to show only substitution for THIS exercise
+    // Filter to show only substitution for THIS exercise
     private var relevantSubstitution: ExerciseSubstitution? {
-        // Debug: Log what we're looking for
-        print("BUILD 186: Looking for exerciseTemplateId = \(exerciseTemplateId)")
-        print("BUILD 186: Available substitutions count = \(substitutionService.substitutions.count)")
-        for sub in substitutionService.substitutions {
-            print("BUILD 186: Sub originalExerciseId = \(String(describing: sub.originalExerciseId)) for \(sub.exerciseName)")
-        }
-
-        let result = substitutionService.substitutions.first { sub in
+        substitutionService.substitutions.first { sub in
             sub.originalExerciseId == exerciseTemplateId
         }
-        print("BUILD 186: Found match = \(result != nil)")
-        return result
     }
 
     var body: some View {
@@ -185,13 +176,6 @@ struct AISubstitutionSheet: View {
                     }
                 }
             }
-            .onAppear {
-                print("BUILD 183 DEBUG: AISubstitutionSheet appeared")
-                print("BUILD 183 DEBUG: sessionExerciseId = \(sessionExerciseId)")
-                print("BUILD 183 DEBUG: exerciseTemplateId = \(exerciseTemplateId)")
-                print("BUILD 183 DEBUG: patientId = \(patientId)")
-                print("BUILD 183 DEBUG: sessionId = \(sessionId)")
-            }
         }
     }
 
@@ -233,11 +217,7 @@ struct AISubstitutionSheet: View {
         defer { isApplying = false }
 
         do {
-            print("BUILD 184: Applying all substitutions via recommendation_id")
-
             try await substitutionService.applySubstitution()
-
-            print("BUILD 184: All substitutions applied successfully!")
 
             // Notify parent to refresh and dismiss
             await MainActor.run {
@@ -245,7 +225,6 @@ struct AISubstitutionSheet: View {
                 dismiss()
             }
         } catch {
-            print("BUILD 184: Failed to apply substitutions: \(error)")
             substitutionService.error = "Failed to apply: \(error.localizedDescription)"
         }
     }

@@ -53,7 +53,9 @@ final class SessionManager: ObservableObject {
         resetActivity()
         startTimer()
 
+        #if DEBUG
         print("[SessionManager] Session monitoring started (timeout: \(Self.sessionTimeout / 60) minutes)")
+        #endif
     }
 
     /// Stop monitoring (e.g., when user logs out)
@@ -61,7 +63,9 @@ final class SessionManager: ObservableObject {
         isMonitoring = false
         stopTimer()
 
+        #if DEBUG
         print("[SessionManager] Session monitoring stopped")
+        #endif
     }
 
     /// Record user activity (call on any user interaction)
@@ -124,8 +128,10 @@ final class SessionManager: ObservableObject {
             // Session expired
             triggerLogout(reason: "Session expired after \(Int(Self.sessionTimeout / 60)) minutes of inactivity")
         } else {
+            #if DEBUG
             let remainingTime = Self.sessionTimeout - elapsedTime
             print("[SessionManager] Session valid - \(Int(remainingTime / 60)) minutes remaining")
+            #endif
         }
     }
 
@@ -137,11 +143,15 @@ final class SessionManager: ObservableObject {
     private func handleBackgrounding() {
         // Record when app went to background
         // Session continues counting even in background
+        #if DEBUG
         print("[SessionManager] App backgrounded - session timeout continues")
+        #endif
     }
 
     private func triggerLogout(reason: String) {
+        #if DEBUG
         print("[SessionManager] ⚠️ Triggering logout: \(reason)")
+        #endif
 
         stopMonitoring()
 

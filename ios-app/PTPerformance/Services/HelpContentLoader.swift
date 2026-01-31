@@ -55,12 +55,16 @@ class HelpContentLoader: ObservableObject {
             // Map to app models
             articles = response.compactMap { mapContentItemFromDB($0) }
 
+            #if DEBUG
             print("✅ Loaded \(articles.count) help articles from Supabase content_items table")
+            #endif
 
         } catch {
             self.error = "Failed to load help articles: \(error.localizedDescription)"
+            #if DEBUG
             print("❌ Error loading help articles: \(error.localizedDescription)")
             print("❌ Full error: \(error)")
+            #endif
 
             // Load sample articles as fallback
             loadSampleArticles()
@@ -115,7 +119,9 @@ class HelpContentLoader: ObservableObject {
             articles = jsonArticles.compactMap { jsonArticle in
                 // Convert string ID to UUID
                 guard let articleId = UUID(uuidString: jsonArticle.id) else {
+                    #if DEBUG
                     print("⚠️ Skipping article with invalid UUID: \(jsonArticle.id)")
+                    #endif
                     return nil
                 }
 
@@ -142,7 +148,9 @@ class HelpContentLoader: ObservableObject {
                 )
             }
 
+            #if DEBUG
             print("✅ Loaded \(articles.count) help articles from local JSON file")
+            #endif
             return
         }
 
@@ -265,7 +273,9 @@ class HelpContentLoader: ObservableObject {
             )
         ]
 
+        #if DEBUG
         print("⚠️ Using hardcoded sample articles (JSON file and database unavailable)")
+        #endif
     }
 }
 

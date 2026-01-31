@@ -35,7 +35,9 @@ class ModeService: ObservableObject {
     /// Load current patient's mode from database
     func loadPatientMode() async {
         guard let userId = supabase.userId else {
+            #if DEBUG
             print("⚠️ No user ID, cannot load mode")
+            #endif
             return
         }
 
