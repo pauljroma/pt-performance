@@ -700,7 +700,7 @@ final class RecommendationContextTests: XCTestCase {
 
         let context = RecommendationContext(from: contextSummary)
 
-        XCTAssertEqual(context.readinessScore, 67.89, accuracy: 0.001)
+        XCTAssertEqual(context.readinessScore ?? 0, 67.89, accuracy: 0.001)
     }
 
     func testRecommendationContext_RecentWorkoutCountPreserved() {

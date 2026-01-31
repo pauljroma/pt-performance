@@ -829,7 +829,7 @@ final class BodyCompGoalProgressTests: XCTestCase {
         )
 
         // Average of 80 + 60 + 100 = 240 / 3 = 80
-        XCTAssertEqual(progress.overallProgress, 80.0, accuracy: 0.01)
+        XCTAssertEqual(progress.overallProgress ?? 0, 80.0, accuracy: 0.01)
     }
 
     func testOverallProgress_SingleMetric() {
@@ -840,7 +840,7 @@ final class BodyCompGoalProgressTests: XCTestCase {
             status: "active"
         )
 
-        XCTAssertEqual(progress.overallProgress, 75.0, accuracy: 0.01)
+        XCTAssertEqual(progress.overallProgress ?? 0, 75.0, accuracy: 0.01)
     }
 
     func testOverallProgress_NoMetrics() {

@@ -413,7 +413,7 @@ final class ScheduledSessionModelTests: XCTestCase {
     func testRelativeTimeString_Today() {
         let today = Calendar.current.startOfDay(for: Date())
         // Set time to noon to ensure it's "today"
-        let todayNoon = Calendar.current.date(bySettingHour: 23, minute: 59, of: today)!
+        let todayNoon = Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: today)!
 
         let session = ScheduledSession.__createDirectly(
             id: UUID(),
