@@ -14,7 +14,7 @@ struct ProgramWorkoutScheduleView: View {
     let enrollment: EnrollmentWithProgram
     @StateObject private var viewModel = ProgramWorkoutScheduleViewModel()
     @State private var selectedWorkout: ProgramScheduleWorkout?
-    @State private var showingWorkoutPlayer = false
+    @State private var workoutToPlay: ProgramScheduleWorkout?
 
     var body: some View {
         ScrollView {
@@ -41,16 +41,17 @@ struct ProgramWorkoutScheduleView: View {
             WorkoutStartSheet(
                 workout: workout,
                 onStart: {
+                    // Store workout before dismissing sheet
+                    workoutToPlay = workout
                     selectedWorkout = nil
-                    showingWorkoutPlayer = true
                 }
             )
         }
-        .fullScreenCover(isPresented: $showingWorkoutPlayer) {
-            if let workout = selectedWorkout {
-                // Navigate to workout player with template
-                WorkoutTemplatePlayerWrapper(templateId: workout.templateId)
-            }
+        .fullScreenCover(item: $workoutToPlay) { workout in
+            WorkoutTemplatePlayerWrapper(
+                templateId: workout.templateId,
+                workoutName: workout.name
+            )
         }
         .task {
             await viewModel.loadSchedule(programLibraryId: enrollment.program.id)
@@ -434,7 +435,7 @@ struct WorkoutStartSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
     }
 
     private func statItem(icon: String, value: String, label: String) -> some View {
@@ -458,35 +459,264 @@ struct WorkoutStartSheet: View {
 
 struct WorkoutTemplatePlayerWrapper: View {
     let templateId: UUID
+    let workoutName: String
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = WorkoutTemplatePlayerViewModel()
 
     var body: some View {
         NavigationStack {
-            // TODO: Connect to ManualWorkoutPlayerView with the template
-            VStack {
-                Text("Starting workout...")
-                    .font(.headline)
-
-                Text("Template ID: \(templateId.uuidString)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Button("Close") {
-                    dismiss()
+            Group {
+                if viewModel.isLoading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading \(workoutName)...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                } else if viewModel.isCreatingSession {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Starting workout...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                } else if let error = viewModel.errorMessage {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        Text("Failed to Load Workout")
+                            .font(.headline)
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button("Close") {
+                            dismiss()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding()
+                } else if let session = viewModel.createdSession, let exercises = viewModel.createdExercises {
+                    // Show the workout execution view
+                    ManualWorkoutExecutionView(
+                        session: session,
+                        exercises: exercises,
+                        patientId: UUID(uuidString: appState.userId ?? "") ?? UUID(),
+                        onComplete: {
+                            dismiss()
+                        }
+                    )
+                } else if let template = viewModel.template {
+                    // Show template preview with start button
+                    templatePreviewView(template)
+                } else {
+                    // Initial loading state
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
-                .padding(.top)
             }
-            .navigationTitle("Workout")
+            .navigationTitle(workoutName)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         dismiss()
                     } label: {
-                        Image(systemName: "xmark")
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
                     }
                 }
             }
         }
+        .task {
+            await viewModel.loadTemplate(templateId: templateId)
+        }
+    }
+
+    private func templatePreviewView(_ template: SystemWorkoutTemplate) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(template.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    if let description = template.description {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 16) {
+                        if let duration = template.durationMinutes {
+                            Label("\(duration) min", systemImage: "clock")
+                        }
+                        Label("\(template.exerciseCount) exercises", systemImage: "figure.run")
+                        if let difficulty = template.difficulty {
+                            Label(difficulty.capitalized, systemImage: "chart.bar.fill")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                // Blocks preview
+                ForEach(template.blocks.indices, id: \.self) { index in
+                    let block = template.blocks[index]
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(block.name)
+                            .font(.headline)
+
+                        ForEach(block.exercises.indices, id: \.self) { exIndex in
+                            let exercise = block.exercises[exIndex]
+                            HStack {
+                                Text(exercise.name)
+                                    .font(.subheadline)
+                                Spacer()
+                                if let sets = exercise.sets, let reps = exercise.reps {
+                                    Text("\(sets) x \(reps)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+
+                // Start button
+                Button {
+                    Task {
+                        if let patientId = appState.userId, let uuid = UUID(uuidString: patientId) {
+                            await viewModel.createSession(from: template, patientId: uuid)
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Start Workout")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(14)
+                }
+                .padding(.top)
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - Workout Template Player View Model
+
+@MainActor
+class WorkoutTemplatePlayerViewModel: ObservableObject {
+    @Published var template: SystemWorkoutTemplate?
+    @Published var isLoading = false
+    @Published var isCreatingSession = false
+    @Published var errorMessage: String?
+    @Published var createdSession: ManualSession?
+    @Published var createdExercises: [ManualSessionExercise]?
+
+    private let workoutService = ManualWorkoutService()
+    private let supabase = PTSupabaseClient.shared
+
+    func loadTemplate(templateId: UUID) async {
+        isLoading = true
+        errorMessage = nil
+        let logger = DebugLogger.shared
+
+        do {
+            logger.log("Loading template: \(templateId)", level: .diagnostic)
+
+            let response = try await supabase.client
+                .from("system_workout_templates")
+                .select()
+                .eq("id", value: templateId.uuidString)
+                .single()
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            template = try decoder.decode(SystemWorkoutTemplate.self, from: response.data)
+
+            logger.log("Loaded template: \(template?.name ?? "unknown")", level: .success)
+        } catch {
+            logger.log("Failed to load template: \(error.localizedDescription)", level: .error)
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    func createSession(from template: SystemWorkoutTemplate, patientId: UUID) async {
+        isCreatingSession = true
+        errorMessage = nil
+
+        let logger = DebugLogger.shared
+
+        do {
+            logger.log("ProgramWorkout: Creating session from template: \(template.name)", level: .diagnostic)
+
+            // 1. Create manual session
+            let session = try await workoutService.createManualSession(
+                name: template.name,
+                patientId: patientId,
+                sourceTemplateId: template.id,
+                sourceTemplateType: .system
+            )
+
+            logger.log("ProgramWorkout: Session created: \(session.id)", level: .success)
+
+            // 2. Add exercises from template blocks
+            var exercises: [ManualSessionExercise] = []
+            for (blockIndex, block) in template.blocks.enumerated() {
+                for (exerciseIndex, exercise) in block.exercises.enumerated() {
+                    let sequence = (blockIndex * 100) + exerciseIndex
+
+                    let input = AddManualSessionExerciseInput(
+                        manualSessionId: session.id,
+                        exerciseTemplateId: nil,
+                        exerciseName: exercise.name,
+                        blockName: block.name,
+                        sequence: sequence,
+                        targetSets: exercise.sets ?? 3,
+                        targetReps: exercise.reps ?? "10",
+                        targetLoad: nil,
+                        loadUnit: nil,
+                        restPeriodSeconds: nil,
+                        notes: exercise.notes
+                    )
+
+                    let addedExercise = try await workoutService.addExercise(to: session.id, exercise: input)
+                    exercises.append(addedExercise)
+                }
+            }
+
+            logger.log("ProgramWorkout: Added \(exercises.count) exercises to session", level: .success)
+
+            createdSession = session
+            createdExercises = exercises
+
+        } catch {
+            logger.log("ProgramWorkout: Failed to create session: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to start workout: \(error.localizedDescription)"
+        }
+
+        isCreatingSession = false
     }
 }
 
