@@ -502,6 +502,8 @@ class ProgramLibraryService: ObservableObject {
         let programLibrary = try await fetchProgram(id: programLibraryId)
         let programId = programLibrary.programId
 
+        logger.log("Program '\(programLibrary.title)' has program_id: \(programId)", level: .diagnostic)
+
         do {
             // Fetch all workout assignments for this program with template details
             let response = try await supabase.client
@@ -529,11 +531,13 @@ class ProgramLibraryService: ObservableObject {
                 .order("day_of_week", ascending: true)
                 .execute()
 
+            logger.log("Raw response size: \(response.data.count) bytes", level: .diagnostic)
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
             let assignments = try decoder.decode([ProgramWorkoutAssignmentWithTemplate].self, from: response.data)
 
-            logger.log("Fetched \(assignments.count) workout assignments", level: .diagnostic)
+            logger.log("Fetched \(assignments.count) workout assignments for program_id: \(programId)", level: .diagnostic)
 
             // Group by week
             let groupedByWeek = Dictionary(grouping: assignments) { $0.weekNumber }
