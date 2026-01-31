@@ -521,9 +521,7 @@ class ProgramLibraryService: ObservableObject {
                         description,
                         duration_minutes,
                         category,
-                        difficulty,
-                        equipment,
-                        tags
+                        difficulty
                     )
                 """)
                 .eq("program_id", value: programId.uuidString)

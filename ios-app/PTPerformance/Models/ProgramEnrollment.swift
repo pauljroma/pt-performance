@@ -208,8 +208,6 @@ struct ScheduleTemplateInfo: Codable {
     let durationMinutes: Int?
     let category: String?
     let difficulty: String?
-    let equipment: [String]?
-    let tags: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -218,7 +216,5 @@ struct ScheduleTemplateInfo: Codable {
         case durationMinutes = "duration_minutes"
         case category
         case difficulty
-        case equipment
-        case tags
     }
 }
