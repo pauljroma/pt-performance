@@ -5,6 +5,7 @@ struct TherapistProgramsView: View {
     @State private var selectedProgram: ProgramListItem?
     @State private var showProgramViewer = false
     @State private var showProgramBuilder = false
+    @State private var showLibraryProgramBuilder = false
     @State private var showProgramManager = false
     @State private var editingProgramId: String?
     @State private var editingPatientId: UUID?
@@ -58,6 +59,12 @@ struct TherapistProgramsView: View {
                         }
 
                         Button {
+                            showLibraryProgramBuilder = true
+                        } label: {
+                            Label("Build Library Program", systemImage: "books.vertical")
+                        }
+
+                        Button {
                             showProgramManager = true
                         } label: {
                             Label("Manage Programs", systemImage: "pencil.circle")
@@ -79,6 +86,14 @@ struct TherapistProgramsView: View {
                 }
             } content: {
                 ProgramBuilderView(patientId: nil)
+            }
+            .sheet(isPresented: $showLibraryProgramBuilder) {
+                // Refresh programs list when library builder is dismissed
+                Task {
+                    await viewModel.loadPrograms()
+                }
+            } content: {
+                TherapistProgramBuilderView()
             }
             .sheet(isPresented: $showProgramManager) {
                 ProgramManagerView()

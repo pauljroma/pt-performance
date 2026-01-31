@@ -222,6 +222,17 @@ struct PatientSettingsView: View {
                     }
 
                     NavigationLink {
+                        BodyCompGoalsView()
+                    } label: {
+                        HStack {
+                            Image(systemName: "figure.arms.open")
+                                .foregroundColor(.purple)
+                            Text("Body Comp Goals")
+                                .foregroundColor(.primary)
+                        }
+                    }
+
+                    NavigationLink {
                         CalculatorsMenuView()
                     } label: {
                         HStack {

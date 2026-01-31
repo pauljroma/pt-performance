@@ -90,7 +90,7 @@ class ImageCacheService: ObservableObject {
     func preloadImages(urls: [URL]) {
         Task.detached(priority: .utility) {
             for url in urls {
-                try? await self.loadImage(from: url)
+                _ = try? await self.loadImage(from: url)
             }
         }
     }
@@ -112,7 +112,9 @@ class ImageCacheService: ObservableObject {
             return 0
         }
 
-        for case let fileURL as URL in enumerator {
+        // Collect URLs synchronously to avoid makeIterator in async context
+        let fileURLs = enumerator.allObjects.compactMap { $0 as? URL }
+        for fileURL in fileURLs {
             if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
                 totalSize += Int64(fileSize)
             }
@@ -177,7 +179,9 @@ class ImageCacheService: ObservableObject {
 
         var files: [(url: URL, date: Date, size: Int64)] = []
 
-        for case let fileURL as URL in enumerator {
+        // Collect URLs synchronously to avoid makeIterator in async context
+        let fileURLs = enumerator.allObjects.compactMap { $0 as? URL }
+        for fileURL in fileURLs {
             if let values = try? fileURL.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
                let date = values.contentModificationDate,
                let size = values.fileSize {

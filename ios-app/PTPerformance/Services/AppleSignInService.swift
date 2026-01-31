@@ -128,7 +128,7 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
         let capturedContinuation = self.continuation
         self.continuation = nil
 
-        Task { @MainActor [weak self] in
+        Task { @MainActor in
             do {
                 // Sign in with Supabase using the Apple ID token
                 try await PTSupabaseClient.shared.signInWithApple(idToken: idTokenString, nonce: nonce)
@@ -199,6 +199,16 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 logger.error("AppleSignIn", "Non-interactive authorization failed")
             case .unknown:
                 logger.error("AppleSignIn", "Unknown authorization error")
+            case .matchedExcludedCredential:
+                logger.error("AppleSignIn", "Matched excluded credential")
+            case .credentialImport:
+                logger.error("AppleSignIn", "Credential import error")
+            case .credentialExport:
+                logger.error("AppleSignIn", "Credential export error")
+            case .preferSignInWithApple:
+                logger.info("AppleSignIn", "Prefer Sign in with Apple")
+            case .deviceNotConfiguredForPasskeyCreation:
+                logger.error("AppleSignIn", "Device not configured for passkey creation")
             @unknown default:
                 logger.error("AppleSignIn", "Unrecognized error code: \(authError.code)")
             }

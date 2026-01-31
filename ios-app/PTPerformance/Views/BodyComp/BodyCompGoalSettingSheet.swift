@@ -206,7 +206,7 @@ struct BodyCompGoalSettingSheet: View {
                 }
 
                 // Show weekly rate needed
-                if let rate = weeklyWeightChange, let current = viewModel.latestWeight {
+                if let rate = weeklyWeightChange, viewModel.latestWeight != nil {
                     HStack {
                         Image(systemName: rate < 0 ? "arrow.down.right" : "arrow.up.right")
                             .foregroundColor(isWeightRateHealthy ? .blue : .orange)
