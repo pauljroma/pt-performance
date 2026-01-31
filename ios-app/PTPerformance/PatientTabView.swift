@@ -33,6 +33,15 @@ struct PatientTabView: View {
                 .accessibilityLabel("Quick Pick Workout")
                 .accessibilityHint("Find a workout based on your preferences")
 
+            // Programs tab - browse program library
+            ProgramLibraryBrowserView()
+                .tabItem {
+                    Label("Programs", systemImage: "list.clipboard")
+                }
+                .tag(2)
+                .accessibilityLabel("Programs")
+                .accessibilityHint("Browse and enroll in training programs")
+
             if let patientId = supabase.userId {
                 premiumGatedView(
                     premium: { HistoryView(patientId: patientId) },
@@ -41,7 +50,7 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
-                .tag(2)
+                .tag(3)
                 .accessibilityLabel("Workout History")
                 .accessibilityHint("View past workouts and progress")
             }
@@ -55,7 +64,7 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("Readiness", systemImage: "battery.100")
                 }
-                .tag(3)
+                .tag(4)
                 .accessibilityLabel("Daily Readiness")
                 .accessibilityHint("Check in with your daily wellness metrics")
             }
@@ -66,7 +75,7 @@ struct PatientTabView: View {
                     .tabItem {
                         Label("Timers", systemImage: "timer")
                     }
-                    .tag(4)
+                    .tag(5)
                     .accessibilityLabel("Workout Timers")
                     .accessibilityHint("Access interval timers and stopwatch")
             }
@@ -78,7 +87,7 @@ struct PatientTabView: View {
             .tabItem {
                 Label("Nutrition", systemImage: "fork.knife")
             }
-            .tag(5)
+            .tag(6)
             .accessibilityLabel("Nutrition Tracking")
             .accessibilityHint("Log meals and track macros")
 
@@ -89,7 +98,7 @@ struct PatientTabView: View {
             .tabItem {
                 Label("AI Assistant", systemImage: "brain.head.profile")
             }
-            .tag(6)
+            .tag(7)
             .accessibilityLabel("AI Assistant")
             .accessibilityHint("Get AI-powered exercise recommendations")
 
@@ -100,7 +109,7 @@ struct PatientTabView: View {
             .tabItem {
                 Label("Learn", systemImage: "book.fill")
             }
-            .tag(7)
+            .tag(8)
             .accessibilityLabel("Learning Center")
             .accessibilityHint("Access educational content and exercise guides")
 
@@ -109,7 +118,7 @@ struct PatientTabView: View {
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }
-                .tag(8)
+                .tag(9)
                 .accessibilityLabel("Settings")
                 .accessibilityHint("Manage app settings and account")
         }
