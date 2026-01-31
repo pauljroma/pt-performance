@@ -1,0 +1,207 @@
+-- BUILD 345: RLS policies for therapist program building
+-- Enables therapists to create and manage training programs
+-- Therapists create programs, patients consume them via enrollments
+
+-- ============================================================================
+-- 1. Programs Table RLS Policies
+-- ============================================================================
+
+-- Drop existing conflicting policies if any
+DROP POLICY IF EXISTS "Therapists can create programs" ON programs;
+DROP POLICY IF EXISTS "Therapists can update programs" ON programs;
+DROP POLICY IF EXISTS "Therapists can delete programs" ON programs;
+DROP POLICY IF EXISTS "Anyone can view system programs" ON programs;
+
+-- Therapists can create programs (system templates have NULL patient_id)
+CREATE POLICY "Therapists can create programs"
+    ON programs FOR INSERT
+    WITH CHECK (
+        -- Allow therapists to create programs
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+        -- Also allow system templates (patient_id IS NULL)
+        OR patient_id IS NULL
+    );
+
+-- Therapists can update their programs and system templates
+CREATE POLICY "Therapists can update programs"
+    ON programs FOR UPDATE
+    USING (
+        -- Therapists can update any program
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+        -- System templates (patient_id IS NULL) are editable
+        OR patient_id IS NULL
+    );
+
+-- Therapists can delete programs they created
+CREATE POLICY "Therapists can delete programs"
+    ON programs FOR DELETE
+    USING (
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- Anyone can view system programs (for program library browsing)
+CREATE POLICY "Anyone can view system programs"
+    ON programs FOR SELECT
+    USING (
+        -- System templates are public
+        patient_id IS NULL
+        -- Patients can view their own programs
+        OR patient_id = auth.uid()
+        -- Therapists can view all programs
+        OR auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- ============================================================================
+-- 2. Phases Table RLS Policies
+-- ============================================================================
+
+-- Drop existing conflicting policies if any
+DROP POLICY IF EXISTS "Therapists can manage phases" ON phases;
+DROP POLICY IF EXISTS "Anyone can view phases" ON phases;
+
+-- Therapists can perform all operations on phases
+CREATE POLICY "Therapists can manage phases"
+    ON phases FOR ALL
+    USING (
+        -- Allow access if the program is a system template (patient_id IS NULL)
+        -- or if the user is a therapist
+        program_id IN (
+            SELECT id FROM programs
+            WHERE patient_id IS NULL
+        )
+        OR auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- Anyone can view phases for system programs (for browsing)
+CREATE POLICY "Anyone can view phases"
+    ON phases FOR SELECT
+    USING (
+        program_id IN (
+            SELECT id FROM programs
+            WHERE patient_id IS NULL
+        )
+        OR auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+        OR program_id IN (
+            SELECT id FROM programs WHERE patient_id = auth.uid()
+        )
+    );
+
+-- ============================================================================
+-- 3. Program Workout Assignments Table RLS Policies
+-- ============================================================================
+
+-- Drop existing conflicting policies if any
+DROP POLICY IF EXISTS "Therapists can manage workout assignments" ON program_workout_assignments;
+DROP POLICY IF EXISTS "Therapists can insert workout assignments" ON program_workout_assignments;
+DROP POLICY IF EXISTS "Therapists can update workout assignments" ON program_workout_assignments;
+DROP POLICY IF EXISTS "Therapists can delete workout assignments" ON program_workout_assignments;
+
+-- Therapists can perform all operations on workout assignments
+CREATE POLICY "Therapists can manage workout assignments"
+    ON program_workout_assignments FOR ALL
+    USING (
+        -- Allow access for system templates
+        program_id IN (
+            SELECT id FROM programs
+            WHERE patient_id IS NULL
+        )
+        -- Or if user is a therapist
+        OR auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- ============================================================================
+-- 4. Program Library Table RLS Policies (Additional for therapists)
+-- ============================================================================
+
+-- Drop existing conflicting policies if any
+DROP POLICY IF EXISTS "Therapists can publish to library" ON program_library;
+DROP POLICY IF EXISTS "Therapists can update library items" ON program_library;
+DROP POLICY IF EXISTS "Therapists can delete library items" ON program_library;
+
+-- Therapists can publish programs to the library
+CREATE POLICY "Therapists can publish to library"
+    ON program_library FOR INSERT
+    WITH CHECK (
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- Therapists can update library entries
+CREATE POLICY "Therapists can update library items"
+    ON program_library FOR UPDATE
+    USING (
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- Therapists can delete library entries
+CREATE POLICY "Therapists can delete library items"
+    ON program_library FOR DELETE
+    USING (
+        auth.uid() IN (SELECT user_id FROM therapists WHERE user_id IS NOT NULL)
+    );
+
+-- ============================================================================
+-- 5. Create view for program template assignments (used by ProgramLibraryService)
+-- ============================================================================
+
+-- Drop and recreate view for consistency
+DROP VIEW IF EXISTS vw_program_template_assignments;
+
+CREATE OR REPLACE VIEW vw_program_template_assignments AS
+SELECT
+    pwa.id,
+    pwa.program_id,
+    pwa.template_id,
+    pwa.phase_id,
+    pwa.week_number,
+    pwa.day_of_week,
+    pwa.sequence,
+    pl.id AS program_library_id
+FROM program_workout_assignments pwa
+JOIN programs p ON p.id = pwa.program_id
+JOIN program_library pl ON pl.program_id = p.id;
+
+COMMENT ON VIEW vw_program_template_assignments IS 'Links workout assignments to program library for progress tracking';
+
+-- ============================================================================
+-- 6. Helper function for therapist check (performance optimization)
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION is_therapist()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM therapists
+        WHERE user_id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+COMMENT ON FUNCTION is_therapist IS 'Check if current user is a therapist (cached for RLS performance)';
+
+-- ============================================================================
+-- 7. Grant necessary permissions
+-- ============================================================================
+
+-- Ensure authenticated users can use the function
+GRANT EXECUTE ON FUNCTION is_therapist() TO authenticated;
+
+-- ============================================================================
+-- 8. Indexes for RLS performance
+-- ============================================================================
+
+-- Index on therapists.user_id for fast RLS lookups
+CREATE INDEX IF NOT EXISTS idx_therapists_user_id
+    ON therapists(user_id)
+    WHERE user_id IS NOT NULL;
+
+-- Index on programs.patient_id for system template identification
+CREATE INDEX IF NOT EXISTS idx_programs_patient_id_null
+    ON programs(patient_id)
+    WHERE patient_id IS NULL;
+
+-- Composite index for program_workout_assignments lookups
+CREATE INDEX IF NOT EXISTS idx_pwa_program_phase
+    ON program_workout_assignments(program_id, phase_id);
+
+COMMENT ON INDEX idx_therapists_user_id IS 'Optimize RLS checks for therapist authentication';
+COMMENT ON INDEX idx_programs_patient_id_null IS 'Optimize queries for system template programs';

@@ -1,0 +1,374 @@
+-- ============================================================================
+-- CREATE BODY COMPOSITION GOALS TABLE
+-- ============================================================================
+-- Tracks body composition goals for patients including target weight, body fat,
+-- muscle mass, and progress over time.
+--
+-- Date: 2026-01-31
+-- ============================================================================
+
+-- =====================================================
+-- Body Composition Goals Table
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS body_comp_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+
+    -- Target values (nullable - user may not set all)
+    target_weight DECIMAL(5,2),           -- in lbs
+    target_body_fat_percentage DECIMAL(4,1),
+    target_muscle_mass DECIMAL(5,2),      -- in lbs
+    target_bmi DECIMAL(4,1),
+
+    -- Starting values (captured when goal is set)
+    starting_weight DECIMAL(5,2),
+    starting_body_fat_percentage DECIMAL(4,1),
+    starting_muscle_mass DECIMAL(5,2),
+
+    -- Timeline
+    target_date DATE,
+    started_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Status
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'achieved', 'paused', 'cancelled')),
+    achieved_at TIMESTAMPTZ,
+
+    -- Metadata
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- Partial Unique Index for Active Goals
+-- =====================================================
+-- Only one active goal per patient at a time
+
+CREATE UNIQUE INDEX idx_body_comp_goals_one_active_per_patient
+    ON body_comp_goals(patient_id)
+    WHERE status = 'active';
+
+-- =====================================================
+-- Indexes
+-- =====================================================
+
+CREATE INDEX idx_body_comp_goals_patient ON body_comp_goals(patient_id);
+CREATE INDEX idx_body_comp_goals_status ON body_comp_goals(status);
+CREATE INDEX idx_body_comp_goals_patient_status ON body_comp_goals(patient_id, status);
+
+-- =====================================================
+-- Comments
+-- =====================================================
+
+COMMENT ON TABLE body_comp_goals IS 'Body composition goals for patients';
+COMMENT ON COLUMN body_comp_goals.patient_id IS 'Patient who owns this goal';
+COMMENT ON COLUMN body_comp_goals.target_weight IS 'Target weight in pounds';
+COMMENT ON COLUMN body_comp_goals.target_body_fat_percentage IS 'Target body fat percentage';
+COMMENT ON COLUMN body_comp_goals.target_muscle_mass IS 'Target muscle mass in pounds';
+COMMENT ON COLUMN body_comp_goals.target_bmi IS 'Target BMI';
+COMMENT ON COLUMN body_comp_goals.starting_weight IS 'Weight when goal was set';
+COMMENT ON COLUMN body_comp_goals.starting_body_fat_percentage IS 'Body fat when goal was set';
+COMMENT ON COLUMN body_comp_goals.starting_muscle_mass IS 'Muscle mass when goal was set';
+COMMENT ON COLUMN body_comp_goals.target_date IS 'Target date to achieve goal';
+COMMENT ON COLUMN body_comp_goals.started_at IS 'When the goal was started';
+COMMENT ON COLUMN body_comp_goals.status IS 'Goal status: active, achieved, paused, cancelled';
+COMMENT ON COLUMN body_comp_goals.achieved_at IS 'When the goal was achieved';
+COMMENT ON COLUMN body_comp_goals.notes IS 'Optional notes about the goal';
+
+-- =====================================================
+-- Row-Level Security (RLS)
+-- =====================================================
+
+ALTER TABLE body_comp_goals ENABLE ROW LEVEL SECURITY;
+
+-- Patients can view their own goals
+CREATE POLICY "Patients can view own goals"
+    ON body_comp_goals FOR SELECT
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can insert their own goals
+CREATE POLICY "Patients can insert own goals"
+    ON body_comp_goals FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Patients can update their own goals
+CREATE POLICY "Patients can update own goals"
+    ON body_comp_goals FOR UPDATE
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    )
+    WITH CHECK (
+        patient_id IN (
+            SELECT id FROM patients WHERE user_id = auth.uid()
+        )
+    );
+
+-- Therapists can view their patients' goals
+CREATE POLICY "Therapists can view patient goals"
+    ON body_comp_goals FOR SELECT
+    TO authenticated
+    USING (
+        patient_id IN (
+            SELECT id FROM patients
+            WHERE therapist_id IN (
+                SELECT id FROM therapists WHERE user_id = auth.uid()
+            )
+        )
+    );
+
+-- Service role has full access
+CREATE POLICY "Service role can manage all body comp goals"
+    ON body_comp_goals FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+-- =====================================================
+-- Grant Permissions
+-- =====================================================
+
+GRANT SELECT, INSERT, UPDATE ON body_comp_goals TO authenticated;
+GRANT ALL ON body_comp_goals TO service_role;
+
+-- =====================================================
+-- Progress Tracking View
+-- =====================================================
+
+CREATE OR REPLACE VIEW vw_body_comp_goal_progress AS
+SELECT
+    g.id as goal_id,
+    g.patient_id,
+    g.target_weight,
+    g.target_body_fat_percentage,
+    g.target_muscle_mass,
+    g.starting_weight,
+    g.starting_body_fat_percentage,
+    g.starting_muscle_mass,
+    g.target_date,
+    g.status,
+    g.started_at,
+    g.notes,
+
+    -- Latest measurements from body_compositions table
+    -- Note: Using column names from existing body_compositions table
+    bc.weight_lb as current_weight,
+    bc.body_fat_percent as current_body_fat,
+    bc.muscle_mass_lb as current_muscle_mass,
+    bc.recorded_at as last_measured,
+
+    -- Progress calculations (as percentages toward goal)
+    -- For weight: handle both weight loss and weight gain goals
+    CASE
+        WHEN g.target_weight IS NOT NULL
+             AND g.starting_weight IS NOT NULL
+             AND bc.weight_lb IS NOT NULL
+             AND ABS(g.target_weight - g.starting_weight) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(bc.weight_lb - g.starting_weight) /
+                ABS(g.target_weight - g.starting_weight) * 100
+            )), 1
+        )
+    END as weight_progress_pct,
+
+    -- For body fat: typically a reduction goal
+    CASE
+        WHEN g.target_body_fat_percentage IS NOT NULL
+             AND g.starting_body_fat_percentage IS NOT NULL
+             AND bc.body_fat_percent IS NOT NULL
+             AND ABS(g.target_body_fat_percentage - g.starting_body_fat_percentage) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(bc.body_fat_percent - g.starting_body_fat_percentage) /
+                ABS(g.target_body_fat_percentage - g.starting_body_fat_percentage) * 100
+            )), 1
+        )
+    END as body_fat_progress_pct,
+
+    -- For muscle mass: typically an increase goal
+    CASE
+        WHEN g.target_muscle_mass IS NOT NULL
+             AND g.starting_muscle_mass IS NOT NULL
+             AND bc.muscle_mass_lb IS NOT NULL
+             AND ABS(g.target_muscle_mass - g.starting_muscle_mass) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(bc.muscle_mass_lb - g.starting_muscle_mass) /
+                ABS(g.target_muscle_mass - g.starting_muscle_mass) * 100
+            )), 1
+        )
+    END as muscle_mass_progress_pct,
+
+    -- Days remaining to target date
+    CASE
+        WHEN g.target_date IS NOT NULL
+        THEN GREATEST(0, g.target_date - CURRENT_DATE)
+    END as days_remaining
+
+FROM body_comp_goals g
+LEFT JOIN LATERAL (
+    SELECT * FROM body_compositions
+    WHERE patient_id = g.patient_id
+    ORDER BY recorded_at DESC
+    LIMIT 1
+) bc ON true
+WHERE g.status = 'active';
+
+COMMENT ON VIEW vw_body_comp_goal_progress IS 'Active body composition goals with current progress';
+
+-- Grant access to the view
+GRANT SELECT ON vw_body_comp_goal_progress TO authenticated;
+
+-- =====================================================
+-- Trigger Function: Check Goal Achievement
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION check_body_comp_goal_achievement()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_goal RECORD;
+    v_weight_achieved BOOLEAN := true;
+    v_body_fat_achieved BOOLEAN := true;
+    v_muscle_achieved BOOLEAN := true;
+    v_all_achieved BOOLEAN := false;
+BEGIN
+    -- Find active goal for this patient
+    SELECT * INTO v_goal
+    FROM body_comp_goals
+    WHERE patient_id = NEW.patient_id AND status = 'active';
+
+    -- No active goal, nothing to check
+    IF v_goal IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    -- Check weight target (within 1% tolerance)
+    IF v_goal.target_weight IS NOT NULL AND NEW.weight_lb IS NOT NULL THEN
+        IF ABS(NEW.weight_lb - v_goal.target_weight) > (v_goal.target_weight * 0.01) THEN
+            v_weight_achieved := false;
+        END IF;
+    ELSIF v_goal.target_weight IS NOT NULL THEN
+        -- Target set but no measurement, not achieved
+        v_weight_achieved := false;
+    END IF;
+
+    -- Check body fat target (within 0.5% absolute tolerance)
+    IF v_goal.target_body_fat_percentage IS NOT NULL AND NEW.body_fat_percent IS NOT NULL THEN
+        IF ABS(NEW.body_fat_percent - v_goal.target_body_fat_percentage) > 0.5 THEN
+            v_body_fat_achieved := false;
+        END IF;
+    ELSIF v_goal.target_body_fat_percentage IS NOT NULL THEN
+        v_body_fat_achieved := false;
+    END IF;
+
+    -- Check muscle mass target (within 1% tolerance)
+    IF v_goal.target_muscle_mass IS NOT NULL AND NEW.muscle_mass_lb IS NOT NULL THEN
+        IF ABS(NEW.muscle_mass_lb - v_goal.target_muscle_mass) > (v_goal.target_muscle_mass * 0.01) THEN
+            v_muscle_achieved := false;
+        END IF;
+    ELSIF v_goal.target_muscle_mass IS NOT NULL THEN
+        v_muscle_achieved := false;
+    END IF;
+
+    -- All set targets must be achieved
+    v_all_achieved := v_weight_achieved AND v_body_fat_achieved AND v_muscle_achieved;
+
+    -- Update goal status if achieved
+    IF v_all_achieved THEN
+        UPDATE body_comp_goals
+        SET status = 'achieved',
+            achieved_at = NOW(),
+            updated_at = NOW()
+        WHERE id = v_goal.id;
+
+        RAISE NOTICE 'Body composition goal % achieved for patient %', v_goal.id, NEW.patient_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION check_body_comp_goal_achievement() IS 'Automatically marks goals as achieved when targets are met';
+
+-- =====================================================
+-- Trigger: Auto-check Goals on New Measurements
+-- =====================================================
+
+CREATE TRIGGER trg_check_body_comp_goals
+    AFTER INSERT ON body_compositions
+    FOR EACH ROW
+    EXECUTE FUNCTION check_body_comp_goal_achievement();
+
+-- =====================================================
+-- Updated At Trigger
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION update_body_comp_goals_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_body_comp_goals_updated_at
+    BEFORE UPDATE ON body_comp_goals
+    FOR EACH ROW
+    EXECUTE FUNCTION update_body_comp_goals_updated_at();
+
+-- =====================================================
+-- Verification
+-- =====================================================
+
+DO $$
+DECLARE
+    v_count integer;
+BEGIN
+    SELECT COUNT(*) INTO v_count FROM body_comp_goals;
+
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'BODY COMPOSITION GOALS TABLE CREATED';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Table: body_comp_goals (% existing entries)', v_count;
+    RAISE NOTICE '';
+    RAISE NOTICE 'Columns:';
+    RAISE NOTICE '  - id (uuid PK)';
+    RAISE NOTICE '  - patient_id (uuid FK -> patients)';
+    RAISE NOTICE '  - target_weight, target_body_fat_percentage, target_muscle_mass, target_bmi';
+    RAISE NOTICE '  - starting_weight, starting_body_fat_percentage, starting_muscle_mass';
+    RAISE NOTICE '  - target_date, started_at, status, achieved_at';
+    RAISE NOTICE '  - notes, created_at, updated_at';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Indexes:';
+    RAISE NOTICE '  - idx_body_comp_goals_patient';
+    RAISE NOTICE '  - idx_body_comp_goals_status';
+    RAISE NOTICE '  - idx_body_comp_goals_patient_status';
+    RAISE NOTICE '  - idx_body_comp_goals_one_active_per_patient (partial unique)';
+    RAISE NOTICE '';
+    RAISE NOTICE 'View: vw_body_comp_goal_progress';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Trigger: trg_check_body_comp_goals (auto-achievement detection)';
+    RAISE NOTICE '';
+    RAISE NOTICE 'RLS Policies:';
+    RAISE NOTICE '  - Patients: Full CRUD on own goals';
+    RAISE NOTICE '  - Therapists: Read-only access to patient goals';
+    RAISE NOTICE '  - Service role: Full access';
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+END $$;

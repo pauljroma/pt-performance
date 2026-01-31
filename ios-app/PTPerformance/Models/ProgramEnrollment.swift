@@ -109,3 +109,116 @@ struct EnrollmentWithProgram: Identifiable {
 
     var id: UUID { enrollment.id }
 }
+
+// MARK: - Program Workout Schedule Models
+
+/// A week in the program schedule
+struct ProgramScheduleWeek: Identifiable {
+    let weekNumber: Int
+    let days: [ProgramScheduleDay]
+
+    var id: Int { weekNumber }
+
+    /// Total workouts in this week
+    var workoutCount: Int {
+        days.reduce(0) { $0 + $1.workouts.count }
+    }
+
+    /// Days that have workouts
+    var activeDays: [ProgramScheduleDay] {
+        days.filter { !$0.workouts.isEmpty }
+    }
+}
+
+/// A day in the program schedule
+struct ProgramScheduleDay: Identifiable {
+    let dayOfWeek: Int
+    let dayName: String
+    let workouts: [ProgramScheduleWorkout]
+
+    var id: Int { dayOfWeek }
+
+    /// Short day name (Mon, Tue, etc.)
+    var shortName: String {
+        String(dayName.prefix(3))
+    }
+
+    /// Whether this is a rest day
+    var isRestDay: Bool {
+        workouts.isEmpty
+    }
+}
+
+/// A workout in the program schedule
+struct ProgramScheduleWorkout: Identifiable {
+    let assignmentId: UUID
+    let templateId: UUID
+    let name: String
+    let description: String?
+    let durationMinutes: Int?
+    let category: String?
+    let difficulty: String?
+    let notes: String?
+
+    var id: UUID { assignmentId }
+
+    /// Formatted duration
+    var formattedDuration: String {
+        guard let minutes = durationMinutes else { return "N/A" }
+        if minutes < 60 {
+            return "\(minutes) min"
+        } else {
+            let hours = minutes / 60
+            let remaining = minutes % 60
+            return remaining > 0 ? "\(hours)h \(remaining)m" : "\(hours)h"
+        }
+    }
+}
+
+/// Assignment with template details (for decoding from Supabase join)
+struct ProgramWorkoutAssignmentWithTemplate: Codable {
+    let id: UUID
+    let programId: UUID
+    let templateId: UUID
+    let phaseId: UUID?
+    let weekNumber: Int
+    let dayOfWeek: Int
+    let sequence: Int
+    let notes: String?
+    let template: ScheduleTemplateInfo
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case programId = "program_id"
+        case templateId = "template_id"
+        case phaseId = "phase_id"
+        case weekNumber = "week_number"
+        case dayOfWeek = "day_of_week"
+        case sequence
+        case notes
+        case template = "system_workout_templates"
+    }
+}
+
+/// Template info nested in assignment response
+struct ScheduleTemplateInfo: Codable {
+    let id: UUID
+    let name: String
+    let description: String?
+    let durationMinutes: Int?
+    let category: String?
+    let difficulty: String?
+    let equipment: [String]?
+    let tags: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case description
+        case durationMinutes = "duration_minutes"
+        case category
+        case difficulty
+        case equipment
+        case tags
+    }
+}

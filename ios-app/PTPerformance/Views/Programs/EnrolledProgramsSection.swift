@@ -193,6 +193,9 @@ struct EnrolledProgramDetailSheet: View {
                     // Header
                     headerSection
 
+                    // Workout Schedule (NEW - Primary action)
+                    workoutScheduleSection
+
                     // Progress Section
                     progressSection
 
@@ -323,6 +326,48 @@ struct EnrolledProgramDetailSheet: View {
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(12)
+        }
+    }
+
+    // MARK: - Workout Schedule Section
+
+    private var workoutScheduleSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Workout Schedule")
+                .font(.headline)
+
+            NavigationLink {
+                ProgramWorkoutScheduleView(enrollment: enrollment)
+            } label: {
+                HStack {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                        .frame(width: 44, height: 44)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(10)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("View Weekly Workouts")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+
+                        Text("See your workout schedule by week")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(12)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
         }
     }
 

@@ -1,0 +1,160 @@
+-- ============================================================================
+-- CREATE BODY COMP GOAL PROGRESS VIEW (Fixed)
+-- ============================================================================
+-- Provides active body composition goals with current measurements and
+-- progress percentages toward each goal.
+--
+-- Date: 2026-01-31
+-- Build: 346
+-- Fixes: Replaces LATERAL join with subquery for better compatibility
+-- ============================================================================
+
+-- Drop the view if it exists (for idempotency)
+DROP VIEW IF EXISTS vw_body_comp_goal_progress;
+
+-- =====================================================
+-- Progress Tracking View
+-- =====================================================
+-- Joins body_comp_goals with the latest body_compositions record
+-- to calculate progress toward each goal.
+-- Uses a subquery with DISTINCT ON instead of LATERAL for compatibility.
+
+CREATE VIEW vw_body_comp_goal_progress AS
+WITH latest_measurements AS (
+    -- Get the most recent body composition record for each patient
+    SELECT DISTINCT ON (patient_id)
+        patient_id,
+        weight_lb,
+        body_fat_percent,
+        muscle_mass_lb,
+        recorded_at
+    FROM body_compositions
+    ORDER BY patient_id, recorded_at DESC
+)
+SELECT
+    g.id as goal_id,
+    g.patient_id,
+    g.target_weight,
+    g.target_body_fat_percentage,
+    g.target_muscle_mass,
+    g.starting_weight,
+    g.starting_body_fat_percentage,
+    g.starting_muscle_mass,
+    g.target_date,
+    g.status,
+    g.started_at,
+    g.notes,
+
+    -- Latest measurements from body_compositions table
+    lm.weight_lb as current_weight,
+    lm.body_fat_percent as current_body_fat,
+    lm.muscle_mass_lb as current_muscle_mass,
+    lm.recorded_at as last_measured,
+
+    -- Progress calculations (as percentages toward goal)
+    -- For weight: handle both weight loss and weight gain goals
+    CASE
+        WHEN g.target_weight IS NOT NULL
+             AND g.starting_weight IS NOT NULL
+             AND lm.weight_lb IS NOT NULL
+             AND ABS(g.target_weight - g.starting_weight) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(lm.weight_lb - g.starting_weight) /
+                ABS(g.target_weight - g.starting_weight) * 100
+            ))::numeric, 1
+        )
+    END as weight_progress_pct,
+
+    -- For body fat: typically a reduction goal
+    CASE
+        WHEN g.target_body_fat_percentage IS NOT NULL
+             AND g.starting_body_fat_percentage IS NOT NULL
+             AND lm.body_fat_percent IS NOT NULL
+             AND ABS(g.target_body_fat_percentage - g.starting_body_fat_percentage) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(lm.body_fat_percent - g.starting_body_fat_percentage) /
+                ABS(g.target_body_fat_percentage - g.starting_body_fat_percentage) * 100
+            ))::numeric, 1
+        )
+    END as body_fat_progress_pct,
+
+    -- For muscle mass: typically an increase goal
+    CASE
+        WHEN g.target_muscle_mass IS NOT NULL
+             AND g.starting_muscle_mass IS NOT NULL
+             AND lm.muscle_mass_lb IS NOT NULL
+             AND ABS(g.target_muscle_mass - g.starting_muscle_mass) > 0
+        THEN ROUND(
+            LEAST(100, GREATEST(0,
+                ABS(lm.muscle_mass_lb - g.starting_muscle_mass) /
+                ABS(g.target_muscle_mass - g.starting_muscle_mass) * 100
+            ))::numeric, 1
+        )
+    END as muscle_mass_progress_pct,
+
+    -- Days remaining to target date
+    CASE
+        WHEN g.target_date IS NOT NULL
+        THEN GREATEST(0, g.target_date - CURRENT_DATE)
+    END as days_remaining
+
+FROM body_comp_goals g
+LEFT JOIN latest_measurements lm ON lm.patient_id = g.patient_id
+WHERE g.status = 'active';
+
+-- =====================================================
+-- Comments
+-- =====================================================
+
+COMMENT ON VIEW vw_body_comp_goal_progress IS 'Active body composition goals with current progress calculations';
+
+-- =====================================================
+-- Grant Permissions
+-- =====================================================
+-- View inherits RLS from underlying tables, but we grant SELECT to authenticated users
+
+GRANT SELECT ON vw_body_comp_goal_progress TO authenticated;
+GRANT SELECT ON vw_body_comp_goal_progress TO service_role;
+
+-- =====================================================
+-- Verification
+-- =====================================================
+
+DO $$
+DECLARE
+    v_view_exists boolean;
+    v_goal_count integer;
+BEGIN
+    -- Check if view was created
+    SELECT EXISTS (
+        SELECT 1 FROM information_schema.views
+        WHERE table_name = 'vw_body_comp_goal_progress'
+    ) INTO v_view_exists;
+
+    -- Count active goals
+    SELECT COUNT(*) INTO v_goal_count FROM body_comp_goals WHERE status = 'active';
+
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE 'BODY COMP GOAL PROGRESS VIEW CREATED (Build 346)';
+    RAISE NOTICE '============================================================================';
+    RAISE NOTICE '';
+    RAISE NOTICE 'View: vw_body_comp_goal_progress';
+    RAISE NOTICE 'Status: %', CASE WHEN v_view_exists THEN 'CREATED' ELSE 'FAILED' END;
+    RAISE NOTICE 'Active Goals: %', v_goal_count;
+    RAISE NOTICE '';
+    RAISE NOTICE 'Columns:';
+    RAISE NOTICE '  - goal_id, patient_id';
+    RAISE NOTICE '  - target_weight, target_body_fat_percentage, target_muscle_mass';
+    RAISE NOTICE '  - starting_weight, starting_body_fat_percentage, starting_muscle_mass';
+    RAISE NOTICE '  - current_weight, current_body_fat, current_muscle_mass';
+    RAISE NOTICE '  - weight_progress_pct, body_fat_progress_pct, muscle_mass_progress_pct';
+    RAISE NOTICE '  - target_date, status, started_at, notes';
+    RAISE NOTICE '  - last_measured, days_remaining';
+    RAISE NOTICE '';
+    RAISE NOTICE 'Fix: Replaced LATERAL join with CTE + DISTINCT ON';
+    RAISE NOTICE '';
+    RAISE NOTICE '============================================================================';
+END $$;

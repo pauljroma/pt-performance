@@ -490,6 +490,115 @@ class ProgramLibraryService: ObservableObject {
         }
     }
 
+    // MARK: - Workout Schedule for Enrolled Programs
+
+    /// Fetch the workout schedule for an enrolled program
+    /// Returns workouts organized by week and day for the user to follow
+    func fetchProgramWorkoutSchedule(programLibraryId: UUID) async throws -> [ProgramScheduleWeek] {
+        let logger = DebugLogger.shared
+        logger.log("Fetching workout schedule for program library: \(programLibraryId)", level: .diagnostic)
+
+        // First get the program_id from program_library
+        let programLibrary = try await fetchProgram(id: programLibraryId)
+        let programId = programLibrary.programId
+
+        do {
+            // Fetch all workout assignments for this program with template details
+            let response = try await supabase.client
+                .from("program_workout_assignments")
+                .select("""
+                    id,
+                    program_id,
+                    template_id,
+                    phase_id,
+                    week_number,
+                    day_of_week,
+                    sequence,
+                    notes,
+                    system_workout_templates!inner(
+                        id,
+                        name,
+                        description,
+                        duration_minutes,
+                        category,
+                        difficulty,
+                        equipment,
+                        tags
+                    )
+                """)
+                .eq("program_id", value: programId.uuidString)
+                .order("week_number", ascending: true)
+                .order("day_of_week", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let assignments = try decoder.decode([ProgramWorkoutAssignmentWithTemplate].self, from: response.data)
+
+            logger.log("Fetched \(assignments.count) workout assignments", level: .diagnostic)
+
+            // Group by week
+            let groupedByWeek = Dictionary(grouping: assignments) { $0.weekNumber }
+
+            // Build week schedule
+            var weeks: [ProgramScheduleWeek] = []
+
+            for weekNumber in groupedByWeek.keys.sorted() {
+                let weekAssignments = groupedByWeek[weekNumber] ?? []
+
+                // Group by day within the week
+                let groupedByDay = Dictionary(grouping: weekAssignments) { $0.dayOfWeek }
+
+                var days: [ProgramScheduleDay] = []
+                for dayNumber in 1...7 {
+                    let dayAssignments = groupedByDay[dayNumber] ?? []
+                    let workouts = dayAssignments.map { assignment -> ProgramScheduleWorkout in
+                        ProgramScheduleWorkout(
+                            assignmentId: assignment.id,
+                            templateId: assignment.templateId,
+                            name: assignment.template.name,
+                            description: assignment.template.description,
+                            durationMinutes: assignment.template.durationMinutes,
+                            category: assignment.template.category,
+                            difficulty: assignment.template.difficulty,
+                            notes: assignment.notes
+                        )
+                    }
+
+                    days.append(ProgramScheduleDay(
+                        dayOfWeek: dayNumber,
+                        dayName: dayName(for: dayNumber),
+                        workouts: workouts
+                    ))
+                }
+
+                weeks.append(ProgramScheduleWeek(
+                    weekNumber: weekNumber,
+                    days: days
+                ))
+            }
+
+            logger.log("Organized into \(weeks.count) weeks", level: .success)
+            return weeks
+        } catch {
+            logger.log("Failed to fetch workout schedule: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
+
+    private func dayName(for dayNumber: Int) -> String {
+        switch dayNumber {
+        case 1: return "Monday"
+        case 2: return "Tuesday"
+        case 3: return "Wednesday"
+        case 4: return "Thursday"
+        case 5: return "Friday"
+        case 6: return "Saturday"
+        case 7: return "Sunday"
+        default: return "Day \(dayNumber)"
+        }
+    }
+
     // MARK: - Phase Preview
 
     /// Fetch phase preview data for a program to show users what's included before enrollment
