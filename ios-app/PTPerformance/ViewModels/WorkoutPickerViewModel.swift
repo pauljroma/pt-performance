@@ -3,7 +3,8 @@
 //  PTPerformance
 //
 //  BUILD 327: Quick Pick Workout Finder
-//  Questionnaire-based workout recommendation system
+//  BUILD 352: AI Quick Pick Mode
+//  Questionnaire-based workout recommendation system with AI-powered suggestions
 //
 
 import Foundation
@@ -11,6 +12,22 @@ import SwiftUI
 
 @MainActor
 class WorkoutPickerViewModel: ObservableObject {
+
+    // MARK: - Mode State (BUILD 352)
+
+    /// AI mode uses intelligent recommendations; Shuffle mode uses random selection
+    @Published var isAIMode: Bool = true
+
+    // MARK: - AI State (BUILD 352)
+
+    @Published var aiRecommendations: [AIWorkoutRecommendation] = []
+    @Published var aiReasoning: String?
+    @Published var aiContext: RecommendationContext?
+    @Published var isLoadingAI: Bool = false
+    @Published var aiError: String?
+    @Published var isAICached: Bool = false
+
+    private let aiService = AIWorkoutRecommendationService()
 
     // MARK: - Questionnaire State
 
@@ -320,5 +337,104 @@ class WorkoutPickerViewModel: ObservableObject {
         includeCore = false
         includeCardio = true
         includeMobility = false
+    }
+
+    // MARK: - AI Mode (BUILD 352)
+
+    /// Toggle between AI and Shuffle modes
+    func toggleMode() {
+        isAIMode.toggle()
+        // Clear results when switching modes
+        if isAIMode {
+            recommendations = []
+        } else {
+            aiRecommendations = []
+            aiReasoning = nil
+            aiContext = nil
+        }
+        hasSearched = false
+    }
+
+    /// Get AI-powered workout recommendations
+    func fetchAIRecommendations(patientId: UUID) async {
+        isLoadingAI = true
+        hasSearched = true
+        aiError = nil
+        aiRecommendations = []
+        aiReasoning = nil
+        aiContext = nil
+
+        logger.log("QuickPick AI: Fetching recommendations for patient \(patientId)", level: .diagnostic)
+
+        // Build category preferences from toggles
+        var categoryPreferences: [String] = []
+        if includePush { categoryPreferences.append("push") }
+        if includePull { categoryPreferences.append("pull") }
+        if includeLegs { categoryPreferences.append("legs") }
+        if includeCore { categoryPreferences.append("core") }
+        if includeCardio { categoryPreferences.append("cardio") }
+        if includeMobility { categoryPreferences.append("mobility") }
+
+        // Determine time of day
+        let hour = Calendar.current.component(.hour, from: Date())
+        let timeOfDay: String
+        if hour < 12 {
+            timeOfDay = "morning"
+        } else if hour < 17 {
+            timeOfDay = "afternoon"
+        } else {
+            timeOfDay = "evening"
+        }
+
+        do {
+            let results = try await aiService.getRecommendations(
+                patientId: patientId,
+                categoryPreferences: categoryPreferences.isEmpty ? nil : categoryPreferences,
+                durationPreference: selectedDuration.rawValue,
+                timeOfDay: timeOfDay
+            )
+
+            aiRecommendations = results
+            aiReasoning = aiService.reasoning
+            aiContext = aiService.contextSummary
+            isAICached = aiService.isCached
+
+            logger.log("QuickPick AI: Got \(results.count) recommendations", level: .success)
+            if let reasoning = aiReasoning {
+                logger.log("QuickPick AI: Reasoning: \(reasoning)", level: .diagnostic)
+            }
+
+        } catch {
+            logger.log("QuickPick AI: Error: \(error.localizedDescription)", level: .error)
+            aiError = aiService.error ?? "We couldn't get AI recommendations. Try shuffling instead."
+        }
+
+        isLoadingAI = false
+    }
+
+    /// Mark an AI recommendation as selected (for analytics)
+    func markAIRecommendationSelected(templateId: UUID) async {
+        await aiService.markAsSelected(templateId: templateId)
+    }
+
+    /// Get template from AI recommendation for workout start
+    func getTemplateForAIRecommendation(_ recommendation: AIWorkoutRecommendation) async -> SystemWorkoutTemplate? {
+        // Ensure templates are loaded
+        await loadTemplatesIfNeeded()
+
+        // Find the template by ID
+        return allTemplates.first { $0.id == recommendation.templateId }
+    }
+
+    // MARK: - Reset (Updated for AI)
+
+    func resetAll() {
+        reset()
+        aiRecommendations = []
+        aiReasoning = nil
+        aiContext = nil
+        aiError = nil
+        isAICached = false
+        aiService.clearRecommendations()
     }
 }

@@ -1775,21 +1775,33 @@ struct ExerciseInfoSheet: View {
     }
 
     private func fetchTemplateData() async {
-        guard let templateId = exercise.exerciseTemplateId else {
-            isLoading = false
-            return
-        }
-
         do {
-            let response = try await supabase.client
-                .from("exercise_templates")
-                .select("id, name, category, body_region, video_url, video_thumbnail_url, video_duration, form_cues, technique_cues, common_mistakes, safety_notes")
-                .eq("id", value: templateId.uuidString)
-                .limit(1)
-                .execute()
+            // BUILD 354: Try by ID first, fallback to name-based lookup
+            let selectFields = "id, name, category, body_region, video_url, video_thumbnail_url, video_duration, form_cues, technique_cues, common_mistakes, safety_notes"
 
-            let templates = try JSONDecoder().decode([Exercise.ExerciseTemplate].self, from: response.data)
-            template = templates.first
+            if let templateId = exercise.exerciseTemplateId {
+                // Lookup by ID
+                let response = try await supabase.client
+                    .from("exercise_templates")
+                    .select(selectFields)
+                    .eq("id", value: templateId.uuidString)
+                    .limit(1)
+                    .execute()
+
+                let templates = try JSONDecoder().decode([Exercise.ExerciseTemplate].self, from: response.data)
+                template = templates.first
+            } else {
+                // Fallback: fuzzy match by exercise name (for workout templates without FK)
+                let response = try await supabase.client
+                    .from("exercise_templates")
+                    .select(selectFields)
+                    .ilike("name", pattern: "%\(exercise.exerciseName)%")
+                    .limit(1)
+                    .execute()
+
+                let templates = try JSONDecoder().decode([Exercise.ExerciseTemplate].self, from: response.data)
+                template = templates.first
+            }
         } catch {
             DebugLogger.shared.error("EXERCISE_INFO", "Failed to fetch template: \(error.localizedDescription)")
         }

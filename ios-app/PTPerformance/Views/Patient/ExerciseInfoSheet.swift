@@ -33,8 +33,12 @@ struct ExerciseTemplateInfoSheet: View {
             }
         }
         .task {
-            if let id = exerciseTemplateId {
+            // BUILD 354: Support lookup by ID or by name
+            if let id = exerciseTemplateId, !id.isEmpty {
                 await viewModel.fetchTemplate(id: id)
+            } else if !exerciseName.isEmpty {
+                // Fallback: lookup by name when ID not available (e.g., from workout templates)
+                await viewModel.fetchTemplateByName(exerciseName)
             }
         }
     }

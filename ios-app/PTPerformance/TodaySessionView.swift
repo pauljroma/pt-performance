@@ -780,18 +780,33 @@ struct TodaySessionView: View {
     }
 
     private var noSessionView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Image(systemName: "calendar.badge.checkmark")
                 .font(.system(size: 64))
                 .foregroundColor(.green)
 
-            Text("No Session Today")
-                .font(.title2)
-                .bold()
+            Text("No Prescribed Session Today")
+                .font(.headline)
 
-            Text("Great job! You're all caught up. Enjoy your rest day!")
+            Text("Great job staying on track! You can rest today, or start a manual workout from the library if you're feeling motivated.")
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
+            Button {
+                HapticFeedback.light()
+                showTemplateLibrary = true
+            } label: {
+                Label("Browse Workout Library", systemImage: "books.vertical")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.blue)
+                    .cornerRadius(12)
+            }
+            .padding(.top, 8)
         }
         .padding()
     }

@@ -120,11 +120,34 @@ struct PatientListView: View {
     private var patientList: some View {
         List {
             if viewModel.filteredPatients.isEmpty {
-                ContentUnavailableView(
-                    "No patients found",
-                    systemImage: "person.slash",
-                    description: Text("Try adjusting your search or filters")
-                )
+                VStack(spacing: 16) {
+                    Image(systemName: "person.2.slash")
+                        .font(.system(size: 56))
+                        .foregroundColor(.secondary)
+
+                    Text("No Patients Found")
+                        .font(.headline)
+
+                    Text("No patients match your current filters. Try adjusting your search criteria or clearing the filters to see all patients.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+
+                    if !viewModel.searchText.isEmpty || viewModel.selectedFlagFilter != .all || viewModel.selectedSport != nil {
+                        Button {
+                            viewModel.searchText = ""
+                            viewModel.selectedFlagFilter = .all
+                            viewModel.selectedSport = nil
+                            viewModel.applyFilters()
+                        } label: {
+                            Label("Clear Filters", systemImage: "xmark.circle")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ForEach(viewModel.filteredPatients) { patient in
                     if viewModel.isSelectionModeActive {

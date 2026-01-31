@@ -197,26 +197,27 @@ struct ProgramLibraryBrowserView: View {
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+        VStack(spacing: 20) {
+            Image(systemName: viewModel.hasActiveFilters ? "magnifyingglass" : "figure.strengthtraining.traditional")
+                .font(.system(size: 56))
+                .foregroundColor(viewModel.hasActiveFilters ? .secondary : .blue.opacity(0.6))
 
-            Text("No Programs Found")
-                .font(.title3)
-                .fontWeight(.semibold)
+            Text(viewModel.hasActiveFilters ? "No Matching Programs" : "Explore Training Programs")
+                .font(.headline)
 
             Text(viewModel.hasActiveFilters
-                 ? "Try adjusting your search or filters"
-                 : "Programs will appear here once available")
+                 ? "No programs match your current filters. Try adjusting your search criteria or browse all available programs."
+                 : "Browse our library of professionally designed training programs for strength, mobility, conditioning, and more. New programs are added regularly.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             if viewModel.hasActiveFilters {
-                Button("Clear Filters") {
+                Button {
                     viewModel.clearFilters()
+                } label: {
+                    Label("Clear All Filters", systemImage: "xmark.circle")
                 }
                 .buttonStyle(.bordered)
             }

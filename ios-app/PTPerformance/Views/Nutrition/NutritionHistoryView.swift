@@ -52,16 +52,21 @@ struct NutritionHistoryView: View {
                     Spacer()
                 } else if logsForSelectedDate.isEmpty {
                     Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "fork.knife")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-                        Text("No meals logged")
+                    VStack(spacing: 16) {
+                        Image(systemName: "fork.knife.circle")
+                            .font(.system(size: 56))
+                            .foregroundColor(.orange)
+
+                        Text("No Meals on This Day")
                             .font(.headline)
-                        Text("Tap + to log a meal")
+
+                        Text("You haven't logged any meals for this date. Select a different day or start tracking your nutrition today.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
                     }
+                    .padding()
                     Spacer()
                 } else {
                     List {

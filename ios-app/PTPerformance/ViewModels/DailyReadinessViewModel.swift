@@ -31,7 +31,7 @@ class DailyReadinessViewModel: ObservableObject {
         armSorenessSeverity: Int,
         jointPain: [JointPainLocation]
     ) {
-        let input = ReadinessInput(
+        let input = BandCalculationInput(
             sleepHours: sleepHours,
             sleepQuality: sleepQuality,
             hrvValue: nil,
@@ -74,7 +74,7 @@ class DailyReadinessViewModel: ObservableObject {
             return
         }
 
-        let input = ReadinessInput(
+        let input = BandCalculationInput(
             sleepHours: sleepHours,
             sleepQuality: sleepQuality,
             hrvValue: nil,

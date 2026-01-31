@@ -1,6 +1,100 @@
 import Foundation
 import SwiftUI
 
+// MARK: - BUILD 351: Readiness Band System Types
+
+/// Readiness band levels for workout modification
+enum ReadinessBand: String, Codable, CaseIterable {
+    case green = "green"    // Full intensity - go hard
+    case yellow = "yellow"  // Slight reduction - be mindful
+    case orange = "orange"  // Moderate reduction - take it easy
+    case red = "red"        // Recovery only - minimal load
+
+    /// Display name for UI
+    var displayName: String {
+        switch self {
+        case .green: return "Ready to Train"
+        case .yellow: return "Train with Caution"
+        case .orange: return "Reduced Intensity"
+        case .red: return "Recovery Day"
+        }
+    }
+
+    /// Description of the readiness level
+    var description: String {
+        switch self {
+        case .green: return "You're recovered and ready for a full workout"
+        case .yellow: return "Minor fatigue detected - consider slight modifications"
+        case .orange: return "Elevated fatigue - reduce intensity and volume"
+        case .red: return "High fatigue or pain - focus on recovery today"
+        }
+    }
+
+    /// Color for UI display
+    var color: Color {
+        switch self {
+        case .green: return .green
+        case .yellow: return .yellow
+        case .orange: return .orange
+        case .red: return .red
+        }
+    }
+
+    /// Load adjustment multiplier (negative = reduction)
+    var loadAdjustment: Double {
+        switch self {
+        case .green: return 0.0      // No reduction
+        case .yellow: return -0.10   // 10% reduction
+        case .orange: return -0.25   // 25% reduction
+        case .red: return -0.50      // 50% reduction
+        }
+    }
+
+    /// Volume adjustment multiplier (negative = reduction)
+    var volumeAdjustment: Double {
+        switch self {
+        case .green: return 0.0      // No reduction
+        case .yellow: return -0.10   // 10% reduction
+        case .orange: return -0.30   // 30% reduction
+        case .red: return -0.50      // 50% reduction
+        }
+    }
+}
+
+/// Joint pain location enum for readiness assessment
+enum JointPainLocation: String, Codable, CaseIterable {
+    case shoulder
+    case elbow
+    case hip
+    case knee
+    case back
+
+    var displayName: String {
+        rawValue.capitalized
+    }
+}
+
+/// Input for WHOOP-style readiness calculations (distinct from ReadinessInput for database)
+struct BandCalculationInput {
+    var sleepHours: Double?
+    var sleepQuality: Int?         // 1-5 scale
+    var hrvValue: Double?
+    var whoopRecoveryPct: Int?
+    var subjectiveReadiness: Int?  // 1-5 scale
+    var armSoreness: Bool
+    var armSorenessSeverity: Int?  // 1-3 scale
+    var jointPain: [JointPainLocation]
+    var jointPainNotes: String?
+}
+
+/// Preview of readiness calculation result
+struct ReadinessPreview {
+    let band: ReadinessBand
+    let score: Double?
+}
+
+// MARK: - Daily Readiness Model
+
 /// Daily readiness check-in
 /// Simplified schema with core wellness metrics
 struct DailyReadiness: Codable, Identifiable {
@@ -110,6 +204,22 @@ struct DailyReadiness: Codable, Identifiable {
         notes = try container.decodeIfPresent(String.self, forKey: .notes)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+    }
+
+    // MARK: - BUILD 351: Computed Readiness Band
+
+    /// Convert readiness score to ReadinessBand for UI display
+    var readinessBand: ReadinessBand {
+        guard let score = readinessScore else { return .yellow }
+        if score >= 80 {
+            return .green
+        } else if score >= 60 {
+            return .yellow
+        } else if score >= 40 {
+            return .orange
+        } else {
+            return .red
+        }
     }
 }
 

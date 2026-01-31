@@ -1,5 +1,6 @@
 import Foundation
 import Supabase
+import SwiftUI
 
 /// Service for managing daily readiness data
 /// Provides CRUD operations for daily readiness check-ins
@@ -512,5 +513,142 @@ struct ReadinessSummary {
             return nil
         }
         return current - average
+    }
+}
+
+// MARK: - BUILD 351: ReadinessService Extension for Daily Check-in
+
+extension ReadinessService {
+    /// Calculate readiness band from WHOOP-style input
+    /// Uses algorithm from Auto-Regulation System (Build 39)
+    /// - Parameter input: BandCalculationInput with sleep, soreness, and subjective data
+    /// - Returns: Tuple of (ReadinessBand, Optional score)
+    nonisolated func calculateReadinessBand(input: BandCalculationInput) -> (ReadinessBand, Double?) {
+        // Calculate weighted score (0-100)
+        var score: Double = 50.0 // Default baseline
+
+        // Sleep component (30% weight)
+        if let sleepHours = input.sleepHours {
+            // Optimal is 7-9 hours, scale accordingly
+            let sleepScore: Double
+            if sleepHours >= 7 && sleepHours <= 9 {
+                sleepScore = 100.0
+            } else if sleepHours >= 6 && sleepHours < 7 {
+                sleepScore = 70.0
+            } else if sleepHours >= 5 && sleepHours < 6 {
+                sleepScore = 50.0
+            } else if sleepHours > 9 && sleepHours <= 10 {
+                sleepScore = 90.0
+            } else {
+                sleepScore = 30.0
+            }
+            score = score * 0.7 + sleepScore * 0.3
+        }
+
+        // Sleep quality component (20% weight)
+        if let sleepQuality = input.sleepQuality {
+            let qualityScore = Double(sleepQuality) / 5.0 * 100.0
+            score = score * 0.8 + qualityScore * 0.2
+        }
+
+        // Subjective readiness component (25% weight)
+        if let subjective = input.subjectiveReadiness {
+            let subjectiveScore = Double(subjective) / 5.0 * 100.0
+            score = score * 0.75 + subjectiveScore * 0.25
+        }
+
+        // HRV component (15% weight) - if available
+        if let hrv = input.hrvValue {
+            // HRV > 60 is good, < 40 is concerning
+            let hrvScore = min(100.0, max(0.0, (hrv - 20) / 60 * 100))
+            score = score * 0.85 + hrvScore * 0.15
+        }
+
+        // WHOOP recovery (25% weight) - if available, use instead of calculated score
+        if let whoopRecovery = input.whoopRecoveryPct {
+            score = score * 0.75 + Double(whoopRecovery) * 0.25
+        }
+
+        // Pain penalties
+        if input.armSoreness {
+            if let severity = input.armSorenessSeverity {
+                // Severe = 3, Moderate = 2, Mild = 1
+                let penalty = Double(severity) * 10.0
+                score = max(0, score - penalty)
+            } else {
+                score = max(0, score - 10)
+            }
+        }
+
+        // Joint pain penalty (5 points per joint)
+        let jointPenalty = Double(input.jointPain.count) * 5.0
+        score = max(0, score - jointPenalty)
+
+        // Clamp to 0-100
+        score = min(100, max(0, score))
+
+        // Determine band
+        let band: ReadinessBand
+        if score >= 80 {
+            band = .green
+        } else if score >= 60 {
+            band = .yellow
+        } else if score >= 40 {
+            band = .orange
+        } else {
+            band = .red
+        }
+
+        return (band, score)
+    }
+
+    /// Submit daily readiness using WHOOP-style input
+    /// Converts to database format and saves
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - input: BandCalculationInput with all readiness data
+    /// - Returns: Created DailyReadiness record
+    func submitDailyReadiness(
+        patientId: UUID,
+        input: BandCalculationInput
+    ) async throws -> DailyReadiness {
+        // Calculate the readiness band/score
+        let (_, _) = calculateReadinessBand(input: input)
+
+        // Map WHOOP-style input to database format
+        // Convert subjective readiness (1-5) to energy level (1-10)
+        let energyLevel: Int? = input.subjectiveReadiness.map { $0 * 2 }
+
+        // Convert arm soreness to soreness level (1-10)
+        let sorenessLevel: Int?
+        if input.armSoreness {
+            sorenessLevel = (input.armSorenessSeverity ?? 1) * 3 + 1 // Maps 1-3 to 4,7,10
+        } else if !input.jointPain.isEmpty {
+            sorenessLevel = input.jointPain.count * 2 + 1 // Some soreness from joints
+        } else {
+            sorenessLevel = 1 // No soreness
+        }
+
+        // Build notes from joint pain locations
+        var notes = input.jointPainNotes ?? ""
+        if !input.jointPain.isEmpty {
+            let jointList = input.jointPain.map { $0.displayName }.joined(separator: ", ")
+            if notes.isEmpty {
+                notes = "Joint pain: \(jointList)"
+            } else {
+                notes += " | Joint pain: \(jointList)"
+            }
+        }
+
+        // Call existing submitReadiness method
+        return try await submitReadiness(
+            patientId: patientId,
+            date: Date(),
+            sleepHours: input.sleepHours,
+            sorenessLevel: sorenessLevel,
+            energyLevel: energyLevel,
+            stressLevel: nil, // Not captured in WHOOP-style input
+            notes: notes.isEmpty ? nil : notes
+        )
     }
 }

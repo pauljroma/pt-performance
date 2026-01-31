@@ -667,9 +667,11 @@ struct WorkoutTemplateLibraryView: View {
                 loadingView
             } else if favoriteSystem.isEmpty && favoritePatient.isEmpty && userCreated.isEmpty {
                 emptyStateView(
-                    title: "No Saved Workouts",
-                    message: "Tap the heart icon on any workout to save it here, or create your own templates",
-                    showClearButton: false
+                    title: "No Saved Workouts Yet",
+                    message: "Tap the heart icon on any workout to save it to your favorites for quick access. You can also create your own custom workout templates.",
+                    showClearButton: false,
+                    icon: "heart.slash",
+                    iconColor: .red.opacity(0.6)
                 )
             } else {
                 myWorkoutsGrid(
@@ -690,9 +692,11 @@ struct WorkoutTemplateLibraryView: View {
                 loadingView
             } else if viewModel.cachedFilteredTrainerRecommendations.isEmpty {
                 emptyStateView(
-                    title: "No PT/Trainer Workouts",
-                    message: "Workouts recommended by your trainer will appear here",
-                    showClearButton: false
+                    title: "No Trainer Recommendations Yet",
+                    message: "Workouts prescribed or recommended by your physical therapist or trainer will appear here. Contact your provider to get personalized workout plans.",
+                    showClearButton: false,
+                    icon: "person.badge.shield.checkmark",
+                    iconColor: .blue.opacity(0.6)
                 )
             } else {
                 paginatedTemplateGrid(
@@ -714,11 +718,13 @@ struct WorkoutTemplateLibraryView: View {
                 loadingView
             } else if viewModel.cachedFilteredSystemTemplates.isEmpty {
                 emptyStateView(
-                    title: "No Templates Found",
+                    title: "No Matching Templates",
                     message: viewModel.searchText.isEmpty && viewModel.selectedCategory == nil
-                        ? "System templates will appear here"
-                        : "Try adjusting your search or filters",
-                    showClearButton: !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil
+                        ? "Browse our comprehensive workout library with hundreds of professionally designed templates for strength, mobility, cardio, and more."
+                        : "No templates match your current filters. Try adjusting your search criteria or clearing the filters.",
+                    showClearButton: !viewModel.searchText.isEmpty || viewModel.selectedCategory != nil,
+                    icon: "magnifyingglass",
+                    iconColor: .secondary
                 )
             } else {
                 paginatedTemplateGrid(
@@ -981,15 +987,14 @@ struct WorkoutTemplateLibraryView: View {
 
     // MARK: - Empty State View
 
-    private func emptyStateView(title: String, message: String, showClearButton: Bool) -> some View {
+    private func emptyStateView(title: String, message: String, showClearButton: Bool, icon: String = "doc.text.magnifyingglass", iconColor: Color = .secondary) -> some View {
         VStack(spacing: 16) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+            Image(systemName: icon)
+                .font(.system(size: 56))
+                .foregroundColor(iconColor)
 
             Text(title)
-                .font(.title3)
-                .fontWeight(.semibold)
+                .font(.headline)
 
             Text(message)
                 .font(.subheadline)
@@ -998,10 +1003,12 @@ struct WorkoutTemplateLibraryView: View {
                 .padding(.horizontal, 32)
 
             if showClearButton {
-                Button("Clear Filters") {
+                Button {
                     viewModel.searchText = ""
                     viewModel.selectedCategory = nil
                     Task { await viewModel.loadAllTemplates() }
+                } label: {
+                    Label("Clear Filters", systemImage: "xmark.circle")
                 }
                 .buttonStyle(.bordered)
             }

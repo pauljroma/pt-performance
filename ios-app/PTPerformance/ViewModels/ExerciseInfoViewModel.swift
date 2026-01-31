@@ -72,4 +72,39 @@ class ExerciseInfoViewModel: ObservableObject {
             isLoading = false
         }
     }
+
+    /// BUILD 354: Fetch exercise template details by name (fuzzy match)
+    /// Used when exercise_template_id is not available (e.g., from workout templates)
+    func fetchTemplateByName(_ name: String) async {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            // Try exact match first, then fuzzy match
+            let response = try await supabase.client
+                .from("exercise_templates")
+                .select("""
+                    id,
+                    exercise_name,
+                    video_url,
+                    video_thumbnail_url,
+                    technique_cues,
+                    common_mistakes,
+                    safety_notes,
+                    category,
+                    body_region
+                """)
+                .ilike("exercise_name", pattern: "%\(name)%")
+                .limit(1)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let results = try decoder.decode([ExerciseTemplateDetail].self, from: response.data)
+            template = results.first
+            isLoading = false
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
+    }
 }
