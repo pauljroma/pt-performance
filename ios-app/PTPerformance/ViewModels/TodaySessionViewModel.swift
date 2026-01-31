@@ -534,7 +534,7 @@ class TodaySessionViewModel: ObservableObject {
             }
 
             // Helper function to fetch prescribed sessions
-            func fetchPrescribedSessions() async -> [PrescribedSessionRow] {
+            @Sendable func fetchPrescribedSessions() async -> [PrescribedSessionRow] {
                 do {
                     let response = try await supabase.client
                         .from("vw_patient_sessions")
@@ -556,7 +556,7 @@ class TodaySessionViewModel: ObservableObject {
             }
 
             // Helper function to fetch manual sessions
-            func fetchManualSessions() async -> [CompletedManualSessionRow] {
+            @Sendable func fetchManualSessions() async -> [CompletedManualSessionRow] {
                 do {
                     let response = try await supabase.client
                         .from("manual_sessions")

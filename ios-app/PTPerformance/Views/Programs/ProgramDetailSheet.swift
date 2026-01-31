@@ -14,13 +14,28 @@ struct ProgramDetailSheet: View {
     @State private var showEnrollSuccess = false
     @State private var enrollmentError: String?
 
+    // Phase preview state
+    @State private var phases: [ProgramPhasePreview] = []
+    @State private var isLoadingPhases = false
+    @State private var phasesError: String?
+
     // Access current user for enrollment
     @ObservedObject private var supabase = PTSupabaseClient.shared
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 20) {
+
+                    // MARK: - Cover Image
+                    ProgramCoverImage(
+                        url: program.coverImageUrl,
+                        size: CGSize(width: CGFloat.infinity, height: 200),
+                        cornerRadius: 0
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .clipped()
 
                     // MARK: - Header
                     VStack(alignment: .leading, spacing: 8) {
@@ -108,6 +123,48 @@ struct ProgramDetailSheet: View {
                         .padding(.horizontal)
                     }
 
+                    // MARK: - Program Phases Preview
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Program Phases")
+                            .font(.headline)
+
+                        if isLoadingPhases {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                    .padding()
+                                Spacer()
+                            }
+                        } else if let error = phasesError {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                Text(error)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        } else if phases.isEmpty {
+                            Text("Phase information will be available once you start the program.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                        } else {
+                            VStack(spacing: 10) {
+                                ForEach(phases) { phase in
+                                    PhasePreviewCard(phase: phase)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+
                     // MARK: - Tags
                     if !program.tags.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
@@ -194,6 +251,31 @@ struct ProgramDetailSheet: View {
                     Text(error)
                 }
             }
+            .task {
+                await loadPhases()
+            }
+        }
+    }
+
+    // MARK: - Load Phases
+
+    private func loadPhases() async {
+        isLoadingPhases = true
+        phasesError = nil
+
+        do {
+            let service = ProgramLibraryService()
+            let fetchedPhases = try await service.fetchPhasePreview(programId: program.programId)
+
+            await MainActor.run {
+                phases = fetchedPhases
+                isLoadingPhases = false
+            }
+        } catch {
+            await MainActor.run {
+                phasesError = "Unable to load phase information"
+                isLoadingPhases = false
+            }
         }
     }
 
@@ -278,6 +360,68 @@ private struct TagChip: View {
             .padding(.vertical, 6)
             .background(Color(.systemGray5))
             .cornerRadius(16)
+    }
+}
+
+private struct PhasePreviewCard: View {
+    let phase: ProgramPhasePreview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                // Phase number badge
+                Text("\(phase.phaseNumber)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .frame(width: 24, height: 24)
+                    .background(
+                        Circle()
+                            .fill(phaseColor)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(phase.phaseName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text(phase.formattedWeekRange)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Workout count
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(phase.workoutCount)")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+
+                    Text(phase.workoutCount == 1 ? "workout" : "workouts")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Phase description if available
+            if let description = phase.description, !description.isEmpty {
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .padding(12)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    /// Color based on phase number for visual variety
+    private var phaseColor: Color {
+        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+        return colors[(phase.phaseNumber - 1) % colors.count]
     }
 }
 

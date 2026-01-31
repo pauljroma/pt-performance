@@ -14,10 +14,7 @@ struct ProgramLibraryBrowserView: View {
     // MARK: - State
 
     @StateObject private var viewModel = ProgramLibraryBrowserViewModel()
-    @State private var searchText = ""
-    @State private var selectedCategory: String? = nil
-    @State private var selectedDifficulty: String? = nil
-    @State private var selectedProgram: ProgramLibrary? = nil
+    @State private var selectedProgram: ProgramLibrary?
 
     // MARK: - Constants
 
@@ -306,59 +303,72 @@ struct ProgramLibraryCard: View {
     let program: ProgramLibrary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header with category badge and featured star
-            HStack {
-                // Category badge
-                ProgramCategoryBadge(category: program.category)
+        VStack(alignment: .leading, spacing: 0) {
+            // Cover image at top
+            ProgramCoverImage(
+                url: program.coverImageUrl,
+                size: CGSize(width: CGFloat.infinity, height: 100),
+                cornerRadius: 0
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 100)
+            .clipped()
 
-                Spacer()
+            VStack(alignment: .leading, spacing: 8) {
+                // Header with category badge and featured star
+                HStack {
+                    // Category badge
+                    ProgramCategoryBadge(category: program.category)
 
-                // Featured star
-                if program.isFeatured {
-                    Image(systemName: "star.fill")
-                        .font(.caption)
-                        .foregroundColor(.yellow)
+                    Spacer()
+
+                    // Featured star
+                    if program.isFeatured {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundColor(.yellow)
+                    }
                 }
-            }
 
-            // Program title
-            Text(program.title)
-                .font(.headline)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-
-            // Description preview (2 lines max)
-            if let description = program.description, !description.isEmpty {
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Program title
+                Text(program.title)
+                    .font(.headline)
                     .lineLimit(2)
-            }
+                    .multilineTextAlignment(.leading)
 
-            Spacer(minLength: 4)
-
-            // Bottom row: duration and difficulty
-            HStack(spacing: 8) {
-                // Duration
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                        .font(.caption2)
-                    Text(program.formattedDuration)
+                // Description preview (2 lines max)
+                if let description = program.description, !description.isEmpty {
+                    Text(description)
                         .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
                 }
-                .foregroundColor(.secondary)
 
-                Spacer()
+                Spacer(minLength: 4)
 
-                // Difficulty pill
-                ProgramDifficultyBadge(difficulty: program.difficultyLevel)
+                // Bottom row: duration and difficulty
+                HStack(spacing: 8) {
+                    // Duration
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                            .font(.caption2)
+                        Text(program.formattedDuration)
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    // Difficulty pill
+                    ProgramDifficultyBadge(difficulty: program.difficultyLevel)
+                }
             }
+            .padding(12)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(12)
+        .clipped()
         .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
     }
 }

@@ -489,4 +489,31 @@ class ProgramLibraryService: ObservableObject {
             throw error
         }
     }
+
+    // MARK: - Phase Preview
+
+    /// Fetch phase preview data for a program to show users what's included before enrollment
+    func fetchPhasePreview(programId: UUID) async throws -> [ProgramPhasePreview] {
+        let logger = DebugLogger.shared
+        logger.log("Fetching phase preview for program: \(programId)", level: .diagnostic)
+
+        do {
+            // Query the vw_phase_preview view
+            let response = try await supabase.client
+                .from("vw_phase_preview")
+                .select()
+                .eq("program_id", value: programId.uuidString)
+                .order("phase_number", ascending: true)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let phases = try decoder.decode([ProgramPhasePreview].self, from: response.data)
+
+            logger.log("Fetched \(phases.count) phases for program preview", level: .success)
+            return phases
+        } catch {
+            logger.log("Failed to fetch phase preview: \(error.localizedDescription)", level: .error)
+            throw error
+        }
+    }
 }
