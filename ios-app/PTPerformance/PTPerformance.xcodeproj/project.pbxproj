@@ -157,6 +157,7 @@
 		8BEF8064D3117521421C469A /* TimerInputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F7AA85C886A30471AED1FA /* TimerInputModels.swift */; };
 		8E3CB893977AD9801C687C5E /* WorkoutPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29216CCCBD9E92EAABE82CF0 /* WorkoutPickerView.swift */; };
 		8EFD49B43F6293B00B8A1C2B /* BodyCompositionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10EA35EA369C1325C88EAD8 /* BodyCompositionViewModel.swift */; };
+		91F789A5C06145F486DB1D1F /* EnrolledProgramsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0932F363D947F7C0A9933EBD /* EnrolledProgramsViewModel.swift */; };
 		931EDC0BC7BC20F9B6B80AFC /* ErrorLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88BB5B1B5967D50CE5D20853 /* ErrorLogger.swift */; };
 		941C59D3BEA803F78CA702BF /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */; };
 		95504C2743929481A0AD631E /* BodyComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF914077489DC856BE5FC03 /* BodyComposition.swift */; };
@@ -183,6 +184,7 @@
 		B3F2BF995F8C1EC86B7CFAFC /* PTPerformanceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDB48928DA610B484950710 /* PTPerformanceApp.swift */; };
 		B5191E8C3BF00AA64BCA7D4D /* TherapistDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D72109F3A342C783B9FF3651 /* TherapistDashboardView.swift */; };
 		B68A8C8F44D431724DD89346 /* SessionBuilderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7C05E02AB83FE35EE7E6A7 /* SessionBuilderSheet.swift */; };
+		B81DBC1DFF0C3859512B0CC2 /* EnrolledProgramsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B388FF9F47099F76432BF3 /* EnrolledProgramsSection.swift */; };
 		B95B03F45F7256E4F7C57E0D /* MealLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7F09EEC182FCE732CC33BB4 /* MealLogView.swift */; };
 		BA20CA548BDCCDF6BD88B140 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBA96C2A50E4AB4CBD6754E /* RootView.swift */; };
 		BB4C70BCFA9A23B0285D4D61 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3EAD49336659A9C0D1EB4A1 /* VideoPlayerView.swift */; };
@@ -269,6 +271,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02B388FF9F47099F76432BF3 /* EnrolledProgramsSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EnrolledProgramsSection.swift; path = Views/Programs/EnrolledProgramsSection.swift; sourceTree = "<group>"; };
 		02F66D984C1236E79C8891A4 /* ProgramTemplateViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramTemplateViewModel.swift; path = ViewModels/ProgramTemplateViewModel.swift; sourceTree = "<group>"; };
 		033992406545E8F6C257745C /* EditSessionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EditSessionView.swift; path = Views/Therapist/ProgramEditor/EditSessionView.swift; sourceTree = "<group>"; };
 		043CA2AD3C85568EB8EAC3FE /* NutritionDashboardViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionDashboardViewModel.swift; path = ViewModels/NutritionDashboardViewModel.swift; sourceTree = "<group>"; };
@@ -279,6 +282,7 @@
 		076968C186C2FDA234565B4E /* ProgramDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramDetailSheet.swift; path = Views/Programs/ProgramDetailSheet.swift; sourceTree = "<group>"; };
 		0844534D436BF6CA1D5E61A7 /* GoalProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GoalProgressView.swift; path = Views/Patient/GoalProgressView.swift; sourceTree = "<group>"; };
 		08DFE3BCB1DE5FB5F39FEA07 /* AccountDeletionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccountDeletionView.swift; path = Views/Settings/AccountDeletionView.swift; sourceTree = "<group>"; };
+		0932F363D947F7C0A9933EBD /* EnrolledProgramsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EnrolledProgramsViewModel.swift; path = ViewModels/EnrolledProgramsViewModel.swift; sourceTree = "<group>"; };
 		0DC9F2EEB8EF9AFC9B3EB4B7 /* AddExerciseToTodaySheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AddExerciseToTodaySheet.swift; path = Views/ManualWorkout/AddExerciseToTodaySheet.swift; sourceTree = "<group>"; };
 		1180F8DC8DD269B5CD7FE5B9 /* ManualWorkoutService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ManualWorkoutService.swift; path = Services/ManualWorkoutService.swift; sourceTree = "<group>"; };
 		14A23D71FB0FB252B40444CF /* MealPlanDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MealPlanDetailView.swift; path = Views/Nutrition/MealPlanDetailView.swift; sourceTree = "<group>"; };
@@ -859,6 +863,7 @@
 				7E3E4E41BDC239CADA137F1F /* FeatureVisibilityViewModel.swift */,
 				88560F4B785FE81A7013336F /* ModeSwitchingViewModel.swift */,
 				6F6EB6A009B99A626D9EB358 /* ProgramLibraryBrowserViewModel.swift */,
+				0932F363D947F7C0A9933EBD /* EnrolledProgramsViewModel.swift */,
 			);
 			name = ViewModels;
 			sourceTree = "<group>";
@@ -1153,6 +1158,7 @@
 			children = (
 				88231FB18FBA1F9D7AEF9E4D /* ProgramLibraryBrowserView.swift */,
 				076968C186C2FDA234565B4E /* ProgramDetailSheet.swift */,
+				02B388FF9F47099F76432BF3 /* EnrolledProgramsSection.swift */,
 			);
 			name = Programs;
 			sourceTree = "<group>";
@@ -1573,6 +1579,8 @@
 				E88524D0C025E28E0D8B0F48 /* ProgramLibraryBrowserViewModel.swift in Sources */,
 				A86FF623EE5A88BB036021B1 /* ProgramLibraryBrowserView.swift in Sources */,
 				C6D5417A8A53C3813B671607 /* ProgramDetailSheet.swift in Sources */,
+				91F789A5C06145F486DB1D1F /* EnrolledProgramsViewModel.swift in Sources */,
+				B81DBC1DFF0C3859512B0CC2 /* EnrolledProgramsSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

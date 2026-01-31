@@ -265,6 +265,158 @@ class ProgramLibraryService: ObservableObject {
         }
     }
 
+    // MARK: - Workout Completion Progress Tracking
+
+    /// Check if a completed workout template is part of an enrolled program and update progress
+    /// When a user completes a workout from their program, this calculates and updates their enrollment progress
+    /// Progress = (completed workouts / total workouts in program) * 100
+    ///
+    /// - Parameters:
+    ///   - patientId: The patient's UUID
+    ///   - templateId: The system_workout_template ID that was just completed
+    func recordWorkoutCompletion(patientId: String, templateId: UUID) async throws {
+        let logger = DebugLogger.shared
+        logger.log("Recording workout completion - patient: \(patientId), template: \(templateId)", level: .diagnostic)
+
+        guard let patientUUID = UUID(uuidString: patientId) else {
+            logger.log("Invalid patient ID format: \(patientId)", level: .error)
+            return
+        }
+
+        // Step 1: Find active enrollment that contains this workout template
+        // Query: program_workout_assignments -> program_library -> program_enrollments
+        do {
+            // First, get the program_library_id(s) that contain this template
+            struct AssignmentRow: Codable {
+                let programLibraryId: UUID
+
+                enum CodingKeys: String, CodingKey {
+                    case programLibraryId = "program_library_id"
+                }
+            }
+
+            let assignmentsResponse = try await supabase.client
+                .from("program_workout_assignments")
+                .select("program_library_id")
+                .eq("system_workout_template_id", value: templateId.uuidString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let assignments = try decoder.decode([AssignmentRow].self, from: assignmentsResponse.data)
+
+            if assignments.isEmpty {
+                logger.log("No program assignments found for template \(templateId) - not a program workout", level: .diagnostic)
+                return
+            }
+
+            logger.log("Found \(assignments.count) program(s) containing this template", level: .diagnostic)
+
+            // Step 2: Check if patient is enrolled in any of these programs
+            let programIds = assignments.map { $0.programLibraryId.uuidString }
+
+            let enrollmentsResponse = try await supabase.client
+                .from("program_enrollments")
+                .select("id, program_library_id, progress_percentage")
+                .eq("patient_id", value: patientId)
+                .eq("status", value: "active")
+                .in("program_library_id", values: programIds)
+                .execute()
+
+            let enrollments = try decoder.decode([ProgramEnrollment].self, from: enrollmentsResponse.data)
+
+            if enrollments.isEmpty {
+                logger.log("Patient not enrolled in any program containing this template", level: .diagnostic)
+                return
+            }
+
+            // Step 3: For each matching enrollment, calculate and update progress
+            for enrollment in enrollments {
+                await updateEnrollmentProgress(enrollment: enrollment, patientId: patientUUID, completedTemplateId: templateId)
+            }
+
+        } catch {
+            logger.log("Failed to record workout completion: \(error.localizedDescription)", level: .error)
+            // Don't throw - progress tracking should not block workout completion
+        }
+    }
+
+    /// Calculate and update progress for a specific enrollment
+    private func updateEnrollmentProgress(enrollment: ProgramEnrollment, patientId: UUID, completedTemplateId: UUID) async {
+        let logger = DebugLogger.shared
+        logger.log("Updating progress for enrollment \(enrollment.id)", level: .diagnostic)
+
+        do {
+            // Get total workout count for this program
+            struct CountRow: Codable {
+                let count: Int
+            }
+
+            let totalResponse = try await supabase.client
+                .from("program_workout_assignments")
+                .select("*", head: true, count: .exact)
+                .eq("program_library_id", value: enrollment.programLibraryId.uuidString)
+                .execute()
+
+            let totalCount = totalResponse.count ?? 0
+
+            if totalCount == 0 {
+                logger.log("No workouts in program - skipping progress update", level: .warning)
+                return
+            }
+
+            // Get all template IDs for this program
+            struct TemplateRow: Codable {
+                let systemWorkoutTemplateId: UUID
+
+                enum CodingKeys: String, CodingKey {
+                    case systemWorkoutTemplateId = "system_workout_template_id"
+                }
+            }
+
+            let templatesResponse = try await supabase.client
+                .from("program_workout_assignments")
+                .select("system_workout_template_id")
+                .eq("program_library_id", value: enrollment.programLibraryId.uuidString)
+                .execute()
+
+            let decoder = JSONDecoder()
+            let templates = try decoder.decode([TemplateRow].self, from: templatesResponse.data)
+            let templateIds = templates.map { $0.systemWorkoutTemplateId.uuidString }
+
+            // Count completed workouts by checking manual_sessions with matching source_template_id
+            // A workout is completed if:
+            // 1. It's a manual_session with source_template_id matching a program template
+            // 2. The session is marked completed
+            // 3. The session belongs to this patient
+            let completedResponse = try await supabase.client
+                .from("manual_sessions")
+                .select("*", head: true, count: .exact)
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("completed", value: true)
+                .in("source_template_id", values: templateIds)
+                .execute()
+
+            let completedCount = completedResponse.count ?? 0
+
+            // Calculate progress percentage
+            let progressPercentage = min(100, Int((Double(completedCount) / Double(totalCount)) * 100))
+
+            logger.log("Progress: \(completedCount)/\(totalCount) = \(progressPercentage)%", level: .diagnostic)
+
+            // Update enrollment progress
+            try await updateProgress(enrollmentId: enrollment.id, progress: progressPercentage)
+
+            // If 100% complete, update status to completed
+            if progressPercentage >= 100 {
+                try await updateEnrollmentStatus(enrollmentId: enrollment.id, status: "completed")
+                logger.log("Program completed! Enrollment status updated to 'completed'", level: .success)
+            }
+
+        } catch {
+            logger.log("Failed to update enrollment progress: \(error.localizedDescription)", level: .error)
+        }
+    }
+
     // MARK: - Combined Queries
 
     /// Fetch enrollments with their associated program details

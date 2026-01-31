@@ -537,6 +537,18 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
                 Exercises: \(completedCount)/\(totalExercises)
                 """)
 
+            // Update program enrollment progress if this workout is from a program template
+            // This runs asynchronously and won't block the completion flow
+            if let sourceTemplateId = session.sourceTemplateId {
+                Task {
+                    let programService = ProgramLibraryService()
+                    try? await programService.recordWorkoutCompletion(
+                        patientId: patientId.uuidString,
+                        templateId: sourceTemplateId
+                    )
+                }
+            }
+
             isLoading = false
             isWorkoutCompleted = true
 

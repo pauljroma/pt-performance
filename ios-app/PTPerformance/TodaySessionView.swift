@@ -4,6 +4,7 @@ struct TodaySessionView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 264: For ManualWorkoutExecutionView
     @StateObject private var viewModel = TodaySessionViewModel()
+    @StateObject private var enrolledProgramsViewModel = EnrolledProgramsViewModel()
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
@@ -165,6 +166,8 @@ struct TodaySessionView: View {
                 await viewModel.fetchTodaySession()
             }
             await loadTodayReadiness()
+            // Load enrolled programs for the My Programs section
+            await enrolledProgramsViewModel.loadEnrolledPrograms()
         }
         .onDisappear {
             // BUILD 124: Stop timer when view disappears
@@ -274,6 +277,11 @@ struct TodaySessionView: View {
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                // Enrolled Programs Section (only shows if user has enrolled programs)
+                if enrolledProgramsViewModel.hasEnrolledPrograms {
+                    enrolledProgramsSection
+                }
+
                 // BUILD 269: Today's completed workouts counter
                 if viewModel.completedTodayCount > 0 {
                     completedTodaySection
@@ -462,6 +470,63 @@ struct TodaySessionView: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+
+    // MARK: - Enrolled Programs Section
+
+    @ViewBuilder
+    private var enrolledProgramsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section Header
+            HStack {
+                Text("My Programs")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                if enrolledProgramsViewModel.activeEnrollmentCount > 0 {
+                    Text("\(enrolledProgramsViewModel.activeEnrollmentCount) active")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Horizontal scrolling cards
+            if enrolledProgramsViewModel.isLoading {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Loading programs...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.vertical, 20)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(enrolledProgramsViewModel.enrolledPrograms) { enrollment in
+                            EnrolledProgramCardInline(
+                                enrollment: enrollment,
+                                currentWeek: enrolledProgramsViewModel.currentWeek(for: enrollment),
+                                progressPercentage: enrolledProgramsViewModel.progressPercentage(for: enrollment),
+                                daysRemainingDisplay: enrolledProgramsViewModel.daysRemainingDisplay(for: enrollment)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
     }
 
     // MARK: - BUILD 116: Readiness Section (Agent 18)
@@ -1005,6 +1070,107 @@ extension ReadinessService {
     /// - Returns: Today's readiness record, or nil if not found
     func fetchTodayReadiness(for patientId: UUID) async throws -> DailyReadiness? {
         return try await getTodayReadiness(for: patientId)
+    }
+}
+
+// MARK: - Enrolled Program Card (Inline for Today tab)
+
+/// Compact card for displaying enrolled programs in the Today tab horizontal scroll
+struct EnrolledProgramCardInline: View {
+    let enrollment: EnrollmentWithProgram
+    let currentWeek: Int
+    let progressPercentage: Int
+    let daysRemainingDisplay: String
+
+    @State private var showDetailSheet = false
+
+    var body: some View {
+        Button {
+            HapticFeedback.light()
+            showDetailSheet = true
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                // Category Badge
+                HStack {
+                    ProgramCategoryBadge(category: enrollment.program.category)
+                    Spacer()
+                }
+
+                // Program Title
+                Text(enrollment.program.title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .foregroundColor(.primary)
+
+                // Current Week
+                Text("Week \(currentWeek)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Spacer(minLength: 4)
+
+                // Progress Bar
+                VStack(alignment: .leading, spacing: 4) {
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            // Background track
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(.systemGray5))
+                                .frame(height: 8)
+
+                            // Progress fill
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(progressColor)
+                                .frame(width: geometry.size.width * CGFloat(progressPercentage) / 100, height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+
+                    // Progress label
+                    HStack {
+                        Text("\(progressPercentage)%")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(progressColor)
+
+                        Spacer()
+
+                        Text(daysRemainingDisplay)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .frame(width: 160, height: 150)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(enrollment.program.title), Week \(currentWeek), \(progressPercentage) percent complete, \(daysRemainingDisplay)")
+        .accessibilityHint("Tap to view program details")
+        .sheet(isPresented: $showDetailSheet) {
+            EnrolledProgramDetailSheet(enrollment: enrollment)
+        }
+    }
+
+    private var progressColor: Color {
+        if progressPercentage >= 75 {
+            return .green
+        } else if progressPercentage >= 50 {
+            return .blue
+        } else if progressPercentage >= 25 {
+            return .orange
+        } else {
+            return .purple
+        }
     }
 }
 
