@@ -284,7 +284,7 @@ class ProgramLibraryService: ObservableObject {
         }
 
         // Step 1: Find active enrollment that contains this workout template
-        // Query: program_workout_assignments -> program_library -> program_enrollments
+        // Query: vw_program_template_assignments (joins program_workout_assignments with program_library)
         do {
             // First, get the program_library_id(s) that contain this template
             struct AssignmentRow: Codable {
@@ -295,10 +295,11 @@ class ProgramLibraryService: ObservableObject {
                 }
             }
 
+            // Use the view that joins program_workout_assignments with program_library
             let assignmentsResponse = try await supabase.client
-                .from("program_workout_assignments")
+                .from("vw_program_template_assignments")
                 .select("program_library_id")
-                .eq("system_workout_template_id", value: templateId.uuidString)
+                .eq("template_id", value: templateId.uuidString)
                 .execute()
 
             let decoder = JSONDecoder()
@@ -351,8 +352,9 @@ class ProgramLibraryService: ObservableObject {
                 let count: Int
             }
 
+            // Use the view for consistent column names
             let totalResponse = try await supabase.client
-                .from("program_workout_assignments")
+                .from("vw_program_template_assignments")
                 .select("*", head: true, count: .exact)
                 .eq("program_library_id", value: enrollment.programLibraryId.uuidString)
                 .execute()
@@ -366,22 +368,22 @@ class ProgramLibraryService: ObservableObject {
 
             // Get all template IDs for this program
             struct TemplateRow: Codable {
-                let systemWorkoutTemplateId: UUID
+                let templateId: UUID
 
                 enum CodingKeys: String, CodingKey {
-                    case systemWorkoutTemplateId = "system_workout_template_id"
+                    case templateId = "template_id"
                 }
             }
 
             let templatesResponse = try await supabase.client
-                .from("program_workout_assignments")
-                .select("system_workout_template_id")
+                .from("vw_program_template_assignments")
+                .select("template_id")
                 .eq("program_library_id", value: enrollment.programLibraryId.uuidString)
                 .execute()
 
             let decoder = JSONDecoder()
             let templates = try decoder.decode([TemplateRow].self, from: templatesResponse.data)
-            let templateIds = templates.map { $0.systemWorkoutTemplateId.uuidString }
+            let templateIds = templates.map { $0.templateId.uuidString }
 
             // Count completed workouts by checking manual_sessions with matching source_template_id
             // A workout is completed if:
