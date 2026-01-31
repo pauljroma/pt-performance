@@ -61,10 +61,14 @@ class WorkoutPickerViewModel: ObservableObject {
 
     // MARK: - Category Mapping
 
-    /// Maps user selections to template categories and tags
+    /// Maps user selections to template categories, tags, and content keywords
     private struct CategoryFilter {
         let categories: [String]
         let tags: [String]
+        /// Keywords to search for in template name, block names, and exercise names
+        let contentKeywords: [String]
+        /// WorkoutBlockTypes that match this filter
+        let blockTypes: [WorkoutBlockType]
     }
 
     private var activeFilters: [CategoryFilter] {
@@ -73,42 +77,54 @@ class WorkoutPickerViewModel: ObservableObject {
         if includeCardio {
             filters.append(CategoryFilter(
                 categories: ["cardio", "hiit", "conditioning"],
-                tags: ["cardio", "hiit", "conditioning", "endurance", "metabolic"]
+                tags: ["cardio", "hiit", "conditioning", "endurance", "metabolic"],
+                contentKeywords: ["cardio", "hiit", "run", "bike", "sprint", "burpee", "jump", "conditioning", "metabolic", "endurance"],
+                blockTypes: [.cardio]
             ))
         }
 
         if includePush {
             filters.append(CategoryFilter(
                 categories: ["push", "upper", "chest"],
-                tags: ["push", "chest", "shoulders", "triceps", "pressing", "upper_body"]
+                tags: ["push", "chest", "shoulders", "triceps", "pressing", "upper_body"],
+                contentKeywords: ["push", "press", "bench", "chest", "shoulder", "tricep", "dip", "fly", "overhead"],
+                blockTypes: [.push]
             ))
         }
 
         if includePull {
             filters.append(CategoryFilter(
                 categories: ["pull", "upper", "back"],
-                tags: ["pull", "back", "biceps", "rowing", "upper_body"]
+                tags: ["pull", "back", "biceps", "rowing", "upper_body"],
+                contentKeywords: ["pull", "row", "back", "bicep", "lat", "chin", "pulldown", "pullup", "curl"],
+                blockTypes: [.pull]
             ))
         }
 
         if includeLegs {
             filters.append(CategoryFilter(
                 categories: ["lower", "legs", "glutes"],
-                tags: ["legs", "lower_body", "quads", "hamstrings", "glutes", "squat"]
+                tags: ["legs", "lower_body", "quads", "hamstrings", "glutes", "squat"],
+                contentKeywords: ["leg", "squat", "lunge", "quad", "hamstring", "glute", "calf", "deadlift", "rdl", "hip", "lower body", "hinge"],
+                blockTypes: [.lungeSquat, .hinge]
             ))
         }
 
         if includeCore {
             filters.append(CategoryFilter(
                 categories: ["core", "abs", "functional"],
-                tags: ["core", "abs", "stability", "functional"]
+                tags: ["core", "abs", "stability", "functional"],
+                contentKeywords: ["core", "abs", "plank", "crunch", "twist", "rotate", "oblique", "stability", "anti-rotation"],
+                blockTypes: [.functional]
             ))
         }
 
         if includeMobility {
             filters.append(CategoryFilter(
                 categories: ["mobility", "flexibility", "recovery"],
-                tags: ["mobility", "flexibility", "recovery", "stretching", "yoga"]
+                tags: ["mobility", "flexibility", "recovery", "stretching", "yoga"],
+                contentKeywords: ["mobility", "flexibility", "stretch", "recovery", "yoga", "foam", "cool down", "warm up", "dynamic"],
+                blockTypes: [.dynamicStretch, .recovery]
             ))
         }
 
@@ -188,18 +204,56 @@ class WorkoutPickerViewModel: ObservableObject {
 
     // MARK: - Filtering Logic
 
+    /// BUILD 346: Enhanced filtering to check category, tags, block types, and content keywords
     private func matchesAnyFilter(_ template: SystemWorkoutTemplate) -> Bool {
         let templateCategory = template.category?.lowercased() ?? ""
         let templateTags = Set((template.tags ?? []).map { $0.lowercased() })
+        let templateName = template.name.lowercased()
+
+        // Collect all searchable text from the template
+        let blockNames = template.blocks.map { $0.name.lowercased() }
+        let blockTypes = template.blocks.map { $0.blockType }
+        let exerciseNames = template.blocks.flatMap { $0.exercises.map { $0.name.lowercased() } }
 
         for filter in activeFilters {
-            // Check if category matches
+            // 1. Check if category matches (substring match)
             if filter.categories.contains(where: { templateCategory.contains($0) }) {
                 return true
             }
 
-            // Check if any tag matches
+            // 2. Check if any tag matches (exact match after lowercasing)
             if !filter.tags.filter({ templateTags.contains($0) }).isEmpty {
+                return true
+            }
+
+            // 3. Check if any block type matches
+            if !filter.blockTypes.isEmpty {
+                for blockType in blockTypes {
+                    if filter.blockTypes.contains(blockType) {
+                        return true
+                    }
+                }
+            }
+
+            // 4. Check if template name contains any content keyword
+            if filter.contentKeywords.contains(where: { templateName.contains($0) }) {
+                return true
+            }
+
+            // 5. Check if any block name contains content keywords
+            for blockName in blockNames {
+                if filter.contentKeywords.contains(where: { blockName.contains($0) }) {
+                    return true
+                }
+            }
+
+            // 6. Check if exercise names collectively suggest this workout matches
+            // Require at least 30% of exercises to match for content-based matching
+            let matchingExerciseCount = exerciseNames.filter { exerciseName in
+                filter.contentKeywords.contains(where: { exerciseName.contains($0) })
+            }.count
+
+            if exerciseNames.count > 0 && matchingExerciseCount >= max(1, exerciseNames.count / 3) {
                 return true
             }
         }

@@ -32,7 +32,7 @@ class ModeSwitchingViewModel: ObservableObject {
     /// Check if current user is a therapist (can change modes)
     var canChangeMode: Bool {
         // Check if user has therapist role
-        guard let userId = supabase.userId else { return false }
+        guard supabase.userId != nil else { return false }
 
         // In production, check user role from database
         // For now, allow all authenticated users (will be restricted by RLS)

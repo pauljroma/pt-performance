@@ -207,7 +207,7 @@ class PatientGoalsViewModel: ObservableObject {
                 .execute()
 
             // Update the local model
-            if let index = goals.firstIndex(where: { $0.id == goalId }),
+            if goals.contains(where: { $0.id == goalId }),
                let pid = patientId, let patientUUID = UUID(uuidString: pid) {
                 await loadGoals(patientId: patientUUID)
             }

@@ -22,6 +22,9 @@
 		0915036B7DD44FCC750C1169 /* StrengthChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322FA49F78ABE77DAB601982 /* StrengthChart.swift */; };
 		09AA371F76F5425F233E35A6 /* SubstitutionFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D761AF17E693443D80FBF5 /* SubstitutionFilteringTests.swift */; };
 		09C8A4A2205F749EA8756143 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50F9EF1BBDEA3F049635053A /* ConfigTests.swift */; };
+		B346A1B1C1B1D1E1F1A1B1C1 /* BodyCompGoalsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A346B1C1D1E1F1A1B1C1D1E1 /* BodyCompGoalsServiceTests.swift */; };
+		B346A2B2C2B2D2E2F2A2B2C2 /* ProgramBuilderServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A346B2C2D2E2F2A2B2C2D2E2 /* ProgramBuilderServiceTests.swift */; };
+		B346A3B3C3B3D3E3F3A3B3C3 /* SchedulingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A346B3C3D3E3F3A3B3C3D3E3 /* SchedulingServiceTests.swift */; };
 		0AA057859F9AB9204AEBF4A0 /* SupabaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F62DDEAB098C9900B98516B /* SupabaseClient.swift */; };
 		0B869C48F440CD753A86E9B8 /* NutritionGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4638C50C645284BC7AD7AEE /* NutritionGoalsView.swift */; };
 		0BDB5EFDBE931BAC3FA5BE72 /* TimerCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864C1C20C83CEB715275285 /* TimerCategory.swift */; };
@@ -442,6 +445,9 @@
 		A84FC01D6DBCF5B5A01F04AF /* FilterChip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FilterChip.swift; path = Components/FilterChip.swift; sourceTree = "<group>"; };
 		A8C9CA7D0D42DF95009AA74E /* ExerciseLogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseLogView.swift; path = Views/Patient/ExerciseLogView.swift; sourceTree = "<group>"; };
 		A93EA5E56D78BD2B26B74969 /* SupabaseIntegrationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SupabaseIntegrationTests.swift; path = Tests/Integration/SupabaseIntegrationTests.swift; sourceTree = "<group>"; };
+		A346B1C1D1E1F1A1B1C1D1E1 /* BodyCompGoalsServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BodyCompGoalsServiceTests.swift; path = PTPerformanceTests/Services/BodyCompGoalsServiceTests.swift; sourceTree = "<group>"; };
+		A346B2C2D2E2F2A2B2C2D2E2 /* ProgramBuilderServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramBuilderServiceTests.swift; path = PTPerformanceTests/Services/ProgramBuilderServiceTests.swift; sourceTree = "<group>"; };
+		A346B3C3D3E3F3A3B3C3D3E3 /* SchedulingServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SchedulingServiceTests.swift; path = PTPerformanceTests/Services/SchedulingServiceTests.swift; sourceTree = "<group>"; };
 		A9739D7D33E2C49C9FAAFA44 /* HelpContent.json */ = {isa = PBXFileReference; includeInIndex = 1; name = HelpContent.json; path = Resources/HelpContent.json; sourceTree = SOURCE_ROOT; };
 		A9CDF9CE466705E3FF6DC230 /* ReadinessScore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessScore.swift; path = Models/ReadinessScore.swift; sourceTree = "<group>"; };
 		A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RegistrationView.swift; path = Views/Auth/RegistrationView.swift; sourceTree = "<group>"; };
@@ -985,6 +991,9 @@
 		9BC28A294D4A061789FADBDE /* PTPerformanceTests */ = {
 			isa = PBXGroup;
 			children = (
+				A346B1C1D1E1F1A1B1C1D1E1 /* BodyCompGoalsServiceTests.swift */,
+				A346B2C2D2E2F2A2B2C2D2E2 /* ProgramBuilderServiceTests.swift */,
+				A346B3C3D3E3F3A3B3C3D3E3 /* SchedulingServiceTests.swift */,
 			);
 			name = PTPerformanceTests;
 			sourceTree = "<group>";
@@ -1661,6 +1670,9 @@
 				09C8A4A2205F749EA8756143 /* ConfigTests.swift in Sources */,
 				A60244E778089FABD803D9F6 /* SupabaseIntegrationTests.swift in Sources */,
 				09AA371F76F5425F233E35A6 /* SubstitutionFilteringTests.swift in Sources */,
+				B346A1B1C1B1D1E1F1A1B1C1 /* BodyCompGoalsServiceTests.swift in Sources */,
+				B346A2B2C2B2D2E2F2A2B2C2 /* ProgramBuilderServiceTests.swift in Sources */,
+				B346A3B3C3B3D3E3F3A3B3C3 /* SchedulingServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
