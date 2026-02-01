@@ -19,11 +19,14 @@ struct ReadinessCheckInView: View {
     // MARK: - Dependencies
 
     @StateObject private var viewModel: ReadinessCheckInViewModel
+    @StateObject private var healthKitService = HealthKitService()
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - UI State
 
     @State private var showingSuccessAnimation = false
+    @State private var isAutoFilling = false
+    @State private var wasAutoFilled = false
 
     // MARK: - Initialization
 
@@ -40,6 +43,7 @@ struct ReadinessCheckInView: View {
             ZStack {
                 // Main content
                 Form {
+                    quickFillSection
                     headerSection
                     sleepSection
                     sorenessSection
@@ -72,6 +76,108 @@ struct ReadinessCheckInView: View {
                 if viewModel.showSuccess {
                     successOverlay
                 }
+            }
+        }
+    }
+
+    // MARK: - Quick Fill Section
+
+    private var quickFillSection: some View {
+        Section {
+            if HealthKitService.isHealthKitAvailable {
+                if healthKitService.isAuthorized {
+                    // Authorized: Show auto-fill button and HRV display
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Button {
+                                Task {
+                                    await autoFillFromHealthKit()
+                                }
+                            } label: {
+                                HStack {
+                                    if isAutoFilling {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "applewatch")
+                                    }
+                                    Text("Auto-Fill from Apple Watch")
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(isAutoFilling)
+
+                            Spacer()
+
+                            if wasAutoFilled {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text("Data from Apple Watch")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+
+                        // Display today's HRV if available
+                        if let hrv = healthKitService.todayHRV {
+                            HStack {
+                                Image(systemName: "heart.fill")
+                                    .foregroundColor(hrvColor(hrv))
+                                    .frame(width: 24)
+                                Text("Today's HRV:")
+                                    .font(.subheadline)
+                                Text(String(format: "%.0f ms", hrv))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(hrvColor(hrv))
+                                Spacer()
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } else {
+                    // Not authorized: Show connect button
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "applewatch")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            Text("Connect Apple Watch")
+                                .font(.headline)
+                            Spacer()
+                        }
+
+                        Text("Auto-fill sleep and HRV data from your Apple Watch")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Button {
+                            Task {
+                                await requestHealthKitAccess()
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "heart.text.square")
+                                Text("Connect Apple Watch")
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(healthKitService.isLoading)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        } header: {
+            if HealthKitService.isHealthKitAvailable {
+                Text("Quick Fill")
+            }
+        } footer: {
+            if HealthKitService.isHealthKitAvailable && healthKitService.isAuthorized {
+                Text("Pull sleep hours and HRV from your Apple Watch to auto-fill the form")
             }
         }
     }
@@ -524,6 +630,72 @@ struct ReadinessCheckInView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d, yyyy"
         return formatter.string(from: Date())
+    }
+
+    /// Auto-fill form fields from HealthKit data
+    private func autoFillFromHealthKit() async {
+        isAutoFilling = true
+        defer { isAutoFilling = false }
+
+        do {
+            let data = try await healthKitService.syncTodayData()
+
+            // Map sleep hours to sleep input (clamped to 0-12 range)
+            if let sleepHours = data.sleepDuration {
+                viewModel.sleepHours = min(max(sleepHours, 0), 12)
+            }
+
+            // Map HRV to energy level suggestion (higher HRV = better recovery)
+            // HRV ranges: <40 = low recovery, 40-60 = moderate, >60 = good recovery
+            if let hrv = data.hrv {
+                let suggestedEnergy: Int
+                switch hrv {
+                case 80...:
+                    suggestedEnergy = 10  // Excellent recovery
+                case 70..<80:
+                    suggestedEnergy = 9
+                case 60..<70:
+                    suggestedEnergy = 8   // Good recovery
+                case 50..<60:
+                    suggestedEnergy = 7
+                case 40..<50:
+                    suggestedEnergy = 5   // Moderate recovery
+                case 30..<40:
+                    suggestedEnergy = 4
+                default:
+                    suggestedEnergy = 3   // Low recovery
+                }
+                viewModel.energyLevel = suggestedEnergy
+            }
+
+            wasAutoFilled = true
+        } catch {
+            // Error is already handled by healthKitService
+            print("Failed to auto-fill from HealthKit: \(error.localizedDescription)")
+        }
+    }
+
+    /// Request HealthKit authorization
+    private func requestHealthKitAccess() async {
+        do {
+            _ = try await healthKitService.requestAuthorization()
+        } catch {
+            print("HealthKit authorization failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Get color for HRV value display
+    /// - Parameter hrv: HRV value in milliseconds
+    /// - Returns: Color based on HRV range (Green >60, Yellow 40-60, Red <40)
+    private func hrvColor(_ hrv: Double) -> Color {
+        switch hrv {
+        case 60...:
+            return .green
+        case 40..<60:
+            return .yellow
+        default:
+            return .red
+        }
     }
 }
 

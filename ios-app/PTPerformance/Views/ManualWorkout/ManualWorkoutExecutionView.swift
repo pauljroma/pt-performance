@@ -8,6 +8,48 @@
 import SwiftUI
 import Combine
 
+// MARK: - Fatigue Adjustment Model
+
+/// Represents active fatigue-based adjustments for a workout
+struct FatigueAdjustment {
+    let isActive: Bool
+    let loadReductionPercent: Int
+    let reason: String
+    let fatigueBand: FatigueBand
+    let isDeloadWeek: Bool
+
+    /// Create from fatigue accumulation data
+    static func from(fatigue: FatigueAccumulation) -> FatigueAdjustment? {
+        // Only create adjustment for high or critical fatigue
+        guard fatigue.fatigueBand == .high || fatigue.fatigueBand == .critical || fatigue.deloadRecommended else {
+            return nil
+        }
+
+        let reduction: Int
+        let reason: String
+
+        switch fatigue.fatigueBand {
+        case .critical:
+            reduction = 30
+            reason = "Critical fatigue detected - significant load reduction applied"
+        case .high:
+            reduction = 20
+            reason = "High fatigue - moderate load reduction for recovery"
+        default:
+            reduction = 15
+            reason = "Deload period active for optimal recovery"
+        }
+
+        return FatigueAdjustment(
+            isActive: true,
+            loadReductionPercent: reduction,
+            reason: reason,
+            fatigueBand: fatigue.fatigueBand,
+            isDeloadWeek: fatigue.deloadRecommended
+        )
+    }
+}
+
 // MARK: - BUILD 260: Local Exercise Template for Picker
 
 /// Local struct for exercise templates used in the picker (Identifiable with UUID)
@@ -630,6 +672,13 @@ struct ManualWorkoutExecutionView: View {
     // BUILD 309: Collapsible RPE/Pain section - hidden by default for simplified logging
     @State private var showAdvancedOptions = false
 
+    // Fatigue and progression state
+    @State private var fatigueAdjustment: FatigueAdjustment?
+    @State private var progressionSuggestion: ProgressionSuggestion?
+    @State private var showFatigueInfo = false
+    @StateObject private var progressiveOverloadService = ProgressiveOverloadAIService()
+    @StateObject private var fatigueService = FatigueTrackingService()
+
     init(session: ManualSession, exercises: [ManualSessionExercise], patientId: UUID, onComplete: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: ManualWorkoutExecutionViewModel(
             session: session,
@@ -694,18 +743,21 @@ struct ManualWorkoutExecutionView: View {
                 }
             }
             .task {
-                DebugLogger.shared.log("🏋️ ManualWorkoutExecutionView task started", level: .diagnostic)
-                DebugLogger.shared.log("🏋️ Session ID: \(viewModel.session.id)", level: .diagnostic)
-                DebugLogger.shared.log("🏋️ Initial exercise count: \(viewModel.exercises.count)", level: .diagnostic)
+                DebugLogger.shared.log("ManualWorkoutExecutionView task started", level: .diagnostic)
+                DebugLogger.shared.log("Session ID: \(viewModel.session.id)", level: .diagnostic)
+                DebugLogger.shared.log("Initial exercise count: \(viewModel.exercises.count)", level: .diagnostic)
 
                 // Load exercises if needed (for convenience init)
                 await viewModel.loadExercisesIfNeeded()
 
-                DebugLogger.shared.log("🏋️ After load, exercise count: \(viewModel.exercises.count)", level: .diagnostic)
+                DebugLogger.shared.log("After load, exercise count: \(viewModel.exercises.count)", level: .diagnostic)
+
+                // Load fatigue state for adjustments banner
+                await loadFatigueState()
 
                 // Start the timer
                 viewModel.startTimer()
-                DebugLogger.shared.log("🏋️ Timer started", level: .success)
+                DebugLogger.shared.log("Timer started", level: .success)
             }
             .onChange(of: viewModel.isWorkoutCompleted) { _, isCompleted in
                 // Call onComplete when workout finishes
@@ -789,8 +841,18 @@ struct ManualWorkoutExecutionView: View {
     private var workoutExecutionView: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Fatigue Adjustment Banner (when active)
+                if let adjustment = fatigueAdjustment, adjustment.isActive {
+                    fatigueAdjustmentBanner(adjustment)
+                }
+
                 // Progress Header
                 progressHeader
+
+                // AI Progression Suggestion (after completing a set)
+                if let suggestion = progressionSuggestion {
+                    progressionSuggestionCard(suggestion)
+                }
 
                 // Block Navigation
                 blockNavigationSection
@@ -811,6 +873,186 @@ struct ManualWorkoutExecutionView: View {
                 loadingOverlay
             }
         }
+    }
+
+    // MARK: - Fatigue Adjustment Banner
+
+    private func fatigueAdjustmentBanner(_ adjustment: FatigueAdjustment) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                // Orange recovery icon
+                Image(systemName: adjustment.isDeloadWeek ? "bed.double.circle.fill" : "arrow.down.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.orange)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Adjusted for Recovery")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text("\(adjustment.loadReductionPercent)% lighter loads today")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Info button
+                Button {
+                    showFatigueInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .font(.title3)
+                        .foregroundColor(.orange)
+                }
+                .accessibilityLabel("Fatigue adjustment details")
+            }
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+        .alert("Recovery Adjustment", isPresented: $showFatigueInfo) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(adjustment.reason)
+        }
+    }
+
+    // MARK: - Progression Suggestion Card
+
+    private func progressionSuggestionCard(_ suggestion: ProgressionSuggestion) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack(spacing: 10) {
+                Image(systemName: "brain.head.profile")
+                    .font(.title2)
+                    .foregroundColor(.purple)
+
+                Text("AI Suggestion")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.purple)
+
+                Spacer()
+
+                // Dismiss button
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        progressionSuggestion = nil
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Next set recommendation
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Next Set")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 4) {
+                        Text("\(Int(suggestion.nextLoad))")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text("lbs")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Text("x")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 4)
+
+                        Text("\(suggestion.nextReps)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text("reps")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                // Progression type badge
+                progressionTypeBadge(suggestion.progressionType)
+            }
+
+            // Reasoning text
+            Text(suggestion.reasoning)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(3)
+
+            // Use This Weight button
+            Button {
+                applyProgressionSuggestion(suggestion)
+            } label: {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("Use This Weight")
+                }
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color.purple)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+            }
+        }
+        .padding()
+        .background(Color.purple.opacity(0.08))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.purple.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func progressionTypeBadge(_ type: ProgressionType) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: type.icon)
+                .font(.caption)
+
+            Text(type.displayText)
+                .font(.caption)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(type.color.opacity(0.15))
+        .foregroundColor(type.color)
+        .cornerRadius(8)
+    }
+
+    private func applyProgressionSuggestion(_ suggestion: ProgressionSuggestion) {
+        // Apply the suggested weight to all sets
+        for i in 0..<viewModel.weightPerSet.count {
+            viewModel.weightPerSet[i] = suggestion.nextLoad
+        }
+
+        // Apply suggested reps
+        for i in 0..<viewModel.repsPerSet.count {
+            viewModel.repsPerSet[i] = suggestion.nextReps
+        }
+
+        // Clear the suggestion after applying
+        withAnimation(.easeOut(duration: 0.2)) {
+            progressionSuggestion = nil
+        }
+
+        HapticFeedback.success()
     }
 
     // MARK: - Progress Header
@@ -1394,6 +1636,8 @@ struct ManualWorkoutExecutionView: View {
             Button {
                 Task {
                     await viewModel.completeCurrentExercise()
+                    // Request AI progression suggestion for next exercise
+                    onSetCompleted()
                 }
             } label: {
                 HStack {
@@ -1541,6 +1785,52 @@ struct ManualWorkoutExecutionView: View {
                 .font(.headline)
         }
         .padding(.vertical, 4)
+    }
+
+    // MARK: - Fatigue & Progression Helpers
+
+    /// Load fatigue state for the patient
+    private func loadFatigueState() async {
+        do {
+            try await fatigueService.fetchCurrentFatigue(patientId: viewModel.patientId)
+            if let fatigue = fatigueService.currentFatigue {
+                fatigueAdjustment = FatigueAdjustment.from(fatigue: fatigue)
+            }
+        } catch {
+            DebugLogger.shared.error("FATIGUE", "Failed to load fatigue state: \(error.localizedDescription)")
+        }
+    }
+
+    /// Request AI progression suggestion after completing a set
+    private func onSetCompleted() {
+        guard let exercise = viewModel.currentExercise,
+              let templateId = exercise.exerciseTemplateId else {
+            return
+        }
+
+        // Get current weight and reps from what was just logged
+        let currentLoad = viewModel.actualLoad ?? exercise.targetLoad ?? 0
+        let currentReps = viewModel.repsPerSet.first ?? Int(exercise.targetReps ?? "10") ?? 10
+
+        Task {
+            do {
+                let suggestion = try await progressiveOverloadService.getSuggestion(
+                    patientId: viewModel.patientId,
+                    exerciseTemplateId: templateId,
+                    currentLoad: currentLoad,
+                    currentReps: currentReps,
+                    recentRPE: viewModel.rpe
+                )
+
+                await MainActor.run {
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        progressionSuggestion = suggestion
+                    }
+                }
+            } catch {
+                DebugLogger.shared.error("PROGRESSION", "Failed to get suggestion: \(error.localizedDescription)")
+            }
+        }
     }
 
     // MARK: - Color Helpers
