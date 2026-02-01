@@ -61,6 +61,10 @@ class ReadinessService: ObservableObject {
         try input.validate()
 
         do {
+            // DEBUG: Log what we're sending
+            print("📤 Submitting readiness for patient: \(patientId.uuidString), date: \(dateString)")
+            print("📤 Input: sleep=\(sleepHours ?? 0), soreness=\(sorenessLevel ?? 0), energy=\(energyLevel ?? 0), stress=\(stressLevel ?? 0)")
+
             // Upsert to database (handles duplicate dates)
             // Database trigger will auto-calculate readiness_score
             let response = try await client.client
@@ -70,11 +74,22 @@ class ReadinessService: ObservableObject {
                 .single()
                 .execute()
 
+            // DEBUG: Log response
+            print("📥 Response status: \(response.status)")
+            if let rawJSON = String(data: response.data, encoding: .utf8) {
+                print("📥 Response data: \(rawJSON.prefix(500))")
+            }
+
             // Use custom decoder that handles both DATE and TIMESTAMP formats
             let decoder = createReadinessDecoder()
             let readiness = try decoder.decode(DailyReadiness.self, from: response.data)
+
+            print("✅ Readiness saved successfully: score=\(readiness.readinessScore ?? 0)")
             return readiness
         } catch {
+            print("❌ ReadinessService Error: \(error)")
+            print("❌ Error type: \(type(of: error))")
+            print("❌ Error details: \(error.localizedDescription)")
             self.error = error
             throw error
         }

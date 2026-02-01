@@ -168,7 +168,19 @@ class ReadinessCheckInViewModel: ObservableObject {
             showSuccess = false
 
         } catch {
-            errorMessage = "We couldn't save your check-in. Please check your connection and try again."
+            // Log the actual error for debugging
+            print("❌ ReadinessCheckIn Error: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+
+            // Show user-friendly message with more detail
+            let nsError = error as NSError
+            if nsError.domain == "Supabase" || error.localizedDescription.contains("RLS") {
+                errorMessage = "Permission error. Please try logging out and back in."
+            } else if error.localizedDescription.contains("network") || error.localizedDescription.contains("connection") {
+                errorMessage = "Network error. Please check your connection and try again."
+            } else {
+                errorMessage = "Couldn't save check-in: \(error.localizedDescription)"
+            }
             showError = true
         }
 
