@@ -1,0 +1,218 @@
+//
+//  HealthKitSettingsView.swift
+//  PTPerformance
+//
+//  Build 362: Apple Health Integration Settings
+//
+
+import SwiftUI
+
+/// Settings view for managing Apple Health integration
+struct HealthKitSettingsView: View {
+    @EnvironmentObject var healthKitService: HealthKitService
+
+    var body: some View {
+        List {
+            // Connection Status Section
+            Section {
+                HStack {
+                    Image(systemName: healthKitService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(healthKitService.isAuthorized ? .green : .red)
+                        .font(.title2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(healthKitService.isAuthorized ? "Connected" : "Not Connected")
+                            .font(.headline)
+                        Text(healthKitService.isAuthorized
+                             ? "PTPerformance can read your health data"
+                             : "Connect to sync HRV, sleep, and heart rate")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+
+                if !healthKitService.isAuthorized {
+                    Button {
+                        Task {
+                            _ = try? await healthKitService.requestAuthorization()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "heart.circle")
+                            Text("Connect Apple Health")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } header: {
+                Text("Connection Status")
+            }
+
+            // Today's Data Section
+            if healthKitService.isAuthorized {
+                Section {
+                    // HRV
+                    HStack {
+                        Image(systemName: "waveform.path.ecg")
+                            .foregroundColor(.purple)
+                            .frame(width: 28)
+                        Text("HRV (SDNN)")
+                        Spacer()
+                        if let hrv = healthKitService.todayHRV {
+                            Text("\(Int(hrv)) ms")
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("No data")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Resting Heart Rate
+                    HStack {
+                        Image(systemName: "heart.fill")
+                            .foregroundColor(.red)
+                            .frame(width: 28)
+                        Text("Resting HR")
+                        Spacer()
+                        if let hr = healthKitService.todayRestingHR {
+                            Text("\(Int(hr)) bpm")
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("No data")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Sleep
+                    HStack {
+                        Image(systemName: "bed.double.fill")
+                            .foregroundColor(.indigo)
+                            .frame(width: 28)
+                        Text("Sleep")
+                        Spacer()
+                        if let sleep = healthKitService.todaySleep {
+                            Text(String(format: "%.1f hrs", sleep))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("No data")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Last Sync
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.blue)
+                            .frame(width: 28)
+                        Text("Last Synced")
+                        Spacer()
+                        if let lastSync = healthKitService.lastSyncDate {
+                            Text(lastSync, style: .relative)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Never")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    // Sync Button
+                    Button {
+                        Task {
+                            _ = try? await healthKitService.syncTodayData()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Sync Now")
+                        }
+                    }
+                } header: {
+                    Text("Today's Health Data")
+                }
+            }
+
+            // What We Sync Section
+            Section {
+                Label("Heart Rate Variability (HRV)", systemImage: "waveform.path.ecg")
+                Label("Resting Heart Rate", systemImage: "heart.fill")
+                Label("Sleep Analysis", systemImage: "bed.double.fill")
+                Label("Active Energy", systemImage: "flame.fill")
+                Label("Exercise Minutes", systemImage: "figure.run")
+            } header: {
+                Text("Data We Read")
+            } footer: {
+                Text("PTPerformance only reads health data to personalize your recovery recommendations. We never write to Apple Health.")
+            }
+
+            // How It's Used Section
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    FeatureRow(
+                        icon: "battery.100",
+                        title: "Readiness Check-In",
+                        description: "Auto-fill sleep and energy from Apple Watch"
+                    )
+                    FeatureRow(
+                        icon: "chart.line.uptrend.xyaxis",
+                        title: "Recovery Tracking",
+                        description: "HRV trends help detect fatigue"
+                    )
+                    FeatureRow(
+                        icon: "bed.double",
+                        title: "Deload Recommendations",
+                        description: "Smart rest suggestions based on your data"
+                    )
+                }
+                .padding(.vertical, 4)
+            } header: {
+                Text("How We Use Your Data")
+            }
+        }
+        .navigationTitle("Apple Health")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if healthKitService.isAuthorized {
+                _ = try? await healthKitService.syncTodayData()
+            }
+        }
+    }
+}
+
+// MARK: - Feature Row
+
+private struct FeatureRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    NavigationStack {
+        HealthKitSettingsView()
+            .environmentObject(HealthKitService())
+    }
+}

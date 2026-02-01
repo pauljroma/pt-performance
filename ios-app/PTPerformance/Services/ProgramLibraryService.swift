@@ -183,7 +183,17 @@ class ProgramLibraryService: ObservableObject {
             logger.log("Successfully enrolled in program with enrollment ID: \(enrollment.id)", level: .success)
             return enrollment
         } catch {
-            logger.log("Failed to enroll in program: \(error.localizedDescription)", level: .error)
+            let errorMessage = error.localizedDescription
+            // Check for duplicate key constraint violation (already enrolled)
+            if errorMessage.contains("duplicate key") || errorMessage.contains("unique constraint") {
+                logger.log("Patient already enrolled in this program", level: .warning)
+                throw NSError(
+                    domain: "ProgramLibraryService",
+                    code: 409,
+                    userInfo: [NSLocalizedDescriptionKey: "You're already enrolled in this program"]
+                )
+            }
+            logger.log("Failed to enroll in program: \(errorMessage)", level: .error)
             throw error
         }
     }

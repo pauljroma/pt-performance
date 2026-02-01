@@ -102,10 +102,33 @@ struct ProfileHubView: View {
         }
     }
 
+    // MARK: - State for HealthKit
+
+    @StateObject private var healthKitService = HealthKitService()
+
     // MARK: - Health Section (Premium Features)
 
     private var healthSection: some View {
         Section("Health & Wellness") {
+            // Apple Health Sync
+            NavigationLink {
+                HealthKitSettingsView()
+                    .environmentObject(healthKitService)
+            } label: {
+                HStack {
+                    Image(systemName: "heart.circle.fill")
+                        .foregroundColor(.red)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Apple Health")
+                            .foregroundColor(.primary)
+                        Text(healthKitService.isAuthorized ? "Connected" : "Not connected")
+                            .font(.caption)
+                            .foregroundColor(healthKitService.isAuthorized ? .green : .secondary)
+                    }
+                }
+            }
+
             // Nutrition
             NavigationLink {
                 premiumGatedView(
@@ -138,6 +161,24 @@ struct ProfileHubView: View {
                             .foregroundColor(.pink)
                             .frame(width: 24)
                         Text("Readiness")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        premiumBadgeIfNeeded
+                    }
+                }
+
+                // Recovery Status (Deload Recommendations)
+                NavigationLink {
+                    premiumGatedView(
+                        premium: { DeloadRecommendationView(patientId: patientId) },
+                        locked: { PremiumLockedView(feature: "Recovery", icon: "bed.double.fill", description: "Smart deload recommendations based on your fatigue and training load") }
+                    )
+                } label: {
+                    HStack {
+                        Image(systemName: "bed.double.fill")
+                            .foregroundColor(.indigo)
+                            .frame(width: 24)
+                        Text("Recovery Status")
                             .foregroundColor(.primary)
                         Spacer()
                         premiumBadgeIfNeeded
