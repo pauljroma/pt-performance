@@ -242,6 +242,14 @@ struct TodaySessionView: View {
                     }
                 )
             }
+            // One-Tap Start: Floating start button always visible when session available
+            .overlay(alignment: .bottom) {
+                if let session = viewModel.session, !session.isCompleted && !isWorkoutStarted {
+                    OneTapStartButton(action: startWorkout)
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -1341,5 +1349,37 @@ private struct DetailRow: View {
             Text(value)
                 .font(.headline)
         }
+    }
+}
+
+// MARK: - One-Tap Start Button
+
+/// Floating action button for quick workout start - always visible when session available
+struct OneTapStartButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            HapticFeedback.medium()
+            action()
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "play.fill")
+                    .font(.title2)
+                Text("Start Workout")
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 32)
+            .padding(.vertical, 16)
+            .background(
+                Capsule()
+                    .fill(Color.green)
+                    .shadow(color: .green.opacity(0.4), radius: 8, y: 4)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Start Workout")
+        .accessibilityHint("Tap to begin today's workout session")
     }
 }

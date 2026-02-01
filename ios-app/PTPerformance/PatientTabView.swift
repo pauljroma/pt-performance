@@ -1,10 +1,14 @@
 import SwiftUI
 
+// BUILD 318: Tab Consolidation - Reduced from 10 tabs to 3
+// Tab 1: Today (Today's workout + Quick Pick + Timers + Readiness access)
+// Tab 2: Programs (Program Library + History)
+// Tab 3: Profile (Settings + Nutrition + Learn + AI Assistant)
+
 struct PatientTabView: View {
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @ObservedObject private var supabase = PTSupabaseClient.shared
-    @ObservedObject private var modeService = ModeService.shared  // ACP-479: Mode awareness
     @EnvironmentObject var storeKit: StoreKitService
+    @EnvironmentObject var appState: AppState
 
     // Track selected tab for haptic feedback
     @State private var selectedTab: Int = 0
@@ -13,114 +17,40 @@ struct PatientTabView: View {
     @State private var premiumRefreshID = UUID()
 
     var body: some View {
-        // BUILD 317: Force TabView to re-render when premium status changes
+        // BUILD 318: Consolidated 3-tab layout
         TabView(selection: $selectedTab) {
-            TodaySessionView()
+            // Tab 1: Today Hub - Primary workout focus
+            TodayHubView()
                 .environmentObject(supabase)
+                .environmentObject(storeKit)
+                .environmentObject(appState)
                 .tabItem {
-                    Label("Today", systemImage: "list.bullet")
+                    Label("Today", systemImage: "figure.run")
                 }
                 .tag(0)
-                .accessibilityLabel("Today's Session")
-                .accessibilityHint("View and start today's workout")
+                .accessibilityLabel("Today")
+                .accessibilityHint("Today's workout with quick access to timers and AI pick")
 
-            // BUILD 327: Quick Pick - free workout finder
-            WorkoutPickerView()
-                .tabItem {
-                    Label("Quick Pick", systemImage: "sparkles")
-                }
-                .tag(1)
-                .accessibilityLabel("Quick Pick Workout")
-                .accessibilityHint("Find a workout based on your preferences")
-
-            // Programs tab - browse program library
-            ProgramLibraryBrowserView()
-                .tabItem {
-                    Label("Programs", systemImage: "list.clipboard")
-                }
-                .tag(2)
-                .accessibilityLabel("Programs")
-                .accessibilityHint("Browse and enroll in training programs")
-
-            if let patientId = supabase.userId {
-                premiumGatedView(
-                    premium: { HistoryView(patientId: patientId) },
-                    locked: { PremiumLockedView(feature: "History", icon: "clock.arrow.circlepath", description: "Track all your sessions and see your workout history") }
-                )
-                .tabItem {
-                    Label("History", systemImage: "clock.arrow.circlepath")
-                }
-                .tag(3)
-                .accessibilityLabel("Workout History")
-                .accessibilityHint("View past workouts and progress")
-            }
-
-            if let patientIdString = supabase.userId,
-               let patientId = UUID(uuidString: patientIdString) {
-                premiumGatedView(
-                    premium: { ReadinessCheckInView(patientId: patientId) },
-                    locked: { PremiumLockedView(feature: "Readiness", icon: "battery.100", description: "Daily readiness check-ins and recovery scoring") }
-                )
-                .tabItem {
-                    Label("Readiness", systemImage: "battery.100")
-                }
-                .tag(4)
-                .accessibilityLabel("Daily Readiness")
-                .accessibilityHint("Check in with your daily wellness metrics")
-            }
-
-            if let patientIdString = supabase.userId,
-               let patientId = UUID(uuidString: patientIdString) {
-                TimerPickerView(patientId: patientId)
-                    .tabItem {
-                        Label("Timers", systemImage: "timer")
-                    }
-                    .tag(5)
-                    .accessibilityLabel("Workout Timers")
-                    .accessibilityHint("Access interval timers and stopwatch")
-            }
-
-            premiumGatedView(
-                premium: { NutritionTabView() },
-                locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Meal plans, food tracking, and nutrition guidance") }
-            )
-            .tabItem {
-                Label("Nutrition", systemImage: "fork.knife")
-            }
-            .tag(6)
-            .accessibilityLabel("Nutrition Tracking")
-            .accessibilityHint("Log meals and track macros")
-
-            premiumGatedView(
-                premium: { AIChatView() },
-                locked: { PremiumLockedView(feature: "AI Assistant", icon: "brain.head.profile", description: "AI-powered exercise recommendations and coaching") }
-            )
-            .tabItem {
-                Label("AI Assistant", systemImage: "brain.head.profile")
-            }
-            .tag(7)
-            .accessibilityLabel("AI Assistant")
-            .accessibilityHint("Get AI-powered exercise recommendations")
-
-            premiumGatedView(
-                premium: { HelpView() },
-                locked: { PremiumLockedView(feature: "Learn", icon: "book.fill", description: "Educational content and exercise technique guides") }
-            )
-            .tabItem {
-                Label("Learn", systemImage: "book.fill")
-            }
-            .tag(8)
-            .accessibilityLabel("Learning Center")
-            .accessibilityHint("Access educational content and exercise guides")
-
-            PatientSettingsView()
+            // Tab 2: Programs Hub - Library and History
+            ProgramsHubView()
                 .environmentObject(storeKit)
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape")
+                    Label("Programs", systemImage: "list.bullet.rectangle")
                 }
-                .tag(9)
-                .accessibilityLabel("Settings")
-                .accessibilityHint("Manage app settings and account")
+                .tag(1)
+                .accessibilityLabel("Programs")
+                .accessibilityHint("Browse programs and view workout history")
+
+            // Tab 3: Profile Hub - Settings and Premium Features
+            ProfileHubView()
+                .environmentObject(storeKit)
+                .environmentObject(appState)
+                .tabItem {
+                    Label("Profile", systemImage: "person.circle")
+                }
+                .tag(2)
+                .accessibilityLabel("Profile")
+                .accessibilityHint("Settings, nutrition, AI assistant, and more")
         }
         .id(premiumRefreshID)  // BUILD 317: Force TabView rebuild with UUID
         .onChange(of: selectedTab) { _, _ in
@@ -131,21 +61,6 @@ struct PatientTabView: View {
             // BUILD 317: Force complete TabView rebuild when premium changes
             print("[PatientTabView] Premium changed to: \(newValue), refreshing tabs")
             premiumRefreshID = UUID()
-        }
-    }
-
-    // BUILD 317: Helper function to create premium-gated views
-    @ViewBuilder
-    private func premiumGatedView<Premium: View, Locked: View>(
-        @ViewBuilder premium: () -> Premium,
-        @ViewBuilder locked: () -> Locked
-    ) -> some View {
-        // BUILD 317: Direct conditional without Group wrapper for cleaner state
-        if storeKit.isPremium {
-            premium()
-        } else {
-            locked()
-                .environmentObject(storeKit)
         }
     }
 }
