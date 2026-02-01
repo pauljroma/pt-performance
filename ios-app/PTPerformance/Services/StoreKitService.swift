@@ -14,8 +14,13 @@ class StoreKitService: ObservableObject {
 
     static let productIDs: Set<String> = [
         "com.ptperformance.app.monthly",
-        "com.ptperformance.app.annual"
+        "com.ptperformance.app.annual",
+        "com.ptperformance.baseballpack"  // One-time purchase
     ]
+
+    // MARK: - Individual Product IDs
+
+    static let baseballPackProductId = "com.ptperformance.baseballpack"
 
     // MARK: - Published Properties
 
@@ -32,6 +37,10 @@ class StoreKitService: ObservableObject {
     // BUILD 309: Changed isPremium from computed to @Published for reliable SwiftUI updates
     @Published private(set) var isPremium: Bool = false
 
+    // MARK: - Baseball Pack Ownership
+
+    @Published var ownsBaseballPack: Bool = false
+
     // MARK: - Subscription Status
 
     enum SubscriptionStatus {
@@ -45,11 +54,17 @@ class StoreKitService: ObservableObject {
 
     enum StoreError: LocalizedError {
         case failedVerification
+        case productNotFound
+        case invalidProductType
 
         var errorDescription: String? {
             switch self {
             case .failedVerification:
                 return "Transaction verification failed. Please try again."
+            case .productNotFound:
+                return "Product not found. Please try again later."
+            case .invalidProductType:
+                return "Invalid product configuration."
             }
         }
     }
@@ -76,6 +91,15 @@ class StoreKitService: ObservableObject {
         products.first { $0.id == "com.ptperformance.app.annual" }
     }
 
+    var baseballPackProduct: Product? {
+        products.first { $0.id == Self.baseballPackProductId }
+    }
+
+    /// Returns true if user has access to baseball content (owns pack or debug override)
+    var hasBaseballAccess: Bool {
+        return ownsBaseballPack || debugPremiumOverride == true
+    }
+
     // MARK: - Transaction Listener
 
     private var updateListenerTask: Task<Void, Error>?
@@ -88,6 +112,7 @@ class StoreKitService: ObservableObject {
 
         Task {
             await updateSubscriptionStatus()
+            await checkBaseballPackOwnership()
             logger.info("StoreKit", "Initial subscription status: \(subscriptionStatus)")
         }
     }
@@ -126,7 +151,16 @@ class StoreKitService: ObservableObject {
             logger.info("StoreKit", "Purchase successful, verifying transaction")
             let transaction = try checkVerified(verification)
             await transaction.finish()
-            await updateSubscriptionStatus()
+
+            // Handle subscription vs non-consumable updates
+            if product.type == .nonConsumable {
+                if product.id == Self.baseballPackProductId {
+                    ownsBaseballPack = true
+                    logger.success("StoreKit", "Baseball Pack purchased successfully")
+                }
+            } else {
+                await updateSubscriptionStatus()
+            }
             logger.success("StoreKit", "Purchase completed for: \(product.id)")
 
         case .userCancelled:
@@ -140,6 +174,50 @@ class StoreKitService: ObservableObject {
         }
     }
 
+    // MARK: - Baseball Pack Purchase
+
+    /// Purchase the Baseball Pack (one-time non-consumable purchase)
+    func purchaseBaseballPack() async throws {
+        guard let product = baseballPackProduct else {
+            logger.error("StoreKit", "Baseball Pack product not found")
+            throw StoreError.productNotFound
+        }
+
+        guard product.type == .nonConsumable else {
+            logger.error("StoreKit", "Baseball Pack is not configured as non-consumable")
+            throw StoreError.invalidProductType
+        }
+
+        try await purchase(product)
+    }
+
+    // MARK: - Baseball Pack Ownership Check
+
+    /// Check if user owns the Baseball Pack by scanning current entitlements
+    func checkBaseballPackOwnership() async {
+        logger.diagnostic("StoreKit: Checking Baseball Pack ownership")
+
+        for await result in Transaction.currentEntitlements {
+            guard let transaction = try? checkVerified(result) else {
+                continue
+            }
+
+            // Skip revoked transactions
+            if transaction.revocationDate != nil {
+                continue
+            }
+
+            if transaction.productID == Self.baseballPackProductId {
+                ownsBaseballPack = true
+                logger.success("StoreKit", "User owns Baseball Pack")
+                return
+            }
+        }
+
+        ownsBaseballPack = false
+        logger.info("StoreKit", "User does not own Baseball Pack")
+    }
+
     // MARK: - Restore Purchases
 
     func restorePurchases() async {
@@ -147,6 +225,7 @@ class StoreKitService: ObservableObject {
         do {
             try await AppStore.sync()
             await updateSubscriptionStatus()
+            await checkBaseballPackOwnership()
             logger.success("StoreKit", "Purchases restored successfully")
         } catch {
             logger.error("StoreKit", "Failed to restore purchases: \(error.localizedDescription)")
@@ -216,7 +295,13 @@ class StoreKitService: ObservableObject {
                 if let transaction = try? await self.checkVerified(result) {
                     logger.info("StoreKit", "Transaction update received: \(transaction.productID)")
                     await transaction.finish()
-                    await self.updateSubscriptionStatus()
+
+                    // Handle Baseball Pack transaction updates
+                    if transaction.productID == StoreKitService.baseballPackProductId {
+                        await self.checkBaseballPackOwnership()
+                    } else {
+                        await self.updateSubscriptionStatus()
+                    }
                 } else {
                     logger.warning("StoreKit", "Failed to verify transaction update")
                 }
