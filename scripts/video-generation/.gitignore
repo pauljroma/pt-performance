@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Output videos (these are uploaded to Supabase, not tracked in git)
+*.mp4
+*.mov
+remotion/out/
+
+# Lottie source files (downloaded, not tracked)
+*.json
+!package.json
+!tsconfig.json
+!remotion.config.ts
+
+# Package lock
+package-lock.json
+
+# OS files
+.DS_Store

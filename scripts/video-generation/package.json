@@ -1,0 +1,26 @@
+{
+  "name": "pt-video-generation",
+  "version": "1.0.0",
+  "description": "Video generation toolkit for PT Performance exercise library",
+  "scripts": {
+    "lottie:download": "./download-lottie-video.sh",
+    "lottie:convert": "./convert-lottie.sh",
+    "runway:generate": "./generate-runway-video.sh",
+    "upload": "./upload-video.sh",
+    "remotion:start": "cd remotion && npm start",
+    "remotion:build": "cd remotion && npm run build"
+  },
+  "dependencies": {
+    "puppeteer-lottie": "^1.1.2"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "video",
+    "exercise",
+    "lottie",
+    "remotion",
+    "pt-performance"
+  ],
+  "author": "PT Performance Team",
+  "license": "MIT"
+}
