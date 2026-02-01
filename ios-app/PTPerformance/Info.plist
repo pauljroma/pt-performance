@@ -22,13 +22,15 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>365</string>
+	<string>366</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>PTPerformance needs camera access to record exercise form check videos that you can share with your physical therapist for technique feedback and guidance.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>PTPerformance uses your HRV, sleep, and heart rate data to personalize recovery recommendations and automatically adjust your workout intensity based on your readiness.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>PTPerformance can save your workout data to Apple Health to help you track your fitness progress across all your health apps.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>PTPerformance needs microphone access to record audio with your exercise videos so your therapist can hear your questions and provide better feedback.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
