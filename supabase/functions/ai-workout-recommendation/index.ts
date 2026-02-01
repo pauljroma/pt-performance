@@ -307,7 +307,7 @@ Respond with valid JSON ONLY (no markdown, no explanation outside JSON):
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',  // Better reasoning for recommendations
+        model: 'gpt-4o',  // Latest GPT-4 model with better performance
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -320,8 +320,8 @@ Respond with valid JSON ONLY (no markdown, no explanation outside JSON):
 
     if (!openaiResponse.ok) {
       const error = await openaiResponse.text()
-      console.error('OpenAI API error:', error)
-      throw new Error('Failed to generate workout recommendations')
+      console.error('OpenAI API error:', openaiResponse.status, error)
+      throw new Error(`OpenAI API error (${openaiResponse.status}): ${error.substring(0, 200)}`)
     }
 
     const completion = await openaiResponse.json()
