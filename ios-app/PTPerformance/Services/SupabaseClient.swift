@@ -74,12 +74,17 @@ class PTSupabaseClient: ObservableObject {
 
         // BUILD 251: Use flexible decoder for all database queries
         // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
-        logger.log("Creating Supabase client with flexible decoder...")
+        // BUILD 366: Added auth configuration to ensure JWT is included in all requests
+        logger.log("Creating Supabase client with flexible decoder and auth config...")
         client = Supabase.SupabaseClient(
             supabaseURL: url,
             supabaseKey: supabaseAnonKey,
             options: SupabaseClientOptions(
-                db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder)
+                db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder),
+                auth: SupabaseClientOptions.AuthOptions(
+                    flowType: .implicit,
+                    autoRefreshToken: true
+                )
             )
         )
 
