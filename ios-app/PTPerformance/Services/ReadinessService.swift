@@ -26,6 +26,38 @@ private struct GetReadinessTrendParams: Encodable {
     }
 }
 
+/// RPC parameters for upsert_daily_readiness function (BUILD 385)
+private struct UpsertDailyReadinessParams: Encodable {
+    let pPatientId: String
+    let pDate: String
+    let pSleepHours: Double?
+    let pSorenessLevel: Int?
+    let pEnergyLevel: Int?
+    let pStressLevel: Int?
+    let pNotes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDate = "p_date"
+        case pSleepHours = "p_sleep_hours"
+        case pSorenessLevel = "p_soreness_level"
+        case pEnergyLevel = "p_energy_level"
+        case pStressLevel = "p_stress_level"
+        case pNotes = "p_notes"
+    }
+}
+
+/// RPC parameters for get_daily_readiness function (BUILD 385)
+private struct GetDailyReadinessParams: Encodable {
+    let pPatientId: String
+    let pDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDate = "p_date"
+    }
+}
+
 /// Service for managing daily readiness data
 /// Provides CRUD operations for daily readiness check-ins
 /// Uses database functions for automatic score calculation
@@ -89,13 +121,20 @@ class ReadinessService: ObservableObject {
             print("📤 Submitting readiness for patient: \(patientId.uuidString), date: \(dateString)")
             print("📤 Input: sleep=\(sleepHours ?? 0), soreness=\(sorenessLevel ?? 0), energy=\(energyLevel ?? 0), stress=\(stressLevel ?? 0)")
 
-            // Upsert to database (handles duplicate dates)
-            // Database trigger will auto-calculate readiness_score
+            // BUILD 385: Use SECURITY DEFINER function to bypass RLS issues
+            // This function runs with elevated privileges while keeping RLS enabled on the table
+            let params = UpsertDailyReadinessParams(
+                pPatientId: patientId.uuidString,
+                pDate: dateString,
+                pSleepHours: sleepHours,
+                pSorenessLevel: sorenessLevel,
+                pEnergyLevel: energyLevel,
+                pStressLevel: stressLevel,
+                pNotes: notes
+            )
+
             let response = try await client.client
-                .from("daily_readiness")
-                .upsert(input, onConflict: "patient_id,date")
-                .select()
-                .single()
+                .rpc("upsert_daily_readiness", params: params)
                 .execute()
 
             // DEBUG: Log response
@@ -235,45 +274,46 @@ class ReadinessService: ObservableObject {
         )
 
         do {
+            // BUILD 385: Use SECURITY DEFINER function to bypass RLS issues
+            let params = GetDailyReadinessParams(
+                pPatientId: patientId.uuidString,
+                pDate: today
+            )
+
             let response = try await client.client
-                .from("daily_readiness")
-                .select()
-                .eq("patient_id", value: patientId.uuidString)
-                .eq("date", value: today)
-                .limit(1)
+                .rpc("get_daily_readiness", params: params)
                 .execute()
 
             // DEBUG: Log response details
             let dataSize = response.data.count
             DebugLogger.shared.info("READINESS", "Response data size: \(dataSize) bytes")
 
-            // Check if response has data
-            guard !response.data.isEmpty else {
-                DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
-                DebugLogger.shared.info("READINESS", "Raw response: \(String(data: response.data, encoding: .utf8) ?? "Unable to decode")")
-                return nil
+            // Check if response has data (RPC returns null for no data)
+            if let rawJSON = String(data: response.data, encoding: .utf8) {
+                DebugLogger.shared.info("READINESS", "Raw response: \(rawJSON)")
+                if rawJSON == "null" || rawJSON.isEmpty {
+                    DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
+                    return nil
+                }
             }
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoder = createReadinessDecoder()
 
-            // BUILD 133: Try to decode with detailed error logging
+            // BUILD 385: RPC returns single object, not array
             do {
-                let results = try decoder.decode([DailyReadiness].self, from: response.data)
+                let readiness = try decoder.decode(DailyReadiness.self, from: response.data)
 
                 // DEBUG: Log successful fetch
-                if let readiness = results.first {
-                    DebugLogger.shared.success("READINESS", """
-                        Found readiness for \(today):
-                        Score: \(readiness.readinessScore ?? 0)
-                        Sleep: \(readiness.sleepHours ?? 0)h
-                        Energy: \(readiness.energyLevel ?? 0)
-                        Soreness: \(readiness.sorenessLevel ?? 0)
-                        Stress: \(readiness.stressLevel ?? 0)
-                        """)
-                }
+                DebugLogger.shared.success("READINESS", """
+                    Found readiness for \(today):
+                    Score: \(readiness.readinessScore ?? 0)
+                    Sleep: \(readiness.sleepHours ?? 0)h
+                    Energy: \(readiness.energyLevel ?? 0)
+                    Soreness: \(readiness.sorenessLevel ?? 0)
+                    Stress: \(readiness.stressLevel ?? 0)
+                    """)
 
-                return results.first
+                return readiness
             } catch let decodingError as DecodingError {
                 // BUILD 133: Enhanced error logging to diagnose decoding failures
                 let rawJSON = String(data: response.data, encoding: .utf8) ?? "Unable to decode as UTF-8"
