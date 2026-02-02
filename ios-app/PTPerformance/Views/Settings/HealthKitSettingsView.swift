@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Build 362: Apple Health Integration Settings
+//  ACP-827: Updated for bidirectional sync
 //
 
 import SwiftUI
@@ -23,7 +24,7 @@ struct HealthKitSettingsView: View {
                         Text(healthKitService.isAuthorized ? "Connected" : "Not Connected")
                             .font(.headline)
                         Text(healthKitService.isAuthorized
-                             ? "PTPerformance can read your health data"
+                             ? "Bidirectional sync enabled"
                              : "Connect to sync HRV, sleep, and heart rate")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -105,6 +106,17 @@ struct HealthKitSettingsView: View {
                         }
                     }
 
+                    // ACP-827: Exported Workouts
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundColor(.green)
+                            .frame(width: 28)
+                        Text("Workouts Exported")
+                        Spacer()
+                        Text("\(healthKitService.exportedWorkoutsCount)")
+                            .foregroundColor(.secondary)
+                    }
+
                     // Last Sync
                     HStack {
                         Image(systemName: "arrow.clockwise")
@@ -135,19 +147,60 @@ struct HealthKitSettingsView: View {
                 } header: {
                     Text("Today's Health Data")
                 }
+
+                // ACP-827: Advanced Sync Settings
+                Section {
+                    NavigationLink {
+                        HealthSyncSettingsView()
+                            .environmentObject(healthKitService)
+                    } label: {
+                        HStack {
+                            Image(systemName: "gearshape.2")
+                                .foregroundColor(.gray)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Sync Settings")
+                                Text("Configure what data syncs and when")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Advanced")
+                }
             }
 
-            // What We Sync Section
+            // ACP-827: Updated data sync section for bidirectional
             Section {
-                Label("Heart Rate Variability (HRV)", systemImage: "waveform.path.ecg")
-                Label("Resting Heart Rate", systemImage: "heart.fill")
-                Label("Sleep Analysis", systemImage: "bed.double.fill")
-                Label("Active Energy", systemImage: "flame.fill")
-                Label("Exercise Minutes", systemImage: "figure.run")
+                // Import
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Import from Apple Health", systemImage: "arrow.down.circle")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    HStack(spacing: 8) {
+                        DataTypeChip(icon: "waveform.path.ecg", text: "HRV")
+                        DataTypeChip(icon: "heart.fill", text: "HR")
+                        DataTypeChip(icon: "bed.double.fill", text: "Sleep")
+                        DataTypeChip(icon: "flame.fill", text: "Energy")
+                    }
+                }
+                .padding(.vertical, 4)
+
+                // Export
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Export to Apple Health", systemImage: "arrow.up.circle")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    HStack(spacing: 8) {
+                        DataTypeChip(icon: "figure.strengthtraining.traditional", text: "Workouts")
+                    }
+                }
+                .padding(.vertical, 4)
             } header: {
-                Text("Data We Read")
+                Text("Bidirectional Sync")
             } footer: {
-                Text("PTPerformance only reads health data to personalize your recovery recommendations. We never write to Apple Health.")
+                Text("PTPerformance imports your health data to personalize recovery, and exports completed workouts to Apple Health.")
             }
 
             // How It's Used Section
@@ -168,6 +221,12 @@ struct HealthKitSettingsView: View {
                         title: "Deload Recommendations",
                         description: "Smart rest suggestions based on your data"
                     )
+                    // ACP-827: New workout export feature
+                    FeatureRow(
+                        icon: "heart.text.square",
+                        title: "Workout Export",
+                        description: "See your training in Apple Health Activity"
+                    )
                 }
                 .padding(.vertical, 4)
             } header: {
@@ -181,6 +240,26 @@ struct HealthKitSettingsView: View {
                 _ = try? await healthKitService.syncTodayData()
             }
         }
+    }
+}
+
+// MARK: - Data Type Chip
+
+private struct DataTypeChip: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color(.systemGray5))
+        .cornerRadius(8)
     }
 }
 

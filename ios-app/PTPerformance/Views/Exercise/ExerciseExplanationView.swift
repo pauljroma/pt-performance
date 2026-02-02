@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Created by Content & Polish Sprint Agent 6
+//  ACP-816: Enhanced with baseball-specific content
 //  View displaying "Why This Exercise" educational content
 //
 
@@ -10,6 +11,7 @@ import SwiftUI
 
 /// View displaying "Why This Exercise" educational content
 /// Shows program-specific context for why an exercise is included
+/// ACP-816: Now includes baseball-specific benefits and performance connections
 struct ExerciseExplanationView: View {
     let exerciseTemplateId: UUID
     let exerciseName: String
@@ -54,6 +56,7 @@ struct ExerciseExplanationView: View {
                 Image(systemName: "figure.strengthtraining.traditional")
                     .font(.title2)
                     .foregroundColor(.blue)
+                    .accessibilityHidden(true)
 
                 Text(exerciseName)
                     .font(.title2)
@@ -61,6 +64,8 @@ struct ExerciseExplanationView: View {
 
                 Spacer()
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
             Text("Learn why this exercise is part of your program")
                 .font(.subheadline)
@@ -89,6 +94,16 @@ struct ExerciseExplanationView: View {
     @ViewBuilder
     private func explanationContent(_ explanation: ExerciseExplanation) -> some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
+            // ACP-816: Baseball-Specific Content (shown prominently at top)
+            if explanation.hasBaseballContent {
+                baseballContentSection(explanation)
+            }
+
+            // ACP-816: Muscle Groups Section
+            if explanation.hasMuscleInfo {
+                muscleGroupsSection(explanation)
+            }
+
             // Why Included
             if !explanation.whyIncluded.isEmpty {
                 ExplanationSection(
@@ -141,6 +156,217 @@ struct ExerciseExplanationView: View {
 
             // Variations Section
             variationsSection(explanation)
+
+            // ACP-816: Research Note (at the bottom)
+            if let researchNote = explanation.researchNote, !researchNote.isEmpty {
+                researchNoteSection(researchNote)
+            }
+        }
+    }
+
+    // MARK: - Baseball Content Section (ACP-816)
+
+    @ViewBuilder
+    private func baseballContentSection(_ explanation: ExerciseExplanation) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Section header
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "baseball.fill")
+                    .font(.title3)
+                    .foregroundColor(.orange)
+                    .accessibilityHidden(true)
+
+                Text("Baseball Performance")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Baseball Benefit
+                if let baseballBenefit = explanation.baseballBenefit, !baseballBenefit.isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "star.fill")
+                                .font(.caption)
+                                .foregroundColor(.yellow)
+                                .accessibilityHidden(true)
+
+                            Text("Baseball Benefit")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Text(baseballBenefit)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Baseball benefit: \(baseballBenefit)")
+                }
+
+                // Performance Connection
+                if let performanceConnection = explanation.performanceConnection, !performanceConnection.isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack(spacing: Spacing.xxs) {
+                            Image(systemName: "arrow.up.forward.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                                .accessibilityHidden(true)
+
+                            Text("On-Field Connection")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Text(performanceConnection)
+                            .font(.body)
+                            .foregroundColor(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("On-field connection: \(performanceConnection)")
+                }
+
+                // Movement Pattern Badge
+                if let movementPattern = explanation.movementPatternDisplay {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: movementPatternIcon(movementPattern))
+                            .font(.caption)
+                            .foregroundColor(.purple)
+
+                        Text(movementPattern)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.purple)
+                    }
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(CornerRadius.xs)
+                    .accessibilityLabel("Movement pattern: \(movementPattern)")
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.05))
+        .overlay(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+        )
+        .cornerRadius(CornerRadius.md)
+    }
+
+    // MARK: - Muscle Groups Section (ACP-816)
+
+    @ViewBuilder
+    private func muscleGroupsSection(_ explanation: ExerciseExplanation) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "figure.arms.open")
+                    .font(.title3)
+                    .foregroundColor(.blue)
+                    .accessibilityHidden(true)
+
+                Text("Muscles Targeted")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Primary muscles
+                if let primaryMuscles = explanation.primaryMuscles, !primaryMuscles.isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Primary")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+
+                        WrappingHStack(alignment: .leading, spacing: Spacing.xs) {
+                            ForEach(primaryMuscles, id: \.self) { muscle in
+                                MuscleTag(name: muscle, isPrimary: true)
+                            }
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Primary muscles: \(explanation.formattedPrimaryMuscles)")
+                }
+
+                // Secondary muscles
+                if let secondaryMuscles = explanation.secondaryMuscles, !secondaryMuscles.isEmpty {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text("Secondary")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+
+                        WrappingHStack(alignment: .leading, spacing: Spacing.xs) {
+                            ForEach(secondaryMuscles, id: \.self) { muscle in
+                                MuscleTag(name: muscle, isPrimary: false)
+                            }
+                        }
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Secondary muscles: \(explanation.formattedSecondaryMuscles)")
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemBackground))
+        .cornerRadius(CornerRadius.md)
+    }
+
+    // MARK: - Research Note Section (ACP-816)
+
+    private func researchNoteSection(_ note: String) -> some View {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            Image(systemName: "book.fill")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text("Research")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+
+                Text(note)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .italic()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(CornerRadius.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Research note: \(note)")
+    }
+
+    // MARK: - Helper Methods
+
+    private func movementPatternIcon(_ pattern: String) -> String {
+        switch pattern.lowercased() {
+        case "hip hinge": return "arrow.up.and.down"
+        case "rotation": return "arrow.triangle.2.circlepath"
+        case "push": return "arrow.right"
+        case "pull": return "arrow.left"
+        case "squat": return "arrow.down"
+        case "lunge": return "figure.walk"
+        case "carry": return "hand.raised.fill"
+        case "core stability": return "circle.grid.cross"
+        default: return "figure.strengthtraining.traditional"
         }
     }
 
@@ -436,6 +662,34 @@ private struct VariationRow: View {
     }
 }
 
+// MARK: - Wrapping HStack
+
+/// A view that wraps its children horizontally, moving to new lines as needed
+private struct WrappingHStack<Content: View>: View {
+    let alignment: HorizontalAlignment
+    let spacing: CGFloat
+    let content: () -> Content
+
+    init(
+        alignment: HorizontalAlignment = .leading,
+        spacing: CGFloat = 8,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.alignment = alignment
+        self.spacing = spacing
+        self.content = content
+    }
+
+    var body: some View {
+        // Using LazyVGrid as a simple wrapping solution
+        LazyVStack(alignment: alignment, spacing: spacing) {
+            HStack(spacing: spacing) {
+                content()
+            }
+        }
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
@@ -451,9 +705,125 @@ struct ExerciseExplanationView_Previews: PreviewProvider {
         .previewDisplayName("Standard View")
 
         NavigationStack {
-            // Preview with mock loaded state
+            // Preview with mock loaded state including baseball content (ACP-816)
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
+                    // Baseball Performance Section (ACP-816)
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "baseball.fill")
+                                .font(.title3)
+                                .foregroundColor(.orange)
+
+                            Text("Baseball Performance")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                HStack(spacing: Spacing.xxs) {
+                                    Image(systemName: "star.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+
+                                    Text("Baseball Benefit")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Text("Develops posterior chain power for explosive movements")
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                            }
+
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                HStack(spacing: Spacing.xxs) {
+                                    Image(systemName: "arrow.up.forward.circle.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+
+                                    Text("On-Field Connection")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.secondary)
+                                }
+
+                                Text("Strong glutes and hamstrings drive your throwing stride and hitting load")
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                            }
+
+                            HStack(spacing: Spacing.xs) {
+                                Image(systemName: "arrow.up.and.down")
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
+
+                                Text("Hip Hinge")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.purple)
+                            }
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(Color.purple.opacity(0.1))
+                            .cornerRadius(CornerRadius.xs)
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.orange.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                    )
+                    .cornerRadius(CornerRadius.md)
+
+                    // Muscles Section (ACP-816)
+                    VStack(alignment: .leading, spacing: Spacing.md) {
+                        HStack(spacing: Spacing.xs) {
+                            Image(systemName: "figure.arms.open")
+                                .font(.title3)
+                                .foregroundColor(.blue)
+
+                            Text("Muscles Targeted")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                Text("Primary")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+
+                                HStack(spacing: Spacing.xs) {
+                                    MuscleTag(name: "glutes", isPrimary: true)
+                                    MuscleTag(name: "hamstrings", isPrimary: true)
+                                    MuscleTag(name: "lower_back", isPrimary: true)
+                                }
+                            }
+
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                Text("Secondary")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+
+                                HStack(spacing: Spacing.xs) {
+                                    MuscleTag(name: "core", isPrimary: false)
+                                    MuscleTag(name: "traps", isPrimary: false)
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(CornerRadius.md)
+
                     ExplanationSection(
                         title: "Why This Exercise?",
                         icon: "questionmark.circle.fill",
@@ -461,32 +831,39 @@ struct ExerciseExplanationView_Previews: PreviewProvider {
                         content: "The Romanian Deadlift is included in your program to strengthen your posterior chain, improve hip hinge mechanics, and build foundational strength for athletic performance."
                     )
 
-                    ExplanationSection(
-                        title: "What It Targets",
-                        icon: "target",
-                        iconColor: .orange,
-                        content: "Primary: Hamstrings, Glutes, Lower Back. Secondary: Core stability, Grip strength"
-                    )
-
-                    ExplanationSection(
-                        title: "How It Helps You",
-                        icon: "arrow.up.circle.fill",
-                        iconColor: .green,
-                        content: "This exercise improves your ability to maintain spinal position under load, directly transferring to better performance in squats, deadlifts, and athletic movements like jumping and sprinting."
-                    )
-
                     ProgressSignsSection(signs: [
                         "Feeling hamstring stretch at bottom position",
                         "Better control during eccentric (lowering) phase",
-                        "Increased weight while maintaining form",
-                        "Reduced lower back fatigue"
+                        "Increased weight while maintaining form"
                     ])
 
                     WarningSignsSection(warnings: [
                         "Sharp pain in lower back",
-                        "Numbness or tingling in legs",
-                        "Unable to maintain neutral spine"
+                        "Numbness or tingling in legs"
                     ])
+
+                    // Research Note (ACP-816)
+                    HStack(alignment: .top, spacing: Spacing.sm) {
+                        Image(systemName: "book.fill")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        VStack(alignment: .leading, spacing: Spacing.xxs) {
+                            Text("Research")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+
+                            Text("Hip extension strength correlates with throwing velocity (Kageyama et al., 2015)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
             }
@@ -494,7 +871,7 @@ struct ExerciseExplanationView_Previews: PreviewProvider {
             .navigationTitle("About This Exercise")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .previewDisplayName("Loaded State")
+        .previewDisplayName("Baseball Content (ACP-816)")
     }
 }
 #endif

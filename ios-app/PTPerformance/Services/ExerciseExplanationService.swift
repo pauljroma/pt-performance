@@ -206,6 +206,7 @@ class ExerciseExplanationService: ObservableObject {
 // MARK: - Models
 
 /// Exercise explanation content from the exercise_explanations table
+/// ACP-816: Extended with baseball-specific fields
 struct ExerciseExplanation: Codable, Identifiable, Hashable {
     let id: UUID
     let exerciseTemplateId: UUID
@@ -220,6 +221,14 @@ struct ExerciseExplanation: Codable, Identifiable, Hashable {
     let harderVariation: String?
     let equipmentAlternatives: String?
 
+    // ACP-816: Baseball-specific fields
+    let baseballBenefit: String?           // "Improves rotational power for hitting"
+    let performanceConnection: String?     // "Stronger hips = faster bat speed"
+    let primaryMuscles: [String]?          // ['glutes', 'core', 'obliques']
+    let secondaryMuscles: [String]?        // ['hip flexors', 'lower back']
+    let movementPattern: String?           // 'hip_hinge', 'rotation', 'push', 'pull'
+    let researchNote: String?              // Brief research reference
+
     enum CodingKeys: String, CodingKey {
         case id
         case exerciseTemplateId = "exercise_template_id"
@@ -233,6 +242,67 @@ struct ExerciseExplanation: Codable, Identifiable, Hashable {
         case easierVariation = "easier_variation"
         case harderVariation = "harder_variation"
         case equipmentAlternatives = "equipment_alternatives"
+        // ACP-816: Baseball-specific coding keys
+        case baseballBenefit = "baseball_benefit"
+        case performanceConnection = "performance_connection"
+        case primaryMuscles = "primary_muscles"
+        case secondaryMuscles = "secondary_muscles"
+        case movementPattern = "movement_pattern"
+        case researchNote = "research_note"
+    }
+
+    // MARK: - Computed Properties (ACP-816)
+
+    /// Returns formatted primary muscles as a comma-separated string
+    var formattedPrimaryMuscles: String {
+        guard let muscles = primaryMuscles, !muscles.isEmpty else { return "" }
+        return muscles.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }.joined(separator: ", ")
+    }
+
+    /// Returns formatted secondary muscles as a comma-separated string
+    var formattedSecondaryMuscles: String {
+        guard let muscles = secondaryMuscles, !muscles.isEmpty else { return "" }
+        return muscles.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }.joined(separator: ", ")
+    }
+
+    /// Returns all muscles (primary + secondary) formatted
+    var allMusclesFormatted: String {
+        var allMuscles: [String] = []
+        if let primary = primaryMuscles {
+            allMuscles.append(contentsOf: primary)
+        }
+        if let secondary = secondaryMuscles {
+            allMuscles.append(contentsOf: secondary)
+        }
+        return allMuscles.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }.joined(separator: ", ")
+    }
+
+    /// Returns human-readable movement pattern
+    var movementPatternDisplay: String? {
+        guard let pattern = movementPattern else { return nil }
+        switch pattern.lowercased() {
+        case "hip_hinge": return "Hip Hinge"
+        case "rotation": return "Rotation"
+        case "push": return "Push"
+        case "pull": return "Pull"
+        case "squat": return "Squat"
+        case "lunge": return "Lunge"
+        case "carry": return "Carry"
+        case "core": return "Core Stability"
+        case "accessory": return "Accessory"
+        default: return pattern.capitalized
+        }
+    }
+
+    /// Returns true if this explanation has baseball-specific content
+    var hasBaseballContent: Bool {
+        baseballBenefit != nil || performanceConnection != nil
+    }
+
+    /// Returns true if this explanation has muscle targeting info
+    var hasMuscleInfo: Bool {
+        (primaryMuscles != nil && !(primaryMuscles?.isEmpty ?? true)) ||
+        (secondaryMuscles != nil && !(secondaryMuscles?.isEmpty ?? true))
     }
 }
 
@@ -266,6 +336,7 @@ private struct ExerciseTemplateWithEducation: Codable {
 }
 
 /// Combined exercise data with explanation for display
+/// ACP-816: Enhanced with baseball-specific fields
 struct ExerciseWithExplanation: Identifiable, Hashable {
     let id: UUID
     let name: String
@@ -305,6 +376,43 @@ struct ExerciseWithExplanation: Identifiable, Hashable {
         case 4: return "Expert"
         default: return "Level \(level)"
         }
+    }
+
+    // MARK: - Baseball-Specific Accessors (ACP-816)
+
+    /// Returns the baseball benefit from explanation
+    var baseballBenefit: String? {
+        explanation?.baseballBenefit
+    }
+
+    /// Returns the performance connection from explanation
+    var performanceConnection: String? {
+        explanation?.performanceConnection
+    }
+
+    /// Returns primary muscles from explanation or falls back to template muscles
+    var primaryMusclesDisplay: [String] {
+        explanation?.primaryMuscles ?? targetMuscles ?? []
+    }
+
+    /// Returns secondary muscles from explanation or falls back to template muscles
+    var secondaryMusclesDisplay: [String] {
+        explanation?.secondaryMuscles ?? secondaryMuscles ?? []
+    }
+
+    /// Returns the movement pattern
+    var movementPattern: String? {
+        explanation?.movementPatternDisplay
+    }
+
+    /// Returns the research note
+    var researchNote: String? {
+        explanation?.researchNote
+    }
+
+    /// Returns true if baseball-specific content is available
+    var hasBaseballContent: Bool {
+        explanation?.hasBaseballContent ?? false
     }
 }
 

@@ -137,6 +137,11 @@ class HealthKitService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: String?
 
+    // ACP-827: Workout export tracking
+    @Published var lastExportDate: Date?
+    @Published var exportedWorkoutsCount: Int = 0
+    @Published var syncConfig: HealthSyncConfig = HealthSyncConfig.load()
+
     // MARK: - Private Properties
 
     private var healthStore: HKHealthStore?
@@ -193,6 +198,21 @@ class HealthKitService: ObservableObject {
         return types
     }
 
+    /// Types to write to HealthKit (ACP-827: Workout export)
+    private var writeTypes: Set<HKSampleType> {
+        var types = Set<HKSampleType>()
+
+        // Workout type for exporting completed sessions
+        types.insert(HKObjectType.workoutType())
+
+        // Active energy burned (for workout samples)
+        if let activeEnergyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            types.insert(activeEnergyType)
+        }
+
+        return types
+    }
+
     // MARK: - Initialization
 
     /// Private initializer for singleton pattern
@@ -231,8 +251,8 @@ class HealthKitService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Request authorization for read types only (we don't write to HealthKit)
-            try await healthStore.requestAuthorization(toShare: [], read: readTypes)
+            // ACP-827: Request authorization for both read and write types (bidirectional sync)
+            try await healthStore.requestAuthorization(toShare: writeTypes, read: readTypes)
 
             // Check if we can actually read the data
             let authorized = checkAuthorizationStatus()
@@ -760,6 +780,198 @@ class HealthKitService: ObservableObject {
 
         let average = hrvValues.reduce(0, +) / Double(hrvValues.count)
         return average
+    }
+
+    // MARK: - Workout Export (ACP-827)
+
+    /// Export a completed workout session to Apple Health
+    /// - Parameter session: The completed session with timing and metrics
+    /// - Returns: The HKWorkout that was saved to HealthKit
+    /// - Throws: HealthKitError if HealthKit is not available or save fails
+    @discardableResult
+    func exportWorkout(session: Session) async throws -> HKWorkout {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        // Validate session has required timing data
+        guard let startTime = session.started_at,
+              let endTime = session.completed_at else {
+            throw HealthKitError.invalidDate
+        }
+
+        // Calculate estimated calories if not provided
+        let estimatedCalories = calculateEstimatedCalories(
+            durationMinutes: session.duration_minutes ?? Int(endTime.timeIntervalSince(startTime) / 60),
+            totalVolume: session.total_volume
+        )
+
+        // Build metadata for the workout
+        var metadata: [String: Any] = [
+            "PTPerformanceSessionId": session.id.uuidString,
+            HKMetadataKeyIndoorWorkout: true
+        ]
+
+        // Create the workout
+        let workout = HKWorkout(
+            activityType: .traditionalStrengthTraining,
+            start: startTime,
+            end: endTime,
+            workoutEvents: nil,
+            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
+            totalDistance: nil,
+            metadata: metadata
+        )
+
+        do {
+            try await healthStore.save(workout)
+            lastExportDate = Date()
+            exportedWorkoutsCount += 1
+            return workout
+        } catch {
+            throw HealthKitError.saveFailed(error.localizedDescription)
+        }
+    }
+
+    /// Export a completed manual workout session to Apple Health
+    /// - Parameter session: The completed manual session
+    /// - Returns: The HKWorkout that was saved to HealthKit
+    /// - Throws: HealthKitError if HealthKit is not available or save fails
+    @discardableResult
+    func exportManualWorkout(session: ManualSession) async throws -> HKWorkout {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        // Validate session has required timing data
+        guard let startTime = session.startedAt,
+              let endTime = session.completedAt else {
+            throw HealthKitError.invalidDate
+        }
+
+        // Calculate estimated calories
+        let estimatedCalories = calculateEstimatedCalories(
+            durationMinutes: session.durationMinutes ?? Int(endTime.timeIntervalSince(startTime) / 60),
+            totalVolume: session.totalVolume
+        )
+
+        // Build metadata for the workout
+        var metadata: [String: Any] = [
+            "PTPerformanceSessionId": session.id.uuidString,
+            HKMetadataKeyIndoorWorkout: true
+        ]
+
+        if let name = session.name {
+            metadata["WorkoutName"] = name
+        }
+
+        // Create the workout
+        let workout = HKWorkout(
+            activityType: .traditionalStrengthTraining,
+            start: startTime,
+            end: endTime,
+            workoutEvents: nil,
+            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
+            totalDistance: nil,
+            metadata: metadata
+        )
+
+        do {
+            try await healthStore.save(workout)
+            lastExportDate = Date()
+            exportedWorkoutsCount += 1
+            return workout
+        } catch {
+            throw HealthKitError.saveFailed(error.localizedDescription)
+        }
+    }
+
+    /// Estimate calories burned based on workout duration and volume
+    /// Uses a simplified MET-based calculation for strength training
+    /// - Parameters:
+    ///   - durationMinutes: Duration of workout in minutes
+    ///   - totalVolume: Total weight lifted in pounds (optional)
+    /// - Returns: Estimated calories burned
+    private func calculateEstimatedCalories(durationMinutes: Int?, totalVolume: Double?) -> Double {
+        let duration = Double(durationMinutes ?? 30)
+
+        // Base calculation: ~5-6 calories per minute for strength training
+        // This is a conservative estimate (MET ~3.5-4.0 for weight training)
+        var baseCalories = duration * 5.5
+
+        // Add bonus for high volume workouts (indicates more intense training)
+        if let volume = totalVolume, volume > 0 {
+            // Add ~1 calorie per 100 lbs lifted as a rough intensity adjustment
+            let volumeBonus = volume / 100.0
+            baseCalories += volumeBonus
+        }
+
+        return baseCalories
+    }
+
+    /// Check if a workout was already exported to HealthKit
+    /// Prevents duplicate exports by checking metadata
+    /// - Parameter sessionId: The PTPerformance session ID
+    /// - Returns: True if workout with this session ID exists in HealthKit
+    func isWorkoutExported(sessionId: UUID) async throws -> Bool {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        // Query for workouts with matching session ID in metadata
+        let workoutType = HKObjectType.workoutType()
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "PTPerformanceSessionId", allowedValues: [sessionId.uuidString])
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: workoutType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: nil
+            ) { _, samples, error in
+                if let error = error {
+                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+                    return
+                }
+
+                let exists = (samples?.count ?? 0) > 0
+                continuation.resume(returning: exists)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    /// Fetch recent workouts exported from PTPerformance
+    /// - Parameter limit: Maximum number of workouts to fetch
+    /// - Returns: Array of exported workouts with metadata
+    func fetchExportedWorkouts(limit: Int = 10) async throws -> [HKWorkout] {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        let workoutType = HKObjectType.workoutType()
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: "PTPerformanceSessionId")
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: workoutType,
+                predicate: predicate,
+                limit: limit,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, error in
+                if let error = error {
+                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+                    return
+                }
+
+                let workouts = (samples as? [HKWorkout]) ?? []
+                continuation.resume(returning: workouts)
+            }
+
+            healthStore.execute(query)
+        }
     }
 
     // MARK: - Database Sync

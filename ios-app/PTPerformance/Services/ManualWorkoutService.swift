@@ -635,6 +635,23 @@ class ManualWorkoutService: ObservableObject {
             let session = try decoder.decode(ManualSession.self, from: response.data)
 
             logger.log("Workout completed successfully", level: .success)
+
+            // ACP-841: Record workout completion for smart notification pattern learning
+            if let patientIdString = PTSupabaseClient.shared.userId,
+               let patientUUID = UUID(uuidString: patientIdString) {
+                Task {
+                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
+                        for: patientUUID,
+                        completionTime: Date()
+                    )
+                }
+            }
+
+            // ACP-827: Export completed workout to Apple Health
+            Task { @MainActor in
+                await HealthSyncManager.shared.exportCompletedManualSession(session)
+            }
+
             return session
         } catch {
             logger.log("Failed to complete workout: \(error.localizedDescription)", level: .error)
@@ -699,6 +716,17 @@ class ManualWorkoutService: ObservableObject {
                 .execute()
 
             logger.log("Prescribed session completed successfully with all metrics", level: .success)
+
+            // ACP-841: Record workout completion for smart notification pattern learning
+            if let patientIdString = PTSupabaseClient.shared.userId,
+               let patientUUID = UUID(uuidString: patientIdString) {
+                Task {
+                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
+                        for: patientUUID,
+                        completionTime: Date()
+                    )
+                }
+            }
         } catch {
             logger.log("Failed to complete prescribed session: \(error.localizedDescription)", level: .error)
             throw error

@@ -5,6 +5,8 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.ptperformance.timer.background</string>
+		<string>com.ptperformance.health-sync</string>
+		<string>com.ptperformance.health-processing</string>
 	</array>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
@@ -22,9 +24,11 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>379</string>
+	<string>380</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>PTPerformance syncs your workouts to your calendar so you never miss a session and can import game schedules to automatically adjust your training.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>PTPerformance needs camera access to record exercise form check videos that you can share with your physical therapist for technique feedback and guidance.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -35,6 +39,18 @@
 	<string>PTPerformance needs microphone access to record audio with your exercise videos so your therapist can hear your questions and provide better feedback.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>PTPerformance needs photo library access to let you select and share exercise videos and images with your physical therapist.</string>
+	<key>NSSiriUsageDescription</key>
+	<string>PTPerformance uses Siri to let you start workouts, log exercises, and check your readiness score hands-free while training.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>StartWorkoutIntent</string>
+		<string>LogExerciseIntent</string>
+		<string>QuickLogIntent</string>
+		<string>CheckReadinessIntent</string>
+		<string>LogReadinessIntent</string>
+		<string>ViewProgressIntent</string>
+		<string>StartRestTimerIntent</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

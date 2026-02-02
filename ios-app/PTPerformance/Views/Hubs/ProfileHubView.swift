@@ -110,6 +110,24 @@ struct ProfileHubView: View {
 
     private var healthSection: some View {
         Section("Health & Wellness") {
+            // Smart Notifications (ACP-841)
+            NavigationLink {
+                NotificationSettingsView()
+            } label: {
+                HStack {
+                    Image(systemName: "bell.badge.fill")
+                        .foregroundColor(.blue)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Smart Notifications")
+                            .foregroundColor(.primary)
+                        Text("Workout reminders")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
             // Apple Health Sync
             NavigationLink {
                 HealthKitSettingsView()

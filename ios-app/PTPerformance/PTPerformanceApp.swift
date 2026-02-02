@@ -1,12 +1,13 @@
 import SwiftUI
 import WidgetKit
+import AppIntents
 #if canImport(Sentry)
 import Sentry
 #endif
 
 // MARK: - Deep Link Destination
 
-/// Deep link destinations for widget tap navigation
+/// Deep link destinations for widget tap navigation and Siri intents
 enum DeepLinkDestination: Equatable {
     case readiness
     case workout(sessionId: String)
@@ -14,6 +15,11 @@ enum DeepLinkDestination: Equatable {
     case today
     case schedule
     case recovery
+    // ACP-826: Siri Shortcuts deep links
+    case startWorkout
+    case logExercise
+    case restTimer(seconds: Int)
+    case progress
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
@@ -21,6 +27,7 @@ enum DeepLinkDestination: Equatable {
 
         let host = url.host ?? ""
         let pathComponents = url.pathComponents.filter { $0 != "/" }
+        let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems
 
         switch host {
         case "readiness":
@@ -39,6 +46,19 @@ enum DeepLinkDestination: Equatable {
             return .schedule
         case "recovery":
             return .recovery
+        // ACP-826: Siri Shortcuts deep links
+        case "start-workout":
+            return .startWorkout
+        case "log-exercise":
+            return .logExercise
+        case "rest-timer":
+            if let secondsString = queryItems?.first(where: { $0.name == "seconds" })?.value,
+               let seconds = Int(secondsString) {
+                return .restTimer(seconds: seconds)
+            }
+            return .restTimer(seconds: 90) // Default 90 seconds
+        case "progress":
+            return .progress
         default:
             return nil
         }
@@ -57,6 +77,14 @@ struct PTPerformanceApp: App {
 
         // Track app launch performance
         PerformanceMonitor.shared.trackAppLaunch()
+
+        // ACP-826: Register App Shortcuts for Siri integration
+        if #available(iOS 16.0, *) {
+            PTPerformanceShortcuts.updateAppShortcutParameters()
+        }
+
+        // ACP-827: Register background tasks for Apple Health sync
+        HealthSyncManager.shared.registerBackgroundTasks()
 
         // Log app startup
         ErrorLogger.shared.logUserAction(
@@ -84,6 +112,9 @@ struct PTPerformanceApp: App {
 
                     // Sync any pending offline exercise logs on app launch
                     await OfflineQueueManager.shared.syncPendingLogs()
+
+                    // ACP-827: Sync Apple Health data on launch if enabled
+                    await HealthSyncManager.shared.syncOnLaunchIfEnabled()
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)
@@ -93,6 +124,15 @@ struct PTPerformanceApp: App {
                         // Refresh widget data when app becomes active
                         Task {
                             await refreshWidgetData()
+                        }
+                        // ACP-826: Check for pending Siri intents
+                        Task { @MainActor in
+                            SiriIntentService.shared.checkForPendingIntents()
+                        }
+                    } else if newPhase == .background {
+                        // ACP-827: Schedule background health sync when entering background
+                        Task { @MainActor in
+                            HealthSyncManager.shared.scheduleBackgroundSync()
                         }
                     }
                 }

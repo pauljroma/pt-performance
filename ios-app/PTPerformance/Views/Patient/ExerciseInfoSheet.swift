@@ -1,14 +1,20 @@
 import SwiftUI
 
 // MARK: - BUILD 296: Exercise Info Sheet (ACP-587)
+// MARK: - ACP-813: Updated with HD Video Exercise Demos support
 
 /// Generic exercise info modal — shows video, technique cues, safety notes
 /// Unlike ExerciseDetailSheet (substitution-only), this works from any exercise context
+/// ACP-813: Now supports multi-angle HD video demos with offline caching
 struct ExerciseTemplateInfoSheet: View {
     let exerciseName: String
     let exerciseTemplateId: String?
+    var patientId: UUID? = nil
 
     @StateObject private var viewModel = ExerciseInfoViewModel()
+    @State private var hdVideos: [ExerciseVideo] = []
+    @State private var isLoadingVideos = false
+    @State private var showFullScreenPlayer = false
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -36,11 +42,45 @@ struct ExerciseTemplateInfoSheet: View {
             // BUILD 354: Support lookup by ID or by name
             if let id = exerciseTemplateId, !id.isEmpty {
                 await viewModel.fetchTemplate(id: id)
+                // ACP-813: Load HD videos
+                await loadHDVideos(exerciseId: id)
             } else if !exerciseName.isEmpty {
                 // Fallback: lookup by name when ID not available (e.g., from workout templates)
                 await viewModel.fetchTemplateByName(exerciseName)
+                // Load HD videos by template ID if found
+                if let templateId = viewModel.template?.id {
+                    await loadHDVideos(exerciseId: templateId.uuidString)
+                }
             }
         }
+        .fullScreenCover(isPresented: $showFullScreenPlayer) {
+            if !hdVideos.isEmpty {
+                ExerciseVideoPlayerView(
+                    videos: hdVideos,
+                    exerciseName: exerciseName,
+                    patientId: patientId,
+                    onDismiss: {
+                        showFullScreenPlayer = false
+                    }
+                )
+            }
+        }
+    }
+
+    // ACP-813: Load HD videos for this exercise
+    private func loadHDVideos(exerciseId: String) async {
+        guard let uuid = UUID(uuidString: exerciseId) else { return }
+        isLoadingVideos = true
+        do {
+            hdVideos = try await ExerciseVideoService.shared.fetchVideos(exerciseId: uuid)
+        } catch {
+            // Non-fatal - fall back to legacy video
+            DebugLogger.shared.log(
+                "Failed to load HD videos: \(error.localizedDescription)",
+                level: .warning
+            )
+        }
+        isLoadingVideos = false
     }
 
     // MARK: - Main Content
@@ -79,10 +119,27 @@ struct ExerciseTemplateInfoSheet: View {
     }
 
     // MARK: - Video Section
+    // ACP-813: Updated to support HD multi-angle videos
 
     @ViewBuilder
     private func videoSection(_ template: ExerciseTemplateDetail) -> some View {
-        if let videoUrl = template.videoUrl {
+        // ACP-813: Prefer HD videos if available
+        if !hdVideos.isEmpty {
+            hdVideoSection
+        } else if isLoadingVideos {
+            // Loading HD videos
+            VStack(spacing: 16) {
+                ProgressView()
+                Text("Loading HD videos...")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .frame(height: 200)
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+        } else if let videoUrl = template.videoUrl {
+            // Legacy single video fallback
             VideoPlayerView(videoUrl: videoUrl)
                 .frame(height: 250)
                 .cornerRadius(12)
@@ -101,6 +158,73 @@ struct ExerciseTemplateInfoSheet: View {
                     Text("Video Coming Soon")
                         .font(.subheadline)
                         .foregroundColor(.gray)
+                }
+            }
+        }
+    }
+
+    // ACP-813: HD Video Section with multi-angle support
+    @ViewBuilder
+    private var hdVideoSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Primary video card
+            if let primaryVideo = hdVideos.first(where: { $0.isPrimary }) ?? hdVideos.first {
+                PrimaryVideoCardView(
+                    video: primaryVideo,
+                    exerciseName: exerciseName
+                ) {
+                    showFullScreenPlayer = true
+                }
+            }
+
+            // Show available angles if multiple
+            if hdVideos.count > 1 {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "camera.viewfinder")
+                            .foregroundColor(.blue)
+                        Text("\(hdVideos.count) angles available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(hdVideos, id: \.id) { video in
+                                Button {
+                                    showFullScreenPlayer = true
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: video.angle.iconName)
+                                            .font(.title3)
+                                        Text(video.angle.displayName)
+                                            .font(.caption2)
+                                    }
+                                    .foregroundColor(.primary)
+                                    .frame(width: 70, height: 50)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        Group {
+                                            if ExerciseVideoService.shared.isVideoCached(video) {
+                                                VStack {
+                                                    HStack {
+                                                        Spacer()
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.caption2)
+                                                            .foregroundColor(.green)
+                                                    }
+                                                    Spacer()
+                                                }
+                                                .padding(4)
+                                            }
+                                        }
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
                 }
             }
         }

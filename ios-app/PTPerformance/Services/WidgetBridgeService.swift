@@ -352,9 +352,16 @@ final class WidgetBridgeService {
     }
 
     /// Fetch and convert streak data to widget model.
+    /// ACP-836: Uses StreakTrackingService for accurate streak data from database
     private func fetchStreakData(for patientId: UUID) async -> WidgetStreak? {
         do {
-            // Fetch recent completed sessions to calculate streak
+            // Use StreakTrackingService for accurate streak data
+            let streakService = StreakTrackingService.shared
+            if let combinedStreak = try await streakService.getCombinedStreak(for: patientId) {
+                return streakService.createWidgetStreak(from: combinedStreak)
+            }
+
+            // Fallback to calculated streak from sessions if no streak record exists
             let allSessions = try await schedulingService.fetchScheduledSessions(for: patientId)
             let completedSessions = allSessions
                 .filter { $0.status == .completed }

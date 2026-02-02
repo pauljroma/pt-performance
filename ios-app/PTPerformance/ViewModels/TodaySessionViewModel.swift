@@ -730,6 +730,21 @@ class TodaySessionViewModel: ObservableObject {
             // Also update viewModel.session for UI refresh
             self.session = updatedSession
 
+            // ACP-841: Record workout completion for smart notification pattern learning
+            if let patientUUID = UUID(uuidString: patientId) {
+                Task {
+                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
+                        for: patientUUID,
+                        completionTime: now
+                    )
+                }
+            }
+
+            // ACP-827: Export completed workout to Apple Health
+            Task { @MainActor in
+                await HealthSyncManager.shared.exportCompletedSession(updatedSession)
+            }
+
             return .success(updatedSession)
 
         } catch {
