@@ -164,8 +164,8 @@ extension View {
     /// Add undo toast overlay to the view
     /// - Parameter undoManager: The undo manager to observe (defaults to shared instance)
     @MainActor
-    func withUndoToasts(undoManager: PTUndoManager = .shared) -> some View {
-        modifier(UndoToastModifier(undoManager: undoManager))
+    func withUndoToasts(undoManager: PTUndoManager? = nil) -> some View {
+        modifier(UndoToastModifier(undoManager: undoManager ?? PTUndoManager.shared))
     }
 }
 

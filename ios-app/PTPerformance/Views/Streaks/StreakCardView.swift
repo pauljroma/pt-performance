@@ -155,9 +155,9 @@ class StreakCardViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(patientId: UUID, service: StreakTrackingService = .shared) {
+    init(patientId: UUID, service: StreakTrackingService? = nil) {
         self.patientId = patientId
-        self.service = service
+        self.service = service ?? StreakTrackingService.shared
     }
 
     // MARK: - Computed Properties

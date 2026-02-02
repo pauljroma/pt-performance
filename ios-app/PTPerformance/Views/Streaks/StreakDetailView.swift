@@ -408,10 +408,10 @@ class StreakDetailViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    init(patientId: UUID, streakType: StreakType, service: StreakTrackingService = .shared) {
+    init(patientId: UUID, streakType: StreakType, service: StreakTrackingService? = nil) {
         self.patientId = patientId
         self.streakType = streakType
-        self.service = service
+        self.service = service ?? StreakTrackingService.shared
     }
 
     // MARK: - Computed Properties

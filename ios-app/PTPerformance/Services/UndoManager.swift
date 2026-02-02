@@ -492,11 +492,10 @@ final class PTUndoManager: ObservableObject {
 // MARK: - Environment Key
 
 private struct UndoManagerKey: EnvironmentKey {
-    // Use nonisolated(unsafe) to allow EnvironmentKey conformance without actor isolation issues
-    nonisolated(unsafe) static var defaultValue: PTUndoManager = {
-        // This will be called on MainActor when first accessed in SwiftUI context
+    // MainActor computed property to safely access shared instance
+    @MainActor static var defaultValue: PTUndoManager {
         PTUndoManager.shared
-    }()
+    }
 }
 
 extension EnvironmentValues {

@@ -262,7 +262,9 @@ class WeeklySummaryNotificationHandler: NSObject, UNUserNotificationCenterDelega
 // MARK: - Environment Key
 
 private struct WeeklySummaryViewModelKey: EnvironmentKey {
-    static let defaultValue: WeeklySummarySharedViewModel = .shared
+    @MainActor static var defaultValue: WeeklySummarySharedViewModel {
+        .shared
+    }
 }
 
 extension EnvironmentValues {
