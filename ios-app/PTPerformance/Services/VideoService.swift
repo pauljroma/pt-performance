@@ -175,14 +175,23 @@ class VideoService {
     ) async throws {
         let supabase = PTSupabaseClient.shared.client
 
+        struct LogVideoViewParams: Encodable {
+            let p_patient_id: String
+            let p_exercise_id: String
+            let p_watch_duration: Int?
+            let p_completed: Bool
+        }
+
+        let params = LogVideoViewParams(
+            p_patient_id: patientId,
+            p_exercise_id: exerciseId,
+            p_watch_duration: watchDuration,
+            p_completed: completed
+        )
+
         do {
             _ = try await supabase
-                .rpc("log_video_view", params: [
-                    "p_patient_id": patientId,
-                    "p_exercise_id": exerciseId,
-                    "p_watch_duration": watchDuration as Any,
-                    "p_completed": completed
-                ])
+                .rpc("log_video_view", params: params)
                 .execute()
         } catch {
             errorLogger.logError(

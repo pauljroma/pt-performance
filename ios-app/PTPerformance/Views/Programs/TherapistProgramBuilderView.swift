@@ -15,8 +15,7 @@ struct TherapistProgramBuilderView: View {
     @State private var showPhaseEditor = false
     @State private var editingPhaseIndex: Int?
     @State private var showPublishConfirmation = false
-    @State private var showDeletePhaseAlert = false
-    @State private var phaseToDelete: Int?
+    // ACP-515: Removed showDeletePhaseAlert - using undo pattern instead
 
     var body: some View {
         NavigationStack {
@@ -76,19 +75,29 @@ struct TherapistProgramBuilderView: View {
             } message: {
                 Text("This will make the program available for patients to browse and enroll. You can edit or unpublish it later.")
             }
-            .alert("Delete Phase?", isPresented: $showDeletePhaseAlert) {
-                Button("Cancel", role: .cancel) {
-                    phaseToDelete = nil
-                }
-                Button("Delete", role: .destructive) {
-                    if let index = phaseToDelete {
-                        viewModel.deletePhase(at: index)
-                        phaseToDelete = nil
-                    }
-                }
-            } message: {
-                Text("This will permanently delete this phase and all its workout assignments.")
-            }
+            // ACP-515: Removed delete phase confirmation dialog - using undo pattern instead
+            .withUndoToasts()
+        }
+    }
+
+    // ACP-515: Delete phase with undo support
+    private func deletePhaseWithUndo(at index: Int) {
+        guard index >= 0 && index < viewModel.phases.count else { return }
+
+        // Store phase for potential undo
+        let deletedPhase = viewModel.phases[index]
+        let phaseName = deletedPhase.name ?? "Phase \(index + 1)"
+
+        // Delete immediately
+        viewModel.deletePhase(at: index)
+
+        // Register undo action
+        PTUndoManager.shared.registerDeletePhase(
+            phaseIndex: index,
+            phaseName: phaseName
+        ) { [weak viewModel] in
+            // Restore the phase at the original position
+            viewModel?.phases.insert(deletedPhase, at: min(index, viewModel?.phases.count ?? 0))
         }
     }
 
@@ -194,8 +203,8 @@ struct TherapistProgramBuilderView: View {
                             showPhaseEditor = true
                         },
                         onDelete: {
-                            phaseToDelete = index
-                            showDeletePhaseAlert = true
+                            // ACP-515: Delete immediately with undo support
+                            deletePhaseWithUndo(at: index)
                         }
                     )
                 }

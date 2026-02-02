@@ -15,6 +15,10 @@ struct TodaySessionView: View {
     @State private var showReadinessDashboard = false
     @State private var todayReadiness: DailyReadiness?
     @State private var isLoadingReadiness = false
+    // ACP-522: Arm Care Assessment state
+    @State private var showArmCareAssessment = false
+    @State private var todayArmCare: ArmCareAssessment?
+    @State private var isLoadingArmCare = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
@@ -78,6 +82,16 @@ struct TodaySessionView: View {
                 NavigationStack {
                     ReadinessDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
                 }
+            }
+        }
+        // ACP-522: Arm Care Assessment sheet
+        .sheet(isPresented: $showArmCareAssessment, onDismiss: {
+            Task {
+                await loadTodayArmCare()
+            }
+        }) {
+            if let patientId = appState.userId {
+                ArmCareAssessmentView(patientId: UUID(uuidString: patientId) ?? UUID())
             }
         }
         // Manual Workout Sheets
@@ -167,6 +181,7 @@ struct TodaySessionView: View {
                 await viewModel.fetchTodaySession()
             }
             await loadTodayReadiness()
+            await loadTodayArmCare()  // ACP-522: Load arm care assessment
             // Load enrolled programs for the My Programs section
             await enrolledProgramsViewModel.loadEnrolledPrograms()
         }
@@ -298,6 +313,9 @@ struct TodaySessionView: View {
 
                 // Readiness Section
                 readinessSection
+
+                // ACP-522: Arm Care Section (for baseball/throwing athletes)
+                armCareSection
 
                 // Session Card with Start Workout
                 if let session = viewModel.session {
@@ -732,6 +750,134 @@ struct TodaySessionView: View {
         }
     }
 
+    // MARK: - ACP-522: Arm Care Section
+
+    @ViewBuilder
+    private var armCareSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section title
+            Text("Arm Care Status")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            if isLoadingArmCare {
+                // Loading state
+                ProgressView("Checking arm status...")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if let armCare = todayArmCare {
+                // Checked in today - show traffic light card
+                armCareStatusCard(assessment: armCare)
+            } else {
+                // Not checked in - show prompt
+                armCareCheckInPrompt
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator), lineWidth: 1)
+        )
+        .adaptiveShadow(Shadow.subtle)
+    }
+
+    @ViewBuilder
+    private func armCareStatusCard(assessment: ArmCareAssessment) -> some View {
+        Button(action: {
+            showArmCareAssessment = true
+        }) {
+            HStack(spacing: 16) {
+                // Traffic light indicator
+                ZStack {
+                    Circle()
+                        .fill(assessment.trafficLight.color.opacity(0.2))
+                        .frame(width: 64, height: 64)
+
+                    Image(systemName: assessment.trafficLight.iconName)
+                        .font(.title)
+                        .foregroundColor(assessment.trafficLight.color)
+                }
+
+                // Status and recommendation
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(assessment.trafficLight.displayName)
+                        .font(.headline)
+                        .foregroundColor(assessment.trafficLight.color)
+
+                    Text(armCareRecommendation(for: assessment.trafficLight))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
+                    .accessibilityHidden(true)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Arm care status: \(assessment.trafficLight.displayName)")
+        .accessibilityHint("Opens arm care assessment details")
+    }
+
+    private func armCareRecommendation(for trafficLight: ArmCareTrafficLight) -> String {
+        switch trafficLight {
+        case .green:
+            return "Full throwing program OK"
+        case .yellow:
+            return "Reduce throwing 50%, add arm care"
+        case .red:
+            return "No throwing - recovery only"
+        }
+    }
+
+    @ViewBuilder
+    private var armCareCheckInPrompt: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "figure.baseball")
+                    .font(.title2)
+                    .foregroundColor(.orange)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("How's your arm today?")
+                        .font(.headline)
+
+                    Text("30-second shoulder/elbow check")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            Button(action: {
+                HapticFeedback.light()
+                showArmCareAssessment = true
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Quick Arm Check")
+                }
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+            .accessibilityLabel("Quick Arm Check")
+            .accessibilityHint("Opens 30-second arm care assessment")
+        }
+    }
+
     // MARK: - BUILD 124: Start Workout Section with Running Clock
 
     @ViewBuilder
@@ -1080,6 +1226,28 @@ struct TodaySessionView: View {
             // Silently fail - just means no check-in today
             DebugLogger.shared.log("ℹ️ No readiness check-in for today: \(error.localizedDescription)")
             todayReadiness = nil
+        }
+    }
+
+    // MARK: - ACP-522: Arm Care Data Loading
+
+    private func loadTodayArmCare() async {
+        guard let userId = appState.userId,
+              let patientId = UUID(uuidString: userId) else {
+            return
+        }
+
+        isLoadingArmCare = true
+        defer { isLoadingArmCare = false }
+
+        do {
+            let armCareService = ArmCareAssessmentService()
+            todayArmCare = try await armCareService.getTodayAssessment(for: patientId)
+            DebugLogger.shared.log("Loaded today's arm care: \(todayArmCare != nil ? "YES" : "NO")")
+        } catch {
+            // Silently fail - just means no assessment today
+            DebugLogger.shared.log("No arm care assessment for today: \(error.localizedDescription)")
+            todayArmCare = nil
         }
     }
 

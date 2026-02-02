@@ -137,7 +137,7 @@ struct StandaloneTimerView: View {
                 }
             }
             .sheet(isPresented: $showCustomBuilder) {
-                CustomTimerBuilderView { template in
+                StandaloneCustomTimerBuilder { template in
                     customTemplate = template
                     selectedTemplate = template
                     showCustomBuilder = false
@@ -223,8 +223,8 @@ struct StandaloneIntervalTimerWrapper: View {
     }
 }
 
-/// Custom timer builder view
-struct CustomTimerBuilderView: View {
+/// Standalone custom timer builder (for quick timer creation)
+struct StandaloneCustomTimerBuilder: View {
     let onComplete: (IntervalTimerTemplate) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -420,23 +420,13 @@ enum IntervalTimerTemplate {
     /// Convert to SessionIntervalBlock for use with IntervalTimerView
     func toSessionBlock() -> SessionIntervalBlock {
         SessionIntervalBlock(
-            id: UUID().uuidString,
-            sessionId: "standalone",
-            templateId: nil,
             name: name,
-            description: description,
             blockType: "standalone",
-            sortOrder: 0,
+            description: description,
             workDuration: workDuration,
             restDuration: restDuration,
             rounds: rounds,
-            exercises: [],  // No specific exercises for standalone timers
-            completed: false,
-            completedAt: nil,
-            sessionRpe: nil,
-            totalDuration: nil,
-            createdAt: Date(),
-            updatedAt: Date()
+            exercises: []  // No specific exercises for standalone timers
         )
     }
 }

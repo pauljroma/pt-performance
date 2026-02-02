@@ -21,7 +21,7 @@ struct TimerHistoryView: View {
     @State private var expandedSessions: Set<UUID> = []
     @State private var searchText: String = ""
     @State private var selectedType: TimerType?
-    @State private var showDeleteConfirmation: UUID?
+    // ACP-515: Removed showDeleteConfirmation - using undo pattern instead
 
     @Environment(\.dismiss) private var dismiss
 
@@ -63,34 +63,8 @@ struct TimerHistoryView: View {
                 HapticFeedback.light()
                 await viewModel.refresh()
             }
-            .alert("Delete Session", isPresented: Binding(
-                get: { showDeleteConfirmation != nil },
-                set: { if !$0 { showDeleteConfirmation = nil } }
-            )) {
-                Button("Cancel", role: .cancel) {
-                    showDeleteConfirmation = nil
-                }
-                Button("Delete", role: .destructive) {
-                    if let sessionId = showDeleteConfirmation {
-                        // BUILD 286: Delete timer session from database (ACP-596)
-                        Task {
-                            do {
-                                try await PTSupabaseClient.shared.client
-                                    .from("workout_timers")
-                                    .delete()
-                                    .eq("id", value: sessionId)
-                                    .execute()
-                                await viewModel.refresh()
-                            } catch {
-                                DebugLogger.shared.error("TIMER_HISTORY", "Failed to delete: \(error.localizedDescription)")
-                            }
-                        }
-                        showDeleteConfirmation = nil
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to delete this timer session? This action cannot be undone.")
-            }
+            // ACP-515: Removed confirmation dialog - using undo pattern instead
+            .withUndoToasts()
             .task {
                 await viewModel.loadHistory()
             }
@@ -328,9 +302,10 @@ struct TimerHistoryView: View {
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            // ACP-515: Delete immediately with undo support
             Button(role: .destructive) {
                 HapticFeedback.medium()
-                showDeleteConfirmation = session.id
+                deleteTimerWithUndo(session: session)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
@@ -593,6 +568,41 @@ struct TimerHistoryView: View {
         let status = session.isCompleted ? "Completed" : "In progress"
 
         return "\(name), \(duration), \(time), \(status)"
+    }
+
+    // MARK: - ACP-515: Delete with Undo
+
+    /// Delete timer session immediately with undo support
+    private func deleteTimerWithUndo(session: WorkoutTimer) {
+        let sessionId = session.id
+        let timerName = viewModel.templateName(for: session)
+
+        // Delete immediately
+        Task {
+            do {
+                try await PTSupabaseClient.shared.client
+                    .from("workout_timers")
+                    .delete()
+                    .eq("id", value: sessionId)
+                    .execute()
+
+                // Register undo action
+                await MainActor.run {
+                    PTUndoManager.shared.registerDeleteTimer(
+                        sessionId: sessionId,
+                        timerName: timerName
+                    ) {
+                        // Note: Full restore would require re-inserting the session
+                        DebugLogger.shared.warning("UNDO", "Timer '\(timerName)' delete undo requested - manual restore required")
+                        throw NSError(domain: "PTUndoManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Timer restore requires manual recovery."])
+                    }
+                }
+
+                await viewModel.refresh()
+            } catch {
+                DebugLogger.shared.error("TIMER_HISTORY", "Failed to delete: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

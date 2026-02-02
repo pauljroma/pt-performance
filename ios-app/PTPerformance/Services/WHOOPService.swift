@@ -289,20 +289,31 @@ enum WHOOPError: Error {
 /// Extension to integrate WHOOP data with ReadinessService
 /// NOTE: This extension will work once ReadinessService is implemented in Build 39
 extension WHOOPService {
-    /// Convert WHOOP data to ReadinessInput for use with ReadinessService
+    /// Convert WHOOP data to WHOOPReadinessInput for use with ReadinessService
     /// - Parameters:
     ///   - accessToken: Valid WHOOP access token
     ///   - recovery: WHOOP recovery data (optional, will fetch if nil)
     ///   - sleep: WHOOP sleep data (optional, will fetch if nil)
-    /// - Returns: ReadinessInput with WHOOP data mapped to readiness metrics
-    func toReadinessInput(
+    /// - Returns: WHOOPReadinessInput with WHOOP data mapped to readiness metrics
+    func toWHOOPReadinessInput(
         accessToken: String,
         recovery: WHOOPRecovery? = nil,
         sleep: WHOOPSleep? = nil
-    ) async throws -> ReadinessInput {
+    ) async throws -> WHOOPReadinessInput {
         // Fetch data if not provided
-        let recoveryData = try recovery ?? await fetchTodayRecovery(accessToken: accessToken)
-        let sleepData = try sleep ?? await fetchTodaySleep(accessToken: accessToken)
+        let recoveryData: WHOOPRecovery
+        if let r = recovery {
+            recoveryData = r
+        } else {
+            recoveryData = try await fetchTodayRecovery(accessToken: accessToken)
+        }
+
+        let sleepData: WHOOPSleep
+        if let s = sleep {
+            sleepData = s
+        } else {
+            sleepData = try await fetchTodaySleep(accessToken: accessToken)
+        }
 
         // Convert WHOOP recovery % to readiness input
         let whoopRecoveryPct = recoveryData.score.recoveryScore
@@ -316,7 +327,7 @@ extension WHOOPService {
         // Calculate sleep hours from quality duration
         let sleepHours = Double(sleepData.score.qualityDuration) / (1000 * 60 * 60)
 
-        return ReadinessInput(
+        return WHOOPReadinessInput(
             sleepHours: sleepHours,
             sleepQuality: sleepQuality,
             hrvValue: hrvValue,
@@ -343,11 +354,11 @@ extension WHOOPService {
     }
 }
 
-// MARK: - ReadinessInput Model (Placeholder)
+// MARK: - WHOOPReadinessInput Model
 
-/// Readiness input model
-/// NOTE: This is a placeholder. The actual model will be defined in ReadinessService (Build 39)
-struct ReadinessInput: Codable {
+/// WHOOP-specific readiness input model
+/// Contains fields specific to WHOOP data integration
+struct WHOOPReadinessInput: Codable {
     var sleepHours: Double?
     var sleepQuality: Int?
     var hrvValue: Double?
@@ -359,16 +370,4 @@ struct ReadinessInput: Codable {
     var jointPainNotes: String?
 }
 
-/// Joint pain location enum
-/// NOTE: This is a placeholder. The actual enum will be defined in ReadinessService (Build 39)
-enum JointPainLocation: String, Codable, CaseIterable {
-    case shoulder
-    case elbow
-    case hip
-    case knee
-    case back
-
-    var displayName: String {
-        rawValue.capitalized
-    }
-}
+// Note: JointPainLocation is defined in Models/DailyReadiness.swift

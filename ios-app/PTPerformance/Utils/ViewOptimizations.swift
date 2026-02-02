@@ -9,27 +9,8 @@
 import SwiftUI
 
 // MARK: - Equatable Conformance for Models
-
-/// Extension to make Patient equatable for view diffing
-extension Patient: Equatable {
-    static func == (lhs: Patient, rhs: Patient) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.first_name == rhs.first_name &&
-        lhs.last_name == rhs.last_name &&
-        lhs.adherence_percentage == rhs.adherence_percentage &&
-        lhs.last_session_date == rhs.last_session_date &&
-        lhs.has_high_severity_flags == rhs.has_high_severity_flags
-    }
-}
-
-/// Extension to make Session equatable for view diffing
-extension Session: Equatable {
-    static func == (lhs: Session, rhs: Session) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.name == rhs.name &&
-        lhs.completed == rhs.completed
-    }
-}
+// Note: Patient Equatable conformance is defined in Patient.swift
+// Note: Session Equatable conformance is defined in Exercise.swift (via Hashable)
 
 /// Extension to make Exercise equatable for view diffing
 extension Exercise: Equatable {
@@ -216,20 +197,8 @@ struct OptimizedListRow<Content: View>: View {
     }
 }
 
-/// Extension to optimize ForEach loops
-extension ForEach where Data.Element: Identifiable, Content: View {
-    /// Create an optimized ForEach that minimizes re-renders
-    static func optimized(
-        _ data: Data,
-        @ViewBuilder content: @escaping (Data.Element) -> Content
-    ) -> some View where ID == Data.Element.ID {
-        ForEach(data, id: \.id) { item in
-            OptimizedListRow(id: item.id as! String) {
-                content(item)
-            }
-        }
-    }
-}
+// Note: ForEach optimization extension removed due to type compatibility issues
+// Use standard ForEach with .id() modifier for similar behavior
 
 // MARK: - Conditional View Updates
 

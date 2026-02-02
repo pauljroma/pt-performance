@@ -84,14 +84,31 @@ struct TemplateDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Category and difficulty
             HStack(spacing: 8) {
-                CategoryBadge(category: template.category)
+                TemplateCategoryBadge(category: template.category.rawValue)
 
                 if let difficulty = template.difficultyLevel {
-                    DifficultyBadge(difficulty: difficulty)
+                    Text(difficulty.displayName)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.15))
+                        .cornerRadius(4)
                 }
 
                 if template.isPopular {
-                    PopularBadge()
+                    HStack(spacing: 2) {
+                        Image(systemName: "star.fill")
+                            .font(.caption2)
+                        Text("Popular")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.yellow)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.yellow.opacity(0.15))
+                    .cornerRadius(4)
                 }
 
                 Spacer()

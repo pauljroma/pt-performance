@@ -20,6 +20,8 @@ enum DeepLinkDestination: Equatable {
     case logExercise
     case restTimer(seconds: Int)
     case progress
+    // ACP-544: UCL Health Assessment
+    case uclHealth
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
@@ -59,6 +61,9 @@ enum DeepLinkDestination: Equatable {
             return .restTimer(seconds: 90) // Default 90 seconds
         case "progress":
             return .progress
+        // ACP-544: UCL Health Assessment
+        case "ucl-health":
+            return .uclHealth
         default:
             return nil
         }
@@ -115,6 +120,9 @@ struct PTPerformanceApp: App {
 
                     // ACP-827: Sync Apple Health data on launch if enabled
                     await HealthSyncManager.shared.syncOnLaunchIfEnabled()
+
+                    // ACP-502: Pre-load today's workout for instant access
+                    await WorkoutPreloadService.shared.preloadOnLaunch()
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)
@@ -128,6 +136,10 @@ struct PTPerformanceApp: App {
                         // ACP-826: Check for pending Siri intents
                         Task { @MainActor in
                             SiriIntentService.shared.checkForPendingIntents()
+                        }
+                        // ACP-502: Refresh workout cache if needed when returning to app
+                        Task { @MainActor in
+                            await WorkoutPreloadService.shared.preloadIfNeeded()
                         }
                     } else if newPhase == .background {
                         // ACP-827: Schedule background health sync when entering background

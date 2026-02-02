@@ -1181,7 +1181,7 @@ struct ManualWorkoutExecutionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 261: For exercise picker sheet
-    @State private var showEndEarlyConfirmation = false
+    // ACP-515: Removed showEndEarlyConfirmation - using undo pattern instead
     @State private var expandedExercises: Set<UUID> = []  // BUILD 216: Track expanded exercises
     let onComplete: (() -> Void)?
 
@@ -1265,9 +1265,33 @@ struct ManualWorkoutExecutionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
+                    // ACP-515: End immediately without confirmation, provide undo
                     Button("End") {
                         if viewModel.completedCount > 0 {
-                            showEndEarlyConfirmation = true
+                            // End workout immediately - trust the user
+                            let completedCount = viewModel.completedCount
+                            let totalCount = viewModel.totalExercises
+                            let workoutName = viewModel.workoutName
+
+                            // Store state snapshot for potential undo
+                            let skippedSnapshot = viewModel.skippedExerciseIds
+                            let completedSnapshot = viewModel.completedExerciseIds
+
+                            Task {
+                                await viewModel.completeWorkout()
+
+                                // Register undo action
+                                PTUndoManager.shared.registerEndWorkout(
+                                    workoutName: workoutName,
+                                    completedExercises: completedCount,
+                                    totalExercises: totalCount
+                                ) { [weak viewModel] in
+                                    // Restore workout state
+                                    viewModel?.skippedExerciseIds = skippedSnapshot
+                                    viewModel?.completedExerciseIds = completedSnapshot
+                                    viewModel?.isWorkoutCompleted = false
+                                }
+                            }
                         } else {
                             onComplete?()
                             dismiss()
@@ -1301,16 +1325,8 @@ struct ManualWorkoutExecutionView: View {
                     }
                 }
             }
-            .alert("End Workout Early?", isPresented: $showEndEarlyConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("End Workout", role: .destructive) {
-                    Task {
-                        await viewModel.completeWorkout()
-                    }
-                }
-            } message: {
-                Text("You've completed \(viewModel.completedCount) of \(viewModel.totalExercises) exercises. End workout now?")
-            }
+            // ACP-515: Removed confirmation dialog - using undo pattern instead
+            // Undo toasts are shown at the bottom of the screen
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK", role: .cancel) { }
             } message: {
@@ -1369,6 +1385,8 @@ struct ManualWorkoutExecutionView: View {
                 restTimer?.invalidate()
                 restTimer = nil
             }
+            // ACP-515: Add undo toast overlay for immediate actions
+            .withUndoToasts()
         }
     }
 
@@ -1694,7 +1712,16 @@ struct ManualWorkoutExecutionView: View {
                 }
             },
             onSkip: {
+                // ACP-515: Skip immediately with undo support
                 viewModel.skipExercise(exercise)
+
+                // Register undo action
+                PTUndoManager.shared.registerSkipExercise(
+                    exerciseId: exercise.id,
+                    exerciseName: exercise.exerciseName
+                ) { [weak viewModel] in
+                    viewModel?.skippedExerciseIds.remove(exercise.id)
+                }
             }
         ) {
             VStack(spacing: 0) {
@@ -1828,11 +1855,19 @@ struct ManualWorkoutExecutionView: View {
                     }
                     .padding(.horizontal, 12)
 
-                    // Skip button
+                    // Skip button - ACP-515: Immediate action with undo
                     Button {
                         viewModel.skipExercise(exercise)
                         _ = withAnimation {
                             expandedExercises.remove(exercise.id)
+                        }
+
+                        // Register undo action
+                        PTUndoManager.shared.registerSkipExercise(
+                            exerciseId: exercise.id,
+                            exerciseName: exercise.exerciseName
+                        ) { [weak viewModel] in
+                            viewModel?.skippedExerciseIds.remove(exercise.id)
                         }
                     } label: {
                         HStack {
@@ -2148,9 +2183,19 @@ struct ManualWorkoutExecutionView: View {
             }
             .disabled(viewModel.currentExercise == nil)
 
-            // Skip Exercise Button
+            // Skip Exercise Button - ACP-515: Immediate action with undo
             Button {
-                viewModel.skipCurrentExercise()
+                if let exercise = viewModel.currentExercise {
+                    viewModel.skipCurrentExercise()
+
+                    // Register undo action
+                    PTUndoManager.shared.registerSkipExercise(
+                        exerciseId: exercise.id,
+                        exerciseName: exercise.exerciseName
+                    ) { [weak viewModel] in
+                        viewModel?.skippedExerciseIds.remove(exercise.id)
+                    }
+                }
             } label: {
                 HStack {
                     Image(systemName: "forward.fill")

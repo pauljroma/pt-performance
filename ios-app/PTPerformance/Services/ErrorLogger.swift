@@ -97,13 +97,18 @@ class ErrorLogger {
 
     // MARK: - Error Logging
 
-    /// Log an error with context
-    func logError(_ error: Error, context: String? = nil, file: String = #file, function: String = #function, line: Int = #line) {
+    /// Log an error with context and optional metadata
+    func logError(_ error: Error, context: String? = nil, metadata: [String: Any]? = nil, file: String = #file, function: String = #function, line: Int = #line) {
         let fileName = (file as NSString).lastPathComponent
         var logMessage = "Error in \(fileName):\(function):\(line) - \(error.localizedDescription)"
 
         if let context = context {
             logMessage += " | Context: \(context)"
+        }
+
+        if let metadata = metadata {
+            let metadataStr = metadata.map { "\($0.key)=\($0.value)" }.joined(separator: ", ")
+            logMessage += " | Metadata: \(metadataStr)"
         }
 
         if let userId = currentUserId {
@@ -116,6 +121,11 @@ class ErrorLogger {
         SentrySDK.capture(error: error) { scope in
             if let context = context {
                 scope.setContext(value: ["context": context], key: "error_context")
+            }
+            if let metadata = metadata {
+                // Convert Any values to strings for Sentry
+                let stringMetadata = metadata.mapValues { String(describing: $0) }
+                scope.setContext(value: stringMetadata, key: "metadata")
             }
             scope.setTag(value: fileName, key: "file")
             scope.setTag(value: function, key: "function")

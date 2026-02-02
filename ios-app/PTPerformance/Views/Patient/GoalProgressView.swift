@@ -739,7 +739,7 @@ struct GoalProgressCard: View {
 
                     // Category and deadline badges
                     HStack(spacing: Spacing.xs) {
-                        CategoryBadge(category: goal.category)
+                        GoalCategoryBadge(category: goal.category)
 
                         if let days = goal.daysRemaining {
                             DeadlineBadge(days: days)
@@ -787,8 +787,8 @@ struct GoalProgressCard: View {
     }
 }
 
-/// Small category badge
-struct CategoryBadge: View {
+/// Small category badge for goals
+struct GoalCategoryBadge: View {
     let category: GoalCategory
 
     var body: some View {
@@ -866,7 +866,7 @@ struct GoalProgressView: View {
                             .multilineTextAlignment(.center)
                     }
 
-                    CategoryBadge(category: goal.category)
+                    GoalCategoryBadge(category: goal.category)
                         .padding(.top, Spacing.xxs)
                 }
                 .padding(.horizontal, Spacing.md)

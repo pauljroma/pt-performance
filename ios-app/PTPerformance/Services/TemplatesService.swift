@@ -177,16 +177,16 @@ class TemplatesService {
     /// Update an existing template
     /// - Parameters:
     ///   - templateId: Template UUID
-    ///   - updates: Dictionary of fields to update
+    ///   - update: Template update with fields to change
     /// - Returns: The updated template
     func updateTemplate(
         templateId: String,
-        updates: [String: Any]
+        update: WorkoutTemplateUpdate
     ) async throws -> WorkoutTemplate {
         do {
             let updated: WorkoutTemplate = try await supabase
                 .from("workout_templates")
-                .update(updates)
+                .update(update)
                 .eq("id", value: templateId)
                 .select()
                 .single()
@@ -462,6 +462,45 @@ private struct WorkoutTemplateInsert: Encodable {
         case createdBy = "created_by"
         case isPublic = "is_public"
         case tags
+    }
+}
+
+/// Update model for templates - all fields optional
+struct WorkoutTemplateUpdate: Encodable {
+    var name: String?
+    var description: String?
+    var category: String?
+    var difficultyLevel: String?
+    var durationWeeks: Int?
+    var isPublic: Bool?
+    var tags: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case description
+        case category
+        case difficultyLevel = "difficulty_level"
+        case durationWeeks = "duration_weeks"
+        case isPublic = "is_public"
+        case tags
+    }
+
+    init(
+        name: String? = nil,
+        description: String? = nil,
+        category: String? = nil,
+        difficultyLevel: String? = nil,
+        durationWeeks: Int? = nil,
+        isPublic: Bool? = nil,
+        tags: [String]? = nil
+    ) {
+        self.name = name
+        self.description = description
+        self.category = category
+        self.difficultyLevel = difficultyLevel
+        self.durationWeeks = durationWeeks
+        self.isPublic = isPublic
+        self.tags = tags
     }
 }
 

@@ -94,7 +94,7 @@ struct LearningArticleView: View {
                             .font(.headline)
                             .foregroundColor(.primary)
 
-                        FlowLayout(spacing: 8) {
+                        LearningFlowLayout(spacing: 8) {
                             ForEach(article.keywords, id: \.self) { keyword in
                                 Text(keyword)
                                     .font(.caption)
@@ -164,7 +164,7 @@ struct LearningArticleView: View {
 
 // MARK: - Flow Layout (for tags)
 
-struct FlowLayout: Layout {
+private struct LearningFlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

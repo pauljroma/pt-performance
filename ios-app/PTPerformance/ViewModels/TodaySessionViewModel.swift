@@ -57,6 +57,7 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch today's session for the authenticated patient
     /// Uses request deduplication to prevent concurrent duplicate API calls
+    /// ACP-502: Now checks preloaded cache first for zero loading states
     func fetchTodaySession() async {
         // Cancel any existing fetch to prevent duplicate concurrent requests
         fetchSessionTask?.cancel()
@@ -64,7 +65,6 @@ class TodaySessionViewModel: ObservableObject {
         // Create new task for this fetch
         fetchSessionTask = Task {
             let logger = DebugLogger.shared
-            isLoading = true
             errorMessage = nil
 
             guard let patientId = supabase.userId else {
@@ -73,6 +73,28 @@ class TodaySessionViewModel: ObservableObject {
                 isLoading = false
                 return
             }
+
+            // ACP-502: Check preloaded cache first for instant display
+            if let cached = PreloadedWorkoutCache.shared.getCachedData(for: patientId) {
+                self.session = cached.session
+                self.exercises = cached.exercises
+                logger.log("⚡ Using preloaded cache - zero loading state!", level: .success)
+                #if DEBUG
+                print("⚡ [TodaySession] Cache hit! Session: \(cached.session?.name ?? "nil"), \(cached.exercises.count) exercises")
+                #endif
+                // Still fetch in background to ensure freshness
+                isLoading = false
+                await fetchTodaysCompletedWorkouts()
+
+                // Background refresh (non-blocking)
+                Task.detached(priority: .utility) { @MainActor in
+                    await self.backgroundRefreshFromSupabase(patientId: patientId)
+                }
+                return
+            }
+
+            // No cache - show loading state and fetch
+            isLoading = true
 
             logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
             #if DEBUG
@@ -102,6 +124,14 @@ class TodaySessionViewModel: ObservableObject {
                 let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
                 supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
                 logger.log("💾 Cached today's session for offline use", level: .success)
+
+                // ACP-502: Update preload cache with fresh data
+                PreloadedWorkoutCache.shared.store(
+                    session: self.session,
+                    exercises: self.exercises,
+                    patientId: patientId
+                )
+                logger.log("⚡ Updated preload cache", level: .success)
 
                 // BUILD 269: Also fetch today's completed workouts count
                 await fetchTodaysCompletedWorkouts()
@@ -483,6 +513,34 @@ class TodaySessionViewModel: ObservableObject {
         print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
         #endif
         self.exercises = exercisesResponse
+    }
+
+    // MARK: - ACP-502: Background Refresh
+
+    /// Background refresh from Supabase to update cache silently
+    /// Called when cache hit occurs but we want to ensure data freshness
+    private func backgroundRefreshFromSupabase(patientId: String) async {
+        let logger = DebugLogger.shared
+        logger.log("🔄 Background refresh starting...", level: .diagnostic)
+
+        do {
+            try await fetchFromSupabase(patientId: patientId)
+
+            // Update preload cache with fresh data
+            PreloadedWorkoutCache.shared.store(
+                session: self.session,
+                exercises: self.exercises,
+                patientId: patientId
+            )
+
+            // Also update offline cache
+            let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
+            supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
+
+            logger.log("🔄 Background refresh complete", level: .success)
+        } catch {
+            logger.log("🔄 Background refresh failed (using cached data): \(error.localizedDescription)", level: .warning)
+        }
     }
 
     /// Refresh data

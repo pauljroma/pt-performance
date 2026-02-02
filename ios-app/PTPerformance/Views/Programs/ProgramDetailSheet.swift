@@ -173,7 +173,7 @@ struct ProgramDetailSheet: View {
 
                             DetailFlowLayout(spacing: 8) {
                                 ForEach(program.tags, id: \.self) { tag in
-                                    TagChip(text: tag)
+                                    ProgramTagChip(text: tag)
                                 }
                             }
                         }
@@ -350,7 +350,7 @@ private struct EquipmentItem: View {
     }
 }
 
-private struct TagChip: View {
+private struct ProgramTagChip: View {
     let text: String
 
     var body: some View {

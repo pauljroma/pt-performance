@@ -223,7 +223,7 @@ struct ExerciseVideoView_Previews: PreviewProvider {
     static var previews: some View {
         ExerciseVideoView(
             exercise: Exercise.ExerciseTemplate(
-                id: "1",
+                id: UUID(),
                 name: "Squat",
                 category: "squat",
                 body_region: "lower",
@@ -234,7 +234,10 @@ struct ExerciseVideoView_Previews: PreviewProvider {
                     .init(cue: "Keep chest up", timestamp: 5),
                     .init(cue: "Drive through heels", timestamp: 15),
                     .init(cue: "Control the descent", timestamp: 25)
-                ]
+                ],
+                techniqueCues: nil,
+                commonMistakes: nil,
+                safetyNotes: nil
             )
         )
     }

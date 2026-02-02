@@ -82,6 +82,14 @@ class HelpContentLoader: ObservableObject {
 
     /// Map Supabase content_items to app model with category mapping
     private func mapContentItemFromDB(_ item: SupabaseContentItem) -> HelpArticle? {
+        // Convert string ID to UUID
+        guard let articleId = UUID(uuidString: item.id) else {
+            #if DEBUG
+            print("⚠️ Skipping article with invalid UUID: \(item.id)")
+            #endif
+            return nil
+        }
+
         // Map database categories to app categories
         let category: HelpCategory
         switch item.category.lowercased() {
@@ -97,11 +105,11 @@ class HelpContentLoader: ObservableObject {
             category = .gettingStarted
         }
 
-        // Extract markdown content from nested structure
-        let markdownContent = item.content.markdown
+        // Extract markdown content from nested structure (handle optional)
+        let markdownContent = item.content.markdown ?? ""
 
         return HelpArticle(
-            id: item.id,
+            id: articleId,
             title: item.title,
             content: markdownContent,
             category: category,
@@ -288,26 +296,4 @@ private struct JSONHelpArticle: Codable {
     let content: String
 }
 
-/// Database model for content_items table
-private struct SupabaseContentItem: Codable {
-    let id: UUID
-    let slug: String
-    let title: String
-    let category: String
-    let subcategory: String?
-    let content: ContentData
-    let tags: [String]?
-    let excerpt: String?
-    let is_published: Bool
-
-    struct ContentData: Codable {
-        let markdown: String
-        let reading_time: String?
-        // references is array, we ignore it
-
-        enum CodingKeys: String, CodingKey {
-            case markdown
-            case reading_time
-        }
-    }
-}
+// Note: SupabaseContentItem is defined in Models/SupabaseContentModels.swift

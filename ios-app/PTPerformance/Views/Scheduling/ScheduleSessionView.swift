@@ -108,8 +108,8 @@ struct ScheduleSessionView: View {
         } footer: {
             if let session = selectedSession {
                 VStack(alignment: .leading, spacing: 8) {
-                    if let description = session.description {
-                        Text(description)
+                    if let notes = session.notes {
+                        Text(notes)
                             .font(.caption)
                     }
 
@@ -297,7 +297,7 @@ struct ScheduleSessionView: View {
                 }
                 let _ = try await SchedulingService.shared.scheduleSession(
                     patientId: patientId,
-                    sessionId: session.id,
+                    sessionId: session.id.uuidString,
                     date: selectedDate,
                     time: selectedTime,
                     notes: notes.isEmpty ? nil : notes

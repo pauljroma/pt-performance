@@ -86,10 +86,28 @@ class DailyReadinessViewModel: ObservableObject {
             jointPainNotes: painNotes
         )
 
+        guard let patientUUID = UUID(uuidString: patientId) else {
+            isLoading = false
+            errorMessage = "Invalid patient ID"
+            return
+        }
+
         do {
-            let _ = try await readinessService.submitDailyReadiness(
-                patientId: patientId,
-                input: input
+            // Map BandCalculationInput fields to submitReadiness parameters
+            // sorenessLevel maps to arm soreness severity
+            let sorenessLevel = input.armSoreness ? (input.armSorenessSeverity ?? 2) : 0
+            // energyLevel from subjective readiness (1-5 scale)
+            let energyLevel = input.subjectiveReadiness
+            // Sleep quality as stress indicator
+            let stressLevel = input.sleepQuality.map { 6 - $0 } // Invert: 5 = low stress, 1 = high stress
+
+            let _ = try await readinessService.submitReadiness(
+                patientId: patientUUID,
+                sleepHours: input.sleepHours,
+                sorenessLevel: sorenessLevel,
+                energyLevel: energyLevel,
+                stressLevel: stressLevel,
+                notes: input.jointPainNotes
             )
 
             isLoading = false
@@ -101,10 +119,11 @@ class DailyReadinessViewModel: ObservableObject {
 
     /// Fetch today's readiness check-in if it exists
     func fetchTodayReadiness() async {
-        guard let patientId = PTSupabaseClient.shared.userId else { return }
+        guard let patientIdString = PTSupabaseClient.shared.userId,
+              let patientId = UUID(uuidString: patientIdString) else { return }
 
         do {
-            if let readiness = try await readinessService.fetchTodayReadiness(patientId: patientId) {
+            if let readiness = try await readinessService.getTodayReadiness(for: patientId) {
                 // Update preview with existing data
                 readinessPreview = ReadinessPreview(
                     band: readiness.readinessBand,

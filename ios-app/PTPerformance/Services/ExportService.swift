@@ -147,7 +147,7 @@ class ExportService {
                 let sets = "\(log.actualSets)"
                 let reps = log.actualReps.map { String($0) }.joined(separator: ";")
                 let weight = log.actualLoad.map { String(format: "%.1f", $0) } ?? ""
-                let unit = escapeCSV(log.loadUnit)
+                let unit = escapeCSV(log.loadUnit ?? "")
                 let rpe = "\(log.rpe)"
                 let painScore = "\(log.painScore)"
                 let notes = escapeCSV(log.notes ?? "")
@@ -279,7 +279,7 @@ class ExportService {
         ]
 
         let summaryText = String(format: "Avg RPE: %.1f | Avg Pain: %.1f | Exercises: %d",
-                                 session.avgRPE, session.avgPainScore, session.exerciseLogs.count)
+                                 session.avgRpe ?? 0.0, session.avgPainScore ?? 0.0, session.exerciseLogs.count)
         let summarySize = summaryText.size(withAttributes: summaryAttributes)
         let summaryRect = CGRect(
             x: margin,

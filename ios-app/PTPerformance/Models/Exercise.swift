@@ -184,7 +184,15 @@ struct Exercise: Codable, Identifiable, Hashable {
 /// Session model from Supabase sessions table
 /// Matches actual database schema: id, phase_id, name, sequence, weekday, notes, created_at
 /// Build 33: Added completion tracking fields
-struct Session: Codable, Identifiable {
+struct Session: Codable, Identifiable, Hashable {
+    static func == (lhs: Session, rhs: Session) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
     let id: UUID
     let phase_id: UUID
     let name: String
@@ -228,7 +236,7 @@ struct Session: Codable, Identifiable {
         // Use weekday to display day of week
         if let day = weekday {
             let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-            return days[safe: day] ?? "Day \(sequence)"
+            return (day >= 0 && day < days.count) ? days[day] : "Day \(sequence)"
         }
         return "Session \(sequence)"
     }

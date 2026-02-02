@@ -360,7 +360,7 @@ struct GoalRowView: View {
 
                 HStack(spacing: Spacing.xs) {
                     // Category badge
-                    CategoryBadge(category: goal.category)
+                    GoalCategoryBadge(category: goal.category)
 
                     // Target date badge
                     if let days = goal.daysRemaining {

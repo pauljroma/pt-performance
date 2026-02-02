@@ -142,6 +142,10 @@ struct ExportButton_Previews: PreviewProvider {
                         sessionDate: Date(),
                         completed: true,
                         notes: "Great workout!",
+                        totalVolume: 4050,
+                        avgRpe: 7.5,
+                        avgPainScore: 1.5,
+                        durationMinutes: 45,
                         exerciseLogs: [
                             ExerciseLogDetail(
                                 id: "log1",
@@ -153,7 +157,9 @@ struct ExportButton_Previews: PreviewProvider {
                                 rpe: 7,
                                 painScore: 2,
                                 notes: "Felt strong",
-                                loggedAt: Date()
+                                loggedAt: Date(),
+                                exerciseTemplateId: nil,
+                                videoUrl: nil
                             ),
                             ExerciseLogDetail(
                                 id: "log2",
@@ -165,7 +171,9 @@ struct ExportButton_Previews: PreviewProvider {
                                 rpe: 8,
                                 painScore: 1,
                                 notes: nil,
-                                loggedAt: Date()
+                                loggedAt: Date(),
+                                exerciseTemplateId: nil,
+                                videoUrl: nil
                             )
                         ]
                     ),
@@ -175,6 +183,10 @@ struct ExportButton_Previews: PreviewProvider {
                         sessionDate: Date().addingTimeInterval(-86400),
                         completed: true,
                         notes: nil,
+                        totalVolume: 2250,
+                        avgRpe: 9.0,
+                        avgPainScore: 3.0,
+                        durationMinutes: 30,
                         exerciseLogs: [
                             ExerciseLogDetail(
                                 id: "log3",
@@ -186,7 +198,9 @@ struct ExportButton_Previews: PreviewProvider {
                                 rpe: 9,
                                 painScore: 3,
                                 notes: "Back felt tight",
-                                loggedAt: Date().addingTimeInterval(-86400)
+                                loggedAt: Date().addingTimeInterval(-86400),
+                                exerciseTemplateId: nil,
+                                videoUrl: nil
                             )
                         ]
                     )

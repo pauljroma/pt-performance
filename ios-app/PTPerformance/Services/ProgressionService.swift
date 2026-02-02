@@ -60,22 +60,56 @@ class ProgressionService: ObservableObject {
         logger.log("  Reason: \(reason)", level: .diagnostic)
 
         // Insert progression record to load_progression_history table
-        let record: [String: Any?] = [
-            "patient_id": patientId,
-            "exercise_template_id": exerciseTemplateId,
-            "session_id": sessionId,
-            "current_load": currentLoad,
-            "load_unit": "lbs",
-            "target_rpe_low": targetRpeLow,
-            "target_rpe_high": targetRpeHigh,
-            "actual_rpe": actualRpe,
-            "progression_action": action.rawValue,
-            "next_load": nextLoad,
-            "reason": reason,
-            "sets_completed": setsCompleted,
-            "reps_completed": repsCompleted,
-            "form_quality": formQuality
-        ]
+        struct ProgressionRecordInsert: Encodable {
+            let patientId: String
+            let exerciseTemplateId: String
+            let sessionId: String?
+            let currentLoad: Double
+            let loadUnit: String
+            let targetRpeLow: Double
+            let targetRpeHigh: Double
+            let actualRpe: Double
+            let progressionAction: String
+            let nextLoad: Double
+            let reason: String
+            let setsCompleted: Int
+            let repsCompleted: Int
+            let formQuality: Int
+
+            enum CodingKeys: String, CodingKey {
+                case patientId = "patient_id"
+                case exerciseTemplateId = "exercise_template_id"
+                case sessionId = "session_id"
+                case currentLoad = "current_load"
+                case loadUnit = "load_unit"
+                case targetRpeLow = "target_rpe_low"
+                case targetRpeHigh = "target_rpe_high"
+                case actualRpe = "actual_rpe"
+                case progressionAction = "progression_action"
+                case nextLoad = "next_load"
+                case reason
+                case setsCompleted = "sets_completed"
+                case repsCompleted = "reps_completed"
+                case formQuality = "form_quality"
+            }
+        }
+
+        let record = ProgressionRecordInsert(
+            patientId: patientId,
+            exerciseTemplateId: exerciseTemplateId,
+            sessionId: sessionId,
+            currentLoad: currentLoad,
+            loadUnit: "lbs",
+            targetRpeLow: targetRpeLow,
+            targetRpeHigh: targetRpeHigh,
+            actualRpe: actualRpe,
+            progressionAction: action.rawValue,
+            nextLoad: nextLoad,
+            reason: reason,
+            setsCompleted: setsCompleted,
+            repsCompleted: repsCompleted,
+            formQuality: formQuality
+        )
 
         do {
             logger.log("📊 Inserting into load_progression_history table...", level: .diagnostic)
@@ -173,17 +207,51 @@ class ProgressionService: ObservableObject {
         let triggerNames = triggers.map { $0.triggerType.rawValue }
 
         // Create deload_history record with standard reductions
-        let deloadRecord: [String: Any?] = [
-            "patient_id": patientId,
-            "trigger_date": Date().ISO8601Format(),
-            "triggers_met": triggerNames,
-            "trigger_window_start": windowStart.ISO8601Format(),
-            "trigger_window_end": windowEnd.ISO8601Format(),
-            "load_reduction_pct": 0.12,      // 12% load reduction
-            "volume_reduction_pct": 0.35,    // 35% volume reduction
-            "duration_days": 7,              // 7-day deload period
-            "status": "scheduled"
-        ]
+        struct DeloadHistoryInsert: Encodable {
+            let patientId: String
+            let triggerDate: String
+            let triggersMet: [String]
+            let triggerWindowStart: String
+            let triggerWindowEnd: String
+            let loadReductionPct: Double
+            let volumeReductionPct: Double
+            let durationDays: Int
+            let status: String
+
+            enum CodingKeys: String, CodingKey {
+                case patientId = "patient_id"
+                case triggerDate = "trigger_date"
+                case triggersMet = "triggers_met"
+                case triggerWindowStart = "trigger_window_start"
+                case triggerWindowEnd = "trigger_window_end"
+                case loadReductionPct = "load_reduction_pct"
+                case volumeReductionPct = "volume_reduction_pct"
+                case durationDays = "duration_days"
+                case status
+            }
+        }
+
+        let deloadRecord = DeloadHistoryInsert(
+            patientId: patientId,
+            triggerDate: Date().ISO8601Format(),
+            triggersMet: triggerNames,
+            triggerWindowStart: windowStart.ISO8601Format(),
+            triggerWindowEnd: windowEnd.ISO8601Format(),
+            loadReductionPct: 0.12,
+            volumeReductionPct: 0.35,
+            durationDays: 7,
+            status: "scheduled"
+        )
+
+        struct TriggerUpdate: Encodable {
+            let resolved: Bool
+            let resolvedAt: String
+
+            enum CodingKeys: String, CodingKey {
+                case resolved
+                case resolvedAt = "resolved_at"
+            }
+        }
 
         do {
             logger.log("🔄 Creating deload_history record...", level: .diagnostic)
@@ -199,10 +267,10 @@ class ProgressionService: ObservableObject {
             for trigger in triggers {
                 logger.log("  Resolving trigger: \(trigger.id)", level: .diagnostic)
 
-                let updateRecord: [String: Any] = [
-                    "resolved": true,
-                    "resolved_at": Date().ISO8601Format()
-                ]
+                let updateRecord = TriggerUpdate(
+                    resolved: true,
+                    resolvedAt: Date().ISO8601Format()
+                )
 
                 try await supabase.client
                     .from("deload_triggers")

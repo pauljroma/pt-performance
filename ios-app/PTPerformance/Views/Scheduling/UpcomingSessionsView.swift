@@ -354,7 +354,7 @@ struct ScheduledSessionDetailView: View {
         NavigationView {
             List {
                 Section("Details") {
-                    LabeledContent("Session", value: session.sessionId)
+                    LabeledContent("Session", value: session.sessionId.uuidString)
                     LabeledContent("Date", value: session.formattedDate)
                     LabeledContent("Time", value: session.formattedTime)
                     LabeledContent("Status", value: session.status.displayName)
