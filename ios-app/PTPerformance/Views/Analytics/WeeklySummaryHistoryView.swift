@@ -230,20 +230,13 @@ struct WeeklySummaryHistoryView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 48))
-                .foregroundColor(.blue)
-
-            Text("No History Yet")
-                .font(.headline)
-
-            Text("Weekly summaries will appear here as you complete more workouts")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
+        EmptyStateView(
+            title: "No Weekly History Yet",
+            message: "Complete workouts throughout the week to see your progress summaries here. Track your adherence trends and celebrate your weekly wins.",
+            icon: "calendar.badge.clock",
+            iconColor: .blue,
+            action: nil
+        )
     }
 
     // MARK: - Data Loading

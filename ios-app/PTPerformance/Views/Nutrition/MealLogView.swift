@@ -186,10 +186,21 @@ struct MealLogView: View {
             }
 
             if viewModel.searchResults.isEmpty && !viewModel.isSearching {
-                Text("No foods found")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding()
+                VStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title)
+                        .foregroundColor(.secondary)
+
+                    Text("No Foods Found")
+                        .font(.headline)
+
+                    Text("Try a different search term or add a custom food using the + button above.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
             } else {
                 ForEach(viewModel.searchResults) { food in
                     FoodSearchRow(food: food) {

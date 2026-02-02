@@ -51,23 +51,13 @@ struct NutritionHistoryView: View {
                     ProgressView()
                     Spacer()
                 } else if logsForSelectedDate.isEmpty {
-                    Spacer()
-                    VStack(spacing: 16) {
-                        Image(systemName: "fork.knife.circle")
-                            .font(.system(size: 56))
-                            .foregroundColor(.orange)
-
-                        Text("No Meals on This Day")
-                            .font(.headline)
-
-                        Text("You haven't logged any meals for this date. Select a different day or start tracking your nutrition today.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
-                    }
-                    .padding()
-                    Spacer()
+                    EmptyStateView(
+                        title: "No Meals on This Day",
+                        message: "You haven't logged any meals for this date. Select a different day to view your nutrition history, or start tracking your meals today.",
+                        icon: "fork.knife.circle",
+                        iconColor: .orange,
+                        action: nil
+                    )
                 } else {
                     List {
                         ForEach(logsForSelectedDate) { log in

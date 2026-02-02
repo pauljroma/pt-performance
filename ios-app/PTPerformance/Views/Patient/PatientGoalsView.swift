@@ -40,6 +40,30 @@ struct PatientGoalsView: View {
         return UUID(uuidString: idString)
     }
 
+    /// Icon for filtered empty state
+    private var filterEmptyStateIcon: String {
+        switch selectedFilter {
+        case .active:
+            return "flame"
+        case .completed:
+            return "checkmark.seal"
+        case .all:
+            return "target"
+        }
+    }
+
+    /// Message for filtered empty state
+    private var filterEmptyStateMessage: String {
+        switch selectedFilter {
+        case .active:
+            return "You have no active goals right now. Create a new goal or check your completed goals."
+        case .completed:
+            return "No goals completed yet. Keep working toward your active goals to see them here."
+        case .all:
+            return "Tap the + button to create your first goal."
+        }
+    }
+
     var body: some View {
         Group {
             if viewModel.isLoading && viewModel.goals.isEmpty {
@@ -154,16 +178,21 @@ struct PatientGoalsView: View {
             // Goals
             Section {
                 if filteredGoals.isEmpty {
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 8) {
-                            Text("No \(selectedFilter.rawValue.lowercased()) goals")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 24)
-                        Spacer()
+                    VStack(spacing: 12) {
+                        Image(systemName: filterEmptyStateIcon)
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+
+                        Text("No \(selectedFilter.rawValue) Goals")
+                            .font(.headline)
+
+                        Text(filterEmptyStateMessage)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
                 } else {
                     ForEach(filteredGoals) { goal in
                         NavigationLink {

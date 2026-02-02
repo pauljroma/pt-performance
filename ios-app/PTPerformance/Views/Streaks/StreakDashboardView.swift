@@ -390,11 +390,17 @@ struct StreakDashboardView: View {
 
     private var emptyStateView: some View {
         EmptyStateView(
-            title: "No Streak Data",
-            message: "Complete workouts and arm care sessions to build your streak. Consistency is key to achieving your fitness goals!",
+            title: "Start Your Streak",
+            message: "Complete workouts and arm care sessions to build your streak. Consistency is key to achieving your fitness and recovery goals.",
             icon: "flame",
             iconColor: .orange,
-            action: nil
+            action: EmptyStateView.EmptyStateAction(
+                title: "View Today's Workout",
+                icon: "figure.strengthtraining.traditional",
+                action: {
+                    // Navigate back to today tab - this will be handled by the navigation stack
+                }
+            )
         )
         .padding(.top, 40)
     }
