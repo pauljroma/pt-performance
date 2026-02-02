@@ -50,6 +50,7 @@ struct ReadinessCheckInView: View {
     @State private var wasAutoFilled = false
     @State private var showHealthKitPrompt = false
     @State private var hrvBaseline: Double?
+    @State private var isInitialLoading = true
 
     // MARK: - Initialization
 
@@ -64,9 +65,29 @@ struct ReadinessCheckInView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // Main content
-                Form {
-                    quickFillSection
+                // Show initial loading state
+                if isInitialLoading {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Loading your check-in...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .navigationTitle("Daily Check-In")
+                    .navigationBarTitleDisplayMode(.large)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                dismiss()
+                            }
+                        }
+                    }
+                } else {
+                    // Main content
+                    Form {
+                        quickFillSection
 
                     // Data from Apple Watch badge
                     if wasAutoFilled {
@@ -111,9 +132,11 @@ struct ReadinessCheckInView: View {
                         hrvBaseline = try? await healthKitService.getHRVBaseline()
                         _ = try? await healthKitService.syncTodayData()
                     }
+                    isInitialLoading = false
                 }
                 .sheet(isPresented: $showHealthKitPrompt) {
                     HealthKitAuthorizationView()
+                }
                 }
 
                 // Success overlay

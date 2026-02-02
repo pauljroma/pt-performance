@@ -10,6 +10,35 @@ struct TherapistLinkingView: View {
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
+        Group {
+            if viewModel.isLoading && !viewModel.isLinked && viewModel.linkingCode == nil {
+                // Show loading state while checking initial link status
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("Checking therapist connection...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                therapistLinkingContent
+            }
+        }
+        .navigationTitle("Therapist Linking")
+        .task {
+            await viewModel.checkLinkStatus()
+        }
+        .onReceive(timer) { _ in
+            // Force UI update for countdown timer
+            // The timeRemaining computed property will recalculate
+            viewModel.objectWillChange.send()
+        }
+    }
+
+    // MARK: - Therapist Linking Content
+
+    private var therapistLinkingContent: some View {
         List {
             if viewModel.isLinked {
                 // MARK: - Linked Therapist Section
@@ -125,15 +154,6 @@ struct TherapistLinkingView: View {
                         .font(.caption)
                 }
             }
-        }
-        .navigationTitle("Therapist Linking")
-        .task {
-            await viewModel.checkLinkStatus()
-        }
-        .onReceive(timer) { _ in
-            // Force UI update for countdown timer
-            // The timeRemaining computed property will recalculate
-            viewModel.objectWillChange.send()
         }
     }
 }

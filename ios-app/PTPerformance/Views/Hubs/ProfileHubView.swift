@@ -312,15 +312,26 @@ struct ProfileHubView: View {
                 TherapistLinkingView()
             } label: {
                 HStack {
-                    Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
-                        .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
-                        .frame(width: 24)
+                    if therapistLinkingVM.isLoading {
+                        ProgressView()
+                            .frame(width: 24)
+                    } else {
+                        Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
+                            .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
+                            .frame(width: 24)
+                    }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Therapist Linking")
                             .foregroundColor(.primary)
-                        Text(therapistLinkStatusText)
-                            .font(.caption)
-                            .foregroundColor(therapistLinkingVM.isLinked ? .green : .secondary)
+                        if therapistLinkingVM.isLoading {
+                            Text("Checking...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(therapistLinkStatusText)
+                                .font(.caption)
+                                .foregroundColor(therapistLinkingVM.isLinked ? .green : .secondary)
+                        }
                     }
                 }
             }

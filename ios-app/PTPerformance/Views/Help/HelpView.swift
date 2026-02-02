@@ -37,7 +37,16 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if filteredArticles.isEmpty {
+                if contentLoader.isLoading && contentLoader.articles.isEmpty {
+                    // Show loading state while initially loading articles
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Loading help articles...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                } else if filteredArticles.isEmpty {
                     emptyState
                 } else if searchText.isEmpty && selectedCategory == nil {
                     // Show category sections when not searching
