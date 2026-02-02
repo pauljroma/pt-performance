@@ -207,7 +207,7 @@ class SessionSummaryViewModel: ObservableObject {
                 Type: \(type(of: error))
                 Session ID: \(session.id.uuidString)
                 """)
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to load your session summary. Please try again."
             isLoading = false
         }
     }

@@ -98,7 +98,7 @@ class MealLogViewModel: ObservableObject {
 
             isLoading = false
         } catch {
-            self.error = "Failed to load food data: \(error.localizedDescription)"
+            self.error = "Unable to load food options. Pull down to refresh."
             isLoading = false
         }
     }
@@ -142,7 +142,7 @@ class MealLogViewModel: ObservableObject {
             searchResults = try await foodService.searchByCategory(category)
             isSearching = false
         } catch {
-            self.error = "Failed to search: \(error.localizedDescription)"
+            self.error = "Unable to search foods. Please try again."
             isSearching = false
         }
     }
@@ -196,7 +196,7 @@ class MealLogViewModel: ObservableObject {
             addFood(newFood)
             return true
         } catch {
-            self.error = "Failed to create custom food: \(error.localizedDescription)"
+            self.error = "Unable to add custom food. Please try again."
             self.showError = true
             return false
         }
@@ -206,7 +206,7 @@ class MealLogViewModel: ObservableObject {
 
     func saveMealLog() async -> Bool {
         guard let patientId = patientId, canSave else {
-            error = "Cannot save: No food items added"
+            error = "Please add at least one food item before saving."
             showError = true
             return false
         }
@@ -233,7 +233,7 @@ class MealLogViewModel: ObservableObject {
             isSaving = false
             return true
         } catch {
-            self.error = "Failed to save meal: \(error.localizedDescription)"
+            self.error = "Unable to save your meal. Please try again."
             self.showError = true
             isSaving = false
             return false

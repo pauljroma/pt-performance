@@ -125,7 +125,7 @@ class TimerPickerViewModel: ObservableObject {
                 Selected category: \(selectedCategory?.displayName ?? "All")
                 """)
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to load timer options. Pull down to refresh."
             showError = true
 
             // BUILD 133: Detailed error logging
@@ -284,7 +284,7 @@ class TimerPickerViewModel: ObservableObject {
             #endif
 
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to start this timer. Please try again."
             showError = true
 
             DebugLogger.shared.error("TIMER_START", """

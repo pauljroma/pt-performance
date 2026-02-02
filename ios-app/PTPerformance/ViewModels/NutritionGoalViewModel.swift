@@ -104,7 +104,7 @@ class NutritionGoalViewModel: ObservableObject {
 
             isLoading = false
         } catch {
-            self.error = "Failed to load goals: \(error.localizedDescription)"
+            self.error = "Unable to load your nutrition goals. Please check your connection and try again."
             self.showError = true
             isLoading = false
         }
@@ -179,7 +179,7 @@ class NutritionGoalViewModel: ObservableObject {
             isSaving = false
             return true
         } catch {
-            self.error = "Failed to save goal: \(error.localizedDescription)"
+            self.error = "Unable to save your nutrition goal. Please try again."
             self.showError = true
             isSaving = false
             return false
@@ -215,7 +215,7 @@ class NutritionGoalViewModel: ObservableObject {
             isSaving = false
             return true
         } catch {
-            self.error = "Failed to update goal: \(error.localizedDescription)"
+            self.error = "Unable to update your goal. Please try again."
             self.showError = true
             isSaving = false
             return false
@@ -244,7 +244,7 @@ class NutritionGoalViewModel: ObservableObject {
             await loadGoals()
             return true
         } catch {
-            self.error = "Failed to deactivate goal: \(error.localizedDescription)"
+            self.error = "Unable to deactivate this goal. Please try again."
             self.showError = true
             return false
         }

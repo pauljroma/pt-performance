@@ -68,7 +68,7 @@ class ExerciseInfoViewModel: ObservableObject {
             template = try decoder.decode(ExerciseTemplateDetail.self, from: response.data)
             isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to load exercise details. Please try again."
             isLoading = false
         }
     }
@@ -103,7 +103,7 @@ class ExerciseInfoViewModel: ObservableObject {
             template = results.first
             isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = "Unable to load exercise details. Please try again."
             isLoading = false
         }
     }

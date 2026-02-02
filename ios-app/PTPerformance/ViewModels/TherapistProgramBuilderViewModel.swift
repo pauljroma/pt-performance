@@ -241,7 +241,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
         } catch {
             logger.log("Failed to create program: \(error)", level: .error)
-            errorMessage = "Failed to save program: \(error.localizedDescription)"
+            errorMessage = "Unable to save your program. Please check your connection and try again."
             throw error
         }
     }
@@ -354,7 +354,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
         } catch {
             logger.log("Failed to publish to library: \(error)", level: .error)
-            errorMessage = "Failed to publish: \(error.localizedDescription)"
+            errorMessage = "Unable to publish your program. Please try again."
             throw error
         }
     }

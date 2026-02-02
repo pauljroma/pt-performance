@@ -112,7 +112,7 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
             updateFilteredPrograms()
             isLoading = false
         } catch {
-            errorMessage = "Failed to load programs: \(error.localizedDescription)"
+            errorMessage = "Unable to load programs. Pull down to refresh."
             isLoading = false
         }
     }
@@ -127,7 +127,7 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
             updateFilteredPrograms()
             isLoading = false
         } catch {
-            errorMessage = "Failed to load programs: \(error.localizedDescription)"
+            errorMessage = "Unable to load programs. Pull down to refresh."
             isLoading = false
         }
     }
@@ -157,7 +157,7 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
             updateFilteredPrograms()
             isLoading = false
         } catch {
-            errorMessage = "Search failed: \(error.localizedDescription)"
+            errorMessage = "Unable to search programs. Please try again."
             isLoading = false
         }
     }

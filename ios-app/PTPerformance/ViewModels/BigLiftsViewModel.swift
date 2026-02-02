@@ -75,7 +75,7 @@ class BigLiftsViewModel: ObservableObject {
             bigLifts = summaries
             isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = UserFriendlyError.message(for: error)
             isLoading = false
             #if DEBUG
             print("BigLiftsViewModel: Error fetching data: \(error)")
@@ -96,7 +96,7 @@ class BigLiftsViewModel: ObservableObject {
             bigLifts = summaries
             isRefreshing = false
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = UserFriendlyError.message(for: error)
             isRefreshing = false
         }
     }
