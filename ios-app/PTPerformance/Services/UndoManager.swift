@@ -464,12 +464,12 @@ final class PTUndoManager: ObservableObject {
         cancelExpiration(for: actionId)
 
         // Create new expiration task
-        let task = Task { [weak self] in
+        let task = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(self?.undoExpirationSeconds ?? 5.0) * 1_000_000_000)
 
             guard !Task.isCancelled else { return }
 
-            await self?.expireAction(actionId)
+            self?.expireAction(actionId)
         }
 
         expirationTimers[actionId] = task
@@ -492,7 +492,11 @@ final class PTUndoManager: ObservableObject {
 // MARK: - Environment Key
 
 private struct UndoManagerKey: EnvironmentKey {
-    static let defaultValue: PTUndoManager = .shared
+    // Use nonisolated(unsafe) to allow EnvironmentKey conformance without actor isolation issues
+    nonisolated(unsafe) static var defaultValue: PTUndoManager = {
+        // This will be called on MainActor when first accessed in SwiftUI context
+        PTUndoManager.shared
+    }()
 }
 
 extension EnvironmentValues {

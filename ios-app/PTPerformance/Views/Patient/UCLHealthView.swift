@@ -22,7 +22,7 @@ struct UCLHealthView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
-                    if let patientId = appState.userId {
+                    if appState.userId != nil {
                         // Current Status Card
                         currentStatusCard
 

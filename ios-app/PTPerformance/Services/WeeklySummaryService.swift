@@ -10,6 +10,19 @@ import Foundation
 import UserNotifications
 import Supabase
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for getting weekly summary
+private struct GetWeeklySummaryParams: Encodable {
+    let pPatientId: String
+    let pWeekStart: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pWeekStart = "p_week_start"
+    }
+}
+
 /// Service for managing weekly progress summaries
 /// Handles data fetching, notification scheduling, and preferences
 actor WeeklySummaryService {
@@ -54,11 +67,12 @@ actor WeeklySummaryService {
 
         do {
             // Call the database function
+            let params = GetWeeklySummaryParams(
+                pPatientId: patientId.uuidString,
+                pWeekStart: weekStartString
+            )
             let response = try await supabase
-                .rpc("get_weekly_summary", params: [
-                    "p_patient_id": patientId.uuidString,
-                    "p_week_start": weekStartString
-                ])
+                .rpc("get_weekly_summary", params: params)
                 .execute()
 
             // Decode the response

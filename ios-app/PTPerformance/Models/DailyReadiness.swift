@@ -97,7 +97,7 @@ struct ReadinessPreview {
 
 /// Daily readiness check-in
 /// Simplified schema with core wellness metrics
-struct DailyReadiness: Codable, Identifiable {
+struct DailyReadiness: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let date: Date

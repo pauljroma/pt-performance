@@ -10,6 +10,29 @@
 import Foundation
 import Supabase
 
+// MARK: - Encodable Structs for Supabase Updates
+
+/// Update for completing a session
+private struct CompleteSessionUpdate: Encodable {
+    let status: String
+    let completedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case completedAt = "completed_at"
+    }
+}
+
+/// Update for session notes
+private struct NotesUpdate: Encodable {
+    let notes: String
+}
+
+/// Update for session status
+private struct StatusUpdate: Encodable {
+    let status: String
+}
+
 /// Service for managing scheduled workout sessions.
 ///
 /// Thread-safe actor that handles all CRUD operations for patient workout schedules.
@@ -232,12 +255,13 @@ actor SchedulingService {
     /// - Throws: `SchedulingError.completeFailed` if the update fails
     func completeSession(scheduledSessionId: String) async throws -> ScheduledSession {
         do {
+            let updateInput = CompleteSessionUpdate(
+                status: ScheduledSession.ScheduleStatus.completed.rawValue,
+                completedAt: dateFormatter.string(from: Date())
+            )
             let updated: ScheduledSession = try await supabase
                 .from(tableName)
-                .update([
-                    "status": ScheduledSession.ScheduleStatus.completed.rawValue,
-                    "completed_at": dateFormatter.string(from: Date())
-                ])
+                .update(updateInput)
                 .eq("id", value: scheduledSessionId)
                 .select()
                 .single()
@@ -261,7 +285,7 @@ actor SchedulingService {
         do {
             try await supabase
                 .from(tableName)
-                .update(["notes": notes])
+                .update(NotesUpdate(notes: notes))
                 .eq("id", value: scheduledSessionId)
                 .execute()
         } catch {
@@ -303,7 +327,7 @@ actor SchedulingService {
         do {
             try await supabase
                 .from(tableName)
-                .update(["status": status.rawValue])
+                .update(StatusUpdate(status: status.rawValue))
                 .eq("id", value: scheduledSessionId)
                 .execute()
         } catch {

@@ -87,7 +87,7 @@ enum GoalProgressStatus: String, Codable {
 // MARK: - Body Comp Goals Model
 
 /// Represents a body composition goal from the body_comp_goals table
-struct BodyCompGoals: Codable, Identifiable {
+struct BodyCompGoals: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
 
@@ -395,7 +395,7 @@ extension BodyCompGoals {
 // MARK: - Body Comp Goal Progress
 
 /// Progress data from vw_body_comp_goal_progress view
-struct BodyCompGoalProgress: Codable, Identifiable {
+struct BodyCompGoalProgress: Codable, Identifiable, Hashable, Equatable {
     var id: UUID { goalId }
 
     let goalId: UUID

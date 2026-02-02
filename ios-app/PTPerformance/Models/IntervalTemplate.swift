@@ -2,7 +2,7 @@ import Foundation
 
 /// Interval template model - maps to database interval_templates table
 /// Represents a reusable timer configuration that can be saved and shared
-struct IntervalTemplate: Codable, Identifiable {
+struct IntervalTemplate: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let name: String
     let type: TimerType

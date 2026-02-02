@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// A user's enrollment in a program from the program library
-struct ProgramEnrollment: Codable, Identifiable {
+struct ProgramEnrollment: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let programLibraryId: UUID

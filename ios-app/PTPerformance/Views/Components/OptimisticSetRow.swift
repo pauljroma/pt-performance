@@ -47,10 +47,34 @@ struct OptimisticSetRow: View {
         .padding(.horizontal, 12)
         .background(backgroundColor)
         .cornerRadius(10)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(setAccessibilityLabel)
+        .accessibilityHint(isCompleted ? "Set completed" : "Double tap to complete this set")
+        .accessibilityAction(named: "Complete Set") {
+            if !isCompleted {
+                onComplete()
+            }
+        }
         .onAppear {
             localReps = reps
             localWeight = weight
         }
+    }
+
+    // MARK: - Accessibility
+
+    private var setAccessibilityLabel: String {
+        var label = "Set \(setNumber)"
+        label += ", \(reps) reps"
+        if weight > 0 {
+            label += ", \(Int(weight)) \(loadUnit)"
+        } else {
+            label += ", bodyweight"
+        }
+        if isCompleted {
+            label += ", completed"
+        }
+        return label
     }
 
     // MARK: - Components
@@ -84,6 +108,9 @@ struct OptimisticSetRow: View {
         }
         .buttonStyle(.plain)
         .disabled(isCompleted)
+        .accessibilityLabel("\(reps) reps")
+        .accessibilityHint("Double tap to edit reps")
+        .accessibilityAddTraits(.isButton)
         .sheet(isPresented: $showingRepsEditor) {
             RepsEditorSheet(
                 reps: $reps,
@@ -121,6 +148,9 @@ struct OptimisticSetRow: View {
         }
         .buttonStyle(.plain)
         .disabled(isCompleted)
+        .accessibilityLabel(weight > 0 ? "\(Int(weight)) \(loadUnit)" : "Bodyweight")
+        .accessibilityHint("Double tap to edit weight")
+        .accessibilityAddTraits(.isButton)
         .sheet(isPresented: $showingWeightEditor) {
             WeightEditorSheet(
                 weight: $weight,
@@ -176,6 +206,9 @@ struct OptimisticSetRow: View {
         }
         .buttonStyle(.plain)
         .disabled(isCompleted)
+        .accessibilityLabel(isCompleted ? "Set completed" : "Complete set \(setNumber)")
+        .accessibilityHint(isCompleted ? "" : "Double tap to mark this set as complete")
+        .accessibilityAddTraits(.isButton)
     }
 
     private var backgroundColor: Color {

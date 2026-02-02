@@ -429,10 +429,12 @@ struct ExerciseVideoPlayerView: View {
 
     private func startControlsTimer() {
         controlsTimer?.invalidate()
-        controlsTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
-            if controller.isPlaying && !showAngleSelector && !showSpeedSelector {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showControls = false
+        controlsTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak controller] _ in
+            Task { @MainActor in
+                if controller?.isPlaying == true && !showAngleSelector && !showSpeedSelector {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showControls = false
+                    }
                 }
             }
         }

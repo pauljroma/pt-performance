@@ -8,7 +8,7 @@
 import Foundation
 
 /// Preview data for a program phase, used to show users what's included before enrollment
-struct ProgramPhasePreview: Codable, Identifiable {
+struct ProgramPhasePreview: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let phaseName: String
     let phaseNumber: Int

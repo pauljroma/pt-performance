@@ -8,7 +8,7 @@
 import Foundation
 
 /// A meal plan for scheduling nutrition
-struct MealPlan: Codable, Identifiable {
+struct MealPlan: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: String
     let name: String
@@ -39,7 +39,7 @@ struct MealPlan: Codable, Identifiable {
 }
 
 /// Type of meal plan
-enum MealPlanType: String, Codable, CaseIterable {
+enum MealPlanType: String, Codable, CaseIterable, Hashable {
     case daily
     case weekly
 
@@ -52,7 +52,7 @@ enum MealPlanType: String, Codable, CaseIterable {
 }
 
 /// Individual meal within a meal plan
-struct MealPlanItem: Codable, Identifiable {
+struct MealPlanItem: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let mealPlanId: UUID
     let dayOfWeek: DayOfWeek?
@@ -89,7 +89,7 @@ struct MealPlanItem: Codable, Identifiable {
 }
 
 /// Day of the week for weekly meal plans
-enum DayOfWeek: Int, Codable, CaseIterable {
+enum DayOfWeek: Int, Codable, CaseIterable, Hashable {
     case sunday = 0
     case monday = 1
     case tuesday = 2

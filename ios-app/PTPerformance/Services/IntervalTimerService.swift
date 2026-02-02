@@ -11,6 +11,21 @@ import Supabase
 import AVFoundation
 import UIKit
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for logging a timer session
+private struct LogTimerSessionParams: Encodable {
+    let pPatientId: String
+    let pTemplateId: String
+    let pDuration: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pTemplateId = "p_template_id"
+        case pDuration = "p_duration"
+    }
+}
+
 /// Service for managing interval timers with precise countdown logic
 @MainActor
 class IntervalTimerService: ObservableObject {
@@ -444,13 +459,14 @@ class IntervalTimerService: ObservableObject {
             // Use session.templateId (null for ephemeral presets) instead of template.id
             // Note: For ephemeral templates from presets, templateId is nil
             if let templateId = session.templateId {
+                let logParams = LogTimerSessionParams(
+                    pPatientId: session.patientId.uuidString,
+                    pTemplateId: templateId.uuidString,
+                    pDuration: String(Int(totalElapsed))
+                )
                 _ = try await client.client.rpc(
                     "log_timer_session",
-                    params: [
-                        "p_patient_id": session.patientId.uuidString,
-                        "p_template_id": templateId.uuidString,
-                        "p_duration": String(Int(totalElapsed))
-                    ]
+                    params: logParams
                 ).execute()
             } else {
                 // Skip logging for ephemeral templates (from presets)
@@ -605,6 +621,23 @@ enum TimerError: LocalizedError {
             return "Timer is already running"
         case .notAuthenticated:
             return "User must be authenticated"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .invalidWorkDuration:
+            return "Set a work duration of at least 1 second."
+        case .invalidRestDuration:
+            return "Set a rest duration of 0 or more seconds."
+        case .invalidRounds:
+            return "Set at least 1 round for the timer."
+        case .sessionNotFound:
+            return "Start a new timer session."
+        case .timerAlreadyRunning:
+            return "Stop the current timer before starting a new one."
+        case .notAuthenticated:
+            return "Please sign in to save your timer sessions."
         }
     }
 }

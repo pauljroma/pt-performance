@@ -86,7 +86,7 @@ struct TherapistProgramBuilderView: View {
 
         // Store phase for potential undo
         let deletedPhase = viewModel.phases[index]
-        let phaseName = deletedPhase.name ?? "Phase \(index + 1)"
+        let phaseName = deletedPhase.name.isEmpty ? "Phase \(index + 1)" : deletedPhase.name
 
         // Delete immediately
         viewModel.deletePhase(at: index)

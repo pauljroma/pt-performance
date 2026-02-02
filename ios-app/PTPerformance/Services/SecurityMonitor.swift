@@ -139,15 +139,29 @@ final class SecurityMonitor: ObservableObject {
         // Log to database for audit trail
         let client = PTSupabaseClient.shared.client
 
+        let input = FailedLoginAttemptInsert(
+            userEmail: email,
+            attemptedAt: ISO8601DateFormatter().string(from: Date())
+        )
+
         do {
             try await client.from("failed_login_attempts")
-                .insert([
-                    "user_email": email,
-                    "attempted_at": ISO8601DateFormatter().string(from: Date())
-                ])
+                .insert(input)
                 .execute()
         } catch {
             print("[SecurityMonitor] Failed to log failed attempt: \(error)")
+        }
+    }
+
+    // MARK: - Encodable Structs for Supabase
+
+    private struct FailedLoginAttemptInsert: Encodable {
+        let userEmail: String
+        let attemptedAt: String
+
+        enum CodingKeys: String, CodingKey {
+            case userEmail = "user_email"
+            case attemptedAt = "attempted_at"
         }
     }
 

@@ -9,6 +9,17 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for getting streak statistics
+private struct GetStreakStatisticsParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+    }
+}
+
 /// Service for managing streak tracking data
 /// Provides CRUD operations for streak records and activity history
 @MainActor
@@ -224,8 +235,9 @@ class StreakTrackingService: ObservableObject {
     /// - Returns: Array of StreakStatistics for each streak type
     func getStreakStatistics(for patientId: UUID) async throws -> [StreakStatistics] {
         do {
+            let params = GetStreakStatisticsParams(pPatientId: patientId.uuidString)
             let response = try await client.client
-                .rpc("get_streak_statistics", params: ["p_patient_id": patientId.uuidString])
+                .rpc("get_streak_statistics", params: params)
                 .execute()
 
             let decoder = createStreakDecoder()
@@ -379,6 +391,17 @@ enum StreakError: LocalizedError {
             return "Failed to record activity"
         case .fetchFailed:
             return "Failed to fetch streak data"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .noPatientFound:
+            return "Please sign out and sign back in to refresh your account."
+        case .activityRecordFailed:
+            return "Your workout was saved, but the streak couldn't be updated. It will sync automatically later."
+        case .fetchFailed:
+            return "Please check your internet connection and try again."
         }
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a phase advancement decision in a training program
-struct PhaseAdvancement: Codable, Identifiable {
+struct PhaseAdvancement: Codable, Identifiable, Hashable, Equatable {
     let id: String
     let patientId: String
     let programId: String
@@ -67,7 +67,7 @@ enum AdvancementDecision: String, Codable {
 }
 
 /// Result of a single phase gate check
-struct GateResult: Codable {
+struct GateResult: Codable, Hashable, Equatable {
     let gateName: String
     let passed: Bool
     let actualValue: Double?
@@ -189,7 +189,7 @@ struct PhaseGateChecker {
 }
 
 /// Input model for creating a phase advancement log
-struct CreatePhaseAdvancementInput: Codable {
+struct CreatePhaseAdvancementInput: Codable, Equatable {
     let patientId: String
     let programId: String
     let fromPhaseId: String?

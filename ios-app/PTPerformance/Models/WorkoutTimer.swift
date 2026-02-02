@@ -2,7 +2,7 @@ import Foundation
 
 /// Workout timer model - maps to database workout_timers table
 /// Represents an active or completed timer session
-struct WorkoutTimer: Codable, Identifiable {
+struct WorkoutTimer: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let templateId: UUID?  // Optional - NULL when started from preset

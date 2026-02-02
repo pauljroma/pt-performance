@@ -9,6 +9,23 @@
 import Foundation
 import Supabase
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for creating program from template
+private struct CreateProgramFromTemplateParams: Encodable {
+    let pTemplateId: String
+    let pPatientId: String
+    let pProgramName: String
+    let pStartDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case pTemplateId = "p_template_id"
+        case pPatientId = "p_patient_id"
+        case pProgramName = "p_program_name"
+        case pStartDate = "p_start_date"
+    }
+}
+
 /// Service for managing workout templates
 class TemplatesService {
 
@@ -379,13 +396,14 @@ class TemplatesService {
                 }
             }
 
+            let params = CreateProgramFromTemplateParams(
+                pTemplateId: templateId,
+                pPatientId: patientId,
+                pProgramName: programName,
+                pStartDate: startDate.iso8601String
+            )
             let result: [ProgramResult] = try await supabase
-                .rpc("create_program_from_template", params: [
-                    "p_template_id": templateId,
-                    "p_patient_id": patientId,
-                    "p_program_name": programName,
-                    "p_start_date": startDate.iso8601String
-                ])
+                .rpc("create_program_from_template", params: params)
                 .execute()
                 .value
 
@@ -560,6 +578,21 @@ enum TemplateError: LocalizedError {
             return "Failed to delete template"
         case .programCreationFailed:
             return "Failed to create program from template"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed:
+            return "Please check your connection and try again."
+        case .createFailed:
+            return "Your template couldn't be saved. Please try again."
+        case .updateFailed:
+            return "Your changes couldn't be saved. Please try again."
+        case .deleteFailed:
+            return "The template couldn't be deleted. Please try again."
+        case .programCreationFailed:
+            return "The program couldn't be created from this template. Please contact your therapist."
         }
     }
 }

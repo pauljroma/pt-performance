@@ -8,7 +8,7 @@
 import Foundation
 
 /// Category for help articles
-enum HelpCategory: String, Codable, CaseIterable {
+enum HelpCategory: String, Codable, CaseIterable, Hashable {
     case gettingStarted = "Getting Started"
     case programs = "Programs"
     case workouts = "Workouts"
@@ -29,7 +29,7 @@ enum HelpCategory: String, Codable, CaseIterable {
 }
 
 /// Help article model
-struct HelpArticle: Identifiable, Codable {
+struct HelpArticle: Identifiable, Codable, Hashable, Equatable {
     let id: UUID
     let title: String
     let content: String // Markdown content

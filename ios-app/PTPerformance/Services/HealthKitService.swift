@@ -112,6 +112,25 @@ enum HealthKitError: LocalizedError {
             return "No authenticated user found"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .notAvailable:
+            return "HealthKit requires an iPhone or Apple Watch. This feature is not available on this device."
+        case .notAuthorized:
+            return "Go to Settings > Privacy > Health > PT Performance to grant access to your health data."
+        case .noDataAvailable:
+            return "Make sure you're wearing your Apple Watch and it's syncing data to your iPhone."
+        case .queryFailed:
+            return "There was a problem reading your health data. Please try again."
+        case .saveFailed:
+            return "Your health data couldn't be saved. Please check your connection and try again."
+        case .invalidDate:
+            return "Please select a valid date and try again."
+        case .noAuthenticatedUser:
+            return "Please sign in to sync your health data."
+        }
+    }
 }
 
 // MARK: - HealthKitService
@@ -807,12 +826,13 @@ class HealthKitService: ObservableObject {
         )
 
         // Build metadata for the workout
-        var metadata: [String: Any] = [
+        let metadata: [String: Any] = [
             "PTPerformanceSessionId": session.id.uuidString,
             HKMetadataKeyIndoorWorkout: true
         ]
 
-        // Create the workout
+        // Create the workout using deprecated API (HKWorkoutBuilder requires more setup)
+        // TODO: Migrate to HKWorkoutBuilder when minimum deployment target is iOS 17+
         let workout = HKWorkout(
             activityType: .traditionalStrengthTraining,
             start: startTime,
@@ -865,7 +885,8 @@ class HealthKitService: ObservableObject {
             metadata["WorkoutName"] = name
         }
 
-        // Create the workout
+        // Create the workout using deprecated API (HKWorkoutBuilder requires more setup)
+        // TODO: Migrate to HKWorkoutBuilder when minimum deployment target is iOS 17+
         let workout = HKWorkout(
             activityType: .traditionalStrengthTraining,
             start: startTime,

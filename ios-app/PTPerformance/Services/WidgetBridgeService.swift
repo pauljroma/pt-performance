@@ -41,16 +41,11 @@ final class WidgetBridgeService {
 
     // MARK: - Initialization
 
-    private init(
-        readinessService: ReadinessService = ReadinessService(),
-        schedulingService: SchedulingService = .shared,
-        fatigueService: FatigueTrackingService = .shared,
-        supabaseClient: PTSupabaseClient = .shared
-    ) {
-        self.readinessService = readinessService
-        self.schedulingService = schedulingService
-        self.fatigueService = fatigueService
-        self.supabaseClient = supabaseClient
+    private init() {
+        self.readinessService = ReadinessService()
+        self.schedulingService = SchedulingService.shared
+        self.fatigueService = FatigueTrackingService.shared
+        self.supabaseClient = PTSupabaseClient.shared
     }
 
     // MARK: - Public API

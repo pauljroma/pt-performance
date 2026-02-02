@@ -186,7 +186,7 @@ struct SwipeGestureModifier: ViewModifier {
 
         // Apply resistance at edges
         let translation = value.translation.width
-        let maxOffset = max(rightAction?.threshold ?? 0, leftAction?.threshold ?? 0) * 1.3
+        _ = max(rightAction?.threshold ?? 0, leftAction?.threshold ?? 0) * 1.3  // maxOffset for future edge resistance
 
         // Rubber-band effect beyond threshold
         if translation > 0 && rightAction != nil {

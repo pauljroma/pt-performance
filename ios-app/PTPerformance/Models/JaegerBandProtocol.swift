@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Protocol Variation
 
 /// Different variations of the J-Band protocol based on time and context
-enum JaegerBandVariation: String, Codable, CaseIterable, Identifiable {
+enum JaegerBandVariation: String, Codable, CaseIterable, Identifiable, Hashable {
     case full = "full"
     case quick = "quick"
     case travel = "travel"
@@ -59,7 +59,7 @@ enum JaegerBandVariation: String, Codable, CaseIterable, Identifiable {
 // MARK: - Exercise Category
 
 /// Categories of J-Band exercises
-enum JaegerBandExerciseCategory: String, Codable, CaseIterable {
+enum JaegerBandExerciseCategory: String, Codable, CaseIterable, Hashable {
     case warmup = "warmup"
     case wristFlexion = "wrist_flexion"
     case wristExtension = "wrist_extension"
@@ -183,7 +183,7 @@ struct JaegerBandExercise: Identifiable, Codable, Hashable {
 // MARK: - J-Band Protocol
 
 /// Complete Jaeger Band Protocol with all exercises and metadata
-struct JaegerBandProtocol: Identifiable, Codable {
+struct JaegerBandProtocol: Identifiable, Codable, Hashable {
     let id: UUID
     let variation: JaegerBandVariation
     let exercises: [JaegerBandExercise]
@@ -227,7 +227,7 @@ struct JaegerBandProtocol: Identifiable, Codable {
 // MARK: - Session Progress
 
 /// Tracks progress through a J-Band session
-struct JaegerBandSessionProgress: Codable {
+struct JaegerBandSessionProgress: Codable, Hashable, Equatable {
     var currentExerciseIndex: Int
     var completedExercises: Set<UUID>
     var startTime: Date?
@@ -263,7 +263,7 @@ struct JaegerBandSessionProgress: Codable {
 // MARK: - Session Log
 
 /// Log entry for a completed J-Band session
-struct JaegerBandSessionLog: Identifiable, Codable {
+struct JaegerBandSessionLog: Identifiable, Codable, Hashable {
     let id: UUID
     let patientId: UUID
     let variation: JaegerBandVariation

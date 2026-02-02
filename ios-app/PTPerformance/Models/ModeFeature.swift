@@ -9,7 +9,7 @@
 import Foundation
 
 /// Feature definition per mode
-struct ModeFeature: Codable, Identifiable {
+struct ModeFeature: Codable, Identifiable, Hashable, Equatable {
     let id: String
     let mode: Mode
     let featureKey: String

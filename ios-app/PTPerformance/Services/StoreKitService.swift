@@ -12,7 +12,7 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Product IDs
 
-    static let productIDs: Set<String> = [
+    nonisolated static let productIDs: Set<String> = [
         "com.ptperformance.app.monthly",
         "com.ptperformance.app.annual",
         "com.ptperformance.baseballpack"  // One-time purchase
@@ -20,7 +20,7 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Individual Product IDs
 
-    static let baseballPackProductId = "com.ptperformance.baseballpack"
+    nonisolated static let baseballPackProductId = "com.ptperformance.baseballpack"
 
     // MARK: - Published Properties
 
@@ -65,6 +65,17 @@ class StoreKitService: ObservableObject {
                 return "Product not found. Please try again later."
             case .invalidProductType:
                 return "Invalid product configuration."
+            }
+        }
+
+        var recoverySuggestion: String? {
+            switch self {
+            case .failedVerification:
+                return "Make sure you're signed into the correct Apple ID and try again."
+            case .productNotFound:
+                return "The subscription may not be available in your region. Please contact support."
+            case .invalidProductType:
+                return "Please update to the latest version of the app and try again."
             }
         }
     }

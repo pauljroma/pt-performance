@@ -25,7 +25,7 @@ class JaegerBandService: ObservableObject {
 
     // MARK: - Initialization
 
-    nonisolated init(supabase: PTSupabaseClient = .shared) {
+    init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
 
@@ -246,7 +246,7 @@ class JaegerBandService: ObservableObject {
 
     /// Fetch weekly J-Band completion stats
     func fetchWeeklyStats() async {
-        guard let patientId = supabase.userId else { return }
+        guard supabase.userId != nil else { return }
 
         // Get start of current week
         let calendar = Calendar.current
@@ -268,7 +268,7 @@ class JaegerBandService: ObservableObject {
 
     /// Calculate current J-Band streak (consecutive days)
     private func calculateStreak() async -> Int {
-        guard let patientId = supabase.userId else { return 0 }
+        guard supabase.userId != nil else { return 0 }
 
         do {
             // Fetch last 30 days of sessions
@@ -308,7 +308,7 @@ class JaegerBandService: ObservableObject {
 
     /// Check if J-Band has been completed today
     func hasCompletedToday() async -> Bool {
-        guard let patientId = supabase.userId else { return false }
+        guard supabase.userId != nil else { return false }
 
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
@@ -378,6 +378,17 @@ enum JaegerBandError: LocalizedError {
             return "Session not found."
         case .saveFailed(let message):
             return "Failed to save session: \(message)"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .noPatientId:
+            return "Sign out and sign back in to refresh your session."
+        case .sessionNotFound:
+            return "This J-Band session may have been deleted. Start a new session."
+        case .saveFailed:
+            return "Please check your connection and try again. Your progress has been saved locally."
         }
     }
 }

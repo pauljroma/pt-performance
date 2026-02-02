@@ -398,4 +398,13 @@ enum ArmCareEducationError: LocalizedError {
             return "Article not found"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed, .searchFailed:
+            return "Please check your connection and try again."
+        case .notFound:
+            return "This article may have been removed. Try browsing the arm care section for related content."
+        }
+    }
 }

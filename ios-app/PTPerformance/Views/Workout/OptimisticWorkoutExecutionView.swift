@@ -118,6 +118,9 @@ struct OptimisticWorkoutExecutionView: View {
             }
             .frame(height: 8)
             .padding(.horizontal)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Workout progress")
+            .accessibilityValue("\(Int(viewModel.progressPercentage * 100)) percent complete")
 
             // Exercise counter
             HStack {
@@ -245,6 +248,9 @@ struct OptimisticWorkoutExecutionView: View {
                     }
                 ), in: 1...10, step: 1)
                 .tint(.blue)
+                .accessibilityLabel("RPE Effort level")
+                .accessibilityValue("\(state.rpe) out of 10")
+                .accessibilityHint("Adjust to rate your perceived effort from 1 easy to 10 max effort")
 
                 HStack {
                     Text("Easy")
@@ -278,6 +284,9 @@ struct OptimisticWorkoutExecutionView: View {
                     }
                 ), in: 0...10, step: 1)
                 .tint(state.painScore > 5 ? .red : .orange)
+                .accessibilityLabel("Pain level")
+                .accessibilityValue("\(state.painScore) out of 10")
+                .accessibilityHint("Adjust to rate your pain level from 0 no pain to 10 severe")
 
                 HStack {
                     Text("No Pain")
@@ -388,10 +397,12 @@ struct WorkoutCompletionSummary: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 80))
                     .foregroundColor(.green)
+                    .accessibilityHidden(true)
 
                 Text("Workout Complete!")
                     .font(.largeTitle)
                     .fontWeight(.bold)
+                    .accessibilityAddTraits(.isHeader)
 
                 // Stats
                 VStack(spacing: 16) {
@@ -451,6 +462,8 @@ struct WorkoutCompletionSummary: View {
             Text(value)
                 .fontWeight(.bold)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

@@ -99,7 +99,7 @@ struct Patient: Codable, Identifiable, Hashable {
 }
 
 /// Extended patient data with analytics
-struct PatientWithStats: Codable, Identifiable {
+struct PatientWithStats: Codable, Identifiable, Hashable, Equatable {
     let patient: Patient
     let recentPainAvg: Double?
     let completedSessions: Int

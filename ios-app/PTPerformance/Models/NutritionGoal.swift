@@ -8,7 +8,7 @@
 import Foundation
 
 /// Patient's nutritional goals and targets
-struct NutritionGoal: Codable, Identifiable {
+struct NutritionGoal: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: String
     let goalType: GoalType
@@ -49,7 +49,7 @@ struct NutritionGoal: Codable, Identifiable {
 }
 
 /// Type of nutrition goal
-enum GoalType: String, Codable, CaseIterable {
+enum GoalType: String, Codable, CaseIterable, Hashable {
     case daily
     case weekly
 
@@ -64,7 +64,7 @@ enum GoalType: String, Codable, CaseIterable {
 // MARK: - Goal Progress
 
 /// Progress toward nutrition goals
-struct NutritionGoalProgress: Codable, Identifiable {
+struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable {
     var id: String { goalId }
     let patientId: String
     let goalId: String

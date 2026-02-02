@@ -559,8 +559,8 @@ class OptimisticUpdateManager: ObservableObject {
     private func syncSingleUpdate(_ update: PendingOptimisticUpdate) async throws {
         switch update.type {
         case .setCompletion:
-            let payload = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
             // Set completions are aggregated into exercise completion, no direct API call needed
+            _ = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
             break
 
         case .exerciseCompletion:

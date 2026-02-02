@@ -8,7 +8,7 @@
 import Foundation
 
 /// Category for learning articles (baseball content)
-enum LearningCategory: String, Codable, CaseIterable {
+enum LearningCategory: String, Codable, CaseIterable, Hashable {
     case armCare = "Arm Care"
     case hitting = "Hitting"
     case injuryPrevention = "Injury Prevention"
@@ -109,7 +109,7 @@ enum LearningCategory: String, Codable, CaseIterable {
 }
 
 /// Learning article model for content library
-struct LearningArticle: Identifiable, Codable {
+struct LearningArticle: Identifiable, Codable, Hashable, Equatable {
     let id: String
     let title: String
     let content: String // Markdown content

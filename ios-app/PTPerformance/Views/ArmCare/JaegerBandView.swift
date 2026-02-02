@@ -188,6 +188,10 @@ private struct ProtocolOptionCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(variation.displayName), \(variation.estimatedDuration) minutes")
+        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to select this routine")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
@@ -262,6 +266,9 @@ private struct ProgressHeaderView: View {
                 }
             }
             .frame(height: 8)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Routine progress")
+            .accessibilityValue("\(Int(viewModel.progressPercentage * 100)) percent complete")
 
             // Exercise Counter
             HStack {
@@ -371,6 +378,8 @@ private struct JaegerVideoThumbnailView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Watch exercise demonstration video")
+        .accessibilityHint("Double tap to play video")
         .sheet(isPresented: $showVideo) {
             VideoPlayerSheet(videoUrl: videoUrl)
         }
@@ -462,6 +471,8 @@ private struct TimerSection: View {
             Text(timeString(from: remainingSeconds))
                 .font(.system(size: 48, weight: .bold, design: .monospaced))
                 .foregroundColor(remainingSeconds <= 5 ? .red : .primary)
+                .accessibilityLabel("Timer")
+                .accessibilityValue("\(remainingSeconds) seconds remaining")
 
             // Timer Controls
             HStack(spacing: 20) {
@@ -473,6 +484,8 @@ private struct TimerSection: View {
                         .background(Color(.systemGray5))
                         .cornerRadius(22)
                 }
+                .accessibilityLabel("Reset timer")
+                .accessibilityHint("Double tap to reset timer to \(totalSeconds) seconds")
 
                 Button(action: { toggleTimer() }) {
                     Image(systemName: isRunning ? "pause.fill" : "play.fill")
@@ -482,6 +495,8 @@ private struct TimerSection: View {
                         .background(Color.orange)
                         .cornerRadius(32)
                 }
+                .accessibilityLabel(isRunning ? "Pause timer" : "Start timer")
+                .accessibilityHint(isRunning ? "Double tap to pause the timer" : "Double tap to start the timer")
             }
         }
         .padding()
@@ -674,6 +689,8 @@ private struct NavigationButtonsView: View {
             }
             .disabled(!viewModel.canGoPrevious)
             .opacity(viewModel.canGoPrevious ? 1 : 0.5)
+            .accessibilityLabel("Previous exercise")
+            .accessibilityHint(viewModel.canGoPrevious ? "Double tap to go back to the previous exercise" : "No previous exercise available")
 
             // Skip Button
             Button(action: { viewModel.skipExercise() }) {
@@ -681,6 +698,8 @@ private struct NavigationButtonsView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Skip exercise")
+            .accessibilityHint("Double tap to skip this exercise")
 
             // Next/Complete Button
             Button(action: {
@@ -701,6 +720,8 @@ private struct NavigationButtonsView: View {
                 .foregroundColor(.white)
                 .cornerRadius(12)
             }
+            .accessibilityLabel(viewModel.isLastExercise ? "Complete routine" : "Next exercise")
+            .accessibilityHint(viewModel.isLastExercise ? "Double tap to complete the routine" : "Double tap to go to the next exercise")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -722,10 +743,12 @@ private struct SessionCompleteView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 80))
                         .foregroundColor(.green)
+                        .accessibilityHidden(true)
 
                     Text("Routine Complete!")
                         .font(.title)
                         .fontWeight(.bold)
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Great work on your arm care today")
                         .font(.subheadline)
@@ -824,6 +847,7 @@ private struct JaegerStatRow: View {
             Image(systemName: icon)
                 .foregroundColor(.orange)
                 .frame(width: 24)
+                .accessibilityHidden(true)
 
             Text(title)
                 .foregroundColor(.secondary)
@@ -833,6 +857,8 @@ private struct JaegerStatRow: View {
             Text(value)
                 .fontWeight(.semibold)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

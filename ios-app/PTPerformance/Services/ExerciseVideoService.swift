@@ -10,6 +10,46 @@ import Foundation
 import AVFoundation
 import UIKit
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for logging detailed video view
+private struct LogDetailedVideoViewParams: Encodable {
+    let pPatientId: String
+    let pExerciseId: String
+    let pVideoId: String
+    let pWatchDuration: String
+    let pCompleted: String
+    let pPlaybackSpeed: String
+    let pAngleWatched: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pExerciseId = "p_exercise_id"
+        case pVideoId = "p_video_id"
+        case pWatchDuration = "p_watch_duration"
+        case pCompleted = "p_completed"
+        case pPlaybackSpeed = "p_playback_speed"
+        case pAngleWatched = "p_angle_watched"
+    }
+}
+
+/// RPC parameters for logging video cached
+private struct LogVideoCachedParams: Encodable {
+    let pPatientId: String
+    let pVideoId: String
+    let pCacheSizeBytes: String
+    let pContentHash: String
+    let pDeviceIdentifier: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pVideoId = "p_video_id"
+        case pCacheSizeBytes = "p_cache_size_bytes"
+        case pContentHash = "p_content_hash"
+        case pDeviceIdentifier = "p_device_identifier"
+    }
+}
+
 /// Service for managing exercise video loading, caching, and preloading
 @MainActor
 class ExerciseVideoService: ObservableObject {
@@ -28,8 +68,9 @@ class ExerciseVideoService: ObservableObject {
     // MARK: - Private Properties
 
     private let supabase = PTSupabaseClient.shared
-    private let fileManager = FileManager.default
-    private let cacheDirectory: URL
+    // FileManager and cacheDirectory are safe to access from any context (immutable after init)
+    nonisolated(unsafe) private let fileManager = FileManager.default
+    nonisolated(unsafe) private let cacheDirectory: URL
     private let maxCacheSize: Int64 = 1_000_000_000 // 1 GB for HD videos
     private let preloadQueue = OperationQueue()
     private var preloadTasks: [UUID: Task<Void, Never>] = [:]
@@ -284,16 +325,17 @@ class ExerciseVideoService: ObservableObject {
         playbackSpeed: PlaybackSpeed = .normal
     ) async throws {
         do {
+            let params = LogDetailedVideoViewParams(
+                pPatientId: patientId.uuidString,
+                pExerciseId: video.exerciseId.uuidString,
+                pVideoId: video.id.uuidString,
+                pWatchDuration: String(watchDuration ?? 0),
+                pCompleted: String(completed),
+                pPlaybackSpeed: String(playbackSpeed.rawValue),
+                pAngleWatched: video.angle.rawValue
+            )
             _ = try await supabase.client
-                .rpc("log_detailed_video_view", params: [
-                    "p_patient_id": patientId.uuidString,
-                    "p_exercise_id": video.exerciseId.uuidString,
-                    "p_video_id": video.id.uuidString,
-                    "p_watch_duration": String(watchDuration ?? 0),
-                    "p_completed": String(completed),
-                    "p_playback_speed": String(playbackSpeed.rawValue),
-                    "p_angle_watched": video.angle.rawValue
-                ])
+                .rpc("log_detailed_video_view", params: params)
                 .execute()
         } catch {
             ErrorLogger.shared.logError(
@@ -308,6 +350,14 @@ class ExerciseVideoService: ObservableObject {
 
     /// Refresh cache statistics
     func refreshCacheStats() async {
+        // Collect file stats synchronously to avoid async iterator issues
+        let stats = calculateCacheStats()
+        cacheSizeBytes = stats.totalSize
+        cachedVideoCount = stats.count
+    }
+
+    /// Calculate cache statistics synchronously
+    private nonisolated func calculateCacheStats() -> (totalSize: Int64, count: Int) {
         var totalSize: Int64 = 0
         var count = 0
 
@@ -323,8 +373,7 @@ class ExerciseVideoService: ObservableObject {
             }
         }
 
-        cacheSizeBytes = totalSize
-        cachedVideoCount = count
+        return (totalSize, count)
     }
 
     /// Get cache size formatted string
@@ -355,21 +404,13 @@ class ExerciseVideoService: ObservableObject {
         return cacheDirectory.appendingPathComponent(filename)
     }
 
-    private func ensureCacheSpace(for requiredBytes: Int64) async {
-        let availableSpace = maxCacheSize - cacheSizeBytes
-
-        if requiredBytes > availableSpace {
-            // Need to clear old videos
-            await cleanupOldCache(targetFreeBytes: requiredBytes)
-        }
-    }
-
-    private func cleanupOldCache(targetFreeBytes: Int64) async {
+    /// Collect cache files with metadata synchronously (sorted oldest first)
+    private nonisolated func collectCacheFiles() -> [(url: URL, date: Date, size: Int64)] {
         guard let enumerator = fileManager.enumerator(
             at: cacheDirectory,
             includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey]
         ) else {
-            return
+            return []
         }
 
         var files: [(url: URL, date: Date, size: Int64)] = []
@@ -383,7 +424,21 @@ class ExerciseVideoService: ObservableObject {
         }
 
         // Sort by date (oldest first)
-        files.sort { $0.date < $1.date }
+        return files.sorted { $0.date < $1.date }
+    }
+
+    private func ensureCacheSpace(for requiredBytes: Int64) async {
+        let availableSpace = maxCacheSize - cacheSizeBytes
+
+        if requiredBytes > availableSpace {
+            // Need to clear old videos
+            await cleanupOldCache(targetFreeBytes: requiredBytes)
+        }
+    }
+
+    private func cleanupOldCache(targetFreeBytes: Int64) async {
+        // Collect files synchronously to avoid async iterator issues
+        let files = collectCacheFiles()
 
         // Remove oldest files until we have enough space
         var freedBytes: Int64 = 0
@@ -455,14 +510,15 @@ class ExerciseVideoService: ObservableObject {
 
         let fileSize = (try? fileManager.attributesOfItem(atPath: localUrl.path)[.size] as? Int64) ?? 0
 
+        let params = LogVideoCachedParams(
+            pPatientId: patientId.uuidString,
+            pVideoId: video.id.uuidString,
+            pCacheSizeBytes: String(fileSize),
+            pContentHash: video.contentHash ?? "",
+            pDeviceIdentifier: deviceIdentifier
+        )
         _ = try await supabase.client
-            .rpc("log_video_cached", params: [
-                "p_patient_id": patientId.uuidString,
-                "p_video_id": video.id.uuidString,
-                "p_cache_size_bytes": String(fileSize),
-                "p_content_hash": video.contentHash ?? "",
-                "p_device_identifier": deviceIdentifier
-            ])
+            .rpc("log_video_cached", params: params)
             .execute()
     }
 }

@@ -2,6 +2,17 @@ import Foundation
 import Supabase
 import SwiftUI
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for fatigue calculation
+private struct CalculateFatigueParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+    }
+}
+
 // MARK: - Fatigue Tracking Models
 
 /// Fatigue band levels for display and recommendations
@@ -270,6 +281,19 @@ enum FatigueTrackingError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fatigueCalculationFailed:
+            return "Your fatigue data couldn't be calculated. Please try again later."
+        case .noFatigueDataFound:
+            return "Complete a few workouts to start seeing your fatigue trends."
+        case .trendFetchFailed, .networkError:
+            return "Please check your connection and try again."
+        case .invalidPatientId:
+            return "Please sign out and sign back in to refresh your session."
+        }
+    }
 }
 
 // MARK: - Fatigue Tracking Service
@@ -384,10 +408,9 @@ class FatigueTrackingService: ObservableObject {
         defer { isLoading = false }
 
         do {
+            let params = CalculateFatigueParams(pPatientId: patientId.uuidString)
             let response = try await client.client
-                .rpc("calculate_fatigue_accumulation", params: [
-                    "p_patient_id": patientId.uuidString
-                ])
+                .rpc("calculate_fatigue_accumulation", params: params)
                 .execute()
 
             // Try to decode the result

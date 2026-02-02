@@ -10,7 +10,7 @@ import Foundation
 
 /// Patient training mode enum
 /// Matches database patient_mode enum
-enum Mode: String, Codable, CaseIterable {
+enum Mode: String, Codable, CaseIterable, Hashable {
     case rehab = "rehab"
     case strength = "strength"
     case performance = "performance"
@@ -65,7 +65,7 @@ enum Mode: String, Codable, CaseIterable {
 }
 
 /// Patient mode info with history
-struct PatientMode: Codable, Identifiable {
+struct PatientMode: Codable, Identifiable, Hashable, Equatable {
     let id: String
     let mode: Mode
     let modeChangedAt: Date?
@@ -80,7 +80,7 @@ struct PatientMode: Codable, Identifiable {
 }
 
 /// Mode change history entry
-struct ModeHistoryEntry: Codable, Identifiable {
+struct ModeHistoryEntry: Codable, Identifiable, Hashable, Equatable {
     let id: String
     let patientId: String
     let previousMode: Mode?

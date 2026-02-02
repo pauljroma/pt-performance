@@ -197,6 +197,33 @@ struct AddToPrescribedSessionInput: Codable {
     }
 }
 
+/// Input for updating usage count
+struct UsageCountUpdate: Encodable {
+    let usageCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case usageCount = "usage_count"
+    }
+}
+
+/// Input for updating order index
+struct OrderIndexUpdate: Encodable {
+    let orderIndex: Int
+
+    enum CodingKeys: String, CodingKey {
+        case orderIndex = "order_index"
+    }
+}
+
+/// Input for starting a workout (setting started_at)
+struct StartWorkoutUpdate: Encodable {
+    let startedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case startedAt = "started_at"
+    }
+}
+
 // MARK: - Service
 
 /// Service for managing manual workout templates and sessions
@@ -376,7 +403,7 @@ class ManualWorkoutService: ObservableObject {
             // Update with new count
             try await supabase.client
                 .from("patient_workout_templates")
-                .update(["usage_count": newCount])
+                .update(UsageCountUpdate(usageCount: newCount))
                 .eq("id", value: templateId.uuidString)
                 .execute()
 
@@ -544,7 +571,7 @@ class ManualWorkoutService: ObservableObject {
             for (index, exerciseId) in exerciseIds.enumerated() {
                 try await supabase.client
                     .from("manual_session_exercises")
-                    .update(["order_index": index])
+                    .update(OrderIndexUpdate(orderIndex: index))
                     .eq("id", value: exerciseId.uuidString)
                     .eq("manual_session_id", value: sessionId.uuidString)
                     .execute()
@@ -567,9 +594,7 @@ class ManualWorkoutService: ObservableObject {
 
             let response = try await supabase.client
                 .from("manual_sessions")
-                .update([
-                    "started_at": now
-                ])
+                .update(StartWorkoutUpdate(startedAt: now))
                 .eq("id", value: sessionId.uuidString)
                 .select()
                 .single()

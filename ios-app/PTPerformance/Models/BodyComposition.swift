@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a body composition measurement from the body_compositions table
-struct BodyComposition: Codable, Identifiable {
+struct BodyComposition: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let recordedAt: Date

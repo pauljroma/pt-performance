@@ -47,7 +47,7 @@ enum StreakType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Streak Record
 
 /// Represents a streak record from the database
-struct StreakRecord: Codable, Identifiable {
+struct StreakRecord: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let streakType: StreakType
@@ -132,7 +132,7 @@ struct StreakRecord: Codable, Identifiable {
 // MARK: - Streak History
 
 /// Represents daily activity history
-struct StreakHistory: Codable, Identifiable {
+struct StreakHistory: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let activityDate: Date
@@ -188,7 +188,7 @@ struct StreakHistory: Codable, Identifiable {
 // MARK: - Streak Statistics
 
 /// Comprehensive streak statistics from database function
-struct StreakStatistics: Codable {
+struct StreakStatistics: Codable, Hashable, Equatable {
     let streakType: String
     let currentStreak: Int
     let longestStreak: Int
@@ -248,7 +248,7 @@ struct StreakStatistics: Codable {
 // MARK: - Calendar History Entry
 
 /// History entry for calendar view (from RPC function)
-struct CalendarHistoryEntry: Codable, Identifiable {
+struct CalendarHistoryEntry: Codable, Identifiable, Hashable, Equatable {
     var id: Date { activityDate }
     let activityDate: Date
     let workoutCompleted: Bool

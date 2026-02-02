@@ -135,22 +135,23 @@ class WorkoutGridViewModel: ObservableObject {
         let filter = "session_id=eq.\(sessionId)"
 
         Task {
+            let changes = realtimeChannel!
+                .postgresChange(
+                    AnyAction.self,
+                    schema: "public",
+                    table: "session_exercises",
+                    filter: filter
+                )
+
             do {
-                let changes = realtimeChannel!
-                    .postgresChange(
-                        AnyAction.self,
-                        schema: "public",
-                        table: "session_exercises",
-                        filter: filter
-                    )
-
-                await realtimeChannel!.subscribe()
-
-                for await change in changes {
-                    await handleRealtimeChange(change)
-                }
+                try await realtimeChannel!.subscribeWithError()
             } catch {
-                logger.log("❌ Realtime subscription error: \(error)", level: .error)
+                logger.log("Realtime subscription error: \(error)", level: .error)
+                return
+            }
+
+            for await change in changes {
+                await handleRealtimeChange(change)
             }
         }
     }

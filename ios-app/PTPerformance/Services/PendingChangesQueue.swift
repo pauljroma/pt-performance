@@ -129,7 +129,7 @@ struct QueueStatistics {
 @MainActor
 class PendingChangesQueue: ObservableObject {
     static let shared = PendingChangesQueue()
-    static let maxRetries = 5
+    nonisolated static let maxRetries = 5
 
     // MARK: - Published State
 

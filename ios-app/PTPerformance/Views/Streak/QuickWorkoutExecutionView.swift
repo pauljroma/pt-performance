@@ -470,7 +470,7 @@ struct QuickWorkoutExecutionView: View {
     }
 
     private func markExerciseComplete(_ exercise: QuickWorkoutExercise) {
-        withAnimation {
+        _ = withAnimation {
             completedExercises.insert(exercise.id)
         }
         HapticFeedback.light()

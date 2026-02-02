@@ -251,4 +251,15 @@ enum AppleSignInError: LocalizedError {
             return "Authentication nonce was not set. Please try again."
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .invalidCredential:
+            return "Please try signing in with Apple again. If the problem persists, check your Apple ID settings."
+        case .missingIdentityToken:
+            return "There was a problem communicating with Apple. Please try again."
+        case .missingNonce:
+            return "Please close and reopen the app, then try signing in again."
+        }
+    }
 }

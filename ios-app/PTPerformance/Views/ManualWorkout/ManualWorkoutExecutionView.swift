@@ -2388,7 +2388,7 @@ struct ManualWorkoutExecutionView: View {
                 await MainActor.run {
                     withAnimation(.easeIn(duration: 0.3)) {
                         progressionSuggestion = suggestion
-                        showProgressionSuggestion = suggestion != nil
+                        showProgressionSuggestion = true
                     }
                 }
             } catch {

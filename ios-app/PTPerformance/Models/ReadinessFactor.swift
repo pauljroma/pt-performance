@@ -4,7 +4,7 @@ import Foundation
 /// BUILD 116 - Agent 6: Daily Readiness Models
 ///
 /// Maps to the `readiness_factors` table in Supabase
-struct ReadinessFactor: Codable, Identifiable {
+struct ReadinessFactor: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let name: String
     let weight: Double

@@ -9,6 +9,18 @@
 import Foundation
 import Supabase
 
+// MARK: - Encodable Structs for Supabase Updates
+
+/// Update for reordering phases
+private struct SequenceUpdate: Encodable {
+    let sequence: Int
+}
+
+/// Update for program status
+private struct ProgramStatusUpdate: Encodable {
+    let status: String
+}
+
 // MARK: - Response Models
 
 /// Program with all its phases and assignments for editing
@@ -319,6 +331,23 @@ enum ProgramServiceError: LocalizedError {
             return "Invalid phase order"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .programNotFound:
+            return "This program may have been deleted. Return to the program list and try again."
+        case .phaseNotFound:
+            return "This phase may have been deleted. Refresh the program to see current phases."
+        case .assignmentNotFound:
+            return "This workout assignment may have been removed. Refresh to see the latest schedule."
+        case .createFailed, .updateFailed, .deleteFailed, .fetchFailed:
+            return "Please check your connection and try again."
+        case .publishFailed:
+            return "The program couldn't be published. Please ensure all required fields are complete."
+        case .invalidPhaseOrder:
+            return "Please reorder the phases and try again."
+        }
+    }
 }
 
 // MARK: - Service
@@ -596,7 +625,7 @@ class ProgramBuilderService: ObservableObject {
 
                 try await supabase.client
                     .from("phases")
-                    .update(["sequence": newSequence])
+                    .update(SequenceUpdate(sequence: newSequence))
                     .eq("id", value: phaseId.uuidString)
                     .eq("program_id", value: programId.uuidString)
                     .execute()
@@ -757,7 +786,7 @@ class ProgramBuilderService: ObservableObject {
             // Update program status to "active"
             try await supabase.client
                 .from("programs")
-                .update(["status": "active"])
+                .update(ProgramStatusUpdate(status: "active"))
                 .eq("id", value: programId.uuidString)
                 .execute()
 

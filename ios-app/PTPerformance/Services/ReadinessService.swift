@@ -2,6 +2,30 @@ import Foundation
 import Supabase
 import SwiftUI
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for calculating readiness score
+private struct CalculateReadinessScoreParams: Encodable {
+    let pPatientId: String
+    let pDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDate = "p_date"
+    }
+}
+
+/// RPC parameters for getting readiness trend
+private struct GetReadinessTrendParams: Encodable {
+    let pPatientId: String
+    let pDays: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDays = "p_days"
+    }
+}
+
 /// Service for managing daily readiness data
 /// Provides CRUD operations for daily readiness check-ins
 /// Uses database functions for automatic score calculation
@@ -132,11 +156,12 @@ class ReadinessService: ObservableObject {
         do {
             let dateString = ISO8601DateFormatter().string(from: date)
 
+            let params = CalculateReadinessScoreParams(
+                pPatientId: patientId.uuidString,
+                pDate: dateString
+            )
             let response = try await client.client
-                .rpc("calculate_readiness_score", params: [
-                    "p_patient_id": patientId.uuidString,
-                    "p_date": dateString
-                ])
+                .rpc("calculate_readiness_score", params: params)
                 .execute()
 
             // Decode as Double
@@ -165,11 +190,12 @@ class ReadinessService: ObservableObject {
         days: Int = 7
     ) async throws -> ReadinessTrend {
         do {
+            let params = GetReadinessTrendParams(
+                pPatientId: patientId.uuidString,
+                pDays: String(days)
+            )
             let response = try await client.client
-                .rpc("get_readiness_trend", params: [
-                    "p_patient_id": patientId.uuidString,
-                    "p_days": String(days)
-                ])
+                .rpc("get_readiness_trend", params: params)
                 .execute()
 
             let decoder = JSONDecoder()

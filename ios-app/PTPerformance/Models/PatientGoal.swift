@@ -83,7 +83,7 @@ enum GoalStatus: String, Codable, CaseIterable, Identifiable {
 // MARK: - Patient Goal Model
 
 /// A goal set by or for a patient, with measurable progress tracking
-struct PatientGoal: Codable, Identifiable {
+struct PatientGoal: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let title: String

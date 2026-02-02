@@ -257,7 +257,7 @@ struct WorkoutGridView: View {
             TextField("0", value: Binding(
                 get: { exercise.prescribedSets },
                 set: { newValue in
-                    viewModel.updateCell(exerciseId: exercise.id, field: .sets, value: newValue)
+                    viewModel.updateCell(exerciseId: exercise.id, field: .sets, value: newValue as Any)
                 }
             ), format: .number)
             .keyboardType(.numberPad)

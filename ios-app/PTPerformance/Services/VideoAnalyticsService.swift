@@ -9,6 +9,28 @@
 import Foundation
 import Supabase
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for video watch statistics
+private struct GetVideoWatchStatisticsParams: Encodable {
+    let pPatientId: String
+    let pDays: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDays = "p_days"
+    }
+}
+
+/// RPC parameters for total watch time
+private struct GetTotalWatchTimeParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+    }
+}
+
 /// Service for tracking video watch events and history
 /// Logs user engagement with exercise videos for analytics
 @MainActor
@@ -320,11 +342,12 @@ class VideoAnalyticsService: ObservableObject {
         }
 
         do {
+            let params = GetVideoWatchStatisticsParams(
+                pPatientId: patientId,
+                pDays: String(days)
+            )
             let result: WatchStatistics = try await client.client
-                .rpc("get_video_watch_statistics", params: [
-                    "p_patient_id": patientId,
-                    "p_days": String(days)
-                ])
+                .rpc("get_video_watch_statistics", params: params)
                 .single()
                 .execute()
                 .value
@@ -371,10 +394,9 @@ class VideoAnalyticsService: ObservableObject {
 
         do {
             // Use RPC for efficient server-side aggregation
+            let params = GetTotalWatchTimeParams(pPatientId: patientId)
             let result: Int = try await client.client
-                .rpc("get_total_watch_time", params: [
-                    "p_patient_id": patientId
-                ])
+                .rpc("get_total_watch_time", params: params)
                 .single()
                 .execute()
                 .value

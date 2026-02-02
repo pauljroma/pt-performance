@@ -2,7 +2,7 @@ import Foundation
 
 /// Timer preset model - maps to database timer_presets table
 /// Represents curated timer configurations with metadata
-struct TimerPreset: Codable, Identifiable {
+struct TimerPreset: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let name: String
     let description: String?
@@ -24,7 +24,7 @@ struct TimerPreset: Codable, Identifiable {
     // MARK: - Template JSON Structure
 
     /// JSONB structure for template configuration
-    struct TemplateJSON: Codable {
+    struct TemplateJSON: Codable, Hashable, Equatable {
         let type: TimerType
         let workSeconds: Int
         let restSeconds: Int
@@ -46,7 +46,7 @@ struct TimerPreset: Codable, Identifiable {
         }
 
         /// Difficulty levels for presets
-        enum Difficulty: String, Codable, CaseIterable {
+        enum Difficulty: String, Codable, CaseIterable, Hashable {
             case easy
             case moderate
             case hard

@@ -337,17 +337,18 @@ struct CalendarSettingsView: View {
 
     private func performSync() {
         Task {
-            do {
-                // In a real implementation, you would fetch sessions here
-                // For now, we just show the sync result
-                // let sessions = try await SchedulingService.shared.fetchUpcomingSessions(for: patientId)
-                // _ = try await calendarService.syncSessionsToCalendar(sessions: sessions)
-                showingSyncResult = true
-            } catch let error as CalendarSyncError {
-                syncError = error
-            } catch {
-                syncError = .syncFailed(error)
-            }
+            // In a real implementation, you would fetch sessions here
+            // For now, we just show the sync result
+            // do {
+            //     let sessions = try await SchedulingService.shared.fetchUpcomingSessions(for: patientId)
+            //     _ = try await calendarService.syncSessionsToCalendar(sessions: sessions)
+            //     showingSyncResult = true
+            // } catch let error as CalendarSyncError {
+            //     syncError = error
+            // } catch {
+            //     syncError = .syncFailed(error)
+            // }
+            showingSyncResult = true
         }
     }
 

@@ -236,7 +236,8 @@ struct ProgramEditorView: View {
 
         // Store program state for potential undo
         let programName = viewModel.programName
-        let phasesSnapshot = viewModel.phases
+        // Note: phasesSnapshot stored for potential future undo implementation
+        _ = viewModel.phases
 
         do {
             try await viewModel.deleteProgram(programId: programId)

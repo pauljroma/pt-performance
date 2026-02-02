@@ -165,6 +165,9 @@ struct SwipeableSetTrackingView: View {
             .frame(height: 10)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: completedSetsCount)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: skippedSetsCount)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Progress: \(Int(progressPercentage * 100)) percent complete")
+            .accessibilityValue("\(completedSetsCount) completed, \(skippedSetsCount) skipped, \(remainingSetsCount) remaining")
 
             // Status text
             HStack {
@@ -215,6 +218,8 @@ struct SwipeableSetTrackingView: View {
         .padding()
         .background(Color.blue.opacity(0.1))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Instructions: Swipe right to complete, left for options")
     }
 
     // MARK: - Set Cards Section
@@ -299,8 +304,12 @@ struct SwipeableSetTrackingView: View {
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
+            .accessibilityLabel("Continue to next exercise")
+            .accessibilityHint("Double tap to proceed to the next exercise")
         }
         .transition(.scale.combined(with: .opacity))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Exercise complete summary")
     }
 
     // MARK: - Helper Methods

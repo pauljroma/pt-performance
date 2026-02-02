@@ -480,7 +480,7 @@ class QuickStartState: ObservableObject {
             isAvailable = false
             sessionName = nil
             exerciseCount = 0
-            status = .error(error.localizedDescription ?? "Unknown error")
+            status = .error(error.localizedDescription)
         }
     }
 }

@@ -2,6 +2,43 @@ import Foundation
 import Supabase
 import SwiftUI
 
+// MARK: - Encodable Structs for Supabase
+
+/// RPC parameters for activating deload
+private struct ActivateDeloadParams: Encodable {
+    let pRecommendationId: String
+    let pPatientId: String
+    let pStartDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case pRecommendationId = "p_recommendation_id"
+        case pPatientId = "p_patient_id"
+        case pStartDate = "p_start_date"
+    }
+}
+
+/// Update for dismissing a deload recommendation
+private struct DismissRecommendationUpdate: Encodable {
+    let status: String
+    let dismissedAt: String
+    let dismissalReason: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case dismissedAt = "dismissed_at"
+        case dismissalReason = "dismissal_reason"
+    }
+}
+
+/// RPC parameters for checking if in deload period
+private struct IsInDeloadPeriodParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+    }
+}
+
 // MARK: - Deload Recommendation Models
 
 /// Summary of fatigue factors contributing to deload recommendation
@@ -442,6 +479,21 @@ enum DeloadRecommendationError: LocalizedError {
             return "Network error: \(error.localizedDescription)"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed, .networkError:
+            return "Please check your connection and try again."
+        case .activationFailed:
+            return "Your deload couldn't be started. Please try again or contact your therapist."
+        case .dismissalFailed:
+            return "The recommendation couldn't be dismissed. Please try again."
+        case .noRecommendationFound:
+            return "Keep training and we'll let you know when a deload is recommended."
+        case .invalidPatientId:
+            return "Please sign out and sign back in to refresh your session."
+        }
+    }
 }
 
 // MARK: - Deload Recommendation Service
@@ -493,12 +545,13 @@ class DeloadRecommendationService: ObservableObject {
 
         do {
             // Call the RPC function to activate deload
+            let params = ActivateDeloadParams(
+                pRecommendationId: recommendationId.uuidString,
+                pPatientId: patientId.uuidString,
+                pStartDate: ISO8601DateFormatter().string(from: startDate)
+            )
             let response = try await client.client
-                .rpc("activate_deload", params: [
-                    "p_recommendation_id": recommendationId.uuidString,
-                    "p_patient_id": patientId.uuidString,
-                    "p_start_date": ISO8601DateFormatter().string(from: startDate)
-                ])
+                .rpc("activate_deload", params: params)
                 .execute()
 
             guard !response.data.isEmpty else {
@@ -545,13 +598,14 @@ class DeloadRecommendationService: ObservableObject {
 
         do {
             // Update recommendation status in database
+            let updateInput = DismissRecommendationUpdate(
+                status: "dismissed",
+                dismissedAt: ISO8601DateFormatter().string(from: Date()),
+                dismissalReason: reason
+            )
             try await client.client
                 .from("deload_recommendations")
-                .update([
-                    "status": "dismissed",
-                    "dismissed_at": ISO8601DateFormatter().string(from: Date()),
-                    "dismissal_reason": reason
-                ])
+                .update(updateInput)
                 .eq("id", value: recommendationId.uuidString)
                 .execute()
 
@@ -588,10 +642,9 @@ class DeloadRecommendationService: ObservableObject {
 
         do {
             // Call the RPC function to check if in deload period
+            let params = IsInDeloadPeriodParams(pPatientId: patientId.uuidString)
             let response = try await client.client
-                .rpc("is_in_deload_period", params: [
-                    "p_patient_id": patientId.uuidString
-                ])
+                .rpc("is_in_deload_period", params: params)
                 .execute()
 
             // Parse the response - could be boolean or full period data

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Program model
-struct Program: Codable, Identifiable {
+struct Program: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let name: String
@@ -29,7 +29,7 @@ struct Program: Codable, Identifiable {
 }
 
 /// Phase model
-struct Phase: Codable, Identifiable {
+struct Phase: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let programId: UUID
     let phaseNumber: Int
@@ -48,7 +48,7 @@ struct Phase: Codable, Identifiable {
 }
 
 /// Session model (simplified for program viewer)
-struct ProgramSession: Codable, Identifiable {
+struct ProgramSession: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let phaseId: UUID
     let sessionNumber: Int?
@@ -67,7 +67,7 @@ struct ProgramSession: Codable, Identifiable {
 }
 
 /// Session exercise (for program viewer)
-struct ProgramExercise: Decodable, Identifiable {
+struct ProgramExercise: Decodable, Identifiable, Hashable, Equatable {
     let id: UUID
     let sessionId: UUID
     let exerciseName: String
@@ -91,7 +91,7 @@ struct ProgramExercise: Decodable, Identifiable {
     }
 
     // Nested structure for exercise_templates join
-    struct ExerciseTemplate: Codable {
+    struct ExerciseTemplate: Codable, Hashable, Equatable {
         let exerciseName: String
 
         enum CodingKeys: String, CodingKey {

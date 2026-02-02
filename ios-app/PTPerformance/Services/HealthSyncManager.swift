@@ -21,10 +21,10 @@ class HealthSyncManager: ObservableObject {
     // MARK: - Background Task Identifiers
 
     /// Background task identifier for health data sync
-    static let syncTaskIdentifier = "com.ptperformance.health-sync"
+    nonisolated static let syncTaskIdentifier = "com.ptperformance.health-sync"
 
     /// Background task identifier for processing (longer running)
-    static let processingTaskIdentifier = "com.ptperformance.health-processing"
+    nonisolated static let processingTaskIdentifier = "com.ptperformance.health-processing"
 
     // MARK: - Published Properties
 

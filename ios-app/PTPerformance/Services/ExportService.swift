@@ -32,6 +32,17 @@ class ExportService {
                 return "Failed to create export file"
             }
         }
+
+        var recoverySuggestion: String? {
+            switch self {
+            case .noData:
+                return "Complete some workouts first, then try exporting again."
+            case .pdfGenerationFailed, .csvGenerationFailed:
+                return "Please try again. If the problem persists, contact support."
+            case .fileCreationFailed:
+                return "Make sure you have enough storage space and try again."
+            }
+        }
     }
 
     // MARK: - PDF Export
@@ -87,7 +98,7 @@ class ExportService {
             currentY += 30
 
             // Sessions
-            for (index, session) in sessions.enumerated() {
+            for (_, session) in sessions.enumerated() {
                 // Check if we need a new page
                 if currentY > pageHeight - 200 {
                     context.beginPage()
@@ -350,7 +361,6 @@ class ExportService {
         pageRect: CGRect,
         pageNumber: Int
     ) {
-        let margin: CGFloat = 50
         let footerY = pageRect.height - 30
 
         let footerFont = UIFont.systemFont(ofSize: 9)

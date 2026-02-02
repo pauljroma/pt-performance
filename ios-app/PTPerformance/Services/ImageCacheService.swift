@@ -238,6 +238,17 @@ enum ImageCacheError: LocalizedError {
             return "Failed to write to cache"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .downloadFailed:
+            return "Please check your connection and try again."
+        case .invalidImageData:
+            return "The image couldn't be loaded. Please try again later."
+        case .cacheWriteFailed:
+            return "There wasn't enough storage space. Try clearing some space on your device."
+        }
+    }
 }
 
 // MARK: - String Extension for Hashing

@@ -133,6 +133,9 @@ struct ArmCareAssessmentView: View {
                 }
             }
             .frame(height: 4)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Assessment progress")
+            .accessibilityValue("\(Int(progressPercentage * 100)) percent complete")
         }
     }
 
@@ -274,6 +277,9 @@ struct ArmCareAssessmentView: View {
                 )
         }
         .offset(x: offset.x, y: offset.y)
+        .accessibilityLabel(location.displayName)
+        .accessibilityHint(isSelected ? "Double tap to remove pain location" : "Double tap to mark as pain location")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
     private func painLocationOffset(for location: ArmPainLocation) -> CGPoint {
@@ -424,6 +430,9 @@ struct ArmCareAssessmentView: View {
             .onChange(of: value.wrappedValue) { _, _ in
                 HapticFeedback.light()
             }
+            .accessibilityLabel(title)
+            .accessibilityValue("\(Int(value.wrappedValue)) out of 10")
+            .accessibilityHint(subtitle)
 
             Text(subtitle)
                 .font(.caption2)
@@ -454,6 +463,8 @@ struct ArmCareAssessmentView: View {
                         .foregroundColor(.white)
                 }
                 .animation(.spring(), value: viewModel.currentTrafficLight)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Arm status: \(viewModel.currentTrafficLight.displayName)")
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(viewModel.currentTrafficLight.displayName)

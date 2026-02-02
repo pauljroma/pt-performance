@@ -1020,6 +1020,15 @@ enum AnalyticsError: LocalizedError {
             return "No data available for the selected period"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .calculationFailed:
+            return "Please try again. If the problem persists, contact support."
+        case .noData:
+            return "Complete some workouts to see your analytics here."
+        }
+    }
 }
 
 // MARK: - Date Extensions

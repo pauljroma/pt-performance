@@ -109,7 +109,7 @@ struct ReadinessCheckInView: View {
                     // Load HRV baseline for trend indicator and sync today's data
                     if healthKitService.isAuthorized {
                         hrvBaseline = try? await healthKitService.getHRVBaseline()
-                        try? await healthKitService.syncTodayData()
+                        _ = try? await healthKitService.syncTodayData()
                     }
                 }
                 .sheet(isPresented: $showHealthKitPrompt) {

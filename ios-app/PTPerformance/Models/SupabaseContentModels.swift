@@ -11,7 +11,7 @@ import Foundation
 // MARK: - Supabase Models
 
 /// Supabase content_items table structure (flexible content system)
-struct SupabaseContentItem: Codable {
+struct SupabaseContentItem: Codable, Identifiable, Hashable {
     let id: String
     let slug: String
     let title: String
@@ -26,12 +26,12 @@ struct SupabaseContentItem: Codable {
 }
 
 /// Content data from JSONB field
-struct ContentData: Codable {
+struct ContentData: Codable, Hashable {
     let markdown: String?
     let reading_time: String?
     let references: [Reference]?
 
-    struct Reference: Codable {
+    struct Reference: Codable, Hashable {
         let citation: String
         let order: Int
     }
@@ -64,7 +64,7 @@ struct ContentData: Codable {
 }
 
 /// Helper for decoding heterogeneous JSONB values
-enum AnyCodableValue: Codable {
+enum AnyCodableValue: Codable, Hashable {
     case string(String)
     case int(Int)
     case double(Double)

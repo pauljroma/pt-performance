@@ -10,6 +10,39 @@ import Foundation
 import UserNotifications
 import Supabase
 
+// MARK: - Encodable Structs for Supabase RPC
+
+/// RPC parameters for analyzing training patterns
+private struct AnalyzeTrainingPatternsParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+    }
+}
+
+/// RPC parameters for getting optimal reminder time
+private struct GetOptimalReminderTimeParams: Encodable {
+    let pPatientId: String
+    let pDayOfWeek: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDayOfWeek = "p_day_of_week"
+    }
+}
+
+/// RPC parameters for recording workout completion time
+private struct RecordWorkoutCompletionTimeParams: Encodable {
+    let pPatientId: String
+    let pCompletionTime: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pCompletionTime = "p_completion_time"
+    }
+}
+
 /// Service for managing smart workout notification scheduling.
 ///
 /// Thread-safe actor that handles:
@@ -96,9 +129,10 @@ actor SmartNotificationService {
     /// - Parameter patientId: The patient's UUID
     func analyzePatterns(for patientId: UUID) async throws {
         do {
+            let params = AnalyzeTrainingPatternsParams(pPatientId: patientId.uuidString)
             try await supabase.rpc(
                 "analyze_training_patterns",
-                params: ["p_patient_id": patientId.uuidString]
+                params: params
             ).execute()
 
             DebugLogger.shared.log(
@@ -212,13 +246,14 @@ actor SmartNotificationService {
         dayOfWeek: Int
     ) async throws -> OptimalReminderTime {
         do {
+            let params = GetOptimalReminderTimeParams(
+                pPatientId: patientId.uuidString,
+                pDayOfWeek: String(dayOfWeek)
+            )
             let result: [OptimalReminderTimeResponse] = try await supabase
                 .rpc(
                     "get_optimal_reminder_time",
-                    params: [
-                        "p_patient_id": patientId.uuidString,
-                        "p_day_of_week": String(dayOfWeek)
-                    ]
+                    params: params
                 )
                 .execute()
                 .value
@@ -263,8 +298,8 @@ actor SmartNotificationService {
             throw SmartNotificationError.permissionDenied
         }
 
-        // Get settings
-        let settings = try await fetchSettings(for: patientId)
+        // Get settings (for future features like custom notification preferences)
+        _ = try await fetchSettings(for: patientId)
 
         // Get today's day of week
         let calendar = Calendar.current
@@ -327,7 +362,8 @@ actor SmartNotificationService {
             throw SmartNotificationError.permissionDenied
         }
 
-        let settings = try await fetchSettings(for: patientId)
+        // Fetch settings for future features (custom weekly schedule preferences)
+        _ = try await fetchSettings(for: patientId)
         let calendar = Calendar.current
 
         // Clear existing reminders
@@ -433,12 +469,13 @@ actor SmartNotificationService {
     ///   - completionTime: When the workout was completed
     func recordWorkoutCompletion(for patientId: UUID, completionTime: Date = Date()) async throws {
         do {
+            let params = RecordWorkoutCompletionTimeParams(
+                pPatientId: patientId.uuidString,
+                pCompletionTime: dateFormatter.string(from: completionTime)
+            )
             try await supabase.rpc(
                 "record_workout_completion_time",
-                params: [
-                    "p_patient_id": patientId.uuidString,
-                    "p_completion_time": dateFormatter.string(from: completionTime)
-                ]
+                params: params
             ).execute()
 
             DebugLogger.shared.log(

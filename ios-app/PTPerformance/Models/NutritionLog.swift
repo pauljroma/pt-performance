@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a logged meal or snack with nutritional information
-struct NutritionLog: Codable, Identifiable {
+struct NutritionLog: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: String
     let loggedAt: Date
@@ -45,7 +45,7 @@ struct NutritionLog: Codable, Identifiable {
 }
 
 /// Types of meals that can be logged
-enum MealType: String, Codable, CaseIterable {
+enum MealType: String, Codable, CaseIterable, Hashable {
     case breakfast
     case lunch
     case dinner
@@ -77,7 +77,7 @@ enum MealType: String, Codable, CaseIterable {
 }
 
 /// Individual food item within a logged meal
-struct LoggedFoodItem: Codable, Identifiable {
+struct LoggedFoodItem: Codable, Identifiable, Hashable, Equatable {
     var id: UUID
     let foodItemId: UUID?
     var name: String

@@ -498,7 +498,7 @@ final class CalendarSyncService: ObservableObject {
             throw CalendarSyncError.accessDenied
         }
 
-        for (sessionId, eventId) in eventMapping {
+        for (_, eventId) in eventMapping {
             if let event = eventStore.event(withIdentifier: eventId) {
                 try? eventStore.remove(event, span: .thisEvent, commit: false)
             }

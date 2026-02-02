@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct WorkloadFlag: Identifiable, Codable {
+struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let flagType: FlagType
@@ -19,7 +19,7 @@ struct WorkloadFlag: Identifiable, Codable {
     let timestamp: Date
     let isResolved: Bool
     
-    enum FlagType: String, Codable {
+    enum FlagType: String, Codable, Hashable {
         case highWorkload = "high_workload"
         case velocityDrop = "velocity_drop"
         case commandLoss = "command_loss"
@@ -37,7 +37,7 @@ struct WorkloadFlag: Identifiable, Codable {
         }
     }
     
-    enum Severity: String, Codable {
+    enum Severity: String, Codable, Hashable {
         case warning = "yellow"
         case critical = "red"
         

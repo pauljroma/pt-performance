@@ -48,7 +48,7 @@ class ExerciseExplanationService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            var query = client.client
+            let query = client.client
                 .from("exercise_explanations")
                 .select()
                 .eq("exercise_template_id", value: exerciseTemplateId.uuidString)
@@ -429,6 +429,15 @@ enum ExerciseExplanationError: LocalizedError {
             return "Failed to fetch exercise explanation: \(error.localizedDescription)"
         case .notFound:
             return "Exercise explanation not found"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed:
+            return "Please check your connection and try again."
+        case .notFound:
+            return "This exercise doesn't have a detailed explanation yet. Watch the video for guidance."
         }
     }
 }

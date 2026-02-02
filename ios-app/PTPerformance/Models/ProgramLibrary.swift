@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// A browsable program in the program library
-struct ProgramLibrary: Codable, Identifiable {
+struct ProgramLibrary: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let title: String
     let description: String?

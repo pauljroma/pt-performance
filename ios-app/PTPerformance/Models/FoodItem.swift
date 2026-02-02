@@ -8,7 +8,7 @@
 import Foundation
 
 /// Food item from the database for nutrition tracking
-struct FoodItem: Codable, Identifiable {
+struct FoodItem: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let name: String
     let brand: String?
@@ -55,7 +55,7 @@ struct FoodItem: Codable, Identifiable {
 }
 
 /// Food categories for organization
-enum FoodCategory: String, Codable, CaseIterable {
+enum FoodCategory: String, Codable, CaseIterable, Hashable {
     case protein
     case vegetable
     case fruit
@@ -203,7 +203,7 @@ struct CreateFoodItemDTO: Codable {
 
 // MARK: - Search Results
 
-struct FoodSearchResult: Codable, Identifiable {
+struct FoodSearchResult: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let name: String
     let brand: String?

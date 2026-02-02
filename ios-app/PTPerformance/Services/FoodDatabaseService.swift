@@ -391,4 +391,15 @@ enum FoodDatabaseError: LocalizedError {
             return "Invalid barcode format"
         }
     }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .unauthorized:
+            return "You can only edit food items you've created. Try creating a new custom food instead."
+        case .notFound:
+            return "This food may have been deleted. Try searching for a similar item."
+        case .invalidBarcode:
+            return "Please scan the barcode again or enter the food details manually."
+        }
+    }
 }

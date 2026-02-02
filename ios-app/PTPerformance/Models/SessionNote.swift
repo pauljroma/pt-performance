@@ -1,7 +1,7 @@
 import Foundation
 
 /// Session note model
-struct SessionNote: Codable, Identifiable {
+struct SessionNote: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: UUID
     let sessionId: UUID?

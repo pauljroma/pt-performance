@@ -11,6 +11,30 @@ import Foundation
 import SwiftUI
 import Supabase
 
+// MARK: - Encodable Structs for Supabase Updates
+
+/// Update for accepting a progression suggestion
+private struct AcceptSuggestionUpdate: Encodable {
+    let status: String
+    let acceptedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case acceptedAt = "accepted_at"
+    }
+}
+
+/// Update for dismissing a progression suggestion
+private struct DismissSuggestionUpdate: Encodable {
+    let status: String
+    let dismissedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case dismissedAt = "dismissed_at"
+    }
+}
+
 // MARK: - Models
 
 /// Type of progression recommendation
@@ -588,12 +612,13 @@ class ProgressiveOverloadAIService: ObservableObject {
 
         do {
             // Update suggestion status in database
+            let updateInput = AcceptSuggestionUpdate(
+                status: "accepted",
+                acceptedAt: ISO8601DateFormatter().string(from: Date())
+            )
             try await client.client
                 .from("progression_suggestions")
-                .update([
-                    "status": "accepted",
-                    "accepted_at": ISO8601DateFormatter().string(from: Date())
-                ])
+                .update(updateInput)
                 .eq("id", value: suggestionId.uuidString)
                 .execute()
 
@@ -616,12 +641,13 @@ class ProgressiveOverloadAIService: ObservableObject {
 
         do {
             // Update suggestion status in database
+            let updateInput = DismissSuggestionUpdate(
+                status: "dismissed",
+                dismissedAt: ISO8601DateFormatter().string(from: Date())
+            )
             try await client.client
                 .from("progression_suggestions")
-                .update([
-                    "status": "dismissed",
-                    "dismissed_at": ISO8601DateFormatter().string(from: Date())
-                ])
+                .update(updateInput)
                 .eq("id", value: suggestionId.uuidString)
                 .execute()
 
@@ -1037,6 +1063,17 @@ enum ProgressionError: LocalizedError {
             return "Received an invalid response from the server."
         case .noData:
             return "No progression data available."
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .serverError:
+            return "Please try again. If the problem persists, contact support."
+        case .invalidResponse:
+            return "There was a problem processing the AI recommendation. Please try again."
+        case .noData:
+            return "Complete a few workouts with this exercise to get progression suggestions."
         }
     }
 }

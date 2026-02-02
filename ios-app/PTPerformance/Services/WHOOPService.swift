@@ -278,10 +278,32 @@ struct WHOOPSleepResponse: Codable {
 }
 
 /// WHOOP API errors
-enum WHOOPError: Error {
+enum WHOOPError: LocalizedError {
     case noDataAvailable
     case authenticationFailed
     case apiError(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .noDataAvailable:
+            return "WHOOP Data Unavailable"
+        case .authenticationFailed:
+            return "WHOOP Authentication Failed"
+        case .apiError(let message):
+            return "WHOOP API Error: \(message)"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .noDataAvailable:
+            return "Make sure you've synced your WHOOP device recently. Open the WHOOP app to ensure your data is up to date."
+        case .authenticationFailed:
+            return "Please reconnect your WHOOP account in Settings to continue syncing your recovery data."
+        case .apiError:
+            return "There was a problem communicating with WHOOP. Please try again later."
+        }
+    }
 }
 
 // MARK: - ReadinessService Integration Extension
