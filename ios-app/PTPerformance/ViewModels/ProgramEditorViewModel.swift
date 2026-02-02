@@ -16,6 +16,44 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Defaults {
+    static let sets = 3
+    static let reps = 10
+    static let repsString = "10"
+    static let targetRPE = 7
+    static let durationWeeks = 8
+    static let targetLevel = "Intermediate"
+    static let estimatedRM: Double? = nil
+    static let restPeriodSeconds = 90
+    static let loadUnit = "lbs"
+}
+
+private enum Limits {
+    static let maxSets = 20
+    static let maxReps = 100
+    static let minRPE = 1
+    static let maxRPE = 10
+    static let maxInstructionsLength = 500
+    static let minProgramNameLength = 3
+    static let maxProgramNameLength = 100
+    static let maxWeeksPerPhase = 52
+    static let maxTotalWeeks = 104  // 2 years
+    static let historyQueryLimit = 10
+}
+
+private enum WeightPercentages {
+    static let strengthRange = 0.85   // 1-5 reps
+    static let hypertrophyRange = 0.70  // 6-12 reps
+    static let enduranceRange = 0.50   // 13+ reps
+}
+
+private enum RepThresholds {
+    static let strengthMax = 5
+    static let hypertrophyMax = 12
+}
+
 @MainActor
 class ProgramEditorViewModel: ObservableObject {
     let patientId: UUID
@@ -24,14 +62,14 @@ class ProgramEditorViewModel: ObservableObject {
     // Exercise editing properties
     @Published var selectedExercise: Exercise?
     @Published var estimatedRM: Double?
-    @Published var sets: Int = 3 {
+    @Published var sets: Int = Defaults.sets {
         didSet { updateRecommendedWeight() }
     }
-    @Published var reps: Int = 10 {
+    @Published var reps: Int = Defaults.reps {
         didSet { updateRecommendedWeight() }
     }
     @Published var recommendedWeight: Double = 0
-    @Published var targetRPE: Int = 7
+    @Published var targetRPE: Int = Defaults.targetRPE
     @Published var instructions: String = ""
     @Published var availableExercises: [Exercise] = []
 
@@ -39,8 +77,8 @@ class ProgramEditorViewModel: ObservableObject {
     @Published var program: Program?
     @Published var phases: [Phase] = []
     @Published var programName: String = ""
-    @Published var targetLevel: String = "Intermediate"
-    @Published var durationWeeks: Int = 8
+    @Published var targetLevel: String = Defaults.targetLevel
+    @Published var durationWeeks: Int = Defaults.durationWeeks
 
     // UI state
     @Published var isLoading = false
@@ -79,7 +117,7 @@ class ProgramEditorViewModel: ObservableObject {
             throw ProgramEditorError.invalidSets
         }
 
-        guard sets <= 20 else {
+        guard sets <= Limits.maxSets else {
             throw ProgramEditorError.setsTooHigh
         }
 
@@ -87,11 +125,11 @@ class ProgramEditorViewModel: ObservableObject {
             throw ProgramEditorError.invalidReps
         }
 
-        guard reps <= 100 else {
+        guard reps <= Limits.maxReps else {
             throw ProgramEditorError.repsTooHigh
         }
 
-        guard targetRPE >= 1 && targetRPE <= 10 else {
+        guard targetRPE >= Limits.minRPE && targetRPE <= Limits.maxRPE else {
             throw ProgramEditorError.invalidRPE
         }
 
@@ -99,7 +137,7 @@ class ProgramEditorViewModel: ObservableObject {
             throw ProgramEditorError.negativeWeight
         }
 
-        if instructions.count > 500 {
+        if instructions.count > Limits.maxInstructionsLength {
             throw ProgramEditorError.instructionsTooLong
         }
     }
@@ -110,11 +148,11 @@ class ProgramEditorViewModel: ObservableObject {
             throw ProgramEditorError.emptyProgramName
         }
 
-        guard programName.count >= 3 else {
+        guard programName.count >= Limits.minProgramNameLength else {
             throw ProgramEditorError.programNameTooShort
         }
 
-        guard programName.count <= 100 else {
+        guard programName.count <= Limits.maxProgramNameLength else {
             throw ProgramEditorError.programNameTooLong
         }
 
@@ -126,7 +164,7 @@ class ProgramEditorViewModel: ObservableObject {
             throw ProgramEditorError.invalidDuration
         }
 
-        guard durationWeeks <= 104 else { // Max 2 years
+        guard durationWeeks <= Limits.maxTotalWeeks else {
             throw ProgramEditorError.durationTooLong
         }
 
@@ -144,7 +182,7 @@ class ProgramEditorViewModel: ObservableObject {
                 throw ProgramEditorError.invalidPhaseDuration(phaseNumber: index + 1)
             }
 
-            guard let phaseDuration = phase.durationWeeks, phaseDuration <= 52 else {
+            guard let phaseDuration = phase.durationWeeks, phaseDuration <= Limits.maxWeeksPerPhase else {
                 throw ProgramEditorError.phaseDurationTooLong(phaseNumber: index + 1)
             }
         }
@@ -238,7 +276,7 @@ class ProgramEditorViewModel: ObservableObject {
                 .eq("patient_id", value: patientId.uuidString)
                 .eq("exercise_template_id", value: exercise.exercise_template_id)
                 .order("created_at", ascending: false)
-                .limit(10)
+                .limit(Limits.historyQueryLimit)
                 .execute()
 
             let decoder = JSONDecoder()
@@ -262,37 +300,37 @@ class ProgramEditorViewModel: ObservableObject {
                     estimatedRM = bestEstimate
                     logger.log("✅ Estimated 1RM: \(Int(estimatedRM ?? 0)) lbs", level: .success)
                 } else {
-                    estimatedRM = 185.0
+                    estimatedRM = Defaults.estimatedRM
                     logger.log("ℹ️ No weight data found, using default estimated RM", level: .diagnostic)
                 }
                 updateRecommendedWeight()
             } else {
                 logger.log("ℹ️ No history found, using default estimated RM", level: .diagnostic)
-                estimatedRM = 185.0
+                estimatedRM = Defaults.estimatedRM
                 updateRecommendedWeight()
             }
         } catch {
             logger.log("❌ Error loading history: \(error)", level: .error)
             // Fallback to default estimated RM
-            estimatedRM = 185.0
+            estimatedRM = Defaults.estimatedRM
             updateRecommendedWeight()
         }
     }
     
     func updateRecommendedWeight() {
         guard let rm = estimatedRM else { return }
-        
+
         // Recommend based on rep range
         // Strength: 1-5 reps = 85% 1RM
         // Hypertrophy: 6-12 reps = 70% 1RM
         // Endurance: 13+ reps = 50% 1RM
-        
-        if reps <= 5 {
-            recommendedWeight = rm * 0.85
-        } else if reps <= 12 {
-            recommendedWeight = rm * 0.70
+
+        if reps <= RepThresholds.strengthMax {
+            recommendedWeight = rm * WeightPercentages.strengthRange
+        } else if reps <= RepThresholds.hypertrophyMax {
+            recommendedWeight = rm * WeightPercentages.hypertrophyRange
         } else {
-            recommendedWeight = rm * 0.50
+            recommendedWeight = rm * WeightPercentages.enduranceRange
         }
     }
     
@@ -568,11 +606,11 @@ class ProgramEditorViewModel: ObservableObject {
                     session_id: UUID(),  // Placeholder UUID for templates (not linked to session)
                     exercise_template_id: templateUUID,
                     sequence: nil,
-                    prescribed_sets: 3,  // Defaults
-                    prescribed_reps: "10",
+                    prescribed_sets: Defaults.sets,
+                    prescribed_reps: Defaults.repsString,
                     prescribed_load: nil,
-                    load_unit: "lbs",
-                    rest_period_seconds: 90,
+                    load_unit: Defaults.loadUnit,
+                    rest_period_seconds: Defaults.restPeriodSeconds,
                     notes: nil,
                     exercise_templates: Exercise.ExerciseTemplate(
                         id: templateUUID,
@@ -946,11 +984,11 @@ class ProgramEditorViewModel: ObservableObject {
         sessionId: String,
         exerciseTemplateId: String,
         sequence: Int,
-        sets: Int = 3,
-        reps: String = "10",
+        sets: Int = Defaults.sets,
+        reps: String = Defaults.repsString,
         load: Double? = nil,
-        loadUnit: String = "lbs",
-        restPeriod: Int? = 90,
+        loadUnit: String = Defaults.loadUnit,
+        restPeriod: Int? = Defaults.restPeriodSeconds,
         notes: String? = nil
     ) async throws {
         isSubmitting = true
@@ -1123,8 +1161,8 @@ class ProgramEditorViewModel: ObservableObject {
             program = nil
             phases = []
             programName = ""
-            targetLevel = "Intermediate"
-            durationWeeks = 8
+            targetLevel = Defaults.targetLevel
+            durationWeeks = Defaults.durationWeeks
 
             successMessage = "Program deleted successfully"
 

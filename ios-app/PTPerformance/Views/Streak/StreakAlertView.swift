@@ -237,7 +237,10 @@ struct StreakAlertView: View {
     private var timeRemainingText: String {
         let calendar = Calendar.current
         let now = Date()
-        let endOfDay = calendar.startOfDay(for: calendar.date(byAdding: .day, value: 1, to: now)!)
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) else {
+            return "Still time to train today"
+        }
+        let endOfDay = calendar.startOfDay(for: tomorrow)
         let hoursRemaining = calendar.dateComponents([.hour], from: now, to: endOfDay).hour ?? 0
 
         if hoursRemaining <= 1 {

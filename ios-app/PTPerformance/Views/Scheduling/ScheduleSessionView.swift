@@ -227,12 +227,12 @@ struct ScheduleSessionView: View {
         let baseDate = calendar.startOfDay(for: Date())
 
         return [
-            calendar.date(byAdding: .hour, value: 6, to: baseDate)!,  // 6:00 AM
-            calendar.date(byAdding: .hour, value: 9, to: baseDate)!,  // 9:00 AM
-            calendar.date(byAdding: .hour, value: 12, to: baseDate)!, // 12:00 PM
-            calendar.date(byAdding: .hour, value: 17, to: baseDate)!, // 5:00 PM
-            calendar.date(byAdding: .hour, value: 18, to: baseDate)!, // 6:00 PM
-        ]
+            calendar.date(byAdding: .hour, value: 6, to: baseDate),  // 6:00 AM
+            calendar.date(byAdding: .hour, value: 9, to: baseDate),  // 9:00 AM
+            calendar.date(byAdding: .hour, value: 12, to: baseDate), // 12:00 PM
+            calendar.date(byAdding: .hour, value: 17, to: baseDate), // 5:00 PM
+            calendar.date(byAdding: .hour, value: 18, to: baseDate), // 6:00 PM
+        ].compactMap { $0 }
     }
 
     private let calendar = Calendar.current

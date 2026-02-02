@@ -6,6 +6,19 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Limits {
+    static let minProgramNameLength = 3
+    static let maxProgramNameLength = 100
+    static let maxWeeksPerPhase = 52
+    static let maxTotalWeeks = 104  // 2 years
+}
+
+private enum Defaults {
+    static let phaseDurationWeeks = 2
+}
+
 @MainActor
 class ProgramBuilderViewModel: ObservableObject {
     @Published var programName: String = ""
@@ -63,11 +76,11 @@ class ProgramBuilderViewModel: ObservableObject {
             throw ProgramBuilderError.emptyProgramName
         }
 
-        guard programName.count >= 3 else {
+        guard programName.count >= Limits.minProgramNameLength else {
             throw ProgramBuilderError.programNameTooShort
         }
 
-        guard programName.count <= 100 else {
+        guard programName.count <= Limits.maxProgramNameLength else {
             throw ProgramBuilderError.programNameTooLong
         }
 
@@ -99,7 +112,7 @@ class ProgramBuilderViewModel: ObservableObject {
                 throw ProgramBuilderError.invalidPhaseDuration(phaseNumber: index + 1)
             }
 
-            guard phase.durationWeeks <= 52 else {
+            guard phase.durationWeeks <= Limits.maxWeeksPerPhase else {
                 throw ProgramBuilderError.phaseDurationTooLong(phaseNumber: index + 1)
             }
         }
@@ -110,7 +123,7 @@ class ProgramBuilderViewModel: ObservableObject {
             throw ProgramBuilderError.invalidTotalDuration
         }
 
-        guard totalWeeks <= 104 else { // Max 2 years
+        guard totalWeeks <= Limits.maxTotalWeeks else {
             throw ProgramBuilderError.totalDurationTooLong
         }
     }
@@ -153,7 +166,7 @@ class ProgramBuilderViewModel: ObservableObject {
     func addPhase() {
         let newPhase = ProgramPhase(
             name: "Phase \(phases.count + 1)",
-            durationWeeks: 2,
+            durationWeeks: Defaults.phaseDurationWeeks,
             sessions: [],
             order: phases.count + 1
         )

@@ -1,6 +1,46 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Defaults {
+    static let sleepHours = 7.0
+    static let levelValue = 5
+}
+
+private enum Limits {
+    static let minSleepHours = 0.0
+    static let maxSleepHours = 24.0
+    static let optimalSleepHours = 8.0
+    static let minLevel = 1
+    static let maxLevel = 10
+    static let levelDivisor = 10.0
+    static let levelRangeNormalizer = 9.0
+}
+
+private enum ScoreWeights {
+    static let sleep = 0.35
+    static let energy = 0.35
+    static let soreness = 0.15
+    static let stress = 0.15
+}
+
+private enum ScoreBounds {
+    static let minimum = 0.0
+    static let maximum = 100.0
+    static let percentMultiplier = 100.0
+}
+
+private enum Timing {
+    static let successDismissNanoseconds: UInt64 = 2_000_000_000
+}
+
+private enum ColorThresholds {
+    static let lowRange = 1...3
+    static let midRange = 4...6
+    static let highMidRange = 7...8
+}
+
 /// ViewModel for managing daily readiness check-in form
 /// BUILD 116 - Agent 11: ReadinessCheckInViewModel
 ///
@@ -19,10 +59,10 @@ class ReadinessCheckInViewModel: ObservableObject {
 
     // MARK: - Input State
 
-    @Published var sleepHours: Double = 7.0
-    @Published var sorenessLevel: Int = 5
-    @Published var energyLevel: Int = 5
-    @Published var stressLevel: Int = 5
+    @Published var sleepHours: Double = Defaults.sleepHours
+    @Published var sorenessLevel: Int = Defaults.levelValue
+    @Published var energyLevel: Int = Defaults.levelValue
+    @Published var stressLevel: Int = Defaults.levelValue
     @Published var notes: String = ""
 
     // MARK: - UI State
@@ -38,10 +78,10 @@ class ReadinessCheckInViewModel: ObservableObject {
 
     /// Checks if all inputs are valid
     var isValid: Bool {
-        sleepHours >= 0 && sleepHours <= 24 &&
-        (1...10).contains(sorenessLevel) &&
-        (1...10).contains(energyLevel) &&
-        (1...10).contains(stressLevel)
+        sleepHours >= Limits.minSleepHours && sleepHours <= Limits.maxSleepHours &&
+        (Limits.minLevel...Limits.maxLevel).contains(sorenessLevel) &&
+        (Limits.minLevel...Limits.maxLevel).contains(energyLevel) &&
+        (Limits.minLevel...Limits.maxLevel).contains(stressLevel)
     }
 
     /// Whether the form can be submitted
@@ -64,22 +104,22 @@ class ReadinessCheckInViewModel: ObservableObject {
     /// - Soreness: 15% weight (inverse - lower is better)
     /// - Stress: 15% weight (inverse - lower is better)
     var liveReadinessScore: Double {
-        // Sleep score: normalize to 8 hours = 100%, max at 9 hours
-        let sleepScore = min((sleepHours / 8.0) * 100, 100)
+        // Sleep score: normalize to optimal hours = 100%
+        let sleepScore = min((sleepHours / Limits.optimalSleepHours) * ScoreBounds.percentMultiplier, ScoreBounds.maximum)
 
         // Energy score: 1-10 scale → 0-100%
-        let energyScore = (Double(energyLevel) / 10.0) * 100
+        let energyScore = (Double(energyLevel) / Limits.levelDivisor) * ScoreBounds.percentMultiplier
 
         // Soreness penalty: inverse (10 = worst, 1 = best)
-        let sorenessScore = (1.0 - (Double(sorenessLevel - 1) / 9.0)) * 100
+        let sorenessScore = (1.0 - (Double(sorenessLevel - 1) / Limits.levelRangeNormalizer)) * ScoreBounds.percentMultiplier
 
         // Stress penalty: inverse (10 = worst, 1 = best)
-        let stressScore = (1.0 - (Double(stressLevel - 1) / 9.0)) * 100
+        let stressScore = (1.0 - (Double(stressLevel - 1) / Limits.levelRangeNormalizer)) * ScoreBounds.percentMultiplier
 
         // Weighted total
-        let total = (sleepScore * 0.35) + (energyScore * 0.35) + (sorenessScore * 0.15) + (stressScore * 0.15)
+        let total = (sleepScore * ScoreWeights.sleep) + (energyScore * ScoreWeights.energy) + (sorenessScore * ScoreWeights.soreness) + (stressScore * ScoreWeights.stress)
 
-        return max(0, min(100, total)) // Clamp to 0-100
+        return max(ScoreBounds.minimum, min(ScoreBounds.maximum, total))
     }
 
     /// Live readiness category based on current form inputs
@@ -118,10 +158,10 @@ class ReadinessCheckInViewModel: ObservableObject {
 
             if let entry = todayEntry {
                 // Populate form with today's values
-                sleepHours = entry.sleepHours ?? 7.0
-                sorenessLevel = entry.sorenessLevel ?? 5
-                energyLevel = entry.energyLevel ?? 5
-                stressLevel = entry.stressLevel ?? 5
+                sleepHours = entry.sleepHours ?? Defaults.sleepHours
+                sorenessLevel = entry.sorenessLevel ?? Defaults.levelValue
+                energyLevel = entry.energyLevel ?? Defaults.levelValue
+                stressLevel = entry.stressLevel ?? Defaults.levelValue
                 notes = entry.notes ?? ""
                 hasSubmittedToday = true
             } else {
@@ -163,8 +203,8 @@ class ReadinessCheckInViewModel: ObservableObject {
             hasSubmittedToday = true
             showSuccess = true
 
-            // Auto-dismiss success after 2 seconds
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            // Auto-dismiss success after delay
+            try? await Task.sleep(nanoseconds: Timing.successDismissNanoseconds)
             showSuccess = false
 
         } catch {
@@ -191,10 +231,10 @@ class ReadinessCheckInViewModel: ObservableObject {
 
     /// Reset form to default values
     func resetForm() {
-        sleepHours = 7.0
-        sorenessLevel = 5
-        energyLevel = 5
-        stressLevel = 5
+        sleepHours = Defaults.sleepHours
+        sorenessLevel = Defaults.levelValue
+        energyLevel = Defaults.levelValue
+        stressLevel = Defaults.levelValue
         notes = ""
         showError = false
         errorMessage = ""
@@ -209,20 +249,20 @@ class ReadinessCheckInViewModel: ObservableObject {
     func validationMessage(for field: String) -> String? {
         switch field {
         case "sleep":
-            if sleepHours < 0 || sleepHours > 24 {
-                return "Sleep hours must be between 0 and 24"
+            if sleepHours < Limits.minSleepHours || sleepHours > Limits.maxSleepHours {
+                return "Sleep hours must be between \(Int(Limits.minSleepHours)) and \(Int(Limits.maxSleepHours))"
             }
         case "soreness":
-            if !(1...10).contains(sorenessLevel) {
-                return "Soreness level must be between 1 and 10"
+            if !(Limits.minLevel...Limits.maxLevel).contains(sorenessLevel) {
+                return "Soreness level must be between \(Limits.minLevel) and \(Limits.maxLevel)"
             }
         case "energy":
-            if !(1...10).contains(energyLevel) {
-                return "Energy level must be between 1 and 10"
+            if !(Limits.minLevel...Limits.maxLevel).contains(energyLevel) {
+                return "Energy level must be between \(Limits.minLevel) and \(Limits.maxLevel)"
             }
         case "stress":
-            if !(1...10).contains(stressLevel) {
-                return "Stress level must be between 1 and 10"
+            if !(Limits.minLevel...Limits.maxLevel).contains(stressLevel) {
+                return "Stress level must be between \(Limits.minLevel) and \(Limits.maxLevel)"
             }
         default:
             break
@@ -255,11 +295,11 @@ class ReadinessCheckInViewModel: ObservableObject {
     /// Get color for soreness level (red = high soreness)
     var sorenessColor: Color {
         switch sorenessLevel {
-        case 1...3:
+        case ColorThresholds.lowRange:
             return .green
-        case 4...6:
+        case ColorThresholds.midRange:
             return .yellow
-        case 7...8:
+        case ColorThresholds.highMidRange:
             return .orange
         default:
             return .red
@@ -269,11 +309,11 @@ class ReadinessCheckInViewModel: ObservableObject {
     /// Get color for energy level (green = high energy)
     var energyColor: Color {
         switch energyLevel {
-        case 1...3:
+        case ColorThresholds.lowRange:
             return .red
-        case 4...6:
+        case ColorThresholds.midRange:
             return .yellow
-        case 7...8:
+        case ColorThresholds.highMidRange:
             return .orange
         default:
             return .green
@@ -283,11 +323,11 @@ class ReadinessCheckInViewModel: ObservableObject {
     /// Get color for stress level (red = high stress)
     var stressColor: Color {
         switch stressLevel {
-        case 1...3:
+        case ColorThresholds.lowRange:
             return .green
-        case 4...6:
+        case ColorThresholds.midRange:
             return .yellow
-        case 7...8:
+        case ColorThresholds.highMidRange:
             return .orange
         default:
             return .red

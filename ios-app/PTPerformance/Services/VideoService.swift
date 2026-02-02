@@ -17,7 +17,9 @@ class VideoService {
     static let shared = VideoService()
 
     private init() {
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        guard let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            fatalError("VideoService: Unable to access caches directory. This should never happen on iOS.")
+        }
         cacheDirectory = cachesDir.appendingPathComponent("VideoCache", isDirectory: true)
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }

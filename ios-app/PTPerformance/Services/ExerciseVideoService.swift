@@ -83,7 +83,9 @@ class ExerciseVideoService: ObservableObject {
     // MARK: - Initialization
 
     private init() {
-        let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        guard let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            fatalError("ExerciseVideoService: Unable to access caches directory. This should never happen on iOS.")
+        }
         cacheDirectory = cachesDir.appendingPathComponent("ExerciseVideos", isDirectory: true)
 
         // Create cache directory if needed

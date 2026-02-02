@@ -35,7 +35,9 @@ class ImageCacheService: ObservableObject {
         memoryCache.countLimit = 100  // Max 100 images in memory
 
         // Setup disk cache directory
-        let cachesDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        guard let cachesDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            fatalError("ImageCacheService: Unable to access caches directory. This should never happen on iOS.")
+        }
         cacheDirectory = cachesDirectory.appendingPathComponent("ImageCache", isDirectory: true)
 
         // Create cache directory if needed
