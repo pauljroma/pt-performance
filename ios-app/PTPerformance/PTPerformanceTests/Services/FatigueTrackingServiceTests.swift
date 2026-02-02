@@ -390,7 +390,7 @@ final class FatigueTrackingServiceTests: XCTestCase {
     // MARK: - ClearError Tests
 
     func testClearError() async {
-        service.error = FatigueTrackingError.fatigueCalculationFailed
+        service.error = "Test error message"
 
         service.clearError()
 

@@ -709,10 +709,16 @@ final class DeloadRecommendationViewModelTests: XCTestCase {
         return DeloadRecommendation(
             id: UUID(),
             patientId: testPatientId,
+            deloadRecommended: true,
+            urgency: .recommended,
+            reasoning: "High fatigue accumulation detected over the past week.",
             fatigueSummary: createMockFatigueSummary(fatigueScore: 72.0, fatigueBand: "high"),
             deloadPrescription: createMockPrescription(),
-            urgency: .recommended,
-            createdAt: Date()
+            createdAt: Date(),
+            status: nil,
+            activatedAt: nil,
+            dismissedAt: nil,
+            dismissalReason: nil
         )
     }
 

@@ -45,7 +45,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: 120,
             restingHeartRate: 58.0,
             activeEnergyBurned: 450.0,
-            exerciseMinutes: 35
+            exerciseMinutes: 35,
+            stepCount: nil
         )
 
         XCTAssertEqual(dayData.date, date)
@@ -70,7 +71,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: nil,
             restingHeartRate: nil,
             activeEnergyBurned: nil,
-            exerciseMinutes: nil
+            exerciseMinutes: nil,
+            stepCount: nil
         )
 
         XCTAssertEqual(dayData.date, date)
@@ -95,7 +97,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: nil,
             restingHeartRate: 58.0,
             activeEnergyBurned: nil,
-            exerciseMinutes: nil
+            exerciseMinutes: nil,
+            stepCount: nil
         )
 
         XCTAssertEqual(dayData.hrvSDNN, 65.5)
@@ -118,7 +121,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: 120,
             restingHeartRate: 58.0,
             activeEnergyBurned: 450.0,
-            exerciseMinutes: 35
+            exerciseMinutes: 35,
+            stepCount: nil
         )
 
         let encoder = createEncoder()
@@ -145,7 +149,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: nil,
             restingHeartRate: 58.0,
             activeEnergyBurned: nil,
-            exerciseMinutes: nil
+            exerciseMinutes: nil,
+            stepCount: nil
         )
 
         let encoder = JSONEncoder()
@@ -281,7 +286,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: 110,
             restingHeartRate: 60.0,
             activeEnergyBurned: 350.0,
-            exerciseMinutes: 30
+            exerciseMinutes: 30,
+            stepCount: nil
         )
 
         let encoder = JSONEncoder()
@@ -312,7 +318,8 @@ final class HealthKitDayDataModelTests: XCTestCase {
             sleepREMMinutes: nil,
             restingHeartRate: nil,
             activeEnergyBurned: nil,
-            exerciseMinutes: nil
+            exerciseMinutes: nil,
+            stepCount: nil
         )
 
         let encoder = JSONEncoder()

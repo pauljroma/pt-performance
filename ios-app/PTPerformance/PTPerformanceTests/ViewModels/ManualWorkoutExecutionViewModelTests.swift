@@ -25,7 +25,7 @@ class MockManualWorkoutService: ManualWorkoutService {
         sets: Int,
         reps: [Int],
         load: Double?,
-        unit: String,
+        unit: String?,
         rpe: Int,
         pain: Int,
         notes: String?
@@ -37,7 +37,7 @@ class MockManualWorkoutService: ManualWorkoutService {
         sets: Int,
         reps: [Int],
         load: Double?,
-        unit: String,
+        unit: String?,
         rpe: Int,
         pain: Int,
         notes: String?
@@ -59,7 +59,7 @@ class MockManualWorkoutService: ManualWorkoutService {
         actualSets: Int,
         actualReps: [Int],
         actualLoad: Double?,
-        loadUnit: String,
+        loadUnit: String? = "lbs",
         rpe: Int,
         painScore: Int,
         notes: String?
@@ -76,7 +76,7 @@ class MockManualWorkoutService: ManualWorkoutService {
         actualSets: Int,
         actualReps: [Int],
         actualLoad: Double?,
-        loadUnit: String,
+        loadUnit: String? = "lbs",
         rpe: Int,
         painScore: Int,
         notes: String?
@@ -89,10 +89,10 @@ class MockManualWorkoutService: ManualWorkoutService {
 
     override func completeWorkout(
         _ sessionId: UUID,
-        totalVolume: Double,
+        totalVolume: Double?,
         avgRpe: Double?,
         avgPain: Double?,
-        durationMinutes: Int
+        durationMinutes: Int?
     ) async throws -> ManualSession {
         if shouldFailCompleteWorkout {
             throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock complete workout error"])
@@ -293,12 +293,12 @@ final class ManualWorkoutExecutionViewModelTests: XCTestCase {
 
     func testActualLoad_MixedWeights() {
         viewModel.weightPerSet = [100, 90, 80]
-        XCTAssertEqual(viewModel.actualLoad, 90.0, accuracy: 0.001, "Should average non-zero weights")
+        XCTAssertEqual(viewModel.actualLoad ?? 0, 90.0, accuracy: 0.001, "Should average non-zero weights")
     }
 
     func testActualLoad_IgnoresZeros() {
         viewModel.weightPerSet = [100, 0, 80]
-        XCTAssertEqual(viewModel.actualLoad, 90.0, accuracy: 0.001, "Should ignore zero weights in average")
+        XCTAssertEqual(viewModel.actualLoad ?? 0, 90.0, accuracy: 0.001, "Should ignore zero weights in average")
     }
 
     // MARK: - Timer Tests
@@ -773,7 +773,7 @@ final class ManualWorkoutExecutionViewModelTests: XCTestCase {
         viewModel.completedExerciseIds.insert(testExercises[0].id)
         viewModel.completedExerciseIds.insert(testExercises[1].id)
 
-        XCTAssertEqual(viewModel.averageRPE, 7.5, accuracy: 0.01)
+        XCTAssertEqual(viewModel.averageRPE ?? 0, 7.5, accuracy: 0.01)
     }
 
     func testAveragePain_NoCompletedExercises() {
@@ -786,7 +786,7 @@ final class ManualWorkoutExecutionViewModelTests: XCTestCase {
         viewModel.completedExerciseIds.insert(testExercises[0].id)
         viewModel.completedExerciseIds.insert(testExercises[1].id)
 
-        XCTAssertEqual(viewModel.averagePain, 3.0, accuracy: 0.01)
+        XCTAssertEqual(viewModel.averagePain ?? 0, 3.0, accuracy: 0.01)
     }
 
     // MARK: - Exercise Block Tests

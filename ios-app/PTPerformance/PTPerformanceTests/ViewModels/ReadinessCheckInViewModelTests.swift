@@ -20,7 +20,7 @@ class MockReadinessService: ReadinessService {
     var shouldFailLoad = false
     var mockTodayEntry: DailyReadiness?
     var submitDelay: UInt64 = 0 // nanoseconds
-    var lastSubmittedData: (patientId: UUID, sleepHours: Double, soreness: Int, energy: Int, stress: Int, notes: String?)?
+    var lastSubmittedData: (patientId: UUID, sleepHours: Double?, soreness: Int?, energy: Int?, stress: Int?, notes: String?)?
 
     // MARK: - Override Methods
 
@@ -33,12 +33,12 @@ class MockReadinessService: ReadinessService {
 
     override func submitReadiness(
         patientId: UUID,
-        date: Date,
-        sleepHours: Double,
-        sorenessLevel: Int,
-        energyLevel: Int,
-        stressLevel: Int,
-        notes: String?
+        date: Date = Date(),
+        sleepHours: Double? = nil,
+        sorenessLevel: Int? = nil,
+        energyLevel: Int? = nil,
+        stressLevel: Int? = nil,
+        notes: String? = nil
     ) async throws -> DailyReadiness {
         if submitDelay > 0 {
             try await Task.sleep(nanoseconds: submitDelay)
@@ -266,7 +266,11 @@ final class ReadinessCheckInViewModelTests: XCTestCase {
         viewModel.stressLevel = 5
 
         // Sleep: 87.5%, Energy: 50%, Soreness: ~55.6%, Stress: ~55.6%
-        let expectedScore = (87.5 * 0.35) + (50 * 0.35) + (55.56 * 0.15) + (55.56 * 0.15)
+        let sleepComponent: Double = 87.5 * 0.35
+        let energyComponent: Double = 50 * 0.35
+        let sorenessComponent: Double = 55.56 * 0.15
+        let stressComponent: Double = 55.56 * 0.15
+        let expectedScore = sleepComponent + energyComponent + sorenessComponent + stressComponent
         XCTAssertEqual(viewModel.liveReadinessScore, expectedScore, accuracy: 1.0, "Average values should give moderate score")
     }
 

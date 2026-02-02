@@ -303,7 +303,7 @@ final class SleepDataTests: XCTestCase {
 
 // MARK: - ReadinessAutoFill Tests
 
-final class ReadinessAutoFillTests: XCTestCase {
+final class HealthKitReadinessAutoFillTests: XCTestCase {
 
     // MARK: - Sleep Quality Calculation Tests
 

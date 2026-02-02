@@ -505,7 +505,7 @@ final class DeloadRecommendationServiceTests: XCTestCase {
     // MARK: - ClearError Tests
 
     func testClearError() async {
-        service.error = DeloadRecommendationError.fetchFailed
+        service.error = "Test error message"
 
         service.clearError()
 
@@ -516,7 +516,7 @@ final class DeloadRecommendationServiceTests: XCTestCase {
 
     func testReset() async {
         service.recommendation = DeloadRecommendation.sample
-        service.error = DeloadRecommendationError.fetchFailed
+        service.error = "Test error message"
 
         service.reset()
 
