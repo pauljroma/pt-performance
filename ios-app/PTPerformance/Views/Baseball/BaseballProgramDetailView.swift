@@ -15,6 +15,10 @@ struct BaseballProgramDetailView: View {
     @State private var isEnrolling: Bool = false
     @State private var showEnrollmentSuccess: Bool = false
     @State private var errorMessage: String?
+    @State private var realPhases: [BaseballProgramPhaseDetail] = []
+    @State private var isLoadingPhases: Bool = true
+
+    private let programLibraryService = ProgramLibraryService()
 
     // MARK: - Baseball Theme Colors
 
@@ -78,6 +82,26 @@ struct BaseballProgramDetailView: View {
                 }
             } message: {
                 Text("You've been enrolled in \(program.title). Head to your programs to get started!")
+            }
+            .task {
+                await loadRealPhases()
+            }
+        }
+    }
+
+    // MARK: - Load Real Phases
+
+    private func loadRealPhases() async {
+        do {
+            let phases = try await BaseballPackService.shared.fetchProgramPhases(programId: program.programId)
+            await MainActor.run {
+                self.realPhases = phases
+                self.isLoadingPhases = false
+            }
+        } catch {
+            DebugLogger.shared.error("BaseballProgramDetailView", "Failed to load phases: \(error.localizedDescription)")
+            await MainActor.run {
+                self.isLoadingPhases = false
             }
         }
     }
@@ -226,9 +250,23 @@ struct BaseballProgramDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Phase Breakdown", icon: "list.number")
 
-            VStack(spacing: 12) {
-                ForEach(phases(for: program), id: \.name) { phase in
-                    PhaseRow(phase: phase)
+            if isLoadingPhases {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if !realPhases.isEmpty {
+                // Show real phases from database
+                VStack(spacing: 12) {
+                    ForEach(realPhases) { phase in
+                        RealPhaseRow(phase: phase)
+                    }
+                }
+            } else {
+                // Fallback to generated phases
+                VStack(spacing: 12) {
+                    ForEach(phases(for: program), id: \.name) { phase in
+                        PhaseRow(phase: phase)
+                    }
                 }
             }
         }
@@ -347,13 +385,31 @@ struct BaseballProgramDetailView: View {
     private func enrollInProgram() async {
         isEnrolling = true
 
-        // Simulate enrollment delay
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        guard let patientId = PTSupabaseClient.shared.userId else {
+            await MainActor.run {
+                errorMessage = "Please sign in to enroll in programs"
+                isEnrolling = false
+            }
+            return
+        }
 
-        // In production, this would call ProgramLibraryService.enrollInProgram
-        showEnrollmentSuccess = true
+        do {
+            // Enroll using the program library service
+            _ = try await programLibraryService.enrollInProgram(
+                patientId: patientId,
+                programLibraryId: program.id
+            )
 
-        isEnrolling = false
+            await MainActor.run {
+                showEnrollmentSuccess = true
+                isEnrolling = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                isEnrolling = false
+            }
+        }
     }
 
     // MARK: - Helper Data
@@ -575,6 +631,48 @@ private struct PhaseRow: View {
             Text(phase.focus)
                 .font(.caption)
                 .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.systemGray6))
+        )
+    }
+}
+
+/// Row for displaying real phases from database
+private struct RealPhaseRow: View {
+    let phase: BaseballProgramPhaseDetail
+
+    private let baseballNavy = Color(red: 0.07, green: 0.14, blue: 0.28)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(phase.name)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                if let weeks = phase.durationWeeks, weeks > 0 {
+                    Text("\(weeks) week\(weeks == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            if let goals = phase.goals, !goals.isEmpty {
+                Text(goals)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            } else if let notes = phase.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
         }
         .padding()
         .background(

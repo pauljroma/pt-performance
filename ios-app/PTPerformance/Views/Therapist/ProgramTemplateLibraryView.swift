@@ -124,10 +124,16 @@ struct ProgramTemplateLibraryView: View {
 
             // No results after filtering
             if viewModel.isFilteredEmpty {
-                ContentUnavailableView(
-                    "No Matching Templates",
-                    systemImage: "magnifyingglass",
-                    description: Text("Try adjusting your search or filters")
+                EmptyStateView(
+                    title: "No Matching Templates",
+                    message: "No program templates match your current search or filters. Try adjusting your criteria to find more results.",
+                    icon: "magnifyingglass",
+                    iconColor: .secondary,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: { viewModel.clearFilters() }
+                    )
                 )
             } else {
                 // Templates grouped by type

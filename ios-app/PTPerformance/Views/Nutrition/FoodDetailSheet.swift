@@ -196,7 +196,7 @@ struct FoodDetailSheet: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Detailed Nutrition
@@ -220,7 +220,7 @@ struct FoodDetailSheet: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

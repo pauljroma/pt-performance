@@ -303,7 +303,7 @@ struct TimerPickerView: View {
             .background(Color.accentColor)
             .foregroundColor(.white)
             .cornerRadius(12)
-            .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+            .adaptiveShadow(Shadow.prominent)
         }
         .padding(.horizontal)
         .padding(.bottom, 20)

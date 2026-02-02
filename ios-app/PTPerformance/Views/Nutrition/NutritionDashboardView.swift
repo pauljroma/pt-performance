@@ -38,6 +38,7 @@ struct NutritionDashboardView: View {
             await viewModel.loadDashboard()
         }
         .refreshable {
+            HapticFeedback.light()
             // BUILD 279: Use forceRefresh for pull-to-refresh
             await viewModel.forceRefresh()
         }
@@ -170,7 +171,7 @@ struct NutritionDashboardView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - AI Suggestion Card
@@ -252,7 +253,7 @@ struct NutritionDashboardView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private func macroColor(for macro: MacroType) -> Color {
@@ -348,7 +349,7 @@ struct NutritionDashboardView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Weekly Trend
@@ -391,7 +392,7 @@ struct NutritionDashboardView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 
@@ -557,42 +558,18 @@ struct NutritionEmptyMealsView: View {
     let onLogMeal: () -> Void
 
     var body: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "fork.knife.circle")
-                .font(.system(size: 48))
-                .foregroundColor(.orange)
-                .accessibilityHidden(true)
-
-            VStack(spacing: Spacing.xs) {
-                Text("No Meals Logged Today")
-                    .font(.headline)
-
-                Text("Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Button(action: {
-                HapticFeedback.medium()
-                onLogMeal()
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Log Your First Meal")
-                }
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.sm)
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(CornerRadius.md)
-            }
-            .accessibilityLabel("Log Your First Meal")
-            .accessibilityHint("Opens meal logging form to start tracking your nutrition")
-        }
+        EmptyStateView(
+            title: "No Meals Logged Today",
+            message: "Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.",
+            icon: "fork.knife.circle",
+            iconColor: .orange,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Log Your First Meal",
+                icon: "plus.circle.fill",
+                action: onLogMeal
+            )
+        )
         .padding(.vertical, Spacing.lg)
-        .frame(maxWidth: .infinity)
     }
 }
 

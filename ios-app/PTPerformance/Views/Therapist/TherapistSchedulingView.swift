@@ -266,20 +266,23 @@ struct TherapistSchedulingView: View {
     // MARK: - Error View
 
     private func errorView(message: String) -> some View {
-        ContentUnavailableView {
-            Label("Unable to Load", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(message)
-        } actions: {
-            Button("Try Again") {
-                Task {
-                    if let therapistId = appState.userId {
-                        await viewModel.loadAllSessions(therapistId: therapistId)
+        ErrorStateView(
+            title: "Unable to Load",
+            message: message,
+            icon: "exclamationmark.triangle.fill",
+            iconColor: .orange,
+            primaryAction: ErrorAction(
+                title: "Try Again",
+                icon: "arrow.clockwise",
+                action: {
+                    Task {
+                        if let therapistId = appState.userId {
+                            await viewModel.loadAllSessions(therapistId: therapistId)
+                        }
                     }
                 }
-            }
-            .buttonStyle(.bordered)
-        }
+            )
+        )
     }
 
     // MARK: - Schedule Content

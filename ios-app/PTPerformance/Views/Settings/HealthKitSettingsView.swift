@@ -97,7 +97,7 @@ struct HealthKitSettingsView: View {
                         Text("Sleep")
                         Spacer()
                         if let sleep = healthKitService.todaySleep {
-                            Text(String(format: "%.1f hrs", sleep))
+                            Text(String(format: "%.1f hrs", sleep.totalHours))
                                 .foregroundColor(.secondary)
                         } else {
                             Text("No data")
@@ -213,6 +213,6 @@ private struct FeatureRow: View {
 #Preview {
     NavigationStack {
         HealthKitSettingsView()
-            .environmentObject(HealthKitService())
+            .environmentObject(HealthKitService.shared)
     }
 }

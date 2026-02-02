@@ -120,34 +120,25 @@ struct PatientListView: View {
     private var patientList: some View {
         List {
             if viewModel.filteredPatients.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "person.2.slash")
-                        .font(.system(size: 56))
-                        .foregroundColor(.secondary)
-
-                    Text("No Patients Found")
-                        .font(.headline)
-
-                    Text("No patients match your current filters. Try adjusting your search criteria or clearing the filters to see all patients.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-
-                    if !viewModel.searchText.isEmpty || viewModel.selectedFlagFilter != .all || viewModel.selectedSport != nil {
-                        Button {
+                let hasFilters = !viewModel.searchText.isEmpty || viewModel.selectedFlagFilter != .all || viewModel.selectedSport != nil
+                EmptyStateView(
+                    title: "No Patients Found",
+                    message: hasFilters
+                        ? "No patients match your current filters. Try adjusting your search criteria or clearing the filters to see all patients."
+                        : "Your patient caseload is empty. Patients will appear here once they are assigned to you.",
+                    icon: "person.2.slash",
+                    iconColor: .secondary,
+                    action: hasFilters ? EmptyStateView.EmptyStateAction(
+                        title: "Clear Filters",
+                        icon: "xmark.circle",
+                        action: {
                             viewModel.searchText = ""
                             viewModel.selectedFlagFilter = .all
                             viewModel.selectedSport = nil
                             viewModel.applyFilters()
-                        } label: {
-                            Label("Clear Filters", systemImage: "xmark.circle")
                         }
-                        .buttonStyle(.bordered)
-                    }
-                }
-                .padding()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ) : nil
+                )
             } else {
                 ForEach(viewModel.filteredPatients) { patient in
                     if viewModel.isSelectionModeActive {
@@ -164,6 +155,75 @@ struct PatientListView: View {
                     } else {
                         NavigationLink(destination: PatientDetailView(patient: patient)) {
                             PatientRowCard(patient: patient)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button {
+                                HapticFeedback.medium()
+                                // Quick action: View progress report
+                                // Navigation handled via NavigationLink
+                            } label: {
+                                Label("Report", systemImage: "chart.bar.doc.horizontal")
+                            }
+                            .tint(.purple)
+
+                            Button {
+                                HapticFeedback.medium()
+                                showBulkAssignmentSheet = true
+                                viewModel.toggleSelection(patientId: patient.id)
+                            } label: {
+                                Label("Assign", systemImage: "doc.badge.plus")
+                            }
+                            .tint(.blue)
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                HapticFeedback.success()
+                                // Quick select for bulk actions
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    if !viewModel.isSelectionModeActive {
+                                        viewModel.toggleSelectionMode()
+                                    }
+                                    viewModel.toggleSelection(patientId: patient.id)
+                                }
+                            } label: {
+                                Label("Select", systemImage: "checkmark.circle")
+                            }
+                            .tint(.green)
+                        }
+                        .contextMenu {
+                            Button {
+                                HapticFeedback.light()
+                            } label: {
+                                Label("View Profile", systemImage: "person.circle")
+                            }
+
+                            Button {
+                                HapticFeedback.light()
+                                showBulkAssignmentSheet = true
+                                viewModel.toggleSelection(patientId: patient.id)
+                            } label: {
+                                Label("Assign Program", systemImage: "doc.badge.plus")
+                            }
+
+                            Divider()
+
+                            Button {
+                                HapticFeedback.light()
+                                // Copy patient name
+                                UIPasteboard.general.string = patient.fullName
+                            } label: {
+                                Label("Copy Name", systemImage: "doc.on.doc")
+                            }
+
+                            if let adherence = patient.adherencePercentage {
+                                Button {
+                                    HapticFeedback.light()
+                                    let summary = "\(patient.fullName): \(Int(adherence))% adherence"
+                                    UIPasteboard.general.string = summary
+                                } label: {
+                                    Label("Copy Stats", systemImage: "chart.bar")
+                                }
+                            }
                         }
                     }
                 }
@@ -254,7 +314,7 @@ struct BulkActionBar: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                .adaptiveShadow(Shadow.prominent)
         )
     }
 }

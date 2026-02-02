@@ -144,7 +144,7 @@ struct WeeklySummaryCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .adaptiveShadow(Shadow.medium)
     }
 
     // MARK: - Empty State
@@ -345,7 +345,7 @@ struct CompactWeeklySummaryCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private func formatVolume(_ volume: Double) -> String {

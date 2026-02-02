@@ -125,7 +125,7 @@ struct MealPlanDetailView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Day Selector
@@ -376,7 +376,7 @@ struct MealTypeSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private var sectionCalories: Int {

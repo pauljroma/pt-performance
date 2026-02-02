@@ -174,6 +174,7 @@ struct TherapistDashboardView: View {
             .padding(.bottom)
         }
         .refreshable {
+            HapticFeedback.light()
             if let therapistId = appState.userId {
                 await viewModel.refresh(therapistId: therapistId)
                 await schedulingViewModel.refresh(therapistId: therapistId)
@@ -200,6 +201,7 @@ struct TherapistDashboardView: View {
     }
 
     private func handlePatientSelection(_ patient: Patient) {
+        HapticFeedback.selectionChanged()
         selectedPatient = patient
 
         // On iPad, ensure detail is visible
@@ -256,7 +258,7 @@ struct PatientCardView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

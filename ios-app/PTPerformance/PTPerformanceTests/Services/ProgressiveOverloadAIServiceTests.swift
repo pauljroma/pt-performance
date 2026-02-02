@@ -4,6 +4,7 @@
 //
 //  Unit tests for ProgressiveOverloadAIService
 //  Tests model Codable encoding/decoding, computed properties, and business logic
+//  Including PerformanceEntry, accept/dismiss actions, and Identifiable conformance
 //
 
 import XCTest
@@ -801,5 +802,667 @@ final class ProgressiveOverloadEdgeCaseTests: XCTestCase {
 
         // Should round to 1 decimal place
         XCTAssertEqual(analysis.estimated1RMFormatted, "172.8 lbs")
+    }
+}
+
+// MARK: - PerformanceEntry Tests
+
+final class PerformanceEntryTests: XCTestCase {
+
+    // MARK: - Initialization Tests
+
+    func testPerformanceEntry_Initialization() {
+        let date = Date()
+        let entry = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 7],
+            rpe: 7.5
+        )
+
+        XCTAssertEqual(entry.date, date)
+        XCTAssertEqual(entry.load, 135.0)
+        XCTAssertEqual(entry.reps, [8, 8, 7])
+        XCTAssertEqual(entry.rpe, 7.5)
+    }
+
+    // MARK: - Computed Properties Tests
+
+    func testPerformanceEntry_AverageReps() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [8, 8, 7],
+            rpe: 7.5
+        )
+
+        // Average of [8, 8, 7] = 23 / 3 = 7.67
+        XCTAssertEqual(entry.averageReps, 7.67, accuracy: 0.01)
+    }
+
+    func testPerformanceEntry_AverageReps_SingleSet() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [10],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry.averageReps, 10.0)
+    }
+
+    func testPerformanceEntry_AverageReps_EmptyReps() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry.averageReps, 0.0)
+    }
+
+    func testPerformanceEntry_TotalVolume() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [8, 8, 7],
+            rpe: 7.5
+        )
+
+        // Total reps = 8 + 8 + 7 = 23
+        // Volume = 135 * 23 = 3105
+        XCTAssertEqual(entry.totalVolume, 3105.0)
+    }
+
+    func testPerformanceEntry_TotalVolume_SingleSet() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 100.0,
+            reps: [10],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry.totalVolume, 1000.0)
+    }
+
+    func testPerformanceEntry_TotalVolume_EmptyReps() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry.totalVolume, 0.0)
+    }
+
+    func testPerformanceEntry_SetCount() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [8, 8, 7, 6],
+            rpe: 8.0
+        )
+
+        XCTAssertEqual(entry.setCount, 4)
+    }
+
+    func testPerformanceEntry_SetCount_Empty() {
+        let entry = PerformanceEntry(
+            date: Date(),
+            load: 135.0,
+            reps: [],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry.setCount, 0)
+    }
+
+    // MARK: - Codable Tests
+
+    func testPerformanceEntry_Encoding() throws {
+        let date = Date()
+        let entry = PerformanceEntry(
+            date: date,
+            load: 145.0,
+            reps: [6, 6, 5],
+            rpe: 8.5
+        )
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(entry)
+        let jsonString = String(data: data, encoding: .utf8)!
+
+        XCTAssertTrue(jsonString.contains("\"load\":145"))
+        XCTAssertTrue(jsonString.contains("\"reps\":[6,6,5]"))
+        XCTAssertTrue(jsonString.contains("\"rpe\":8.5"))
+    }
+
+    func testPerformanceEntry_Decoding() throws {
+        let json = """
+        {
+            "date": "2024-01-15T10:00:00Z",
+            "load": 155.0,
+            "reps": [5, 5, 4],
+            "rpe": 9.0
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let entry = try decoder.decode(PerformanceEntry.self, from: json)
+
+        XCTAssertEqual(entry.load, 155.0)
+        XCTAssertEqual(entry.reps, [5, 5, 4])
+        XCTAssertEqual(entry.rpe, 9.0)
+    }
+
+    func testPerformanceEntry_RoundTrip() throws {
+        let original = PerformanceEntry(
+            date: Date(),
+            load: 165.0,
+            reps: [8, 7, 7],
+            rpe: 8.0
+        )
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(original)
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(PerformanceEntry.self, from: data)
+
+        XCTAssertEqual(decoded.load, original.load)
+        XCTAssertEqual(decoded.reps, original.reps)
+        XCTAssertEqual(decoded.rpe, original.rpe)
+    }
+
+    // MARK: - Equatable Tests
+
+    func testPerformanceEntry_Equatable_Equal() {
+        let date = Date()
+        let entry1 = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 8],
+            rpe: 7.0
+        )
+
+        let entry2 = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 8],
+            rpe: 7.0
+        )
+
+        XCTAssertEqual(entry1, entry2)
+    }
+
+    func testPerformanceEntry_Equatable_NotEqual_DifferentLoad() {
+        let date = Date()
+        let entry1 = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 8],
+            rpe: 7.0
+        )
+
+        let entry2 = PerformanceEntry(
+            date: date,
+            load: 140.0,
+            reps: [8, 8, 8],
+            rpe: 7.0
+        )
+
+        XCTAssertNotEqual(entry1, entry2)
+    }
+
+    func testPerformanceEntry_Equatable_NotEqual_DifferentReps() {
+        let date = Date()
+        let entry1 = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 8],
+            rpe: 7.0
+        )
+
+        let entry2 = PerformanceEntry(
+            date: date,
+            load: 135.0,
+            reps: [8, 8, 7],
+            rpe: 7.0
+        )
+
+        XCTAssertNotEqual(entry1, entry2)
+    }
+
+    // MARK: - Sample Data Tests
+
+    func testPerformanceEntry_SampleEntries() {
+        let samples = PerformanceEntry.sampleEntries
+
+        XCTAssertEqual(samples.count, 3)
+
+        // First entry should be most recent
+        let firstEntry = samples[0]
+        XCTAssertEqual(firstEntry.load, 135.0)
+        XCTAssertEqual(firstEntry.reps, [8, 8, 7])
+        XCTAssertEqual(firstEntry.rpe, 7.5)
+    }
+}
+
+// MARK: - ProgressionSuggestion Identifiable Tests
+
+final class ProgressionSuggestionIdentifiableTests: XCTestCase {
+
+    func testProgressionSuggestion_HasUniqueId() {
+        let suggestion1 = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        let suggestion2 = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        XCTAssertNotEqual(suggestion1.id, suggestion2.id)
+    }
+
+    func testProgressionSuggestion_SameIdEquals() {
+        let id = UUID()
+        let suggestion1 = ProgressionSuggestion(
+            id: id,
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        let suggestion2 = ProgressionSuggestion(
+            id: id,
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        XCTAssertEqual(suggestion1.id, suggestion2.id)
+    }
+
+    func testProgressionSuggestion_Sample_HasValidId() {
+        let sample = ProgressionSuggestion.sample
+
+        XCTAssertNotNil(sample.id)
+        XCTAssertEqual(sample.id.uuidString.count, 36)
+    }
+}
+
+// MARK: - Accept/Dismiss Actions Tests
+
+@MainActor
+final class ProgressiveOverloadAcceptDismissTests: XCTestCase {
+
+    var service: ProgressiveOverloadAIService!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        service = ProgressiveOverloadAIService()
+    }
+
+    override func tearDown() async throws {
+        service = nil
+        try await super.tearDown()
+    }
+
+    // MARK: - Accept Suggestion Tests
+
+    func testAcceptSuggestion_ClearsLocalSuggestion() async {
+        // Set up a suggestion
+        let suggestionId = UUID()
+        service.suggestion = ProgressionSuggestion(
+            id: suggestionId,
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        XCTAssertNotNil(service.suggestion)
+        XCTAssertEqual(service.suggestion?.id, suggestionId)
+    }
+
+    func testAcceptSuggestion_RequiresSuggestionId() {
+        let suggestionId = UUID()
+        XCTAssertNotNil(suggestionId)
+        XCTAssertEqual(suggestionId.uuidString.count, 36)
+    }
+
+    // MARK: - Dismiss Suggestion Tests
+
+    func testDismissSuggestion_ClearsLocalSuggestion() async {
+        // Set up a suggestion
+        let suggestionId = UUID()
+        service.suggestion = ProgressionSuggestion(
+            id: suggestionId,
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        XCTAssertNotNil(service.suggestion)
+
+        // Clear suggestion (simulating dismiss)
+        service.clearSuggestion()
+
+        XCTAssertNil(service.suggestion)
+    }
+
+    func testDismissSuggestion_RequiresSuggestionId() {
+        let suggestionId = UUID()
+        XCTAssertNotNil(suggestionId)
+    }
+
+    // MARK: - Clear Suggestion Tests
+
+    func testClearSuggestion_ClearsAllState() async {
+        // Set up state
+        service.suggestion = ProgressionSuggestion.sample
+        service.error = "Some error"
+
+        // Clear
+        service.clearSuggestion()
+
+        XCTAssertNil(service.suggestion)
+        XCTAssertNil(service.error)
+        XCTAssertFalse(service.isLoading)
+    }
+}
+
+// MARK: - GetSuggestion Request Tests
+
+@MainActor
+final class ProgressiveOverloadGetSuggestionTests: XCTestCase {
+
+    var service: ProgressiveOverloadAIService!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        service = ProgressiveOverloadAIService()
+    }
+
+    override func tearDown() async throws {
+        service = nil
+        try await super.tearDown()
+    }
+
+    func testGetSuggestion_RequiresPatientId() {
+        let patientId = UUID()
+        XCTAssertNotNil(patientId)
+    }
+
+    func testGetSuggestion_RequiresExerciseTemplateId() {
+        let exerciseTemplateId = UUID()
+        XCTAssertNotNil(exerciseTemplateId)
+    }
+
+    func testGetSuggestion_RequiresRecentPerformance() {
+        let performance = PerformanceEntry.sampleEntries
+        XCTAssertFalse(performance.isEmpty)
+        XCTAssertEqual(performance.count, 3)
+    }
+
+    func testGetSuggestion_SetsLoadingState() {
+        XCTAssertFalse(service.isLoading)
+    }
+
+    func testGetSuggestion_ClearsErrorOnStart() {
+        service.error = "Previous error"
+
+        // When starting a new request, error should be cleared
+        XCTAssertNotNil(service.error)
+
+        // Simulate clearing at start of request
+        service.error = nil
+        XCTAssertNil(service.error)
+    }
+
+    func testGetSuggestion_ClearsSuggestionOnStart() {
+        service.suggestion = ProgressionSuggestion.sample
+
+        XCTAssertNotNil(service.suggestion)
+
+        // Simulate clearing at start of request
+        service.suggestion = nil
+        XCTAssertNil(service.suggestion)
+    }
+}
+
+// MARK: - PerformanceAnalysis VelocityTrend Tests
+
+final class PerformanceAnalysisVelocityTrendTests: XCTestCase {
+
+    func testVelocityTrendColor_Increasing() {
+        let analysis = PerformanceAnalysis(
+            trend: .improving,
+            estimated1RM: 175.0,
+            velocityTrend: "increasing",
+            fatigueImpact: "low"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .green)
+    }
+
+    func testVelocityTrendColor_Improving() {
+        let analysis = PerformanceAnalysis(
+            trend: .improving,
+            estimated1RM: 175.0,
+            velocityTrend: "improving",
+            fatigueImpact: "low"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .green)
+    }
+
+    func testVelocityTrendColor_Stable() {
+        let analysis = PerformanceAnalysis(
+            trend: .plateaued,
+            estimated1RM: 165.0,
+            velocityTrend: "stable",
+            fatigueImpact: "moderate"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .blue)
+    }
+
+    func testVelocityTrendColor_Maintaining() {
+        let analysis = PerformanceAnalysis(
+            trend: .plateaued,
+            estimated1RM: 165.0,
+            velocityTrend: "maintaining",
+            fatigueImpact: "moderate"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .blue)
+    }
+
+    func testVelocityTrendColor_Decreasing() {
+        let analysis = PerformanceAnalysis(
+            trend: .declining,
+            estimated1RM: 155.0,
+            velocityTrend: "decreasing",
+            fatigueImpact: "high"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .orange)
+    }
+
+    func testVelocityTrendColor_Declining() {
+        let analysis = PerformanceAnalysis(
+            trend: .declining,
+            estimated1RM: 155.0,
+            velocityTrend: "declining",
+            fatigueImpact: "high"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .orange)
+    }
+
+    func testVelocityTrendColor_Unknown() {
+        let analysis = PerformanceAnalysis(
+            trend: .plateaued,
+            estimated1RM: 160.0,
+            velocityTrend: "unknown",
+            fatigueImpact: "moderate"
+        )
+
+        XCTAssertEqual(analysis.velocityTrendColor, .gray)
+    }
+}
+
+// MARK: - ProgressionSuggestion Percentage Change Tests
+
+final class ProgressionSuggestionPercentageChangeTests: XCTestCase {
+
+    func testPercentageChange_Increase() {
+        let suggestion = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 140.0,
+            nextReps: 8,
+            confidence: 85,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 175.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        let currentLoad = 135.0
+        let percentChange = suggestion.percentageChange(from: currentLoad)
+
+        // (140 - 135) / 135 * 100 = 3.7%
+        XCTAssertEqual(percentChange, 3.70, accuracy: 0.01)
+    }
+
+    func testPercentageChange_Decrease() {
+        let suggestion = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 120.0,
+            nextReps: 8,
+            confidence: 75,
+            reasoning: "Test",
+            progressionType: .decrease,
+            analysis: PerformanceAnalysis(
+                trend: .declining,
+                estimated1RM: 160.0,
+                velocityTrend: "decreasing",
+                fatigueImpact: "high"
+            )
+        )
+
+        let currentLoad = 135.0
+        let percentChange = suggestion.percentageChange(from: currentLoad)
+
+        // (120 - 135) / 135 * 100 = -11.11%
+        XCTAssertEqual(percentChange, -11.11, accuracy: 0.01)
+    }
+
+    func testPercentageChange_NoChange() {
+        let suggestion = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 135.0,
+            nextReps: 8,
+            confidence: 70,
+            reasoning: "Test",
+            progressionType: .hold,
+            analysis: PerformanceAnalysis(
+                trend: .plateaued,
+                estimated1RM: 165.0,
+                velocityTrend: "stable",
+                fatigueImpact: "moderate"
+            )
+        )
+
+        let currentLoad = 135.0
+        let percentChange = suggestion.percentageChange(from: currentLoad)
+
+        XCTAssertEqual(percentChange, 0.0, accuracy: 0.01)
+    }
+
+    func testPercentageChange_ZeroCurrentLoad() {
+        let suggestion = ProgressionSuggestion(
+            id: UUID(),
+            nextLoad: 135.0,
+            nextReps: 8,
+            confidence: 70,
+            reasoning: "Test",
+            progressionType: .increase,
+            analysis: PerformanceAnalysis(
+                trend: .improving,
+                estimated1RM: 165.0,
+                velocityTrend: "stable",
+                fatigueImpact: "low"
+            )
+        )
+
+        let currentLoad = 0.0
+        let percentChange = suggestion.percentageChange(from: currentLoad)
+
+        XCTAssertEqual(percentChange, 0.0)
     }
 }

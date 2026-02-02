@@ -389,8 +389,10 @@ struct ExerciseLogView: View {
                     isSubmitting = false
                     // Check if it was queued offline vs synced immediately
                     if service.wasQueuedOffline {
+                        HapticFeedback.warning()  // Warning haptic for offline queue
                         showQueuedOffline = true
                     } else {
+                        HapticFeedback.success()  // Success haptic for logged exercise
                         showSuccess = true
                     }
                 }
@@ -407,8 +409,10 @@ struct ExerciseLogView: View {
                     isSubmitting = false
                     // Check if error was handled by offline queue
                     if service.wasQueuedOffline {
+                        HapticFeedback.warning()
                         showQueuedOffline = true
                     } else {
+                        HapticFeedback.error()  // Error haptic for failed submission
                         errorMessage = error.localizedDescription
                         showError = true
                     }

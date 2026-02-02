@@ -32,17 +32,17 @@ struct ModeTheme {
     static let rehab = ModeTheme(
         primaryColor: Color(red: 0/255, green: 102/255, blue: 204/255),  // #0066CC
         secondaryColor: Color(red: 51/255, green: 153/255, blue: 255/255),  // Lighter blue
-        backgroundColor: .white,
-        textColor: Color(red: 51/255, green: 51/255, blue: 51/255),  // Dark gray
+        backgroundColor: Color(.systemBackground),
+        textColor: Color(.label),
         accentColor: Color(red: 0/255, green: 102/255, blue: 204/255)
     )
 
     // MARK: - STRENGTH Theme (Performance Black)
     static let strength = ModeTheme(
-        primaryColor: Color(red: 26/255, green: 26/255, blue: 26/255),  // #1A1A1A
-        secondaryColor: Color(red: 68/255, green: 68/255, blue: 68/255),  // Gray
-        backgroundColor: Color(red: 245/255, green: 245/255, blue: 247/255),  // Light gray
-        textColor: Color(red: 26/255, green: 26/255, blue: 26/255),
+        primaryColor: Color(.label),
+        secondaryColor: Color(.secondaryLabel),
+        backgroundColor: Color(.systemGroupedBackground),
+        textColor: Color(.label),
         accentColor: Color(red: 0/255, green: 122/255, blue: 255/255)  // iOS blue
     )
 

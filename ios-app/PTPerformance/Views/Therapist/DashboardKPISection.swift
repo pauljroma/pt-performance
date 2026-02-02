@@ -276,7 +276,7 @@ struct KPICard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+        .adaptiveShadow(Shadow.medium)
     }
 }
 
@@ -385,7 +385,7 @@ struct SchedulePreviewRow: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private var statusColor: Color {

@@ -3,11 +3,12 @@
 //  PTPerformance
 //
 //  Build 95 - Agent 9: Reusable error alert component
+//  Updated: Added support for generic Error types with UserFriendlyError conversion
 //
 
 import SwiftUI
 
-/// Reusable error alert view with retry functionality
+/// Reusable error alert view with retry functionality for AppError
 struct ErrorAlertView: ViewModifier {
     @Binding var error: AppError?
     var onRetry: (() async -> Void)?
@@ -42,13 +43,121 @@ struct ErrorAlertView: ViewModifier {
     }
 }
 
+/// Reusable error alert view for any Error type
+/// Automatically converts to user-friendly messages using UserFriendlyError
+struct GenericErrorAlertView: ViewModifier {
+    @Binding var error: Error?
+    var onRetry: (() async -> Void)?
+
+    func body(content: Content) -> some View {
+        content
+            .alert(
+                error.map { UserFriendlyError.title(for: $0) } ?? "Error",
+                isPresented: Binding(
+                    get: { error != nil },
+                    set: { if !$0 { error = nil } }
+                )
+            ) {
+                // Retry button (if applicable)
+                if let onRetry = onRetry, error.map({ UserFriendlyError.shouldShowRetry(for: $0) }) == true {
+                    Button("Try Again") {
+                        Task {
+                            await onRetry()
+                        }
+                    }
+                }
+
+                // Dismiss button
+                Button("OK", role: .cancel) {
+                    error = nil
+                }
+            } message: {
+                if let error = error {
+                    Text(UserFriendlyError.message(for: error))
+                }
+            }
+    }
+}
+
+/// Error alert modifier for String error messages
+struct StringErrorAlertView: ViewModifier {
+    @Binding var errorMessage: String?
+    var title: String
+    var onRetry: (() async -> Void)?
+    var showRetry: Bool
+
+    init(errorMessage: Binding<String?>, title: String = "Error", onRetry: (() async -> Void)? = nil, showRetry: Bool = true) {
+        self._errorMessage = errorMessage
+        self.title = title
+        self.onRetry = onRetry
+        self.showRetry = showRetry
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .alert(
+                title,
+                isPresented: Binding(
+                    get: { errorMessage != nil },
+                    set: { if !$0 { errorMessage = nil } }
+                )
+            ) {
+                // Retry button
+                if let onRetry = onRetry, showRetry {
+                    Button("Try Again") {
+                        Task {
+                            await onRetry()
+                        }
+                    }
+                }
+
+                // Dismiss button
+                Button("OK", role: .cancel) {
+                    errorMessage = nil
+                }
+            } message: {
+                if let message = errorMessage {
+                    Text(message)
+                }
+            }
+    }
+}
+
 extension View {
-    /// Display an error alert with optional retry functionality
+    /// Display an error alert with optional retry functionality for AppError
     /// - Parameters:
     ///   - error: Binding to an optional AppError
     ///   - onRetry: Optional retry closure
     func errorAlert(error: Binding<AppError?>, onRetry: (() async -> Void)? = nil) -> some View {
         modifier(ErrorAlertView(error: error, onRetry: onRetry))
+    }
+
+    /// Display an error alert for any Error type with automatic user-friendly message conversion
+    /// - Parameters:
+    ///   - error: Binding to an optional Error
+    ///   - onRetry: Optional retry closure
+    func errorAlert(anyError error: Binding<Error?>, onRetry: (() async -> Void)? = nil) -> some View {
+        modifier(GenericErrorAlertView(error: error, onRetry: onRetry))
+    }
+
+    /// Display an error alert for a String error message
+    /// - Parameters:
+    ///   - errorMessage: Binding to an optional String message
+    ///   - title: Alert title (default: "Error")
+    ///   - onRetry: Optional retry closure
+    ///   - showRetry: Whether to show the retry button (default: true)
+    func errorAlert(
+        message errorMessage: Binding<String?>,
+        title: String = "Something Went Wrong",
+        onRetry: (() async -> Void)? = nil,
+        showRetry: Bool = true
+    ) -> some View {
+        modifier(StringErrorAlertView(
+            errorMessage: errorMessage,
+            title: title,
+            onRetry: onRetry,
+            showRetry: showRetry
+        ))
     }
 }
 

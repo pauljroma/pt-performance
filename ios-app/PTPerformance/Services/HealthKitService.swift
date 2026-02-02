@@ -8,61 +8,67 @@ import SwiftUI
 /// All health metrics for a single day from HealthKit
 struct HealthKitDayData: Codable {
     let date: Date
-    let hrv: Double?
+    let hrvSDNN: Double?
+    let hrvRMSSD: Double?
+    let sleepDurationMinutes: Int?
+    let sleepDeepMinutes: Int?
+    let sleepREMMinutes: Int?
     let restingHeartRate: Double?
-    let sleepDuration: Double?  // Total hours
-    let sleepData: SleepData?
-    let activeEnergyBurned: Double?  // Calories
-    let appleExerciseTime: Double?   // Minutes
+    let activeEnergyBurned: Double?
+    let exerciseMinutes: Int?
+    let stepCount: Int?
 
     enum CodingKeys: String, CodingKey {
         case date
-        case hrv
+        case hrvSDNN = "hrv_sdnn"
+        case hrvRMSSD = "hrv_rmssd"
+        case sleepDurationMinutes = "sleep_duration_minutes"
+        case sleepDeepMinutes = "sleep_deep_minutes"
+        case sleepREMMinutes = "sleep_rem_minutes"
         case restingHeartRate = "resting_heart_rate"
-        case sleepDuration = "sleep_duration"
-        case sleepData = "sleep_data"
         case activeEnergyBurned = "active_energy_burned"
-        case appleExerciseTime = "apple_exercise_time"
+        case exerciseMinutes = "exercise_minutes"
+        case stepCount = "step_count"
     }
 }
 
 /// Sleep stages breakdown from HealthKit
 struct SleepData: Codable {
-    let totalDuration: Double       // Hours
-    let inBedDuration: Double       // Hours
-    let asleepDuration: Double      // Hours (all sleep stages combined)
-    let remDuration: Double?        // Hours
-    let deepSleepDuration: Double?  // Hours (core sleep on Apple Watch)
-    let lightSleepDuration: Double? // Hours
-    let awakeDuration: Double?      // Hours (awake periods during sleep)
-    let sleepEfficiency: Double?    // Percentage (0-100)
+    let totalMinutes: Int
+    let inBedMinutes: Int
+    let deepMinutes: Int?
+    let remMinutes: Int?
+    let coreMinutes: Int?
+    let awakeMinutes: Int?
 
     enum CodingKeys: String, CodingKey {
-        case totalDuration = "total_duration"
-        case inBedDuration = "in_bed_duration"
-        case asleepDuration = "asleep_duration"
-        case remDuration = "rem_duration"
-        case deepSleepDuration = "deep_sleep_duration"
-        case lightSleepDuration = "light_sleep_duration"
-        case awakeDuration = "awake_duration"
-        case sleepEfficiency = "sleep_efficiency"
+        case totalMinutes = "total_minutes"
+        case inBedMinutes = "in_bed_minutes"
+        case deepMinutes = "deep_minutes"
+        case remMinutes = "rem_minutes"
+        case coreMinutes = "core_minutes"
+        case awakeMinutes = "awake_minutes"
     }
 
-    /// Calculate sleep efficiency if not provided
-    var calculatedEfficiency: Double {
-        guard inBedDuration > 0 else { return 0 }
-        return (asleepDuration / inBedDuration) * 100
+    /// Calculate sleep efficiency as percentage
+    var sleepEfficiency: Double {
+        guard inBedMinutes > 0 else { return 0 }
+        let awakeMins = awakeMinutes ?? 0
+        let asleepMinutes = totalMinutes - awakeMins
+        return (Double(asleepMinutes) / Double(inBedMinutes)) * 100
+    }
+
+    /// Convert to hours for display
+    var totalHours: Double {
+        Double(totalMinutes) / 60.0
     }
 }
 
 /// Pre-fill data for readiness check-in from HealthKit
 struct ReadinessAutoFill {
-    let sleepHours: Double?
-    let sleepQuality: Int?        // 1-5 scale based on efficiency
-    let hrvValue: Double?
-    let restingHeartRate: Double?
-    let dataSource: String        // "HealthKit" or "AppleWatch"
-    let lastSyncDate: Date?
+    let suggestedSleepHours: Double?
+    let suggestedEnergyLevel: Int?  // Based on HRV deviation from baseline (1-10)
+    let dataSource: String          // "apple_watch" or "manual"
 
     /// Convert sleep efficiency to 1-5 quality scale
     static func sleepQualityFromEfficiency(_ efficiency: Double) -> Int {
@@ -86,6 +92,7 @@ enum HealthKitError: LocalizedError {
     case queryFailed(String)
     case saveFailed(String)
     case invalidDate
+    case noAuthenticatedUser
 
     var errorDescription: String? {
         switch self {
@@ -101,6 +108,8 @@ enum HealthKitError: LocalizedError {
             return "Failed to save to database: \(message)"
         case .invalidDate:
             return "Invalid date provided"
+        case .noAuthenticatedUser:
+            return "No authenticated user found"
         }
     }
 }
@@ -113,20 +122,27 @@ enum HealthKitError: LocalizedError {
 @MainActor
 class HealthKitService: ObservableObject {
 
+    // MARK: - Singleton
+
+    /// Shared singleton instance
+    static let shared = HealthKitService()
+
     // MARK: - Published Properties
 
     @Published var isAuthorized: Bool = false
     @Published var lastSyncDate: Date?
     @Published var todayHRV: Double?
-    @Published var todaySleep: Double?
+    @Published var todaySleep: SleepData?
     @Published var todayRestingHR: Double?
     @Published var isLoading: Bool = false
-    @Published var error: Error?
+    @Published var error: String?
 
     // MARK: - Private Properties
 
     private var healthStore: HKHealthStore?
-    private let supabaseClient: PTSupabaseClient
+    // Using nonisolated(unsafe) to allow initialization in nonisolated init
+    // This is safe because supabaseClient is only read after initialization
+    private nonisolated(unsafe) let supabaseClient: PTSupabaseClient
 
     /// Check if HealthKit is available on this device
     static var isHealthKitAvailable: Bool {
@@ -139,7 +155,7 @@ class HealthKitService: ObservableObject {
     private var readTypes: Set<HKObjectType> {
         var types = Set<HKObjectType>()
 
-        // HRV
+        // HRV (SDNN)
         if let hrvType = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) {
             types.insert(hrvType)
         }
@@ -159,6 +175,16 @@ class HealthKitService: ObservableObject {
             types.insert(exerciseType)
         }
 
+        // Step Count
+        if let stepType = HKObjectType.quantityType(forIdentifier: .stepCount) {
+            types.insert(stepType)
+        }
+
+        // Oxygen Saturation (if available)
+        if let oxygenType = HKObjectType.quantityType(forIdentifier: .oxygenSaturation) {
+            types.insert(oxygenType)
+        }
+
         // Sleep Analysis
         if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             types.insert(sleepType)
@@ -169,7 +195,19 @@ class HealthKitService: ObservableObject {
 
     // MARK: - Initialization
 
-    nonisolated init(supabaseClient: PTSupabaseClient = .shared) {
+    /// Private initializer for singleton pattern
+    /// Use HealthKitService.shared to access the singleton
+    private nonisolated init() {
+        self.supabaseClient = PTSupabaseClient.shared
+
+        // Initialize health store only if HealthKit is available
+        if HKHealthStore.isHealthDataAvailable() {
+            self.healthStore = HKHealthStore()
+        }
+    }
+
+    /// Initializer for dependency injection (testing)
+    nonisolated init(supabaseClient: PTSupabaseClient) {
         self.supabaseClient = supabaseClient
 
         // Initialize health store only if HealthKit is available
@@ -182,12 +220,14 @@ class HealthKitService: ObservableObject {
 
     /// Request HealthKit permissions for all required data types
     /// - Returns: True if authorization was granted
+    /// - Throws: HealthKitError if HealthKit is not available
     func requestAuthorization() async throws -> Bool {
         guard let healthStore = healthStore else {
             throw HealthKitError.notAvailable
         }
 
         isLoading = true
+        error = nil
         defer { isLoading = false }
 
         do {
@@ -199,9 +239,9 @@ class HealthKitService: ObservableObject {
             isAuthorized = authorized
 
             return authorized
-        } catch {
-            self.error = error
-            throw error
+        } catch let authError {
+            self.error = authError.localizedDescription
+            throw authError
         }
     }
 
@@ -234,12 +274,14 @@ class HealthKitService: ObservableObject {
 
     /// Sync all today's health data
     /// - Returns: HealthKitDayData with all available metrics
+    /// - Throws: HealthKitError if HealthKit is not available
     func syncTodayData() async throws -> HealthKitDayData {
         guard healthStore != nil else {
             throw HealthKitError.notAvailable
         }
 
         isLoading = true
+        error = nil
         defer { isLoading = false }
 
         let today = Date()
@@ -250,6 +292,7 @@ class HealthKitService: ObservableObject {
         async let rhrResult = fetchRestingHeartRate(for: today)
         async let activeEnergyResult = fetchActiveEnergy(for: today)
         async let exerciseTimeResult = fetchExerciseTime(for: today)
+        async let stepCountResult = fetchStepCount(for: today)
 
         // Await all results
         let hrv = try? await hrvResult
@@ -257,25 +300,29 @@ class HealthKitService: ObservableObject {
         let rhr = try? await rhrResult
         let activeEnergy = try? await activeEnergyResult
         let exerciseTime = try? await exerciseTimeResult
+        let stepCount = try? await stepCountResult
 
         // Update published properties
         todayHRV = hrv
-        todaySleep = sleep?.totalDuration
+        todaySleep = sleep
         todayRestingHR = rhr
         lastSyncDate = Date()
 
         return HealthKitDayData(
             date: today,
-            hrv: hrv,
+            hrvSDNN: hrv,
+            hrvRMSSD: nil, // Apple Watch provides SDNN, not RMSSD
+            sleepDurationMinutes: sleep?.totalMinutes,
+            sleepDeepMinutes: sleep?.deepMinutes,
+            sleepREMMinutes: sleep?.remMinutes,
             restingHeartRate: rhr,
-            sleepDuration: sleep?.totalDuration,
-            sleepData: sleep,
             activeEnergyBurned: activeEnergy,
-            appleExerciseTime: exerciseTime
+            exerciseMinutes: exerciseTime != nil ? Int(exerciseTime!) : nil,
+            stepCount: stepCount != nil ? Int(stepCount!) : nil
         )
     }
 
-    /// Fetch HRV for a specific date
+    /// Fetch HRV (SDNN) for a specific date
     /// - Parameter date: The date to fetch HRV for
     /// - Returns: HRV value in milliseconds (SDNN), or nil if not available
     func fetchHRV(for date: Date) async throws -> Double? {
@@ -295,9 +342,9 @@ class HealthKitService: ObservableObject {
                 quantityType: hrvType,
                 quantitySamplePredicate: predicate,
                 options: .discreteAverage
-            ) { _, result, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
                     return
                 }
 
@@ -340,9 +387,9 @@ class HealthKitService: ObservableObject {
                 predicate: predicate,
                 limit: HKObjectQueryNoLimit,
                 sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]
-            ) { _, samples, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+            ) { _, samples, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
                     return
                 }
 
@@ -351,12 +398,12 @@ class HealthKitService: ObservableObject {
                     return
                 }
 
-                // Process sleep samples
+                // Process sleep samples - all durations in seconds initially
                 var inBedDuration: TimeInterval = 0
                 var asleepDuration: TimeInterval = 0
                 var remDuration: TimeInterval = 0
                 var deepSleepDuration: TimeInterval = 0
-                var lightSleepDuration: TimeInterval = 0
+                var coreSleepDuration: TimeInterval = 0
                 var awakeDuration: TimeInterval = 0
 
                 for sample in sleepSamples {
@@ -377,7 +424,7 @@ class HealthKitService: ObservableObject {
                                 remDuration += duration
                                 asleepDuration += duration
                             case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-                                lightSleepDuration += duration
+                                coreSleepDuration += duration
                                 asleepDuration += duration
                             case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
                                 deepSleepDuration += duration
@@ -389,19 +436,16 @@ class HealthKitService: ObservableObject {
                     }
                 }
 
-                // Convert to hours
-                let hoursMultiplier = 1.0 / 3600.0
-                let totalDuration = max(inBedDuration, asleepDuration + awakeDuration)
+                // Convert to minutes
+                let minutesDivisor = 60.0
 
                 let sleepData = SleepData(
-                    totalDuration: totalDuration * hoursMultiplier,
-                    inBedDuration: inBedDuration * hoursMultiplier,
-                    asleepDuration: asleepDuration * hoursMultiplier,
-                    remDuration: remDuration > 0 ? remDuration * hoursMultiplier : nil,
-                    deepSleepDuration: deepSleepDuration > 0 ? deepSleepDuration * hoursMultiplier : nil,
-                    lightSleepDuration: lightSleepDuration > 0 ? lightSleepDuration * hoursMultiplier : nil,
-                    awakeDuration: awakeDuration > 0 ? awakeDuration * hoursMultiplier : nil,
-                    sleepEfficiency: inBedDuration > 0 ? (asleepDuration / inBedDuration) * 100 : nil
+                    totalMinutes: Int(asleepDuration / minutesDivisor),
+                    inBedMinutes: Int(inBedDuration / minutesDivisor),
+                    deepMinutes: deepSleepDuration > 0 ? Int(deepSleepDuration / minutesDivisor) : nil,
+                    remMinutes: remDuration > 0 ? Int(remDuration / minutesDivisor) : nil,
+                    coreMinutes: coreSleepDuration > 0 ? Int(coreSleepDuration / minutesDivisor) : nil,
+                    awakeMinutes: awakeDuration > 0 ? Int(awakeDuration / minutesDivisor) : nil
                 )
 
                 continuation.resume(returning: sleepData)
@@ -431,9 +475,9 @@ class HealthKitService: ObservableObject {
                 quantityType: rhrType,
                 quantitySamplePredicate: predicate,
                 options: .discreteAverage
-            ) { _, result, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
                     return
                 }
 
@@ -471,9 +515,9 @@ class HealthKitService: ObservableObject {
                 quantityType: energyType,
                 quantitySamplePredicate: predicate,
                 options: .cumulativeSum
-            ) { _, result, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
                     return
                 }
 
@@ -511,9 +555,9 @@ class HealthKitService: ObservableObject {
                 quantityType: exerciseType,
                 quantitySamplePredicate: predicate,
                 options: .cumulativeSum
-            ) { _, result, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
                     return
                 }
 
@@ -531,10 +575,92 @@ class HealthKitService: ObservableObject {
         }
     }
 
+    /// Fetch step count for a specific date
+    /// - Parameter date: The date to fetch step count for
+    /// - Returns: Step count, or nil if not available
+    private func fetchStepCount(for date: Date) async throws -> Double? {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        guard let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount) else {
+            return nil
+        }
+
+        let (startOfDay, endOfDay) = dayBoundaries(for: date)
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKStatisticsQuery(
+                quantityType: stepType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
+                    return
+                }
+
+                guard let result = result,
+                      let sum = result.sumQuantity() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let steps = sum.doubleValue(for: HKUnit.count())
+                continuation.resume(returning: steps)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
+    /// Fetch oxygen saturation for a specific date
+    /// - Parameter date: The date to fetch oxygen saturation for
+    /// - Returns: Oxygen saturation percentage (0-100), or nil if not available
+    func fetchOxygenSaturation(for date: Date) async throws -> Double? {
+        guard let healthStore = healthStore else {
+            throw HealthKitError.notAvailable
+        }
+
+        guard let oxygenType = HKQuantityType.quantityType(forIdentifier: .oxygenSaturation) else {
+            return nil
+        }
+
+        let (startOfDay, endOfDay) = dayBoundaries(for: date)
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKStatisticsQuery(
+                quantityType: oxygenType,
+                quantitySamplePredicate: predicate,
+                options: .discreteAverage
+            ) { _, result, queryError in
+                if let queryError = queryError {
+                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
+                    return
+                }
+
+                guard let result = result,
+                      let average = result.averageQuantity() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                // Convert from decimal (0.0-1.0) to percentage (0-100)
+                let oxygenValue = average.doubleValue(for: HKUnit.percent()) * 100
+                continuation.resume(returning: oxygenValue)
+            }
+
+            healthStore.execute(query)
+        }
+    }
+
     // MARK: - Readiness Auto-Fill
 
     /// Get auto-fill data for readiness check-in
     /// Pulls latest HealthKit data to pre-populate readiness form
+    /// Suggests energy level based on HRV deviation from baseline
     /// - Returns: ReadinessAutoFill with available health metrics
     func getReadinessAutoFill() async throws -> ReadinessAutoFill {
         guard healthStore != nil else {
@@ -543,30 +669,68 @@ class HealthKitService: ObservableObject {
 
         let today = Date()
 
-        // Fetch HRV and sleep data
-        let hrv = try? await fetchHRV(for: today)
-        let sleep = try? await fetchSleepData(for: today)
-        let rhr = try? await fetchRestingHeartRate(for: today)
+        // Fetch HRV, sleep data, and baseline in parallel
+        async let hrvTask = fetchHRV(for: today)
+        async let sleepTask = fetchSleepData(for: today)
+        async let baselineTask = getHRVBaseline(days: 7)
 
-        // Calculate sleep quality from efficiency
-        var sleepQuality: Int?
-        if let efficiency = sleep?.sleepEfficiency ?? sleep?.calculatedEfficiency {
-            sleepQuality = ReadinessAutoFill.sleepQualityFromEfficiency(efficiency)
+        let hrv = try? await hrvTask
+        let sleep = try? await sleepTask
+        let baseline = try? await baselineTask
+
+        // Calculate suggested energy level based on HRV deviation from baseline
+        let suggestedEnergy = calculateSuggestedEnergyLevel(currentHRV: hrv, baseline: baseline)
+
+        // Determine data source
+        let dataSource: String
+        if hrv != nil || sleep != nil {
+            dataSource = "apple_watch"
+        } else {
+            dataSource = "manual"
         }
 
         return ReadinessAutoFill(
-            sleepHours: sleep?.asleepDuration ?? sleep?.totalDuration,
-            sleepQuality: sleepQuality,
-            hrvValue: hrv,
-            restingHeartRate: rhr,
-            dataSource: "HealthKit",
-            lastSyncDate: Date()
+            suggestedSleepHours: sleep?.totalHours,
+            suggestedEnergyLevel: suggestedEnergy,
+            dataSource: dataSource
         )
+    }
+
+    /// Calculate suggested energy level based on HRV deviation from baseline
+    /// - Parameters:
+    ///   - currentHRV: Today's HRV value
+    ///   - baseline: 7-day rolling average HRV
+    /// - Returns: Suggested energy level (1-10) or nil if no data
+    private func calculateSuggestedEnergyLevel(currentHRV: Double?, baseline: Double?) -> Int? {
+        guard let hrv = currentHRV, let base = baseline, base > 0 else {
+            return nil
+        }
+
+        let deviationPercent = ((hrv - base) / base) * 100
+
+        // HRV > baseline + 10% -> high energy (8-10)
+        // HRV < baseline - 10% -> low energy (4-6)
+        // Otherwise -> normal energy (6-8)
+        if deviationPercent > 10 {
+            // Good recovery - suggest high energy
+            // Scale from 8-10 based on how much above baseline
+            let scaledEnergy = min(10, 8 + Int(deviationPercent / 10))
+            return scaledEnergy
+        } else if deviationPercent < -10 {
+            // Poor recovery - suggest low energy
+            // Scale from 4-6 based on how much below baseline
+            let scaledEnergy = max(4, 6 + Int(deviationPercent / 10))
+            return scaledEnergy
+        } else {
+            // Normal range - suggest moderate energy (6-8)
+            // Slight bias toward 7
+            return 7
+        }
     }
 
     // MARK: - HRV Baseline
 
-    /// Calculate HRV baseline as average over specified days
+    /// Calculate HRV baseline as 7-day rolling average
     /// - Parameter days: Number of days to average (default 7)
     /// - Returns: Average HRV value, or nil if insufficient data
     func getHRVBaseline(days: Int = 7) async throws -> Double? {
@@ -578,8 +742,8 @@ class HealthKitService: ObservableObject {
         let calendar = Calendar.current
         let today = Date()
 
-        // Fetch HRV for each day
-        for dayOffset in 0..<days {
+        // Fetch HRV for each day (skip today, use previous 7 days)
+        for dayOffset in 1...days {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
                 continue
             }
@@ -600,14 +764,25 @@ class HealthKitService: ObservableObject {
 
     // MARK: - Database Sync
 
-    /// Save HealthKit data to Supabase health_kit_data table
-    /// - Parameter data: HealthKitDayData to save
-    func saveToSupabase(data: HealthKitDayData) async throws {
-        guard let patientId = supabaseClient.userId else {
-            throw HealthKitError.saveFailed("No authenticated user")
+    /// Upload HealthKit data to Supabase health_kit_data table
+    /// - Parameter data: HealthKitDayData to upload
+    /// - Throws: HealthKitError if no authenticated user or save fails
+    func uploadToSupabase(data: HealthKitDayData) async throws {
+        guard let patientIdString = supabaseClient.userId,
+              let patientId = UUID(uuidString: patientIdString) else {
+            throw HealthKitError.noAuthenticatedUser
         }
 
+        try await syncToSupabase(patientId: patientId, data: data)
+    }
+
+    /// Sync HealthKit data to Supabase health_kit_data table
+    /// - Parameters:
+    ///   - patientId: Patient UUID to associate the data with
+    ///   - data: HealthKitDayData to save
+    func syncToSupabase(patientId: UUID, data: HealthKitDayData) async throws {
         isLoading = true
+        error = nil
         defer { isLoading = false }
 
         // Format date for database
@@ -618,18 +793,19 @@ class HealthKitService: ObservableObject {
 
         // Prepare data for upsert
         let dbData = HealthKitDBRecord(
-            patientId: patientId,
+            patientId: patientId.uuidString,
             date: dateString,
-            hrv: data.hrv,
+            hrvSdnn: data.hrvSDNN,
+            hrvRmssd: data.hrvRMSSD,
             restingHeartRate: data.restingHeartRate,
-            sleepDuration: data.sleepDuration,
-            remSleep: data.sleepData?.remDuration,
-            deepSleep: data.sleepData?.deepSleepDuration,
-            lightSleep: data.sleepData?.lightSleepDuration,
-            sleepEfficiency: data.sleepData?.sleepEfficiency,
+            sleepDurationMinutes: data.sleepDurationMinutes,
+            sleepDeepMinutes: data.sleepDeepMinutes,
+            sleepRemMinutes: data.sleepREMMinutes,
             activeEnergyBurned: data.activeEnergyBurned,
-            exerciseMinutes: data.appleExerciseTime,
-            dataSource: "healthkit"
+            exerciseMinutes: data.exerciseMinutes,
+            stepCount: data.stepCount,
+            dataSource: "apple_watch",
+            syncedAt: ISO8601DateFormatter().string(from: Date())
         )
 
         do {
@@ -639,10 +815,18 @@ class HealthKitService: ObservableObject {
                 .execute()
 
             lastSyncDate = Date()
-        } catch {
-            self.error = error
-            throw HealthKitError.saveFailed(error.localizedDescription)
+        } catch let saveError {
+            self.error = saveError.localizedDescription
+            throw HealthKitError.saveFailed(saveError.localizedDescription)
         }
+    }
+
+    /// Save HealthKit data to Supabase for the current authenticated user
+    /// Convenience method that uses the current user's patient ID
+    /// - Parameter data: HealthKitDayData to save
+    @available(*, deprecated, renamed: "uploadToSupabase(data:)", message: "Use uploadToSupabase instead")
+    func saveToSupabase(data: HealthKitDayData) async throws {
+        try await uploadToSupabase(data: data)
     }
 
     // MARK: - Helper Methods
@@ -664,30 +848,32 @@ class HealthKitService: ObservableObject {
 private struct HealthKitDBRecord: Codable {
     let patientId: String
     let date: String
-    let hrv: Double?
+    let hrvSdnn: Double?
+    let hrvRmssd: Double?
     let restingHeartRate: Double?
-    let sleepDuration: Double?
-    let remSleep: Double?
-    let deepSleep: Double?
-    let lightSleep: Double?
-    let sleepEfficiency: Double?
+    let sleepDurationMinutes: Int?
+    let sleepDeepMinutes: Int?
+    let sleepRemMinutes: Int?
     let activeEnergyBurned: Double?
-    let exerciseMinutes: Double?
+    let exerciseMinutes: Int?
+    let stepCount: Int?
     let dataSource: String
+    let syncedAt: String
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
         case date
-        case hrv
+        case hrvSdnn = "hrv_sdnn"
+        case hrvRmssd = "hrv_rmssd"
         case restingHeartRate = "resting_heart_rate"
-        case sleepDuration = "sleep_duration"
-        case remSleep = "rem_sleep"
-        case deepSleep = "deep_sleep"
-        case lightSleep = "light_sleep"
-        case sleepEfficiency = "sleep_efficiency"
+        case sleepDurationMinutes = "sleep_duration_minutes"
+        case sleepDeepMinutes = "sleep_deep_minutes"
+        case sleepRemMinutes = "sleep_rem_minutes"
         case activeEnergyBurned = "active_energy_burned"
         case exerciseMinutes = "exercise_minutes"
+        case stepCount = "step_count"
         case dataSource = "data_source"
+        case syncedAt = "synced_at"
     }
 }
 
@@ -713,8 +899,36 @@ extension HealthKitService {
     /// Sync and save today's data in one call
     func syncAndSave() async throws -> HealthKitDayData {
         let data = try await syncTodayData()
-        try await saveToSupabase(data: data)
+        try await uploadToSupabase(data: data)
         return data
+    }
+
+    /// Sync and save today's data for a specific patient
+    func syncAndSave(patientId: UUID) async throws -> HealthKitDayData {
+        let data = try await syncTodayData()
+        try await syncToSupabase(patientId: patientId, data: data)
+        return data
+    }
+
+    /// Get HRV deviation from baseline as percentage
+    /// Useful for displaying recovery status
+    /// - Returns: Deviation percentage (positive = above baseline, negative = below)
+    func getHRVDeviationFromBaseline() async throws -> Double? {
+        // Get current HRV - prefer cached, otherwise fetch
+        let currentHRV: Double
+        if let cached = todayHRV {
+            currentHRV = cached
+        } else if let fetched = try await fetchHRV(for: Date()) {
+            currentHRV = fetched
+        } else {
+            return nil
+        }
+
+        guard let baseline = try await getHRVBaseline(), baseline > 0 else {
+            return nil
+        }
+
+        return ((currentHRV - baseline) / baseline) * 100
     }
 }
 
@@ -724,10 +938,10 @@ extension HealthKitService {
 extension HealthKitService {
     /// Create a mock service for previews
     static var preview: HealthKitService {
-        let service = HealthKitService()
+        let service = HealthKitService(supabaseClient: .shared)
         service.isAuthorized = true
         service.todayHRV = 65.5
-        service.todaySleep = 7.5
+        service.todaySleep = SleepData.sample
         service.todayRestingHR = 58.0
         service.lastSyncDate = Date()
         return service
@@ -739,12 +953,15 @@ extension HealthKitDayData {
     static var sample: HealthKitDayData {
         HealthKitDayData(
             date: Date(),
-            hrv: 65.5,
+            hrvSDNN: 65.5,
+            hrvRMSSD: nil,
+            sleepDurationMinutes: 450,
+            sleepDeepMinutes: 90,
+            sleepREMMinutes: 108,
             restingHeartRate: 58.0,
-            sleepDuration: 7.5,
-            sleepData: SleepData.sample,
             activeEnergyBurned: 450.0,
-            appleExerciseTime: 35.0
+            exerciseMinutes: 35,
+            stepCount: 8500
         )
     }
 }
@@ -753,14 +970,12 @@ extension SleepData {
     /// Sample data for previews
     static var sample: SleepData {
         SleepData(
-            totalDuration: 8.0,
-            inBedDuration: 8.5,
-            asleepDuration: 7.5,
-            remDuration: 1.8,
-            deepSleepDuration: 1.5,
-            lightSleepDuration: 4.2,
-            awakeDuration: 0.5,
-            sleepEfficiency: 88.2
+            totalMinutes: 450,
+            inBedMinutes: 510,
+            deepMinutes: 90,
+            remMinutes: 108,
+            coreMinutes: 252,
+            awakeMinutes: 30
         )
     }
 }
@@ -769,12 +984,9 @@ extension ReadinessAutoFill {
     /// Sample data for previews
     static var sample: ReadinessAutoFill {
         ReadinessAutoFill(
-            sleepHours: 7.5,
-            sleepQuality: 4,
-            hrvValue: 65.5,
-            restingHeartRate: 58.0,
-            dataSource: "HealthKit",
-            lastSyncDate: Date()
+            suggestedSleepHours: 7.5,
+            suggestedEnergyLevel: 8,
+            dataSource: "apple_watch"
         )
     }
 }

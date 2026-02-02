@@ -59,33 +59,58 @@ enum AnimationDuration {
 }
 
 /// Shadow constants for elevation
+/// Note: Uses Color(.sRGBLinear, white: 0, opacity:) for adaptive dark mode shadows
 enum Shadow {
+    /// Returns adaptive shadow color based on color scheme
+    /// In dark mode, shadows are more subtle as cards have less visual lift
+    static func adaptiveColor(opacity: Double, colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(.sRGBLinear, white: 0, opacity: opacity * 1.5)
+            : Color(.sRGBLinear, white: 0, opacity: opacity)
+    }
+
     static let subtle = ShadowStyle(
-        color: Color.black.opacity(0.05),
+        lightOpacity: 0.05,
+        darkOpacity: 0.25,
         radius: 2,
         x: 0,
         y: 1
     )
 
     static let medium = ShadowStyle(
-        color: Color.black.opacity(0.08),
+        lightOpacity: 0.08,
+        darkOpacity: 0.30,
         radius: 4,
         x: 0,
         y: 2
     )
 
     static let prominent = ShadowStyle(
-        color: Color.black.opacity(0.12),
+        lightOpacity: 0.12,
+        darkOpacity: 0.40,
         radius: 8,
         x: 0,
         y: 4
     )
 
     struct ShadowStyle {
-        let color: Color
+        let lightOpacity: Double
+        let darkOpacity: Double
         let radius: CGFloat
         let x: CGFloat
         let y: CGFloat
+
+        /// Legacy color property for backward compatibility (uses light mode opacity)
+        var color: Color {
+            Color.black.opacity(lightOpacity)
+        }
+
+        /// Returns adaptive shadow color for the given color scheme
+        func color(for colorScheme: ColorScheme) -> Color {
+            colorScheme == .dark
+                ? Color.black.opacity(darkOpacity)
+                : Color.black.opacity(lightOpacity)
+        }
     }
 }
 
@@ -134,6 +159,14 @@ enum HapticFeedback {
     static func selectionChanged() {
         let generator = UISelectionFeedbackGenerator()
         generator.selectionChanged()
+    }
+
+    /// Tab switch feedback - soft impact with prepared generator for responsiveness
+    /// Uses a rigid style with low intensity for subtle but responsive feedback
+    static func tabSwitch() {
+        let generator = UIImpactFeedbackGenerator(style: .rigid)
+        generator.prepare()
+        generator.impactOccurred(intensity: 0.5)
     }
 }
 
@@ -221,6 +254,8 @@ struct Card<Content: View>: View {
     var cornerRadius: CGFloat = CornerRadius.md
     var shadow: Shadow.ShadowStyle = Shadow.subtle
 
+    @Environment(\.colorScheme) private var colorScheme
+
     init(
         padding: CGFloat = Spacing.md,
         cornerRadius: CGFloat = CornerRadius.md,
@@ -239,7 +274,7 @@ struct Card<Content: View>: View {
             .background(Color(.systemBackground))
             .cornerRadius(cornerRadius)
             .shadow(
-                color: shadow.color,
+                color: shadow.color(for: colorScheme),
                 radius: shadow.radius,
                 x: shadow.x,
                 y: shadow.y
@@ -255,6 +290,7 @@ struct TappableCard<Content: View>: View {
     var cornerRadius: CGFloat = CornerRadius.md
 
     @State private var isPressed = false
+    @Environment(\.colorScheme) private var colorScheme
 
     init(
         padding: CGFloat = Spacing.md,
@@ -278,10 +314,10 @@ struct TappableCard<Content: View>: View {
                 .background(Color(.systemBackground))
                 .cornerRadius(cornerRadius)
                 .shadow(
-                    color: Color.black.opacity(0.08),
-                    radius: 4,
-                    x: 0,
-                    y: 2
+                    color: Shadow.medium.color(for: colorScheme),
+                    radius: Shadow.medium.radius,
+                    x: Shadow.medium.x,
+                    y: Shadow.medium.y
                 )
                 .scaleEffect(isPressed ? 0.98 : 1.0)
         }
@@ -370,6 +406,43 @@ struct PulseAnimation: ViewModifier {
     }
 }
 
+/// Card style modifier with adaptive shadows for dark mode
+struct CardStyleModifier: ViewModifier {
+    let padding: CGFloat
+    let cornerRadius: CGFloat
+    let shadow: Shadow.ShadowStyle
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .padding(padding)
+            .background(Color(.systemBackground))
+            .cornerRadius(cornerRadius)
+            .shadow(
+                color: shadow.color(for: colorScheme),
+                radius: shadow.radius,
+                x: shadow.x,
+                y: shadow.y
+            )
+    }
+}
+
+/// Adaptive shadow modifier that adjusts opacity for dark mode
+struct AdaptiveShadowModifier: ViewModifier {
+    let style: Shadow.ShadowStyle
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .shadow(
+                color: style.color(for: colorScheme),
+                radius: style.radius,
+                x: style.x,
+                y: style.y
+            )
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {
@@ -388,22 +461,18 @@ extension View {
         modifier(PulseAnimation())
     }
 
-    /// Apply standard card styling
+    /// Apply standard card styling with adaptive shadows
     func cardStyle(
         padding: CGFloat = Spacing.md,
         cornerRadius: CGFloat = CornerRadius.md,
         shadow: Shadow.ShadowStyle = Shadow.subtle
     ) -> some View {
-        self
-            .padding(padding)
-            .background(Color(.systemBackground))
-            .cornerRadius(cornerRadius)
-            .shadow(
-                color: shadow.color,
-                radius: shadow.radius,
-                x: shadow.x,
-                y: shadow.y
-            )
+        modifier(CardStyleModifier(padding: padding, cornerRadius: cornerRadius, shadow: shadow))
+    }
+
+    /// Apply adaptive shadow that adjusts for dark mode
+    func adaptiveShadow(_ style: Shadow.ShadowStyle = Shadow.subtle) -> some View {
+        modifier(AdaptiveShadowModifier(style: style))
     }
 
     // MARK: - Accessibility Extensions

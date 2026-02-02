@@ -374,7 +374,7 @@ struct TodaySessionLoadingView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .adaptiveShadow(Shadow.medium)
     }
 }
 
@@ -463,7 +463,7 @@ struct GoalsLoadingView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -624,7 +624,7 @@ struct NutritionDashboardLoadingView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Skeleton AI Suggestion Card
@@ -697,7 +697,7 @@ struct NutritionDashboardLoadingView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Skeleton Quick Log Section
@@ -772,7 +772,7 @@ struct NutritionDashboardLoadingView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Skeleton Weekly Trend Section
@@ -818,7 +818,7 @@ struct NutritionDashboardLoadingView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 5)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

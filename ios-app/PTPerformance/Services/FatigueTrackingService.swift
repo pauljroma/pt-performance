@@ -279,14 +279,50 @@ enum FatigueTrackingError: LocalizedError {
 /// Uses database RPCs for fatigue calculations
 @MainActor
 class FatigueTrackingService: ObservableObject {
+    static let shared = FatigueTrackingService()
+
     nonisolated(unsafe) private let client: PTSupabaseClient
 
     @Published var currentFatigue: FatigueAccumulation?
     @Published var isLoading: Bool = false
-    @Published var error: Error?
+    @Published var error: String?
 
     nonisolated init(client: PTSupabaseClient = .shared) {
         self.client = client
+    }
+
+    // MARK: - Public API (matching requirements)
+
+    /// Fetch the current fatigue accumulation for the logged-in patient
+    /// - Returns: The current FatigueAccumulation if available
+    /// - Throws: FatigueTrackingError if fetch fails
+    func fetchCurrentFatigue() async throws -> FatigueAccumulation? {
+        guard let patientId = UUID(uuidString: client.userId ?? "") else {
+            throw FatigueTrackingError.invalidPatientId
+        }
+        try await fetchCurrentFatigue(patientId: patientId)
+        return currentFatigue
+    }
+
+    /// Calculate fatigue accumulation for the logged-in patient
+    /// - Returns: The calculated FatigueAccumulation
+    /// - Throws: FatigueTrackingError if calculation fails
+    func calculateFatigue() async throws -> FatigueAccumulation {
+        guard let patientId = UUID(uuidString: client.userId ?? "") else {
+            throw FatigueTrackingError.invalidPatientId
+        }
+        return try await calculateFatigue(patientId: patientId)
+    }
+
+    /// Get fatigue trend for the logged-in patient
+    /// - Parameter days: Number of days to fetch (default 14)
+    /// - Returns: Array of FatigueAccumulation records ordered by date
+    /// - Throws: FatigueTrackingError if fetch fails
+    func getFatigueTrend(days: Int = 14) async throws -> [FatigueAccumulation] {
+        guard let patientId = UUID(uuidString: client.userId ?? "") else {
+            throw FatigueTrackingError.invalidPatientId
+        }
+        return try await getFatigueTrend(patientId: patientId, days: days)
     }
 
     // MARK: - Fetch Current Fatigue
@@ -329,7 +365,7 @@ class FatigueTrackingService: ObservableObject {
             }
             #endif
         } catch {
-            self.error = error
+            self.error = error.localizedDescription
             #if DEBUG
             DebugLogger.shared.error("FATIGUE", "Failed to fetch current fatigue: \(error.localizedDescription)")
             #endif
@@ -378,10 +414,10 @@ class FatigueTrackingService: ObservableObject {
 
             return fatigue
         } catch let fatigueError as FatigueTrackingError {
-            self.error = fatigueError
+            self.error = fatigueError.localizedDescription
             throw fatigueError
         } catch {
-            self.error = error
+            self.error = error.localizedDescription
             #if DEBUG
             DebugLogger.shared.error("FATIGUE", "Failed to calculate fatigue: \(error.localizedDescription)")
             #endif
@@ -434,7 +470,7 @@ class FatigueTrackingService: ObservableObject {
 
             return results
         } catch {
-            self.error = error
+            self.error = error.localizedDescription
             #if DEBUG
             DebugLogger.shared.error("FATIGUE", "Failed to fetch fatigue trend: \(error.localizedDescription)")
             #endif

@@ -621,7 +621,7 @@ private struct WorkoutRecommendationCard: View {
             .padding()
             .background(Color(.systemBackground))
             .cornerRadius(14)
-            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .adaptiveShadow(Shadow.subtle)
         }
     }
 }
@@ -914,7 +914,7 @@ private struct AIWorkoutRecommendationCard: View {
                 )
             )
             .cornerRadius(14)
-            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .adaptiveShadow(Shadow.subtle)
         }
     }
 

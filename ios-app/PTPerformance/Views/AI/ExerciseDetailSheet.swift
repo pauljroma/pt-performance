@@ -69,7 +69,7 @@ struct ExerciseDetailSheet: View {
                 VideoPlayerView(videoUrl: videoUrl)
                     .frame(height: 250)
                     .cornerRadius(12)
-                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .adaptiveShadow(Shadow.medium)
             } else {
                 // Placeholder when video not available
                 videoPlaceholder
@@ -148,7 +148,7 @@ struct ExerciseDetailSheet: View {
         .padding(16)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - How to Perform Section
@@ -192,7 +192,7 @@ struct ExerciseDetailSheet: View {
         .padding(16)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private func cueGroup(title: String, icon: String, cues: [String], color: Color) -> some View {
@@ -283,7 +283,7 @@ struct ExerciseDetailSheet: View {
         .padding(16)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Safety Section

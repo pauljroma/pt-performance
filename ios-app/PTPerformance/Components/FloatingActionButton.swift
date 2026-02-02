@@ -10,6 +10,7 @@ import UIKit
 
 /// Floating action button that expands to show workout creation options
 struct FloatingActionButton: View {
+    @Environment(\.colorScheme) private var colorScheme
     // MARK: - Callbacks
 
     let onAddToToday: (() -> Void)?  // BUILD 259: Made optional
@@ -142,7 +143,7 @@ struct FloatingActionButton: View {
             .background(
                 Capsule()
                     .fill(Color(UIColor.systemBackground))
-                    .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 2)
+                    .shadow(color: colorScheme == .dark ? .black.opacity(0.4) : .black.opacity(0.15), radius: 6, x: 0, y: 2)
             )
         }
         .accessibilityLabel(title)

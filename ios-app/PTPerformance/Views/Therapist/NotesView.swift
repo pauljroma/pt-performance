@@ -49,10 +49,16 @@ struct NotesView: View {
     private var notesContent: some View {
         Group {
             if viewModel.notes.isEmpty {
-                ContentUnavailableView(
-                    "No Notes Yet",
-                    systemImage: "note.text",
-                    description: Text("Tap + to add your first note")
+                EmptyStateView(
+                    title: "No Notes Yet",
+                    message: "Add clinical notes, progress updates, or assessment records to track this patient's journey. Tap the + button to create your first note.",
+                    icon: "note.text",
+                    iconColor: .blue,
+                    action: EmptyStateView.EmptyStateAction(
+                        title: "Add Note",
+                        icon: "plus.circle.fill",
+                        action: { viewModel.showAddNoteSheet = true }
+                    )
                 )
             } else {
                 List {

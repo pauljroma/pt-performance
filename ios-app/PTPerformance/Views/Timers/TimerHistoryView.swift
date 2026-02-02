@@ -60,6 +60,7 @@ struct TimerHistoryView: View {
             }
             .searchable(text: $searchText, prompt: "Search sessions...")
             .refreshable {
+                HapticFeedback.light()
                 await viewModel.refresh()
             }
             .alert("Delete Session", isPresented: Binding(
@@ -189,7 +190,7 @@ struct TimerHistoryView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Session List
@@ -244,6 +245,7 @@ struct TimerHistoryView: View {
         return VStack(spacing: 0) {
             // Main row content
             Button(action: {
+                HapticFeedback.selectionChanged()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     if expandedSessions.contains(session.id) {
                         expandedSessions.remove(session.id)
@@ -327,6 +329,7 @@ struct TimerHistoryView: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
+                HapticFeedback.medium()
                 showDeleteConfirmation = session.id
             } label: {
                 Label("Delete", systemImage: "trash")

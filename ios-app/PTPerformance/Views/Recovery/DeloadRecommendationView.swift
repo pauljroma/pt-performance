@@ -176,7 +176,7 @@ struct DeloadRecommendationView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
     }
 
@@ -317,7 +317,7 @@ struct DeloadRecommendationView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
@@ -385,7 +385,7 @@ struct DeloadRecommendationView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
     }
 
@@ -503,7 +503,7 @@ struct DeloadRecommendationView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
     }
 
@@ -552,6 +552,433 @@ struct DeloadRecommendationView: View {
         }
         .padding(.top, 60)
     }
+}
+
+// MARK: - FatigueScoreGauge Component
+
+/// Circular gauge component displaying fatigue score (0-100)
+/// Color-coded by fatigue band with animated progress ring
+struct FatigueScoreGauge: View {
+    let score: Double
+    let band: FatigueBand
+
+    @State private var animatedProgress: Double = 0
+
+    private var progress: Double {
+        score / 100.0
+    }
+
+    var body: some View {
+        ZStack {
+            // Background ring
+            Circle()
+                .stroke(
+                    band.color.opacity(0.2),
+                    lineWidth: 12
+                )
+
+            // Progress ring
+            Circle()
+                .trim(from: 0, to: animatedProgress)
+                .stroke(
+                    band.color,
+                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+
+            // Score and band label
+            VStack(spacing: 4) {
+                Text(String(format: "%.0f", score))
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(band.color)
+
+                Text(band.displayName)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(width: 120, height: 120)
+        .onAppear {
+            withAnimation(.easeOut(duration: 1.0)) {
+                animatedProgress = progress
+            }
+        }
+        .accessibilityLabel("Fatigue score \(Int(score)) out of 100, \(band.displayName) level")
+    }
+}
+
+// MARK: - DeloadPrescriptionCard Component
+
+/// Card showing deload prescription details with activate/dismiss actions
+struct DeloadPrescriptionCard: View {
+    let urgency: DeloadUrgency
+    let prescription: DeloadPrescription
+    let isActivating: Bool
+    let isDismissing: Bool
+    let onActivate: () -> Void
+    let onDismiss: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header with urgency indicator
+            HStack {
+                Image(systemName: urgency.icon)
+                    .font(.title2)
+                    .foregroundColor(urgency.color)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(urgency.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text(urgency.subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            Divider()
+
+            // Prescription details
+            VStack(spacing: 12) {
+                PrescriptionDetailRow(
+                    icon: "calendar",
+                    title: "Duration",
+                    value: "\(prescription.durationDays) days",
+                    subtitle: prescription.dateRangeText
+                )
+
+                PrescriptionDetailRow(
+                    icon: "scalemass",
+                    title: "Load Reduction",
+                    value: prescription.formattedLoadReduction,
+                    subtitle: "Reduce weight/intensity"
+                )
+
+                PrescriptionDetailRow(
+                    icon: "list.number",
+                    title: "Volume Reduction",
+                    value: prescription.formattedVolumeReduction,
+                    subtitle: "Reduce sets/reps"
+                )
+
+                PrescriptionDetailRow(
+                    icon: "target",
+                    title: "Focus",
+                    value: prescription.focus,
+                    subtitle: nil
+                )
+            }
+
+            // Action buttons
+            HStack(spacing: 12) {
+                Button(action: onDismiss) {
+                    HStack {
+                        if isDismissing {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .secondary))
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "xmark.circle")
+                        }
+                        Text("Dismiss")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .disabled(isDismissing || isActivating)
+
+                Button(action: onActivate) {
+                    HStack {
+                        if isActivating {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        Text("Activate")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(urgency.color)
+                    )
+                }
+                .disabled(isDismissing || isActivating)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .adaptiveShadow(Shadow.medium)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(urgency.color.opacity(0.3), lineWidth: 2)
+        )
+    }
+}
+
+/// Row showing a single prescription detail
+struct PrescriptionDetailRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    let subtitle: String?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.body)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(value)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(.primary)
+
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - ContributingFactorRow Component
+
+/// Single row displaying a contributing factor to fatigue
+struct ContributingFactorRow: View {
+    let factor: String
+    var icon: String = "exclamationmark.triangle.fill"
+    var iconColor: Color = .orange
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(iconColor)
+
+            Text(factor)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(iconColor.opacity(0.1))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Contributing factor: \(factor)")
+    }
+}
+
+// MARK: - FatigueTrendChart Component
+
+/// Simple sparkline chart showing fatigue score trend over time
+struct FatigueTrendChart: View {
+    let dataPoints: [FatigueTrendPoint]
+    var height: CGFloat = 200
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("\(dataPoints.count)-Day Fatigue Trend")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                Text("Lower is better")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            if dataPoints.isEmpty {
+                emptyState
+            } else {
+                chartContent
+            }
+
+            // Legend
+            HStack(spacing: 16) {
+                legendItem(color: .green, label: "Low (0-50)")
+                legendItem(color: .yellow, label: "Moderate (50-70)")
+                legendItem(color: .orange, label: "High (70-85)")
+                legendItem(color: .red, label: "Critical (85+)")
+            }
+            .font(.caption2)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .adaptiveShadow(Shadow.medium)
+        )
+    }
+
+    private var chartContent: some View {
+        Chart(dataPoints) { dataPoint in
+            // Area gradient fill
+            AreaMark(
+                x: .value("Date", dataPoint.date, unit: .day),
+                y: .value("Score", dataPoint.fatigueScore)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [
+                        dataPoint.band.color.opacity(0.3),
+                        dataPoint.band.color.opacity(0.1)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+
+            // Line
+            LineMark(
+                x: .value("Date", dataPoint.date, unit: .day),
+                y: .value("Score", dataPoint.fatigueScore)
+            )
+            .foregroundStyle(dataPoint.band.color)
+            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+            .interpolationMethod(.catmullRom)
+
+            // Point markers
+            PointMark(
+                x: .value("Date", dataPoint.date, unit: .day),
+                y: .value("Score", dataPoint.fatigueScore)
+            )
+            .foregroundStyle(dataPoint.band.color)
+            .symbolSize(50)
+        }
+        .chartYScale(domain: 0...100)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { value in
+                AxisGridLine()
+                AxisValueLabel {
+                    if let intValue = value.as(Int.self) {
+                        Text("\(intValue)")
+                            .font(.caption)
+                    }
+                }
+            }
+        }
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .day, count: 1)) { _ in
+                AxisGridLine()
+                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+            }
+        }
+        .chartPlotStyle { plotArea in
+            plotArea
+                .background(
+                    Color(colorScheme == .dark ? .systemGray6 : .systemGray6).opacity(0.3)
+                )
+                .cornerRadius(8)
+        }
+        .frame(height: height)
+        .accessibilityLabel("Fatigue trend chart")
+        .accessibilityValue("Shows \(dataPoints.count) days of fatigue data")
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.title)
+                .foregroundColor(.secondary)
+
+            Text("Not enough data for trend")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(height: height)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func legendItem(color: Color, label: String) -> some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(label)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Component Previews
+
+#Preview("FatigueScoreGauge - Low") {
+    FatigueScoreGauge(score: 35, band: .low)
+        .padding()
+}
+
+#Preview("FatigueScoreGauge - High") {
+    FatigueScoreGauge(score: 78, band: .high)
+        .padding()
+}
+
+#Preview("DeloadPrescriptionCard") {
+    DeloadPrescriptionCard(
+        urgency: .recommended,
+        prescription: DeloadPrescription.sample,
+        isActivating: false,
+        isDismissing: false,
+        onActivate: { print("Activate") },
+        onDismiss: { print("Dismiss") }
+    )
+    .padding()
+}
+
+#Preview("ContributingFactorRow") {
+    VStack(spacing: 8) {
+        ContributingFactorRow(factor: "Elevated acute:chronic workload ratio")
+        ContributingFactorRow(factor: "Consecutive low readiness days")
+        ContributingFactorRow(factor: "High average RPE in recent sessions")
+    }
+    .padding()
+}
+
+#Preview("FatigueTrendChart") {
+    let calendar = Calendar.current
+    let trendData = (0..<7).map { daysAgo in
+        let date = calendar.date(byAdding: .day, value: -6 + daysAgo, to: Date()) ?? Date()
+        let score = 45.0 + Double(daysAgo) * 5.0 + Double.random(in: -5...5)
+        let band: FatigueBand = score > 70 ? .high : (score > 50 ? .moderate : .low)
+        return FatigueTrendPoint(date: date, fatigueScore: score, band: band)
+    }
+
+    return FatigueTrendChart(dataPoints: trendData)
+        .padding()
 }
 
 // MARK: - Previews

@@ -104,7 +104,7 @@ struct ProfileHubView: View {
 
     // MARK: - State for HealthKit
 
-    @StateObject private var healthKitService = HealthKitService()
+    @StateObject private var healthKitService = HealthKitService.shared
 
     // MARK: - Health Section (Premium Features)
 
@@ -382,7 +382,8 @@ struct ProfileHubView: View {
     // MARK: - Subscription Section
 
     private var subscriptionSection: some View {
-        Section("Subscription") {
+        Section("Subscription & Purchases") {
+            // Main subscription
             NavigationLink {
                 SubscriptionView()
                     .environmentObject(StoreKitService.shared)
@@ -397,6 +398,40 @@ struct ProfileHubView: View {
                         Text(subscriptionPlanText)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            // Baseball Pack
+            NavigationLink {
+                BaseballPackView()
+                    .environmentObject(storeKit)
+            } label: {
+                HStack {
+                    Image(systemName: "baseball.fill")
+                        .foregroundColor(.orange)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Baseball Pack")
+                            .foregroundColor(.primary)
+                        Text(storeKit.hasBaseballAccess ? "Purchased" : "12+ baseball programs")
+                            .font(.caption)
+                            .foregroundColor(storeKit.hasBaseballAccess ? .green : .secondary)
+                    }
+                    Spacer()
+                    if storeKit.hasBaseballAccess {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.subheadline)
+                    } else {
+                        Text("PREMIUM")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.2))
+                            .foregroundColor(.orange)
+                            .cornerRadius(4)
                     }
                 }
             }

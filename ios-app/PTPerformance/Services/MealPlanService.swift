@@ -437,16 +437,56 @@ class MealPlanService {
 
 // MARK: - Errors
 
+/// Meal plan errors with user-friendly messages
 enum MealPlanError: LocalizedError {
     case notFound
     case unauthorized
+    case saveFailed(Error)
+    case deleteFailed(Error)
+    case loadFailed(Error)
+
+    // MARK: - User-Friendly Error Titles
 
     var errorDescription: String? {
         switch self {
         case .notFound:
-            return "Meal plan not found"
+            return "Meal Plan Not Found"
         case .unauthorized:
-            return "You don't have permission to modify this meal plan"
+            return "Access Denied"
+        case .saveFailed:
+            return "Couldn't Save Meal Plan"
+        case .deleteFailed:
+            return "Couldn't Delete Meal Plan"
+        case .loadFailed:
+            return "Couldn't Load Meal Plans"
+        }
+    }
+
+    // MARK: - User-Friendly Recovery Suggestions
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .notFound:
+            return "This meal plan may have been removed. Please refresh your meal plans."
+        case .unauthorized:
+            return "You don't have permission to modify this meal plan. Please contact your therapist."
+        case .saveFailed:
+            return "We couldn't save your meal plan right now. Please try again."
+        case .deleteFailed:
+            return "We couldn't remove this meal plan. Please try again."
+        case .loadFailed:
+            return "We couldn't load your meal plans. Please check your connection and try again."
+        }
+    }
+
+    // MARK: - Retry Logic
+
+    var shouldRetry: Bool {
+        switch self {
+        case .notFound, .unauthorized:
+            return false
+        case .saveFailed, .deleteFailed, .loadFailed:
+            return true
         }
     }
 }

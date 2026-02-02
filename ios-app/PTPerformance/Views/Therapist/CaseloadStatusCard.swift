@@ -144,7 +144,7 @@ struct CaseloadStatusCard: View {
             .frame(maxWidth: .infinity)
             .background(cardBackgroundColor)
             .cornerRadius(12)
-            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .adaptiveShadow(Shadow.subtle)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(status.color.opacity(0.3), lineWidth: 2)

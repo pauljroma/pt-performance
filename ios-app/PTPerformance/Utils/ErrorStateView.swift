@@ -185,6 +185,121 @@ extension ErrorStateView {
             secondaryAction: nil
         )
     }
+
+    /// Create an error view from any Error type with automatic user-friendly message conversion
+    /// - Parameters:
+    ///   - error: The error to display
+    ///   - retry: Optional retry action
+    ///   - contactSupport: Optional contact support action
+    static func from(
+        error: Error,
+        retry: (() -> Void)? = nil,
+        contactSupport: (() -> Void)? = nil
+    ) -> ErrorStateView {
+        let title = UserFriendlyError.title(for: error)
+        let message = UserFriendlyError.message(for: error)
+        let shouldRetry = UserFriendlyError.shouldShowRetry(for: error)
+
+        // Determine icon based on error type
+        let (icon, iconColor) = iconFor(error: error)
+
+        var primaryAction: ErrorAction?
+        var secondaryAction: ErrorAction?
+
+        if let retry = retry, shouldRetry {
+            primaryAction = ErrorAction(title: "Try Again", icon: "arrow.clockwise", action: retry)
+        }
+
+        if let contactSupport = contactSupport {
+            secondaryAction = ErrorAction(title: "Contact Support", icon: "envelope.fill", action: contactSupport)
+        }
+
+        return ErrorStateView(
+            title: title,
+            message: message,
+            icon: icon,
+            iconColor: iconColor,
+            primaryAction: primaryAction,
+            secondaryAction: secondaryAction
+        )
+    }
+
+    /// Create an error view from an AppError
+    /// - Parameters:
+    ///   - appError: The AppError to display
+    ///   - retry: Optional retry action
+    static func from(
+        appError: AppError,
+        retry: (() -> Void)? = nil
+    ) -> ErrorStateView {
+        let title = appError.errorDescription ?? "Error"
+        let message = appError.recoverySuggestion ?? "Please try again."
+
+        // Determine icon based on error type
+        let (icon, iconColor) = iconFor(appError: appError)
+
+        var primaryAction: ErrorAction?
+        if let retry = retry, appError.shouldRetry {
+            primaryAction = ErrorAction(title: "Try Again", icon: "arrow.clockwise", action: retry)
+        }
+
+        return ErrorStateView(
+            title: title,
+            message: message,
+            icon: icon,
+            iconColor: iconColor,
+            primaryAction: primaryAction,
+            secondaryAction: nil
+        )
+    }
+
+    // MARK: - Icon Helpers
+
+    private static func iconFor(error: Error) -> (String, Color) {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                return ("wifi.exclamationmark", .orange)
+            case .timedOut:
+                return ("clock.badge.exclamationmark", .orange)
+            default:
+                return ("exclamationmark.triangle.fill", .orange)
+            }
+        }
+
+        if let appError = error as? AppError {
+            return iconFor(appError: appError)
+        }
+
+        return ("exclamationmark.circle.fill", .orange)
+    }
+
+    private static func iconFor(appError: AppError) -> (String, Color) {
+        switch appError {
+        case .noInternetConnection:
+            return ("wifi.exclamationmark", .orange)
+        case .serverUnreachable:
+            return ("server.rack", .red)
+        case .requestTimeout:
+            return ("clock.badge.exclamationmark", .orange)
+        case .networkError:
+            return ("network.slash", .orange)
+        case .notAuthenticated, .sessionExpired, .invalidCredentials, .authenticationFailed:
+            return ("person.crop.circle.badge.exclamationmark", .blue)
+        case .dataNotFound, .sessionNotFound:
+            return ("doc.questionmark", .gray)
+        case .saveFailed, .deleteFailed, .databaseError:
+            return ("externaldrive.badge.exclamationmark", .red)
+        case .aiServiceUnavailable, .aiTimeout, .aiQuotaExceeded, .aiError:
+            return ("brain", .purple)
+        case .duplicateSchedule, .scheduleConflict, .schedulingFailed:
+            return ("calendar.badge.exclamationmark", .orange)
+        case .invalidInput, .missingRequiredData, .invalidDateRange:
+            return ("exclamationmark.bubble", .yellow)
+        case .unknown:
+            return ("exclamationmark.triangle.fill", .orange)
+        }
+    }
 }
 
 // MARK: - Compact Error View
@@ -218,6 +333,139 @@ struct CompactErrorView: View {
         .background(Color(.systemGray6))
         .cornerRadius(8)
     }
+
+    /// Create a compact error view from any Error
+    static func from(error: Error, retry: (() -> Void)? = nil) -> CompactErrorView {
+        CompactErrorView(
+            message: UserFriendlyError.message(for: error),
+            retry: UserFriendlyError.shouldShowRetry(for: error) ? retry : nil
+        )
+    }
+}
+
+// MARK: - Toast Error View
+
+/// Toast-style error view for brief notifications
+struct ErrorToastView: View {
+    let message: String
+    var icon: String = "exclamationmark.triangle.fill"
+    var iconColor: Color = .orange
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(iconColor)
+                .font(.body)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+                .lineLimit(2)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+.adaptiveShadow(Shadow.prominent)
+        )
+        .padding(.horizontal)
+    }
+
+    /// Create a toast from any Error
+    static func from(error: Error) -> ErrorToastView {
+        ErrorToastView(message: UserFriendlyError.message(for: error))
+    }
+}
+
+// MARK: - Error Banner View
+
+/// Banner-style error view for persistent errors at top of screen
+struct ErrorBannerView: View {
+    let title: String
+    let message: String
+    var onRetry: (() -> Void)?
+    var onDismiss: (() -> Void)?
+
+    @State private var isRetrying = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.white)
+                    .font(.title3)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.white)
+
+                    Text(message)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.9))
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                if let onDismiss = onDismiss {
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+            }
+
+            if let onRetry = onRetry {
+                Button(action: {
+                    isRetrying = true
+                    onRetry()
+                    // Reset after a delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isRetrying = false
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        if isRetrying {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.7)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        Text("Try Again")
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(6)
+                }
+                .disabled(isRetrying)
+            }
+        }
+        .padding()
+        .background(Color.orange)
+    }
+
+    /// Create a banner from any Error
+    static func from(
+        error: Error,
+        onRetry: (() -> Void)? = nil,
+        onDismiss: (() -> Void)? = nil
+    ) -> ErrorBannerView {
+        ErrorBannerView(
+            title: UserFriendlyError.title(for: error),
+            message: UserFriendlyError.message(for: error),
+            onRetry: UserFriendlyError.shouldShowRetry(for: error) ? onRetry : nil,
+            onDismiss: onDismiss
+        )
+    }
 }
 
 // MARK: - Preview
@@ -248,12 +496,33 @@ struct ErrorStateView_Previews: PreviewProvider {
             ErrorStateView.authenticationError(signIn: {})
                 .previewDisplayName("Authentication Required")
 
+            ErrorStateView.from(
+                appError: .noInternetConnection,
+                retry: {}
+            )
+            .previewDisplayName("From AppError")
+
             CompactErrorView(
-                message: "Failed to load data",
+                message: "We couldn't load your data. Please try again.",
                 retry: {}
             )
             .padding()
             .previewDisplayName("Compact Error")
+
+            ErrorToastView(message: "Something went wrong. Please try again.")
+                .padding(.vertical, 50)
+                .previewDisplayName("Error Toast")
+
+            VStack(spacing: 0) {
+                ErrorBannerView(
+                    title: "Connection Issue",
+                    message: "We couldn't reach our servers. Please check your connection.",
+                    onRetry: {},
+                    onDismiss: {}
+                )
+                Spacer()
+            }
+            .previewDisplayName("Error Banner")
         }
     }
 }

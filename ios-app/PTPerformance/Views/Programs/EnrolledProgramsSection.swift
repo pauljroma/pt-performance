@@ -155,7 +155,7 @@ struct EnrolledProgramCard: View {
         .frame(width: 160, height: 150)
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.5), lineWidth: 1)

@@ -327,7 +327,7 @@ struct MetricCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

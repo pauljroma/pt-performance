@@ -1,0 +1,48 @@
+-- BUILD 352: AI Workout Recommendations
+-- Creates table to store AI-generated workout recommendations for analytics and caching
+
+BEGIN;
+
+-- Create workout_recommendations table
+CREATE TABLE IF NOT EXISTS workout_recommendations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    recommendations JSONB NOT NULL,
+    reasoning TEXT,
+    context JSONB,
+    was_selected BOOLEAN DEFAULT FALSE,
+    selected_template_id UUID,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for cache lookups (patient + time)
+CREATE INDEX IF NOT EXISTS idx_workout_recommendations_patient_created
+ON workout_recommendations(patient_id, created_at DESC);
+
+-- Index for analytics (which templates are selected)
+CREATE INDEX IF NOT EXISTS idx_workout_recommendations_selected
+ON workout_recommendations(was_selected, selected_template_id)
+WHERE was_selected = TRUE;
+
+-- Enable RLS
+ALTER TABLE workout_recommendations ENABLE ROW LEVEL SECURITY;
+
+-- Patients can view their own recommendations
+CREATE POLICY "Patients can view own recommendations"
+ON workout_recommendations FOR SELECT
+USING (auth.uid() = patient_id);
+
+-- Patients can insert their own recommendations (via edge function)
+CREATE POLICY "Service role can insert recommendations"
+ON workout_recommendations FOR INSERT
+WITH CHECK (true);
+
+-- Patients can update their own recommendations (mark as selected)
+CREATE POLICY "Patients can update own recommendations"
+ON workout_recommendations FOR UPDATE
+USING (auth.uid() = patient_id);
+
+COMMIT;
+
+-- Verify
+SELECT 'workout_recommendations table created' as status;

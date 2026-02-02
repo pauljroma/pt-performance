@@ -72,6 +72,7 @@ struct HistoryView: View {
         }
         .navigationTitle("History")
         .refreshable {
+            HapticFeedback.light()
             await viewModel.refresh(for: patientId)
         }
         .task {
@@ -512,6 +513,49 @@ struct WorkoutHistoryRow: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                HapticFeedback.light()
+                // Copy workout summary
+                var summary = "\(workout.name) - \(workout.date.formatted(date: .abbreviated, time: .omitted))"
+                if let duration = workout.duration {
+                    summary += " (\(duration) min)"
+                }
+                if let volume = workout.volume, volume > 0 {
+                    summary += " - \(formatVolume(volume))"
+                }
+                UIPasteboard.general.string = summary
+            } label: {
+                Label("Copy Summary", systemImage: "doc.on.doc")
+            }
+
+            if let volume = workout.volume, volume > 0 {
+                Button {
+                    HapticFeedback.light()
+                    UIPasteboard.general.string = "Volume: \(formatVolume(volume))"
+                } label: {
+                    Label("Copy Volume", systemImage: "scalemass")
+                }
+            }
+
+            Divider()
+
+            Button {
+                HapticFeedback.light()
+                // Share workout summary
+                var summary = "Completed \(workout.name) on \(workout.date.formatted(date: .long, time: .omitted))"
+                if let duration = workout.duration {
+                    summary += " (\(duration) min)"
+                }
+                if let volume = workout.volume, volume > 0 {
+                    summary += " - Total volume: \(formatVolume(volume))"
+                }
+                UIPasteboard.general.string = summary
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+        }
     }
 
     private func formatVolume(_ volume: Double) -> String {

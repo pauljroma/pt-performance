@@ -106,7 +106,7 @@ struct LearningCategoryCard: View {
             .padding()
             .background(Color(.systemBackground))
             .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+            .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(PlainButtonStyle())
     }

@@ -16,6 +16,7 @@ struct TodaySessionView: View {
     @State private var todayReadiness: DailyReadiness?
     @State private var isLoadingReadiness = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     // BUILD 120: Exercise state management
     @State private var completedExercises: [UUID: Bool] = [:]
@@ -347,7 +348,7 @@ struct TodaySessionView: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
 
-            // List of completed workouts today
+            // List of completed workouts today with context menus
             if viewModel.todaysCompletedWorkouts.count > 0 {
                 ForEach(viewModel.todaysCompletedWorkouts) { workout in
                     HStack(spacing: 12) {
@@ -389,6 +390,32 @@ struct TodaySessionView: View {
                     .padding(.horizontal, 12)
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(8)
+                    .contentShape(Rectangle())
+                    .contextMenu {
+                        Button {
+                            HapticFeedback.light()
+                            // Copy workout summary to clipboard
+                            var summary = workout.name
+                            if let duration = workout.durationMinutes {
+                                summary += " - \(duration) min"
+                            }
+                            if let volume = workout.totalVolume, volume > 0 {
+                                summary += " - \(Int(volume)) lbs"
+                            }
+                            UIPasteboard.general.string = summary
+                        } label: {
+                            Label("Copy Summary", systemImage: "doc.on.doc")
+                        }
+
+                        Button {
+                            HapticFeedback.light()
+                            // Share workout details
+                            let summary = "Completed \(workout.name) at \(workout.completedAt.formatted(date: .omitted, time: .shortened))"
+                            UIPasteboard.general.string = summary
+                        } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                    }
                 }
             }
         }
@@ -425,7 +452,7 @@ struct TodaySessionView: View {
                 }
             }
 
-            // Exercise preview (first 3)
+            // Exercise preview (first 3) with context menus
             if !viewModel.exercises.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(viewModel.exercises.prefix(3)) { exercise in
@@ -442,6 +469,23 @@ struct TodaySessionView: View {
                             Text("\(exercise.prescribed_sets) × \(exercise.repsDisplay)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            Button {
+                                HapticFeedback.light()
+                                selectedExercise = exercise
+                            } label: {
+                                Label("View Details", systemImage: "info.circle")
+                            }
+
+                            Button {
+                                HapticFeedback.light()
+                                // Copy exercise name to clipboard
+                                UIPasteboard.general.string = exercise.exercise_name ?? "Exercise"
+                            } label: {
+                                Label("Copy Name", systemImage: "doc.on.doc")
+                            }
                         }
                     }
 
@@ -477,7 +521,32 @@ struct TodaySessionView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .adaptiveShadow(Shadow.medium)
+        .contextMenu {
+            Button {
+                HapticFeedback.medium()
+                startWorkout()
+            } label: {
+                Label("Start Workout", systemImage: "play.circle.fill")
+            }
+
+            Button {
+                HapticFeedback.light()
+                // Copy session name
+                UIPasteboard.general.string = session.name
+            } label: {
+                Label("Copy Session Name", systemImage: "doc.on.doc")
+            }
+
+            Divider()
+
+            Button {
+                HapticFeedback.light()
+                Task { await viewModel.refresh() }
+            } label: {
+                Label("Refresh", systemImage: "arrow.clockwise")
+            }
+        }
     }
 
     // MARK: - Enrolled Programs Section
@@ -534,7 +603,7 @@ struct TodaySessionView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - BUILD 116: Readiness Section (Agent 18)
@@ -569,7 +638,7 @@ struct TodaySessionView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     @ViewBuilder
@@ -950,7 +1019,7 @@ struct TodaySessionView: View {
         .padding(24)
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .adaptiveShadow(Shadow.medium)
         .padding()
     }
 
@@ -988,7 +1057,7 @@ struct TodaySessionView: View {
             isCompletingSession = false
         case .failure(let error):
             isCompletingSession = false
-            completionError = "Failed to complete session: \(error.localizedDescription)"
+            completionError = UserFriendlyError.logAndMessage(for: error, context: "Session completion")
         }
     }
 
@@ -1179,6 +1248,34 @@ struct EnrolledProgramCardInline: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(enrollment.program.title), Week \(currentWeek), \(progressPercentage) percent complete, \(daysRemainingDisplay)")
         .accessibilityHint("Tap to view program details")
+        .contextMenu {
+            Button {
+                HapticFeedback.light()
+                showDetailSheet = true
+            } label: {
+                Label("View Details", systemImage: "info.circle")
+            }
+
+            Button {
+                HapticFeedback.light()
+                // Copy program summary
+                let summary = "\(enrollment.program.title) - Week \(currentWeek) (\(progressPercentage)% complete)"
+                UIPasteboard.general.string = summary
+            } label: {
+                Label("Copy Progress", systemImage: "doc.on.doc")
+            }
+
+            Divider()
+
+            Button {
+                HapticFeedback.light()
+                // Share program progress
+                let summary = "Working on \(enrollment.program.title) - Week \(currentWeek), \(progressPercentage)% complete!"
+                UIPasteboard.general.string = summary
+            } label: {
+                Label("Share Progress", systemImage: "square.and.arrow.up")
+            }
+        }
         .sheet(isPresented: $showDetailSheet) {
             EnrolledProgramDetailSheet(enrollment: enrollment)
         }
@@ -1244,7 +1341,31 @@ struct ExerciseRow: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                HapticFeedback.light()
+                // Copy exercise prescription
+                var prescription = exercise.exercise_name ?? "Exercise"
+                prescription += ": \(exercise.setsDisplay) × \(exercise.repsDisplay)"
+                if let load = exercise.prescribed_load {
+                    prescription += " @ \(Int(load)) \(exercise.load_unit ?? "lbs")"
+                }
+                UIPasteboard.general.string = prescription
+            } label: {
+                Label("Copy Prescription", systemImage: "doc.on.doc")
+            }
+
+            if let notes = exercise.notes, !notes.isEmpty {
+                Button {
+                    HapticFeedback.light()
+                    UIPasteboard.general.string = notes
+                } label: {
+                    Label("Copy Notes", systemImage: "note.text")
+                }
+            }
+        }
     }
 }
 

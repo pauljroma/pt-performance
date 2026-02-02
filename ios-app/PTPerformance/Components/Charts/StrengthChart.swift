@@ -11,6 +11,7 @@ import Charts
 
 /// Reusable strength progression chart component
 struct StrengthChart: View {
+    @Environment(\.colorScheme) private var colorScheme
     let dataPoints: [StrengthDataPoint]
     let exerciseName: String
     var height: CGFloat = 200
@@ -84,7 +85,7 @@ struct StrengthChart: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Strength Progression Chart")
         .accessibilityValue(accessibilitySummary)
@@ -244,7 +245,7 @@ struct StrengthChartSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private func errorView(_ error: String) -> some View {
@@ -271,7 +272,7 @@ struct StrengthChartSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private var emptySelectionView: some View {
@@ -294,7 +295,7 @@ struct StrengthChartSection: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

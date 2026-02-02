@@ -60,17 +60,26 @@ struct TodayHubView: View {
 
     private var quickAccessMenu: some View {
         Menu {
-            Button(action: { showQuickPick = true }) {
+            Button(action: {
+                HapticFeedback.light()
+                showQuickPick = true
+            }) {
                 Label("AI Quick Pick", systemImage: "sparkles")
             }
 
-            Button(action: { showTimers = true }) {
+            Button(action: {
+                HapticFeedback.light()
+                showTimers = true
+            }) {
                 Label("Timers", systemImage: "timer")
             }
 
             Divider()
 
-            Button(action: { showReadinessCheckIn = true }) {
+            Button(action: {
+                HapticFeedback.light()
+                showReadinessCheckIn = true
+            }) {
                 Label("Readiness Check-In", systemImage: "heart.text.square")
             }
         } label: {

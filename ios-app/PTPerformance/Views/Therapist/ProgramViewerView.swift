@@ -41,34 +41,19 @@ struct ProgramViewerView: View {
 
     // BUILD 283: Empty state when patient has no program
     private var noProgramView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "doc.badge.plus")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-
-            Text("No Program Assigned")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("This patient doesn't have a rehabilitation program yet. Create a program to get started.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            Button {
-                showingProgramBuilder = true
-            } label: {
-                Label("Create Program", systemImage: "plus.circle.fill")
-            }
-            .buttonStyle(.borderedProminent)
-            .sheet(isPresented: $showingProgramBuilder) {
-                ProgramBuilderView(patientId: UUID(uuidString: patientId))
-            }
-
-            Spacer()
+        EmptyStateView(
+            title: "No Program Assigned",
+            message: "This patient doesn't have a rehabilitation program yet. Create a personalized program with phases, sessions, and exercises to guide their recovery.",
+            icon: "doc.badge.plus",
+            iconColor: .blue,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Create Program",
+                icon: "plus.circle.fill",
+                action: { showingProgramBuilder = true }
+            )
+        )
+        .sheet(isPresented: $showingProgramBuilder) {
+            ProgramBuilderView(patientId: UUID(uuidString: patientId))
         }
     }
 

@@ -569,3 +569,314 @@ struct BaseballProgram: Codable, Identifiable {
         subcategoryEnum?.displayName ?? "Baseball"
     }
 }
+
+// MARK: - Program Structure Models (for detailed view)
+
+/// Phase within a baseball program
+struct BaseballProgramPhaseDetail: Codable, Identifiable {
+    let id: UUID
+    let programId: UUID
+    let name: String
+    let sequence: Int
+    let durationWeeks: Int?
+    let goals: String?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case programId = "program_id"
+        case name
+        case sequence
+        case durationWeeks = "duration_weeks"
+        case goals
+        case notes
+    }
+}
+
+/// Session within a phase
+struct BaseballSessionDetail: Codable, Identifiable {
+    let id: UUID
+    let phaseId: UUID
+    let name: String
+    let sequence: Int
+    let weekday: Int?
+    let isThrowingDay: Bool?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case phaseId = "phase_id"
+        case name
+        case sequence
+        case weekday
+        case isThrowingDay = "is_throwing_day"
+        case notes
+    }
+}
+
+/// Exercise within a session
+struct BaseballSessionExercise: Codable, Identifiable {
+    let id: UUID
+    let sessionId: UUID
+    let exerciseTemplateId: UUID
+    let sequence: Int
+    let blockNumber: Int?
+    let blockLabel: String?
+    let targetSets: Int?
+    let targetReps: Int?
+    let notes: String?
+    let exerciseTemplate: BaseballExerciseTemplate?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sessionId = "session_id"
+        case exerciseTemplateId = "exercise_template_id"
+        case sequence
+        case blockNumber = "block_number"
+        case blockLabel = "block_label"
+        case targetSets = "target_sets"
+        case targetReps = "target_reps"
+        case notes
+        case exerciseTemplate = "exercise_templates"
+    }
+}
+
+/// Exercise template details
+struct BaseballExerciseTemplate: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let category: String?
+    let bodyRegion: String?
+    let equipmentType: String?
+    let difficultyLevel: String?
+    let techniqueCues: [String: [String]]?
+    let commonMistakes: String?
+    let safetyNotes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case category
+        case bodyRegion = "body_region"
+        case equipmentType = "equipment_type"
+        case difficultyLevel = "difficulty_level"
+        case techniqueCues = "technique_cues"
+        case commonMistakes = "common_mistakes"
+        case safetyNotes = "safety_notes"
+    }
+}
+
+/// Complete program structure with phases, sessions, and exercises
+struct BaseballProgramStructure {
+    let program: BaseballProgram
+    let phases: [PhaseWithSessions]
+
+    struct PhaseWithSessions {
+        let phase: BaseballProgramPhaseDetail
+        let sessions: [SessionWithExercises]
+    }
+
+    struct SessionWithExercises {
+        let session: BaseballSessionDetail
+        let exercises: [BaseballSessionExercise]
+    }
+}
+
+// MARK: - BaseballPackService Extension for Program Structure
+
+extension BaseballPackService {
+
+    /// Fetch the complete program structure including phases, sessions, and exercises
+    func fetchProgramStructure(programId: UUID) async throws -> BaseballProgramStructure {
+        logger.diagnostic("BaseballPackService: Fetching program structure for: \(programId)")
+        isLoading = true
+        error = nil
+        defer { isLoading = false }
+
+        do {
+            // First, fetch the program library entry
+            let programResponse = try await supabase.client
+                .from("program_library")
+                .select()
+                .eq("program_id", value: programId.uuidString)
+                .single()
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let program = try decoder.decode(BaseballProgram.self, from: programResponse.data)
+
+            // Fetch phases
+            let phasesResponse = try await supabase.client
+                .from("phases")
+                .select()
+                .eq("program_id", value: programId.uuidString)
+                .order("sequence", ascending: true)
+                .execute()
+
+            let phases = try decoder.decode([BaseballProgramPhaseDetail].self, from: phasesResponse.data)
+            logger.diagnostic("Fetched \(phases.count) phases")
+
+            // Build structure with sessions and exercises
+            var phasesWithSessions: [BaseballProgramStructure.PhaseWithSessions] = []
+
+            for phase in phases {
+                // Fetch sessions for this phase
+                let sessionsResponse = try await supabase.client
+                    .from("sessions")
+                    .select()
+                    .eq("phase_id", value: phase.id.uuidString)
+                    .order("sequence", ascending: true)
+                    .execute()
+
+                let sessions = try decoder.decode([BaseballSessionDetail].self, from: sessionsResponse.data)
+                logger.diagnostic("Phase '\(phase.name)' has \(sessions.count) sessions")
+
+                var sessionsWithExercises: [BaseballProgramStructure.SessionWithExercises] = []
+
+                for session in sessions {
+                    // Fetch exercises with template details
+                    let exercisesResponse = try await supabase.client
+                        .from("session_exercises")
+                        .select("""
+                            id,
+                            session_id,
+                            exercise_template_id,
+                            sequence,
+                            block_number,
+                            block_label,
+                            target_sets,
+                            target_reps,
+                            notes,
+                            exercise_templates (
+                                id,
+                                name,
+                                category,
+                                body_region,
+                                equipment_type,
+                                difficulty_level,
+                                technique_cues,
+                                common_mistakes,
+                                safety_notes
+                            )
+                        """)
+                        .eq("session_id", value: session.id.uuidString)
+                        .order("sequence", ascending: true)
+                        .execute()
+
+                    let exercises = try decoder.decode([BaseballSessionExercise].self, from: exercisesResponse.data)
+                    logger.diagnostic("Session '\(session.name)' has \(exercises.count) exercises")
+
+                    sessionsWithExercises.append(
+                        BaseballProgramStructure.SessionWithExercises(
+                            session: session,
+                            exercises: exercises
+                        )
+                    )
+                }
+
+                phasesWithSessions.append(
+                    BaseballProgramStructure.PhaseWithSessions(
+                        phase: phase,
+                        sessions: sessionsWithExercises
+                    )
+                )
+            }
+
+            let structure = BaseballProgramStructure(
+                program: program,
+                phases: phasesWithSessions
+            )
+
+            logger.success("BaseballPackService", "Fetched complete program structure: \(phases.count) phases, \(phasesWithSessions.flatMap { $0.sessions }.count) sessions")
+            return structure
+        } catch {
+            let errorMessage = "Failed to fetch program structure: \(error.localizedDescription)"
+            logger.error("BaseballPackService", errorMessage)
+            self.error = errorMessage
+            throw error
+        }
+    }
+
+    /// Fetch phases for a program (lightweight version)
+    func fetchProgramPhases(programId: UUID) async throws -> [BaseballProgramPhaseDetail] {
+        logger.diagnostic("BaseballPackService: Fetching phases for program: \(programId)")
+
+        let response = try await supabase.client
+            .from("phases")
+            .select()
+            .eq("program_id", value: programId.uuidString)
+            .order("sequence", ascending: true)
+            .execute()
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let phases = try decoder.decode([BaseballProgramPhaseDetail].self, from: response.data)
+
+        logger.success("BaseballPackService", "Fetched \(phases.count) phases")
+        return phases
+    }
+
+    /// Fetch sessions with exercises for a phase
+    func fetchPhaseSessions(phaseId: UUID) async throws -> [BaseballProgramStructure.SessionWithExercises] {
+        logger.diagnostic("BaseballPackService: Fetching sessions for phase: \(phaseId)")
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        // Fetch sessions
+        let sessionsResponse = try await supabase.client
+            .from("sessions")
+            .select()
+            .eq("phase_id", value: phaseId.uuidString)
+            .order("sequence", ascending: true)
+            .execute()
+
+        let sessions = try decoder.decode([BaseballSessionDetail].self, from: sessionsResponse.data)
+
+        var result: [BaseballProgramStructure.SessionWithExercises] = []
+
+        for session in sessions {
+            // Fetch exercises with template
+            let exercisesResponse = try await supabase.client
+                .from("session_exercises")
+                .select("""
+                    id,
+                    session_id,
+                    exercise_template_id,
+                    sequence,
+                    block_number,
+                    block_label,
+                    target_sets,
+                    target_reps,
+                    notes,
+                    exercise_templates (
+                        id,
+                        name,
+                        category,
+                        body_region,
+                        equipment_type,
+                        difficulty_level,
+                        technique_cues,
+                        common_mistakes,
+                        safety_notes
+                    )
+                """)
+                .eq("session_id", value: session.id.uuidString)
+                .order("sequence", ascending: true)
+                .execute()
+
+            let exercises = try decoder.decode([BaseballSessionExercise].self, from: exercisesResponse.data)
+
+            result.append(
+                BaseballProgramStructure.SessionWithExercises(
+                    session: session,
+                    exercises: exercises
+                )
+            )
+        }
+
+        logger.success("BaseballPackService", "Fetched \(result.count) sessions with exercises")
+        return result
+    }
+}

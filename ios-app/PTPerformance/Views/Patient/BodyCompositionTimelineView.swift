@@ -181,7 +181,7 @@ struct BodyCompositionTimelineView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Stats Row
@@ -259,7 +259,7 @@ struct BodyCompositionTimelineView: View {
         .padding(.horizontal, 12)
         .background(Color(.systemBackground))
         .cornerRadius(8)
-        .shadow(color: .black.opacity(0.03), radius: 2, y: 1)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Loading State

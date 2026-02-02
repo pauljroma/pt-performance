@@ -13,6 +13,7 @@ struct ProgressChartsView: View {
 
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ProgressChartsViewModel()
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationView {
@@ -196,31 +197,20 @@ struct ProgressChartsView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     private var strengthEmptyState: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "figure.strengthtraining.traditional")
-                .font(.system(size: 48))
-                .foregroundColor(.green.opacity(0.6))
-
-            Text("No Strength Data")
-                .font(.headline)
-                .fontWeight(.semibold)
-
-            Text("Log weighted exercises to track your strength progression over time. Your personal records and improvement trends will appear here.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, Spacing.md)
-        }
+        EmptyStateView(
+            title: "No Strength Data",
+            message: "Log weighted exercises to track your strength progression over time. Your personal records and improvement trends will appear here.",
+            icon: "figure.strengthtraining.traditional",
+            iconColor: .green
+        )
         .frame(height: 220)
-        .frame(maxWidth: .infinity)
-        .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 
     // MARK: - Empty State
@@ -275,7 +265,7 @@ struct ProgressChartsView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 

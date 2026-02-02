@@ -209,22 +209,20 @@ struct HelpView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Articles Found", systemImage: "magnifyingglass")
-        } description: {
-            Text("Try adjusting your search or browse by category")
-        } actions: {
-            Button("Clear Search") {
-                searchText = ""
-                selectedCategory = nil
-            }
-            .buttonStyle(.borderedProminent)
-
-            Button("Browse Categories") {
-                showCategoryBrowser = true
-            }
-            .buttonStyle(.bordered)
-        }
+        EmptyStateView(
+            title: "No Articles Found",
+            message: "No help articles match your search. Try adjusting your search terms or browse by category to find what you're looking for.",
+            icon: "magnifyingglass",
+            iconColor: .secondary,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Clear Search",
+                icon: "xmark.circle",
+                action: {
+                    searchText = ""
+                    selectedCategory = nil
+                }
+            )
+        )
     }
 
     // MARK: - Helpers

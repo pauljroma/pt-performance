@@ -378,24 +378,32 @@ OPENAI_API_KEY=sk-...
 
 ## Implementation Roadmap
 
+### Phase 0: Foundation (Completed)
+
+- [x] Create all Claude Code skills (10 skills in `.claude/skills/`)
+- [x] Create Make.com webhook handlers (`scripts/make-webhooks/handlers/`)
+- [x] Create email templates (welcome, reengagement)
+- [x] Create scenario blueprints (patient-onboarding, inactive-reengagement)
+- [x] Write AUTOMATION.md documentation
+
 ### Week 1: Patient Onboarding (Scenario 1)
 
 - [ ] Set up Make.com account
 - [ ] Connect Supabase webhook for `patients` table
 - [ ] Configure SendGrid for transactional emails
-- [ ] Build welcome email template
-- [ ] Build "complete your profile" reminder
+- [ ] Upload welcome email template to SendGrid
+- [ ] Create "complete your profile" reminder template
 - [ ] Connect Slack notifications for new patients
 - [ ] Test end-to-end with test patient
 
 ### Week 2: Re-engagement & Auto-Advance (Scenarios 3 & 4)
 
 - [ ] Build inactive user detection query (7+ days)
-- [ ] Create re-engagement email templates
+- [ ] Upload re-engagement email template to SendGrid
 - [ ] Connect to `send-push-notification` Edge Function
 - [ ] Build program completion webhook trigger
 - [ ] Implement auto-enrollment in next program
-- [ ] Create `/patient-report` Claude skill
+- [ ] Test re-engagement flow with test patient
 
 ### Week 3: Readiness Integration (Scenario 5)
 
@@ -404,12 +412,12 @@ OPENAI_API_KEY=sk-...
 - [ ] Create low-readiness notification flow
 - [ ] Add audit logging for adjustments
 
-### Week 4: Polish & Documentation
+### Week 4: Polish & Monitoring
 
-- [ ] Create `/deploy` Claude skill
 - [ ] Build Weekly Dashboard (Scenario 2)
-- [ ] Write AUTOMATION.md documentation
 - [ ] Set up error alerting in Make.com
+- [ ] Create runbook for common issues
+- [ ] Monitor first week of production usage
 
 ---
 

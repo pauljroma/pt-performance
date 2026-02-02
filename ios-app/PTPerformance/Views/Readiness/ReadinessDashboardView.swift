@@ -150,7 +150,7 @@ struct ReadinessDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
     }
 
@@ -272,7 +272,7 @@ struct ReadinessDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
     }
 
@@ -344,7 +344,7 @@ struct ReadinessDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .adaptiveShadow(Shadow.subtle)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
@@ -422,7 +422,7 @@ struct ReadinessDashboardView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .adaptiveShadow(Shadow.subtle)
         )
         .padding(.horizontal)
         .accessibilityElement(children: .combine)

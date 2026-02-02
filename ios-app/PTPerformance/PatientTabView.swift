@@ -4,17 +4,66 @@ import SwiftUI
 // Tab 1: Today (Today's workout + Quick Pick + Timers + Readiness access)
 // Tab 2: Programs (Program Library + History)
 // Tab 3: Profile (Settings + Nutrition + Learn + AI Assistant)
+//
+// BUILD 319: Tab Navigation Polish
+// - Consistent SF Symbols with .medium weight
+// - Subtle haptic feedback on tab switches
+// - Dark mode adaptive styling
+// - Badge support for notifications
+// - Smooth tab transition animations
 
 struct PatientTabView: View {
     @ObservedObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var badgeManager = TabBarBadgeManager.shared
 
     // Track selected tab for haptic feedback
-    @State private var selectedTab: Int = 0
+    @State private var selectedTab: PatientTab = .today
 
     // BUILD 317: State-based refresh trigger for premium changes
     @State private var premiumRefreshID = UUID()
+
+    // MARK: - Tab Definitions
+
+    enum PatientTab: Int, CaseIterable {
+        case today = 0
+        case programs = 1
+        case profile = 2
+
+        var title: String {
+            switch self {
+            case .today: return "Today"
+            case .programs: return "Programs"
+            case .profile: return "Profile"
+            }
+        }
+
+        /// Consistent SF Symbol names with filled variants for selected state
+        var iconName: String {
+            switch self {
+            case .today: return "figure.run"
+            case .programs: return "list.bullet.rectangle.portrait"
+            case .profile: return "person.circle"
+            }
+        }
+
+        var selectedIconName: String {
+            switch self {
+            case .today: return "figure.run"
+            case .programs: return "list.bullet.rectangle.portrait.fill"
+            case .profile: return "person.circle.fill"
+            }
+        }
+
+        var accessibilityHint: String {
+            switch self {
+            case .today: return "Today's workout with quick access to timers and AI pick"
+            case .programs: return "Browse programs and view workout history"
+            case .profile: return "Settings, nutrition, AI assistant, and more"
+            }
+        }
+    }
 
     var body: some View {
         // BUILD 318: Consolidated 3-tab layout
@@ -25,42 +74,104 @@ struct PatientTabView: View {
                 .environmentObject(storeKit)
                 .environmentObject(appState)
                 .tabItem {
-                    Label("Today", systemImage: "figure.run")
+                    Label {
+                        Text(PatientTab.today.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .today ? PatientTab.today.selectedIconName : PatientTab.today.iconName)
+                            .fontWeight(.medium)
+                    }
                 }
-                .tag(0)
-                .accessibilityLabel("Today")
-                .accessibilityHint("Today's workout with quick access to timers and AI pick")
+                .tag(PatientTab.today)
+                .accessibilityLabel(PatientTab.today.title)
+                .accessibilityHint(PatientTab.today.accessibilityHint)
 
             // Tab 2: Programs Hub - Library and History
             ProgramsHubView()
                 .environmentObject(storeKit)
                 .tabItem {
-                    Label("Programs", systemImage: "list.bullet.rectangle")
+                    Label {
+                        Text(PatientTab.programs.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .programs ? PatientTab.programs.selectedIconName : PatientTab.programs.iconName)
+                            .fontWeight(.medium)
+                    }
                 }
-                .tag(1)
-                .accessibilityLabel("Programs")
-                .accessibilityHint("Browse programs and view workout history")
+                .tag(PatientTab.programs)
+                .badge(badgeManager.programsBadge)
+                .accessibilityLabel(PatientTab.programs.title)
+                .accessibilityHint(PatientTab.programs.accessibilityHint)
 
             // Tab 3: Profile Hub - Settings and Premium Features
             ProfileHubView()
                 .environmentObject(storeKit)
                 .environmentObject(appState)
                 .tabItem {
-                    Label("Profile", systemImage: "person.circle")
+                    Label {
+                        Text(PatientTab.profile.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .profile ? PatientTab.profile.selectedIconName : PatientTab.profile.iconName)
+                            .fontWeight(.medium)
+                    }
                 }
-                .tag(2)
-                .accessibilityLabel("Profile")
-                .accessibilityHint("Settings, nutrition, AI assistant, and more")
+                .tag(PatientTab.profile)
+                .badge(badgeManager.profileBadge)
+                .accessibilityLabel(PatientTab.profile.title)
+                .accessibilityHint(PatientTab.profile.accessibilityHint)
         }
         .id(premiumRefreshID)  // BUILD 317: Force TabView rebuild with UUID
-        .onChange(of: selectedTab) { _, _ in
-            // Haptic feedback for tab switching
-            HapticFeedback.selectionChanged()
+        .tint(.accentColor)  // Ensure consistent tint color across light/dark mode
+        .onChange(of: selectedTab) { oldTab, newTab in
+            // BUILD 319: Subtle haptic feedback for tab switching
+            HapticFeedback.tabSwitch()
+
+            // Clear badge when tab is selected
+            badgeManager.clearBadge(for: newTab.rawValue)
         }
         .onChange(of: storeKit.isPremium) { _, newValue in
             // BUILD 317: Force complete TabView rebuild when premium changes
             print("[PatientTabView] Premium changed to: \(newValue), refreshing tabs")
             premiumRefreshID = UUID()
+        }
+        .onAppear {
+            // Configure tab bar appearance for dark mode adaptation
+            configureTabBarAppearance()
+        }
+    }
+
+    // MARK: - Tab Bar Appearance Configuration
+
+    /// Configures UITabBar appearance for consistent styling across light/dark mode
+    private func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+
+        // Use system background color for dark mode adaptation
+        appearance.backgroundColor = UIColor.systemBackground
+
+        // Configure normal state
+        let normalAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 10, weight: .medium)
+        ]
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = normalAttributes
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.secondaryLabel
+
+        // Configure selected state
+        let selectedAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+        ]
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttributes
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.accentColor)
+
+        // Configure badge appearance
+        appearance.stackedLayoutAppearance.normal.badgeBackgroundColor = UIColor.systemRed
+        appearance.stackedLayoutAppearance.normal.badgeTextAttributes = [
+            .font: UIFont.systemFont(ofSize: 11, weight: .bold),
+            .foregroundColor: UIColor.white
+        ]
+
+        UITabBar.appearance().standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }
 }

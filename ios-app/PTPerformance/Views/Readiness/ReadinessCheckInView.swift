@@ -1,5 +1,25 @@
 import SwiftUI
 
+// MARK: - HRV Trend Indicator
+
+/// Displays HRV deviation from baseline with directional indicator
+struct HRVTrendIndicator: View {
+    let hrv: Double
+    let baseline: Double?
+
+    var body: some View {
+        if let baseline = baseline {
+            let deviation = ((hrv - baseline) / baseline) * 100
+            HStack(spacing: 2) {
+                Image(systemName: deviation > 5 ? "arrow.up" : deviation < -5 ? "arrow.down" : "minus")
+                Text(String(format: "%.0f%%", abs(deviation)))
+            }
+            .font(.caption)
+            .foregroundColor(deviation > 5 ? .green : deviation < -5 ? .red : .secondary)
+        }
+    }
+}
+
 /// Daily readiness check-in view
 /// BUILD 116 - Agent 16: ReadinessCheckInView
 ///
@@ -19,14 +39,17 @@ struct ReadinessCheckInView: View {
     // MARK: - Dependencies
 
     @StateObject private var viewModel: ReadinessCheckInViewModel
-    @StateObject private var healthKitService = HealthKitService()
+    @StateObject private var healthKitService = HealthKitService.shared
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - UI State
 
     @State private var showingSuccessAnimation = false
     @State private var isAutoFilling = false
+    @State private var isAutoFilled = false
     @State private var wasAutoFilled = false
+    @State private var showHealthKitPrompt = false
+    @State private var hrvBaseline: Double?
 
     // MARK: - Initialization
 
@@ -44,6 +67,19 @@ struct ReadinessCheckInView: View {
                 // Main content
                 Form {
                     quickFillSection
+
+                    // Data from Apple Watch badge
+                    if wasAutoFilled {
+                        HStack {
+                            Image(systemName: "applewatch")
+                            Text("Data from Apple Watch")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.green)
+                        .padding(.horizontal)
+                        .listRowBackground(Color.clear)
+                    }
+
                     headerSection
                     sleepSection
                     sorenessSection
@@ -70,6 +106,14 @@ struct ReadinessCheckInView: View {
                 }
                 .task {
                     await viewModel.loadTodayEntry()
+                    // Load HRV baseline for trend indicator and sync today's data
+                    if healthKitService.isAuthorized {
+                        hrvBaseline = try? await healthKitService.getHRVBaseline()
+                        try? await healthKitService.syncTodayData()
+                    }
+                }
+                .sheet(isPresented: $showHealthKitPrompt) {
+                    HealthKitAuthorizationView()
                 }
 
                 // Success overlay
@@ -86,89 +130,61 @@ struct ReadinessCheckInView: View {
         Section {
             if HealthKitService.isHealthKitAvailable {
                 if healthKitService.isAuthorized {
-                    // Authorized: Show auto-fill button and HRV display
+                    // Authorized: Show auto-fill button and health data
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Button {
-                                Task {
-                                    await autoFillFromHealthKit()
-                                }
-                            } label: {
-                                HStack {
-                                    if isAutoFilling {
-                                        ProgressView()
-                                            .progressViewStyle(.circular)
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: "applewatch")
-                                    }
-                                    Text("Auto-Fill from Apple Watch")
-                                }
+                        // Auto-fill button
+                        Button {
+                            Task {
+                                await autoFillFromHealthKit()
                             }
-                            .buttonStyle(.bordered)
-                            .disabled(isAutoFilling)
-
-                            Spacer()
-
-                            if wasAutoFilled {
-                                HStack(spacing: 4) {
+                        } label: {
+                            HStack {
+                                if isAutoFilling {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "applewatch")
+                                }
+                                Text("Fill from Apple Watch")
+                                Spacer()
+                                if isAutoFilled {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.green)
-                                    Text("Data from Apple Watch")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
                                 }
                             }
                         }
+                        .disabled(isAutoFilling)
 
-                        // Display today's HRV if available
+                        // Show today's HRV with trend indicator
                         if let hrv = healthKitService.todayHRV {
                             HStack {
-                                Image(systemName: "heart.fill")
-                                    .foregroundColor(hrvColor(hrv))
-                                    .frame(width: 24)
-                                Text("Today's HRV:")
-                                    .font(.subheadline)
-                                Text(String(format: "%.0f ms", hrv))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(hrvColor(hrv))
+                                Text("Today's HRV")
                                 Spacer()
+                                HRVTrendIndicator(hrv: hrv, baseline: hrvBaseline)
+                                Text("\(Int(hrv)) ms")
+                                    .foregroundColor(hrvColor(hrv))
                             }
+                            .font(.subheadline)
+                        }
+
+                        // Show sleep from Apple Watch
+                        if let sleep = healthKitService.todaySleep {
+                            HStack {
+                                Text("Last Night's Sleep")
+                                Spacer()
+                                Text(formatSleep(sleep.totalMinutes))
+                                    .foregroundColor(sleepColor(sleep.totalMinutes))
+                            }
+                            .font(.subheadline)
                         }
                     }
                     .padding(.vertical, 4)
                 } else {
                     // Not authorized: Show connect button
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "applewatch")
-                                .foregroundColor(.blue)
-                                .frame(width: 24)
-                            Text("Connect Apple Watch")
-                                .font(.headline)
-                            Spacer()
-                        }
-
-                        Text("Auto-fill sleep and HRV data from your Apple Watch")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Button {
-                            Task {
-                                await requestHealthKitAccess()
-                            }
-                        } label: {
-                            HStack {
-                                Image(systemName: "heart.text.square")
-                                Text("Connect Apple Watch")
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(healthKitService.isLoading)
+                    Button("Connect Apple Watch") {
+                        showHealthKitPrompt = true
                     }
-                    .padding(.vertical, 4)
                 }
             }
         } header: {
@@ -638,40 +654,78 @@ struct ReadinessCheckInView: View {
         defer { isAutoFilling = false }
 
         do {
-            let data = try await healthKitService.syncTodayData()
+            // Fetch today's data and baseline in parallel
+            async let dataTask = healthKitService.syncTodayData()
+            async let baselineTask = healthKitService.getHRVBaseline()
+
+            let data = try await dataTask
+            let baseline = try? await baselineTask
+
+            // Update cached baseline for HRV trend indicator
+            hrvBaseline = baseline
 
             // Map sleep hours to sleep input (clamped to 0-12 range)
-            if let sleepHours = data.sleepDuration {
+            if let sleepMinutes = data.sleepDurationMinutes {
+                let sleepHours = Double(sleepMinutes) / 60.0
                 viewModel.sleepHours = min(max(sleepHours, 0), 12)
             }
 
-            // Map HRV to energy level suggestion (higher HRV = better recovery)
-            // HRV ranges: <40 = low recovery, 40-60 = moderate, >60 = good recovery
-            if let hrv = data.hrv {
-                let suggestedEnergy: Int
-                switch hrv {
-                case 80...:
-                    suggestedEnergy = 10  // Excellent recovery
-                case 70..<80:
-                    suggestedEnergy = 9
-                case 60..<70:
-                    suggestedEnergy = 8   // Good recovery
-                case 50..<60:
-                    suggestedEnergy = 7
-                case 40..<50:
-                    suggestedEnergy = 5   // Moderate recovery
-                case 30..<40:
-                    suggestedEnergy = 4
-                default:
-                    suggestedEnergy = 3   // Low recovery
-                }
+            // Calculate energy level based on HRV deviation from baseline
+            if let hrv = data.hrvSDNN {
+                let suggestedEnergy = calculateSuggestedEnergyLevel(currentHRV: hrv, baseline: baseline)
                 viewModel.energyLevel = suggestedEnergy
             }
 
+            isAutoFilled = true
             wasAutoFilled = true
         } catch {
             // Error is already handled by healthKitService
             print("Failed to auto-fill from HealthKit: \(error.localizedDescription)")
+        }
+    }
+
+    /// Calculate suggested energy level based on HRV deviation from baseline
+    /// - Parameters:
+    ///   - currentHRV: Today's HRV value
+    ///   - baseline: 7-day rolling average HRV
+    /// - Returns: Suggested energy level (1-10)
+    private func calculateSuggestedEnergyLevel(currentHRV: Double, baseline: Double?) -> Int {
+        guard let baseline = baseline, baseline > 0 else {
+            // No baseline available - use absolute HRV ranges as fallback
+            switch currentHRV {
+            case 80...:
+                return 10
+            case 70..<80:
+                return 9
+            case 60..<70:
+                return 8
+            case 50..<60:
+                return 7
+            case 40..<50:
+                return 5
+            case 30..<40:
+                return 4
+            default:
+                return 3
+            }
+        }
+
+        let deviationPercent = ((currentHRV - baseline) / baseline) * 100
+
+        // HRV > baseline + 10%: suggest energy 8-10
+        // HRV < baseline - 10%: suggest energy 4-6
+        // Otherwise: suggest energy 6-8
+        if deviationPercent > 10 {
+            // Good recovery - scale from 8-10 based on deviation
+            let scaledEnergy = min(10, 8 + Int(deviationPercent / 10))
+            return scaledEnergy
+        } else if deviationPercent < -10 {
+            // Poor recovery - scale from 4-6 based on deviation
+            let scaledEnergy = max(4, 6 + Int(deviationPercent / 10))
+            return scaledEnergy
+        } else {
+            // Normal range - suggest moderate energy 7
+            return 7
         }
     }
 
@@ -696,6 +750,25 @@ struct ReadinessCheckInView: View {
         default:
             return .red
         }
+    }
+
+    /// Get color for sleep duration display
+    /// - Parameter minutes: Total sleep duration in minutes
+    /// - Returns: Color based on sleep hours (Green >=7h, Yellow 6-7h, Red <6h)
+    private func sleepColor(_ minutes: Int) -> Color {
+        let hours = Double(minutes) / 60.0
+        if hours >= 7 { return .green }
+        if hours >= 6 { return .yellow }
+        return .red
+    }
+
+    /// Format sleep duration for display
+    /// - Parameter minutes: Total sleep duration in minutes
+    /// - Returns: Formatted string like "7h 30m"
+    private func formatSleep(_ minutes: Int) -> String {
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return "\(hours)h \(mins)m"
     }
 }
 
@@ -726,6 +799,38 @@ struct ReadinessCheckInView_Previews: PreviewProvider {
                 .previewDevice("iPad Pro (12.9-inch) (6th generation)")
                 .previewDisplayName("iPad")
         }
+    }
+}
+
+struct HRVTrendIndicator_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack(spacing: 20) {
+            // Above baseline (good recovery)
+            HStack {
+                Text("Above baseline:")
+                HRVTrendIndicator(hrv: 72.0, baseline: 60.0)
+            }
+
+            // Below baseline (poor recovery)
+            HStack {
+                Text("Below baseline:")
+                HRVTrendIndicator(hrv: 48.0, baseline: 60.0)
+            }
+
+            // Near baseline (normal)
+            HStack {
+                Text("Near baseline:")
+                HRVTrendIndicator(hrv: 61.0, baseline: 60.0)
+            }
+
+            // No baseline
+            HStack {
+                Text("No baseline:")
+                HRVTrendIndicator(hrv: 65.0, baseline: nil)
+            }
+        }
+        .padding()
+        .previewDisplayName("HRV Trend Indicator")
     }
 }
 #endif

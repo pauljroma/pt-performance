@@ -49,7 +49,7 @@ struct DeloadBannerView: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .adaptiveShadow(Shadow.subtle)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -61,6 +61,107 @@ struct DeloadBannerView: View {
         .accessibilityLabel("\(urgency.title). \(urgency.subtitle)")
         .accessibilityHint("Double tap to view recovery details")
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+// MARK: - Dismissible Deload Banner
+
+/// Dismissible banner for the Today view with View and dismiss actions
+/// Color-coded by urgency level with special styling for required urgency
+struct DismissibleDeloadBannerView: View {
+    // MARK: - Properties
+
+    let urgency: DeloadUrgency
+    let onTap: () -> Void
+    let onDismiss: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    // MARK: - Computed Properties
+
+    private var isRequired: Bool {
+        urgency == .required
+    }
+
+    private var backgroundColor: Color {
+        isRequired ? urgency.color : urgency.color.opacity(0.1)
+    }
+
+    private var primaryTextColor: Color {
+        isRequired ? .white : .primary
+    }
+
+    private var secondaryTextColor: Color {
+        isRequired ? .white.opacity(0.8) : .secondary
+    }
+
+    private var iconColor: Color {
+        isRequired ? .white : urgency.color
+    }
+
+    private var buttonColor: Color {
+        isRequired ? .white : urgency.color
+    }
+
+    private var dismissButtonColor: Color {
+        isRequired ? .white.opacity(0.6) : .secondary
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Urgency icon
+            Image(systemName: urgency.icon)
+                .font(.title2)
+                .foregroundColor(iconColor)
+
+            // Title and subtitle
+            VStack(alignment: .leading, spacing: 2) {
+                Text(urgency.title)
+                    .font(.headline)
+                    .foregroundColor(primaryTextColor)
+
+                Text(urgency.subtitle)
+                    .font(.caption)
+                    .foregroundColor(secondaryTextColor)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // View button
+            Button {
+                onTap()
+            } label: {
+                Text("View")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(buttonColor)
+            }
+            .buttonStyle(PlainButtonStyle())
+
+            // Dismiss button
+            Button {
+                onDismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption)
+                    .foregroundColor(dismissButtonColor)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(backgroundColor)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(urgency.color.opacity(0.3), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(urgency.title). \(urgency.subtitle)")
+        .accessibilityHint("Tap View to see recovery details, or dismiss this notification")
     }
 }
 
@@ -234,6 +335,29 @@ struct AnimatedDeloadBanner: View {
     .padding()
 }
 
+#Preview("Dismissible Deload Banner") {
+    VStack(spacing: 16) {
+        DismissibleDeloadBannerView(
+            urgency: .required,
+            onTap: { print("Tapped required") },
+            onDismiss: { print("Dismissed required") }
+        )
+
+        DismissibleDeloadBannerView(
+            urgency: .recommended,
+            onTap: { print("Tapped recommended") },
+            onDismiss: { print("Dismissed recommended") }
+        )
+
+        DismissibleDeloadBannerView(
+            urgency: .suggested,
+            onTap: { print("Tapped suggested") },
+            onDismiss: { print("Dismissed suggested") }
+        )
+    }
+    .padding()
+}
+
 #Preview("Dark Mode") {
     VStack(spacing: 16) {
         DeloadBannerView(urgency: .recommended) {
@@ -243,6 +367,12 @@ struct AnimatedDeloadBanner: View {
         AnimatedDeloadBanner(urgency: .required) {
             print("Tapped")
         }
+
+        DismissibleDeloadBannerView(
+            urgency: .required,
+            onTap: { print("Tapped") },
+            onDismiss: { print("Dismissed") }
+        )
     }
     .padding()
     .preferredColorScheme(.dark)

@@ -56,31 +56,17 @@ struct UpcomingSessionsView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-
-            Text("No Scheduled Sessions")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Schedule your workout sessions in advance to stay on track with your program")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            Button(action: { showingScheduleSheet = true }) {
-                Label("Schedule Session", systemImage: "plus.circle.fill")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
-            }
-            .padding(.top, 8)
-        }
+        EmptyStateView(
+            title: "No Scheduled Sessions",
+            message: "Schedule your workout sessions in advance to stay on track with your program. Set reminders to keep yourself accountable.",
+            icon: "calendar.badge.clock",
+            iconColor: .blue,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Schedule Session",
+                icon: "plus.circle.fill",
+                action: { showingScheduleSheet = true }
+            )
+        )
     }
 
     // MARK: - Sessions List

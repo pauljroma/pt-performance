@@ -782,7 +782,7 @@ struct GoalProgressCard: View {
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+                .adaptiveShadow(Shadow.subtle)
         )
     }
 }

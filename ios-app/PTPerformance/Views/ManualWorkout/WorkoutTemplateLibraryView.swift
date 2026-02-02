@@ -988,32 +988,21 @@ struct WorkoutTemplateLibraryView: View {
     // MARK: - Empty State View
 
     private func emptyStateView(title: String, message: String, showClearButton: Bool, icon: String = "doc.text.magnifyingglass", iconColor: Color = .secondary) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 56))
-                .foregroundColor(iconColor)
-
-            Text(title)
-                .font(.headline)
-
-            Text(message)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            if showClearButton {
-                Button {
+        EmptyStateView(
+            title: title,
+            message: message,
+            icon: icon,
+            iconColor: iconColor,
+            action: showClearButton ? EmptyStateView.EmptyStateAction(
+                title: "Clear Filters",
+                icon: "xmark.circle",
+                action: {
                     viewModel.searchText = ""
                     viewModel.selectedCategory = nil
                     Task { await viewModel.loadAllTemplates() }
-                } label: {
-                    Label("Clear Filters", systemImage: "xmark.circle")
                 }
-                .buttonStyle(.bordered)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ) : nil
+        )
     }
 }
 
@@ -1208,7 +1197,48 @@ struct TemplateCardView: View {
         .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                HapticFeedback.light()
+                onFavoriteToggle?()
+            } label: {
+                Label(
+                    isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                    systemImage: isFavorite ? "heart.slash" : "heart"
+                )
+            }
+
+            Button {
+                HapticFeedback.light()
+                // Copy workout name
+                UIPasteboard.general.string = template.name
+            } label: {
+                Label("Copy Name", systemImage: "doc.on.doc")
+            }
+
+            if let description = template.description, !description.isEmpty {
+                Button {
+                    HapticFeedback.light()
+                    UIPasteboard.general.string = description
+                } label: {
+                    Label("Copy Description", systemImage: "text.alignleft")
+                }
+            }
+
+            Divider()
+
+            // Exercise count info
+            Button {
+                HapticFeedback.light()
+                let allExercises = template.blocks.flatMap { $0.exercises }
+                let exerciseList = allExercises.map { $0.name }.joined(separator: "\n")
+                UIPasteboard.general.string = "\(template.name)\n\nExercises:\n\(exerciseList)"
+            } label: {
+                Label("Copy Exercise List", systemImage: "list.bullet")
+            }
+        }
     }
 }
 

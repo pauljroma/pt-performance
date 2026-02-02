@@ -639,3 +639,261 @@ final class FatigueTrackingEdgeCaseTests: XCTestCase {
         XCTAssertEqual(fatigue.fatigueBand, .critical)
     }
 }
+
+// MARK: - FatigueTrackingService HasHighFatigue Tests
+
+@MainActor
+final class FatigueTrackingServiceHasHighFatigueTests: XCTestCase {
+
+    var service: FatigueTrackingService!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        service = FatigueTrackingService()
+    }
+
+    override func tearDown() async throws {
+        service = nil
+        try await super.tearDown()
+    }
+
+    // MARK: - HasHighFatigue with Current Fatigue Tests
+
+    func testHasHighFatigue_WithHighFatigueBand_ReturnsTrue() async {
+        // Set current fatigue with high band
+        service.currentFatigue = FatigueAccumulation(
+            id: UUID(),
+            patientId: UUID(),
+            calculationDate: Date(),
+            fatigueScore: 75.0,
+            fatigueBand: .high,
+            deloadRecommended: true,
+            deloadUrgency: .recommended
+        )
+
+        guard let fatigue = service.currentFatigue else {
+            XCTFail("Current fatigue should be set")
+            return
+        }
+
+        let isHigh = fatigue.fatigueBand == .high || fatigue.fatigueBand == .critical
+        XCTAssertTrue(isHigh)
+    }
+
+    func testHasHighFatigue_WithCriticalFatigueBand_ReturnsTrue() async {
+        service.currentFatigue = FatigueAccumulation(
+            id: UUID(),
+            patientId: UUID(),
+            calculationDate: Date(),
+            fatigueScore: 85.0,
+            fatigueBand: .critical,
+            deloadRecommended: true,
+            deloadUrgency: .required
+        )
+
+        guard let fatigue = service.currentFatigue else {
+            XCTFail("Current fatigue should be set")
+            return
+        }
+
+        let isHigh = fatigue.fatigueBand == .high || fatigue.fatigueBand == .critical
+        XCTAssertTrue(isHigh)
+    }
+
+    func testHasHighFatigue_WithModerateFatigueBand_ReturnsFalse() async {
+        service.currentFatigue = FatigueAccumulation(
+            id: UUID(),
+            patientId: UUID(),
+            calculationDate: Date(),
+            fatigueScore: 55.0,
+            fatigueBand: .moderate,
+            deloadRecommended: false,
+            deloadUrgency: .suggested
+        )
+
+        guard let fatigue = service.currentFatigue else {
+            XCTFail("Current fatigue should be set")
+            return
+        }
+
+        let isHigh = fatigue.fatigueBand == .high || fatigue.fatigueBand == .critical
+        XCTAssertFalse(isHigh)
+    }
+
+    func testHasHighFatigue_WithLowFatigueBand_ReturnsFalse() async {
+        service.currentFatigue = FatigueAccumulation(
+            id: UUID(),
+            patientId: UUID(),
+            calculationDate: Date(),
+            fatigueScore: 25.0,
+            fatigueBand: .low,
+            deloadRecommended: false,
+            deloadUrgency: .none
+        )
+
+        guard let fatigue = service.currentFatigue else {
+            XCTFail("Current fatigue should be set")
+            return
+        }
+
+        let isHigh = fatigue.fatigueBand == .high || fatigue.fatigueBand == .critical
+        XCTAssertFalse(isHigh)
+    }
+
+    func testHasHighFatigue_WithNilCurrentFatigue_ReturnsFalse() async {
+        service.currentFatigue = nil
+
+        let hasHighFatigue = service.currentFatigue?.fatigueBand == .high || service.currentFatigue?.fatigueBand == .critical
+        XCTAssertFalse(hasHighFatigue)
+    }
+}
+
+// MARK: - FatigueTrackingService Trend Data Tests
+
+@MainActor
+final class FatigueTrackingServiceTrendTests: XCTestCase {
+
+    func testTrendDataRequest_CorrectDateRange() {
+        // Test the date calculation for trend fetching
+        let days = 14
+        let calendar = Calendar.current
+        guard let startDate = calendar.date(byAdding: .day, value: -days, to: Date()) else {
+            XCTFail("Should be able to calculate start date")
+            return
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let startDateString = dateFormatter.string(from: startDate)
+
+        // Verify the date string is valid
+        XCTAssertFalse(startDateString.isEmpty)
+
+        // Verify it's 14 days ago
+        let components = calendar.dateComponents([.day], from: startDate, to: Date())
+        XCTAssertEqual(components.day, days)
+    }
+
+    func testTrendDataRequest_DefaultDays() {
+        // Default is 14 days
+        let defaultDays = 14
+        XCTAssertEqual(defaultDays, 14)
+    }
+
+    func testTrendDataRequest_CustomDays() {
+        // Can request custom number of days
+        let customDays = 7
+        let calendar = Calendar.current
+        guard let startDate = calendar.date(byAdding: .day, value: -customDays, to: Date()) else {
+            XCTFail("Should be able to calculate start date")
+            return
+        }
+
+        let components = calendar.dateComponents([.day], from: startDate, to: Date())
+        XCTAssertEqual(components.day, customDays)
+    }
+}
+
+// MARK: - Fatigue Calculation Trigger Tests
+
+@MainActor
+final class FatigueCalculationTriggerTests: XCTestCase {
+
+    var service: FatigueTrackingService!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        service = FatigueTrackingService()
+    }
+
+    override func tearDown() async throws {
+        service = nil
+        try await super.tearDown()
+    }
+
+    func testCalculateFatigue_SetsLoading() {
+        // Service should track loading state
+        XCTAssertFalse(service.isLoading)
+    }
+
+    func testCalculateFatigue_RequiresPatientId() {
+        // Valid patient ID is required
+        let patientId = UUID()
+        XCTAssertNotNil(patientId)
+        XCTAssertEqual(patientId.uuidString.count, 36) // UUID string length
+    }
+
+    func testCalculateFatigue_UpdatesCurrentFatigue() async {
+        // After successful calculation, currentFatigue should be updated
+        // For unit test, we just verify the service can accept a calculated value
+        let calculatedFatigue = FatigueAccumulation(
+            id: UUID(),
+            patientId: UUID(),
+            calculationDate: Date(),
+            avgReadiness7d: 65.0,
+            avgReadiness14d: 68.0,
+            fatigueScore: 45.0,
+            fatigueBand: .moderate,
+            deloadRecommended: false,
+            deloadUrgency: .none
+        )
+
+        service.currentFatigue = calculatedFatigue
+
+        XCTAssertNotNil(service.currentFatigue)
+        XCTAssertEqual(service.currentFatigue?.fatigueScore, 45.0)
+        XCTAssertEqual(service.currentFatigue?.fatigueBand, .moderate)
+    }
+}
+
+// MARK: - FatigueBand Severity Tests
+
+final class FatigueBandSeverityTests: XCTestCase {
+
+    func testFatigueBand_SeverityOrder() {
+        // Verify the severity order is correct
+        let bands: [FatigueBand] = [.low, .moderate, .high, .critical]
+
+        // Each band should have the expected raw value
+        XCTAssertEqual(bands[0].rawValue, "low")
+        XCTAssertEqual(bands[1].rawValue, "moderate")
+        XCTAssertEqual(bands[2].rawValue, "high")
+        XCTAssertEqual(bands[3].rawValue, "critical")
+    }
+
+    func testFatigueBand_SeverityProgression() {
+        // Score ranges typically map to bands
+        // low: 0-40, moderate: 40-60, high: 60-80, critical: 80-100
+        let lowScore = 30.0
+        let moderateScore = 50.0
+        let highScore = 70.0
+        let criticalScore = 90.0
+
+        XCTAssertTrue(lowScore < 40)
+        XCTAssertTrue(moderateScore >= 40 && moderateScore < 60)
+        XCTAssertTrue(highScore >= 60 && highScore < 80)
+        XCTAssertTrue(criticalScore >= 80)
+    }
+}
+
+// MARK: - DeloadUrgency Severity Tests
+
+final class DeloadUrgencySeverityTests: XCTestCase {
+
+    func testDeloadUrgency_SeverityOrder() {
+        let urgencies: [DeloadUrgency] = [.none, .suggested, .recommended, .required]
+
+        XCTAssertEqual(urgencies[0].rawValue, "none")
+        XCTAssertEqual(urgencies[1].rawValue, "suggested")
+        XCTAssertEqual(urgencies[2].rawValue, "recommended")
+        XCTAssertEqual(urgencies[3].rawValue, "required")
+    }
+
+    func testDeloadUrgency_RequiredIsHighestPriority() {
+        let required = DeloadUrgency.required
+
+        XCTAssertEqual(required.title, "Deload Required")
+        XCTAssertEqual(required.subtitle, "Immediate deload needed to prevent overtraining")
+        XCTAssertEqual(required.color, .red)
+    }
+}

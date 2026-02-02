@@ -4,6 +4,9 @@
 //
 //  Browse and discover programs from the program library
 //
+//  BUILD 320: Baseball Pack Integration
+//  Added baseball category with premium gating for baseball programs
+//
 
 import SwiftUI
 
@@ -11,14 +14,19 @@ import SwiftUI
 
 struct ProgramLibraryBrowserView: View {
 
+    // MARK: - Environment
+
+    @EnvironmentObject var storeKit: StoreKitService
+
     // MARK: - State
 
     @StateObject private var viewModel = ProgramLibraryBrowserViewModel()
     @State private var selectedProgram: ProgramLibrary?
+    @State private var showBaseballLocked = false
 
     // MARK: - Constants
 
-    private let categories = ["All", "Annuals", "Strength", "Mobility", "Conditioning"]
+    private let categories = ["All", "Annuals", "Strength", "Mobility", "Conditioning", "Baseball"]
     private let difficulties = ["All", "Beginner", "Intermediate", "Advanced"]
 
     private let columns = [
@@ -47,6 +55,12 @@ struct ProgramLibraryBrowserView: View {
             .navigationBarTitleDisplayMode(.large)
             .sheet(item: $selectedProgram) { program in
                 ProgramDetailSheet(program: program)
+            }
+            .sheet(isPresented: $showBaseballLocked) {
+                NavigationStack {
+                    BaseballPackLockedView()
+                        .environmentObject(storeKit)
+                }
             }
             .alert("Error", isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
@@ -100,23 +114,46 @@ struct ProgramLibraryBrowserView: View {
                     let isSelected = (category == "All" && viewModel.selectedCategory == nil) ||
                         (category != "All" && viewModel.selectedCategory?.rawValue.lowercased() == category.lowercased())
 
-                    ProgramFilterChip(
-                        title: category,
-                        icon: iconForCategory(category),
-                        isSelected: isSelected,
-                        color: colorForCategory(category)
-                    ) {
-                        if category == "All" {
-                            viewModel.selectedCategory = nil
-                        } else {
-                            let newCategory = ProgramCategory(rawValue: category.lowercased())
-                            viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
+                    // Special handling for baseball category with premium badge
+                    if category == "Baseball" {
+                        BaseballCategoryChip(
+                            isSelected: isSelected,
+                            isPremium: !storeKit.hasBaseballAccess
+                        ) {
+                            handleBaseballCategoryTap()
+                        }
+                    } else {
+                        ProgramFilterChip(
+                            title: category,
+                            icon: iconForCategory(category),
+                            isSelected: isSelected,
+                            color: colorForCategory(category)
+                        ) {
+                            if category == "All" {
+                                viewModel.selectedCategory = nil
+                            } else {
+                                let newCategory = ProgramCategory(rawValue: category.lowercased())
+                                viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
+                            }
                         }
                     }
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Baseball Category Tap Handler
+
+    private func handleBaseballCategoryTap() {
+        if storeKit.hasBaseballAccess {
+            // User owns baseball pack - filter to baseball programs
+            let newCategory = ProgramCategory(rawValue: "baseball")
+            viewModel.selectedCategory = viewModel.selectedCategory == newCategory ? nil : newCategory
+        } else {
+            // User doesn't own baseball pack - show locked view
+            showBaseballLocked = true
         }
     }
 
@@ -234,6 +271,7 @@ struct ProgramLibraryBrowserView: View {
         case "strength": return "dumbbell.fill"
         case "mobility": return "figure.flexibility"
         case "conditioning": return "heart.fill"
+        case "baseball": return "baseball.fill"
         default: return "figure.run"
         }
     }
@@ -245,6 +283,7 @@ struct ProgramLibraryBrowserView: View {
         case "strength": return .blue
         case "mobility": return .green
         case "conditioning": return .red
+        case "baseball": return .orange
         default: return .gray
         }
     }
@@ -280,7 +319,10 @@ private struct ProgramFilterChip: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticFeedback.selectionChanged()
+            action()
+        }) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.caption)
@@ -294,6 +336,50 @@ private struct ProgramFilterChip: View {
             .background(isSelected ? color : Color(.systemGray6))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
+        }
+    }
+}
+
+// MARK: - Baseball Category Chip (with Premium Badge)
+
+private struct BaseballCategoryChip: View {
+    let isSelected: Bool
+    let isPremium: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            HapticFeedback.selectionChanged()
+            action()
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: "baseball.fill")
+                    .font(.caption)
+
+                Text("Baseball")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                // Premium badge if not owned
+                if isPremium {
+                    Image(systemName: "lock.fill")
+                        .font(.caption2)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .orange)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.orange : Color(.systemGray6))
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(20)
+            .overlay(
+                // Premium indicator border
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(
+                        isPremium && !isSelected ? Color.orange.opacity(0.5) : Color.clear,
+                        lineWidth: 1.5
+                    )
+            )
         }
     }
 }
@@ -370,7 +456,39 @@ struct ProgramLibraryCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .clipped()
-        .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
+        .adaptiveShadow(Shadow.subtle)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button {
+                HapticFeedback.light()
+                UIPasteboard.general.string = program.title
+            } label: {
+                Label("Copy Title", systemImage: "doc.on.doc")
+            }
+
+            if let description = program.description, !description.isEmpty {
+                Button {
+                    HapticFeedback.light()
+                    UIPasteboard.general.string = description
+                } label: {
+                    Label("Copy Description", systemImage: "text.alignleft")
+                }
+            }
+
+            Divider()
+
+            Button {
+                HapticFeedback.light()
+                var summary = "\(program.title) - \(program.category.capitalized)"
+                summary += " (\(program.formattedDuration), \(program.difficultyLevel.capitalized))"
+                if let description = program.description {
+                    summary += "\n\n\(description)"
+                }
+                UIPasteboard.general.string = summary
+            } label: {
+                Label("Share Program", systemImage: "square.and.arrow.up")
+            }
+        }
     }
 }
 
@@ -403,6 +521,7 @@ struct ProgramCategoryBadge: View {
         case "cardio", "conditioning": return "heart.fill"
         case "recovery": return "bed.double.fill"
         case "sport": return "sportscourt.fill"
+        case "baseball": return "baseball.fill"
         default: return "figure.run"
         }
     }
@@ -415,6 +534,7 @@ struct ProgramCategoryBadge: View {
         case "cardio", "conditioning": return .red
         case "recovery": return .teal
         case "sport": return .orange
+        case "baseball": return .orange
         default: return .gray
         }
     }

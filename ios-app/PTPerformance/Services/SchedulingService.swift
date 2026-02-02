@@ -489,6 +489,7 @@ private struct ReschedulePayload: Encodable {
 }
 
 /// Errors that can occur during scheduling operations.
+/// User-friendly messages that avoid technical jargon.
 enum SchedulingError: LocalizedError {
     /// Failed to fetch scheduled sessions from the database.
     case fetchFailed(Error)
@@ -511,18 +512,60 @@ enum SchedulingError: LocalizedError {
     /// A session with this ID is already scheduled for the given date.
     case duplicateSchedule
 
+    // MARK: - User-Friendly Error Titles
+
     var errorDescription: String? {
         switch self {
-        case .fetchFailed: return "Failed to fetch scheduled sessions"
-        case .scheduleFailed: return "Failed to schedule session"
-        case .rescheduleFailed: return "Failed to reschedule session"
-        case .cancelFailed: return "Failed to cancel session"
-        case .completeFailed: return "Failed to mark session as completed"
-        case .updateFailed: return "Failed to update session"
-        case .deleteFailed: return "Failed to delete session"
-        case .sessionNotFound: return "Session not found"
-        case .invalidSession: return "Session does not belong to your active program"
-        case .duplicateSchedule: return "You already have this session scheduled on this date"
+        case .fetchFailed: return "Couldn't Load Schedule"
+        case .scheduleFailed: return "Scheduling Issue"
+        case .rescheduleFailed: return "Rescheduling Issue"
+        case .cancelFailed: return "Couldn't Cancel Session"
+        case .completeFailed: return "Couldn't Complete Session"
+        case .updateFailed: return "Couldn't Update Session"
+        case .deleteFailed: return "Couldn't Remove Session"
+        case .sessionNotFound: return "Session Not Found"
+        case .invalidSession: return "Session Unavailable"
+        case .duplicateSchedule: return "Already Scheduled"
+        }
+    }
+
+    // MARK: - User-Friendly Recovery Suggestions
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed:
+            return "We couldn't load your scheduled sessions. Please check your connection and try again."
+        case .scheduleFailed:
+            return "We couldn't schedule this session right now. Please try again in a moment."
+        case .rescheduleFailed:
+            return "We couldn't move this session to the new time. Please try again."
+        case .cancelFailed:
+            return "We couldn't cancel this session right now. Please try again."
+        case .completeFailed:
+            return "We couldn't mark this session as complete. Don't worry - your progress is saved."
+        case .updateFailed:
+            return "We couldn't save your changes. Please try again."
+        case .deleteFailed:
+            return "We couldn't remove this session. Please try again."
+        case .sessionNotFound:
+            return "This session may have been removed or rescheduled. Please refresh your schedule."
+        case .invalidSession:
+            return "This session isn't part of your current program. Please contact your therapist if you think this is a mistake."
+        case .duplicateSchedule:
+            return "You already have this session scheduled for this date. Choose a different date to continue."
+        }
+    }
+
+    // MARK: - Retry Logic
+
+    /// Whether the user should be offered a retry option
+    var shouldRetry: Bool {
+        switch self {
+        case .fetchFailed, .scheduleFailed, .rescheduleFailed, .cancelFailed,
+             .completeFailed, .updateFailed, .deleteFailed:
+            return true
+        case .sessionNotFound, .invalidSession, .duplicateSchedule:
+            return false
         }
     }
 

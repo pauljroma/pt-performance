@@ -97,32 +97,17 @@ struct PatientGoalsView: View {
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "target")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-
-            Text("No Goals Yet")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Set your first goal to start tracking your progress toward recovery and performance milestones.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            Button {
-                showingAddGoalSheet = true
-            } label: {
-                Label("Add Your First Goal", systemImage: "plus.circle.fill")
-                    .font(.headline)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(
+            title: "No Goals Yet",
+            message: "Set your first goal to start tracking your progress toward recovery and performance milestones. Goals help you stay motivated and measure your improvement.",
+            icon: "target",
+            iconColor: .blue,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Add Your First Goal",
+                icon: "plus.circle.fill",
+                action: { showingAddGoalSheet = true }
+            )
+        )
         .refreshable {
             HapticFeedback.light()
             guard let uuid = patientUUID else { return }
@@ -188,6 +173,7 @@ struct PatientGoalsView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
+                                HapticFeedback.medium()
                                 Task {
                                     await viewModel.deleteGoal(goalId: goal.id)
                                 }
@@ -196,6 +182,7 @@ struct PatientGoalsView: View {
                             }
 
                             Button {
+                                HapticFeedback.light()
                                 // Navigate to detail/edit view
                             } label: {
                                 Label("Edit", systemImage: "pencil")
@@ -205,6 +192,7 @@ struct PatientGoalsView: View {
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             if goal.status == .active {
                                 Button {
+                                    HapticFeedback.success()
                                     Task {
                                         await viewModel.updateStatus(goalId: goal.id, status: .completed)
                                     }
@@ -326,7 +314,7 @@ struct PatientGoalsView: View {
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+                .adaptiveShadow(Shadow.medium)
         )
         .padding(.horizontal)
         .padding(.vertical, Spacing.xs)

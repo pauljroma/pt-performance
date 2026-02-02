@@ -27,6 +27,9 @@ struct ProgramWorkoutScheduleView: View {
                     loadingView
                 } else if let error = viewModel.errorMessage {
                     errorView(error)
+                } else if viewModel.usesPhaseBasedStructure {
+                    // Use phase-based display for baseball programs
+                    phaseBasedContent
                 } else if viewModel.weeks.isEmpty {
                     emptyView
                 } else {
@@ -145,6 +148,17 @@ struct ProgramWorkoutScheduleView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
+    }
+
+    // MARK: - Phase-Based Content (for baseball programs)
+
+    @ViewBuilder
+    private var phaseBasedContent: some View {
+        if let structure = viewModel.programStructure {
+            ForEach(structure.phases, id: \.phase.id) { phaseWithSessions in
+                PhaseSection(phaseWithSessions: phaseWithSessions)
+            }
+        }
     }
 
     // MARK: - Weeks Content
@@ -315,7 +329,7 @@ private struct WorkoutCard: View {
         .padding(12)
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
+        .adaptiveShadow(Shadow.subtle)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
@@ -727,16 +741,24 @@ class ProgramWorkoutScheduleViewModel: ObservableObject {
     @Published var weeks: [ProgramScheduleWeek] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var usesPhaseBasedStructure = false
+    @Published var programStructure: BaseballProgramStructure?
 
     private let service = ProgramLibraryService()
 
     var totalWorkouts: Int {
-        weeks.reduce(0) { $0 + $1.workoutCount }
+        if usesPhaseBasedStructure, let structure = programStructure {
+            return structure.phases.reduce(0) { $0 + $1.sessions.count }
+        }
+        return weeks.reduce(0) { $0 + $1.workoutCount }
     }
 
     var currentWeek: Int? {
         // TODO: Calculate based on enrollment start date
         // For now, return week 1
+        if usesPhaseBasedStructure {
+            return programStructure?.phases.isEmpty == false ? 1 : nil
+        }
         guard !weeks.isEmpty else { return nil }
         return 1
     }
@@ -746,12 +768,196 @@ class ProgramWorkoutScheduleViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            // First try the new architecture (program_workout_assignments)
             weeks = try await service.fetchProgramWorkoutSchedule(programLibraryId: programLibraryId)
+
+            // If no workouts found, try the old architecture (phases -> sessions)
+            if weeks.isEmpty || weeks.allSatisfy({ $0.workoutCount == 0 }) {
+                let program = try await service.fetchProgram(id: programLibraryId)
+
+                // Try loading from phases/sessions architecture
+                do {
+                    let structure = try await BaseballPackService.shared.fetchProgramStructure(programId: program.programId)
+
+                    if !structure.phases.isEmpty {
+                        programStructure = structure
+                        usesPhaseBasedStructure = true
+                        // Clear weeks since we're using phase-based
+                        weeks = []
+                    }
+                } catch {
+                    // If this fails too, the program truly has no workouts
+                    DebugLogger.shared.warning("ProgramWorkoutScheduleViewModel", "Failed to load phase-based structure: \(error.localizedDescription)")
+                }
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
 
         isLoading = false
+    }
+}
+
+// MARK: - Phase Section (for baseball programs using old architecture)
+
+private struct PhaseSection: View {
+    let phaseWithSessions: BaseballProgramStructure.PhaseWithSessions
+
+    @State private var isExpanded = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Phase Header
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(phaseWithSessions.phase.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        if let weeks = phaseWithSessions.phase.durationWeeks, weeks > 0 {
+                            Text("\(weeks) week\(weeks == 1 ? "" : "s") • \(phaseWithSessions.sessions.count) sessions")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("\(phaseWithSessions.sessions.count) sessions")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+
+            // Sessions
+            if isExpanded {
+                ForEach(phaseWithSessions.sessions, id: \.session.id) { sessionWithExercises in
+                    SessionCard(sessionWithExercises: sessionWithExercises)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Session Card (for phase-based structure)
+
+private struct SessionCard: View {
+    let sessionWithExercises: BaseballProgramStructure.SessionWithExercises
+
+    @State private var showExercises = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Session Header
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showExercises.toggle()
+                }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(sessionWithExercises.session.name)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+
+                        HStack(spacing: 8) {
+                            if sessionWithExercises.session.isThrowingDay == true {
+                                Label("Throwing", systemImage: "figure.baseball")
+                                    .font(.caption2)
+                                    .foregroundColor(.orange)
+                            }
+
+                            Text("\(sessionWithExercises.exercises.count) exercises")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: showExercises ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(12)
+                .background(Color(.systemGray5))
+                .cornerRadius(10)
+            }
+            .buttonStyle(.plain)
+
+            // Exercises
+            if showExercises {
+                VStack(spacing: 6) {
+                    ForEach(sessionWithExercises.exercises) { exercise in
+                        PhaseExerciseRow(exercise: exercise)
+                    }
+                }
+                .padding(.leading, 16)
+            }
+        }
+    }
+}
+
+// MARK: - Phase Exercise Row (for phase-based structure)
+
+private struct PhaseExerciseRow: View {
+    let exercise: BaseballSessionExercise
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Sequence number
+            Text("\(exercise.sequence)")
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(width: 20, height: 20)
+                .background(Circle().fill(Color.blue))
+
+            VStack(alignment: .leading, spacing: 2) {
+                // Exercise name
+                Text(exercise.exerciseTemplate?.name ?? "Exercise")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+
+                // Sets x Reps
+                HStack(spacing: 4) {
+                    if let sets = exercise.targetSets {
+                        Text("\(sets) sets")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    if let reps = exercise.targetReps {
+                        Text("× \(reps) reps")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    if let label = exercise.blockLabel {
+                        Text("• \(label)")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+
+            Spacer()
+        }
+        .padding(10)
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
     }
 }
 

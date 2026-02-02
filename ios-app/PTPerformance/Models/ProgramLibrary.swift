@@ -73,9 +73,16 @@ struct ProgramLibrary: Codable, Identifiable {
             return "bed.double.fill"
         case "sport":
             return "sportscourt.fill"
+        case "baseball":
+            return "baseball.fill"
         default:
             return "figure.run"
         }
+    }
+
+    /// Whether this program is part of the Baseball Pack (premium content)
+    var isBaseballPack: Bool {
+        category.lowercased() == "baseball"
     }
 
     /// Formatted duration string
@@ -117,6 +124,7 @@ enum ProgramCategory: String, Codable, CaseIterable {
     case cardio
     case recovery
     case sport
+    case baseball
 
     var displayName: String {
         rawValue.capitalized
@@ -130,6 +138,25 @@ enum ProgramCategory: String, Codable, CaseIterable {
         case .cardio: return "heart.fill"
         case .recovery: return "bed.double.fill"
         case .sport: return "sportscourt.fill"
+        case .baseball: return "baseball.fill"
+        }
+    }
+
+    /// Whether this category requires Baseball Pack purchase
+    var requiresBaseballPack: Bool {
+        self == .baseball
+    }
+
+    /// Color for the category
+    var color: Color {
+        switch self {
+        case .annuals: return .purple
+        case .strength: return .blue
+        case .mobility: return .green
+        case .cardio: return .red
+        case .recovery: return .teal
+        case .sport: return .orange
+        case .baseball: return .orange
         }
     }
 }

@@ -55,6 +55,7 @@ struct AuthLandingView: View {
                 VStack(spacing: 16) {
                     // Sign in with Apple
                     Button(action: {
+                        HapticFeedback.light()
                         Task {
                             await signInWithApple()
                         }
@@ -77,6 +78,7 @@ struct AuthLandingView: View {
 
                     // Continue with Email
                     Button(action: {
+                        HapticFeedback.light()
                         showEmailSignIn = true
                     }) {
                         HStack(spacing: 8) {
@@ -97,6 +99,7 @@ struct AuthLandingView: View {
 
                     // Create Account
                     Button(action: {
+                        HapticFeedback.light()
                         showRegistration = true
                     }) {
                         HStack(spacing: 8) {
@@ -155,6 +158,7 @@ struct AuthLandingView: View {
                     HStack(spacing: 12) {
                         // Demo Patient
                         Button(action: {
+                            HapticFeedback.light()
                             loginAsDemoPatient()
                         }) {
                             HStack(spacing: 6) {
@@ -172,6 +176,7 @@ struct AuthLandingView: View {
 
                         // Demo Therapist
                         Button(action: {
+                            HapticFeedback.light()
                             loginAsDemoTherapist()
                         }) {
                             HStack(spacing: 6) {

@@ -5,6 +5,9 @@
 //  BUILD 318: Tab Consolidation - Programs Hub
 //  Combines Program Library and History into a single tab with segmented navigation
 //
+//  BUILD 320: Baseball Pack Integration
+//  Added Baseball Pack promo card entry point in the programs section
+//
 
 import SwiftUI
 
@@ -24,6 +27,7 @@ struct ProgramsHubView: View {
 
     enum ProgramsSection: String, CaseIterable {
         case programs = "Programs"
+        case baseball = "Baseball"
         case history = "History"
 
         var title: String { rawValue }
@@ -64,6 +68,15 @@ struct ProgramsHubView: View {
         case .programs:
             // Use the existing ProgramLibraryBrowserView which has its own NavigationStack
             ProgramLibraryBrowserView()
+                .environmentObject(storeKit)
+
+        case .baseball:
+            // Baseball Pack section with premium gating
+            NavigationStack {
+                baseballContent
+                    .navigationTitle("Baseball Pack")
+                    .navigationBarTitleDisplayMode(.large)
+            }
 
         case .history:
             // History needs NavigationStack wrapper since it doesn't have one
@@ -72,6 +85,20 @@ struct ProgramsHubView: View {
                     .navigationTitle("History")
                     .navigationBarTitleDisplayMode(.large)
             }
+        }
+    }
+
+    // MARK: - Baseball Content
+
+    @ViewBuilder
+    private var baseballContent: some View {
+        if storeKit.hasBaseballAccess {
+            // User owns the pack - show the browser
+            BaseballPackBrowserView()
+        } else {
+            // User doesn't own the pack - show marketing/purchase view
+            BaseballPackMarketingView()
+                .environmentObject(storeKit)
         }
     }
 
@@ -93,10 +120,11 @@ struct ProgramsHubView: View {
             }
         } else {
             // No patient ID available
-            ContentUnavailableView(
-                "Not Signed In",
-                systemImage: "person.crop.circle.badge.exclamationmark",
-                description: Text("Please sign in to view your workout history")
+            EmptyStateView(
+                title: "Not Signed In",
+                message: "Please sign in to view your workout history, programs, and track your progress.",
+                icon: "person.crop.circle.badge.exclamationmark",
+                iconColor: .orange
             )
         }
     }

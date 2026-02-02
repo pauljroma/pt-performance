@@ -255,23 +255,56 @@ struct VideoStats: Codable {
     }
 }
 
-/// Video service errors
+/// Video service errors with user-friendly messages
 enum VideoError: LocalizedError {
     case loggingFailed(Error)
     case fetchFailed(Error)
     case downloadFailed(Error)
     case notFound
+    case playbackFailed
+
+    // MARK: - User-Friendly Error Titles
 
     var errorDescription: String? {
         switch self {
         case .loggingFailed:
-            return "Failed to log video view"
+            return "Video Tracking Issue"
         case .fetchFailed:
-            return "Failed to fetch video statistics"
+            return "Couldn't Load Video"
         case .downloadFailed:
-            return "Failed to download video"
+            return "Video Download Issue"
         case .notFound:
-            return "Video not found"
+            return "Video Unavailable"
+        case .playbackFailed:
+            return "Playback Issue"
+        }
+    }
+
+    // MARK: - User-Friendly Recovery Suggestions
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .loggingFailed:
+            return "Your video progress couldn't be saved, but you can keep watching."
+        case .fetchFailed:
+            return "We couldn't load the video right now. Please check your connection and try again."
+        case .downloadFailed:
+            return "The video couldn't be downloaded. Please check your connection and try again."
+        case .notFound:
+            return "This exercise video is no longer available. Please contact your therapist for guidance."
+        case .playbackFailed:
+            return "There was a problem playing this video. Please try again."
+        }
+    }
+
+    // MARK: - Retry Logic
+
+    var shouldRetry: Bool {
+        switch self {
+        case .loggingFailed, .fetchFailed, .downloadFailed, .playbackFailed:
+            return true
+        case .notFound:
+            return false
         }
     }
 }

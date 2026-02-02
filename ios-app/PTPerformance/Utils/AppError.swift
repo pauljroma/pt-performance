@@ -277,3 +277,179 @@ extension AppError {
         return (title, message)
     }
 }
+
+// MARK: - User-Friendly Error Helper
+
+/// Helper struct for converting any error to a user-friendly message
+/// Use this when you have a raw Error and need to display it to users
+struct UserFriendlyError {
+
+    /// Convert any error to a user-friendly message
+    /// - Parameter error: The raw error to convert
+    /// - Returns: A user-friendly message suitable for display
+    static func message(for error: Error) -> String {
+        // If it's already an AppError, use its built-in message
+        if let appError = error as? AppError {
+            return appError.recoverySuggestion ?? appError.errorDescription ?? defaultMessage
+        }
+
+        // Handle URLError (network issues)
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                return "No internet connection. Please check your connection and try again."
+            case .timedOut:
+                return "The request took too long. Please try again."
+            case .cannotFindHost, .cannotConnectToHost:
+                return "Unable to reach our servers. Please try again in a moment."
+            case .cancelled:
+                return "The request was cancelled."
+            case .secureConnectionFailed, .serverCertificateUntrusted:
+                return "We couldn't establish a secure connection. Please try again."
+            default:
+                return "Connection error. Please check your internet and try again."
+            }
+        }
+
+        // Handle DecodingError (data parsing issues)
+        if error is DecodingError {
+            return "We received unexpected data from the server. Please try again, and if the problem persists, contact support."
+        }
+
+        // Handle common error patterns by description
+        let description = error.localizedDescription.lowercased()
+
+        // Authentication patterns
+        if description.contains("unauthorized") || description.contains("401") {
+            return "Please sign in again to continue."
+        }
+
+        if description.contains("forbidden") || description.contains("403") {
+            return "You don't have permission to perform this action."
+        }
+
+        // Session patterns
+        if description.contains("session") && description.contains("expired") {
+            return "Your session has expired. Please sign in again."
+        }
+
+        // Network patterns
+        if description.contains("timeout") {
+            return "The request took too long. Please try again."
+        }
+
+        if description.contains("network") || description.contains("connection") {
+            return "Connection error. Please check your internet and try again."
+        }
+
+        // Not found patterns
+        if description.contains("not found") || description.contains("404") {
+            return "The requested item could not be found. Please refresh and try again."
+        }
+
+        // Server error patterns
+        if description.contains("500") || description.contains("server error") {
+            return "Our servers are experiencing issues. Please try again in a moment."
+        }
+
+        // Default message
+        return defaultMessage
+    }
+
+    /// Default error message when we can't determine a specific issue
+    private static let defaultMessage = "Something went wrong. Please try again."
+
+    /// Get a title for the error (for alert dialogs)
+    /// - Parameter error: The raw error
+    /// - Returns: A short, user-friendly title
+    static func title(for error: Error) -> String {
+        if let appError = error as? AppError {
+            return appError.errorDescription ?? "Error"
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost:
+                return "No Internet"
+            case .timedOut:
+                return "Request Timed Out"
+            case .cannotFindHost, .cannotConnectToHost:
+                return "Server Unavailable"
+            default:
+                return "Connection Error"
+            }
+        }
+
+        if error is DecodingError {
+            return "Data Error"
+        }
+
+        let description = error.localizedDescription.lowercased()
+
+        if description.contains("unauthorized") || description.contains("401") {
+            return "Session Expired"
+        }
+
+        if description.contains("forbidden") || description.contains("403") {
+            return "Access Denied"
+        }
+
+        if description.contains("not found") || description.contains("404") {
+            return "Not Found"
+        }
+
+        return "Something Went Wrong"
+    }
+
+    /// Check if an error should prompt the user to retry
+    /// - Parameter error: The raw error
+    /// - Returns: true if a retry might succeed
+    static func shouldShowRetry(for error: Error) -> Bool {
+        if let appError = error as? AppError {
+            return appError.shouldRetry
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .timedOut:
+                return true
+            case .cannotFindHost, .cannotConnectToHost:
+                return true
+            case .cancelled, .badURL:
+                return false
+            default:
+                return true
+            }
+        }
+
+        // Most errors are worth retrying
+        return true
+    }
+
+    /// Check if an error should trigger a sign-out
+    /// - Parameter error: The raw error
+    /// - Returns: true if the user should be signed out
+    static func shouldSignOut(for error: Error) -> Bool {
+        if let appError = error as? AppError {
+            return appError.shouldSignOut
+        }
+
+        let description = error.localizedDescription.lowercased()
+        return description.contains("session") && description.contains("expired") ||
+               description.contains("unauthorized") ||
+               description.contains("invalid token")
+    }
+
+    /// Log an error for debugging while returning a user-friendly message
+    /// - Parameters:
+    ///   - error: The raw error
+    ///   - context: Optional context about where the error occurred
+    /// - Returns: A user-friendly message
+    static func logAndMessage(for error: Error, context: String? = nil) -> String {
+        // Log the technical error for debugging
+        ErrorLogger.shared.logError(error, context: context)
+
+        // Return the user-friendly message
+        return message(for: error)
+    }
+}

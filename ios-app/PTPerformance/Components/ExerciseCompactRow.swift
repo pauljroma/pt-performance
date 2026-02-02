@@ -57,7 +57,7 @@ struct ExerciseCompactRow: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(borderColor, lineWidth: isCompleted ? 2 : 1)
         )
-        .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+        .adaptiveShadow(Shadow.subtle)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isExpanded)
         .sheet(isPresented: $showingSubstitutionSheet) {
             if let patientId = viewModel.patientId,

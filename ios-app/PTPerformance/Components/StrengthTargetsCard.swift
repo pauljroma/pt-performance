@@ -77,7 +77,7 @@ struct StrengthTargetsCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .adaptiveShadow(Shadow.subtle)
     }
 }
 
