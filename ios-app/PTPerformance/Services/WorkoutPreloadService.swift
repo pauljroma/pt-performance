@@ -118,8 +118,14 @@ final class WorkoutPreloadService: ObservableObject {
 
     /// Main preload function - fetches session, exercises, and thumbnails
     func preloadTodayWorkout() async {
-        // Cancel any existing preload task
-        preloadTask?.cancel()
+        // Cancel any existing preload task and wait for it to finish
+        if let existingTask = preloadTask {
+            existingTask.cancel()
+            _ = await existingTask.value
+        }
+
+        // Reset preloading flag after cancellation
+        isPreloading = false
 
         // Create new preload task
         preloadTask = Task { @MainActor in
@@ -137,6 +143,7 @@ final class WorkoutPreloadService: ObservableObject {
             return
         }
 
+        // Double-check we're not already preloading (should be reset by caller)
         guard !isPreloading else {
             logger.log("[WorkoutPreloadService] Preload already in progress", level: .diagnostic)
             return
