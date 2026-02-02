@@ -15,6 +15,8 @@ struct ProgramWorkoutScheduleView: View {
     @StateObject private var viewModel = ProgramWorkoutScheduleViewModel()
     @State private var selectedWorkout: ProgramScheduleWorkout?
     @State private var workoutToPlay: ProgramScheduleWorkout?
+    @State private var selectedPhaseSession: BaseballProgramStructure.SessionWithExercises?
+    @State private var phaseSessionToPlay: BaseballProgramStructure.SessionWithExercises?
 
     var body: some View {
         ScrollView {
@@ -50,10 +52,24 @@ struct ProgramWorkoutScheduleView: View {
                 }
             )
         }
+        .sheet(item: $selectedPhaseSession) { session in
+            PhaseSessionStartSheet(
+                session: session,
+                onStart: {
+                    phaseSessionToPlay = session
+                    selectedPhaseSession = nil
+                }
+            )
+        }
         .fullScreenCover(item: $workoutToPlay) { workout in
             WorkoutTemplatePlayerWrapper(
                 templateId: workout.templateId,
                 workoutName: workout.name
+            )
+        }
+        .fullScreenCover(item: $phaseSessionToPlay) { session in
+            PhaseSessionPlayerWrapper(
+                session: session
             )
         }
         .task {
@@ -156,7 +172,12 @@ struct ProgramWorkoutScheduleView: View {
     private var phaseBasedContent: some View {
         if let structure = viewModel.programStructure {
             ForEach(structure.phases, id: \.phase.id) { phaseWithSessions in
-                PhaseSection(phaseWithSessions: phaseWithSessions)
+                PhaseSection(
+                    phaseWithSessions: phaseWithSessions,
+                    onStartSession: { session in
+                        selectedPhaseSession = session
+                    }
+                )
             }
         }
     }
@@ -802,6 +823,7 @@ class ProgramWorkoutScheduleViewModel: ObservableObject {
 
 private struct PhaseSection: View {
     let phaseWithSessions: BaseballProgramStructure.PhaseWithSessions
+    var onStartSession: ((BaseballProgramStructure.SessionWithExercises) -> Void)?
 
     @State private var isExpanded = true
 
@@ -845,7 +867,10 @@ private struct PhaseSection: View {
             // Sessions
             if isExpanded {
                 ForEach(phaseWithSessions.sessions, id: \.session.id) { sessionWithExercises in
-                    SessionCard(sessionWithExercises: sessionWithExercises)
+                    SessionCard(
+                        sessionWithExercises: sessionWithExercises,
+                        onStartSession: onStartSession
+                    )
                 }
             }
         }
@@ -856,48 +881,62 @@ private struct PhaseSection: View {
 
 private struct SessionCard: View {
     let sessionWithExercises: BaseballProgramStructure.SessionWithExercises
+    var onStartSession: ((BaseballProgramStructure.SessionWithExercises) -> Void)?
 
     @State private var showExercises = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Session Header
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    showExercises.toggle()
-                }
-            } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(sessionWithExercises.session.name)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-
-                        HStack(spacing: 8) {
-                            if sessionWithExercises.session.isThrowingDay == true {
-                                Label("Throwing", systemImage: "figure.baseball")
-                                    .font(.caption2)
-                                    .foregroundColor(.orange)
-                            }
-
-                            Text("\(sessionWithExercises.exercises.count) exercises")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showExercises.toggle()
                     }
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(sessionWithExercises.session.name)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
 
-                    Spacer()
+                            HStack(spacing: 8) {
+                                if sessionWithExercises.session.isThrowingDay == true {
+                                    Label("Throwing", systemImage: "figure.baseball")
+                                        .font(.caption2)
+                                        .foregroundColor(.orange)
+                                }
 
-                    Image(systemName: showExercises ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                                Text("\(sessionWithExercises.exercises.count) exercises")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        Image(systemName: showExercises ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
-                .padding(12)
-                .background(Color(.systemGray5))
-                .cornerRadius(10)
+                .buttonStyle(.plain)
+
+                // Start button
+                Button {
+                    HapticFeedback.light()
+                    onStartSession?(sessionWithExercises)
+                } label: {
+                    Image(systemName: "play.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .padding(12)
+            .background(Color(.systemGray5))
+            .cornerRadius(10)
 
             // Exercises
             if showExercises {
@@ -959,6 +998,294 @@ private struct PhaseExerciseRow: View {
         .background(Color(.systemGray6))
         .cornerRadius(8)
     }
+}
+
+// MARK: - Phase Session Start Sheet
+
+struct PhaseSessionStartSheet: View {
+    let session: BaseballProgramStructure.SessionWithExercises
+    let onStart: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Session Icon
+                Image(systemName: session.session.isThrowingDay == true ? "figure.baseball" : "figure.run")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+                    .padding(.top, 20)
+
+                // Session Info
+                VStack(spacing: 8) {
+                    Text(session.session.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
+
+                    if let notes = session.session.notes, !notes.isEmpty {
+                        Text(notes)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(3)
+                    }
+                }
+                .padding(.horizontal)
+
+                // Stats
+                HStack(spacing: 24) {
+                    statItem(icon: "figure.run", value: "\(session.exercises.count)", label: "exercises")
+
+                    if session.session.isThrowingDay == true {
+                        statItem(icon: "figure.baseball", value: "Yes", label: "throwing")
+                    }
+                }
+
+                // Exercises preview
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Exercises")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ScrollView {
+                        VStack(spacing: 6) {
+                            ForEach(session.exercises.prefix(5)) { exercise in
+                                HStack {
+                                    Text(exercise.exerciseTemplate?.name ?? "Exercise")
+                                        .font(.subheadline)
+                                    Spacer()
+                                    if let sets = exercise.targetSets, let reps = exercise.targetReps {
+                                        Text("\(sets) × \(reps)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            if session.exercises.count > 5 {
+                                Text("+ \(session.exercises.count - 5) more")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .frame(maxHeight: 200)
+                }
+
+                Spacer()
+
+                // Start Button
+                Button {
+                    onStart()
+                } label: {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Start Workout")
+                    }
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(14)
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+            .navigationTitle("Ready to Start?")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func statItem(icon: String, value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.blue)
+
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Phase Session Player Wrapper
+
+struct PhaseSessionPlayerWrapper: View {
+    let session: BaseballProgramStructure.SessionWithExercises
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = PhaseSessionPlayerViewModel()
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if viewModel.isCreatingSession {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Starting workout...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                } else if let error = viewModel.errorMessage {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        Text("Failed to Start Workout")
+                            .font(.headline)
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button("Close") {
+                            dismiss()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .padding()
+                } else if let createdSession = viewModel.createdSession,
+                          let createdExercises = viewModel.createdExercises {
+                    // Show the workout execution view
+                    ManualWorkoutExecutionView(
+                        session: createdSession,
+                        exercises: createdExercises,
+                        patientId: UUID(uuidString: appState.userId ?? "") ?? UUID(),
+                        onComplete: {
+                            dismiss()
+                        }
+                    )
+                } else {
+                    // Initial loading state
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .navigationTitle(session.session.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .task {
+            if let patientId = appState.userId, let uuid = UUID(uuidString: patientId) {
+                await viewModel.createSession(from: session, patientId: uuid)
+            }
+        }
+    }
+}
+
+// MARK: - Phase Session Player View Model
+
+@MainActor
+class PhaseSessionPlayerViewModel: ObservableObject {
+    @Published var isCreatingSession = false
+    @Published var errorMessage: String?
+    @Published var createdSession: ManualSession?
+    @Published var createdExercises: [ManualSessionExercise]?
+
+    private let workoutService = ManualWorkoutService()
+
+    func createSession(from sessionData: BaseballProgramStructure.SessionWithExercises, patientId: UUID) async {
+        isCreatingSession = true
+        errorMessage = nil
+
+        let logger = DebugLogger.shared
+
+        do {
+            logger.log("PhaseSession: Creating session from: \(sessionData.session.name)", level: .diagnostic)
+
+            // 1. Create manual session
+            let session = try await workoutService.createManualSession(
+                name: sessionData.session.name,
+                patientId: patientId,
+                sourceTemplateId: nil,
+                sourceTemplateType: nil
+            )
+
+            logger.log("PhaseSession: Session created: \(session.id)", level: .success)
+
+            // 2. Add exercises from the phase session
+            var exercises: [ManualSessionExercise] = []
+            for (index, exercise) in sessionData.exercises.enumerated() {
+                let repsString: String?
+                if let reps = exercise.targetReps {
+                    repsString = String(reps)
+                } else {
+                    repsString = "10"
+                }
+
+                let input = AddManualSessionExerciseInput(
+                    manualSessionId: session.id,
+                    exerciseTemplateId: exercise.exerciseTemplateId,
+                    exerciseName: exercise.exerciseTemplate?.name ?? "Exercise \(index + 1)",
+                    blockName: exercise.blockLabel,
+                    sequence: index,
+                    targetSets: exercise.targetSets ?? 3,
+                    targetReps: repsString,
+                    targetLoad: nil,
+                    loadUnit: nil,
+                    restPeriodSeconds: nil,
+                    notes: exercise.notes
+                )
+
+                let addedExercise = try await workoutService.addExercise(to: session.id, exercise: input)
+                exercises.append(addedExercise)
+            }
+
+            logger.log("PhaseSession: Added \(exercises.count) exercises to session", level: .success)
+
+            createdSession = session
+            createdExercises = exercises
+
+        } catch {
+            logger.log("PhaseSession: Failed to create session: \(error.localizedDescription)", level: .error)
+            errorMessage = "Failed to start workout: \(error.localizedDescription)"
+        }
+
+        isCreatingSession = false
+    }
+}
+
+// MARK: - Identifiable conformance for SessionWithExercises
+
+extension BaseballProgramStructure.SessionWithExercises: Identifiable {
+    public var id: UUID { session.id }
 }
 
 // MARK: - Preview

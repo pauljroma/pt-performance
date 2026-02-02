@@ -663,17 +663,37 @@ struct ExercisePickerSheet: View {
     let onExerciseSelected: (CreatorExercise) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var exercises: [Exercise.ExerciseTemplate] = []
+    @State private var favoriteExerciseIds: Set<UUID> = []
     @State private var isLoading = true
     @State private var error: String?
+    @State private var showAllExercises = false
 
-    private var filteredExercises: [Exercise.ExerciseTemplate] {
-        if searchText.isEmpty {
-            return exercises
+    // Filtered exercises based on block type
+    private var suggestedExercises: [Exercise.ExerciseTemplate] {
+        exercises.filter { exercise in
+            blockType.matchesExercise(category: exercise.category, bodyRegion: exercise.body_region)
         }
-        return exercises.filter { exercise in
-            exercise.name.localizedCaseInsensitiveContains(searchText)
+    }
+
+    // Favorite exercises
+    private var favoriteExercises: [Exercise.ExerciseTemplate] {
+        exercises.filter { favoriteExerciseIds.contains($0.id) }
+    }
+
+    // Search-filtered exercises
+    private var filteredExercises: [Exercise.ExerciseTemplate] {
+        let baseExercises = showAllExercises ? exercises : suggestedExercises
+
+        if searchText.isEmpty {
+            return baseExercises
+        }
+        return baseExercises.filter { exercise in
+            exercise.name.localizedCaseInsensitiveContains(searchText) ||
+            (exercise.category?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+            (exercise.body_region?.localizedCaseInsensitiveContains(searchText) ?? false)
         }
     }
 
@@ -706,28 +726,89 @@ struct ExercisePickerSheet: View {
                     .padding()
                 } else {
                     List {
-                        if filteredExercises.isEmpty {
-                            VStack(spacing: 12) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.secondary)
-                                Text("No exercises found")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                        // Favorites section (if any and not searching)
+                        if !favoriteExercises.isEmpty && searchText.isEmpty {
+                            Section {
+                                ForEach(favoriteExercises) { exercise in
+                                    Button {
+                                        selectExercise(exercise)
+                                    } label: {
+                                        ExercisePickerRowView(
+                                            exercise: exercise,
+                                            blockType: blockType,
+                                            isFavorite: true,
+                                            onToggleFavorite: {
+                                                toggleFavorite(exercise)
+                                            }
+                                        )
+                                    }
+                                }
+                            } header: {
+                                Label("Favorites", systemImage: "star.fill")
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 40)
-                        } else {
-                            ForEach(filteredExercises) { exercise in
-                                Button {
-                                    selectExercise(exercise)
-                                } label: {
-                                    ExercisePickerRowView(exercise: exercise, blockType: blockType)
+                        }
+
+                        // Filter toggle section
+                        if searchText.isEmpty {
+                            Section {
+                                Toggle(isOn: $showAllExercises) {
+                                    HStack {
+                                        Image(systemName: showAllExercises ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                                            .foregroundColor(blockType.color)
+                                        VStack(alignment: .leading) {
+                                            Text(showAllExercises ? "Showing All Exercises" : "Showing Suggested")
+                                                .font(.subheadline)
+                                            Text(showAllExercises ? "\(exercises.count) exercises" : "\(suggestedExercises.count) for \(blockType.displayName)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
                                 }
                             }
                         }
+
+                        // Main exercise list
+                        Section {
+                            if filteredExercises.isEmpty {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.secondary)
+                                    Text(searchText.isEmpty ? "No suggested exercises" : "No exercises found")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    if !showAllExercises && searchText.isEmpty {
+                                        Button("Show All Exercises") {
+                                            showAllExercises = true
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 40)
+                            } else {
+                                ForEach(filteredExercises) { exercise in
+                                    Button {
+                                        selectExercise(exercise)
+                                    } label: {
+                                        ExercisePickerRowView(
+                                            exercise: exercise,
+                                            blockType: blockType,
+                                            isFavorite: favoriteExerciseIds.contains(exercise.id),
+                                            onToggleFavorite: {
+                                                toggleFavorite(exercise)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        } header: {
+                            if !filteredExercises.isEmpty {
+                                Text(showAllExercises ? "All Exercises" : "Suggested for \(blockType.displayName)")
+                            }
+                        }
                     }
-                    .listStyle(.plain)
+                    .listStyle(.insetGrouped)
                 }
             }
             .searchable(text: $searchText, prompt: "Search exercises")
@@ -742,6 +823,7 @@ struct ExercisePickerSheet: View {
             }
             .task {
                 await loadExercises()
+                await loadFavorites()
             }
         }
     }
@@ -770,6 +852,81 @@ struct ExercisePickerSheet: View {
         isLoading = false
     }
 
+    private func loadFavorites() async {
+        guard let userId = appState.userId, let patientId = UUID(uuidString: userId) else { return }
+
+        do {
+            let response = try await PTSupabaseClient.shared.client
+                .from("patient_favorite_exercises")
+                .select("exercise_template_id")
+                .eq("patient_id", value: patientId.uuidString)
+                .execute()
+
+            struct FavoriteRow: Codable {
+                let exerciseTemplateId: UUID
+
+                enum CodingKeys: String, CodingKey {
+                    case exerciseTemplateId = "exercise_template_id"
+                }
+            }
+
+            let decoder = JSONDecoder()
+            let rows = try decoder.decode([FavoriteRow].self, from: response.data)
+            favoriteExerciseIds = Set(rows.map { $0.exerciseTemplateId })
+
+            DebugLogger.shared.log("Loaded \(favoriteExerciseIds.count) favorite exercises", level: .success)
+        } catch {
+            // Table might not exist yet, that's OK
+            DebugLogger.shared.log("Favorites not loaded (table may not exist): \(error.localizedDescription)", level: .warning)
+        }
+    }
+
+    private func toggleFavorite(_ exercise: Exercise.ExerciseTemplate) {
+        guard let userId = appState.userId, let patientId = UUID(uuidString: userId) else { return }
+
+        Task {
+            do {
+                if favoriteExerciseIds.contains(exercise.id) {
+                    // Remove from favorites
+                    try await PTSupabaseClient.shared.client
+                        .from("patient_favorite_exercises")
+                        .delete()
+                        .eq("patient_id", value: patientId.uuidString)
+                        .eq("exercise_template_id", value: exercise.id.uuidString)
+                        .execute()
+
+                    await MainActor.run {
+                        favoriteExerciseIds.remove(exercise.id)
+                        HapticFeedback.light()
+                    }
+                } else {
+                    // Add to favorites
+                    struct InsertFavorite: Codable {
+                        let patientId: UUID
+                        let exerciseTemplateId: UUID
+
+                        enum CodingKeys: String, CodingKey {
+                            case patientId = "patient_id"
+                            case exerciseTemplateId = "exercise_template_id"
+                        }
+                    }
+
+                    try await PTSupabaseClient.shared.client
+                        .from("patient_favorite_exercises")
+                        .insert(InsertFavorite(patientId: patientId, exerciseTemplateId: exercise.id))
+                        .execute()
+
+                    await MainActor.run {
+                        favoriteExerciseIds.insert(exercise.id)
+                        HapticFeedback.success()
+                    }
+                }
+            } catch {
+                DebugLogger.shared.log("Failed to toggle favorite: \(error.localizedDescription)", level: .error)
+            }
+        }
+    }
+
     private func selectExercise(_ exercise: Exercise.ExerciseTemplate) {
         let creatorExercise = CreatorExercise(
             exerciseTemplateId: exercise.id,
@@ -795,9 +952,21 @@ struct ExercisePickerSheet: View {
 struct ExercisePickerRowView: View {
     let exercise: Exercise.ExerciseTemplate
     let blockType: WorkoutBlockType
+    var isFavorite: Bool = false
+    var onToggleFavorite: (() -> Void)?
 
     var body: some View {
         HStack {
+            // Favorite star button
+            Button {
+                onToggleFavorite?()
+            } label: {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .font(.subheadline)
+                    .foregroundColor(isFavorite ? .yellow : .secondary.opacity(0.5))
+            }
+            .buttonStyle(.plain)
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(exercise.name)
                     .font(.subheadline)

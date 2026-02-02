@@ -137,6 +137,74 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
         }
     }
 
+    /// Categories and body regions that are suggested for this block type
+    /// Used to filter exercises in the exercise picker
+    var suggestedCategories: [String] {
+        switch self {
+        case .cardio:
+            return ["cardio", "conditioning", "warm-up"]
+        case .dynamicStretch:
+            return ["mobility", "stretch", "dynamic", "warm-up", "flexibility"]
+        case .prehab:
+            return ["prehab", "activation", "corrective", "stability"]
+        case .push:
+            return ["strength", "push", "press"]
+        case .pull:
+            return ["strength", "pull", "row"]
+        case .hinge:
+            return ["strength", "hinge", "deadlift"]
+        case .lungeSquat:
+            return ["strength", "squat", "lunge", "lower"]
+        case .functional:
+            return ["functional", "core", "plyometric", "power"]
+        case .recovery:
+            return ["recovery", "stretch", "foam roll", "cool-down", "mobility"]
+        }
+    }
+
+    /// Body regions that are suggested for this block type
+    var suggestedBodyRegions: [String] {
+        switch self {
+        case .cardio:
+            return ["full body", "lower body", "cardio"]
+        case .dynamicStretch:
+            return ["full body", "hip", "shoulder", "thoracic", "ankle"]
+        case .prehab:
+            return ["shoulder", "hip", "core", "knee", "ankle"]
+        case .push:
+            return ["chest", "shoulder", "triceps", "upper body"]
+        case .pull:
+            return ["back", "biceps", "upper body", "lats"]
+        case .hinge:
+            return ["posterior chain", "hamstring", "glute", "lower back"]
+        case .lungeSquat:
+            return ["quad", "glute", "lower body", "leg"]
+        case .functional:
+            return ["core", "full body"]
+        case .recovery:
+            return ["full body", "hip", "shoulder", "back", "leg"]
+        }
+    }
+
+    /// Check if an exercise matches this block type based on category and body region
+    func matchesExercise(category: String?, bodyRegion: String?) -> Bool {
+        let categoryMatch = category.map { cat in
+            suggestedCategories.contains { suggested in
+                cat.localizedCaseInsensitiveContains(suggested) ||
+                suggested.localizedCaseInsensitiveContains(cat)
+            }
+        } ?? false
+
+        let bodyRegionMatch = bodyRegion.map { region in
+            suggestedBodyRegions.contains { suggested in
+                region.localizedCaseInsensitiveContains(suggested) ||
+                suggested.localizedCaseInsensitiveContains(region)
+            }
+        } ?? false
+
+        return categoryMatch || bodyRegionMatch
+    }
+
     /// Get sort order for a block name string
     static func sortOrder(for name: String) -> Int {
         let blockType = inferFromName(name)

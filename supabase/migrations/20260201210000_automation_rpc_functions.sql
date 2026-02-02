@@ -26,8 +26,8 @@ BEGIN;
 -- Used by: Make.com re-engagement workflow, inactive patient alerts
 
 CREATE OR REPLACE FUNCTION get_inactive_patients(
-    days_inactive INT DEFAULT 7,
-    max_results INT DEFAULT 50
+    p_days_inactive INT DEFAULT 7,
+    p_max_results INT DEFAULT 50
 )
 RETURNS TABLE (
     id UUID,
@@ -43,12 +43,12 @@ SET search_path = public
 AS $$
 BEGIN
     -- Parameter validation
-    IF days_inactive < 1 THEN
-        RAISE EXCEPTION 'days_inactive must be at least 1';
+    IF p_days_inactive < 1 THEN
+        RAISE EXCEPTION 'p_days_inactive must be at least 1';
     END IF;
 
-    IF max_results < 1 OR max_results > 1000 THEN
-        RAISE EXCEPTION 'max_results must be between 1 and 1000';
+    IF p_max_results < 1 OR p_max_results > 1000 THEN
+        RAISE EXCEPTION 'p_max_results must be between 1 and 1000';
     END IF;
 
     RETURN QUERY
@@ -69,11 +69,11 @@ BEGIN
     GROUP BY p.id, p.first_name, p.last_name, p.email, p.therapist_id
     HAVING
         MAX(s.completed_at) IS NULL
-        OR MAX(s.completed_at) < CURRENT_DATE - days_inactive
+        OR MAX(s.completed_at) < CURRENT_DATE - p_days_inactive
     ORDER BY
         CASE WHEN MAX(s.completed_at) IS NULL THEN 1 ELSE 0 END DESC,
         MAX(s.completed_at) ASC NULLS FIRST
-    LIMIT max_results;
+    LIMIT p_max_results;
 END;
 $$;
 
