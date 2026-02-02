@@ -131,16 +131,14 @@ class WorkoutGridViewModel: ObservableObject {
         // Create channel for this session
         realtimeChannel = supabase.client.realtimeV2.channel("session_exercises:\(sessionId)")
 
-        // Listen for INSERT, UPDATE, DELETE on session_exercises
-        let filter = "session_id=eq.\(sessionId)"
-
         Task {
+            // Listen for INSERT, UPDATE, DELETE on session_exercises using new filter syntax
             let changes = realtimeChannel!
                 .postgresChange(
                     AnyAction.self,
                     schema: "public",
                     table: "session_exercises",
-                    filter: filter
+                    filter: .eq("session_id", value: sessionId)
                 )
 
             do {

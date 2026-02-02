@@ -831,23 +831,45 @@ class HealthKitService: ObservableObject {
             HKMetadataKeyIndoorWorkout: true
         ]
 
-        // Create the workout using deprecated API (HKWorkoutBuilder requires more setup)
-        // TODO: Migrate to HKWorkoutBuilder when minimum deployment target is iOS 17+
-        let workout = HKWorkout(
-            activityType: .traditionalStrengthTraining,
-            start: startTime,
-            end: endTime,
-            workoutEvents: nil,
-            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
-            totalDistance: nil,
-            metadata: metadata
+        // Create and save workout using HKWorkoutBuilder (modern API)
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = .traditionalStrengthTraining
+        configuration.locationType = .indoor
+
+        let builder = HKWorkoutBuilder(
+            healthStore: healthStore,
+            configuration: configuration,
+            device: nil
         )
 
         do {
-            try await healthStore.save(workout)
+            try await builder.beginCollection(at: startTime)
+
+            // Add metadata to the builder before finishing
+            try await builder.addMetadata(metadata)
+
+            // Add energy burned sample
+            let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+            let energySample = HKQuantitySample(
+                type: energyType,
+                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
+                start: startTime,
+                end: endTime
+            )
+            try await builder.addSamples([energySample])
+
+            try await builder.endCollection(at: endTime)
+
+            let workout = try await builder.finishWorkout()
+            guard let savedWorkout = workout else {
+                throw HealthKitError.saveFailed("Failed to create workout")
+            }
+
             lastExportDate = Date()
             exportedWorkoutsCount += 1
-            return workout
+            return savedWorkout
+        } catch let error as HealthKitError {
+            throw error
         } catch {
             throw HealthKitError.saveFailed(error.localizedDescription)
         }
@@ -885,23 +907,45 @@ class HealthKitService: ObservableObject {
             metadata["WorkoutName"] = name
         }
 
-        // Create the workout using deprecated API (HKWorkoutBuilder requires more setup)
-        // TODO: Migrate to HKWorkoutBuilder when minimum deployment target is iOS 17+
-        let workout = HKWorkout(
-            activityType: .traditionalStrengthTraining,
-            start: startTime,
-            end: endTime,
-            workoutEvents: nil,
-            totalEnergyBurned: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
-            totalDistance: nil,
-            metadata: metadata
+        // Create and save workout using HKWorkoutBuilder (modern API)
+        let configuration = HKWorkoutConfiguration()
+        configuration.activityType = .traditionalStrengthTraining
+        configuration.locationType = .indoor
+
+        let builder = HKWorkoutBuilder(
+            healthStore: healthStore,
+            configuration: configuration,
+            device: nil
         )
 
         do {
-            try await healthStore.save(workout)
+            try await builder.beginCollection(at: startTime)
+
+            // Add metadata to the builder before finishing
+            try await builder.addMetadata(metadata)
+
+            // Add energy burned sample
+            let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+            let energySample = HKQuantitySample(
+                type: energyType,
+                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
+                start: startTime,
+                end: endTime
+            )
+            try await builder.addSamples([energySample])
+
+            try await builder.endCollection(at: endTime)
+
+            let workout = try await builder.finishWorkout()
+            guard let savedWorkout = workout else {
+                throw HealthKitError.saveFailed("Failed to create workout")
+            }
+
             lastExportDate = Date()
             exportedWorkoutsCount += 1
-            return workout
+            return savedWorkout
+        } catch let error as HealthKitError {
+            throw error
         } catch {
             throw HealthKitError.saveFailed(error.localizedDescription)
         }

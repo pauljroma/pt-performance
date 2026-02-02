@@ -1244,7 +1244,7 @@ private struct InlineBigLiftCard: View {
     /// Estimates 1RM using Epley formula if we have rep data
     /// This is a simplified calculation - the full RMCalculator is used in ExerciseHistorySheet
     private var estimated1RMValue: Double? {
-        guard let pr = exercise.personalRecord else { return nil }
+        guard exercise.personalRecord != nil else { return nil }
         // Simple Epley formula estimate: weight * (1 + reps/30)
         // Since we don't have rep count in ExerciseProgressItem, return nil
         // The actual 1RM is calculated in ExerciseHistorySheet with full session data

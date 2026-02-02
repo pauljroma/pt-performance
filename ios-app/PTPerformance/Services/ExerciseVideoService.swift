@@ -70,7 +70,7 @@ class ExerciseVideoService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     // FileManager and cacheDirectory are safe to access from any context (immutable after init)
     nonisolated(unsafe) private let fileManager = FileManager.default
-    nonisolated(unsafe) private let cacheDirectory: URL
+    private let cacheDirectory: URL
     private let maxCacheSize: Int64 = 1_000_000_000 // 1 GB for HD videos
     private let preloadQueue = OperationQueue()
     private var preloadTasks: [UUID: Task<Void, Never>] = [:]
