@@ -366,8 +366,10 @@ class StreakCalendarViewModel: ObservableObject {
 
     var canGoForward: Bool {
         let today = Date()
-        let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
-        let todayMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: today))!
+        guard let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)),
+              let todayMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) else {
+            return false
+        }
         return currentMonthStart < todayMonthStart
     }
 
@@ -400,8 +402,10 @@ class StreakCalendarViewModel: ObservableObject {
     }
 
     var monthWorkoutCount: Int {
-        let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
-        let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)!
+        guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)),
+              let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+            return 0
+        }
 
         return historyEntries.filter { entry in
             entry.activityDate >= monthStart && entry.activityDate < monthEnd && entry.workoutCompleted
@@ -409,8 +413,10 @@ class StreakCalendarViewModel: ObservableObject {
     }
 
     var monthArmCareCount: Int {
-        let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
-        let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)!
+        guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)),
+              let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+            return 0
+        }
 
         return historyEntries.filter { entry in
             entry.activityDate >= monthStart && entry.activityDate < monthEnd && entry.armCareCompleted
@@ -418,8 +424,10 @@ class StreakCalendarViewModel: ObservableObject {
     }
 
     var monthActivityDays: Int {
-        let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
-        let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart)!
+        guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)),
+              let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+            return 0
+        }
 
         return historyEntries.filter { entry in
             entry.activityDate >= monthStart && entry.activityDate < monthEnd && entry.hasAnyActivity
@@ -427,11 +435,16 @@ class StreakCalendarViewModel: ObservableObject {
     }
 
     var monthConsistencyPercent: Int {
-        let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
+        guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)) else {
+            return 0
+        }
         let today = Date()
 
         // Calculate days elapsed in month (or total days if viewing past month)
-        let endDate = min(today, calendar.date(byAdding: .month, value: 1, to: monthStart)!)
+        guard let nextMonthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+            return 0
+        }
+        let endDate = min(today, nextMonthStart)
         let daysInPeriod = calendar.dateComponents([.day], from: monthStart, to: endDate).day ?? 1
 
         guard daysInPeriod > 0 else { return 0 }

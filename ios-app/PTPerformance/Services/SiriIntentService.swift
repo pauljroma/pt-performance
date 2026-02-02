@@ -107,7 +107,7 @@ final class SiriIntentService: ObservableObject {
         let exerciseName = data["exerciseName"] as? String ?? ""
         let weight = data["weight"] as? Double ?? 0
 
-        print("[SiriIntentService] Processing log exercise: \(sets) sets of \(reps)")
+        DebugLogger.shared.info("SiriIntentService", "Processing log exercise: \(sets) sets of \(reps)")
 
         // Post notification for views to handle
         NotificationCenter.default.post(
@@ -132,7 +132,7 @@ final class SiriIntentService: ObservableObject {
         let reps = data["reps"] as? Int ?? 0
         let weight = data["weight"] as? Double ?? 0
 
-        print("[SiriIntentService] Processing quick log: \(reps) reps")
+        DebugLogger.shared.info("SiriIntentService", "Processing quick log: \(reps) reps")
 
         NotificationCenter.default.post(
             name: .siriQuickLogIntent,
@@ -150,7 +150,7 @@ final class SiriIntentService: ObservableObject {
         let sorenessLevel = data["sorenessLevel"] as? Int ?? 5
         let stressLevel = data["stressLevel"] as? Int ?? 5
 
-        print("[SiriIntentService] Processing log readiness")
+        DebugLogger.shared.info("SiriIntentService", "Processing log readiness")
 
         NotificationCenter.default.post(
             name: .siriLogReadinessIntent,
@@ -167,7 +167,7 @@ final class SiriIntentService: ObservableObject {
     private func processRestTimerIntent(_ data: [String: Any]) {
         let seconds = data["seconds"] as? Int ?? 90
 
-        print("[SiriIntentService] Processing rest timer: \(seconds) seconds")
+        DebugLogger.shared.info("SiriIntentService", "Processing rest timer: \(seconds) seconds")
 
         NotificationCenter.default.post(
             name: .siriRestTimerIntent,
@@ -179,7 +179,7 @@ final class SiriIntentService: ObservableObject {
     private func processStartWorkoutIntent(_ data: [String: Any]) {
         let workoutName = data["workoutName"] as? String
 
-        print("[SiriIntentService] Processing start workout")
+        DebugLogger.shared.info("SiriIntentService", "Processing start workout")
 
         NotificationCenter.default.post(
             name: .siriStartWorkoutIntent,
@@ -189,7 +189,7 @@ final class SiriIntentService: ObservableObject {
     }
 
     private func processViewProgressIntent(_ data: [String: Any]) {
-        print("[SiriIntentService] Processing view progress")
+        DebugLogger.shared.info("SiriIntentService", "Processing view progress")
 
         NotificationCenter.default.post(
             name: .siriViewProgressIntent,

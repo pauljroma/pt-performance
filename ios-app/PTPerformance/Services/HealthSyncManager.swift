@@ -53,8 +53,12 @@ class HealthSyncManager: ObservableObject {
             forTaskWithIdentifier: HealthSyncManager.syncTaskIdentifier,
             using: nil
         ) { task in
+            guard let refreshTask = task as? BGAppRefreshTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
             Task { @MainActor in
-                await self.handleBackgroundSync(task: task as! BGAppRefreshTask)
+                await self.handleBackgroundSync(task: refreshTask)
             }
         }
 
@@ -63,8 +67,12 @@ class HealthSyncManager: ObservableObject {
             forTaskWithIdentifier: HealthSyncManager.processingTaskIdentifier,
             using: nil
         ) { task in
+            guard let processingTask = task as? BGProcessingTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
             Task { @MainActor in
-                await self.handleBackgroundProcessing(task: task as! BGProcessingTask)
+                await self.handleBackgroundProcessing(task: processingTask)
             }
         }
 

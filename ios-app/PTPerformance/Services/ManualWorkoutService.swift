@@ -665,10 +665,14 @@ class ManualWorkoutService: ObservableObject {
             if let patientIdString = PTSupabaseClient.shared.userId,
                let patientUUID = UUID(uuidString: patientIdString) {
                 Task {
-                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
-                        for: patientUUID,
-                        completionTime: Date()
-                    )
+                    do {
+                        try await SmartNotificationService.shared.recordWorkoutCompletion(
+                            for: patientUUID,
+                            completionTime: Date()
+                        )
+                    } catch {
+                        DebugLogger.shared.log("Failed to record workout completion notification: \(error.localizedDescription)", level: .warning)
+                    }
                 }
             }
 
@@ -746,10 +750,14 @@ class ManualWorkoutService: ObservableObject {
             if let patientIdString = PTSupabaseClient.shared.userId,
                let patientUUID = UUID(uuidString: patientIdString) {
                 Task {
-                    try? await SmartNotificationService.shared.recordWorkoutCompletion(
-                        for: patientUUID,
-                        completionTime: Date()
-                    )
+                    do {
+                        try await SmartNotificationService.shared.recordWorkoutCompletion(
+                            for: patientUUID,
+                            completionTime: Date()
+                        )
+                    } catch {
+                        DebugLogger.shared.log("Failed to record prescribed session completion notification: \(error.localizedDescription)", level: .warning)
+                    }
                 }
             }
         } catch {

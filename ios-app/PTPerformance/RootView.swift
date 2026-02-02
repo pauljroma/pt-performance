@@ -88,7 +88,9 @@ struct RootView: View {
             SessionManager.shared.startMonitoring()
         } catch {
             // No valid session — show login screen
+            #if DEBUG
             print("No existing session: \(error.localizedDescription)")
+            #endif
             await MainActor.run {
                 isCheckingSession = false
             }

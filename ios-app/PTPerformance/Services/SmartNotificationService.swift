@@ -337,13 +337,17 @@ actor SmartNotificationService {
         try await notificationCenter.add(request)
 
         // Record in history
-        try? await recordNotificationScheduled(
-            patientId: patientId,
-            type: "workout_reminder",
-            title: content.title,
-            body: content.body,
-            scheduledFor: triggerDate
-        )
+        do {
+            try await recordNotificationScheduled(
+                patientId: patientId,
+                type: "workout_reminder",
+                title: content.title,
+                body: content.body,
+                scheduledFor: triggerDate
+            )
+        } catch {
+            DebugLogger.shared.log("Failed to record notification scheduled in history: \(error.localizedDescription)", level: .warning)
+        }
 
         DebugLogger.shared.log(
             "Smart reminder scheduled for \(triggerDate) (smart=\(optimalTime.isSmart), confidence=\(optimalTime.confidence))",

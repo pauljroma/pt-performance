@@ -263,9 +263,27 @@ extension ScheduledSession {
             updated_at: isoFormatter.string(from: updatedAt)
         )
 
-        let data = try! JSONEncoder().encode(directSession)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try! decoder.decode(ScheduledSession.self, from: data)
+        do {
+            let data = try JSONEncoder().encode(directSession)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(ScheduledSession.self, from: data)
+        } catch {
+            // Fallback: Create a minimal valid session using direct initialization
+            // This should never fail with valid input, but provides safety
+            return ScheduledSession(
+                id: id,
+                patientId: patientId,
+                sessionId: sessionId,
+                scheduledDate: scheduledDate,
+                scheduledTime: scheduledTime,
+                status: status,
+                completedAt: completedAt,
+                reminderSent: reminderSent,
+                notes: notes,
+                createdAt: createdAt,
+                updatedAt: updatedAt
+            )
+        }
     }
 }

@@ -426,10 +426,14 @@ class StreakDetailViewModel: ObservableObject {
 
     var weeklyActivity: [WeekDay] {
         let today = calendar.startOfDay(for: Date())
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
+        guard let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) else {
+            return []
+        }
 
-        return (0..<7).map { offset in
-            let date = calendar.date(byAdding: .day, value: offset, to: startOfWeek)!
+        return (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: startOfWeek) else {
+                return nil
+            }
             let dayFormatter = DateFormatter()
             dayFormatter.dateFormat = "EEEEE"
 

@@ -382,7 +382,11 @@ struct WhyThisExerciseCard_Previews: PreviewProvider {
         }
         """.data(using: .utf8)!
 
-        return try! JSONDecoder().decode(ExerciseExplanation.self, from: json)
+        do {
+            return try JSONDecoder().decode(ExerciseExplanation.self, from: json)
+        } catch {
+            fatalError("Preview sample data failed to decode: \(error)")
+        }
     }
 
     static var previews: some View {

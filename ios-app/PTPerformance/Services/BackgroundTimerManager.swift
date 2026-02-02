@@ -32,7 +32,11 @@ class BackgroundTimerManager: ObservableObject {
             forTaskWithIdentifier: backgroundTaskIdentifier,
             using: nil
         ) { task in
-            self.handleBackgroundTask(task: task as! BGAppRefreshTask)
+            guard let refreshTask = task as? BGAppRefreshTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleBackgroundTask(task: refreshTask)
         }
     }
 
@@ -228,30 +232,37 @@ class BackgroundTimerManager: ObservableObject {
             totalRounds: totalRounds
         )
 
-        if let encoded = try? JSONEncoder().encode(state) {
+        do {
+            let encoded = try JSONEncoder().encode(state)
             UserDefaults.standard.set(encoded, forKey: "timer_state")
 
-            DebugLogger.shared.info("DEBUG", 
+            DebugLogger.shared.info("DEBUG",
                 "Saved timer state: Round \(currentRound)/\(totalRounds), Phase: \(currentPhase)",
             )
+        } catch {
+            DebugLogger.shared.log("Failed to encode timer state for persistence: \(error.localizedDescription)", level: .error)
         }
     }
 
     /// Restore timer state from UserDefaults
     func restoreTimerState() -> TimerState? {
-        guard let data = UserDefaults.standard.data(forKey: "timer_state"),
-              let state = try? JSONDecoder().decode(TimerState.self, from: data) else {
-            DebugLogger.shared.info("DEBUG", 
+        guard let data = UserDefaults.standard.data(forKey: "timer_state") else {
+            DebugLogger.shared.info("DEBUG",
                 "No saved timer state found",
             )
             return nil
         }
 
-        DebugLogger.shared.info("DEBUG", 
-            "Restored timer state: \(state.templateName), Round \(state.currentRound)/\(state.totalRounds)",
-        )
-
-        return state
+        do {
+            let state = try JSONDecoder().decode(TimerState.self, from: data)
+            DebugLogger.shared.info("DEBUG",
+                "Restored timer state: \(state.templateName), Round \(state.currentRound)/\(state.totalRounds)",
+            )
+            return state
+        } catch {
+            DebugLogger.shared.log("Failed to decode timer state from persistence: \(error.localizedDescription)", level: .error)
+            return nil
+        }
     }
 
     /// Clear saved timer state

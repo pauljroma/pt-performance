@@ -255,7 +255,7 @@ struct TherapistSettingsView: View {
                 await MainActor.run {
                     isLoggingOut = false
                 }
-                print("Logout failed: \(error.localizedDescription)")
+                DebugLogger.shared.error("TherapistSettingsView", "Logout failed: \(error.localizedDescription)")
             }
         }
     }

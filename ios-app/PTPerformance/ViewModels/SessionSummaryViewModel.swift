@@ -5,6 +5,17 @@ import SwiftUI
 /// Build 60: UX Polish - Enhanced session summary with PRs and motivation
 @MainActor
 class SessionSummaryViewModel: ObservableObject {
+    // MARK: - Compliance Thresholds
+
+    /// Thresholds for determining compliance level in motivational messages
+    private enum ComplianceThreshold {
+        /// Exceptional performance threshold (95%+)
+        static let exceptional = 95.0
+        /// Solid performance threshold (80%+)
+        static let solid = 80.0
+        /// Good effort threshold (60%+)
+        static let good = 60.0
+    }
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var summary: SessionSummaryData?
@@ -108,8 +119,12 @@ class SessionSummaryViewModel: ObservableObject {
 
             // BUILD 133: Enhanced logging to verify time-based filtering worked
             let sortedLogs = exerciseLogs.sorted { $0.logged_at < $1.logged_at }
-            let dateRange = sortedLogs.isEmpty ? "N/A" :
-                "\(sortedLogs.first!.logged_at) to \(sortedLogs.last!.logged_at)"
+            let dateRange: String
+            if let firstLog = sortedLogs.first, let lastLog = sortedLogs.last {
+                dateRange = "\(firstLog.logged_at) to \(lastLog.logged_at)"
+            } else {
+                dateRange = "N/A"
+            }
 
             DebugLogger.shared.info("SESSION_SUMMARY", """
                 Retrieved \(exerciseLogs.count) exercise logs
@@ -127,12 +142,12 @@ class SessionSummaryViewModel: ObservableObject {
                     3. No exercises were actually logged
                     Raw response: \(String(data: response.data, encoding: .utf8) ?? "Unable to decode")
                     """)
-            } else {
+            } else if let firstLog = sortedLogs.first, let lastLog = sortedLogs.last {
                 // Log first, last, and count
                 DebugLogger.shared.info("SESSION_SUMMARY", """
-                    First log: \(sortedLogs.first!.logged_at)
-                    Last log: \(sortedLogs.last!.logged_at)
-                    Span: \(sortedLogs.last!.logged_at.timeIntervalSince(sortedLogs.first!.logged_at) / 60) minutes
+                    First log: \(firstLog.logged_at)
+                    Last log: \(lastLog.logged_at)
+                    Span: \(lastLog.logged_at.timeIntervalSince(firstLog.logged_at) / 60) minutes
                     """)
 
                 // Log each exercise log (first 5 only to avoid spam)
@@ -348,7 +363,7 @@ class SessionSummaryViewModel: ObservableObject {
     /// Generate motivational message based on performance
     private func generateMotivationalMessage(compliance: Double, prCount: Int, volume: Double) -> String {
         // Exceptional performance (PR + high compliance)
-        if prCount > 0 && compliance >= 95 {
+        if prCount > 0 && compliance >= ComplianceThreshold.exceptional {
             let prText = prCount == 1 ? "a personal record" : "\(prCount) personal records"
             return "Outstanding! You crushed it today with \(prText) and near-perfect execution!"
         }
@@ -360,17 +375,17 @@ class SessionSummaryViewModel: ObservableObject {
         }
 
         // High compliance
-        if compliance >= 95 {
+        if compliance >= ComplianceThreshold.exceptional {
             return "Excellent work! You completed all prescribed reps with precision."
         }
 
         // Good compliance
-        if compliance >= 80 {
+        if compliance >= ComplianceThreshold.solid {
             return "Solid session! You're making consistent progress toward your goals."
         }
 
         // Moderate compliance
-        if compliance >= 60 {
+        if compliance >= ComplianceThreshold.good {
             return "Good effort today! Remember, consistency is key to progress."
         }
 

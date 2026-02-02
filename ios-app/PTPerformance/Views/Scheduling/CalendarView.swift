@@ -252,7 +252,10 @@ struct CalendarView: View {
         // Generate 6 weeks of dates (42 days)
         for _ in 0..<42 {
             dates.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
         }
 
         return dates
@@ -268,7 +271,10 @@ struct CalendarView: View {
 
         for _ in 0..<7 {
             dates.append(currentDate)
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+            guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
+                break
+            }
+            currentDate = nextDate
         }
 
         return dates

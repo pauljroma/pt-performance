@@ -520,7 +520,11 @@ class StreakAlertService: ObservableObject {
 
         // Reschedule notifications with new timing
         Task {
-            try? await scheduleStreakAlert()
+            do {
+                try await scheduleStreakAlert()
+            } catch {
+                DebugLogger.shared.log("Failed to reschedule streak alert after configuration update: \(error.localizedDescription)", level: .warning)
+            }
         }
     }
 

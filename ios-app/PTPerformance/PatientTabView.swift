@@ -129,7 +129,9 @@ struct PatientTabView: View {
         }
         .onChange(of: storeKit.isPremium) { _, newValue in
             // BUILD 317: Force complete TabView rebuild when premium changes
+            #if DEBUG
             print("[PatientTabView] Premium changed to: \(newValue), refreshing tabs")
+            #endif
             premiumRefreshID = UUID()
         }
         .onAppear {
@@ -460,7 +462,7 @@ struct PatientSettingsView: View {
                 appState.userId = nil
             }
         } catch {
-            print("Logout error: \(error.localizedDescription)")
+            DebugLogger.shared.error("PatientSettingsView", "Logout error: \(error.localizedDescription)")
         }
     }
 }

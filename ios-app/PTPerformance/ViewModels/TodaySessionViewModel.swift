@@ -5,6 +5,10 @@ import SwiftUI
 /// Fetches today's session and exercises from Supabase or backend API
 @MainActor
 class TodaySessionViewModel: ObservableObject {
+    // MARK: - Pain Alert Thresholds
+
+    /// Pain threshold above which therapist should be notified
+    private static let painNotificationThreshold = 5
     @Published var session: Session?
     @Published var exercises: [Exercise] = []
     @Published var isLoading: Bool = false
@@ -919,8 +923,8 @@ class TodaySessionViewModel: ObservableObject {
 
             logger.log("✅ Exercise log saved successfully", level: .success)
 
-            // Notify therapist if pain > 5
-            if pain > 5 {
+            // Notify therapist if pain exceeds threshold
+            if pain > Self.painNotificationThreshold {
                 logger.log("⚠️  High pain level (\(pain)) - therapist notification triggered", level: .warning)
                 // BUILD 286: Notify therapist of high pain (ACP-597)
                 Task {

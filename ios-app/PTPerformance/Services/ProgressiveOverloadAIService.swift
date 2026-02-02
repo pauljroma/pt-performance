@@ -214,6 +214,15 @@ struct PerformanceAnalysis: Codable, Equatable {
     }
 }
 
+/// Thresholds for determining confidence level of progression suggestions
+private enum ConfidenceThreshold {
+    /// High confidence threshold (80+)
+    static let high = 80.0
+    /// Moderate confidence threshold (60+)
+    static let moderate = 60.0
+    // Below moderate = low confidence
+}
+
 /// AI-generated progression suggestion
 struct ProgressionSuggestion: Codable, Identifiable, Equatable {
     let id: UUID
@@ -278,9 +287,9 @@ struct ProgressionSuggestion: Codable, Identifiable, Equatable {
 
     /// Confidence level description
     var confidenceLevel: String {
-        if confidence >= 80 {
+        if confidence >= ConfidenceThreshold.high {
             return "High"
-        } else if confidence >= 60 {
+        } else if confidence >= ConfidenceThreshold.moderate {
             return "Moderate"
         } else {
             return "Low"
@@ -289,9 +298,9 @@ struct ProgressionSuggestion: Codable, Identifiable, Equatable {
 
     /// Confidence color for UI
     var confidenceColor: Color {
-        if confidence >= 80 {
+        if confidence >= ConfidenceThreshold.high {
             return .green
-        } else if confidence >= 60 {
+        } else if confidence >= ConfidenceThreshold.moderate {
             return .orange
         } else {
             return .gray

@@ -559,6 +559,17 @@ struct ReadinessSummary {
 
 // MARK: - BUILD 351: ReadinessService Extension for Daily Check-in
 
+/// Thresholds for determining readiness band from calculated score
+private enum ReadinessThreshold {
+    /// High readiness - green band (80+)
+    static let high = 80.0
+    /// Moderate readiness - yellow band (60+)
+    static let moderate = 60.0
+    /// Poor readiness - orange band (40+)
+    static let poor = 40.0
+    // Below poor threshold = red band
+}
+
 extension ReadinessService {
     /// Calculate readiness band from WHOOP-style input
     /// Uses algorithm from Auto-Regulation System (Build 39)
@@ -630,11 +641,11 @@ extension ReadinessService {
 
         // Determine band
         let band: ReadinessBand
-        if score >= 80 {
+        if score >= ReadinessThreshold.high {
             band = .green
-        } else if score >= 60 {
+        } else if score >= ReadinessThreshold.moderate {
             band = .yellow
-        } else if score >= 40 {
+        } else if score >= ReadinessThreshold.poor {
             band = .orange
         } else {
             band = .red
