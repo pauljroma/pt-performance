@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your PT Performance Profile</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0;
+      background-color: #f3f4f6;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 10px 0 0;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 30px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #4F46E5;
+      color: white !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    .cta-button:hover {
+      background-color: #4338CA;
+    }
+    .profile-benefits {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .profile-benefits h3 {
+      margin-top: 0;
+      color: #4F46E5;
+    }
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      margin: 15px 0;
+    }
+    .benefit-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+    .benefit-content {
+      flex: 1;
+    }
+    .benefit-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .benefit-description {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .progress-bar {
+      background-color: #e5e7eb;
+      border-radius: 9999px;
+      height: 8px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%);
+      height: 100%;
+      width: 40%;
+      border-radius: 9999px;
+    }
+    .progress-text {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .footer {
+      background-color: #f9fafb;
+      padding: 20px 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .footer a {
+      color: #4F46E5;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Complete Your Profile</h1>
+      <p>Help us personalize your experience</p>
+    </div>
+
+    <div class="content">
+      <p class="greeting">Hi {{first_name}},</p>
+
+      <p>
+        We noticed your profile isn't quite complete yet. Taking a few minutes to
+        fill in some additional details will help us create a truly personalized
+        training experience just for you.
+      </p>
+
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <p class="progress-text">Your profile is 40% complete</p>
+
+      <div class="profile-benefits">
+        <h3>Why Complete Your Profile?</h3>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">🎯</div>
+          <div class="benefit-content">
+            <div class="benefit-title">Personalized Goals</div>
+            <div class="benefit-description">Set clear targets so we can track your progress and celebrate your wins.</div>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">🏥</div>
+          <div class="benefit-content">
+            <div class="benefit-title">Injury History</div>
+            <div class="benefit-description">Help your therapist understand your background to create safer, more effective programs.</div>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">⚙️</div>
+          <div class="benefit-content">
+            <div class="benefit-title">Workout Preferences</div>
+            <div class="benefit-description">Tell us when you prefer to work out and what equipment you have access to.</div>
+          </div>
+        </div>
+
+        <div class="benefit-item">
+          <div class="benefit-icon">📊</div>
+          <div class="benefit-content">
+            <div class="benefit-title">Better Insights</div>
+            <div class="benefit-description">Get more accurate readiness scores and smarter workout recommendations.</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="{{profile_url}}" class="cta-button">
+          Complete Your Profile
+        </a>
+      </div>
+
+      <p>
+        It only takes a few minutes, and it makes a big difference in the quality
+        of your personalized training experience.
+      </p>
+
+      <p>
+        Best,<br>
+        <strong>The PT Performance Team</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        PT Performance | Personalized Physical Therapy<br>
+        <a href="https://ptperformance.app">ptperformance.app</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        <a href="{{unsubscribe_url}}">Unsubscribe from reminder emails</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

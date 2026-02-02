@@ -1,0 +1,366 @@
+{
+  "name": "Readiness-Based Workout Adjustment",
+  "description": "Triggered when daily readiness is logged. Automatically adjusts workout intensity or marks rest day based on readiness score.",
+  "trigger": {
+    "type": "webhook",
+    "source": "supabase",
+    "table": "daily_readiness",
+    "event": "INSERT"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Supabase Webhook",
+      "type": "webhook-custom",
+      "description": "Receives new daily readiness entry",
+      "output": {
+        "readiness_id": "{{record.id}}",
+        "patient_id": "{{record.patient_id}}",
+        "readiness_score": "{{record.readiness_score}}",
+        "sleep_quality": "{{record.sleep_quality}}",
+        "stress_level": "{{record.stress_level}}",
+        "muscle_soreness": "{{record.muscle_soreness}}",
+        "logged_at": "{{record.created_at}}"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Get Patient Info",
+      "type": "http-request",
+      "description": "Fetch patient details and today's scheduled session",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?id=eq.{{1.patient_id}}&select=*",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Get Today's Session",
+      "type": "http-request",
+      "description": "Fetch the scheduled session for today",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/scheduled_sessions?patient_id=eq.{{1.patient_id}}&scheduled_date=eq.{{formatDate(now, \"YYYY-MM-DD\")}}&select=*",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Router - Readiness Level",
+      "type": "router",
+      "description": "Branch based on readiness score thresholds",
+      "routes": [
+        {
+          "name": "Very Low Readiness (< 30)",
+          "condition": "{{1.readiness_score}} < 30",
+          "next": 5
+        },
+        {
+          "name": "Low Readiness (30-49)",
+          "condition": "{{1.readiness_score}} >= 30 AND {{1.readiness_score}} < 50",
+          "next": 10
+        },
+        {
+          "name": "Normal Readiness (>= 50)",
+          "condition": "{{1.readiness_score}} >= 50",
+          "next": 15
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Mark Session as Rest Day",
+      "type": "http-request",
+      "description": "Update today's session to rest day status",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/scheduled_sessions?id=eq.{{3.body[0].id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": {
+          "session_type": "rest_day",
+          "original_session_type": "{{3.body[0].session_type}}",
+          "adjusted_reason": "low_readiness",
+          "adjusted_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Send Recovery Tips Email",
+      "type": "sendgrid-send",
+      "description": "Send email with recovery tips and encouragement",
+      "config": {
+        "to": "{{2.body[0].email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-recovery-tips-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(2.body[0].full_name, \" \")[0]}}",
+          "readiness_score": "{{1.readiness_score}}",
+          "sleep_quality": "{{1.sleep_quality}}",
+          "stress_level": "{{1.stress_level}}",
+          "tips": [
+            "Focus on hydration - aim for 8+ glasses of water today",
+            "Try gentle stretching or a short walk",
+            "Prioritize 7-9 hours of sleep tonight",
+            "Consider stress-reduction techniques like deep breathing"
+          ]
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Send Rest Day Push",
+      "type": "http-request",
+      "description": "Notify patient that today is a rest day",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "title": "Rest Day Activated",
+          "body": "Your body needs recovery today. We've converted today to a rest day. Check your email for recovery tips!",
+          "data": {
+            "screen": "today",
+            "session_type": "rest_day"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Log Rest Day Adjustment",
+      "type": "http-request",
+      "description": "Record the rest day adjustment in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "readiness_rest_day",
+          "entity_type": "scheduled_session",
+          "entity_id": "{{3.body[0].id}}",
+          "patient_id": "{{1.patient_id}}",
+          "metadata": {
+            "readiness_score": "{{1.readiness_score}}",
+            "sleep_quality": "{{1.sleep_quality}}",
+            "stress_level": "{{1.stress_level}}",
+            "muscle_soreness": "{{1.muscle_soreness}}",
+            "original_session_type": "{{3.body[0].session_type}}",
+            "adjustment_type": "rest_day"
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Alert Therapist - Very Low Readiness",
+      "type": "slack-post",
+      "description": "Notify therapist about critically low readiness",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ":warning: *Low Readiness Alert*\n\n*Patient:* {{2.body[0].full_name}}\n*Readiness Score:* {{1.readiness_score}}/100\n\nSession converted to rest day automatically."
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Sleep:* {{1.sleep_quality}}/10"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Stress:* {{1.stress_level}}/10"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Soreness:* {{1.muscle_soreness}}/10"
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Patient"
+                },
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "name": "Trigger Readiness Adjustment",
+      "type": "http-request",
+      "description": "Call edge function to adjust workout intensity",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/trigger-readiness-adjustment",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "session_id": "{{3.body[0].id}}",
+          "readiness_score": "{{1.readiness_score}}",
+          "adjustment_type": "reduce_intensity",
+          "reduction_percentage": 30
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "Send Adjustment Push",
+      "type": "http-request",
+      "description": "Notify patient about workout adjustment",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "title": "Workout Adjusted",
+          "body": "Based on your readiness score, we've lightened today's workout. Listen to your body!",
+          "data": {
+            "screen": "today",
+            "adjusted": true
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "Log Intensity Adjustment",
+      "type": "http-request",
+      "description": "Record the intensity adjustment in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "readiness_intensity_adjustment",
+          "entity_type": "scheduled_session",
+          "entity_id": "{{3.body[0].id}}",
+          "patient_id": "{{1.patient_id}}",
+          "metadata": {
+            "readiness_score": "{{1.readiness_score}}",
+            "sleep_quality": "{{1.sleep_quality}}",
+            "stress_level": "{{1.stress_level}}",
+            "muscle_soreness": "{{1.muscle_soreness}}",
+            "adjustment_type": "reduce_intensity",
+            "reduction_percentage": 30,
+            "exercises_adjusted": "{{10.body.exercises_adjusted}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "name": "Update Session with Adjustment",
+      "type": "http-request",
+      "description": "Mark session as adjusted in database",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/scheduled_sessions?id=eq.{{3.body[0].id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "intensity_adjusted": true,
+          "adjusted_reason": "moderate_low_readiness",
+          "adjusted_at": "{{now}}",
+          "readiness_score_at_adjustment": "{{1.readiness_score}}"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "name": "End - Low Readiness Branch",
+      "type": "end",
+      "description": "End of low readiness (30-49) branch"
+    },
+    {
+      "id": 15,
+      "name": "Log Normal Readiness",
+      "type": "http-request",
+      "description": "Record normal readiness in audit logs for tracking",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "readiness_logged",
+          "entity_type": "daily_readiness",
+          "entity_id": "{{1.readiness_id}}",
+          "patient_id": "{{1.patient_id}}",
+          "metadata": {
+            "readiness_score": "{{1.readiness_score}}",
+            "sleep_quality": "{{1.sleep_quality}}",
+            "stress_level": "{{1.stress_level}}",
+            "muscle_soreness": "{{1.muscle_soreness}}",
+            "adjustment_applied": false
+          }
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Readiness adjustment failed for patient {{1.patient_id}}: {{error.message}}"
+    }
+  },
+  "schedule": null,
+  "estimated_operations": 15,
+  "estimated_cost_per_run": 0.02
+}

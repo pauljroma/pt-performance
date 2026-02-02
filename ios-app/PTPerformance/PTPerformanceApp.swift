@@ -1,12 +1,55 @@
 import SwiftUI
+import WidgetKit
 #if canImport(Sentry)
 import Sentry
 #endif
+
+// MARK: - Deep Link Destination
+
+/// Deep link destinations for widget tap navigation
+enum DeepLinkDestination: Equatable {
+    case readiness
+    case workout(sessionId: String)
+    case streak
+    case today
+    case schedule
+    case recovery
+
+    /// Parse URL into destination
+    static func from(url: URL) -> DeepLinkDestination? {
+        guard url.scheme == "ptperformance" else { return nil }
+
+        let host = url.host ?? ""
+        let pathComponents = url.pathComponents.filter { $0 != "/" }
+
+        switch host {
+        case "readiness":
+            return .readiness
+        case "workout":
+            // Handle ptperformance://workout/{sessionId}
+            if let sessionId = pathComponents.first {
+                return .workout(sessionId: sessionId)
+            }
+            return nil
+        case "streak":
+            return .streak
+        case "today":
+            return .today
+        case "schedule":
+            return .schedule
+        case "recovery":
+            return .recovery
+        default:
+            return nil
+        }
+    }
+}
 
 @main
 struct PTPerformanceApp: App {
     @StateObject private var appState = AppState()
     @ObservedObject private var storeKit = StoreKitService.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // BUILD 286: Initialize Sentry error monitoring (ACP-599)
@@ -43,26 +86,70 @@ struct PTPerformanceApp: App {
                     await OfflineQueueManager.shared.syncPendingLogs()
                 }
                 .onOpenURL { url in
-                    // Handle auth deep links (e.g., password reset: ptperformance://reset-password#access_token=...)
-                    Task {
-                        do {
-                            let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
-                            await MainActor.run {
-                                appState.isAuthenticated = true
-                                appState.userId = session.user.id.uuidString
-                            }
-                            await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
-                            await MainActor.run {
-                                if let role = PTSupabaseClient.shared.userRole {
-                                    appState.userRole = role
-                                }
-                            }
-                        } catch {
-                            print("Failed to handle deep link: \(error.localizedDescription)")
+                    handleDeepLink(url)
+                }
+                .onChange(of: scenePhase) { oldPhase, newPhase in
+                    if newPhase == .active {
+                        // Refresh widget data when app becomes active
+                        Task {
+                            await refreshWidgetData()
                         }
                     }
                 }
         }
+    }
+
+    // MARK: - Deep Link Handling
+
+    /// Handle incoming deep links for both auth and widget navigation
+    private func handleDeepLink(_ url: URL) {
+        // First, check if this is a widget navigation deep link
+        if let destination = DeepLinkDestination.from(url: url) {
+            appState.pendingDeepLink = destination
+
+            // Log deep link navigation for analytics
+            ErrorLogger.shared.logUserAction(
+                action: "deep_link_opened",
+                properties: [
+                    "destination": String(describing: destination),
+                    "url": url.absoluteString
+                ]
+            )
+            return
+        }
+
+        // Handle auth deep links (e.g., password reset: ptperformance://reset-password#access_token=...)
+        Task {
+            do {
+                let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
+                await MainActor.run {
+                    appState.isAuthenticated = true
+                    appState.userId = session.user.id.uuidString
+                }
+                await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
+                await MainActor.run {
+                    if let role = PTSupabaseClient.shared.userRole {
+                        appState.userRole = role
+                    }
+                }
+            } catch {
+                print("Failed to handle auth deep link: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Widget Refresh
+
+    /// Refresh all widget data when app becomes active
+    private func refreshWidgetData() async {
+        // Only refresh if user is authenticated
+        guard appState.isAuthenticated else { return }
+
+        // Reload all widget timelines to ensure fresh data
+        WidgetCenter.shared.reloadAllTimelines()
+
+        // Log refresh for debugging
+        print("[PTPerformanceApp] Refreshed widget timelines on app active")
     }
 }
 
@@ -82,6 +169,10 @@ final class AppState: ObservableObject {
             updateUserContext()
         }
     }
+
+    /// Pending deep link destination from widget tap or URL scheme
+    /// Views should observe this and navigate accordingly, then set to nil
+    @Published var pendingDeepLink: DeepLinkDestination? = nil
 
     /// Update Sentry user context when authentication state changes
     private func updateUserContext() {

@@ -1,0 +1,315 @@
+{
+  "name": "Program Auto-Advance",
+  "description": "Triggered when a patient completes a program. Automatically enrolls them in the next program in sequence or alerts their therapist if no next program exists.",
+  "trigger": {
+    "type": "webhook",
+    "source": "supabase",
+    "table": "program_enrollments",
+    "event": "UPDATE",
+    "filter": "status = 'completed'"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Supabase Webhook",
+      "type": "webhook-custom",
+      "description": "Receives program enrollment update when status changes to completed",
+      "output": {
+        "enrollment_id": "{{record.id}}",
+        "patient_id": "{{record.patient_id}}",
+        "program_id": "{{record.program_id}}",
+        "completed_at": "{{record.updated_at}}"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Get Patient Info",
+      "type": "http-request",
+      "description": "Fetch patient details including therapist assignment",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?id=eq.{{1.patient_id}}&select=*,therapists(id,full_name,email,slack_user_id)",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Get Current Program",
+      "type": "http-request",
+      "description": "Fetch current program details including sequence info",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/programs?id=eq.{{1.program_id}}&select=id,name,sequence_order,program_sequence_id",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Find Next Program in Sequence",
+      "type": "http-request",
+      "description": "Query for the next program in the sequence order",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/programs?program_sequence_id=eq.{{3.body[0].program_sequence_id}}&sequence_order=gt.{{3.body[0].sequence_order}}&order=sequence_order.asc&limit=1",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Router - Check Next Program",
+      "type": "router",
+      "description": "Branch based on whether a next program exists",
+      "routes": [
+        {
+          "name": "Next Program Exists",
+          "condition": "{{length(4.body)}} > 0",
+          "next": 6
+        },
+        {
+          "name": "No Next Program",
+          "condition": "{{length(4.body)}} = 0",
+          "next": 12
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Create New Enrollment",
+      "type": "http-request",
+      "description": "Enroll patient in the next program",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/program_enrollments",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "program_id": "{{4.body[0].id}}",
+          "status": "active",
+          "started_at": "{{now}}",
+          "auto_advanced": true,
+          "previous_enrollment_id": "{{1.enrollment_id}}"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Generate Scheduled Sessions",
+      "type": "http-request",
+      "description": "Call edge function to create sessions for the new program",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/generate-scheduled-sessions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "program_id": "{{4.body[0].id}}",
+          "enrollment_id": "{{6.body[0].id}}",
+          "start_date": "{{formatDate(addDays(now, 1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Send Congratulations Email",
+      "type": "sendgrid-send",
+      "description": "Send program completion congrats and next program info",
+      "config": {
+        "to": "{{2.body[0].email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-program-advance-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(2.body[0].full_name, \" \")[0]}}",
+          "completed_program_name": "{{3.body[0].name}}",
+          "next_program_name": "{{4.body[0].name}}",
+          "start_date": "{{formatDate(addDays(now, 1), \"MMMM D, YYYY\")}}"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Send Push Notification",
+      "type": "http-request",
+      "description": "Send congratulatory push notification",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "title": "Congratulations! Program Complete",
+          "body": "You've completed {{3.body[0].name}}! Your next program {{4.body[0].name}} starts tomorrow.",
+          "data": {
+            "screen": "program",
+            "program_id": "{{4.body[0].id}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "name": "Notify Therapist of Advancement",
+      "type": "slack-post",
+      "description": "Inform therapist of successful program transition",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Program Auto-Advanced* :arrow_right:\n\n*Patient:* {{2.body[0].full_name}}\n*Completed:* {{3.body[0].name}}\n*Starting:* {{4.body[0].name}}"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Patient"
+                },
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "name": "Log Advancement",
+      "type": "http-request",
+      "description": "Record the auto-advancement in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "program_auto_advanced",
+          "entity_type": "program_enrollment",
+          "entity_id": "{{6.body[0].id}}",
+          "patient_id": "{{1.patient_id}}",
+          "metadata": {
+            "previous_program_id": "{{1.program_id}}",
+            "previous_program_name": "{{3.body[0].name}}",
+            "new_program_id": "{{4.body[0].id}}",
+            "new_program_name": "{{4.body[0].name}}",
+            "sessions_generated": "{{7.body.sessions_count}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "Alert Therapist - No Next Program",
+      "type": "slack-post",
+      "description": "Notify therapist that patient completed final program in sequence",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Patient Completed Final Program"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ":checkered_flag: *{{2.body[0].full_name}}* has completed *{{3.body[0].name}}*\n\nNo next program in sequence. Please assign a new program or schedule a follow-up."
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Therapist:* {{2.body[0].therapists.full_name}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Completed:* {{formatDate(now, \"MMM D, YYYY\")}}"
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Assign New Program"
+                },
+                "style": "primary",
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}/programs"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Patient"
+                },
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "name": "Send Completion Email (No Next)",
+      "type": "sendgrid-send",
+      "description": "Send final program completion email to patient",
+      "config": {
+        "to": "{{2.body[0].email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-program-complete-final-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(2.body[0].full_name, \" \")[0]}}",
+          "program_name": "{{3.body[0].name}}",
+          "therapist_name": "{{2.body[0].therapists.full_name}}"
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Program auto-advance failed for patient {{1.patient_id}}: {{error.message}}"
+    }
+  },
+  "schedule": null,
+  "estimated_operations": 13,
+  "estimated_cost_per_run": 0.02
+}

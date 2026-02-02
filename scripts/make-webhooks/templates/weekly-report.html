@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Weekly Dashboard</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0;
+      background-color: #f3f4f6;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 10px 0 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #059669;
+    }
+    .stat-label {
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .stat-card.warning {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+    .stat-card.warning .stat-value {
+      color: #d97706;
+    }
+    .ai-summary {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #059669;
+    }
+    .ai-summary h3 {
+      margin-top: 0;
+      color: #059669;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-summary p {
+      margin-bottom: 0;
+      color: #4b5563;
+    }
+    .exercises-section {
+      margin: 20px 0;
+    }
+    .exercises-section h3 {
+      color: #1f2937;
+      margin-bottom: 15px;
+    }
+    .exercise-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .exercise-rank {
+      width: 28px;
+      height: 28px;
+      background-color: #059669;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .exercise-name {
+      flex: 1;
+      font-weight: 500;
+    }
+    .exercise-count {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .pain-alert {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid #ef4444;
+    }
+    .pain-alert h3 {
+      margin-top: 0;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pain-alert p {
+      margin-bottom: 0;
+      color: #7f1d1d;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #059669;
+      color: white !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    .cta-button:hover {
+      background-color: #047857;
+    }
+    .footer {
+      background-color: #f9fafb;
+      padding: 20px 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .footer a {
+      color: #059669;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Your Weekly Dashboard</h1>
+      <p>{{week_start}} - {{week_end}}</p>
+    </div>
+
+    <div class="content">
+      <p class="greeting">Hi {{therapist_name}},</p>
+
+      <p>
+        Here's a summary of your patients' activity and progress from the past week.
+      </p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{active_patients}}</div>
+          <div class="stat-label">Active Patients</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{sessions_completed}}</div>
+          <div class="stat-label">Sessions Completed</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{average_adherence}}%</div>
+          <div class="stat-label">Avg Adherence</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{average_readiness}}</div>
+          <div class="stat-label">Avg Readiness</div>
+        </div>
+      </div>
+
+      {{#if patients_with_pain}}
+      <div class="pain-alert">
+        <h3>⚠️ Pain Alerts</h3>
+        <p>{{patients_with_pain}} patient(s) reported elevated pain levels this week. Review their sessions to check on their progress and consider adjusting their programs.</p>
+      </div>
+      {{/if}}
+
+      <div class="ai-summary">
+        <h3>✨ AI Summary</h3>
+        <p>{{ai_summary}}</p>
+      </div>
+
+      <div class="exercises-section">
+        <h3>Top Exercises This Week</h3>
+
+        {{top_exercises}}
+      </div>
+
+      <div style="text-align: center;">
+        <a href="https://app.ptperformance.app/dashboard" class="cta-button">
+          View Full Dashboard
+        </a>
+      </div>
+
+      <p>
+        Keep up the great work supporting your patients!
+      </p>
+
+      <p>
+        Best,<br>
+        <strong>The PT Performance Team</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        PT Performance | Personalized Physical Therapy<br>
+        <a href="https://ptperformance.app">ptperformance.app</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        You're receiving this weekly report as a PT Performance therapist.<br>
+        <a href="https://app.ptperformance.app/settings/notifications">Manage notification preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

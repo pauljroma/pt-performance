@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congratulations! You Completed {{program_name}}!</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0;
+      background-color: #f3f4f6;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #7C3AED 0%, #A855F7 50%, #D97706 100%);
+      color: white;
+      padding: 50px 30px;
+      text-align: center;
+    }
+    .header-icon {
+      font-size: 64px;
+      margin-bottom: 15px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 10px 0 0;
+      opacity: 0.95;
+      font-size: 16px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .celebration-text {
+      font-size: 18px;
+      color: #7C3AED;
+      font-weight: 500;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      margin: 30px 0;
+      gap: 16px;
+    }
+    .achievement-stat {
+      text-align: center;
+      flex: 1;
+    }
+    .achievement-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      font-size: 28px;
+    }
+    .achievement-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #7C3AED;
+    }
+    .achievement-label {
+      color: #6b7280;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-section {
+      background: linear-gradient(135deg, #FAF5FF 0%, #F3E8FF 100%);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: center;
+      border: 2px solid #E9D5FF;
+    }
+    .badge-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .badge-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #7C3AED;
+      margin-bottom: 5px;
+    }
+    .badge-description {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .next-steps {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .next-steps h3 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+    .next-program {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background-color: white;
+      border-radius: 8px;
+      border: 2px solid #E9D5FF;
+      margin-top: 15px;
+    }
+    .next-program-icon {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 24px;
+    }
+    .next-program-info {
+      flex: 1;
+    }
+    .next-program-label {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .next-program-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 16px;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+      color: white !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .cta-button.secondary {
+      background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+    }
+    .cta-button:hover {
+      opacity: 0.9;
+    }
+    .motivational-quote {
+      font-style: italic;
+      color: #6b7280;
+      border-left: 3px solid #A855F7;
+      padding-left: 15px;
+      margin: 25px 0;
+    }
+    .footer {
+      background-color: #f9fafb;
+      padding: 20px 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .footer a {
+      color: #7C3AED;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">🏆</div>
+      <h1>Congratulations!</h1>
+      <p>You completed {{program_name}}!</p>
+    </div>
+
+    <div class="content">
+      <p class="greeting">Amazing work, {{first_name}}!</p>
+
+      <p class="celebration-text">
+        You did it! Every rep, every set, every session – you showed up and put in the work.
+        This achievement is a testament to your dedication and commitment.
+      </p>
+
+      <div class="stats-row">
+        <div class="achievement-stat">
+          <div class="achievement-icon">💪</div>
+          <div class="achievement-value">{{sessions_completed}}</div>
+          <div class="achievement-label">Sessions Completed</div>
+        </div>
+
+        <div class="achievement-stat">
+          <div class="achievement-icon">🔥</div>
+          <div class="achievement-value">{{total_volume}}</div>
+          <div class="achievement-label">Total Volume (lbs)</div>
+        </div>
+      </div>
+
+      <div class="badge-section">
+        <div class="badge-icon">🎖️</div>
+        <div class="badge-title">Program Complete Badge Unlocked!</div>
+        <div class="badge-description">You've earned this badge by completing your entire program. Check your profile to see all your achievements!</div>
+      </div>
+
+      {{#if next_program_name}}
+      <div class="next-steps">
+        <h3>What's Next?</h3>
+        <p>Your therapist has prepared your next program. Keep the momentum going!</p>
+
+        <div class="next-program">
+          <div class="next-program-icon">🚀</div>
+          <div class="next-program-info">
+            <div class="next-program-label">Up Next</div>
+            <div class="next-program-name">{{next_program_name}}</div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+
+      <div style="text-align: center;">
+        {{#if next_program_name}}
+        <a href="{{app_deep_link}}" class="cta-button">
+          Start Next Program
+        </a>
+        {{else}}
+        <a href="{{app_deep_link}}" class="cta-button">
+          View Your Progress
+        </a>
+        {{/if}}
+      </div>
+
+      <p class="motivational-quote">
+        "Success is the sum of small efforts, repeated day in and day out." – Robert Collier
+      </p>
+
+      <p>
+        Take a moment to celebrate this milestone. You've earned it!
+      </p>
+
+      <p>
+        Cheering you on,<br>
+        <strong>The PT Performance Team</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        PT Performance | Personalized Physical Therapy<br>
+        <a href="https://ptperformance.app">ptperformance.app</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        <a href="{{unsubscribe_url}}">Unsubscribe from milestone emails</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

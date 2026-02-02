@@ -1,0 +1,543 @@
+{
+  "name": "Weekly Video Generation Batch",
+  "description": "Runs every Sunday at 2am ET. Queries exercises without video URLs, generates videos via external service, uploads to Supabase storage, and updates exercise templates.",
+  "trigger": {
+    "type": "schedule",
+    "cron": "0 2 * * 0",
+    "timezone": "America/New_York"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Schedule Trigger",
+      "type": "schedule",
+      "description": "Runs every Sunday at 2am ET",
+      "config": {
+        "time": "02:00",
+        "day_of_week": "sunday",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Query Exercises Without Videos",
+      "type": "http-request",
+      "description": "Find exercise templates that need video generation",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/exercise_templates?video_url=is.null&video_generation_status=neq.processing&select=id,name,description,muscle_groups,equipment,difficulty,instructions&limit=20",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Router - Check Exercises",
+      "type": "router",
+      "description": "Branch based on whether exercises need videos",
+      "routes": [
+        {
+          "name": "Exercises Found",
+          "condition": "{{length(2.body)}} > 0",
+          "next": 4
+        },
+        {
+          "name": "No Exercises",
+          "condition": "{{length(2.body)}} = 0",
+          "next": 16
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Iterator - Exercises",
+      "type": "iterator",
+      "description": "Process each exercise for video generation",
+      "config": {
+        "array": "{{2.body}}"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Mark Exercise Processing",
+      "type": "http-request",
+      "description": "Update exercise status to processing to prevent duplicates",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/exercise_templates?id=eq.{{4.id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "video_generation_status": "processing",
+          "video_generation_started_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Request Video Generation",
+      "type": "http-request",
+      "description": "POST to video generation endpoint with exercise details",
+      "config": {
+        "url": "{{env.VIDEO_GENERATION_API_URL}}/generate",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.VIDEO_GENERATION_API_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "exercise_id": "{{4.id}}",
+          "exercise_name": "{{4.name}}",
+          "description": "{{4.description}}",
+          "instructions": "{{4.instructions}}",
+          "muscle_groups": "{{4.muscle_groups}}",
+          "equipment": "{{4.equipment}}",
+          "difficulty": "{{4.difficulty}}",
+          "callback_url": "https://hook.make.com/{{env.VIDEO_CALLBACK_WEBHOOK_ID}}",
+          "output_format": "mp4",
+          "resolution": "1080p",
+          "duration_seconds": 30,
+          "style": "professional_demo"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Log Video Request",
+      "type": "http-request",
+      "description": "Record video generation request in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "video_generation_requested",
+          "entity_type": "exercise_template",
+          "entity_id": "{{4.id}}",
+          "metadata": {
+            "exercise_name": "{{4.name}}",
+            "job_id": "{{6.body.job_id}}",
+            "estimated_completion": "{{6.body.estimated_completion}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Store Job Reference",
+      "type": "http-request",
+      "description": "Store video generation job ID for callback tracking",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/video_generation_jobs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "exercise_template_id": "{{4.id}}",
+          "external_job_id": "{{6.body.job_id}}",
+          "status": "processing",
+          "requested_at": "{{now}}",
+          "estimated_completion": "{{6.body.estimated_completion}}"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Delay Between Requests",
+      "type": "tools-delay",
+      "description": "Rate limit: wait 5 seconds between API requests",
+      "config": {
+        "delay": 5
+      }
+    },
+    {
+      "id": 10,
+      "name": "Aggregator",
+      "type": "aggregator",
+      "description": "Collect results from all video generation requests",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "total_requested": "count",
+          "exercise_ids": "array({{4.id}})",
+          "exercise_names": "array({{4.name}})"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "Post Batch Summary to Slack",
+      "type": "slack-post",
+      "description": "Summary of video generation batch job",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Video Generation Batch Started"
+            }
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "{{formatDate(now, \"dddd, MMMM D, YYYY [at] h:mm A\")}}"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Videos Requested:*\n{{10.total_requested}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Estimated Completion:*\n~{{multiply(10.total_requested, 5)}} minutes"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Exercises:*\n{{join(10.exercise_names, \", \")}}"
+            }
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "Videos will be uploaded to storage and exercise templates updated automatically upon completion."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "name": "Log Batch Start",
+      "type": "http-request",
+      "description": "Record batch job start in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "video_batch_started",
+          "entity_type": "system",
+          "entity_id": null,
+          "metadata": {
+            "total_requested": "{{10.total_requested}}",
+            "exercise_ids": "{{10.exercise_ids}}",
+            "batch_date": "{{formatDate(now, \"YYYY-MM-DD\")}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "name": "End - Batch Started",
+      "type": "end",
+      "description": "End of main batch flow - callbacks will handle completion"
+    },
+    {
+      "id": 14,
+      "name": "Video Callback Webhook",
+      "type": "webhook-custom",
+      "description": "Receives callback when video generation completes",
+      "trigger_type": "separate_webhook",
+      "webhook_id": "{{env.VIDEO_CALLBACK_WEBHOOK_ID}}",
+      "output": {
+        "job_id": "{{body.job_id}}",
+        "exercise_id": "{{body.exercise_id}}",
+        "status": "{{body.status}}",
+        "video_url": "{{body.video_url}}",
+        "thumbnail_url": "{{body.thumbnail_url}}",
+        "duration": "{{body.duration}}",
+        "file_size": "{{body.file_size}}"
+      }
+    },
+    {
+      "id": 15,
+      "name": "Router - Callback Status",
+      "type": "router",
+      "description": "Branch based on video generation result",
+      "routes": [
+        {
+          "name": "Generation Successful",
+          "condition": "{{14.status}} = 'completed'",
+          "next": 17
+        },
+        {
+          "name": "Generation Failed",
+          "condition": "{{14.status}} = 'failed'",
+          "next": 24
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Post No Videos Needed",
+      "type": "slack-post",
+      "description": "Notify that no exercises need videos",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ":white_check_mark: *Video Generation Check*\n\nNo exercises found without videos. All exercise templates have video URLs."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "name": "Download Video",
+      "type": "http-request",
+      "description": "Download the generated video file",
+      "config": {
+        "url": "{{14.video_url}}",
+        "method": "GET",
+        "response_type": "binary"
+      }
+    },
+    {
+      "id": 18,
+      "name": "Upload to Supabase Storage",
+      "type": "http-request",
+      "description": "Upload video to Supabase storage bucket",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/storage/v1/object/exercise-videos/{{14.exercise_id}}.mp4",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "video/mp4",
+          "x-upsert": "true"
+        },
+        "body": "{{17.body}}"
+      }
+    },
+    {
+      "id": 19,
+      "name": "Download Thumbnail",
+      "type": "http-request",
+      "description": "Download the video thumbnail",
+      "config": {
+        "url": "{{14.thumbnail_url}}",
+        "method": "GET",
+        "response_type": "binary"
+      }
+    },
+    {
+      "id": 20,
+      "name": "Upload Thumbnail to Storage",
+      "type": "http-request",
+      "description": "Upload thumbnail to Supabase storage bucket",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/storage/v1/object/exercise-thumbnails/{{14.exercise_id}}.jpg",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "image/jpeg",
+          "x-upsert": "true"
+        },
+        "body": "{{19.body}}"
+      }
+    },
+    {
+      "id": 21,
+      "name": "Update Exercise Template",
+      "type": "http-request",
+      "description": "Update exercise template with video URL and metadata",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/exercise_templates?id=eq.{{14.exercise_id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": {
+          "video_url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/storage/v1/object/public/exercise-videos/{{14.exercise_id}}.mp4",
+          "thumbnail_url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/storage/v1/object/public/exercise-thumbnails/{{14.exercise_id}}.jpg",
+          "video_duration_seconds": "{{14.duration}}",
+          "video_file_size_bytes": "{{14.file_size}}",
+          "video_generation_status": "completed",
+          "video_generated_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "name": "Update Job Status",
+      "type": "http-request",
+      "description": "Mark video generation job as completed",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/video_generation_jobs?external_job_id=eq.{{14.job_id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "status": "completed",
+          "completed_at": "{{now}}",
+          "video_url": "{{21.body[0].video_url}}",
+          "thumbnail_url": "{{21.body[0].thumbnail_url}}"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "name": "Log Video Completion",
+      "type": "http-request",
+      "description": "Record video completion in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "video_generation_completed",
+          "entity_type": "exercise_template",
+          "entity_id": "{{14.exercise_id}}",
+          "metadata": {
+            "exercise_name": "{{21.body[0].name}}",
+            "video_url": "{{21.body[0].video_url}}",
+            "duration_seconds": "{{14.duration}}",
+            "file_size_bytes": "{{14.file_size}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "Handle Generation Failure",
+      "type": "http-request",
+      "description": "Update exercise template with failed status",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/exercise_templates?id=eq.{{14.exercise_id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "video_generation_status": "failed",
+          "video_generation_error": "{{14.body.error_message}}",
+          "video_generation_failed_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 25,
+      "name": "Alert Failure to Slack",
+      "type": "slack-post",
+      "description": "Notify about video generation failure",
+      "config": {
+        "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ":x: *Video Generation Failed*\n\n*Exercise ID:* {{14.exercise_id}}\n*Job ID:* {{14.job_id}}\n*Error:* {{14.body.error_message}}"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Exercise"
+                },
+                "url": "https://app.ptperformance.app/exercises/{{14.exercise_id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "name": "Log Failure",
+      "type": "http-request",
+      "description": "Record video failure in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "video_generation_failed",
+          "entity_type": "exercise_template",
+          "entity_id": "{{14.exercise_id}}",
+          "metadata": {
+            "job_id": "{{14.job_id}}",
+            "error_message": "{{14.body.error_message}}"
+          }
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Video generation batch failed: {{error.message}}"
+    }
+  },
+  "schedule": {
+    "type": "weekly",
+    "day": "sunday",
+    "time": "02:00",
+    "timezone": "America/New_York"
+  },
+  "estimated_operations": 30,
+  "estimated_cost_per_run": 0.25
+}
