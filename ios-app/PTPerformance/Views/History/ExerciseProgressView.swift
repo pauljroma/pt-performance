@@ -5,6 +5,8 @@
 //  Exercise-specific progress tracking with expandable detail views
 //  Shows progress charts, personal records, and recent history for each exercise
 //
+//  BUILD 340: Added Big Lifts Scorecard integration for prominent PR display
+//
 
 import SwiftUI
 import Charts
@@ -13,6 +15,7 @@ import Charts
 
 /// Main view for tracking progress on individual exercises
 /// Shows a searchable, sortable list of exercises with expandable detail views
+/// BUILD 340: Now features Big Lifts Scorecard at the top for achievement-focused display
 struct ExerciseProgressView: View {
     let patientId: String
 
@@ -20,6 +23,7 @@ struct ExerciseProgressView: View {
     @State private var searchText = ""
     @State private var sortOption: ExerciseSortOption = .mostRecent
     @State private var expandedExerciseId: String?
+    @State private var selectedBigLiftExercise: String?
     @AppStorage("preferredWeightUnit") private var preferredWeightUnit: String = "lbs"
 
     var body: some View {
@@ -56,6 +60,9 @@ struct ExerciseProgressView: View {
             }
             .task {
                 await viewModel.fetchExerciseProgress(for: patientId)
+            }
+            .sheet(item: $selectedBigLiftExercise) { exerciseName in
+                ExerciseHistorySheet(exerciseName: exerciseName, patientId: patientId)
             }
         }
     }
@@ -108,12 +115,44 @@ struct ExerciseProgressView: View {
         }
     }
 
+    // MARK: - Big Lifts Data
+
+    /// Filters exercises to show only the "big lifts" - major compound movements
+    private var bigLiftsExercises: [ExerciseProgressItem] {
+        let bigLiftPatterns = [
+            "bench press", "squat", "deadlift", "overhead press", "barbell row",
+            "back squat", "front squat", "incline press", "military press"
+        ]
+
+        return viewModel.exercises.filter { exercise in
+            let name = exercise.exerciseName.lowercased()
+            return bigLiftPatterns.contains { pattern in
+                name.contains(pattern)
+            }
+        }
+    }
+
     // MARK: - Exercise List
 
     private var exerciseList: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.md) {
-                // Summary header
+                // BUILD 340: Big Lifts Scorecard at the top
+                if !bigLiftsExercises.isEmpty && searchText.isEmpty {
+                    bigLiftsSection
+                }
+
+                // Section divider
+                if !bigLiftsExercises.isEmpty && searchText.isEmpty {
+                    sectionDivider
+                }
+
+                // All Exercise Progress header
+                if !filteredExercises.isEmpty {
+                    allExerciseProgressHeader
+                }
+
+                // Summary stats (Total PRs, etc.)
                 if !filteredExercises.isEmpty {
                     progressSummaryHeader
                 }
@@ -181,6 +220,65 @@ struct ExerciseProgressView: View {
             }
             .padding()
         }
+    }
+
+    // MARK: - Big Lifts Section (BUILD 340)
+
+    private var bigLiftsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Section header
+            HStack {
+                Image(systemName: "figure.strengthtraining.traditional")
+                    .font(.title2)
+                    .foregroundColor(.orange)
+                Text("Big Lifts")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                if bigLiftsExercises.count > 4 {
+                    Text("\(bigLiftsExercises.count) lifts")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Big Lifts Section, \(bigLiftsExercises.count) compound lifts tracked")
+
+            // Big lifts grid
+            InlineBigLiftsGrid(
+                exercises: bigLiftsExercises,
+                preferredUnit: preferredWeightUnit,
+                onExerciseTap: { exerciseName in
+                    HapticFeedback.light()
+                    selectedBigLiftExercise = exerciseName
+                }
+            )
+        }
+    }
+
+    // MARK: - Section Divider
+
+    private var sectionDivider: some View {
+        Rectangle()
+            .fill(Color(.systemGray4))
+            .frame(height: 1)
+            .padding(.vertical, Spacing.sm)
+    }
+
+    // MARK: - All Exercise Progress Header
+
+    private var allExerciseProgressHeader: some View {
+        HStack {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.title3)
+                .foregroundColor(.blue)
+            Text("All Exercise Progress")
+                .font(.title3)
+                .fontWeight(.semibold)
+            Spacer()
+        }
+        .padding(.top, Spacing.xs)
+        .accessibilityAddTraits(.isHeader)
     }
 
     // MARK: - Progress Summary Header
@@ -981,14 +1079,208 @@ private struct ExerciseHistoryRecord: Codable {
     }
 }
 
+// MARK: - String Identifiable Extension (for sheet binding)
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
+}
+
+// MARK: - Inline Big Lifts Grid (BUILD 340)
+
+/// Displays a grid of "big lift" compound exercises with their PRs prominently
+/// Uses ExerciseProgressItem data from the parent view
+/// Tapping a card navigates to detailed history for that exercise
+private struct InlineBigLiftsGrid: View {
+    let exercises: [ExerciseProgressItem]
+    let preferredUnit: String
+    let onExerciseTap: (String) -> Void
+
+    private let columns = [
+        GridItem(.flexible(), spacing: Spacing.sm),
+        GridItem(.flexible(), spacing: Spacing.sm)
+    ]
+
+    var body: some View {
+        if exercises.isEmpty {
+            emptyBigLiftsState
+        } else {
+            LazyVGrid(columns: columns, spacing: Spacing.sm) {
+                ForEach(exercises.prefix(6)) { exercise in
+                    InlineBigLiftCard(
+                        exercise: exercise,
+                        preferredUnit: preferredUnit,
+                        onTap: { onExerciseTap(exercise.exerciseName) }
+                    )
+                }
+            }
+        }
+    }
+
+    private var emptyBigLiftsState: some View {
+        VStack(spacing: Spacing.sm) {
+            Image(systemName: "dumbbell.fill")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+            Text("No Big Lifts Yet")
+                .font(.headline)
+            Text("Log bench press, squat, deadlift, or overhead press to see your PRs here")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(Spacing.lg)
+        .background(Color(.systemGray6))
+        .cornerRadius(CornerRadius.md)
+    }
+}
+
+// MARK: - Inline Big Lift Card
+
+/// Individual card for a big lift exercise showing weight, estimated 1RM, and improvement
+private struct InlineBigLiftCard: View {
+    let exercise: ExerciseProgressItem
+    let preferredUnit: String
+    let onTap: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var displayUnit: String {
+        exercise.loadUnit ?? preferredUnit
+    }
+
+    private var cardBackgroundColor: Color {
+        colorScheme == .dark ? Color(.systemGray5) : Color(.systemBackground)
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                // Exercise name with trophy if PR
+                HStack {
+                    Text(shortExerciseName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                        .foregroundColor(.primary)
+
+                    Spacer()
+
+                    if exercise.hasPersonalRecord {
+                        Image(systemName: "trophy.fill")
+                            .font(.caption)
+                            .foregroundColor(.yellow)
+                    }
+                }
+
+                Spacer()
+
+                // Max weight prominently displayed
+                if let pr = exercise.personalRecord {
+                    Text(formatWeight(pr.value))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .monospacedDigit()
+
+                    // Estimated 1RM (if different from max weight)
+                    if let estimated1RM = estimated1RMValue, estimated1RM > pr.value {
+                        HStack(spacing: 2) {
+                            Text("Est 1RM:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(formatWeight(estimated1RM))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.purple)
+                        }
+                    }
+                } else {
+                    Text(formatWeight(exercise.averageWeight))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .monospacedDigit()
+
+                    Text("Avg Weight")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                // Improvement badge
+                if exercise.improvementPercentage != 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: exercise.improvementPercentage > 0 ? "arrow.up.right" : "arrow.down.right")
+                            .font(.caption2)
+                        Text(exercise.formattedImprovement)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(exercise.improvementPercentage > 0 ? .green : .red)
+                }
+            }
+            .padding(Spacing.sm)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+            .background(cardBackgroundColor)
+            .cornerRadius(CornerRadius.md)
+            .adaptiveShadow(Shadow.subtle)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(exercise.exerciseName), \(exercise.personalRecord.map { formatWeight($0.value) } ?? formatWeight(exercise.averageWeight))")
+        .accessibilityHint("Double tap to view exercise history")
+    }
+
+    /// Shortened exercise name for compact display
+    private var shortExerciseName: String {
+        let name = exercise.exerciseName
+        // Remove common prefixes for compact display
+        let shortened = name
+            .replacingOccurrences(of: "Barbell ", with: "")
+            .replacingOccurrences(of: "Dumbbell ", with: "DB ")
+        return shortened
+    }
+
+    /// Estimates 1RM using Epley formula if we have rep data
+    /// This is a simplified calculation - the full RMCalculator is used in ExerciseHistorySheet
+    private var estimated1RMValue: Double? {
+        guard let pr = exercise.personalRecord else { return nil }
+        // Simple Epley formula estimate: weight * (1 + reps/30)
+        // Since we don't have rep count in ExerciseProgressItem, return nil
+        // The actual 1RM is calculated in ExerciseHistorySheet with full session data
+        return nil
+    }
+
+    private func formatWeight(_ weight: Double) -> String {
+        if weight == floor(weight) {
+            return "\(Int(weight)) \(displayUnit)"
+        }
+        return String(format: "%.1f %@", weight, displayUnit)
+    }
+}
+
 // MARK: - Loading View
 
 struct ExerciseProgressLoadingView: View {
     @State private var isAnimating = false
 
+    private let columns = [
+        GridItem(.flexible(), spacing: Spacing.sm),
+        GridItem(.flexible(), spacing: Spacing.sm)
+    ]
+
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.md) {
+                // BUILD 340: Big Lifts skeleton
+                skeletonBigLiftsSection
+
+                // Section divider
+                Rectangle()
+                    .fill(Color(.systemGray4))
+                    .frame(height: 1)
+                    .padding(.vertical, Spacing.sm)
+
                 // Summary header skeleton
                 skeletonSummaryHeader
 
@@ -1007,6 +1299,68 @@ struct ExerciseProgressLoadingView: View {
                 isAnimating = true
             }
         }
+    }
+
+    // BUILD 340: Big Lifts skeleton
+    private var skeletonBigLiftsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Header skeleton
+            HStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 28, height: 28)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 22)
+                    .shimmer(isAnimating: isAnimating)
+
+                Spacer()
+            }
+
+            // Cards grid skeleton
+            LazyVGrid(columns: columns, spacing: Spacing.sm) {
+                ForEach(0..<4, id: \.self) { _ in
+                    skeletonBigLiftCard
+                }
+            }
+        }
+    }
+
+    private var skeletonBigLiftCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            // Title row
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+                Spacer()
+                Circle()
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 16, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            Spacer()
+
+            // Weight
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 100, height: 28)
+                .shimmer(isAnimating: isAnimating)
+
+            // Improvement
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 14)
+                .shimmer(isAnimating: isAnimating)
+        }
+        .padding(Spacing.sm)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        .background(Color(.systemBackground))
+        .cornerRadius(CornerRadius.md)
     }
 
     private var skeletonSummaryHeader: some View {
@@ -1103,10 +1457,36 @@ struct ExerciseProgressView_Previews: PreviewProvider {
             ExerciseProgressLoadingView()
                 .previewDisplayName("Loading State")
 
-            // Preview with sample data
+            // BUILD 340: Big Lifts Scorecard Preview
             NavigationStack {
                 ScrollView {
                     VStack(spacing: Spacing.md) {
+                        // Big Lifts Section
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            HStack {
+                                Image(systemName: "figure.strengthtraining.traditional")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                                Text("Big Lifts")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Spacer()
+                            }
+
+                            InlineBigLiftsGrid(
+                                exercises: sampleBigLifts,
+                                preferredUnit: "lbs",
+                                onExerciseTap: { _ in }
+                            )
+                        }
+
+                        // Divider
+                        Rectangle()
+                            .fill(Color(.systemGray4))
+                            .frame(height: 1)
+                            .padding(.vertical, Spacing.sm)
+
+                        // Exercise rows
                         ExerciseProgressRow(
                             exercise: sampleExerciseItem,
                             isExpanded: false,
@@ -1123,8 +1503,102 @@ struct ExerciseProgressView_Previews: PreviewProvider {
                 }
                 .navigationTitle("Preview")
             }
-            .previewDisplayName("Expanded Row")
+            .previewDisplayName("Big Lifts + Rows")
         }
+    }
+
+    // Sample big lifts for preview
+    static var sampleBigLifts: [ExerciseProgressItem] {
+        [
+            ExerciseProgressItem(
+                id: "bench",
+                exerciseId: "ex-bench",
+                exerciseName: "Bench Press",
+                dataPoints: [],
+                trend: .increasing,
+                averageWeight: 185.0,
+                totalVolume: 18500,
+                sessionCount: 15,
+                lastPerformed: Date(),
+                improvementPercentage: 0.08,
+                personalRecord: PersonalRecord(
+                    exerciseId: "ex-bench",
+                    exerciseName: "Bench Press",
+                    recordType: .maxWeight,
+                    value: 225.0,
+                    achievedDate: Date().addingTimeInterval(-86400 * 3),
+                    previousRecord: 215.0
+                ),
+                recentHistory: [],
+                loadUnit: "lbs"
+            ),
+            ExerciseProgressItem(
+                id: "squat",
+                exerciseId: "ex-squat",
+                exerciseName: "Back Squat",
+                dataPoints: [],
+                trend: .increasing,
+                averageWeight: 275.0,
+                totalVolume: 32000,
+                sessionCount: 18,
+                lastPerformed: Date().addingTimeInterval(-86400),
+                improvementPercentage: 0.12,
+                personalRecord: PersonalRecord(
+                    exerciseId: "ex-squat",
+                    exerciseName: "Back Squat",
+                    recordType: .maxWeight,
+                    value: 315.0,
+                    achievedDate: Date().addingTimeInterval(-86400 * 7),
+                    previousRecord: 295.0
+                ),
+                recentHistory: [],
+                loadUnit: "lbs"
+            ),
+            ExerciseProgressItem(
+                id: "deadlift",
+                exerciseId: "ex-deadlift",
+                exerciseName: "Deadlift",
+                dataPoints: [],
+                trend: .stable,
+                averageWeight: 345.0,
+                totalVolume: 28000,
+                sessionCount: 12,
+                lastPerformed: Date().addingTimeInterval(-86400 * 2),
+                improvementPercentage: 0.03,
+                personalRecord: PersonalRecord(
+                    exerciseId: "ex-deadlift",
+                    exerciseName: "Deadlift",
+                    recordType: .maxWeight,
+                    value: 405.0,
+                    achievedDate: Date().addingTimeInterval(-86400 * 14),
+                    previousRecord: 385.0
+                ),
+                recentHistory: [],
+                loadUnit: "lbs"
+            ),
+            ExerciseProgressItem(
+                id: "ohp",
+                exerciseId: "ex-ohp",
+                exerciseName: "Overhead Press",
+                dataPoints: [],
+                trend: .increasing,
+                averageWeight: 115.0,
+                totalVolume: 9800,
+                sessionCount: 10,
+                lastPerformed: Date().addingTimeInterval(-86400 * 4),
+                improvementPercentage: 0.05,
+                personalRecord: PersonalRecord(
+                    exerciseId: "ex-ohp",
+                    exerciseName: "Overhead Press",
+                    recordType: .maxWeight,
+                    value: 135.0,
+                    achievedDate: Date().addingTimeInterval(-86400 * 10),
+                    previousRecord: 125.0
+                ),
+                recentHistory: [],
+                loadUnit: "lbs"
+            )
+        ]
     }
 
     static var sampleExerciseItem: ExerciseProgressItem {

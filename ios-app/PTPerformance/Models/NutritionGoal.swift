@@ -63,19 +63,16 @@ enum GoalType: String, Codable, CaseIterable, Hashable {
 
 // MARK: - Goal Progress
 
-/// Progress toward nutrition goals
+/// Progress toward nutrition goals from vw_nutrition_goal_progress view
+/// BUILD 280: Updated to match vw_nutrition_goal_progress view columns
 struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable {
     var id: String { goalId }
     let patientId: String
     let goalId: String
     let targetCalories: Int?
     let targetProteinG: Double?
-    let targetCarbsG: Double?
-    let targetFatG: Double?
     let consumedCalories: Int
     let consumedProteinG: Double
-    let consumedCarbsG: Double
-    let consumedFatG: Double
     let caloriesPercent: Double
     let proteinPercent: Double
 
@@ -84,12 +81,8 @@ struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable {
         case goalId = "goal_id"
         case targetCalories = "target_calories"
         case targetProteinG = "target_protein_g"
-        case targetCarbsG = "target_carbs_g"
-        case targetFatG = "target_fat_g"
         case consumedCalories = "consumed_calories"
         case consumedProteinG = "consumed_protein_g"
-        case consumedCarbsG = "consumed_carbs_g"
-        case consumedFatG = "consumed_fat_g"
         case caloriesPercent = "calories_percent"
         case proteinPercent = "protein_percent"
     }

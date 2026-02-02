@@ -98,27 +98,32 @@ class NutritionDashboardViewModel: ObservableObject {
     }
 
     // Macro chart data
+    // BUILD 280: Updated to calculate calories from grams since view only provides percentages
     var macroChartData: [MacroChartData] {
         guard let macro = macroDistribution else {
             return defaultMacroData
         }
+        let proteinGrams = todaySummary?.totalProteinG ?? 0
+        let carbsGrams = todaySummary?.totalCarbsG ?? 0
+        let fatGrams = todaySummary?.totalFatG ?? 0
+
         return [
             MacroChartData(
                 macro: .protein,
-                grams: todaySummary?.totalProteinG ?? 0,
-                calories: macro.proteinCalories,
+                grams: proteinGrams,
+                calories: proteinGrams * MacroType.protein.caloriesPerGram,
                 percent: macro.proteinPercent
             ),
             MacroChartData(
                 macro: .carbs,
-                grams: todaySummary?.totalCarbsG ?? 0,
-                calories: macro.carbsCalories,
+                grams: carbsGrams,
+                calories: carbsGrams * MacroType.carbs.caloriesPerGram,
                 percent: macro.carbsPercent
             ),
             MacroChartData(
                 macro: .fat,
-                grams: todaySummary?.totalFatG ?? 0,
-                calories: macro.fatCalories,
+                grams: fatGrams,
+                calories: fatGrams * MacroType.fat.caloriesPerGram,
                 percent: macro.fatPercent
             )
         ]
@@ -126,9 +131,9 @@ class NutritionDashboardViewModel: ObservableObject {
 
     private var defaultMacroData: [MacroChartData] {
         [
-            MacroChartData(macro: .protein, grams: proteinToday, calories: proteinToday * 4, percent: 30),
-            MacroChartData(macro: .carbs, grams: carbsToday, calories: carbsToday * 4, percent: 40),
-            MacroChartData(macro: .fat, grams: fatToday, calories: fatToday * 9, percent: 30)
+            MacroChartData(macro: .protein, grams: proteinToday, calories: proteinToday * MacroType.protein.caloriesPerGram, percent: 30),
+            MacroChartData(macro: .carbs, grams: carbsToday, calories: carbsToday * MacroType.carbs.caloriesPerGram, percent: 40),
+            MacroChartData(macro: .fat, grams: fatToday, calories: fatToday * MacroType.fat.caloriesPerGram, percent: 30)
         ]
     }
 

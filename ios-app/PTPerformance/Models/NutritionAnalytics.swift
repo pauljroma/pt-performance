@@ -8,6 +8,7 @@
 import Foundation
 
 /// Daily nutrition summary from vw_daily_nutrition view
+/// BUILD 280: Updated to match vw_daily_nutrition view columns
 struct DailyNutritionSummary: Codable, Identifiable {
     var id: String { "\(patientId)-\(logDate)" }
     let patientId: String
@@ -17,7 +18,6 @@ struct DailyNutritionSummary: Codable, Identifiable {
     let totalProteinG: Double
     let totalCarbsG: Double
     let totalFatG: Double
-    let totalFiberG: Double
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
@@ -27,11 +27,11 @@ struct DailyNutritionSummary: Codable, Identifiable {
         case totalProteinG = "total_protein_g"
         case totalCarbsG = "total_carbs_g"
         case totalFatG = "total_fat_g"
-        case totalFiberG = "total_fiber_g"
     }
 }
 
 /// Weekly nutrition trend from vw_nutrition_trend view
+/// BUILD 280: Updated to match vw_nutrition_trend view columns
 struct WeeklyNutritionTrend: Codable, Identifiable {
     var id: String { "\(patientId)-\(weekStart)" }
     let patientId: String
@@ -39,8 +39,6 @@ struct WeeklyNutritionTrend: Codable, Identifiable {
     let daysLogged: Int
     let avgDailyCalories: Double
     let avgDailyProteinG: Double
-    let avgDailyCarbsG: Double
-    let avgDailyFatG: Double
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
@@ -48,8 +46,6 @@ struct WeeklyNutritionTrend: Codable, Identifiable {
         case daysLogged = "days_logged"
         case avgDailyCalories = "avg_daily_calories"
         case avgDailyProteinG = "avg_daily_protein_g"
-        case avgDailyCarbsG = "avg_daily_carbs_g"
-        case avgDailyFatG = "avg_daily_fat_g"
     }
 
     /// Consistency score (days logged / 7)
@@ -59,13 +55,11 @@ struct WeeklyNutritionTrend: Codable, Identifiable {
 }
 
 /// Macro distribution from vw_macro_distribution view
+/// BUILD 280: Updated to match vw_macro_distribution view columns (percentages only)
 struct MacroDistribution: Codable, Identifiable {
     var id: String { "\(patientId)-\(logDate)" }
     let patientId: String
     let logDate: Date
-    let proteinCalories: Double
-    let carbsCalories: Double
-    let fatCalories: Double
     let proteinPercent: Double
     let carbsPercent: Double
     let fatPercent: Double
@@ -73,17 +67,9 @@ struct MacroDistribution: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
         case logDate = "log_date"
-        case proteinCalories = "protein_calories"
-        case carbsCalories = "carbs_calories"
-        case fatCalories = "fat_calories"
         case proteinPercent = "protein_percent"
         case carbsPercent = "carbs_percent"
         case fatPercent = "fat_percent"
-    }
-
-    /// Total calories from macros
-    var totalCalories: Double {
-        proteinCalories + carbsCalories + fatCalories
     }
 }
 
