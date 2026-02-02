@@ -15,9 +15,11 @@ This automation system reduces manual work for PT Performance by:
 | Component | Status |
 |-----------|--------|
 | Claude Code Skills (10) | Done |
-| Webhook Handlers | Done |
-| Email Templates | Done |
-| Scenario Blueprints | Done |
+| Webhook Handlers (2) | Done |
+| Email Templates (6) | Done |
+| Scenario Blueprints (6) | Done |
+| Supabase RPC Functions (5) | Done |
+| Webhook Triggers (4) | Done |
 | Make.com Setup | Pending |
 | SendGrid Integration | Pending |
 | Production Testing | Pending |
@@ -195,6 +197,7 @@ Flow:
 **Files**:
 - `scripts/make-webhooks/scenarios/patient-onboarding.json`
 - `scripts/make-webhooks/templates/welcome.html`
+- `scripts/make-webhooks/templates/complete-profile.html`
 - `scripts/make-webhooks/handlers/patient-onboarding.ts`
 
 ---
@@ -219,6 +222,8 @@ Flow:
 ```
 
 **Files**:
+- `scripts/make-webhooks/scenarios/weekly-dashboard.json`
+- `scripts/make-webhooks/templates/weekly-report.html`
 - `scripts/make-webhooks/handlers/generate-report.ts`
 
 ---
@@ -263,6 +268,10 @@ Flow:
    a. [Slack] Alert therapist to assign manually
 ```
 
+**Files**:
+- `scripts/make-webhooks/scenarios/program-auto-advance.json`
+- `scripts/make-webhooks/templates/congratulations.html`
+
 ---
 
 ### Scenario 5: Daily Readiness → Workout Adjustment
@@ -281,6 +290,32 @@ Flow:
    b. [SendGrid] Send recovery tips email
 4. [Supabase] Log adjustment in audit_logs
 ```
+
+**Files**:
+- `scripts/make-webhooks/scenarios/readiness-adjustment.json`
+- `scripts/make-webhooks/templates/recovery-tips.html`
+
+---
+
+### Scenario 6: Video Generation (Weekly Batch)
+
+**Trigger**: Schedule (Every Sunday 2am)
+
+```
+Flow:
+1. [Schedule] Sunday 2am
+2. [Supabase] Query exercises without video_url
+3. [Iterator] For each exercise:
+   a. [HTTP] POST to video generation endpoint
+   b. [Delay] Wait for render callback
+   c. [Supabase Storage] Upload video
+   d. [Supabase] Update exercise_templates with URL
+4. [Slack] Report: "X new exercise videos generated"
+5. [Supabase] Log batch in audit_logs
+```
+
+**Files**:
+- `scripts/make-webhooks/scenarios/video-generation.json`
 
 ---
 
@@ -394,8 +429,10 @@ OPENAI_API_KEY=sk-...
 
 - [x] Create all Claude Code skills (10 skills in `.claude/skills/`)
 - [x] Create Make.com webhook handlers (`scripts/make-webhooks/handlers/`)
-- [x] Create email templates (welcome, reengagement)
-- [x] Create scenario blueprints (patient-onboarding, inactive-reengagement)
+- [x] Create email templates (6 templates in `scripts/make-webhooks/templates/`)
+- [x] Create scenario blueprints (6 scenarios in `scripts/make-webhooks/scenarios/`)
+- [x] Create Supabase RPC functions (`20260201210000_automation_rpc_functions.sql`)
+- [x] Create webhook triggers (`20260201210001_automation_webhook_triggers.sql`)
 - [x] Write AUTOMATION.md documentation
 
 ### Week 1: Patient Onboarding (Scenario 1)
@@ -510,11 +547,33 @@ scripts/make-webhooks/
 │   ├── patient-onboarding.ts
 │   └── generate-report.ts
 ├── templates/
-│   ├── welcome.html
-│   └── reengagement.html
+│   ├── welcome.html           # New patient welcome
+│   ├── complete-profile.html  # Profile completion reminder
+│   ├── reengagement.html      # Inactive user win-back
+│   ├── weekly-report.html     # Therapist dashboard
+│   ├── congratulations.html   # Program completion
+│   └── recovery-tips.html     # Low readiness day
 └── scenarios/
-    ├── patient-onboarding.json
-    └── inactive-reengagement.json
+    ├── patient-onboarding.json     # Scenario 1
+    ├── weekly-dashboard.json       # Scenario 2
+    ├── inactive-reengagement.json  # Scenario 3
+    ├── program-auto-advance.json   # Scenario 4
+    ├── readiness-adjustment.json   # Scenario 5
+    └── video-generation.json       # Scenario 6
+
+supabase/migrations/
+├── 20260201210000_automation_rpc_functions.sql
+│   # RPC functions:
+│   # - get_inactive_patients(days, limit)
+│   # - get_weekly_stats(therapist_id)
+│   # - get_top_exercises(therapist_id, limit)
+│   # - get_next_program_in_sequence(program_id)
+│   # - log_automation_event(type, patient_id, metadata)
+│
+└── 20260201210001_automation_webhook_triggers.sql
+    # Tables: automation_webhooks, automation_logs
+    # Triggers: on_patient_created, on_program_completed,
+    #           on_readiness_logged, on_session_completed
 
 docs/
 └── AUTOMATION.md          # This file
@@ -526,12 +585,18 @@ docs/
 
 ### Completed
 - [x] Claude Code skills created and documented (10 skills)
-- [x] Make.com webhook handlers written
-- [x] Email templates created (HTML)
-- [x] Scenario blueprints defined (JSON)
+- [x] Make.com webhook handlers written (2 handlers)
+- [x] Email templates created (6 templates)
+- [x] Scenario blueprints defined (6 scenarios)
+- [x] Supabase RPC functions created (5 functions)
+- [x] Webhook triggers created (4 triggers)
+- [x] Automation logging tables created
 
 ### Pending (requires Make.com account)
+- [ ] Apply Supabase migrations to production
 - [ ] Import scenarios into Make.com
+- [ ] Update webhook URLs in `automation_webhooks` table
+- [ ] Upload email templates to SendGrid
 - [ ] Test each Make.com scenario with test data
 - [ ] Verify Supabase webhooks fire correctly
 - [ ] Check email deliverability (SendGrid)
