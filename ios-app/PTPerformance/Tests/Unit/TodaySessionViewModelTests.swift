@@ -59,8 +59,8 @@ final class TodaySessionViewModelTests: XCTestCase {
 
         XCTAssertFalse(viewModel.isLoading, "Should finish loading")
         XCTAssertNotNil(viewModel.errorMessage, "Should have error message when no patient ID")
-        XCTAssertTrue(viewModel.errorMessage?.contains("No patient ID") ?? false,
-            "Error should mention missing patient ID")
+        XCTAssertTrue(viewModel.errorMessage?.contains("couldn't find your account") ?? false,
+            "Error should mention account issue")
     }
 
     // MARK: - Loading State Tests

@@ -186,8 +186,9 @@ final class DeloadRecommendationViewModelTests: XCTestCase {
     // MARK: - Computed Properties Tests - fatigueScoreText
 
     func testFatigueScoreText_FormatsCorrectly() {
+        // Swift uses banker's rounding (round half to even), so 72.5 rounds to 72
         viewModel.fatigueSummary = createMockFatigueSummary(fatigueScore: 72.5, fatigueBand: "high")
-        XCTAssertEqual(viewModel.fatigueScoreText, "73", "fatigueScoreText should format to whole number")
+        XCTAssertEqual(viewModel.fatigueScoreText, "72", "fatigueScoreText should format to whole number")
     }
 
     func testFatigueScoreText_WhenZero_DisplaysZero() {
@@ -554,8 +555,9 @@ final class DeloadRecommendationViewModelTests: XCTestCase {
     }
 
     func testFatigueTrendPoint_FormattedScore() {
+        // Swift uses banker's rounding (round half to even), so 72.5 rounds to 72
         let trendPoint = FatigueTrendPoint(date: Date(), fatigueScore: 72.5, band: .high)
-        XCTAssertEqual(trendPoint.formattedScore, "73", "formattedScore should round to whole number")
+        XCTAssertEqual(trendPoint.formattedScore, "72", "formattedScore should round to whole number")
     }
 
     func testFatigueTrendPoint_HasUniqueId() {

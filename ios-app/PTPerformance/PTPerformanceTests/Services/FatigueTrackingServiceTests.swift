@@ -112,10 +112,11 @@ final class DeloadUrgencyTests: XCTestCase {
     }
 
     func testDeloadUrgency_InitFromRawValue() {
-        XCTAssertEqual(DeloadUrgency(rawValue: "none"), .none)
-        XCTAssertEqual(DeloadUrgency(rawValue: "suggested"), .suggested)
-        XCTAssertEqual(DeloadUrgency(rawValue: "recommended"), .recommended)
-        XCTAssertEqual(DeloadUrgency(rawValue: "required"), .required)
+        // Use fully qualified DeloadUrgency.none to avoid ambiguity with Optional.none
+        XCTAssertEqual(DeloadUrgency(rawValue: "none"), DeloadUrgency.none)
+        XCTAssertEqual(DeloadUrgency(rawValue: "suggested"), DeloadUrgency.suggested)
+        XCTAssertEqual(DeloadUrgency(rawValue: "recommended"), DeloadUrgency.recommended)
+        XCTAssertEqual(DeloadUrgency(rawValue: "required"), DeloadUrgency.required)
         XCTAssertNil(DeloadUrgency(rawValue: "invalid"))
     }
 

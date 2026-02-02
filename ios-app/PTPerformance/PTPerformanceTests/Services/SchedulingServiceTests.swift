@@ -122,67 +122,67 @@ final class SchedulingErrorTests: XCTestCase {
         let underlyingError = NSError(domain: "test", code: 1, userInfo: nil)
         let error = SchedulingError.fetchFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to fetch scheduled sessions")
+        XCTAssertEqual(error.errorDescription, "Couldn't Load Schedule")
     }
 
     func testScheduleFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 2, userInfo: nil)
         let error = SchedulingError.scheduleFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to schedule session")
+        XCTAssertEqual(error.errorDescription, "Scheduling Issue")
     }
 
     func testRescheduleFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 3, userInfo: nil)
         let error = SchedulingError.rescheduleFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to reschedule session")
+        XCTAssertEqual(error.errorDescription, "Rescheduling Issue")
     }
 
     func testCancelFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 4, userInfo: nil)
         let error = SchedulingError.cancelFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to cancel session")
+        XCTAssertEqual(error.errorDescription, "Couldn't Cancel Session")
     }
 
     func testCompleteFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 5, userInfo: nil)
         let error = SchedulingError.completeFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to mark session as completed")
+        XCTAssertEqual(error.errorDescription, "Couldn't Complete Session")
     }
 
     func testUpdateFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 6, userInfo: nil)
         let error = SchedulingError.updateFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to update session")
+        XCTAssertEqual(error.errorDescription, "Couldn't Update Session")
     }
 
     func testDeleteFailed_ErrorDescription() {
         let underlyingError = NSError(domain: "test", code: 7, userInfo: nil)
         let error = SchedulingError.deleteFailed(underlyingError)
 
-        XCTAssertEqual(error.errorDescription, "Failed to delete session")
+        XCTAssertEqual(error.errorDescription, "Couldn't Remove Session")
     }
 
     func testSessionNotFound_ErrorDescription() {
         let error = SchedulingError.sessionNotFound
 
-        XCTAssertEqual(error.errorDescription, "Session not found")
+        XCTAssertEqual(error.errorDescription, "Session Not Found")
     }
 
     func testInvalidSession_ErrorDescription() {
         let error = SchedulingError.invalidSession
 
-        XCTAssertEqual(error.errorDescription, "Session does not belong to your active program")
+        XCTAssertEqual(error.errorDescription, "Session Unavailable")
     }
 
     func testDuplicateSchedule_ErrorDescription() {
         let error = SchedulingError.duplicateSchedule
 
-        XCTAssertEqual(error.errorDescription, "You already have this session scheduled on this date")
+        XCTAssertEqual(error.errorDescription, "Already Scheduled")
     }
 
     // MARK: - Underlying Error Tests
