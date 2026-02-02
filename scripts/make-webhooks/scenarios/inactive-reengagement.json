@@ -1,0 +1,206 @@
+{
+  "name": "Inactive User Re-engagement",
+  "description": "Daily check for users with no session in 7+ days. Sends personalized re-engagement email and push notification.",
+  "trigger": {
+    "type": "schedule",
+    "cron": "0 9 * * *",
+    "timezone": "America/New_York"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Schedule Trigger",
+      "type": "schedule",
+      "description": "Runs daily at 9am ET",
+      "config": {
+        "time": "09:00",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Query Inactive Patients",
+      "type": "http-request",
+      "description": "Find patients with no session in 7+ days",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_inactive_patients",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "days_inactive": 7,
+          "limit": 50
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Iterator",
+      "type": "iterator",
+      "description": "Process each inactive patient",
+      "config": {
+        "array": "{{2.body}}"
+      }
+    },
+    {
+      "id": 4,
+      "name": "Get AI Workout Recommendation",
+      "type": "http-request",
+      "description": "Generate personalized comeback workout",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/ai-workout-recommendation",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{3.id}}",
+          "context": "re-engagement",
+          "difficulty": "easy",
+          "exercises_count": 3
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Send Re-engagement Email",
+      "type": "sendgrid-send",
+      "description": "Send personalized 'We miss you' email",
+      "config": {
+        "to": "{{3.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-reengagement-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(3.full_name, \" \")[0]}}",
+          "days_since_last_session": "{{3.days_inactive}}",
+          "exercise_1_name": "{{4.body.exercises[0].name}}",
+          "exercise_1_sets": "{{4.body.exercises[0].sets}}x{{4.body.exercises[0].reps}}",
+          "exercise_2_name": "{{4.body.exercises[1].name}}",
+          "exercise_2_sets": "{{4.body.exercises[1].sets}}x{{4.body.exercises[1].reps}}",
+          "exercise_3_name": "{{4.body.exercises[2].name}}",
+          "exercise_3_sets": "{{4.body.exercises[2].sets}}x{{4.body.exercises[2].reps}}",
+          "app_deep_link": "ptperformance://today"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Send Push Notification",
+      "type": "http-request",
+      "description": "Send push notification to bring user back",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{3.id}}",
+          "title": "Your comeback workout is ready 💪",
+          "body": "We've prepared an easy session to help you ease back in.",
+          "data": {
+            "screen": "today",
+            "workout_type": "comeback"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Log Outreach",
+      "type": "http-request",
+      "description": "Record re-engagement attempt in patient_communications",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_communications",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "apikey": "{{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{3.id}}",
+          "type": "re_engagement",
+          "channel": "email_and_push",
+          "sent_at": "{{now}}",
+          "metadata": {
+            "days_inactive": "{{3.days_inactive}}",
+            "workout_recommended": true
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Aggregator",
+      "type": "aggregator",
+      "description": "Collect results from all iterations",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "total_sent": "count",
+          "patient_ids": "array({{3.id}})"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Post Summary to Slack",
+      "type": "slack-post",
+      "description": "Daily summary of re-engagement attempts",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Daily Re-engagement Summary"
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Patients Contacted:* {{8.total_sent}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Date:* {{formatDate(now, \"MMM D, YYYY\")}}"
+              }
+            ]
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "Each patient received a personalized comeback workout via email and push notification."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Re-engagement flow failed: {{error.message}}"
+    }
+  },
+  "schedule": {
+    "type": "daily",
+    "time": "09:00",
+    "timezone": "America/New_York"
+  },
+  "estimated_operations": 15,
+  "estimated_cost_per_run": 0.05
+}

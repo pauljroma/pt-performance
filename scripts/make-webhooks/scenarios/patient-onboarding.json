@@ -1,0 +1,187 @@
+{
+  "name": "Patient Onboarding Sequence",
+  "description": "Triggered when a new patient is created. Sends welcome email, creates first session, and notifies therapist.",
+  "trigger": {
+    "type": "webhook",
+    "source": "supabase",
+    "table": "patients",
+    "event": "INSERT"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Supabase Webhook",
+      "type": "webhook-custom",
+      "description": "Receives new patient data from Supabase",
+      "output": {
+        "patient_id": "{{record.id}}",
+        "full_name": "{{record.full_name}}",
+        "email": "{{record.email}}",
+        "therapist_id": "{{record.therapist_id}}"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Delay 5 Minutes",
+      "type": "tools-delay",
+      "description": "Wait to ensure patient record is fully committed",
+      "config": {
+        "delay": 300
+      }
+    },
+    {
+      "id": 3,
+      "name": "Send Welcome Email",
+      "type": "sendgrid-send",
+      "description": "Send welcome email with app download link",
+      "config": {
+        "to": "{{1.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-welcome-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(1.full_name, \" \")[0]}}",
+          "email": "{{1.email}}",
+          "app_download_url": "https://apps.apple.com/app/pt-performance/id123456789"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Create First Session",
+      "type": "http-request",
+      "description": "Call Supabase Edge Function to create scheduled sessions",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/generate-scheduled-sessions",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "weeks": 1,
+          "include_onboarding": true
+        }
+      }
+    },
+    {
+      "id": 5,
+      "name": "Send Push Notification",
+      "type": "http-request",
+      "description": "Send welcome push notification via Supabase Edge Function",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "title": "Welcome to PT Performance!",
+          "body": "Your first session is ready. Tap to get started.",
+          "data": {
+            "screen": "today"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Notify Therapist",
+      "type": "slack-post",
+      "description": "Post notification to therapist's Slack channel",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*New Patient Registered* :wave:\n\n*Name:* {{1.full_name}}\n*Email:* {{1.email}}"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Patient"
+                },
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "name": "Delay 24 Hours",
+      "type": "tools-delay",
+      "description": "Wait before sending profile completion reminder",
+      "config": {
+        "delay": 86400
+      }
+    },
+    {
+      "id": 8,
+      "name": "Check Profile Status",
+      "type": "http-request",
+      "description": "Query Supabase to check if profile is complete",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?id=eq.{{1.patient_id}}&select=profile_completed",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "apikey": "{{env.SUPABASE_ANON_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Router - Profile Check",
+      "type": "router",
+      "description": "Branch based on profile completion status",
+      "routes": [
+        {
+          "name": "Profile Incomplete",
+          "condition": "{{8.body[0].profile_completed}} = false",
+          "next": 10
+        },
+        {
+          "name": "Profile Complete",
+          "condition": "{{8.body[0].profile_completed}} = true",
+          "next": null
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Send Profile Reminder",
+      "type": "sendgrid-send",
+      "description": "Send reminder to complete profile",
+      "config": {
+        "to": "{{1.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-complete-profile-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(1.full_name, \" \")[0]}}",
+          "profile_url": "https://app.ptperformance.app/profile"
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Patient onboarding failed for {{1.email}}: {{error.message}}"
+    }
+  },
+  "schedule": null,
+  "estimated_operations": 10,
+  "estimated_cost_per_run": 0.01
+}

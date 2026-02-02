@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to PT Performance</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0;
+      background-color: #f3f4f6;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 10px 0 0;
+      opacity: 0.9;
+    }
+    .content {
+      padding: 30px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #4F46E5;
+      color: white !important;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    .cta-button:hover {
+      background-color: #4338CA;
+    }
+    .steps {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .steps h3 {
+      margin-top: 0;
+      color: #4F46E5;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      margin: 15px 0;
+    }
+    .step-number {
+      background-color: #4F46E5;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .step-description {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .footer {
+      background-color: #f9fafb;
+      padding: 20px 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .footer a {
+      color: #4F46E5;
+      text-decoration: none;
+    }
+    .app-badges {
+      margin: 20px 0;
+    }
+    .app-badge {
+      display: inline-block;
+      margin: 5px;
+    }
+    .app-badge img {
+      height: 44px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Welcome to PT Performance</h1>
+      <p>Your personalized training journey starts now</p>
+    </div>
+
+    <div class="content">
+      <p class="greeting">Hi {{first_name}},</p>
+
+      <p>
+        We're thrilled to have you on board! Your therapist has set up a personalized
+        training program designed specifically for your goals and needs.
+      </p>
+
+      <div style="text-align: center;">
+        <a href="{{app_download_url}}" class="cta-button">
+          Download the App
+        </a>
+      </div>
+
+      <div class="steps">
+        <h3>Getting Started</h3>
+
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">Download the app</div>
+            <div class="step-description">Available on iOS. Just tap the button above.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">Log in with this email</div>
+            <div class="step-description">Use {{email}} to access your account.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">Complete your profile</div>
+            <div class="step-description">Add your injury history and fitness goals.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-title">Start your first session</div>
+            <div class="step-description">Your personalized workout is waiting!</div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        If you have any questions, just reply to this email or reach out to your
+        therapist directly. We're here to help!
+      </p>
+
+      <p>
+        Best,<br>
+        <strong>The PT Performance Team</strong>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        PT Performance | Personalized Physical Therapy<br>
+        <a href="https://ptperformance.app">ptperformance.app</a>
+      </p>
+      <p style="font-size: 12px; margin-top: 15px;">
+        You're receiving this email because you were registered as a patient
+        on PT Performance. <a href="{{unsubscribe_url}}">Unsubscribe</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
