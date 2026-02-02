@@ -1,6 +1,46 @@
 import Foundation
 import Supabase
 
+// MARK: - RPC Parameter Structs
+
+/// RPC parameters for upsert_arm_care_assessment function
+private struct UpsertArmCareAssessmentParams: Encodable {
+    let pPatientId: String
+    let pDate: String
+    let pShoulderPainScore: Int
+    let pShoulderStiffnessScore: Int
+    let pShoulderStrengthScore: Int
+    let pElbowPainScore: Int
+    let pElbowTightnessScore: Int
+    let pValgusStressScore: Int
+    let pPainLocations: [String]
+    let pNotes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDate = "p_date"
+        case pShoulderPainScore = "p_shoulder_pain_score"
+        case pShoulderStiffnessScore = "p_shoulder_stiffness_score"
+        case pShoulderStrengthScore = "p_shoulder_strength_score"
+        case pElbowPainScore = "p_elbow_pain_score"
+        case pElbowTightnessScore = "p_elbow_tightness_score"
+        case pValgusStressScore = "p_valgus_stress_score"
+        case pPainLocations = "p_pain_locations"
+        case pNotes = "p_notes"
+    }
+}
+
+/// RPC parameters for get_arm_care_assessment function
+private struct GetArmCareAssessmentParams: Encodable {
+    let pPatientId: String
+    let pDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
+        case pDate = "p_date"
+    }
+}
+
 /// Service for managing arm care assessments
 /// ACP-522: Provides CRUD operations and trend analysis for arm health tracking
 @MainActor
@@ -73,17 +113,26 @@ class ArmCareAssessmentService: ObservableObject {
 
         do {
             #if DEBUG
-            print("Submitting arm care assessment for patient: \(patientId.uuidString), date: \(dateString)")
+            print("Submitting arm care assessment via RPC for patient: \(patientId.uuidString), date: \(dateString)")
             print("Scores: shoulder=\(input.shoulderScore ?? 0), elbow=\(input.elbowScore ?? 0), overall=\(input.overallScore ?? 0)")
-            print("Traffic light: \(input.trafficLight ?? "unknown")")
             #endif
 
-            // Upsert to database
+            // Use SECURITY DEFINER RPC function to bypass RLS
+            let params = UpsertArmCareAssessmentParams(
+                pPatientId: patientId.uuidString,
+                pDate: dateString,
+                pShoulderPainScore: shoulderPainScore,
+                pShoulderStiffnessScore: shoulderStiffnessScore,
+                pShoulderStrengthScore: shoulderStrengthScore,
+                pElbowPainScore: elbowPainScore,
+                pElbowTightnessScore: elbowTightnessScore,
+                pValgusStressScore: valgusStressScore,
+                pPainLocations: painLocations?.map { $0.rawValue } ?? [],
+                pNotes: notes
+            )
+
             let response = try await client.client
-                .from("arm_care_assessments")
-                .upsert(input, onConflict: "patient_id,date")
-                .select()
-                .single()
+                .rpc("upsert_arm_care_assessment", params: params)
                 .execute()
 
             let decoder = createDecoder()
@@ -115,21 +164,25 @@ class ArmCareAssessmentService: ObservableObject {
         let today = dateFormatter.string(from: Date())
 
         do {
+            // Use SECURITY DEFINER RPC function to bypass RLS
+            let params = GetArmCareAssessmentParams(
+                pPatientId: patientId.uuidString,
+                pDate: today
+            )
+
             let response = try await client.client
-                .from("arm_care_assessments")
-                .select()
-                .eq("patient_id", value: patientId.uuidString)
-                .eq("date", value: today)
-                .limit(1)
+                .rpc("get_arm_care_assessment", params: params)
                 .execute()
 
-            guard !response.data.isEmpty else {
+            // RPC returns null if no assessment found
+            guard !response.data.isEmpty,
+                  let jsonString = String(data: response.data, encoding: .utf8),
+                  jsonString != "null" else {
                 return nil
             }
 
             let decoder = createDecoder()
-            let results = try decoder.decode([ArmCareAssessment].self, from: response.data)
-            return results.first
+            return try decoder.decode(ArmCareAssessment.self, from: response.data)
         } catch {
             #if DEBUG
             print("Error fetching today's arm care assessment: \(error)")
