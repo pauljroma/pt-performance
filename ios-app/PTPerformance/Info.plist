@@ -4,10 +4,12 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.ptperformance.timer.background</string>
-		<string>com.ptperformance.health-sync</string>
-		<string>com.ptperformance.health-processing</string>
+		<string>com.getmodus.timer.background</string>
+		<string>com.getmodus.health-sync</string>
+		<string>com.getmodus.health-processing</string>
 	</array>
+	<key>CFBundleDisplayName</key>
+	<string>Modus</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
 	<key>CFBundleShortVersionString</key>
@@ -16,31 +18,31 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.ptperformance.app</string>
+			<string>com.getmodus.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>ptperformance</string>
+				<string>modus</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>404</string>
+	<string>405</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCalendarsUsageDescription</key>
-	<string>PTPerformance syncs your workouts to your calendar so you never miss a session and can import game schedules to automatically adjust your training.</string>
+	<string>Modus syncs your workouts to your calendar so you never miss a session and can import game schedules to automatically adjust your training.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>PTPerformance needs camera access to record exercise form check videos that you can share with your physical therapist for technique feedback and guidance.</string>
+	<string>Modus needs camera access to record exercise form check videos that you can share with your physical therapist for technique feedback and guidance.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>PTPerformance uses your HRV, sleep, and heart rate data to personalize recovery recommendations and automatically adjust your workout intensity based on your readiness.</string>
+	<string>Modus uses your HRV, sleep, and heart rate data to personalize recovery recommendations and automatically adjust your workout intensity based on your readiness.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>PTPerformance can save your workout data to Apple Health to help you track your fitness progress across all your health apps.</string>
+	<string>Modus can save your workout data to Apple Health to help you track your fitness progress across all your health apps.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>PTPerformance needs microphone access to record audio with your exercise videos so your therapist can hear your questions and provide better feedback.</string>
+	<string>Modus needs microphone access to record audio with your exercise videos so your therapist can hear your questions and provide better feedback.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>PTPerformance needs photo library access to let you select and share exercise videos and images with your physical therapist.</string>
+	<string>Modus needs photo library access to let you select and share exercise videos and images with your physical therapist.</string>
 	<key>NSSiriUsageDescription</key>
-	<string>PTPerformance uses Siri to let you start workouts, log exercises, and check your readiness score hands-free while training.</string>
+	<string>Modus uses Siri to let you start workouts, log exercises, and check your readiness score hands-free while training.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>StartWorkoutIntent</string>
