@@ -8,10 +8,13 @@ final class SupplementService: ObservableObject {
     @Published private(set) var supplements: [Supplement] = []
     @Published private(set) var todaySchedule: [ScheduledSupplement] = []
     @Published private(set) var recentLogs: [SupplementLog] = []
+    @Published private(set) var aiRecommendations: SupplementRecommendationResponse?
     @Published private(set) var isLoading = false
+    @Published private(set) var isLoadingRecommendations = false
     @Published private(set) var error: Error?
 
     private let supabase = PTSupabaseClient.shared
+    private let edgeFunctionUrl = "ai-supplement-recommendation"
 
     private init() {}
 
@@ -155,6 +158,119 @@ final class SupplementService: ObservableObject {
         return calendar.date(from: components) ?? date
     }
 
+    // MARK: - AI Recommendations
+
+    /// Fetches AI-powered supplement recommendations based on patient data
+    func getAIRecommendations() async {
+        isLoadingRecommendations = true
+        error = nil
+
+        do {
+            guard let patientId = try await getPatientId() else {
+                error = SupplementServiceError.noPatientId
+                isLoadingRecommendations = false
+                return
+            }
+
+            let requestBody: [String: Any] = ["patient_id": patientId.uuidString]
+            let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
+
+            let response: SupplementRecommendationResponse = try await supabase.client.functions
+                .invoke(
+                    edgeFunctionUrl,
+                    options: .init(body: bodyData)
+                )
+
+            self.aiRecommendations = response
+            DebugLogger.shared.info("SupplementService", "Fetched \(response.recommendations.count) AI recommendations (cached: \(response.cached))")
+        } catch {
+            self.error = error
+            DebugLogger.shared.error("SupplementService", "Failed to fetch AI recommendations: \(error)")
+        }
+
+        isLoadingRecommendations = false
+    }
+
+    /// Clears cached recommendations to force a fresh AI analysis
+    func refreshAIRecommendations() async {
+        aiRecommendations = nil
+        await getAIRecommendations()
+    }
+
+    /// Adds a recommended supplement to the user's stack
+    func addRecommendedSupplement(_ recommendation: AISupplementRecommendation) async throws {
+        guard let patientId = try await getPatientId() else {
+            throw SupplementServiceError.noPatientId
+        }
+
+        // Map AI recommendation category to SupplementCategory
+        let category = mapCategoryFromString(recommendation.category)
+
+        // Parse timing from recommendation
+        let timeOfDay = parseTimingFromString(recommendation.timing)
+
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: patientId,
+            name: recommendation.name,
+            brand: recommendation.brand,
+            category: category,
+            dosage: recommendation.dosage,
+            frequency: .daily,
+            timeOfDay: timeOfDay,
+            withFood: recommendation.timing.lowercased().contains("meal") || recommendation.timing.lowercased().contains("food"),
+            notes: recommendation.rationale,
+            momentousProductId: recommendation.purchaseUrl != nil ? recommendation.name.lowercased().replacingOccurrences(of: " ", with: "_") : nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        try await addSupplement(supplement)
+    }
+
+    private func mapCategoryFromString(_ string: String) -> SupplementCategory {
+        switch string.lowercased() {
+        case "protein": return .protein
+        case "creatine", "performance": return .creatine
+        case "vitamins": return .vitamins
+        case "minerals": return .minerals
+        case "omega3", "essential_fatty_acids": return .omega3
+        case "preworkout": return .preworkout
+        case "recovery": return .recovery
+        case "sleep": return .sleep
+        case "adaptogens", "cognitive", "hormonal_support": return .adaptogens
+        default: return .other
+        }
+    }
+
+    private func parseTimingFromString(_ timing: String) -> [TimeOfDay] {
+        let lower = timing.lowercased()
+        var times: [TimeOfDay] = []
+
+        if lower.contains("morning") || lower.contains("am") {
+            times.append(.morning)
+        }
+        if lower.contains("pre-workout") || lower.contains("before exercise") {
+            times.append(.preWorkout)
+        }
+        if lower.contains("post-workout") || lower.contains("after exercise") {
+            times.append(.postWorkout)
+        }
+        if lower.contains("evening") || lower.contains("bed") || lower.contains("night") {
+            times.append(.beforeBed)
+        }
+        if lower.contains("meal") || lower.contains("food") {
+            times.append(.withMeals)
+        }
+
+        // Default to morning if no timing parsed
+        if times.isEmpty {
+            times.append(.morning)
+        }
+
+        return times
+    }
+
     // MARK: - Helpers
 
     private func getPatientId() async throws -> UUID? {
@@ -173,5 +289,24 @@ final class SupplementService: ObservableObject {
             .value
 
         return patients.first?.id
+    }
+}
+
+// MARK: - Errors
+
+enum SupplementServiceError: LocalizedError {
+    case noPatientId
+    case invalidResponse
+    case networkError(Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .noPatientId:
+            return "Unable to identify patient. Please ensure you are logged in."
+        case .invalidResponse:
+            return "Received an invalid response from the server."
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
+        }
     }
 }

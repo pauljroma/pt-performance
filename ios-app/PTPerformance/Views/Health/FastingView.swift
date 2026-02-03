@@ -47,11 +47,26 @@ struct FastingView: View {
     private var contentView: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Extended Fast Warning Banner (16h+)
+                if viewModel.isExtendedFast {
+                    extendedFastWarningBanner
+                }
+
                 // Current Fast Status
                 if viewModel.isFasting {
                     activeFastCard
                 } else {
                     startFastCard
+                }
+
+                // Today's Training Section
+                if let workoutRec = viewModel.workoutRecommendation {
+                    todaysTrainingSection(workoutRec)
+                }
+
+                // Nutrition Timing Section
+                if let workoutRec = viewModel.workoutRecommendation, viewModel.isFasting {
+                    nutritionTimingSection(workoutRec)
                 }
 
                 // Stats
@@ -73,6 +88,280 @@ struct FastingView: View {
             }
             .padding()
         }
+    }
+
+    // MARK: - Extended Fast Warning Banner
+
+    private var extendedFastWarningBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+                .foregroundColor(.white)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Extended Fast Active")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Text("You've been fasting for \(String(format: "%.1f", viewModel.elapsedHours)) hours. Exercise caution when training.")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.9))
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [.orange, .red.opacity(0.8)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .cornerRadius(16)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Extended fast warning: You've been fasting for \(String(format: "%.1f", viewModel.elapsedHours)) hours. Exercise caution when training.")
+    }
+
+    // MARK: - Today's Training Section
+
+    private func todaysTrainingSection(_ recommendation: FastingWorkoutRecommendation) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "figure.run")
+                    .foregroundColor(.modusCyan)
+                Text("Today's Training")
+                    .font(.headline)
+                Spacer()
+                NavigationLink {
+                    FastingWorkoutRecommendationDetailView(recommendation: recommendation)
+                } label: {
+                    Text("Details")
+                        .font(.subheadline)
+                        .foregroundColor(.modusCyan)
+                }
+            }
+
+            // Intensity Gauge
+            HStack(spacing: 20) {
+                // Circular gauge
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 8)
+                        .frame(width: 80, height: 80)
+
+                    Circle()
+                        .trim(from: 0, to: CGFloat(recommendation.intensityModifier))
+                        .stroke(
+                            intensityGradient(for: recommendation.intensityPercentage),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
+                        .frame(width: 80, height: 80)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut(duration: 0.6), value: recommendation.intensityModifier)
+
+                    VStack(spacing: 0) {
+                        Text("\(recommendation.intensityPercentage)%")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundColor(intensityColor(for: recommendation.intensityPercentage))
+                    }
+                }
+                .accessibilityLabel("Training intensity: \(recommendation.intensityPercentage) percent")
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(intensityMessage(for: recommendation))
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    if recommendation.workoutRecommended {
+                        Label("Workout Recommended", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.modusTealAccent)
+                    } else {
+                        Label("Consider Resting", systemImage: "moon.zzz.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+
+                    if !recommendation.safetyWarnings.isEmpty {
+                        Label("\(recommendation.safetyWarnings.count) warning\(recommendation.safetyWarnings.count == 1 ? "" : "s")", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+
+                Spacer()
+            }
+
+            // Recommended workout types
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Recommended Activities")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(recommendation.recommendedWorkoutTypes, id: \.self) { type in
+                            workoutTypeChip(type)
+                        }
+                    }
+                }
+            }
+
+            // Quick warnings preview (first 2)
+            if !recommendation.safetyWarnings.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(recommendation.safetyWarnings.prefix(2), id: \.self) { warning in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            Text(warning)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if recommendation.safetyWarnings.count > 2 {
+                        Text("+\(recommendation.safetyWarnings.count - 2) more warnings")
+                            .font(.caption)
+                            .foregroundColor(.modusCyan)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
+    }
+
+    private func intensityGradient(for percentage: Int) -> LinearGradient {
+        if percentage >= 90 {
+            return LinearGradient(colors: [.modusTealAccent, .modusCyan], startPoint: .leading, endPoint: .trailing)
+        } else if percentage >= 75 {
+            return LinearGradient(colors: [.modusCyan, .blue], startPoint: .leading, endPoint: .trailing)
+        } else if percentage >= 60 {
+            return LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
+        } else {
+            return LinearGradient(colors: [.red, .orange], startPoint: .leading, endPoint: .trailing)
+        }
+    }
+
+    private func intensityColor(for percentage: Int) -> Color {
+        if percentage >= 90 {
+            return .modusTealAccent
+        } else if percentage >= 75 {
+            return .modusCyan
+        } else if percentage >= 60 {
+            return .orange
+        } else {
+            return .red
+        }
+    }
+
+    private func intensityMessage(for recommendation: FastingWorkoutRecommendation) -> String {
+        let percentage = recommendation.intensityPercentage
+        if percentage >= 90 {
+            return "Train at full capacity"
+        } else if percentage >= 75 {
+            return "Train at \(percentage)% today"
+        } else if percentage >= 60 {
+            return "Light activity recommended"
+        } else {
+            return "Rest or gentle movement only"
+        }
+    }
+
+    private func workoutTypeChip(_ type: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: iconForWorkoutType(type))
+                .font(.caption2)
+            Text(type)
+                .font(.caption)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.modusCyan.opacity(0.15))
+        .foregroundColor(.modusCyan)
+        .cornerRadius(16)
+    }
+
+    private func iconForWorkoutType(_ type: String) -> String {
+        let lowercased = type.lowercased()
+        if lowercased.contains("strength") {
+            return "dumbbell.fill"
+        } else if lowercased.contains("hiit") {
+            return "bolt.fill"
+        } else if lowercased.contains("cardio") {
+            return "heart.fill"
+        } else if lowercased.contains("walking") {
+            return "figure.walk"
+        } else if lowercased.contains("yoga") {
+            return "figure.yoga"
+        } else if lowercased.contains("mobility") || lowercased.contains("stretching") {
+            return "figure.flexibility"
+        } else if lowercased.contains("all") {
+            return "star.fill"
+        } else {
+            return "checkmark.circle.fill"
+        }
+    }
+
+    // MARK: - Nutrition Timing Section
+
+    private func nutritionTimingSection(_ recommendation: FastingWorkoutRecommendation) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "fork.knife.circle.fill")
+                    .foregroundColor(.modusTealAccent)
+                Text("Nutrition Timing")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Text(recommendation.nutritionTiming.recommendation)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Divider()
+
+            // Timing cards
+            VStack(spacing: 8) {
+                if let preWorkout = recommendation.nutritionTiming.preWorkout {
+                    NutritionTimingCard(
+                        phase: "Pre-Workout",
+                        advice: preWorkout,
+                        icon: "arrow.right.circle.fill",
+                        color: .blue
+                    )
+                }
+
+                if let intraWorkout = recommendation.nutritionTiming.intraWorkout {
+                    NutritionTimingCard(
+                        phase: "During Workout",
+                        advice: intraWorkout,
+                        icon: "circle.circle.fill",
+                        color: .modusCyan
+                    )
+                }
+
+                NutritionTimingCard(
+                    phase: "Post-Workout",
+                    advice: recommendation.nutritionTiming.postWorkout,
+                    icon: "checkmark.circle.fill",
+                    color: .modusTealAccent
+                )
+            }
+
+            if !recommendation.nutritionTiming.timingNotes.isEmpty {
+                Text(recommendation.nutritionTiming.timingNotes)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
     }
 
     // MARK: - Empty History View
@@ -428,5 +717,54 @@ struct EndFastSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Nutrition Timing Card
+
+struct NutritionTimingCard: View {
+    let phase: String
+    let advice: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .font(.title3)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(phase)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(color)
+
+                Text(advice)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Workout Recommendation Detail View
+
+struct FastingWorkoutRecommendationDetailView: View {
+    let recommendation: FastingWorkoutRecommendation
+
+    var body: some View {
+        ScrollView {
+            FastingWorkoutRecommendationView(recommendation: recommendation)
+        }
+        .navigationTitle("Training Recommendations")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(Color(.systemGroupedBackground))
     }
 }

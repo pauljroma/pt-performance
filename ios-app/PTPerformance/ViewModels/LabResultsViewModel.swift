@@ -9,6 +9,13 @@ final class LabResultsViewModel: ObservableObject {
     @Published var showingAddSheet = false
     @Published var showingDetailSheet = false
 
+    // AI Analysis State
+    @Published var labAnalysis: LabAnalysis?
+    @Published var isAnalyzing = false
+    @Published var analysisError: String?
+    @Published var biomarkerTrendData: [BiomarkerTrendPoint] = []
+    @Published var isLoadingTrends = false
+
     private let service = LabResultService.shared
 
     func loadResults() async {
@@ -38,10 +45,57 @@ final class LabResultsViewModel: ObservableObject {
 
     func getAIAnalysis(for result: LabResult) async -> String {
         do {
-            return try await service.analyzeLabResult(result)
+            let analysis = try await fetchAIAnalysis(for: result)
+            return analysis.analysisText
         } catch {
             return "Unable to generate analysis: \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - AI Analysis Methods
+
+    /// Fetches comprehensive AI analysis for a lab result
+    ///
+    /// - Parameter result: The lab result to analyze
+    /// - Returns: LabAnalysis containing AI insights
+    func fetchAIAnalysis(for result: LabResult) async throws -> LabAnalysis {
+        isAnalyzing = true
+        analysisError = nil
+
+        defer { isAnalyzing = false }
+
+        do {
+            let analysis = try await service.analyzeLabResult(result)
+            labAnalysis = analysis
+            return analysis
+        } catch {
+            let errorMessage = error.localizedDescription
+            analysisError = errorMessage
+            throw error
+        }
+    }
+
+    /// Fetches biomarker trend data for chart visualization
+    ///
+    /// - Parameter biomarkerType: The type of biomarker to fetch trends for
+    func fetchBiomarkerTrends(for biomarkerType: String) async {
+        isLoadingTrends = true
+        defer { isLoadingTrends = false }
+
+        do {
+            biomarkerTrendData = try await service.fetchBiomarkerHistory(biomarkerType: biomarkerType)
+        } catch {
+            DebugLogger.shared.error("LabResultsViewModel", "Failed to fetch trends: \(error)")
+            biomarkerTrendData = []
+        }
+    }
+
+    /// Clears the current analysis state
+    func clearAnalysis() {
+        labAnalysis = nil
+        analysisError = nil
+        biomarkerTrendData = []
+        service.clearAnalysis()
     }
 
     // MARK: - Computed Properties

@@ -57,6 +57,9 @@ struct RecoveryView: View {
                 // Weekly Stats Card
                 weeklyStatsCard
 
+                // Recovery Insights Section
+                insightsSection
+
                 // Recommendations
                 if !viewModel.recommendations.isEmpty {
                     recommendationsSection
@@ -74,6 +77,124 @@ struct RecoveryView: View {
             }
             .padding()
         }
+    }
+
+    // MARK: - Insights Section
+
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Recovery Insights")
+                    .font(.headline)
+                Spacer()
+
+                if viewModel.isAnalyzing {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                } else if viewModel.hasInsightsData {
+                    Button {
+                        viewModel.showingInsightsSheet = true
+                    } label: {
+                        Text("See All")
+                            .font(.subheadline)
+                            .foregroundColor(.modusCyan)
+                    }
+                }
+            }
+
+            if viewModel.isAnalyzing {
+                insightsLoadingView
+            } else if let analysis = viewModel.impactAnalysis, analysis.hasSufficientData {
+                // Show top insights inline
+                if !analysis.insights.isEmpty {
+                    VStack(spacing: 8) {
+                        ForEach(analysis.insights.prefix(2)) { insight in
+                            CompactInsightRow(insight: insight)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                }
+            } else {
+                insightsBuildingView
+            }
+        }
+        .sheet(isPresented: $viewModel.showingInsightsSheet) {
+            NavigationStack {
+                ScrollView {
+                    if let analysis = viewModel.impactAnalysis {
+                        RecoveryInsightsView(
+                            analysis: analysis,
+                            onLogSession: { protocolType in
+                                viewModel.showingInsightsSheet = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    viewModel.startLogSession(for: protocolType)
+                                }
+                            }
+                        )
+                        .padding()
+                    }
+                }
+                .navigationTitle("Recovery Insights")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            viewModel.showingInsightsSheet = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var insightsLoadingView: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Analyzing your data...")
+                    .font(.subheadline)
+                Text("Correlating recovery sessions with HRV and sleep")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    private var insightsBuildingView: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "chart.bar.doc.horizontal")
+                .font(.title2)
+                .foregroundColor(.modusCyan)
+                .frame(width: 44)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Building Your Insights")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text("Log more recovery sessions and sync your Apple Watch to see how recovery impacts your HRV and sleep.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if viewModel.dataPointsAnalyzed > 0 {
+                    Text("\(viewModel.dataPointsAnalyzed) data points collected")
+                        .font(.caption2)
+                        .foregroundColor(.modusCyan)
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
     }
 
     // MARK: - Empty Sessions View

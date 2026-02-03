@@ -16,6 +16,9 @@ struct HealthHubView: View {
     private var premiumContent: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Unified AI Coach Card (Prominent)
+                unifiedAICoachCard
+
                 // Health Score Card
                 HealthScoreCard()
 
@@ -53,7 +56,7 @@ struct HealthHubView: View {
                     )
                 }
 
-                // AI Coach Card
+                // Legacy AI Coach Card (keep for backwards compatibility)
                 NavigationLink {
                     AIHealthCoachView()
                 } label: {
@@ -88,6 +91,91 @@ struct HealthHubView: View {
             .padding()
         }
         .navigationTitle("Health")
+    }
+
+    // MARK: - Unified AI Coach Card
+
+    private var unifiedAICoachCard: some View {
+        NavigationLink {
+            UnifiedAICoachView()
+        } label: {
+            VStack(spacing: 16) {
+                HStack(spacing: 16) {
+                    // Animated icon area
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.modusCyan, Color.modusTealAccent],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 60, height: 60)
+
+                        Image(systemName: "sparkles")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
+                    .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("AI Performance Coach")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+
+                            Text("NEW")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.modusCyan)
+                                .foregroundColor(.white)
+                                .cornerRadius(4)
+                        }
+
+                        Text("Your complete health picture - training, sleep, labs, recovery - analyzed by AI for personalized guidance")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    Spacer()
+                }
+
+                // Quick Actions Preview
+                HStack(spacing: 12) {
+                    QuickActionPreview(icon: "moon.fill", label: "Sleep")
+                    QuickActionPreview(icon: "heart.fill", label: "Recovery")
+                    QuickActionPreview(icon: "figure.run", label: "Training")
+                    QuickActionPreview(icon: "cross.case.fill", label: "Labs")
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.modusCyan)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [Color.modusCyan.opacity(0.15), Color.modusLightTeal],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.modusCyan.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("AI Performance Coach")
+        .accessibilityHint("Opens the unified AI coaching interface with insights from all your health data")
     }
 
     private var paywallContent: some View {
@@ -320,5 +408,23 @@ struct HealthFeatureRow: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(text), included in premium")
+    }
+}
+
+struct QuickActionPreview: View {
+    let icon: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.modusCyan)
+                .accessibilityHidden(true)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .accessibilityHidden(true)
     }
 }

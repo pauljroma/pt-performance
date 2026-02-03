@@ -2,11 +2,15 @@ import SwiftUI
 
 struct SupplementsView: View {
     @StateObject private var viewModel = SupplementViewModel()
+    @State private var showingAIRecommendations = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    // AI Recommendations Card
+                    aiRecommendationsCard
+
                     // Today's Schedule
                     todayScheduleSection
 
@@ -32,6 +36,9 @@ struct SupplementsView: View {
             .sheet(isPresented: $viewModel.showingAddSheet) {
                 AddSupplementSheet(viewModel: viewModel)
             }
+            .sheet(isPresented: $showingAIRecommendations) {
+                SupplementRecommendationsView()
+            }
             .task {
                 await viewModel.loadData()
             }
@@ -39,6 +46,56 @@ struct SupplementsView: View {
                 await viewModel.loadData()
             }
         }
+    }
+
+    // MARK: - AI Recommendations Card
+
+    private var aiRecommendationsCard: some View {
+        Button {
+            showingAIRecommendations = true
+        } label: {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color.modusCyan.opacity(0.15))
+                        .frame(width: 56, height: 56)
+
+                    Image(systemName: "sparkles")
+                        .font(.title2)
+                        .foregroundColor(.modusCyan)
+                }
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Supplement Stack")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Get personalized recommendations based on your goals, labs, and recovery data")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [Color.modusCyan.opacity(0.1), Color.modusLightTeal],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("AI Supplement Stack")
+        .accessibilityHint("Get personalized supplement recommendations powered by AI")
     }
 
     private var todayScheduleSection: some View {

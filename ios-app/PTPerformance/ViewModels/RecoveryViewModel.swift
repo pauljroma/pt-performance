@@ -4,9 +4,12 @@ import SwiftUI
 final class RecoveryViewModel: ObservableObject {
     @Published var sessions: [RecoverySession] = []
     @Published var recommendations: [RecoveryRecommendation] = []
+    @Published var impactAnalysis: RecoveryImpactAnalysis?
     @Published var isLoading = false
+    @Published var isAnalyzing = false
     @Published var error: String?
     @Published var showingLogSheet = false
+    @Published var showingInsightsSheet = false
     @Published var selectedProtocol: RecoveryProtocolType = .sauna
 
     // Log session form
@@ -29,6 +32,23 @@ final class RecoveryViewModel: ObservableObject {
             error = serviceError.localizedDescription
         }
         isLoading = false
+
+        // Fetch impact analysis in background
+        await loadImpactAnalysis()
+    }
+
+    func loadImpactAnalysis() async {
+        isAnalyzing = true
+        await service.analyzeRecoveryImpact(days: 30)
+        impactAnalysis = service.impactAnalysis
+        isAnalyzing = service.isAnalyzing
+    }
+
+    func refreshAnalysis() async {
+        isAnalyzing = true
+        await service.analyzeRecoveryImpact(days: 30)
+        impactAnalysis = service.impactAnalysis
+        isAnalyzing = false
     }
 
     func logSession() async {
@@ -75,5 +95,33 @@ final class RecoveryViewModel: ObservableObject {
 
     func sessionsForProtocol(_ type: RecoveryProtocolType) -> [RecoverySession] {
         sessions.filter { $0.protocolType == type }
+    }
+
+    // MARK: - Impact Analysis Computed Properties
+
+    /// Top insight for display in summary
+    var topInsight: RecoveryInsight? {
+        impactAnalysis?.topInsight
+    }
+
+    /// Top 3 positive insights
+    var topPositiveInsights: [RecoveryInsight] {
+        Array((impactAnalysis?.positiveInsights ?? []).prefix(3))
+    }
+
+    /// Whether we have sufficient data for insights
+    var hasInsightsData: Bool {
+        impactAnalysis?.hasSufficientData ?? false
+    }
+
+    /// Number of data points analyzed
+    var dataPointsAnalyzed: Int {
+        impactAnalysis?.dataPointsAnalyzed ?? 0
+    }
+
+    /// Start log session for a specific protocol (for use from recommendations)
+    func startLogSession(for protocolType: RecoveryProtocolType) {
+        selectedProtocol = protocolType
+        showingLogSheet = true
     }
 }
