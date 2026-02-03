@@ -16,7 +16,7 @@ struct CheckReadinessIntent: AppIntent {
         print("[CheckReadinessIntent] Checking readiness via Siri")
 
         // Try to get cached readiness score from UserDefaults (set by WidgetBridgeService)
-        let defaults = UserDefaults(suiteName: "group.com.ptperformance.app") ?? UserDefaults.standard
+        let defaults = UserDefaults(suiteName: "group.com.getmodus.app") ?? UserDefaults.standard
 
         if let readinessData = defaults.data(forKey: "cachedReadinessScore"),
            let decoded = try? JSONDecoder().decode(CachedReadiness.self, from: readinessData) {

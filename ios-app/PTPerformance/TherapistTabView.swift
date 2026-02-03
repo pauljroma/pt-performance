@@ -205,7 +205,7 @@ struct TherapistSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "questionmark.circle")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("View Tutorial")
                                 .foregroundColor(.primary)
                         }

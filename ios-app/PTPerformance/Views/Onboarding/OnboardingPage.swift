@@ -47,23 +47,23 @@ struct OnboardingPage_Previews: PreviewProvider {
         Group {
             OnboardingPage(
                 icon: "figure.wave",
-                title: "Welcome to PT Performance",
-                description: "The complete platform for physical therapy program management and patient progress tracking.",
-                accentColor: .blue
+                title: "Welcome to Modus",
+                description: "Stop Guessing. Start Recovering.\n\nThe complete platform for physical therapy program management and patient progress tracking.",
+                accentColor: .modusCyan
             )
 
             OnboardingPage(
                 icon: "list.clipboard",
                 title: "For Therapists",
                 description: "Create custom exercise programs, track patient compliance, and monitor progress in real-time.",
-                accentColor: .green
+                accentColor: .modusTealAccent
             )
 
             OnboardingPage(
                 icon: "chart.bar.fill",
                 title: "Analyze Progress",
                 description: "View detailed analytics, track personal records, and monitor compliance trends over time.",
-                accentColor: .purple
+                accentColor: .modusDeepTeal
             )
         }
     }

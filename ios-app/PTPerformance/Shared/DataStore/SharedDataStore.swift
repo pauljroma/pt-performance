@@ -10,7 +10,7 @@ public final class SharedDataStore {
 
     // MARK: - Constants
 
-    private let suiteName = "group.com.ptperformance.shared"
+    private let suiteName = "group.com.getmodus.shared"
 
     public enum Keys {
         public static let readiness = "widget_readiness"

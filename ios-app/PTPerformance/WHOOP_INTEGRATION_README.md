@@ -34,7 +34,7 @@ Main service class providing:
 
 1. Go to https://developer.whoop.com
 2. Create a new application
-3. Set redirect URI to: `ptperformance://whoop-callback`
+3. Set redirect URI to: `modus://whoop-callback`
 4. Request scopes: `read:recovery`, `read:sleep`, `read:cycles`
 5. Copy Client ID and Client Secret
 
@@ -98,7 +98,7 @@ UIApplication.shared.open(authURL)
 // Step 3: Handle callback in AppDelegate/SceneDelegate
 func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
     // Extract authorization code from URL
-    // URL format: ptperformance://whoop-callback?code=AUTH_CODE
+    // URL format: modus://whoop-callback?code=AUTH_CODE
     
     guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
           let code = components.queryItems?.first(where: { $0.name == "code" })?.value else {

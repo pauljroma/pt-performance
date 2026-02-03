@@ -26,7 +26,7 @@ struct OnboardingView: View {
                         Button(action: handleSkip) {
                             Text("Skip")
                                 .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                                 .padding()
                         }
                     }
@@ -38,9 +38,9 @@ struct OnboardingView: View {
                     // Page 1: Welcome
                     OnboardingPage(
                         icon: "figure.wave",
-                        title: "Welcome to PT Performance",
-                        description: "The complete platform for physical therapy program management and patient progress tracking.",
-                        accentColor: .blue
+                        title: "Welcome to Modus",
+                        description: "Stop Guessing. Start Recovering.\n\nThe complete platform for physical therapy program management and patient progress tracking.",
+                        accentColor: .modusCyan
                     )
                     .tag(0)
 
@@ -49,7 +49,7 @@ struct OnboardingView: View {
                         icon: "list.clipboard",
                         title: "For Therapists",
                         description: "Create custom exercise programs, track patient compliance, and monitor progress in real-time.",
-                        accentColor: .green
+                        accentColor: .modusTealAccent
                     )
                     .tag(1)
 
@@ -58,7 +58,7 @@ struct OnboardingView: View {
                         icon: "figure.strengthtraining.traditional",
                         title: "For Patients",
                         description: "Log your workouts, track your sets and reps, and watch your progress improve over time.",
-                        accentColor: .orange
+                        accentColor: .modusCyan
                     )
                     .tag(2)
 
@@ -67,7 +67,7 @@ struct OnboardingView: View {
                         icon: "chart.bar.fill",
                         title: "Analyze Progress",
                         description: "View detailed analytics, track personal records, and monitor compliance trends with powerful visualizations.",
-                        accentColor: .purple
+                        accentColor: .modusDeepTeal
                     )
                     .tag(3)
 
@@ -76,7 +76,7 @@ struct OnboardingView: View {
                         icon: "checkmark.circle.fill",
                         title: "Get Started",
                         description: "You're all set! Log in to access your personalized dashboard and begin your PT journey.",
-                        accentColor: .indigo
+                        accentColor: .modusTealAccent
                     )
                     .tag(4)
                 }
@@ -91,7 +91,7 @@ struct OnboardingView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(Color.blue)
+                            .background(Color.modusCyan)
                             .cornerRadius(12)
                             .padding(.horizontal, 40)
                     }

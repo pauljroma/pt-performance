@@ -31,9 +31,9 @@ actor UCLHealthService {
     // MARK: - Notification Identifiers
 
     private enum NotificationIdentifier {
-        static let weeklyReminder = "com.ptperformance.ucl.weekly"
-        static let elevatedRisk = "com.ptperformance.ucl.elevated"
-        static let criticalAlert = "com.ptperformance.ucl.critical"
+        static let weeklyReminder = "com.getmodus.ucl.weekly"
+        static let elevatedRisk = "com.getmodus.ucl.elevated"
+        static let criticalAlert = "com.getmodus.ucl.critical"
     }
 
     // MARK: - Initialization

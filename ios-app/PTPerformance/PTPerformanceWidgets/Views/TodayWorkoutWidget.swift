@@ -70,9 +70,9 @@ struct TodayWorkoutWidgetView: View {
 
     private var workoutURL: URL? {
         if let sessionId = entry.workout?.sessionId {
-            return URL(string: "ptperformance://workout/\(sessionId.uuidString)")
+            return URL(string: "modus://workout/\(sessionId.uuidString)")
         }
-        return URL(string: "ptperformance://today")
+        return URL(string: "modus://today")
     }
 
     private func statusColor(_ status: WidgetWorkout.WorkoutStatus) -> Color {

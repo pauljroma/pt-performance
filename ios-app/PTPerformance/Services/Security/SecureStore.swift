@@ -49,7 +49,7 @@ final class SecureStore {
 
     // MARK: - Properties
 
-    private let service = "com.ptperformance.app"
+    private let service = "com.getmodus.app"
 
     // MARK: - Initialization
 
@@ -171,7 +171,7 @@ final class SecureStore {
 
     /// Clears all items stored by this service from the keychain
     ///
-    /// Removes all items associated with the `com.ptperformance.app` service
+    /// Removes all items associated with the `com.getmodus.app` service
     /// identifier. Use with caution as this cannot be undone.
     ///
     /// - Throws: `SecureStoreError.deletionFailed` if keychain deletion fails

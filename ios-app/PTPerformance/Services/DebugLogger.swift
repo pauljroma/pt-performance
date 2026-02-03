@@ -18,7 +18,7 @@ class DebugLogger {
 
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.ptperformance.app", category: "Debug")
+    private let logger = Logger(subsystem: "com.getmodus.app", category: "Debug")
     private let isEnabled: Bool
 
     // MARK: - Log Levels

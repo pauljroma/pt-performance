@@ -10,11 +10,11 @@ import StoreKit
 /// and maintains subscription status.
 ///
 /// ## Subscription Products
-/// - Monthly subscription: `com.ptperformance.app.monthly`
-/// - Annual subscription: `com.ptperformance.app.annual`
+/// - Monthly subscription: `com.getmodus.app.monthly`
+/// - Annual subscription: `com.getmodus.app.annual`
 ///
 /// ## One-Time Purchases
-/// - Baseball Pack: `com.ptperformance.baseballpack`
+/// - Baseball Pack: `com.getmodus.baseballpack`
 ///
 /// ## Usage Example
 /// ```swift
@@ -44,14 +44,14 @@ class StoreKitService: ObservableObject {
     // MARK: - Product IDs
 
     nonisolated static let productIDs: Set<String> = [
-        "com.ptperformance.app.monthly",
-        "com.ptperformance.app.annual",
-        "com.ptperformance.baseballpack"  // One-time purchase
+        "com.getmodus.app.monthly",
+        "com.getmodus.app.annual",
+        "com.getmodus.baseballpack"  // One-time purchase
     ]
 
     // MARK: - Individual Product IDs
 
-    nonisolated static let baseballPackProductId = "com.ptperformance.baseballpack"
+    nonisolated static let baseballPackProductId = "com.getmodus.baseballpack"
 
     // MARK: - Published Properties
 
@@ -126,11 +126,11 @@ class StoreKitService: ObservableObject {
     }
 
     var monthlyProduct: Product? {
-        products.first { $0.id == "com.ptperformance.app.monthly" }
+        products.first { $0.id == "com.getmodus.app.monthly" }
     }
 
     var annualProduct: Product? {
-        products.first { $0.id == "com.ptperformance.app.annual" }
+        products.first { $0.id == "com.getmodus.app.annual" }
     }
 
     var baseballPackProduct: Product? {

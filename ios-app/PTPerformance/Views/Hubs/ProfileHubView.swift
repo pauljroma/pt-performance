@@ -28,9 +28,9 @@ struct ProfileHubView: View {
     /// Current subscription plan display text
     private var subscriptionPlanText: String {
         if storeKit.isPremium {
-            if storeKit.purchasedProductIDs.contains("com.ptperformance.app.annual") {
+            if storeKit.purchasedProductIDs.contains("com.getmodus.app.annual") {
                 return "Annual Premium"
-            } else if storeKit.purchasedProductIDs.contains("com.ptperformance.app.monthly") {
+            } else if storeKit.purchasedProductIDs.contains("com.getmodus.app.monthly") {
                 return "Monthly Premium"
             } else {
                 return "Premium Active"

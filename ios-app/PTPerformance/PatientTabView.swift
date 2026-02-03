@@ -216,9 +216,9 @@ struct PatientSettingsView: View {
     /// Current subscription plan display text
     private var subscriptionPlanText: String {
         if storeKit.isPremium {
-            if storeKit.purchasedProductIDs.contains("com.ptperformance.app.annual") {
+            if storeKit.purchasedProductIDs.contains("com.getmodus.app.annual") {
                 return "Annual Premium"
-            } else if storeKit.purchasedProductIDs.contains("com.ptperformance.app.monthly") {
+            } else if storeKit.purchasedProductIDs.contains("com.getmodus.app.monthly") {
                 return "Monthly Premium"
             } else {
                 return "Premium Active"
@@ -264,7 +264,7 @@ struct PatientSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "figure.stand")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Body Composition")
                                 .foregroundColor(.primary)
                         }
@@ -351,7 +351,7 @@ struct PatientSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "questionmark.circle")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                                 .accessibilityHidden(true)
                             Text("View Tutorial")
                                 .foregroundColor(.primary)
@@ -367,7 +367,7 @@ struct PatientSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "hand.raised.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Privacy Notice")
                                 .foregroundColor(.primary)
                         }
@@ -399,7 +399,7 @@ struct PatientSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
-                                .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
+                                .foregroundColor(therapistLinkingVM.isLinked ? .green : .accentColor)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Therapist Linking")
                                     .foregroundColor(.primary)
@@ -419,7 +419,7 @@ struct PatientSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "rectangle.portrait.and.arrow.right")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Log Out")
                                 .foregroundColor(.primary)
                         }
@@ -458,7 +458,7 @@ struct PatientSettingsView: View {
                         Button("Reset to Real Status") {
                             storeKit.debugPremiumOverride = nil
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                         .accessibilityLabel("Reset to Real Status")
                         .accessibilityHint("Removes debug override and uses actual subscription status")
                     }

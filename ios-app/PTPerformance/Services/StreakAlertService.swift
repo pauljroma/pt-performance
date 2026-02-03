@@ -129,9 +129,9 @@ class StreakAlertService: ObservableObject {
     @Published var configuration: StreakAlertConfiguration
 
     // MARK: - Private Properties
-    private let notificationIdentifier = "com.ptperformance.streak.reminder"
-    private let criticalNotificationIdentifier = "com.ptperformance.streak.critical"
-    private let backgroundTaskIdentifier = "com.ptperformance.streak.check"
+    private let notificationIdentifier = "com.getmodus.streak.reminder"
+    private let criticalNotificationIdentifier = "com.getmodus.streak.critical"
+    private let backgroundTaskIdentifier = "com.getmodus.streak.check"
     private let userDefaultsKey = "streak_alert_configuration"
     private var cancellables = Set<AnyCancellable>()
 

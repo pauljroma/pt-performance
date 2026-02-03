@@ -94,7 +94,7 @@ struct WeekOverviewWidgetView: View {
             }
         }
         .padding(.horizontal, 4)
-        .widgetURL(URL(string: "ptperformance://schedule"))
+        .widgetURL(URL(string: "modus://schedule"))
     }
 
     private func adherenceColor(_ percentage: Double) -> Color {

@@ -25,7 +25,7 @@ enum DeepLinkDestination: Equatable {
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
-        guard url.scheme == "ptperformance" else { return nil }
+        guard url.scheme == "modus" else { return nil }
 
         let host = url.host ?? ""
         let pathComponents = url.pathComponents.filter { $0 != "/" }
@@ -35,7 +35,7 @@ enum DeepLinkDestination: Equatable {
         case "readiness":
             return .readiness
         case "workout":
-            // Handle ptperformance://workout/{sessionId}
+            // Handle modus://workout/{sessionId}
             if let sessionId = pathComponents.first {
                 return .workout(sessionId: sessionId)
             }
@@ -206,7 +206,7 @@ struct PTPerformanceApp: App {
             return
         }
 
-        // Handle auth deep links (e.g., password reset: ptperformance://reset-password#access_token=...)
+        // Handle auth deep links (e.g., password reset: modus://reset-password#access_token=...)
         Task {
             do {
                 let session = try await PTSupabaseClient.shared.client.auth.session(from: url)

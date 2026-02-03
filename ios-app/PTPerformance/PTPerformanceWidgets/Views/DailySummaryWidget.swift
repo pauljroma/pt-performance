@@ -109,7 +109,7 @@ struct DailySummaryWidgetView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 8)
-        .widgetURL(URL(string: "ptperformance://today"))
+        .widgetURL(URL(string: "modus://today"))
     }
 
     private func shortBandLabel(_ band: String) -> String {

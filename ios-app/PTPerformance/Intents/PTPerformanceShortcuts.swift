@@ -117,7 +117,7 @@ struct ViewProgressIntent: AppIntent {
         print("[ViewProgressIntent] Viewing progress via Siri")
 
         // Get cached stats from UserDefaults
-        let defaults = UserDefaults(suiteName: "group.com.ptperformance.app") ?? UserDefaults.standard
+        let defaults = UserDefaults(suiteName: "group.com.getmodus.app") ?? UserDefaults.standard
 
         let workoutStreak = defaults.integer(forKey: "currentWorkoutStreak")
         let totalWorkouts = defaults.integer(forKey: "totalWorkoutsCompleted")

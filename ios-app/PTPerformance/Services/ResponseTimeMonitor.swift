@@ -125,7 +125,7 @@ class ResponseTimeMonitor {
     #endif
 
     private let maxStoredMeasurements = 1000  // Rolling buffer
-    private let logger = Logger(subsystem: "com.ptperformance.app", category: "ResponseTime")
+    private let logger = Logger(subsystem: "com.getmodus.app", category: "ResponseTime")
 
     // MARK: - State
 

@@ -21,7 +21,7 @@ class ErrorLogger {
 
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.ptperformance.app", category: "ErrorLogger")
+    private let logger = Logger(subsystem: "com.getmodus.app", category: "ErrorLogger")
     private var currentUserId: String?
     private var currentUserType: String?
     private var sessionStartTime: Date

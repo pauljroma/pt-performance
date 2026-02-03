@@ -83,9 +83,9 @@ actor SmartNotificationService {
     // MARK: - Notification Identifiers
 
     private enum NotificationIdentifier {
-        static let workoutReminder = "com.ptperformance.workout.reminder"
-        static let streakAlert = "com.ptperformance.streak.alert"
-        static let weeklySummary = "com.ptperformance.weekly.summary"
+        static let workoutReminder = "com.getmodus.workout.reminder"
+        static let streakAlert = "com.getmodus.streak.alert"
+        static let weeklySummary = "com.getmodus.weekly.summary"
     }
 
     // MARK: - Initialization

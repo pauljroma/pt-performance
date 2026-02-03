@@ -63,7 +63,7 @@ struct StreakWidgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .widgetURL(URL(string: "ptperformance://streak"))
+        .widgetURL(URL(string: "modus://streak"))
     }
 
     private var flameGradient: LinearGradient {

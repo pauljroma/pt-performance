@@ -6,7 +6,7 @@ import Foundation
 class WHOOPService {
     private let clientId: String
     private let clientSecret: String
-    private let redirectUri: String = "ptperformance://whoop-callback"
+    private let redirectUri: String = "modus://whoop-callback"
 
     private let baseURL = "https://api.whoop.com/v1"
 

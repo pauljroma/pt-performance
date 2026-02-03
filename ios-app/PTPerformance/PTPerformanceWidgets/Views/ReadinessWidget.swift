@@ -59,7 +59,7 @@ struct ReadinessWidgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .widgetURL(URL(string: "ptperformance://readiness"))
+        .widgetURL(URL(string: "modus://readiness"))
     }
 }
 

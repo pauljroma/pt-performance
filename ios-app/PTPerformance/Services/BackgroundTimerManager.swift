@@ -15,7 +15,7 @@ import UserNotifications
 class BackgroundTimerManager: ObservableObject {
     static let shared = BackgroundTimerManager()
 
-    private let backgroundTaskIdentifier = "com.ptperformance.timer.background"
+    private let backgroundTaskIdentifier = "com.getmodus.timer.background"
 
     @Published var hasPermission: Bool = false
 

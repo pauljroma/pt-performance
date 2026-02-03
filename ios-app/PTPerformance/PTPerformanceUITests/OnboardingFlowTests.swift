@@ -42,7 +42,7 @@ final class OnboardingFlowTests: XCTestCase {
         app.launch()
 
         // Wait for onboarding to appear
-        let onboardingTitle = app.staticTexts["Welcome to PT Performance"]
+        let onboardingTitle = app.staticTexts["Welcome to Modus"]
         XCTAssertTrue(onboardingTitle.waitForExistence(timeout: 5), "Onboarding should appear on first launch")
 
         // When: User swipes through all pages
@@ -50,7 +50,7 @@ final class OnboardingFlowTests: XCTestCase {
         XCTAssertTrue(pageIndicator.exists, "Page indicator should be visible")
 
         // Page 1: Welcome
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].exists, "Welcome page title should be visible")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].exists, "Welcome page title should be visible")
         XCTAssertTrue(app.images["figure.wave"].exists || app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Welcome'")).firstMatch.exists, "Welcome icon or text should be visible")
 
         // Swipe to Page 2: For Therapists
@@ -93,7 +93,7 @@ final class OnboardingFlowTests: XCTestCase {
         app.launch()
 
         // Onboarding should NOT appear on second launch
-        let onboardingTitleReappears = app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 3)
+        let onboardingTitleReappears = app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 3)
         XCTAssertFalse(onboardingTitleReappears, "Onboarding should not appear on subsequent launches")
     }
 
@@ -102,7 +102,7 @@ final class OnboardingFlowTests: XCTestCase {
         // Given: App launches with onboarding
         app.launch()
 
-        let onboardingTitle = app.staticTexts["Welcome to PT Performance"]
+        let onboardingTitle = app.staticTexts["Welcome to Modus"]
         XCTAssertTrue(onboardingTitle.waitForExistence(timeout: 5), "Onboarding should appear")
 
         // When: User taps Skip button
@@ -113,7 +113,7 @@ final class OnboardingFlowTests: XCTestCase {
         skipButton.tap()
 
         // Then: Should dismiss onboarding and show auth/dashboard
-        let onboardingDismissed = !app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 2)
+        let onboardingDismissed = !app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 2)
         XCTAssertTrue(onboardingDismissed, "Onboarding should be dismissed after skip")
 
         // Verify we're on auth view or main view
@@ -126,7 +126,7 @@ final class OnboardingFlowTests: XCTestCase {
         app.terminate()
         app.launch()
 
-        let onboardingReappears = app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 3)
+        let onboardingReappears = app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 3)
         XCTAssertFalse(onboardingReappears, "Onboarding should not reappear after skip")
     }
 
@@ -135,7 +135,7 @@ final class OnboardingFlowTests: XCTestCase {
         // Given: App launches with onboarding
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 5), "Onboarding should appear")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 5), "Onboarding should appear")
 
         // When: User swipes forward then backward
         swipeLeftToNextPage()
@@ -149,7 +149,7 @@ final class OnboardingFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["For Therapists"].waitForExistence(timeout: 2), "Should go back to page 2")
 
         swipeRightToPreviousPage()
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 2), "Should go back to page 1")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 2), "Should go back to page 1")
 
         // Skip button should still be visible on first page
         XCTAssertTrue(app.buttons["Skip"].exists, "Skip button should be visible on first page")
@@ -162,7 +162,7 @@ final class OnboardingFlowTests: XCTestCase {
         app.launch()
 
         // Then: Onboarding should appear
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 5), "Onboarding should appear on first launch")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 5), "Onboarding should appear on first launch")
 
         // When: Complete onboarding
         let getStartedButton = app.buttons["Get Started"]
@@ -181,7 +181,7 @@ final class OnboardingFlowTests: XCTestCase {
         app.launch()
 
         // Then: Onboarding should NOT appear
-        let onboardingReappears = app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 3)
+        let onboardingReappears = app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 3)
         XCTAssertFalse(onboardingReappears, "Onboarding should not appear on second launch")
 
         // Should show auth view instead
@@ -194,12 +194,12 @@ final class OnboardingFlowTests: XCTestCase {
         // Given: App launches with onboarding
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].waitForExistence(timeout: 5), "Onboarding should appear")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].waitForExistence(timeout: 5), "Onboarding should appear")
 
         // Then: All key UI elements should be present
 
         // Page 1
-        XCTAssertTrue(app.staticTexts["Welcome to PT Performance"].exists, "Welcome title should exist")
+        XCTAssertTrue(app.staticTexts["Welcome to Modus"].exists, "Welcome title should exist")
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'complete platform'")).firstMatch.exists,
                      "Welcome description should exist")
         XCTAssertTrue(app.buttons["Skip"].exists, "Skip button should exist")

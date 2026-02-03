@@ -399,11 +399,11 @@ class PTSupabaseClient: ObservableObject {
     ///
     /// - Throws: Supabase authentication errors if the request fails
     ///
-    /// - Note: The reset link redirects to `ptperformance://reset-password`
+    /// - Note: The reset link redirects to `modus://reset-password`
     func resetPassword(email: String) async throws {
         try await client.auth.resetPasswordForEmail(
             email,
-            redirectTo: URL(string: "ptperformance://reset-password")
+            redirectTo: URL(string: "modus://reset-password")
         )
     }
 

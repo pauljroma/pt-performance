@@ -25,7 +25,7 @@ class PerformanceMonitor {
 
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "com.ptperformance.app", category: "Performance")
+    private let logger = Logger(subsystem: "com.getmodus.app", category: "Performance")
     private var appLaunchStartTime: Date?
     private var appLaunchEndTime: Date?
     private var viewLoadTimes: [String: TimeInterval] = [:]
@@ -64,7 +64,7 @@ class PerformanceMonitor {
     private init() {
         // ACP-932/945: Defer logging to avoid blocking during cold start
         Task.detached(priority: .utility) {
-            Logger(subsystem: "com.ptperformance.app", category: "Performance")
+            Logger(subsystem: "com.getmodus.app", category: "Performance")
                 .info("PerformanceMonitor initialized")
         }
         setupMemoryWarningObserver()

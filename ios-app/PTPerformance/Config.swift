@@ -20,8 +20,8 @@ enum Config {
 
     // MARK: - Subscription Products
     enum Subscription {
-        static let monthlyProductID = "com.ptperformance.app.monthly"
-        static let annualProductID = "com.ptperformance.app.annual"
+        static let monthlyProductID = "com.getmodus.app.monthly"
+        static let annualProductID = "com.getmodus.app.annual"
         static let groupID = "PTPerformance Premium"
     }
 
