@@ -307,14 +307,77 @@ final class WorkoutPreloadService: ObservableObject {
 
     // MARK: - Thumbnail Preloading
 
+    /// Validates that a URL is suitable for thumbnail preloading
+    /// Filters out malformed URLs, placeholder values, and unreachable hosts
+    private func isValidThumbnailURL(_ url: URL) -> Bool {
+        // Must have https scheme
+        guard url.scheme == "https" else { return false }
+
+        // Must have a valid host
+        guard let host = url.host, !host.isEmpty else { return false }
+
+        // Filter out placeholder or malformed hostnames
+        let invalidHostPatterns = [
+            "example.com",
+            "placeholder",
+            "localhost",
+            "127.0.0.1",
+            ".local",
+            "your-",
+            "undefined",
+            "null"
+        ]
+
+        let lowercaseHost = host.lowercased()
+        for pattern in invalidHostPatterns {
+            if lowercaseHost.contains(pattern) {
+                return false
+            }
+        }
+
+        // Must have a path (not just root)
+        guard url.path.count > 1 else { return false }
+
+        // Validate common CDN/storage hosts
+        let validHostPatterns = [
+            "supabase.co",
+            "supabase.in",
+            "cloudfront.net",
+            "amazonaws.com",
+            "storage.googleapis.com",
+            "cloudinary.com",
+            "imgix.net",
+            "cdn.ptperformance"
+        ]
+
+        // If host matches a known valid pattern, accept it
+        for pattern in validHostPatterns {
+            if lowercaseHost.contains(pattern) {
+                return true
+            }
+        }
+
+        // For unknown hosts, at least require a proper TLD
+        let components = lowercaseHost.components(separatedBy: ".")
+        guard components.count >= 2,
+              let tld = components.last,
+              tld.count >= 2 && tld.count <= 6 else {
+            return false
+        }
+
+        return true
+    }
+
     /// Pre-download video thumbnails for all exercises
     private func preloadThumbnails(exercises: [Exercise]) async {
         let thumbnailURLs = exercises.compactMap { exercise -> URL? in
             guard let urlString = exercise.exercise_templates?.videoThumbnailUrl,
-                  !urlString.isEmpty else {
+                  !urlString.isEmpty,
+                  let url = URL(string: urlString),
+                  isValidThumbnailURL(url) else {
                 return nil
             }
-            return URL(string: urlString)
+            return url
         }
 
         guard !thumbnailURLs.isEmpty else {

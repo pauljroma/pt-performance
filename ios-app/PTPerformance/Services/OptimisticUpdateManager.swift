@@ -271,7 +271,7 @@ class OptimisticUpdateManager: ObservableObject {
         weight: Double?,
         loadUnit: String = "lbs"
     ) {
-        let startTime = ResponseTimeMonitor.shared.startInteraction(.setCompletion)
+        let startTime = ResponseTimeMonitor.shared.startInteraction(InteractionType.setCompletion)
 
         // 1. Capture state for potential rollback
         let state = state(for: sessionExerciseId)
@@ -303,7 +303,7 @@ class OptimisticUpdateManager: ObservableObject {
 
         queueUpdate(type: .setCompletion, payload: payload)
 
-        ResponseTimeMonitor.shared.endInteraction(startTime, type: .setCompletion)
+        ResponseTimeMonitor.shared.endInteraction(startTime, type: InteractionType.setCompletion)
     }
 
     /// Complete an exercise with immediate UI update and background sync
@@ -318,7 +318,7 @@ class OptimisticUpdateManager: ObservableObject {
         painScore: Int,
         notes: String?
     ) {
-        let startTime = ResponseTimeMonitor.shared.startInteraction(.exerciseCompletion)
+        let startTime = ResponseTimeMonitor.shared.startInteraction(InteractionType.exerciseCompletion)
 
         // 1. Capture state for potential rollback
         let state = state(for: sessionExerciseId)
@@ -358,7 +358,7 @@ class OptimisticUpdateManager: ObservableObject {
 
         queueUpdate(type: .exerciseCompletion, payload: payload)
 
-        ResponseTimeMonitor.shared.endInteraction(startTime, type: .exerciseCompletion)
+        ResponseTimeMonitor.shared.endInteraction(startTime, type: InteractionType.exerciseCompletion)
     }
 
     /// Update weight with immediate UI update and background sync
@@ -369,7 +369,7 @@ class OptimisticUpdateManager: ObservableObject {
         newWeight: Double,
         loadUnit: String = "lbs"
     ) {
-        let startTime = ResponseTimeMonitor.shared.startInteraction(.weightChange)
+        let startTime = ResponseTimeMonitor.shared.startInteraction(InteractionType.weightChange)
 
         // 1. Capture state for potential rollback
         let state = state(for: sessionExerciseId)
@@ -399,12 +399,12 @@ class OptimisticUpdateManager: ObservableObject {
 
         queueUpdate(type: .weightChange, payload: payload)
 
-        ResponseTimeMonitor.shared.endInteraction(startTime, type: .weightChange)
+        ResponseTimeMonitor.shared.endInteraction(startTime, type: InteractionType.weightChange)
     }
 
     /// Skip an exercise with immediate UI update
     func skipExercise(sessionExerciseId: UUID) {
-        let startTime = ResponseTimeMonitor.shared.startInteraction(.exerciseSkip)
+        let startTime = ResponseTimeMonitor.shared.startInteraction(InteractionType.exerciseSkip)
 
         let state = state(for: sessionExerciseId)
         stateSnapshots[sessionExerciseId] = state.snapshot()
@@ -414,7 +414,7 @@ class OptimisticUpdateManager: ObservableObject {
 
         exerciseStateChanged.send(sessionExerciseId)
 
-        ResponseTimeMonitor.shared.endInteraction(startTime, type: .exerciseSkip)
+        ResponseTimeMonitor.shared.endInteraction(startTime, type: InteractionType.exerciseSkip)
     }
 
     // MARK: - Workout-Level Operations
@@ -430,7 +430,7 @@ class OptimisticUpdateManager: ObservableObject {
         avgPain: Double?,
         durationMinutes: Int
     ) {
-        let startTime = ResponseTimeMonitor.shared.startInteraction(.workoutCompletion)
+        let startTime = ResponseTimeMonitor.shared.startInteraction(InteractionType.workoutCompletion)
 
         let payload = WorkoutCompletionPayload(
             sessionId: sessionId,
@@ -448,7 +448,7 @@ class OptimisticUpdateManager: ObservableObject {
 
         queueUpdate(type: .workoutCompletion, payload: payload)
 
-        ResponseTimeMonitor.shared.endInteraction(startTime, type: .workoutCompletion)
+        ResponseTimeMonitor.shared.endInteraction(startTime, type: InteractionType.workoutCompletion)
     }
 
     // MARK: - Sync Operations

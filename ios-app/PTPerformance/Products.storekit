@@ -4,7 +4,21 @@
 
   ],
   "products" : [
-
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "6740147050",
+      "localizations" : [
+        {
+          "description" : "Complete baseball training programs for pitchers, position players, and seasonal preparation",
+          "displayName" : "Baseball Performance Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.ptperformance.baseballpack",
+      "referenceName" : "Baseball Performance Pack",
+      "type" : "NonConsumable"
+    }
   ],
   "settings" : {
     "_applicationInternalID" : "6740147039",
