@@ -32,7 +32,7 @@ struct OnboardingPage {
 
     // Page 1: Welcome
     var welcomeTitle: XCUIElement {
-        app.staticTexts["Welcome to PT Performance"]
+        app.staticTexts["Welcome to Modus"]
     }
 
     var welcomeDescription: XCUIElement {

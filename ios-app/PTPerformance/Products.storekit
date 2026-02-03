@@ -1,5 +1,5 @@
 {
-  "identifier" : "PTPerformance Products",
+  "identifier" : "Modus Products",
   "nonRenewableSubscriptions" : [
 
   ],
@@ -15,7 +15,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.ptperformance.baseballpack",
+      "productID" : "com.getmodus.app.baseballpack",
       "referenceName" : "Baseball Performance Pack",
       "type" : "NonConsumable"
     }
@@ -29,12 +29,12 @@
       "id" : "21586498",
       "localizations" : [
         {
-          "description" : "Full access to all PT Performance features",
-          "displayName" : "PT Performance Premium",
+          "description" : "Full access to all Modus features",
+          "displayName" : "Modus Premium",
           "locale" : "en_US"
         }
       ],
-      "name" : "PTPerformance Premium",
+      "name" : "Modus Premium",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -55,7 +55,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.ptperformance.app.monthly",
+          "productID" : "com.getmodus.app.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Monthly Premium",
           "subscriptionGroupID" : "21586498",
@@ -84,7 +84,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.ptperformance.app.annual",
+          "productID" : "com.getmodus.app.annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Annual Premium",
           "subscriptionGroupID" : "21586498",

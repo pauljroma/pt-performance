@@ -1,7 +1,7 @@
 import Foundation
 import Supabase
 
-/// Supabase client singleton for PT Performance app
+/// Supabase client singleton for Modus app
 /// Manages authentication and database access to Supabase backend
 class PTSupabaseClient: ObservableObject {
     static let shared = PTSupabaseClient()

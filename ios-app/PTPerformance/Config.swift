@@ -1,6 +1,6 @@
 import Foundation
 
-/// Configuration for PT Performance app
+/// Configuration for Modus app
 /// Contains Supabase credentials and other app settings
 enum Config {
     // MARK: - Supabase Configuration

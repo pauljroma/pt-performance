@@ -166,11 +166,11 @@ class HelpContentLoader: ObservableObject {
         articles = [
             HelpArticle(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-                title: "Getting Started with PT Performance",
+                title: "Getting Started with Modus",
                 content: """
-                # Welcome to PT Performance
+                # Welcome to Modus
 
-                PT Performance helps you track your training, monitor progress, and work with your therapist to achieve your athletic goals.
+                Modus helps you track your training, monitor progress, and work with your therapist to achieve your athletic goals.
 
                 ## Key Features
 

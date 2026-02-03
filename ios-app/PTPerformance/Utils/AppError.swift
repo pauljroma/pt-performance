@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// User-friendly error types for the PT Performance app
+/// User-friendly error types for the Modus app
 /// Provides clear, actionable error messages without technical jargon
 enum AppError: LocalizedError {
 
