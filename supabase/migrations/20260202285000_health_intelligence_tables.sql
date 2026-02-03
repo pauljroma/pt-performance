@@ -288,9 +288,13 @@ CREATE TABLE IF NOT EXISTS patient_supplement_stacks (
     ended_at TIMESTAMPTZ,
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE(patient_id, supplement_id) WHERE is_active = true
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Partial unique index: only one active stack entry per patient/supplement
+CREATE UNIQUE INDEX IF NOT EXISTS idx_patient_supplement_stacks_unique_active
+    ON patient_supplement_stacks(patient_id, supplement_id)
+    WHERE is_active = true;
 
 COMMENT ON TABLE patient_supplement_stacks IS 'Patient ongoing supplement regimens';
 COMMENT ON COLUMN patient_supplement_stacks.dosage IS 'Standard dosage amount';
@@ -324,54 +328,64 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Lab results triggers
+DROP TRIGGER IF EXISTS update_lab_results_timestamp ON lab_results;
 CREATE TRIGGER update_lab_results_timestamp
     BEFORE UPDATE ON lab_results
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_biomarker_values_timestamp ON biomarker_values;
 CREATE TRIGGER update_biomarker_values_timestamp
     BEFORE UPDATE ON biomarker_values
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_biomarker_reference_ranges_timestamp ON biomarker_reference_ranges;
 CREATE TRIGGER update_biomarker_reference_ranges_timestamp
     BEFORE UPDATE ON biomarker_reference_ranges
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
 -- Recovery triggers
+DROP TRIGGER IF EXISTS update_recovery_sessions_timestamp ON recovery_sessions;
 CREATE TRIGGER update_recovery_sessions_timestamp
     BEFORE UPDATE ON recovery_sessions
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_recovery_protocols_timestamp ON recovery_protocols;
 CREATE TRIGGER update_recovery_protocols_timestamp
     BEFORE UPDATE ON recovery_protocols
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
 -- Fasting triggers
+DROP TRIGGER IF EXISTS update_fasting_logs_timestamp ON fasting_logs;
 CREATE TRIGGER update_fasting_logs_timestamp
     BEFORE UPDATE ON fasting_logs
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_fasting_protocols_timestamp ON fasting_protocols;
 CREATE TRIGGER update_fasting_protocols_timestamp
     BEFORE UPDATE ON fasting_protocols
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
 -- Supplement triggers
+DROP TRIGGER IF EXISTS update_supplements_timestamp ON supplements;
 CREATE TRIGGER update_supplements_timestamp
     BEFORE UPDATE ON supplements
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_supplement_logs_timestamp ON supplement_logs;
 CREATE TRIGGER update_supplement_logs_timestamp
     BEFORE UPDATE ON supplement_logs
     FOR EACH ROW
     EXECUTE FUNCTION update_health_intelligence_timestamp();
 
+DROP TRIGGER IF EXISTS update_patient_supplement_stacks_timestamp ON patient_supplement_stacks;
 CREATE TRIGGER update_patient_supplement_stacks_timestamp
     BEFORE UPDATE ON patient_supplement_stacks
     FOR EACH ROW
