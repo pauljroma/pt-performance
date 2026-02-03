@@ -1,9 +1,9 @@
 {
-  "name": "Weekly Therapist Dashboard Report",
-  "description": "Runs every Monday at 8am ET. Generates comprehensive weekly stats, AI summary, and distributes via email, Google Sheets, and Slack.",
+  "name": "Weekly Health Dashboard",
+  "description": "Scheduled every Sunday at 8am. For each active patient, fetches weekly stats (workouts, recovery, fasting, supplements), generates AI summary, sends personalized email with insights, and tracks email engagement.",
   "trigger": {
     "type": "schedule",
-    "cron": "0 8 * * 1",
+    "cron": "0 8 * * 0",
     "timezone": "America/New_York"
   },
   "modules": [
@@ -11,161 +11,20 @@
       "id": 1,
       "name": "Schedule Trigger",
       "type": "schedule",
-      "description": "Runs every Monday at 8am ET",
+      "description": "Runs every Sunday at 8am ET",
       "config": {
         "time": "08:00",
-        "day_of_week": "monday",
+        "day_of_week": "sunday",
         "timezone": "America/New_York"
       }
     },
     {
       "id": 2,
-      "name": "Query Weekly Stats - Active Patients",
+      "name": "Query Active Patients",
       "type": "http-request",
-      "description": "Get count of active patients and new signups",
+      "description": "Get all active patients who should receive weekly dashboards",
       "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_weekly_patient_stats",
-        "method": "POST",
-        "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
-        }
-      }
-    },
-    {
-      "id": 3,
-      "name": "Query Weekly Stats - Sessions",
-      "type": "http-request",
-      "description": "Get session completion stats",
-      "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_weekly_session_stats",
-        "method": "POST",
-        "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
-        }
-      }
-    },
-    {
-      "id": 4,
-      "name": "Query Weekly Stats - Adherence",
-      "type": "http-request",
-      "description": "Get adherence rates by patient and overall",
-      "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_weekly_adherence_stats",
-        "method": "POST",
-        "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
-        }
-      }
-    },
-    {
-      "id": 5,
-      "name": "Query Weekly Stats - Readiness",
-      "type": "http-request",
-      "description": "Get average readiness scores and trends",
-      "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_weekly_readiness_stats",
-        "method": "POST",
-        "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
-        }
-      }
-    },
-    {
-      "id": 6,
-      "name": "Query Weekly Stats - Pain Flags",
-      "type": "http-request",
-      "description": "Get pain reports and concerning patterns",
-      "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_weekly_pain_flags",
-        "method": "POST",
-        "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
-        }
-      }
-    },
-    {
-      "id": 7,
-      "name": "Generate AI Summary",
-      "type": "openai-chat",
-      "description": "Use OpenAI to generate insights and recommendations",
-      "config": {
-        "model": "gpt-4-turbo",
-        "messages": [
-          {
-            "role": "system",
-            "content": "You are a PT practice analytics assistant. Analyze the weekly stats and provide actionable insights. Be concise but thorough. Highlight wins, concerns, and specific recommendations."
-          },
-          {
-            "role": "user",
-            "content": "Generate a weekly summary for the PT practice. Here are the stats from {{formatDate(addDays(now, -7), \"MMM D\")}} to {{formatDate(addDays(now, -1), \"MMM D, YYYY\")}}:\n\n**Patient Stats:**\n- Active Patients: {{2.body.active_patients}}\n- New Signups: {{2.body.new_signups}}\n- Churned: {{2.body.churned_patients}}\n\n**Session Stats:**\n- Total Scheduled: {{3.body.total_scheduled}}\n- Completed: {{3.body.completed}}\n- Skipped: {{3.body.skipped}}\n- Completion Rate: {{3.body.completion_rate}}%\n\n**Adherence:**\n- Overall Adherence: {{4.body.overall_adherence}}%\n- Patients Below 50%: {{4.body.low_adherence_count}}\n- Top Performer: {{4.body.top_performer_name}} ({{4.body.top_performer_rate}}%)\n\n**Readiness:**\n- Average Score: {{5.body.avg_readiness}}\n- Low Readiness Days: {{5.body.low_readiness_count}}\n- Rest Days Triggered: {{5.body.rest_days_triggered}}\n\n**Pain Flags:**\n- Total Reports: {{6.body.total_pain_reports}}\n- High Severity (7+): {{6.body.high_severity_count}}\n- Patients with Recurring Pain: {{6.body.recurring_pain_patients}}\n\nProvide:\n1. Executive Summary (2-3 sentences)\n2. Key Wins (bullet points)\n3. Areas of Concern (bullet points)\n4. Recommended Actions (bullet points)"
-          }
-        ],
-        "temperature": 0.7,
-        "max_tokens": 1000
-      }
-    },
-    {
-      "id": 8,
-      "name": "Append to Google Sheets",
-      "type": "google-sheets-add-row",
-      "description": "Add weekly stats row to tracking spreadsheet",
-      "config": {
-        "spreadsheet_id": "{{env.GOOGLE_SHEETS_WEEKLY_REPORT_ID}}",
-        "sheet_name": "Weekly Stats",
-        "values": [
-          "{{formatDate(now, \"YYYY-MM-DD\")}}",
-          "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
-          "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}",
-          "{{2.body.active_patients}}",
-          "{{2.body.new_signups}}",
-          "{{2.body.churned_patients}}",
-          "{{3.body.total_scheduled}}",
-          "{{3.body.completed}}",
-          "{{3.body.skipped}}",
-          "{{3.body.completion_rate}}",
-          "{{4.body.overall_adherence}}",
-          "{{4.body.low_adherence_count}}",
-          "{{5.body.avg_readiness}}",
-          "{{5.body.low_readiness_count}}",
-          "{{5.body.rest_days_triggered}}",
-          "{{6.body.total_pain_reports}}",
-          "{{6.body.high_severity_count}}",
-          "{{6.body.recurring_pain_patients}}"
-        ]
-      }
-    },
-    {
-      "id": 9,
-      "name": "Query Therapist List",
-      "type": "http-request",
-      "description": "Get all active therapists to send reports",
-      "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/therapists?status=eq.active&select=id,email,full_name",
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?status=eq.active&email_preferences->>weekly_dashboard=eq.true&select=id,email,full_name,therapist_id,timezone,created_at",
         "method": "GET",
         "headers": {
           "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
@@ -174,61 +33,363 @@
       }
     },
     {
-      "id": 10,
-      "name": "Iterator - Therapists",
+      "id": 3,
+      "name": "Router - Check Patients",
+      "type": "router",
+      "description": "Branch based on whether there are active patients",
+      "routes": [
+        {
+          "name": "Patients Found",
+          "condition": "{{length(2.body)}} > 0",
+          "next": 4
+        },
+        {
+          "name": "No Patients",
+          "condition": "{{length(2.body)}} = 0",
+          "next": 25
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Iterator - Patients",
       "type": "iterator",
-      "description": "Send report to each therapist",
+      "description": "Process each active patient for personalized dashboard",
       "config": {
-        "array": "{{9.body}}"
+        "array": "{{2.body}}"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Fetch Weekly Workout Stats",
+      "type": "http-request",
+      "description": "Get patient's workout completion stats for the week",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_workout_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Fetch Recovery Stats",
+      "type": "http-request",
+      "description": "Get patient's recovery sessions (stretching, foam rolling, cold therapy, etc.)",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_recovery_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Fetch Fasting Stats",
+      "type": "http-request",
+      "description": "Get patient's intermittent fasting logs and stats",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_fasting_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Fetch Supplement Adherence",
+      "type": "http-request",
+      "description": "Get patient's supplement tracking data",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_supplement_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Fetch Sleep & Readiness Data",
+      "type": "http-request",
+      "description": "Get patient's sleep quality and readiness scores",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_readiness_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "name": "Fetch Pain & Progress Notes",
+      "type": "http-request",
+      "description": "Get patient's pain logs and progress indicators",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_weekly_pain_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{4.id}}",
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
       }
     },
     {
       "id": 11,
-      "name": "Send Weekly Report Email",
-      "type": "sendgrid-send",
-      "description": "Send weekly report email to each therapist",
+      "name": "Generate AI Summary",
+      "type": "openai-chat",
+      "description": "Use OpenAI to generate personalized weekly insights for the patient",
       "config": {
-        "to": "{{10.email}}",
-        "from": "reports@ptperformance.app",
-        "template_id": "d-weekly-report-template-id",
-        "dynamic_template_data": {
-          "therapist_name": "{{split(10.full_name, \" \")[0]}}",
-          "week_start": "{{formatDate(addDays(now, -7), \"MMMM D\")}}",
-          "week_end": "{{formatDate(addDays(now, -1), \"MMMM D, YYYY\")}}",
-          "active_patients": "{{2.body.active_patients}}",
-          "new_signups": "{{2.body.new_signups}}",
-          "churned_patients": "{{2.body.churned_patients}}",
-          "sessions_scheduled": "{{3.body.total_scheduled}}",
-          "sessions_completed": "{{3.body.completed}}",
-          "sessions_skipped": "{{3.body.skipped}}",
-          "completion_rate": "{{3.body.completion_rate}}",
-          "overall_adherence": "{{4.body.overall_adherence}}",
-          "low_adherence_count": "{{4.body.low_adherence_count}}",
-          "top_performer_name": "{{4.body.top_performer_name}}",
-          "top_performer_rate": "{{4.body.top_performer_rate}}",
-          "avg_readiness": "{{5.body.avg_readiness}}",
-          "rest_days_triggered": "{{5.body.rest_days_triggered}}",
-          "pain_reports": "{{6.body.total_pain_reports}}",
-          "high_severity_pain": "{{6.body.high_severity_count}}",
-          "ai_summary": "{{7.choices[0].message.content}}",
-          "dashboard_url": "https://app.ptperformance.app/dashboard"
-        }
+        "model": "gpt-4-turbo",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a supportive health coach assistant for PT Performance. Generate a personalized, encouraging weekly summary for this patient. Be concise but insightful. Highlight wins, provide actionable tips, and acknowledge any challenges. Use a warm, supportive tone. Keep the summary to 3-4 short paragraphs."
+          },
+          {
+            "role": "user",
+            "content": "Generate a weekly health summary for {{split(4.full_name, \" \")[0]}}. Here are their stats from {{formatDate(addDays(now, -7), \"MMM D\")}} to {{formatDate(addDays(now, -1), \"MMM D, YYYY\")}}:\n\n**Workouts:**\n- Scheduled: {{5.body.sessions_scheduled}}\n- Completed: {{5.body.sessions_completed}}\n- Completion Rate: {{5.body.completion_rate}}%\n- Total Exercise Volume: {{5.body.total_sets}} sets, {{5.body.total_reps}} reps\n- Personal Records: {{5.body.prs_count}}\n\n**Recovery:**\n- Recovery Sessions: {{6.body.total_sessions}}\n- Types: {{join(6.body.session_types, \", \")}}\n- Recovery Score Trend: {{6.body.trend}}\n- Stretch Minutes: {{6.body.stretch_minutes}}\n\n**Fasting (Intermittent):**\n- Days Tracked: {{7.body.days_tracked}}\n- Average Fast Duration: {{7.body.avg_fast_hours}} hours\n- Longest Fast: {{7.body.longest_fast_hours}} hours\n- Fasting Streak: {{7.body.current_streak}} days\n\n**Supplements:**\n- Adherence Rate: {{8.body.adherence_rate}}%\n- Supplements Tracked: {{join(8.body.supplements, \", \")}}\n- Missed Days: {{8.body.missed_days}}\n\n**Sleep & Readiness:**\n- Average Sleep: {{9.body.avg_sleep_hours}} hours\n- Sleep Quality Avg: {{9.body.avg_sleep_quality}}/10\n- Average Readiness: {{9.body.avg_readiness}}/100\n- Low Readiness Days: {{9.body.low_readiness_days}}\n\n**Pain & Progress:**\n- Pain Reports: {{10.body.pain_reports}}\n- Average Pain Level: {{10.body.avg_pain_level}}/10\n- Pain Trend: {{10.body.pain_trend}}\n- Progress Notes: {{10.body.progress_notes}}\n\nProvide:\n1. A motivating opening that acknowledges their week\n2. Key wins and achievements to celebrate\n3. One specific area for improvement with actionable tip\n4. An encouraging close for the week ahead"
+          }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 800
       }
     },
     {
       "id": 12,
-      "name": "Aggregator",
-      "type": "aggregator",
-      "description": "Collect results from email sends",
+      "name": "Generate Weekly Score",
+      "type": "tools-code",
+      "description": "Calculate an overall weekly health score (0-100)",
       "config": {
-        "group_by": null,
-        "aggregate": {
-          "emails_sent": "count"
-        }
+        "code": "const workoutScore = Math.min(100, ({{5.body.completion_rate}} || 0) * 0.3);\nconst recoveryScore = Math.min(100, (({{6.body.total_sessions}} || 0) / 7) * 100) * 0.15;\nconst fastingScore = Math.min(100, (({{7.body.days_tracked}} || 0) / 7) * 100) * 0.15;\nconst supplementScore = ({{8.body.adherence_rate}} || 0) * 0.15;\nconst sleepScore = Math.min(100, (({{9.body.avg_sleep_hours}} || 0) / 8) * 100) * 0.15;\nconst painScore = Math.max(0, 100 - (({{10.body.avg_pain_level}} || 0) * 10)) * 0.1;\n\nconst totalScore = Math.round(workoutScore + recoveryScore + fastingScore + supplementScore + sleepScore + painScore);\nreturn { weekly_score: totalScore };"
       }
     },
     {
       "id": 13,
+      "name": "Get Previous Week Score",
+      "type": "http-request",
+      "description": "Fetch last week's score for comparison",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_weekly_reports?patient_id=eq.{{4.id}}&order=week_ending.desc&limit=1&select=weekly_score",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "name": "Calculate Score Change",
+      "type": "tools-code",
+      "description": "Calculate week-over-week score change",
+      "config": {
+        "code": "const currentScore = {{12.weekly_score}};\nconst previousScore = {{13.body[0]?.weekly_score}} || currentScore;\nconst change = currentScore - previousScore;\nconst changeText = change > 0 ? `+${change}` : change.toString();\nconst trend = change > 0 ? 'up' : (change < 0 ? 'down' : 'stable');\nreturn { change: change, change_text: changeText, trend: trend };"
+      }
+    },
+    {
+      "id": 15,
+      "name": "Send Personalized Dashboard Email",
+      "type": "sendgrid-send",
+      "description": "Send weekly health dashboard email to patient",
+      "config": {
+        "to": "{{4.email}}",
+        "from": "insights@ptperformance.app",
+        "template_id": "d-weekly-health-dashboard-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(4.full_name, \" \")[0]}}",
+          "week_start": "{{formatDate(addDays(now, -7), \"MMMM D\")}}",
+          "week_end": "{{formatDate(addDays(now, -1), \"MMMM D, YYYY\")}}",
+          "weekly_score": "{{12.weekly_score}}",
+          "score_change": "{{14.change_text}}",
+          "score_trend": "{{14.trend}}",
+          "workouts_completed": "{{5.body.sessions_completed}}",
+          "workouts_scheduled": "{{5.body.sessions_scheduled}}",
+          "workout_completion_rate": "{{5.body.completion_rate}}",
+          "personal_records": "{{5.body.prs_count}}",
+          "recovery_sessions": "{{6.body.total_sessions}}",
+          "recovery_trend": "{{6.body.trend}}",
+          "stretch_minutes": "{{6.body.stretch_minutes}}",
+          "fasting_days": "{{7.body.days_tracked}}",
+          "avg_fast_hours": "{{7.body.avg_fast_hours}}",
+          "fasting_streak": "{{7.body.current_streak}}",
+          "supplement_adherence": "{{8.body.adherence_rate}}",
+          "avg_sleep_hours": "{{9.body.avg_sleep_hours}}",
+          "avg_sleep_quality": "{{9.body.avg_sleep_quality}}",
+          "avg_readiness": "{{9.body.avg_readiness}}",
+          "pain_trend": "{{10.body.pain_trend}}",
+          "ai_summary": "{{11.choices[0].message.content}}",
+          "dashboard_url": "https://app.ptperformance.app/dashboard",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        },
+        "custom_args": {
+          "patient_id": "{{4.id}}",
+          "report_type": "weekly_dashboard",
+          "week_ending": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "name": "Store Weekly Report",
+      "type": "http-request",
+      "description": "Save the weekly report data to Supabase for historical tracking",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_weekly_reports",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": {
+          "patient_id": "{{4.id}}",
+          "week_starting": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "week_ending": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}",
+          "weekly_score": "{{12.weekly_score}}",
+          "score_change": "{{14.change}}",
+          "workout_stats": {
+            "scheduled": "{{5.body.sessions_scheduled}}",
+            "completed": "{{5.body.sessions_completed}}",
+            "completion_rate": "{{5.body.completion_rate}}",
+            "total_sets": "{{5.body.total_sets}}",
+            "total_reps": "{{5.body.total_reps}}",
+            "prs_count": "{{5.body.prs_count}}"
+          },
+          "recovery_stats": {
+            "total_sessions": "{{6.body.total_sessions}}",
+            "session_types": "{{6.body.session_types}}",
+            "trend": "{{6.body.trend}}",
+            "stretch_minutes": "{{6.body.stretch_minutes}}"
+          },
+          "fasting_stats": {
+            "days_tracked": "{{7.body.days_tracked}}",
+            "avg_fast_hours": "{{7.body.avg_fast_hours}}",
+            "longest_fast_hours": "{{7.body.longest_fast_hours}}",
+            "current_streak": "{{7.body.current_streak}}"
+          },
+          "supplement_stats": {
+            "adherence_rate": "{{8.body.adherence_rate}}",
+            "supplements": "{{8.body.supplements}}",
+            "missed_days": "{{8.body.missed_days}}"
+          },
+          "sleep_stats": {
+            "avg_sleep_hours": "{{9.body.avg_sleep_hours}}",
+            "avg_sleep_quality": "{{9.body.avg_sleep_quality}}",
+            "avg_readiness": "{{9.body.avg_readiness}}",
+            "low_readiness_days": "{{9.body.low_readiness_days}}"
+          },
+          "pain_stats": {
+            "pain_reports": "{{10.body.pain_reports}}",
+            "avg_pain_level": "{{10.body.avg_pain_level}}",
+            "pain_trend": "{{10.body.pain_trend}}"
+          },
+          "ai_summary": "{{11.choices[0].message.content}}",
+          "email_sent_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "Track Email Engagement - Set Up Webhook",
+      "type": "http-request",
+      "description": "Register SendGrid webhook for tracking opens and clicks",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/email_tracking",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{4.id}}",
+          "email_type": "weekly_dashboard",
+          "report_id": "{{16.body[0].id}}",
+          "sent_at": "{{now}}",
+          "tracking_status": "sent"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "name": "Aggregator - Patient Reports",
+      "type": "aggregator",
+      "description": "Collect results from all patient report sends",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "total_sent": "count",
+          "patient_ids": "array({{4.id}})",
+          "avg_score": "average({{12.weekly_score}})"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "name": "Query Aggregate Stats for Slack",
+      "type": "http-request",
+      "description": "Get overall platform stats for the week",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_platform_weekly_stats",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_start_date": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
+          "p_end_date": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}"
+        }
+      }
+    },
+    {
+      "id": 20,
       "name": "Post to Slack #pt-metrics",
       "type": "slack-post",
       "description": "Post weekly summary to Slack metrics channel",
@@ -239,7 +400,7 @@
             "type": "header",
             "text": {
               "type": "plain_text",
-              "text": "Weekly PT Performance Report"
+              "text": "Weekly Health Dashboard Report"
             }
           },
           {
@@ -256,30 +417,37 @@
           },
           {
             "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Personalized Dashboards Sent:* {{18.total_sent}} patients"
+            }
+          },
+          {
+            "type": "section",
             "fields": [
               {
                 "type": "mrkdwn",
-                "text": "*Active Patients*\n{{2.body.active_patients}}"
+                "text": "*Avg Weekly Score*\n{{round(18.avg_score)}}/100"
               },
               {
                 "type": "mrkdwn",
-                "text": "*New Signups*\n{{2.body.new_signups}}"
+                "text": "*Platform Avg*\n{{19.body.avg_weekly_score}}/100"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Session Completion*\n{{3.body.completion_rate}}%"
+                "text": "*Total Workouts*\n{{19.body.total_workouts_completed}}"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Overall Adherence*\n{{4.body.overall_adherence}}%"
+                "text": "*Completion Rate*\n{{19.body.avg_completion_rate}}%"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Avg Readiness*\n{{5.body.avg_readiness}}/100"
+                "text": "*Recovery Sessions*\n{{19.body.total_recovery_sessions}}"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Pain Flags*\n{{6.body.high_severity_count}} high severity"
+                "text": "*Avg Sleep*\n{{19.body.avg_sleep_hours}} hrs"
               }
             ]
           },
@@ -290,17 +458,14 @@
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*AI Insights*\n{{7.choices[0].message.content}}"
+              "text": "*Top Performers This Week:*\n{{join(19.body.top_performers, \", \")}}"
             }
-          },
-          {
-            "type": "divider"
           },
           {
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": ":email: Reports sent to {{12.emails_sent}} therapists"
+              "text": "*Needs Attention:* {{19.body.needs_attention_count}} patients with declining scores"
             }
           },
           {
@@ -310,17 +475,9 @@
                 "type": "button",
                 "text": {
                   "type": "plain_text",
-                  "text": "View Full Dashboard"
+                  "text": "View Analytics Dashboard"
                 },
-                "url": "https://app.ptperformance.app/dashboard"
-              },
-              {
-                "type": "button",
-                "text": {
-                  "type": "plain_text",
-                  "text": "View Google Sheet"
-                },
-                "url": "https://docs.google.com/spreadsheets/d/{{env.GOOGLE_SHEETS_WEEKLY_REPORT_ID}}"
+                "url": "https://app.ptperformance.app/admin/analytics"
               }
             ]
           }
@@ -328,10 +485,10 @@
       }
     },
     {
-      "id": 14,
-      "name": "Log Report Generation",
+      "id": 21,
+      "name": "Log Batch Completion",
       "type": "http-request",
-      "description": "Record report generation in audit logs",
+      "description": "Record batch job completion in audit logs",
       "config": {
         "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
         "method": "POST",
@@ -342,22 +499,95 @@
           "Prefer": "return=minimal"
         },
         "body": {
-          "action": "weekly_report_generated",
+          "action": "weekly_health_dashboard_batch_completed",
           "entity_type": "system",
           "entity_id": null,
           "metadata": {
             "week_start": "{{formatDate(addDays(now, -7), \"YYYY-MM-DD\")}}",
             "week_end": "{{formatDate(addDays(now, -1), \"YYYY-MM-DD\")}}",
-            "emails_sent": "{{12.emails_sent}}",
-            "stats_summary": {
-              "active_patients": "{{2.body.active_patients}}",
-              "completion_rate": "{{3.body.completion_rate}}",
-              "adherence_rate": "{{4.body.overall_adherence}}",
-              "avg_readiness": "{{5.body.avg_readiness}}",
-              "pain_flags": "{{6.body.total_pain_reports}}"
+            "emails_sent": "{{18.total_sent}}",
+            "avg_weekly_score": "{{18.avg_score}}",
+            "platform_stats": {
+              "avg_completion_rate": "{{19.body.avg_completion_rate}}",
+              "total_workouts": "{{19.body.total_workouts_completed}}",
+              "avg_sleep": "{{19.body.avg_sleep_hours}}"
             }
           }
         }
+      }
+    },
+    {
+      "id": 22,
+      "name": "SendGrid Engagement Webhook Handler",
+      "type": "webhook-custom",
+      "description": "Receives email engagement events from SendGrid (opens, clicks)",
+      "trigger_type": "separate_webhook",
+      "webhook_id": "{{env.SENDGRID_ENGAGEMENT_WEBHOOK_ID}}",
+      "output": {
+        "event": "{{body.event}}",
+        "email": "{{body.email}}",
+        "timestamp": "{{body.timestamp}}",
+        "patient_id": "{{body.patient_id}}",
+        "report_type": "{{body.report_type}}",
+        "url_clicked": "{{body.url}}"
+      }
+    },
+    {
+      "id": 23,
+      "name": "Update Email Tracking",
+      "type": "http-request",
+      "description": "Update email tracking record with engagement data",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/email_tracking?patient_id=eq.{{22.patient_id}}&email_type=eq.{{22.report_type}}&order=sent_at.desc&limit=1",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "tracking_status": "{{22.event}}",
+          "{{22.event}}_at": "{{22.timestamp}}",
+          "last_interaction": "{{now}}",
+          "clicks": "{{if(22.event = 'click', 'clicks + 1', 'clicks')}}"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "Log Engagement Event",
+      "type": "http-request",
+      "description": "Log email engagement for analytics",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/email_engagement_events",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{22.patient_id}}",
+          "email_type": "{{22.report_type}}",
+          "event_type": "{{22.event}}",
+          "event_timestamp": "{{22.timestamp}}",
+          "url_clicked": "{{22.url_clicked}}",
+          "metadata": {
+            "email": "{{22.email}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 25,
+      "name": "Log No Patients",
+      "type": "slack-post",
+      "description": "Notify if no patients were eligible for dashboard",
+      "config": {
+        "webhook_url": "{{env.SLACK_METRICS_WEBHOOK_URL}}",
+        "text": ":information_source: Weekly Health Dashboard: No active patients with dashboard notifications enabled."
       }
     }
   ],
@@ -365,15 +595,25 @@
     "type": "slack-post",
     "config": {
       "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
-      "text": ":warning: Weekly dashboard report failed: {{error.message}}"
+      "text": ":warning: Weekly health dashboard failed: {{error.message}}\n\nPatient: {{4.full_name}} ({{4.id}})\nStep: {{error.module_name}}"
     }
   },
   "schedule": {
     "type": "weekly",
-    "day": "monday",
+    "day": "sunday",
     "time": "08:00",
     "timezone": "America/New_York"
   },
-  "estimated_operations": 20,
-  "estimated_cost_per_run": 0.15
+  "estimated_operations": 50,
+  "estimated_cost_per_run": 0.50,
+  "notes": "Operations scale with number of active patients. Estimate ~10 operations per patient.",
+  "environment_variables": [
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_KEY",
+    "SENDGRID_API_KEY",
+    "OPENAI_API_KEY",
+    "SLACK_METRICS_WEBHOOK_URL",
+    "SLACK_ALERT_WEBHOOK",
+    "SENDGRID_ENGAGEMENT_WEBHOOK_ID"
+  ]
 }

@@ -1,0 +1,462 @@
+{
+  "name": "Recovery Reminder System",
+  "description": "Scheduled based on patient preferences. Checks if recovery session logged today, sends push notification reminder if not, and tracks recovery streaks.",
+  "trigger": {
+    "type": "schedule",
+    "cron": "0 * * * *",
+    "timezone": "America/New_York",
+    "note": "Runs hourly, but only sends reminders at patient's preferred time"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Schedule Trigger",
+      "type": "schedule",
+      "description": "Runs every hour to check for patients due for recovery reminders",
+      "config": {
+        "interval": "hourly",
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Get Current Hour",
+      "type": "tools-code",
+      "description": "Calculate current hour for timezone-aware matching",
+      "config": {
+        "code": "const now = new Date();\nreturn {\n  current_hour: now.getHours(),\n  current_date: now.toISOString().split('T')[0],\n  day_of_week: now.getDay()\n};"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Query Patients Due for Recovery Reminder",
+      "type": "http-request",
+      "description": "Find patients who should receive a recovery reminder at this hour",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patients_due_for_recovery_reminder",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_current_hour": "{{2.current_hour}}",
+          "p_current_date": "{{2.current_date}}",
+          "p_day_of_week": "{{2.day_of_week}}"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Router - Check Patients",
+      "type": "router",
+      "description": "Branch based on whether patients need reminders",
+      "routes": [
+        {
+          "name": "Patients Found",
+          "condition": "{{length(3.body)}} > 0",
+          "next": 5
+        },
+        {
+          "name": "No Patients",
+          "condition": "{{length(3.body)}} = 0",
+          "next": 20
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Iterator - Patients",
+      "type": "iterator",
+      "description": "Process each patient due for recovery reminder",
+      "config": {
+        "array": "{{3.body}}"
+      }
+    },
+    {
+      "id": 6,
+      "name": "Check If Recovery Logged Today",
+      "type": "http-request",
+      "description": "Check if patient has already logged a recovery session today",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/recovery_sessions?patient_id=eq.{{5.id}}&logged_date=eq.{{2.current_date}}&select=id",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Router - Recovery Status",
+      "type": "router",
+      "description": "Branch based on whether recovery has been logged",
+      "routes": [
+        {
+          "name": "Recovery Not Logged",
+          "condition": "{{length(6.body)}} = 0",
+          "next": 8
+        },
+        {
+          "name": "Recovery Already Logged",
+          "condition": "{{length(6.body)}} > 0",
+          "next": 17
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Get Patient's Recovery Streak",
+      "type": "http-request",
+      "description": "Fetch current recovery streak for motivational messaging",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_recovery_streak",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{5.id}}"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Get Recommended Recovery Activity",
+      "type": "http-request",
+      "description": "Get AI-recommended recovery activity based on recent workouts",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/ai-recovery-recommendation",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{5.id}}",
+          "context": {
+            "current_streak": "{{8.body.current_streak}}",
+            "preferred_activities": "{{5.preferred_recovery_activities}}",
+            "last_workout_type": "{{5.last_workout_type}}",
+            "readiness_score": "{{5.today_readiness}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "name": "Select Reminder Message",
+      "type": "tools-code",
+      "description": "Select appropriate reminder message based on streak and context",
+      "config": {
+        "code": "const streak = {{8.body.current_streak}} || 0;\nconst atRisk = streak > 0; // Has a streak to protect\nconst recommendation = '{{9.body.recommended_activity}}';\nconst duration = '{{9.body.recommended_duration}}';\n\nlet title, body;\n\nif (streak === 0) {\n  title = 'Time for Recovery';\n  body = `Start building your recovery streak! Try ${duration} of ${recommendation} today.`;\n} else if (streak < 7) {\n  title = `${streak} Day Streak!`;\n  body = `Keep your recovery streak alive with ${duration} of ${recommendation}.`;\n} else if (streak < 30) {\n  title = `${streak} Day Streak!`;\n  body = `Amazing commitment! ${recommendation} will help maintain your ${streak}-day streak.`;\n} else {\n  title = `${streak} Day Streak Champion!`;\n  body = `Incredible! Don't break your ${streak}-day streak. ${duration} of ${recommendation} awaits.`;\n}\n\nreturn { title, body, at_risk: atRisk, streak: streak };"
+      }
+    },
+    {
+      "id": 11,
+      "name": "Send Recovery Reminder Push",
+      "type": "http-request",
+      "description": "Send push notification reminder for recovery",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{5.id}}",
+          "title": "{{10.title}}",
+          "body": "{{10.body}}",
+          "data": {
+            "screen": "recovery",
+            "action": "log_recovery",
+            "recommended_activity": "{{9.body.recommended_activity}}",
+            "recommended_duration": "{{9.body.recommended_duration}}",
+            "current_streak": "{{8.body.current_streak}}"
+          },
+          "priority": "{{if(10.at_risk, 'high', 'normal')}}"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "Check Snooze Count Today",
+      "type": "http-request",
+      "description": "Check how many reminders already sent today",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/recovery_reminders?patient_id=eq.{{5.id}}&reminder_date=eq.{{2.current_date}}&select=id",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "name": "Router - Send Follow-up Email",
+      "type": "router",
+      "description": "Send email if this is the second reminder of the day",
+      "routes": [
+        {
+          "name": "First Reminder - Skip Email",
+          "condition": "{{length(12.body)}} = 0",
+          "next": 15
+        },
+        {
+          "name": "Second Reminder - Send Email",
+          "condition": "{{length(12.body)}} >= 1",
+          "next": 14
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Send Recovery Reminder Email",
+      "type": "sendgrid-send",
+      "description": "Send email reminder for recovery (second reminder of day)",
+      "config": {
+        "to": "{{5.email}}",
+        "from": "recovery@ptperformance.app",
+        "template_id": "d-recovery-reminder-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(5.full_name, \" \")[0]}}",
+          "current_streak": "{{8.body.current_streak}}",
+          "recommended_activity": "{{9.body.recommended_activity}}",
+          "recommended_duration": "{{9.body.recommended_duration}}",
+          "benefits": "{{9.body.benefits}}",
+          "streak_at_risk": "{{10.at_risk}}",
+          "quick_log_url": "https://app.ptperformance.app/recovery/quick-log",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 15,
+      "name": "Log Recovery Reminder",
+      "type": "http-request",
+      "description": "Record reminder sent for tracking",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/recovery_reminders",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{5.id}}",
+          "reminder_date": "{{2.current_date}}",
+          "reminder_hour": "{{2.current_hour}}",
+          "channel": "{{if(length(12.body) >= 1, 'push_and_email', 'push')}}",
+          "current_streak": "{{8.body.current_streak}}",
+          "recommended_activity": "{{9.body.recommended_activity}}",
+          "sent_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "name": "Update Patient Last Reminder",
+      "type": "http-request",
+      "description": "Update patient record with last reminder timestamp",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?id=eq.{{5.id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "last_recovery_reminder_at": "{{now}}",
+          "recovery_reminders_today": "{{add(length(12.body), 1)}}"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "Update Streak if Logged",
+      "type": "http-request",
+      "description": "Ensure streak is updated when recovery is logged",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/update_recovery_streak",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{5.id}}"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "name": "Check for Streak Milestones",
+      "type": "http-request",
+      "description": "Check if patient hit a streak milestone",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/check_recovery_streak_milestone",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{5.id}}"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "name": "Router - Milestone Reached",
+      "type": "router",
+      "description": "Send celebration notification if milestone reached",
+      "routes": [
+        {
+          "name": "Milestone Reached",
+          "condition": "{{18.body.milestone_reached}} = true",
+          "next": 21
+        },
+        {
+          "name": "No Milestone",
+          "condition": "{{18.body.milestone_reached}} = false",
+          "next": null
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Log No Patients",
+      "type": "tools-code",
+      "description": "Log that no patients needed reminders this hour",
+      "config": {
+        "code": "return { message: 'No patients due for recovery reminder at hour ' + {{2.current_hour}} };"
+      }
+    },
+    {
+      "id": 21,
+      "name": "Send Milestone Celebration Push",
+      "type": "http-request",
+      "description": "Celebrate recovery streak milestone",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{5.id}}",
+          "title": "{{18.body.milestone_title}}",
+          "body": "{{18.body.milestone_message}}",
+          "data": {
+            "screen": "achievements",
+            "achievement_type": "recovery_streak",
+            "milestone": "{{18.body.milestone_days}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "name": "Award Achievement Badge",
+      "type": "http-request",
+      "description": "Award streak milestone achievement",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_achievements",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{5.id}}",
+          "achievement_type": "recovery_streak",
+          "achievement_name": "{{18.body.achievement_name}}",
+          "achievement_description": "{{18.body.achievement_description}}",
+          "milestone_value": "{{18.body.milestone_days}}",
+          "earned_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "name": "Aggregator - Results",
+      "type": "aggregator",
+      "description": "Collect results from all patient processing",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "reminders_sent": "count",
+          "emails_sent": "countIf({{length(12.body)}} >= 1)",
+          "streaks_updated": "countIf({{length(6.body)}} > 0)",
+          "milestones_reached": "countIf({{18.body.milestone_reached}} = true)"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "Log Hourly Batch",
+      "type": "http-request",
+      "description": "Record hourly batch results",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "recovery_reminder_batch",
+          "entity_type": "system",
+          "entity_id": null,
+          "metadata": {
+            "hour": "{{2.current_hour}}",
+            "date": "{{2.current_date}}",
+            "patients_checked": "{{length(3.body)}}",
+            "reminders_sent": "{{23.reminders_sent}}",
+            "emails_sent": "{{23.emails_sent}}",
+            "streaks_updated": "{{23.streaks_updated}}",
+            "milestones_reached": "{{23.milestones_reached}}"
+          }
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "slack-post",
+    "config": {
+      "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+      "text": ":warning: Recovery reminder batch failed\n\nHour: {{2.current_hour}}\nError: {{error.message}}\nStep: {{error.module_name}}"
+    }
+  },
+  "schedule": {
+    "type": "hourly",
+    "timezone": "America/New_York"
+  },
+  "estimated_operations": 10,
+  "estimated_cost_per_run": 0.03,
+  "notes": "Runs hourly but only sends reminders at patient's preferred time. Operations scale with active patients.",
+  "environment_variables": [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SENDGRID_API_KEY",
+    "SLACK_ALERT_WEBHOOK"
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "name": "Inactive User Re-engagement",
-  "description": "Daily check for users with no session in 7+ days. Sends personalized re-engagement email and push notification.",
+  "name": "Inactive Re-engagement Sequence",
+  "description": "Daily check for inactive patients. Sends tiered re-engagement sequence: Day 7 'We miss you' with recent features, Day 14 'Your progress is waiting' with stats, Day 21 'Special offer' or therapist outreach.",
   "trigger": {
     "type": "schedule",
     "cron": "0 9 * * *",
@@ -19,78 +19,141 @@
     },
     {
       "id": 2,
-      "name": "Query Inactive Patients",
+      "name": "Query Day 7 Inactive Patients",
       "type": "http-request",
-      "description": "Find patients with no session in 7+ days",
+      "description": "Find patients with no session in exactly 7 days (first re-engagement)",
       "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_inactive_patients",
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_inactive_patients_by_tier",
         "method": "POST",
         "headers": {
           "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
           "Content-Type": "application/json"
         },
         "body": {
-          "days_inactive": 7,
+          "days_inactive_min": 7,
+          "days_inactive_max": 8,
+          "exclude_reengaged_within_days": 30,
           "limit": 50
         }
       }
     },
     {
       "id": 3,
-      "name": "Iterator",
-      "type": "iterator",
-      "description": "Process each inactive patient",
+      "name": "Query Day 14 Inactive Patients",
+      "type": "http-request",
+      "description": "Find patients inactive for ~14 days (second re-engagement)",
       "config": {
-        "array": "{{2.body}}"
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_inactive_patients_by_tier",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "days_inactive_min": 14,
+          "days_inactive_max": 15,
+          "exclude_reengaged_within_days": 7,
+          "limit": 50
+        }
       }
     },
     {
       "id": 4,
-      "name": "Get AI Workout Recommendation",
+      "name": "Query Day 21 Inactive Patients",
       "type": "http-request",
-      "description": "Generate personalized comeback workout",
+      "description": "Find patients inactive for ~21 days (final re-engagement / therapist outreach)",
       "config": {
-        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/ai-workout-recommendation",
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_inactive_patients_by_tier",
         "method": "POST",
         "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
           "Content-Type": "application/json"
         },
         "body": {
-          "patient_id": "{{3.id}}",
-          "context": "re-engagement",
-          "difficulty": "easy",
-          "exercises_count": 3
+          "days_inactive_min": 21,
+          "days_inactive_max": 22,
+          "exclude_reengaged_within_days": 7,
+          "limit": 50
         }
       }
     },
     {
       "id": 5,
-      "name": "Send Re-engagement Email",
-      "type": "sendgrid-send",
-      "description": "Send personalized 'We miss you' email",
+      "name": "Get Recent Features",
+      "type": "http-request",
+      "description": "Fetch recent app features for Day 7 email",
       "config": {
-        "to": "{{3.email}}",
-        "from": "hello@ptperformance.app",
-        "template_id": "d-reengagement-template-id",
-        "dynamic_template_data": {
-          "first_name": "{{split(3.full_name, \" \")[0]}}",
-          "days_since_last_session": "{{3.days_inactive}}",
-          "exercise_1_name": "{{4.body.exercises[0].name}}",
-          "exercise_1_sets": "{{4.body.exercises[0].sets}}x{{4.body.exercises[0].reps}}",
-          "exercise_2_name": "{{4.body.exercises[1].name}}",
-          "exercise_2_sets": "{{4.body.exercises[1].sets}}x{{4.body.exercises[1].reps}}",
-          "exercise_3_name": "{{4.body.exercises[2].name}}",
-          "exercise_3_sets": "{{4.body.exercises[2].sets}}x{{4.body.exercises[2].reps}}",
-          "app_deep_link": "ptperformance://today"
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/app_features?is_active=eq.true&order=released_at.desc&limit=3&select=id,title,description,icon_url",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
         }
       }
     },
     {
       "id": 6,
-      "name": "Send Push Notification",
+      "name": "Process Day 7 Patients",
+      "type": "router",
+      "description": "Branch to process Day 7 inactive patients",
+      "routes": [
+        {
+          "name": "Day 7 Patients Found",
+          "condition": "{{length(2.body)}} > 0",
+          "next": 7
+        },
+        {
+          "name": "No Day 7 Patients",
+          "condition": "{{length(2.body)}} = 0",
+          "next": 15
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Iterator - Day 7 Patients",
+      "type": "iterator",
+      "description": "Process each Day 7 inactive patient",
+      "config": {
+        "array": "{{2.body}}"
+      }
+    },
+    {
+      "id": 8,
+      "name": "Send Day 7 'We Miss You' Email",
+      "type": "sendgrid-send",
+      "description": "Send first re-engagement email highlighting recent features",
+      "config": {
+        "to": "{{7.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-reengagement-day7-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(7.full_name, \" \")[0]}}",
+          "days_since_last_session": "{{7.days_inactive}}",
+          "last_session_date": "{{formatDate(7.last_session_at, \"MMMM D\")}}",
+          "feature_1_title": "{{5.body[0].title}}",
+          "feature_1_description": "{{5.body[0].description}}",
+          "feature_1_icon": "{{5.body[0].icon_url}}",
+          "feature_2_title": "{{5.body[1].title}}",
+          "feature_2_description": "{{5.body[1].description}}",
+          "feature_2_icon": "{{5.body[1].icon_url}}",
+          "feature_3_title": "{{5.body[2].title}}",
+          "feature_3_description": "{{5.body[2].description}}",
+          "feature_3_icon": "{{5.body[2].icon_url}}",
+          "app_deep_link": "ptperformance://today",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Send Day 7 Push Notification",
       "type": "http-request",
-      "description": "Send push notification to bring user back",
+      "description": "Send push notification for Day 7 re-engagement",
       "config": {
         "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
         "method": "POST",
@@ -99,60 +162,540 @@
           "Content-Type": "application/json"
         },
         "body": {
-          "patient_id": "{{3.id}}",
-          "title": "Your comeback workout is ready 💪",
-          "body": "We've prepared an easy session to help you ease back in.",
+          "patient_id": "{{7.id}}",
+          "title": "We miss you!",
+          "body": "It's been a week since your last workout. Check out what's new!",
           "data": {
             "screen": "today",
-            "workout_type": "comeback"
+            "reengagement_tier": "day_7"
           }
         }
       }
     },
     {
-      "id": 7,
-      "name": "Log Outreach",
+      "id": 10,
+      "name": "Log Day 7 Outreach",
       "type": "http-request",
-      "description": "Record re-engagement attempt in patient_communications",
+      "description": "Record Day 7 re-engagement attempt",
       "config": {
         "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_communications",
         "method": "POST",
         "headers": {
-          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
-          "apikey": "{{env.SUPABASE_ANON_KEY}}",
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
           "Content-Type": "application/json",
           "Prefer": "return=minimal"
         },
         "body": {
-          "patient_id": "{{3.id}}",
-          "type": "re_engagement",
+          "patient_id": "{{7.id}}",
+          "type": "reengagement",
           "channel": "email_and_push",
+          "tier": "day_7",
           "sent_at": "{{now}}",
           "metadata": {
-            "days_inactive": "{{3.days_inactive}}",
-            "workout_recommended": true
+            "days_inactive": "{{7.days_inactive}}",
+            "template": "we_miss_you",
+            "features_highlighted": ["{{5.body[0].title}}", "{{5.body[1].title}}", "{{5.body[2].title}}"]
           }
         }
       }
     },
     {
-      "id": 8,
-      "name": "Aggregator",
+      "id": 11,
+      "name": "Aggregator - Day 7",
       "type": "aggregator",
-      "description": "Collect results from all iterations",
+      "description": "Collect Day 7 results",
       "config": {
         "group_by": null,
         "aggregate": {
-          "total_sent": "count",
-          "patient_ids": "array({{3.id}})"
+          "day7_sent": "count",
+          "day7_patient_ids": "array({{7.id}})"
         }
       }
     },
     {
-      "id": 9,
-      "name": "Post Summary to Slack",
+      "id": 15,
+      "name": "Process Day 14 Patients",
+      "type": "router",
+      "description": "Branch to process Day 14 inactive patients",
+      "routes": [
+        {
+          "name": "Day 14 Patients Found",
+          "condition": "{{length(3.body)}} > 0",
+          "next": 16
+        },
+        {
+          "name": "No Day 14 Patients",
+          "condition": "{{length(3.body)}} = 0",
+          "next": 27
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Iterator - Day 14 Patients",
+      "type": "iterator",
+      "description": "Process each Day 14 inactive patient",
+      "config": {
+        "array": "{{3.body}}"
+      }
+    },
+    {
+      "id": 17,
+      "name": "Fetch Patient Progress Stats",
+      "type": "http-request",
+      "description": "Get patient's historical progress for Day 14 email",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/get_patient_progress_summary",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{16.id}}"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "name": "Send Day 14 'Progress Waiting' Email",
+      "type": "sendgrid-send",
+      "description": "Send second re-engagement email with personalized progress stats",
+      "config": {
+        "to": "{{16.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-reengagement-day14-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(16.full_name, \" \")[0]}}",
+          "days_since_last_session": "{{16.days_inactive}}",
+          "total_workouts_completed": "{{17.body.total_workouts}}",
+          "total_exercises_done": "{{17.body.total_exercises}}",
+          "current_streak_record": "{{17.body.best_streak}}",
+          "total_minutes_trained": "{{17.body.total_minutes}}",
+          "progress_percentage": "{{17.body.program_progress}}",
+          "personal_records": "{{17.body.total_prs}}",
+          "recovery_sessions": "{{17.body.total_recovery}}",
+          "last_milestone": "{{17.body.last_achievement}}",
+          "next_milestone": "{{17.body.next_achievement}}",
+          "app_deep_link": "ptperformance://progress",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 19,
+      "name": "Send Day 14 Push Notification",
+      "type": "http-request",
+      "description": "Send push notification for Day 14 re-engagement",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{16.id}}",
+          "title": "Your progress is waiting",
+          "body": "You've completed {{17.body.total_workouts}} workouts! Don't let your momentum slip away.",
+          "data": {
+            "screen": "progress",
+            "reengagement_tier": "day_14"
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
+      "name": "Log Day 14 Outreach",
+      "type": "http-request",
+      "description": "Record Day 14 re-engagement attempt",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_communications",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{16.id}}",
+          "type": "reengagement",
+          "channel": "email_and_push",
+          "tier": "day_14",
+          "sent_at": "{{now}}",
+          "metadata": {
+            "days_inactive": "{{16.days_inactive}}",
+            "template": "progress_waiting",
+            "stats_shown": {
+              "total_workouts": "{{17.body.total_workouts}}",
+              "best_streak": "{{17.body.best_streak}}",
+              "total_prs": "{{17.body.total_prs}}"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "name": "Aggregator - Day 14",
+      "type": "aggregator",
+      "description": "Collect Day 14 results",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "day14_sent": "count",
+          "day14_patient_ids": "array({{16.id}})"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "name": "Process Day 21 Patients",
+      "type": "router",
+      "description": "Branch to process Day 21 inactive patients",
+      "routes": [
+        {
+          "name": "Day 21 Patients Found",
+          "condition": "{{length(4.body)}} > 0",
+          "next": 28
+        },
+        {
+          "name": "No Day 21 Patients",
+          "condition": "{{length(4.body)}} = 0",
+          "next": 40
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Iterator - Day 21 Patients",
+      "type": "iterator",
+      "description": "Process each Day 21 inactive patient",
+      "config": {
+        "array": "{{4.body}}"
+      }
+    },
+    {
+      "id": 29,
+      "name": "Get Therapist Info",
+      "type": "http-request",
+      "description": "Fetch therapist details for personalized outreach",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/therapists?id=eq.{{28.therapist_id}}&select=id,full_name,email,phone,slack_user_id",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 30,
+      "name": "Check Special Offer Eligibility",
+      "type": "http-request",
+      "description": "Check if patient is eligible for a special offer",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/rpc/check_special_offer_eligibility",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "p_patient_id": "{{28.id}}"
+        }
+      }
+    },
+    {
+      "id": 31,
+      "name": "Router - Offer or Therapist Outreach",
+      "type": "router",
+      "description": "Determine if special offer or therapist outreach",
+      "routes": [
+        {
+          "name": "Special Offer Eligible",
+          "condition": "{{30.body.eligible}} = true",
+          "next": 32
+        },
+        {
+          "name": "Therapist Outreach",
+          "condition": "{{30.body.eligible}} = false",
+          "next": 35
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Send Day 21 Special Offer Email",
+      "type": "sendgrid-send",
+      "description": "Send special offer email to re-engage patient",
+      "config": {
+        "to": "{{28.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-reengagement-day21-offer-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(28.full_name, \" \")[0]}}",
+          "days_since_last_session": "{{28.days_inactive}}",
+          "offer_type": "{{30.body.offer_type}}",
+          "offer_title": "{{30.body.offer_title}}",
+          "offer_description": "{{30.body.offer_description}}",
+          "offer_code": "{{30.body.offer_code}}",
+          "offer_expiry": "{{formatDate(addDays(now, 7), \"MMMM D, YYYY\")}}",
+          "therapist_name": "{{split(29.body[0].full_name, \" \")[0]}}",
+          "app_deep_link": "ptperformance://offers/{{30.body.offer_code}}",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 33,
+      "name": "Create Offer Redemption Record",
+      "type": "http-request",
+      "description": "Store offer details for tracking redemption",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_offers",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{28.id}}",
+          "offer_type": "{{30.body.offer_type}}",
+          "offer_code": "{{30.body.offer_code}}",
+          "expires_at": "{{formatDate(addDays(now, 7), \"YYYY-MM-DD\")}}T23:59:59Z",
+          "status": "pending",
+          "reengagement_tier": "day_21"
+        }
+      }
+    },
+    {
+      "id": 34,
+      "name": "Send Day 21 Special Offer Push",
+      "type": "http-request",
+      "description": "Send push notification for special offer",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{28.id}}",
+          "title": "A special offer just for you",
+          "body": "{{30.body.offer_title}} - expires in 7 days!",
+          "data": {
+            "screen": "offers",
+            "offer_code": "{{30.body.offer_code}}",
+            "reengagement_tier": "day_21"
+          }
+        }
+      }
+    },
+    {
+      "id": 35,
+      "name": "Alert Therapist for Outreach",
       "type": "slack-post",
-      "description": "Daily summary of re-engagement attempts",
+      "description": "Notify therapist to personally reach out to patient",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Patient Needs Personal Outreach"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*{{28.full_name}}* has been inactive for *{{28.days_inactive}} days*\n\nAutomated re-engagement hasn't worked. Time for a personal touch!"
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Email:*\n{{28.email}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Phone:*\n{{28.phone}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Last Session:*\n{{formatDate(28.last_session_at, \"MMMM D, YYYY\")}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Program:*\n{{28.current_program}}"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Suggested Actions:*\n- Schedule a check-in call\n- Send a personalized message\n- Review and adjust their program\n- Offer a complimentary session"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Patient"
+                },
+                "style": "primary",
+                "url": "https://app.ptperformance.app/patients/{{28.id}}"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Send Email"
+                },
+                "url": "mailto:{{28.email}}?subject=Checking%20in%20-%20PT%20Performance"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Call Patient"
+                },
+                "url": "tel:{{28.phone}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "name": "Create Therapist Task",
+      "type": "http-request",
+      "description": "Create a task for therapist to follow up",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/therapist_tasks",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "therapist_id": "{{28.therapist_id}}",
+          "patient_id": "{{28.id}}",
+          "task_type": "personal_outreach",
+          "title": "Personal outreach: {{28.full_name}}",
+          "description": "Patient has been inactive for {{28.days_inactive}} days. Automated re-engagement did not work. Please reach out personally.",
+          "due_date": "{{formatDate(addDays(now, 2), \"YYYY-MM-DD\")}}",
+          "priority": "high",
+          "status": "pending"
+        }
+      }
+    },
+    {
+      "id": 37,
+      "name": "Send Gentle Reminder Email (Day 21)",
+      "type": "sendgrid-send",
+      "description": "Send gentle reminder email when therapist will reach out",
+      "config": {
+        "to": "{{28.email}}",
+        "from": "hello@ptperformance.app",
+        "template_id": "d-reengagement-day21-therapist-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(28.full_name, \" \")[0]}}",
+          "therapist_first_name": "{{split(29.body[0].full_name, \" \")[0]}}",
+          "therapist_full_name": "{{29.body[0].full_name}}",
+          "days_since_last_session": "{{28.days_inactive}}",
+          "app_deep_link": "ptperformance://today",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 38,
+      "name": "Log Day 21 Outreach",
+      "type": "http-request",
+      "description": "Record Day 21 re-engagement attempt",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patient_communications",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{28.id}}",
+          "type": "reengagement",
+          "channel": "email_and_slack",
+          "tier": "day_21",
+          "sent_at": "{{now}}",
+          "metadata": {
+            "days_inactive": "{{28.days_inactive}}",
+            "template": "{{if(30.body.eligible, 'special_offer', 'therapist_outreach')}}",
+            "offer_code": "{{30.body.offer_code}}",
+            "therapist_notified": true
+          }
+        }
+      }
+    },
+    {
+      "id": 39,
+      "name": "Aggregator - Day 21",
+      "type": "aggregator",
+      "description": "Collect Day 21 results",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "day21_sent": "count",
+          "day21_patient_ids": "array({{28.id}})",
+          "offers_sent": "countIf({{30.body.eligible}} = true)",
+          "therapist_alerts": "countIf({{30.body.eligible}} = false)"
+        }
+      }
+    },
+    {
+      "id": 40,
+      "name": "Compile Summary Stats",
+      "type": "tools-code",
+      "description": "Compile all tier results for summary",
+      "config": {
+        "code": "return {\n  day7_count: {{11.day7_sent}} || 0,\n  day14_count: {{21.day14_sent}} || 0,\n  day21_count: {{39.day21_sent}} || 0,\n  total_contacted: ({{11.day7_sent}} || 0) + ({{21.day14_sent}} || 0) + ({{39.day21_sent}} || 0),\n  offers_sent: {{39.offers_sent}} || 0,\n  therapist_alerts: {{39.therapist_alerts}} || 0\n};"
+      }
+    },
+    {
+      "id": 41,
+      "name": "Post Daily Summary to Slack",
+      "type": "slack-post",
+      "description": "Daily summary of re-engagement attempts across all tiers",
       "config": {
         "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
         "blocks": [
@@ -164,15 +707,48 @@
             }
           },
           {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "{{formatDate(now, \"dddd, MMMM D, YYYY\")}}"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
             "type": "section",
             "fields": [
               {
                 "type": "mrkdwn",
-                "text": "*Patients Contacted:* {{8.total_sent}}"
+                "text": "*Day 7 (We Miss You)*\n{{40.day7_count}} patients"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Date:* {{formatDate(now, \"MMM D, YYYY\")}}"
+                "text": "*Day 14 (Progress Waiting)*\n{{40.day14_count}} patients"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Day 21 (Final Outreach)*\n{{40.day21_count}} patients"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Total Contacted*\n{{40.total_contacted}} patients"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Special Offers Sent*\n{{40.offers_sent}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Therapist Alerts*\n{{40.therapist_alerts}}"
               }
             ]
           },
@@ -181,11 +757,41 @@
             "elements": [
               {
                 "type": "mrkdwn",
-                "text": "Each patient received a personalized comeback workout via email and push notification."
+                "text": "Each patient received a personalized email and push notification based on their inactivity tier."
               }
             ]
           }
         ]
+      }
+    },
+    {
+      "id": 42,
+      "name": "Log Daily Batch",
+      "type": "http-request",
+      "description": "Record daily re-engagement batch in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "reengagement_batch_completed",
+          "entity_type": "system",
+          "entity_id": null,
+          "metadata": {
+            "date": "{{formatDate(now, \"YYYY-MM-DD\")}}",
+            "day7_count": "{{40.day7_count}}",
+            "day14_count": "{{40.day14_count}}",
+            "day21_count": "{{40.day21_count}}",
+            "total_contacted": "{{40.total_contacted}}",
+            "offers_sent": "{{40.offers_sent}}",
+            "therapist_alerts": "{{40.therapist_alerts}}"
+          }
+        }
       }
     }
   ],
@@ -193,7 +799,7 @@
     "type": "slack-post",
     "config": {
       "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
-      "text": ":warning: Re-engagement flow failed: {{error.message}}"
+      "text": ":warning: Re-engagement flow failed: {{error.message}}\n\nStep: {{error.module_name}}"
     }
   },
   "schedule": {
@@ -201,6 +807,15 @@
     "time": "09:00",
     "timezone": "America/New_York"
   },
-  "estimated_operations": 15,
-  "estimated_cost_per_run": 0.05
+  "estimated_operations": 25,
+  "estimated_cost_per_run": 0.08,
+  "notes": "Operations scale with number of inactive patients across all tiers.",
+  "environment_variables": [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SENDGRID_API_KEY",
+    "SLACK_WEBHOOK_URL",
+    "SLACK_ALERT_WEBHOOK"
+  ]
 }

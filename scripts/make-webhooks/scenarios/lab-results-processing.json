@@ -1,0 +1,606 @@
+{
+  "name": "Lab Results Processing",
+  "description": "Triggered when a lab PDF is uploaded. Uses AI to parse the PDF and extract biomarkers, stores results in Supabase, triggers AI analysis, sends patient notification with summary, and alerts therapist if critical values detected.",
+  "trigger": {
+    "type": "webhook",
+    "source": "supabase",
+    "table": "lab_uploads",
+    "event": "INSERT"
+  },
+  "modules": [
+    {
+      "id": 1,
+      "name": "Supabase Webhook",
+      "type": "webhook-custom",
+      "description": "Receives notification when lab PDF is uploaded to storage",
+      "output": {
+        "upload_id": "{{record.id}}",
+        "patient_id": "{{record.patient_id}}",
+        "file_path": "{{record.file_path}}",
+        "file_name": "{{record.file_name}}",
+        "lab_type": "{{record.lab_type}}",
+        "lab_date": "{{record.lab_date}}",
+        "uploaded_at": "{{record.created_at}}"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Get Patient Info",
+      "type": "http-request",
+      "description": "Fetch patient details for notifications",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/patients?id=eq.{{1.patient_id}}&select=id,full_name,email,phone,therapist_id,date_of_birth,sex",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "name": "Get Therapist Info",
+      "type": "http-request",
+      "description": "Fetch therapist details for alerts",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/therapists?id=eq.{{2.body[0].therapist_id}}&select=id,full_name,email,slack_user_id",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "name": "Download Lab PDF",
+      "type": "http-request",
+      "description": "Download the lab PDF from Supabase storage",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/storage/v1/object/authenticated/lab-results/{{1.file_path}}",
+        "method": "GET",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}"
+        },
+        "response_type": "binary"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Convert PDF to Base64",
+      "type": "tools-code",
+      "description": "Encode PDF as base64 for AI processing",
+      "config": {
+        "code": "const base64 = Buffer.from({{4.body}}).toString('base64');\nreturn { pdf_base64: base64 };"
+      }
+    },
+    {
+      "id": 6,
+      "name": "AI Parse Lab Results",
+      "type": "openai-chat",
+      "description": "Use GPT-4 Vision to extract biomarkers from lab PDF",
+      "config": {
+        "model": "gpt-4-vision-preview",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a medical lab results parser. Extract all biomarkers from the lab report PDF. For each biomarker, provide:\n1. name (standard medical name)\n2. value (numeric value)\n3. unit (measurement unit)\n4. reference_range_low (lower bound of normal range)\n5. reference_range_high (upper bound of normal range)\n6. status (normal, low, high, critical_low, critical_high)\n7. category (e.g., lipid_panel, metabolic_panel, cbc, hormone, vitamin, inflammatory)\n\nReturn a JSON object with:\n- biomarkers: array of biomarker objects\n- lab_name: name of the laboratory\n- collection_date: date of sample collection\n- report_date: date of report\n- patient_name: name on the report (for verification)\n- ordering_physician: name of ordering physician if present\n\nBe precise with values and units. Mark any values outside reference ranges appropriately."
+          },
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Parse this lab report PDF and extract all biomarkers. Lab type: {{1.lab_type}}. Patient: {{2.body[0].full_name}}, DOB: {{2.body[0].date_of_birth}}, Sex: {{2.body[0].sex}}"
+              },
+              {
+                "type": "image_url",
+                "image_url": {
+                  "url": "data:application/pdf;base64,{{5.pdf_base64}}"
+                }
+              }
+            ]
+          }
+        ],
+        "temperature": 0,
+        "max_tokens": 4000,
+        "response_format": { "type": "json_object" }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Parse AI Response",
+      "type": "tools-code",
+      "description": "Parse the JSON response from AI",
+      "config": {
+        "code": "const response = JSON.parse('{{6.choices[0].message.content}}');\nconst hasCritical = response.biomarkers.some(b => b.status === 'critical_low' || b.status === 'critical_high');\nconst abnormalCount = response.biomarkers.filter(b => b.status !== 'normal').length;\nreturn {\n  ...response,\n  has_critical_values: hasCritical,\n  abnormal_count: abnormalCount,\n  total_biomarkers: response.biomarkers.length\n};"
+      }
+    },
+    {
+      "id": 8,
+      "name": "Store Lab Results",
+      "type": "http-request",
+      "description": "Save parsed lab results to Supabase",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/lab_results",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "upload_id": "{{1.upload_id}}",
+          "lab_type": "{{1.lab_type}}",
+          "lab_name": "{{7.lab_name}}",
+          "collection_date": "{{7.collection_date}}",
+          "report_date": "{{7.report_date}}",
+          "ordering_physician": "{{7.ordering_physician}}",
+          "total_biomarkers": "{{7.total_biomarkers}}",
+          "abnormal_count": "{{7.abnormal_count}}",
+          "has_critical_values": "{{7.has_critical_values}}",
+          "processed_at": "{{now}}",
+          "status": "processed"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "name": "Store Individual Biomarkers",
+      "type": "iterator",
+      "description": "Store each biomarker individually",
+      "config": {
+        "array": "{{7.biomarkers}}"
+      }
+    },
+    {
+      "id": 10,
+      "name": "Insert Biomarker Record",
+      "type": "http-request",
+      "description": "Insert individual biomarker into database",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/biomarkers",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "lab_result_id": "{{8.body[0].id}}",
+          "name": "{{9.name}}",
+          "value": "{{9.value}}",
+          "unit": "{{9.unit}}",
+          "reference_range_low": "{{9.reference_range_low}}",
+          "reference_range_high": "{{9.reference_range_high}}",
+          "status": "{{9.status}}",
+          "category": "{{9.category}}",
+          "collection_date": "{{7.collection_date}}"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "name": "Aggregator - Biomarkers",
+      "type": "aggregator",
+      "description": "Collect biomarker insertion results",
+      "config": {
+        "group_by": null,
+        "aggregate": {
+          "biomarkers_stored": "count"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "name": "Trigger AI Analysis Edge Function",
+      "type": "http-request",
+      "description": "Call AI analysis edge function for insights",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/ai-lab-analysis",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "lab_result_id": "{{8.body[0].id}}",
+          "biomarkers": "{{7.biomarkers}}",
+          "patient_context": {
+            "age": "{{calculateAge(2.body[0].date_of_birth)}}",
+            "sex": "{{2.body[0].sex}}",
+            "lab_type": "{{1.lab_type}}"
+          },
+          "include_recommendations": true,
+          "include_trends": true
+        }
+      }
+    },
+    {
+      "id": 13,
+      "name": "Store AI Analysis",
+      "type": "http-request",
+      "description": "Save AI analysis to database",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/lab_results?id=eq.{{8.body[0].id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "ai_summary": "{{12.body.summary}}",
+          "ai_recommendations": "{{12.body.recommendations}}",
+          "ai_concerns": "{{12.body.concerns}}",
+          "ai_trends": "{{12.body.trends}}",
+          "health_score": "{{12.body.health_score}}",
+          "analysis_completed_at": "{{now}}"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "name": "Router - Check Critical Values",
+      "type": "router",
+      "description": "Branch based on whether critical values exist",
+      "routes": [
+        {
+          "name": "Critical Values Found",
+          "condition": "{{7.has_critical_values}} = true",
+          "next": 15
+        },
+        {
+          "name": "No Critical Values",
+          "condition": "{{7.has_critical_values}} = false",
+          "next": 20
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Alert Therapist - Critical Values",
+      "type": "slack-post",
+      "description": "Urgent notification to therapist about critical lab values",
+      "config": {
+        "webhook_url": "{{env.SLACK_URGENT_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "CRITICAL LAB VALUES DETECTED"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Patient:* {{2.body[0].full_name}}\n*Lab Type:* {{1.lab_type}}\n*Date:* {{7.collection_date}}"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Critical Biomarkers:*\n{{#each 7.biomarkers}}{{#if (or (eq status 'critical_low') (eq status 'critical_high'))}}:warning: *{{name}}*: {{value}} {{unit}} (Range: {{reference_range_low}}-{{reference_range_high}}) - {{status}}\n{{/if}}{{/each}}"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*AI Assessment:*\n{{12.body.concerns}}"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Full Results"
+                },
+                "style": "danger",
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}/labs/{{8.body[0].id}}"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Contact Patient"
+                },
+                "url": "tel:{{2.body[0].phone}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "name": "Send Critical Values Email to Therapist",
+      "type": "sendgrid-send",
+      "description": "Email therapist about critical lab values",
+      "config": {
+        "to": "{{3.body[0].email}}",
+        "from": "alerts@ptperformance.app",
+        "template_id": "d-critical-lab-values-template-id",
+        "dynamic_template_data": {
+          "therapist_name": "{{split(3.body[0].full_name, \" \")[0]}}",
+          "patient_name": "{{2.body[0].full_name}}",
+          "lab_type": "{{1.lab_type}}",
+          "collection_date": "{{7.collection_date}}",
+          "critical_biomarkers": "{{filter(7.biomarkers, 'status', 'critical_low|critical_high')}}",
+          "ai_concerns": "{{12.body.concerns}}",
+          "view_results_url": "https://app.ptperformance.app/patients/{{1.patient_id}}/labs/{{8.body[0].id}}"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "name": "Send Critical Alert Push to Therapist",
+      "type": "http-request",
+      "description": "Send urgent push notification to therapist",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "user_id": "{{3.body[0].id}}",
+          "user_type": "therapist",
+          "title": "CRITICAL: Lab Values Alert",
+          "body": "{{2.body[0].full_name}} has critical lab values that need attention.",
+          "priority": "high",
+          "data": {
+            "screen": "patient_labs",
+            "patient_id": "{{1.patient_id}}",
+            "lab_result_id": "{{8.body[0].id}}",
+            "alert_type": "critical_lab_values"
+          }
+        }
+      }
+    },
+    {
+      "id": 18,
+      "name": "Create Urgent Follow-up Task",
+      "type": "http-request",
+      "description": "Create urgent task for therapist to follow up",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/therapist_tasks",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "therapist_id": "{{2.body[0].therapist_id}}",
+          "patient_id": "{{1.patient_id}}",
+          "task_type": "critical_lab_review",
+          "title": "URGENT: Review critical lab values for {{2.body[0].full_name}}",
+          "description": "Critical lab values detected in {{1.lab_type}} results from {{7.collection_date}}. Review results and contact patient immediately.",
+          "due_date": "{{formatDate(now, \"YYYY-MM-DD\")}}",
+          "priority": "urgent",
+          "status": "pending",
+          "related_entity_type": "lab_result",
+          "related_entity_id": "{{8.body[0].id}}"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "name": "Send Patient Critical Alert",
+      "type": "sendgrid-send",
+      "description": "Send patient notification about critical values (advising to contact provider)",
+      "config": {
+        "to": "{{2.body[0].email}}",
+        "from": "health@ptperformance.app",
+        "template_id": "d-lab-results-critical-patient-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(2.body[0].full_name, \" \")[0]}}",
+          "lab_type": "{{1.lab_type}}",
+          "collection_date": "{{formatDate(7.collection_date, \"MMMM D, YYYY\")}}",
+          "message": "Some of your lab results require attention. Your therapist {{3.body[0].full_name}} has been notified and will be reaching out to discuss next steps.",
+          "therapist_name": "{{3.body[0].full_name}}",
+          "therapist_phone": "{{3.body[0].phone}}",
+          "view_results_url": "https://app.ptperformance.app/labs/{{8.body[0].id}}"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "name": "Send Patient Results Summary",
+      "type": "sendgrid-send",
+      "description": "Send patient friendly summary of lab results",
+      "config": {
+        "to": "{{2.body[0].email}}",
+        "from": "health@ptperformance.app",
+        "template_id": "d-lab-results-summary-template-id",
+        "dynamic_template_data": {
+          "first_name": "{{split(2.body[0].full_name, \" \")[0]}}",
+          "lab_type": "{{1.lab_type}}",
+          "lab_name": "{{7.lab_name}}",
+          "collection_date": "{{formatDate(7.collection_date, \"MMMM D, YYYY\")}}",
+          "total_biomarkers": "{{7.total_biomarkers}}",
+          "normal_count": "{{subtract(7.total_biomarkers, 7.abnormal_count)}}",
+          "abnormal_count": "{{7.abnormal_count}}",
+          "health_score": "{{12.body.health_score}}",
+          "ai_summary": "{{12.body.summary}}",
+          "ai_recommendations": "{{12.body.recommendations}}",
+          "key_highlights": "{{12.body.highlights}}",
+          "view_full_results_url": "https://app.ptperformance.app/labs/{{8.body[0].id}}",
+          "unsubscribe_url": "https://app.ptperformance.app/settings/notifications"
+        },
+        "tracking_settings": {
+          "click_tracking": { "enable": true },
+          "open_tracking": { "enable": true }
+        }
+      }
+    },
+    {
+      "id": 21,
+      "name": "Send Patient Push Notification",
+      "type": "http-request",
+      "description": "Notify patient that lab results are ready",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/functions/v1/send-push-notification",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_ANON_KEY}}",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "patient_id": "{{1.patient_id}}",
+          "title": "Lab Results Ready",
+          "body": "Your {{1.lab_type}} results have been analyzed. Tap to view your personalized insights.",
+          "data": {
+            "screen": "lab_results",
+            "lab_result_id": "{{8.body[0].id}}"
+          }
+        }
+      }
+    },
+    {
+      "id": 22,
+      "name": "Notify Therapist - Normal Results",
+      "type": "slack-post",
+      "description": "Notify therapist that lab results have been processed",
+      "config": {
+        "webhook_url": "{{env.SLACK_WEBHOOK_URL}}",
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Lab Results Processed*\n\n*Patient:* {{2.body[0].full_name}}\n*Lab Type:* {{1.lab_type}}\n*Date:* {{7.collection_date}}\n*Biomarkers:* {{7.total_biomarkers}} total, {{7.abnormal_count}} outside range\n*Health Score:* {{12.body.health_score}}/100"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Results"
+                },
+                "url": "https://app.ptperformance.app/patients/{{1.patient_id}}/labs/{{8.body[0].id}}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "name": "Update Upload Status",
+      "type": "http-request",
+      "description": "Mark the upload as processed",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/lab_uploads?id=eq.{{1.upload_id}}",
+        "method": "PATCH",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "status": "processed",
+          "lab_result_id": "{{8.body[0].id}}",
+          "processed_at": "{{now}}",
+          "biomarkers_extracted": "{{7.total_biomarkers}}"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "name": "Log Lab Processing",
+      "type": "http-request",
+      "description": "Record lab processing in audit logs",
+      "config": {
+        "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/audit_logs",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+          "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "body": {
+          "action": "lab_results_processed",
+          "entity_type": "lab_result",
+          "entity_id": "{{8.body[0].id}}",
+          "patient_id": "{{1.patient_id}}",
+          "metadata": {
+            "upload_id": "{{1.upload_id}}",
+            "lab_type": "{{1.lab_type}}",
+            "biomarkers_count": "{{7.total_biomarkers}}",
+            "abnormal_count": "{{7.abnormal_count}}",
+            "has_critical": "{{7.has_critical_values}}",
+            "health_score": "{{12.body.health_score}}",
+            "patient_notified": true,
+            "therapist_notified": true
+          }
+        }
+      }
+    }
+  ],
+  "error_handler": {
+    "type": "multi",
+    "handlers": [
+      {
+        "type": "http-request",
+        "description": "Mark upload as failed",
+        "config": {
+          "url": "https://rpbxeaxlaoyoqkohytlw.supabase.co/rest/v1/lab_uploads?id=eq.{{1.upload_id}}",
+          "method": "PATCH",
+          "headers": {
+            "Authorization": "Bearer {{env.SUPABASE_SERVICE_KEY}}",
+            "apikey": "{{env.SUPABASE_SERVICE_KEY}}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "status": "failed",
+            "error_message": "{{error.message}}",
+            "failed_at": "{{now}}"
+          }
+        }
+      },
+      {
+        "type": "slack-post",
+        "description": "Alert team about failure",
+        "config": {
+          "webhook_url": "{{env.SLACK_ALERT_WEBHOOK}}",
+          "text": ":warning: Lab results processing failed\n\nPatient: {{2.body[0].full_name}}\nUpload ID: {{1.upload_id}}\nError: {{error.message}}\nStep: {{error.module_name}}"
+        }
+      }
+    ]
+  },
+  "schedule": null,
+  "estimated_operations": 25,
+  "estimated_cost_per_run": 0.10,
+  "notes": "Requires GPT-4 Vision for PDF parsing. Critical values trigger additional notifications.",
+  "environment_variables": [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SENDGRID_API_KEY",
+    "OPENAI_API_KEY",
+    "SLACK_WEBHOOK_URL",
+    "SLACK_URGENT_WEBHOOK_URL",
+    "SLACK_ALERT_WEBHOOK"
+  ]
+}
