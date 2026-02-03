@@ -5,6 +5,8 @@
 //  ACP-813: HD Video Exercise Demos - Video thumbnail with play button
 //  Displays video preview with duration, resolution, and cache status
 //
+//  BUILD 350: ACP-942 - Use CachedAsyncImage for 60fps scroll performance
+//
 
 import SwiftUI
 
@@ -53,19 +55,13 @@ struct VideoThumbnailView: View {
     private var thumbnailImage: some View {
         Group {
             if let thumbnailUrl = video.thumbnail {
-                AsyncImage(url: thumbnailUrl) { phase in
-                    switch phase {
-                    case .empty:
-                        placeholderView
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(16/9, contentMode: .fill)
-                    case .failure:
-                        placeholderView
-                    @unknown default:
-                        placeholderView
-                    }
+                // ACP-942: Use CachedAsyncImage for better scroll performance
+                CachedAsyncImage(url: thumbnailUrl) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(16/9, contentMode: .fill)
+                } placeholder: {
+                    placeholderView
                 }
             } else {
                 placeholderView
@@ -193,15 +189,13 @@ struct CompactVideoThumbnailView: View {
                 // Thumbnail
                 ZStack {
                     if let thumbnailUrl = video.thumbnail {
-                        AsyncImage(url: thumbnailUrl) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            default:
-                                thumbnailPlaceholder
-                            }
+                        // ACP-942: Use CachedAsyncImage for better scroll performance
+                        CachedAsyncImage(url: thumbnailUrl) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            thumbnailPlaceholder
                         }
                     } else {
                         thumbnailPlaceholder
@@ -297,17 +291,14 @@ struct PrimaryVideoCardView: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Large thumbnail
                 ZStack {
-                    // Thumbnail
+                    // Thumbnail - ACP-942: Use CachedAsyncImage for better scroll performance
                     if let thumbnailUrl = video.thumbnail {
-                        AsyncImage(url: thumbnailUrl) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(16/9, contentMode: .fill)
-                            default:
-                                thumbnailPlaceholder
-                            }
+                        CachedAsyncImage(url: thumbnailUrl) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(16/9, contentMode: .fill)
+                        } placeholder: {
+                            thumbnailPlaceholder
                         }
                     } else {
                         thumbnailPlaceholder

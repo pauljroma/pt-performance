@@ -365,7 +365,7 @@ private struct WorkoutCard: View {
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(workout.name)\(workout.durationMinutes != nil ? ", \(workout.durationMinutes!) minutes" : "")\(workout.difficulty != nil ? ", \(workout.difficulty!.capitalized) difficulty" : "")")
+        .accessibilityLabel("\(workout.name)\(workout.durationMinutes.map { ", \($0) minutes" } ?? "")\(workout.difficulty.map { ", \($0.capitalized) difficulty" } ?? "")")
         .accessibilityHint("Double tap to start workout")
     }
 

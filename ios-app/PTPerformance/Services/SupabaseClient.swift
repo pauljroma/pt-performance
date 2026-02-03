@@ -81,23 +81,18 @@ class PTSupabaseClient: ObservableObject {
     }()
 
     private init() {
-        let logger = DebugLogger.shared
-
-        logger.log("Initializing PTSupabaseClient...")
+        // ACP-932/945: Cold Start & Main Thread Optimization
+        // Minimize synchronous work during init - defer logging to background
 
         // Load from Config (with environment variable override support)
         let supabaseURL = ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? Config.supabaseURL
         let supabaseAnonKey = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? Config.supabaseAnonKey
-
-        logger.log("Supabase URL: \(supabaseURL)")
-        logger.log("Anon Key: \(supabaseAnonKey.prefix(20))...")
 
         // Validate URL; use a placeholder if invalid to prevent crash (client will be non-functional)
         let url: URL
         if let validUrl = URL(string: supabaseURL) {
             url = validUrl
         } else {
-            logger.log("Invalid Supabase URL: \(supabaseURL). Client will be non-functional.", level: .error)
             isConfigurationValid = false
             // Use a placeholder URL to allow initialization; all operations will fail gracefully
             url = URL(string: "https://invalid.supabase.co")!
@@ -106,7 +101,6 @@ class PTSupabaseClient: ObservableObject {
         // Use flexible decoder for all database queries
         // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
         // Auth configuration ensures JWT is included in all requests
-        logger.log("Creating Supabase client with flexible decoder and auth config...")
         client = Supabase.SupabaseClient(
             supabaseURL: url,
             supabaseKey: supabaseAnonKey,
@@ -119,9 +113,25 @@ class PTSupabaseClient: ObservableObject {
             )
         )
 
-        logger.log("Supabase client initialized with flexible decoder", level: .success)
+        // ACP-932/945: Defer logging and session check to avoid blocking main thread
+        let isValid = isConfigurationValid
+        let urlString = supabaseURL
+        let keyPrefix = String(supabaseAnonKey.prefix(20))
 
-        // Check for existing session on init
+        Task.detached(priority: .utility) {
+            let logger = DebugLogger.shared
+            logger.log("Initializing PTSupabaseClient...")
+            logger.log("Supabase URL: \(urlString)")
+            logger.log("Anon Key: \(keyPrefix)...")
+
+            if !isValid {
+                logger.log("Invalid Supabase URL: \(urlString). Client will be non-functional.", level: .error)
+            }
+
+            logger.log("Supabase client initialized with flexible decoder", level: .success)
+        }
+
+        // Check for existing session on init (already properly deferred)
         Task {
             await checkSession()
         }

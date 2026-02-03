@@ -4,6 +4,8 @@
 //
 //  Reusable cover image component for programs with async loading support
 //
+//  BUILD 350: ACP-942 - Use CachedAsyncImage for 60fps scroll performance
+//
 
 import SwiftUI
 
@@ -15,20 +17,14 @@ struct ProgramCoverImage: View {
     var body: some View {
         Group {
             if let urlString = url, let imageUrl = URL(string: urlString) {
-                AsyncImage(url: imageUrl) { phase in
-                    switch phase {
-                    case .empty:
-                        placeholderView
-                            .overlay(ProgressView())
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        placeholderView
-                    @unknown default:
-                        placeholderView
-                    }
+                // ACP-942: Use CachedAsyncImage for better scroll performance
+                CachedAsyncImage(url: imageUrl) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    placeholderView
+                        .overlay(ProgressView())
                 }
             } else {
                 placeholderView

@@ -76,32 +76,59 @@ struct PTPerformanceApp: App {
     @ObservedObject private var storeKit = StoreKitService.shared
     @Environment(\.scenePhase) private var scenePhase
 
-    init() {
-        // Initialize Sentry error monitoring (ACP-599)
-        SentryConfig.initialize()
+    // ACP-932: Cold Start Optimization - Track launch time for <2 second target
+    private static let launchStartTime = CFAbsoluteTimeGetCurrent()
 
-        // Track app launch performance
+    init() {
+        // ACP-932: Cold Start Optimization - Minimal synchronous init
+        // Only track launch time synchronously - everything else deferred
         PerformanceMonitor.shared.trackAppLaunch()
 
-        // ACP-826: Register App Shortcuts for Siri integration
-        if #available(iOS 16.0, *) {
-            PTPerformanceShortcuts.updateAppShortcutParameters()
+        // ACP-932: Defer heavy initialization to background
+        // This moves blocking work off the main thread during cold start
+        Task.detached(priority: .utility) {
+            // Initialize Sentry error monitoring (ACP-599)
+            // Deferred to avoid blocking main thread
+            SentryConfig.initialize()
+
+            // ACP-826: Register App Shortcuts for Siri integration
+            // Safe to defer - shortcuts are registered before user interaction
+            if #available(iOS 16.0, *) {
+                await MainActor.run {
+                    PTPerformanceShortcuts.updateAppShortcutParameters()
+                }
+            }
+
+            // ACP-827: Register background tasks for Apple Health sync
+            // Must be done early but doesn't need to block launch
+            await MainActor.run {
+                HealthSyncManager.shared.registerBackgroundTasks()
+            }
+
+            // Initialize CacheCoordinator for unified memory management
+            // Deferred - memory warning observer setup is not launch-critical
+            await MainActor.run {
+                _ = CacheCoordinator.shared
+            }
+
+            // ACP-932: Log app startup with deferred device info collection
+            // UIDevice.current access can be slow, so defer it
+            await Self.logDeferredLaunch()
         }
+    }
 
-        // ACP-827: Register background tasks for Apple Health sync
-        HealthSyncManager.shared.registerBackgroundTasks()
-
-        // Initialize CacheCoordinator for unified memory management
-        _ = CacheCoordinator.shared
-
-        // Log app startup
+    // ACP-932: Deferred launch logging to avoid UIDevice access during init
+    @MainActor
+    private static func logDeferredLaunch() {
+        let launchDuration = CFAbsoluteTimeGetCurrent() - launchStartTime
         ErrorLogger.shared.logUserAction(
             action: "app_launched",
             properties: [
                 "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
                 "build": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown",
                 "device": UIDevice.current.model,
-                "os_version": UIDevice.current.systemVersion
+                "os_version": UIDevice.current.systemVersion,
+                "cold_start_ms": Int(launchDuration * 1000)
             ]
         )
     }
@@ -115,17 +142,23 @@ struct PTPerformanceApp: App {
                     PerformanceMonitor.shared.finishAppLaunch()
                 }
                 .task {
-                    await storeKit.loadProducts()
-                    await storeKit.updateSubscriptionStatus()
+                    // ACP-932: Cold Start Optimization - Parallelize independent async work
+                    // Group 1: Critical path - StoreKit needs to complete for premium features
+                    async let storeKitProducts = storeKit.loadProducts()
+                    async let subscriptionStatus = storeKit.updateSubscriptionStatus()
 
-                    // Sync any pending offline exercise logs on app launch
-                    await OfflineQueueManager.shared.syncPendingLogs()
+                    // Group 2: Background work - can run independently
+                    // These don't block UI rendering
+                    async let offlineSync: () = OfflineQueueManager.shared.syncPendingLogs()
+                    async let healthSync: () = HealthSyncManager.shared.syncOnLaunchIfEnabled()
+                    async let workoutPreload: () = WorkoutPreloadService.shared.preloadOnLaunch()
 
-                    // ACP-827: Sync Apple Health data on launch if enabled
-                    await HealthSyncManager.shared.syncOnLaunchIfEnabled()
+                    // Wait for StoreKit first (may affect UI state)
+                    _ = await storeKitProducts
+                    _ = await subscriptionStatus
 
-                    // ACP-502: Pre-load today's workout for instant access
-                    await WorkoutPreloadService.shared.preloadOnLaunch()
+                    // Background tasks can complete whenever
+                    _ = await (offlineSync, healthSync, workoutPreload)
                 }
                 .onOpenURL { url in
                     handleDeepLink(url)
@@ -258,6 +291,7 @@ final class AppState: ObservableObject {
 // MARK: - Logging Service for On-Screen Diagnostics
 
 /// Shared logging service that captures all diagnostic messages for UI display
+/// ACP-945: Main Thread Optimization - Uses reusable DateFormatter and batched updates
 class LoggingService: ObservableObject {
     static let shared = LoggingService()
 
@@ -266,6 +300,13 @@ class LoggingService: ObservableObject {
 
     private let maxMessages = 500
 
+    // ACP-945: Reuse DateFormatter to avoid allocation overhead on every log
+    private static let timestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
+
     struct LogMessage: Identifiable {
         let id = UUID()
         let timestamp: Date
@@ -273,9 +314,8 @@ class LoggingService: ObservableObject {
         let level: LogLevel
 
         var formatted: String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm:ss.SSS"
-            return "[\(formatter.string(from: timestamp))] \(level.emoji) \(message)"
+            // ACP-945: Use shared formatter instead of creating new one each time
+            return "[\(LoggingService.timestampFormatter.string(from: timestamp))] \(level.emoji) \(message)"
         }
     }
 
@@ -300,17 +340,22 @@ class LoggingService: ObservableObject {
     func log(_ message: String, level: LogLevel = .diagnostic) {
         guard isEnabled else { return }
 
+        // ACP-945: Create the log message off the main thread to reduce main thread work
+        let logMessage = LogMessage(timestamp: Date(), message: message, level: level)
+
         Task { @MainActor in
-            // Also print to console
+            // Print to console (debug only in release for performance)
+            #if DEBUG
             print("\(level.emoji) [\(level)] \(message)")
+            #endif
 
             // Add to messages array
-            let logMessage = LogMessage(timestamp: Date(), message: message, level: level)
             self.messages.append(logMessage)
 
-            // Keep only last N messages
+            // Keep only last N messages - use more efficient removal
             if self.messages.count > self.maxMessages {
-                self.messages.removeFirst(self.messages.count - self.maxMessages)
+                let removeCount = self.messages.count - self.maxMessages
+                self.messages.removeFirst(removeCount)
             }
         }
     }

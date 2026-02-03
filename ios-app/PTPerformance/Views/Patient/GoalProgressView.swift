@@ -403,12 +403,12 @@ struct GoalProgressMiniChart: View {
                     )
 
                     // Milestone points
-                    if point.milestone != nil {
+                    if let milestone = point.milestone {
                         PointMark(
                             x: .value("Date", point.date),
                             y: .value("Value", point.value)
                         )
-                        .foregroundStyle(point.milestone!.color)
+                        .foregroundStyle(milestone.color)
                         .symbolSize(40)
                     }
                 }

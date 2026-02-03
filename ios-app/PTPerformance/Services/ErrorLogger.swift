@@ -235,4 +235,166 @@ class ErrorLogger {
             "user_id": currentUserId ?? "unknown"
         ])
     }
+
+    // MARK: - ACP-955: Enhanced Breadcrumbs
+
+    /// Log a navigation event for crash debugging
+    func logNavigation(from: String, to: String) {
+        let message = "Navigation: \(from) -> \(to)"
+        logger.info("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .info, category: "navigation")
+        breadcrumb.message = message
+        breadcrumb.data = ["from": from, "to": to]
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    /// Log a data operation for crash debugging
+    func logDataOperation(operation: String, entity: String, count: Int? = nil, success: Bool = true) {
+        var message = "Data: \(operation) \(entity)"
+        if let count = count {
+            message += " (\(count) records)"
+        }
+        message += success ? " - success" : " - failed"
+
+        if success {
+            logger.info("\(message)")
+        } else {
+            logger.error("\(message)")
+        }
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: success ? .info : .error, category: "data")
+        breadcrumb.message = message
+        var data: [String: Any] = [
+            "operation": operation,
+            "entity": entity,
+            "success": success
+        ]
+        if let count = count {
+            data["count"] = count
+        }
+        breadcrumb.data = data
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    /// Log a state change for crash debugging
+    func logStateChange(component: String, from: String, to: String) {
+        let message = "State: \(component) changed from '\(from)' to '\(to)'"
+        logger.info("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .info, category: "state")
+        breadcrumb.message = message
+        breadcrumb.data = [
+            "component": component,
+            "from": from,
+            "to": to
+        ]
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    /// Log a critical operation start (helps identify what was happening during crash)
+    func logCriticalOperationStart(_ operation: String, details: [String: Any]? = nil) {
+        var message = "Starting critical operation: \(operation)"
+        logger.info("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .info, category: "critical_operation")
+        breadcrumb.message = "START: \(operation)"
+        if let details = details {
+            breadcrumb.data = details.mapValues { String(describing: $0) }
+        }
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    /// Log a critical operation end
+    func logCriticalOperationEnd(_ operation: String, success: Bool, duration: TimeInterval? = nil) {
+        var message = "Completed critical operation: \(operation) - \(success ? "success" : "failed")"
+        if let duration = duration {
+            message += " (\(String(format: "%.2f", duration * 1000))ms)"
+        }
+
+        if success {
+            logger.info("\(message)")
+        } else {
+            logger.error("\(message)")
+        }
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: success ? .info : .error, category: "critical_operation")
+        breadcrumb.message = "END: \(operation) - \(success ? "success" : "failed")"
+        var data: [String: Any] = ["success": success]
+        if let duration = duration {
+            data["duration_ms"] = Int(duration * 1000)
+        }
+        breadcrumb.data = data
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    // MARK: - ACP-956: Crash Prevention Logging
+
+    /// Log a defensive coding intervention (when a fallback was used)
+    func logDefensiveFallback(context: String, expected: String, actual: String, fallback: String) {
+        let message = "Defensive fallback used in \(context): expected '\(expected)', got '\(actual)', using '\(fallback)'"
+        logger.warning("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .warning, category: "defensive_coding")
+        breadcrumb.message = message
+        breadcrumb.data = [
+            "context": context,
+            "expected": expected,
+            "actual": actual,
+            "fallback": fallback
+        ]
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
+
+    /// Log when nil was encountered unexpectedly
+    func logUnexpectedNil(context: String, variable: String) {
+        let message = "Unexpected nil for '\(variable)' in \(context)"
+        logger.warning("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .warning, category: "unexpected_nil")
+        breadcrumb.message = message
+        breadcrumb.data = [
+            "context": context,
+            "variable": variable
+        ]
+        SentrySDK.addBreadcrumb(breadcrumb)
+
+        // Also capture as a non-fatal error for tracking
+        SentrySDK.capture(message: message) { scope in
+            scope.setLevel(.warning)
+            scope.setTag(value: "unexpected_nil", key: "error_type")
+            scope.setTag(value: context, key: "context")
+        }
+        #endif
+    }
+
+    /// Log array bounds check that prevented a crash
+    func logBoundsCheckPrevention(context: String, index: Int, arrayCount: Int) {
+        let message = "Bounds check prevented crash in \(context): index \(index) out of bounds (count: \(arrayCount))"
+        logger.warning("\(message)")
+
+        #if canImport(Sentry)
+        let breadcrumb = Breadcrumb(level: .warning, category: "bounds_check")
+        breadcrumb.message = message
+        breadcrumb.data = [
+            "context": context,
+            "index": index,
+            "count": arrayCount
+        ]
+        SentrySDK.addBreadcrumb(breadcrumb)
+        #endif
+    }
 }

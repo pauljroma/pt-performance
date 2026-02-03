@@ -11,13 +11,10 @@ struct RootView: View {
     var body: some View {
         Group {
             if isCheckingSession {
-                // Show loading while restoring session
-                VStack(spacing: 16) {
-                    ProgressView()
-                    Text("Loading...")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+                // ACP-932: Show minimal loading while restoring session
+                // Keep this view lightweight to reduce initial render time
+                ProgressView()
+                    .scaleEffect(1.2)
             } else if !appState.isAuthenticated {
                 AuthLandingView()
             } else {
@@ -57,21 +54,25 @@ struct RootView: View {
         }
     }
 
-    /// Restore existing Supabase session on app launch
+    /// ACP-932: Restore existing Supabase session on app launch
+    /// Optimized to minimize time to first meaningful paint
     private func restoreSession() async {
         let supabase = PTSupabaseClient.shared
 
         do {
             let session = try await supabase.client.auth.session
 
-            // Session exists — restore auth state
+            // Session exists — restore auth state immediately
             await MainActor.run {
                 supabase.currentSession = session
                 supabase.currentUser = session.user
             }
 
-            await supabase.fetchUserRole(userId: session.user.id.uuidString)
+            // ACP-932: Fetch role and update UI state in parallel where possible
+            async let roleTask: () = supabase.fetchUserRole(userId: session.user.id.uuidString)
+            await roleTask
 
+            // Update UI state as soon as role is known
             await MainActor.run {
                 appState.userId = supabase.userId
                 appState.userRole = supabase.userRole ?? .patient
@@ -79,15 +80,21 @@ struct RootView: View {
                 isCheckingSession = false
             }
 
-            // ACP-479: Load patient mode after session restore
-            if supabase.userRole == .patient {
-                await modeService.loadPatientMode()
-            }
+            // ACP-932/945: Defer non-critical work to after UI is displayed
+            // These operations don't affect the initial UI render
+            Task.detached(priority: .utility) {
+                // ACP-479: Load patient mode after session restore
+                if supabase.userRole == .patient {
+                    await modeService.loadPatientMode()
+                }
 
-            // Start session monitoring for restored sessions
-            SessionManager.shared.startMonitoring()
+                // Start session monitoring for restored sessions
+                await MainActor.run {
+                    SessionManager.shared.startMonitoring()
+                }
+            }
         } catch {
-            // No valid session — show login screen
+            // No valid session — show login screen immediately
             #if DEBUG
             print("No existing session: \(error.localizedDescription)")
             #endif

@@ -118,7 +118,7 @@ struct HealthKitSettingsView: View {
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Sleep: \(healthKitService.todaySleep != nil ? String(format: "%.1f hours", healthKitService.todaySleep!.totalHours) : "No data")")
+                    .accessibilityLabel("Sleep: \(healthKitService.todaySleep.map { String(format: "%.1f hours", $0.totalHours) } ?? "No data")")
 
                     // ACP-827: Exported Workouts
                     HStack {

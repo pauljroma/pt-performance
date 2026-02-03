@@ -286,7 +286,7 @@ struct EditorPhaseRowView: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(phase.name)\(phase.durationWeeks != nil ? ", \(phase.durationWeeks!) weeks" : "")\(phase.goals != nil && !phase.goals!.isEmpty ? ", Goals: \(phase.goals!)" : "")")
+        .accessibilityLabel("\(phase.name)\(phase.durationWeeks.map { ", \($0) weeks" } ?? "")\(phase.goals.flatMap { $0.isEmpty ? nil : ", Goals: \($0)" } ?? "")")
         .accessibilityHint("Double tap to edit this phase")
     }
 }

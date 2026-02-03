@@ -162,10 +162,15 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
     }
 
     /// Load all data (programs + featured)
+    /// ACP-937: Fixed memory leak - use [weak self] in TaskGroup closures
     func loadAllData() async {
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { await self.loadPrograms() }
-            group.addTask { await self.loadFeatured() }
+        await withTaskGroup(of: Void.self) { [weak self] group in
+            group.addTask { [weak self] in
+                await self?.loadPrograms()
+            }
+            group.addTask { [weak self] in
+                await self?.loadFeatured()
+            }
         }
     }
 

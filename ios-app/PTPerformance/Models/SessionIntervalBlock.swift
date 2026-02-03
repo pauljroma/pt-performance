@@ -18,7 +18,8 @@ struct IntervalExercise: Codable, Identifiable, Hashable {
     let notes: String?
 
     var hasVideo: Bool {
-        videoUrl != nil && !videoUrl!.isEmpty
+        guard let url = videoUrl else { return false }
+        return !url.isEmpty
     }
 
     init(

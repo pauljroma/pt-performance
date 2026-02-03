@@ -130,7 +130,7 @@ struct ProgramRowView: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(program.name)\(program.status != nil ? ", \(program.status!.capitalized)" : ""), \(program.durationWeeks) \(program.durationWeeks == 1 ? "week" : "weeks"), \(program.targetLevel.capitalized) level")
+        .accessibilityLabel("\(program.name)\(program.status.map { ", \($0.capitalized)" } ?? ""), \(program.durationWeeks) \(program.durationWeeks == 1 ? "week" : "weeks"), \(program.targetLevel.capitalized) level")
         .accessibilityHint("Double tap to view and edit program")
     }
 }

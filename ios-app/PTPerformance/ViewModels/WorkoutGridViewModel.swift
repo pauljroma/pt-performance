@@ -131,8 +131,14 @@ class WorkoutGridViewModel: ObservableObject {
         realtimeChannel = supabase.client.realtimeV2.channel("session_exercises:\(sessionId)")
 
         Task {
+            // Guard against nil channel before accessing
+            guard let channel = realtimeChannel else {
+                logger.log("Realtime channel is nil, cannot subscribe", level: .warning)
+                return
+            }
+
             // Listen for INSERT, UPDATE, DELETE on session_exercises using new filter syntax
-            let changes = realtimeChannel!
+            let changes = channel
                 .postgresChange(
                     AnyAction.self,
                     schema: "public",
@@ -141,7 +147,7 @@ class WorkoutGridViewModel: ObservableObject {
                 )
 
             do {
-                try await realtimeChannel!.subscribeWithError()
+                try await channel.subscribeWithError()
             } catch {
                 logger.log("Realtime subscription error: \(error)", level: .error)
                 return

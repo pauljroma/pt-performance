@@ -332,12 +332,13 @@ class WorkoutTemplateLibraryViewModel: ObservableObject {
         }
     }
 
+    /// ACP-937: Fixed memory leak - use [weak self] in TaskGroup closures
     func loadAllTemplates() async {
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { await self.loadSystemTemplates() }
-            group.addTask { await self.loadPatientTemplates() }
-            group.addTask { await self.loadFavorites() }
-            group.addTask { await self.loadTrainerRecommendations() }
+        await withTaskGroup(of: Void.self) { [weak self] group in
+            group.addTask { [weak self] in await self?.loadSystemTemplates() }
+            group.addTask { [weak self] in await self?.loadPatientTemplates() }
+            group.addTask { [weak self] in await self?.loadFavorites() }
+            group.addTask { [weak self] in await self?.loadTrainerRecommendations() }
         }
     }
 

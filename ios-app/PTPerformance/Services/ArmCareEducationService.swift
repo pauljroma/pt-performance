@@ -370,7 +370,8 @@ struct ArmCareArticle: Codable, Identifiable, Hashable {
 
     /// Whether the article has video content
     var hasVideo: Bool {
-        videoUrl != nil && !videoUrl!.isEmpty
+        guard let url = videoUrl else { return false }
+        return !url.isEmpty
     }
 
     /// Whether the article has related exercises
