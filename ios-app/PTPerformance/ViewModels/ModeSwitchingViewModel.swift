@@ -2,7 +2,6 @@
 //  ModeSwitchingViewModel.swift
 //  PTPerformance
 //
-//  Created by Claude (BUILD 115) on 2026-01-02.
 //  ViewModel for mode switching panel
 //
 

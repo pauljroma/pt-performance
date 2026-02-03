@@ -241,15 +241,17 @@ actor SmartNotificationService {
     ///   - patientId: The patient's UUID
     ///   - dayOfWeek: Day of week (0=Sunday, 6=Saturday)
     /// - Returns: Optimal reminder time information
+    /// - Throws: SmartNotificationError.fetchFailed if the RPC call fails
     func getOptimalReminderTime(
         for patientId: UUID,
         dayOfWeek: Int
     ) async throws -> OptimalReminderTime {
+        let params = GetOptimalReminderTimeParams(
+            pPatientId: patientId.uuidString,
+            pDayOfWeek: String(dayOfWeek)
+        )
+
         do {
-            let params = GetOptimalReminderTimeParams(
-                pPatientId: patientId.uuidString,
-                pDayOfWeek: String(dayOfWeek)
-            )
             let result: [OptimalReminderTimeResponse] = try await supabase
                 .rpc(
                     "get_optimal_reminder_time",
@@ -259,6 +261,7 @@ actor SmartNotificationService {
                 .value
 
             guard let response = result.first else {
+                // No pattern data yet - this is expected for new users, return default
                 return OptimalReminderTime.default
             }
 
@@ -269,7 +272,28 @@ actor SmartNotificationService {
                 basedOnWorkouts: response.basedOnWorkouts
             )
         } catch {
-            // Return default if RPC fails
+            // Log the error for debugging/monitoring
+            errorLogger.logError(error, context: "SmartNotificationService.getOptimalReminderTime(patient=\(patientId), day=\(dayOfWeek))")
+            throw SmartNotificationError.fetchFailed(error)
+        }
+    }
+
+    /// Get the optimal reminder time for a specific day, with fallback to default on error.
+    ///
+    /// Use this variant when you want to gracefully degrade to default timing
+    /// rather than surfacing errors to the user (e.g., background scheduling).
+    ///
+    /// - Parameters:
+    ///   - patientId: The patient's UUID
+    ///   - dayOfWeek: Day of week (0=Sunday, 6=Saturday)
+    /// - Returns: Optimal reminder time information, or default if fetch fails
+    func getOptimalReminderTimeWithFallback(
+        for patientId: UUID,
+        dayOfWeek: Int
+    ) async -> OptimalReminderTime {
+        do {
+            return try await getOptimalReminderTime(for: patientId, dayOfWeek: dayOfWeek)
+        } catch {
             DebugLogger.shared.log(
                 "Failed to get optimal reminder time, using default: \(error.localizedDescription)",
                 level: .warning
@@ -305,8 +329,8 @@ actor SmartNotificationService {
         let calendar = Calendar.current
         let today = calendar.component(.weekday, from: Date()) - 1 // Convert to 0-indexed
 
-        // Get optimal time
-        let optimalTime = try await getOptimalReminderTime(for: patientId, dayOfWeek: today)
+        // Get optimal time (use fallback variant since this is background scheduling)
+        let optimalTime = await getOptimalReminderTimeWithFallback(for: patientId, dayOfWeek: today)
 
         // Create notification content
         let content = UNMutableNotificationContent()
@@ -378,7 +402,7 @@ actor SmartNotificationService {
             let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: Date()) ?? Date()
             let dayOfWeek = calendar.component(.weekday, from: targetDate) - 1
 
-            let optimalTime = try await getOptimalReminderTime(for: patientId, dayOfWeek: dayOfWeek)
+            let optimalTime = await getOptimalReminderTimeWithFallback(for: patientId, dayOfWeek: dayOfWeek)
 
             let content = UNMutableNotificationContent()
             content.title = "Time to Train"

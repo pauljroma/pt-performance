@@ -2,8 +2,6 @@ import Foundation
 import SwiftUI
 
 /// Helper model for readiness score ranges and categories
-/// BUILD 116 - Agent 6: Daily Readiness Models
-///
 /// Provides categorization and recommendations based on readiness scores
 struct ReadinessScoreHelper {
     let score: Double
@@ -39,7 +37,7 @@ typealias ReadinessScore = ReadinessScoreHelper
 
 /// Readiness category classification with training recommendations
 /// Based on Agent 3 specifications
-enum ReadinessCategory: String, Codable, CaseIterable {
+enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
     case elite = "Elite"
     case high = "High"
     case moderate = "Moderate"

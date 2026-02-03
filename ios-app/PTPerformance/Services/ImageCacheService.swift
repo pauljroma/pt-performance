@@ -2,7 +2,6 @@
 //  ImageCacheService.swift
 //  PTPerformance
 //
-//  BUILD 95 - Agent 8: Performance optimization
 //  Efficient image caching service to reduce network requests and memory usage
 //
 
@@ -34,14 +33,23 @@ class ImageCacheService: ObservableObject {
         memoryCache.totalCostLimit = maxMemoryCacheSize
         memoryCache.countLimit = 100  // Max 100 images in memory
 
-        // Setup disk cache directory
-        guard let cachesDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-            fatalError("ImageCacheService: Unable to access caches directory. This should never happen on iOS.")
+        // Setup disk cache directory; fallback to temp directory if unavailable
+        if let cachesDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            cacheDirectory = cachesDirectory.appendingPathComponent("ImageCache", isDirectory: true)
+        } else {
+            // Fallback to temp directory - this should never happen on iOS but handles edge cases gracefully
+            #if DEBUG
+            print("ImageCacheService: Unable to access caches directory, using temp directory")
+            #endif
+            cacheDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("ImageCache", isDirectory: true)
         }
-        cacheDirectory = cachesDirectory.appendingPathComponent("ImageCache", isDirectory: true)
 
         // Create cache directory if needed
-        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "ImageCacheService.init.createCacheDirectory")
+        }
 
         // Setup automatic cleanup on memory warning
         NotificationCenter.default.addObserver(
@@ -52,8 +60,8 @@ class ImageCacheService: ObservableObject {
         )
 
         // Cleanup old cache on init
-        Task.detached(priority: .utility) {
-            await self.cleanupOldCache()
+        Task.detached(priority: .utility) { [weak self] in
+            await self?.cleanupOldCache()
         }
     }
 
@@ -90,9 +98,9 @@ class ImageCacheService: ObservableObject {
     /// Preload images in background for better UX
     /// - Parameter urls: Array of image URLs to preload
     func preloadImages(urls: [URL]) {
-        Task.detached(priority: .utility) {
+        Task.detached(priority: .utility) { [weak self] in
             for url in urls {
-                _ = try? await self.loadImage(from: url)
+                _ = try? await self?.loadImage(from: url)
             }
         }
     }
@@ -162,7 +170,11 @@ class ImageCacheService: ObservableObject {
         let filename = url.absoluteString.sha256Hash
         let fileURL = cacheDirectory.appendingPathComponent(filename)
 
-        try? data.write(to: fileURL)
+        do {
+            try data.write(to: fileURL)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "ImageCacheService.saveToDisk", metadata: ["url": url.absoluteString])
+        }
 
         // Check if we need to cleanup
         let cacheSize = await getCacheSize()

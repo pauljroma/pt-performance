@@ -165,6 +165,7 @@ struct MealLogView: View {
                 } onRemove: {
                     viewModel.removeFood(item)
                 }
+                .id(item.id)
             }
         }
         .padding()
@@ -206,6 +207,7 @@ struct MealLogView: View {
                     FoodSearchRow(food: food) {
                         viewModel.addFood(food)
                     }
+                    .id(food.id)
                 }
             }
         }

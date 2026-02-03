@@ -136,7 +136,12 @@ enum HealthKitError: LocalizedError {
 // MARK: - HealthKitService
 
 /// Service for integrating with Apple HealthKit
-/// Provides access to HRV, sleep, heart rate, and activity data
+/// Acts as a facade/coordinator that delegates to focused services:
+/// - HRVService: Heart rate variability data
+/// - SleepService: Sleep analysis data
+/// - ActivityService: Energy, steps, resting heart rate
+/// - WorkoutExportService: Workout export to Apple Health
+///
 /// Uses @MainActor for thread-safe UI updates
 @MainActor
 class HealthKitService: ObservableObject {
@@ -167,6 +172,44 @@ class HealthKitService: ObservableObject {
     // Using nonisolated(unsafe) to allow initialization in nonisolated init
     // This is safe because supabaseClient is only read after initialization
     private nonisolated(unsafe) let supabaseClient: PTSupabaseClient
+
+    // MARK: - Focused Services (lazy initialization)
+
+    private var _hrvService: HRVService?
+    private var hrvService: HRVService? {
+        guard let healthStore = healthStore else { return nil }
+        if _hrvService == nil {
+            _hrvService = HRVService(healthStore: healthStore)
+        }
+        return _hrvService
+    }
+
+    private var _sleepService: SleepService?
+    private var sleepService: SleepService? {
+        guard let healthStore = healthStore else { return nil }
+        if _sleepService == nil {
+            _sleepService = SleepService(healthStore: healthStore)
+        }
+        return _sleepService
+    }
+
+    private var _activityService: ActivityService?
+    private var activityService: ActivityService? {
+        guard let healthStore = healthStore else { return nil }
+        if _activityService == nil {
+            _activityService = ActivityService(healthStore: healthStore)
+        }
+        return _activityService
+    }
+
+    private var _workoutExportService: WorkoutExportService?
+    private var workoutExportService: WorkoutExportService? {
+        guard let healthStore = healthStore else { return nil }
+        if _workoutExportService == nil {
+            _workoutExportService = WorkoutExportService(healthStore: healthStore)
+        }
+        return _workoutExportService
+    }
 
     /// Check if HealthKit is available on this device
     static var isHealthKitAvailable: Bool {
@@ -325,13 +368,13 @@ class HealthKitService: ObservableObject {
 
         let today = Date()
 
-        // Fetch all data in parallel
+        // Fetch all data in parallel using focused services
         async let hrvResult = fetchHRV(for: today)
         async let sleepResult = fetchSleepData(for: today)
         async let rhrResult = fetchRestingHeartRate(for: today)
-        async let activeEnergyResult = fetchActiveEnergy(for: today)
-        async let exerciseTimeResult = fetchExerciseTime(for: today)
-        async let stepCountResult = fetchStepCount(for: today)
+        async let activeEnergyResult = activityService?.fetchActiveEnergy(for: today)
+        async let exerciseTimeResult = activityService?.fetchExerciseTime(for: today)
+        async let stepCountResult = activityService?.fetchStepCount(for: today)
 
         // Await all results
         let hrv = try? await hrvResult
@@ -355,344 +398,66 @@ class HealthKitService: ObservableObject {
             sleepDeepMinutes: sleep?.deepMinutes,
             sleepREMMinutes: sleep?.remMinutes,
             restingHeartRate: rhr,
-            activeEnergyBurned: activeEnergy,
+            activeEnergyBurned: activeEnergy ?? nil,
             exerciseMinutes: exerciseTime != nil ? Int(exerciseTime!) : nil,
             stepCount: stepCount != nil ? Int(stepCount!) : nil
         )
     }
 
+    // MARK: - HRV Methods (delegated to HRVService)
+
     /// Fetch HRV (SDNN) for a specific date
     /// - Parameter date: The date to fetch HRV for
     /// - Returns: HRV value in milliseconds (SDNN), or nil if not available
     func fetchHRV(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
+        guard let hrvService = hrvService else {
             throw HealthKitError.notAvailable
         }
-
-        guard let hrvType = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: hrvType,
-                quantitySamplePredicate: predicate,
-                options: .discreteAverage
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let average = result.averageQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let hrvValue = average.doubleValue(for: HKUnit.secondUnit(with: .milli))
-                continuation.resume(returning: hrvValue)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await hrvService.fetchHRV(for: date)
     }
+
+    /// Calculate HRV baseline as 7-day rolling average
+    /// - Parameter days: Number of days to average (default 7)
+    /// - Returns: Average HRV value, or nil if insufficient data
+    func getHRVBaseline(days: Int = 7) async throws -> Double? {
+        guard let hrvService = hrvService else {
+            throw HealthKitError.notAvailable
+        }
+        return try await hrvService.getHRVBaseline(days: days)
+    }
+
+    // MARK: - Sleep Methods (delegated to SleepService)
 
     /// Fetch sleep data for a specific date (previous night's sleep)
     /// - Parameter date: The date to fetch sleep for (looks at sleep ending on this date)
     /// - Returns: SleepData with breakdown by stage, or nil if not available
     func fetchSleepData(for date: Date) async throws -> SleepData? {
-        guard let healthStore = healthStore else {
+        guard let sleepService = sleepService else {
             throw HealthKitError.notAvailable
         }
-
-        guard let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else {
-            return nil
-        }
-
-        // For sleep, look at the previous night (sleep ending on the given date)
-        let calendar = Calendar.current
-        let endOfDay = calendar.startOfDay(for: date).addingTimeInterval(12 * 60 * 60) // Noon
-        let startTime = calendar.date(byAdding: .hour, value: -18, to: endOfDay)! // 6 PM previous day
-
-        let predicate = HKQuery.predicateForSamples(withStart: startTime, end: endOfDay, options: .strictEndDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: sleepType,
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)]
-            ) { _, samples, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let sleepSamples = samples as? [HKCategorySample], !sleepSamples.isEmpty else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                // Process sleep samples - all durations in seconds initially
-                var inBedDuration: TimeInterval = 0
-                var asleepDuration: TimeInterval = 0
-                var remDuration: TimeInterval = 0
-                var deepSleepDuration: TimeInterval = 0
-                var coreSleepDuration: TimeInterval = 0
-                var awakeDuration: TimeInterval = 0
-
-                for sample in sleepSamples {
-                    let duration = sample.endDate.timeIntervalSince(sample.startDate)
-
-                    switch sample.value {
-                    case HKCategoryValueSleepAnalysis.inBed.rawValue:
-                        inBedDuration += duration
-                    case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
-                        asleepDuration += duration
-                    case HKCategoryValueSleepAnalysis.awake.rawValue:
-                        awakeDuration += duration
-                    default:
-                        // Handle newer sleep stages (iOS 16+)
-                        if #available(iOS 16.0, *) {
-                            switch sample.value {
-                            case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                                remDuration += duration
-                                asleepDuration += duration
-                            case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-                                coreSleepDuration += duration
-                                asleepDuration += duration
-                            case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                                deepSleepDuration += duration
-                                asleepDuration += duration
-                            default:
-                                break
-                            }
-                        }
-                    }
-                }
-
-                // Convert to minutes
-                let minutesDivisor = 60.0
-
-                let sleepData = SleepData(
-                    totalMinutes: Int(asleepDuration / minutesDivisor),
-                    inBedMinutes: Int(inBedDuration / minutesDivisor),
-                    deepMinutes: deepSleepDuration > 0 ? Int(deepSleepDuration / minutesDivisor) : nil,
-                    remMinutes: remDuration > 0 ? Int(remDuration / minutesDivisor) : nil,
-                    coreMinutes: coreSleepDuration > 0 ? Int(coreSleepDuration / minutesDivisor) : nil,
-                    awakeMinutes: awakeDuration > 0 ? Int(awakeDuration / minutesDivisor) : nil
-                )
-
-                continuation.resume(returning: sleepData)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await sleepService.fetchSleepData(for: date)
     }
+
+    // MARK: - Activity Methods (delegated to ActivityService)
 
     /// Fetch resting heart rate for a specific date
     /// - Parameter date: The date to fetch RHR for
     /// - Returns: Resting heart rate in BPM, or nil if not available
     func fetchRestingHeartRate(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
+        guard let activityService = activityService else {
             throw HealthKitError.notAvailable
         }
-
-        guard let rhrType = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: rhrType,
-                quantitySamplePredicate: predicate,
-                options: .discreteAverage
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let average = result.averageQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let rhrValue = average.doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
-                continuation.resume(returning: rhrValue)
-            }
-
-            healthStore.execute(query)
-        }
-    }
-
-    /// Fetch active energy burned for a specific date
-    /// - Parameter date: The date to fetch active energy for
-    /// - Returns: Active calories burned, or nil if not available
-    private func fetchActiveEnergy(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
-            throw HealthKitError.notAvailable
-        }
-
-        guard let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: energyType,
-                quantitySamplePredicate: predicate,
-                options: .cumulativeSum
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let sum = result.sumQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let calories = sum.doubleValue(for: HKUnit.kilocalorie())
-                continuation.resume(returning: calories)
-            }
-
-            healthStore.execute(query)
-        }
-    }
-
-    /// Fetch Apple Exercise Time for a specific date
-    /// - Parameter date: The date to fetch exercise time for
-    /// - Returns: Exercise time in minutes, or nil if not available
-    private func fetchExerciseTime(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
-            throw HealthKitError.notAvailable
-        }
-
-        guard let exerciseType = HKQuantityType.quantityType(forIdentifier: .appleExerciseTime) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: exerciseType,
-                quantitySamplePredicate: predicate,
-                options: .cumulativeSum
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let sum = result.sumQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let minutes = sum.doubleValue(for: HKUnit.minute())
-                continuation.resume(returning: minutes)
-            }
-
-            healthStore.execute(query)
-        }
-    }
-
-    /// Fetch step count for a specific date
-    /// - Parameter date: The date to fetch step count for
-    /// - Returns: Step count, or nil if not available
-    private func fetchStepCount(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
-            throw HealthKitError.notAvailable
-        }
-
-        guard let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: stepType,
-                quantitySamplePredicate: predicate,
-                options: .cumulativeSum
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let sum = result.sumQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                let steps = sum.doubleValue(for: HKUnit.count())
-                continuation.resume(returning: steps)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await activityService.fetchRestingHeartRate(for: date)
     }
 
     /// Fetch oxygen saturation for a specific date
     /// - Parameter date: The date to fetch oxygen saturation for
     /// - Returns: Oxygen saturation percentage (0-100), or nil if not available
     func fetchOxygenSaturation(for date: Date) async throws -> Double? {
-        guard let healthStore = healthStore else {
+        guard let activityService = activityService else {
             throw HealthKitError.notAvailable
         }
-
-        guard let oxygenType = HKQuantityType.quantityType(forIdentifier: .oxygenSaturation) else {
-            return nil
-        }
-
-        let (startOfDay, endOfDay) = dayBoundaries(for: date)
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKStatisticsQuery(
-                quantityType: oxygenType,
-                quantitySamplePredicate: predicate,
-                options: .discreteAverage
-            ) { _, result, queryError in
-                if let queryError = queryError {
-                    continuation.resume(throwing: HealthKitError.queryFailed(queryError.localizedDescription))
-                    return
-                }
-
-                guard let result = result,
-                      let average = result.averageQuantity() else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                // Convert from decimal (0.0-1.0) to percentage (0-100)
-                let oxygenValue = average.doubleValue(for: HKUnit.percent()) * 100
-                continuation.resume(returning: oxygenValue)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await activityService.fetchOxygenSaturation(for: date)
     }
 
     // MARK: - Readiness Auto-Fill
@@ -718,7 +483,7 @@ class HealthKitService: ObservableObject {
         let baseline = try? await baselineTask
 
         // Calculate suggested energy level based on HRV deviation from baseline
-        let suggestedEnergy = calculateSuggestedEnergyLevel(currentHRV: hrv, baseline: baseline)
+        let suggestedEnergy = hrvService?.calculateSuggestedEnergyLevel(currentHRV: hrv, baseline: baseline)
 
         // Determine data source
         let dataSource: String
@@ -735,73 +500,7 @@ class HealthKitService: ObservableObject {
         )
     }
 
-    /// Calculate suggested energy level based on HRV deviation from baseline
-    /// - Parameters:
-    ///   - currentHRV: Today's HRV value
-    ///   - baseline: 7-day rolling average HRV
-    /// - Returns: Suggested energy level (1-10) or nil if no data
-    private func calculateSuggestedEnergyLevel(currentHRV: Double?, baseline: Double?) -> Int? {
-        guard let hrv = currentHRV, let base = baseline, base > 0 else {
-            return nil
-        }
-
-        let deviationPercent = ((hrv - base) / base) * 100
-
-        // HRV > baseline + 10% -> high energy (8-10)
-        // HRV < baseline - 10% -> low energy (4-6)
-        // Otherwise -> normal energy (6-8)
-        if deviationPercent > 10 {
-            // Good recovery - suggest high energy
-            // Scale from 8-10 based on how much above baseline
-            let scaledEnergy = min(10, 8 + Int(deviationPercent / 10))
-            return scaledEnergy
-        } else if deviationPercent < -10 {
-            // Poor recovery - suggest low energy
-            // Scale from 4-6 based on how much below baseline
-            let scaledEnergy = max(4, 6 + Int(deviationPercent / 10))
-            return scaledEnergy
-        } else {
-            // Normal range - suggest moderate energy (6-8)
-            // Slight bias toward 7
-            return 7
-        }
-    }
-
-    // MARK: - HRV Baseline
-
-    /// Calculate HRV baseline as 7-day rolling average
-    /// - Parameter days: Number of days to average (default 7)
-    /// - Returns: Average HRV value, or nil if insufficient data
-    func getHRVBaseline(days: Int = 7) async throws -> Double? {
-        guard healthStore != nil else {
-            throw HealthKitError.notAvailable
-        }
-
-        var hrvValues: [Double] = []
-        let calendar = Calendar.current
-        let today = Date()
-
-        // Fetch HRV for each day (skip today, use previous 7 days)
-        for dayOffset in 1...days {
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
-                continue
-            }
-
-            if let hrv = try? await fetchHRV(for: date), hrv > 0 {
-                hrvValues.append(hrv)
-            }
-        }
-
-        // Need at least 3 days of data for a meaningful baseline
-        guard hrvValues.count >= 3 else {
-            return nil
-        }
-
-        let average = hrvValues.reduce(0, +) / Double(hrvValues.count)
-        return average
-    }
-
-    // MARK: - Workout Export (ACP-827)
+    // MARK: - Workout Export (ACP-827) (delegated to WorkoutExportService)
 
     /// Export a completed workout session to Apple Health
     /// - Parameter session: The completed session with timing and metrics
@@ -809,70 +508,14 @@ class HealthKitService: ObservableObject {
     /// - Throws: HealthKitError if HealthKit is not available or save fails
     @discardableResult
     func exportWorkout(session: Session) async throws -> HKWorkout {
-        guard let healthStore = healthStore else {
+        guard let workoutExportService = workoutExportService else {
             throw HealthKitError.notAvailable
         }
 
-        // Validate session has required timing data
-        guard let startTime = session.started_at,
-              let endTime = session.completed_at else {
-            throw HealthKitError.invalidDate
-        }
-
-        // Calculate estimated calories if not provided
-        let estimatedCalories = calculateEstimatedCalories(
-            durationMinutes: session.duration_minutes ?? Int(endTime.timeIntervalSince(startTime) / 60),
-            totalVolume: session.total_volume
-        )
-
-        // Build metadata for the workout
-        let metadata: [String: Any] = [
-            "PTPerformanceSessionId": session.id.uuidString,
-            HKMetadataKeyIndoorWorkout: true
-        ]
-
-        // Create and save workout using HKWorkoutBuilder (modern API)
-        let configuration = HKWorkoutConfiguration()
-        configuration.activityType = .traditionalStrengthTraining
-        configuration.locationType = .indoor
-
-        let builder = HKWorkoutBuilder(
-            healthStore: healthStore,
-            configuration: configuration,
-            device: nil
-        )
-
-        do {
-            try await builder.beginCollection(at: startTime)
-
-            // Add metadata to the builder before finishing
-            try await builder.addMetadata(metadata)
-
-            // Add energy burned sample
-            let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
-            let energySample = HKQuantitySample(
-                type: energyType,
-                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
-                start: startTime,
-                end: endTime
-            )
-            try await builder.addSamples([energySample])
-
-            try await builder.endCollection(at: endTime)
-
-            let workout = try await builder.finishWorkout()
-            guard let savedWorkout = workout else {
-                throw HealthKitError.saveFailed("Failed to create workout")
-            }
-
-            lastExportDate = Date()
-            exportedWorkoutsCount += 1
-            return savedWorkout
-        } catch let error as HealthKitError {
-            throw error
-        } catch {
-            throw HealthKitError.saveFailed(error.localizedDescription)
-        }
+        let workout = try await workoutExportService.exportWorkout(session: session)
+        lastExportDate = Date()
+        exportedWorkoutsCount += 1
+        return workout
     }
 
     /// Export a completed manual workout session to Apple Health
@@ -881,97 +524,14 @@ class HealthKitService: ObservableObject {
     /// - Throws: HealthKitError if HealthKit is not available or save fails
     @discardableResult
     func exportManualWorkout(session: ManualSession) async throws -> HKWorkout {
-        guard let healthStore = healthStore else {
+        guard let workoutExportService = workoutExportService else {
             throw HealthKitError.notAvailable
         }
 
-        // Validate session has required timing data
-        guard let startTime = session.startedAt,
-              let endTime = session.completedAt else {
-            throw HealthKitError.invalidDate
-        }
-
-        // Calculate estimated calories
-        let estimatedCalories = calculateEstimatedCalories(
-            durationMinutes: session.durationMinutes ?? Int(endTime.timeIntervalSince(startTime) / 60),
-            totalVolume: session.totalVolume
-        )
-
-        // Build metadata for the workout
-        var metadata: [String: Any] = [
-            "PTPerformanceSessionId": session.id.uuidString,
-            HKMetadataKeyIndoorWorkout: true
-        ]
-
-        if let name = session.name {
-            metadata["WorkoutName"] = name
-        }
-
-        // Create and save workout using HKWorkoutBuilder (modern API)
-        let configuration = HKWorkoutConfiguration()
-        configuration.activityType = .traditionalStrengthTraining
-        configuration.locationType = .indoor
-
-        let builder = HKWorkoutBuilder(
-            healthStore: healthStore,
-            configuration: configuration,
-            device: nil
-        )
-
-        do {
-            try await builder.beginCollection(at: startTime)
-
-            // Add metadata to the builder before finishing
-            try await builder.addMetadata(metadata)
-
-            // Add energy burned sample
-            let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
-            let energySample = HKQuantitySample(
-                type: energyType,
-                quantity: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),
-                start: startTime,
-                end: endTime
-            )
-            try await builder.addSamples([energySample])
-
-            try await builder.endCollection(at: endTime)
-
-            let workout = try await builder.finishWorkout()
-            guard let savedWorkout = workout else {
-                throw HealthKitError.saveFailed("Failed to create workout")
-            }
-
-            lastExportDate = Date()
-            exportedWorkoutsCount += 1
-            return savedWorkout
-        } catch let error as HealthKitError {
-            throw error
-        } catch {
-            throw HealthKitError.saveFailed(error.localizedDescription)
-        }
-    }
-
-    /// Estimate calories burned based on workout duration and volume
-    /// Uses a simplified MET-based calculation for strength training
-    /// - Parameters:
-    ///   - durationMinutes: Duration of workout in minutes
-    ///   - totalVolume: Total weight lifted in pounds (optional)
-    /// - Returns: Estimated calories burned
-    private func calculateEstimatedCalories(durationMinutes: Int?, totalVolume: Double?) -> Double {
-        let duration = Double(durationMinutes ?? 30)
-
-        // Base calculation: ~5-6 calories per minute for strength training
-        // This is a conservative estimate (MET ~3.5-4.0 for weight training)
-        var baseCalories = duration * 5.5
-
-        // Add bonus for high volume workouts (indicates more intense training)
-        if let volume = totalVolume, volume > 0 {
-            // Add ~1 calorie per 100 lbs lifted as a rough intensity adjustment
-            let volumeBonus = volume / 100.0
-            baseCalories += volumeBonus
-        }
-
-        return baseCalories
+        let workout = try await workoutExportService.exportManualWorkout(session: session)
+        lastExportDate = Date()
+        exportedWorkoutsCount += 1
+        return workout
     }
 
     /// Check if a workout was already exported to HealthKit
@@ -979,64 +539,20 @@ class HealthKitService: ObservableObject {
     /// - Parameter sessionId: The PTPerformance session ID
     /// - Returns: True if workout with this session ID exists in HealthKit
     func isWorkoutExported(sessionId: UUID) async throws -> Bool {
-        guard let healthStore = healthStore else {
+        guard let workoutExportService = workoutExportService else {
             throw HealthKitError.notAvailable
         }
-
-        // Query for workouts with matching session ID in metadata
-        let workoutType = HKObjectType.workoutType()
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "PTPerformanceSessionId", allowedValues: [sessionId.uuidString])
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: workoutType,
-                predicate: predicate,
-                limit: 1,
-                sortDescriptors: nil
-            ) { _, samples, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
-                    return
-                }
-
-                let exists = (samples?.count ?? 0) > 0
-                continuation.resume(returning: exists)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await workoutExportService.isWorkoutExported(sessionId: sessionId)
     }
 
     /// Fetch recent workouts exported from PTPerformance
     /// - Parameter limit: Maximum number of workouts to fetch
     /// - Returns: Array of exported workouts with metadata
     func fetchExportedWorkouts(limit: Int = 10) async throws -> [HKWorkout] {
-        guard let healthStore = healthStore else {
+        guard let workoutExportService = workoutExportService else {
             throw HealthKitError.notAvailable
         }
-
-        let workoutType = HKObjectType.workoutType()
-        let predicate = HKQuery.predicateForObjects(withMetadataKey: "PTPerformanceSessionId")
-        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: workoutType,
-                predicate: predicate,
-                limit: limit,
-                sortDescriptors: [sortDescriptor]
-            ) { _, samples, error in
-                if let error = error {
-                    continuation.resume(throwing: HealthKitError.queryFailed(error.localizedDescription))
-                    return
-                }
-
-                let workouts = (samples as? [HKWorkout]) ?? []
-                continuation.resume(returning: workouts)
-            }
-
-            healthStore.execute(query)
-        }
+        return try await workoutExportService.fetchExportedWorkouts(limit: limit)
     }
 
     // MARK: - Database Sync
@@ -1096,26 +612,6 @@ class HealthKitService: ObservableObject {
             self.error = saveError.localizedDescription
             throw HealthKitError.saveFailed(saveError.localizedDescription)
         }
-    }
-
-    /// Save HealthKit data to Supabase for the current authenticated user
-    /// Convenience method that uses the current user's patient ID
-    /// - Parameter data: HealthKitDayData to save
-    @available(*, deprecated, renamed: "uploadToSupabase(data:)", message: "Use uploadToSupabase instead")
-    func saveToSupabase(data: HealthKitDayData) async throws {
-        try await uploadToSupabase(data: data)
-    }
-
-    // MARK: - Helper Methods
-
-    /// Get start and end of day for a given date
-    /// - Parameter date: The date to get boundaries for
-    /// - Returns: Tuple of (startOfDay, endOfDay)
-    private func dayBoundaries(for date: Date) -> (Date, Date) {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        return (startOfDay, endOfDay)
     }
 }
 

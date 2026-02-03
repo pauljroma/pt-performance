@@ -444,7 +444,7 @@ class PendingChangesQueue: ObservableObject {
         // Debounce rapid changes
         syncTimer?.invalidate()
         syncTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 await self?.sync()
             }
         }
@@ -457,7 +457,7 @@ class PendingChangesQueue: ObservableObject {
 
         syncTimer?.invalidate()
         syncTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 await self?.sync()
             }
         }
@@ -468,7 +468,7 @@ class PendingChangesQueue: ObservableObject {
     private func setupPeriodicSync() {
         // Periodic sync every 30 seconds while app is active
         Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 if self?.hasPendingChanges == true {
                     await self?.sync()
                 }
@@ -484,7 +484,7 @@ class PendingChangesQueue: ObservableObject {
             .sink { [weak self] isOffline in
                 if !isOffline {
                     // Network came back - trigger sync
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         await self?.sync()
                     }
                 }

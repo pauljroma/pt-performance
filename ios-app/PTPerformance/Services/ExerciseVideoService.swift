@@ -83,13 +83,24 @@ class ExerciseVideoService: ObservableObject {
     // MARK: - Initialization
 
     private init() {
-        guard let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-            fatalError("ExerciseVideoService: Unable to access caches directory. This should never happen on iOS.")
+        // Attempt to get caches directory; fallback to temp directory if unavailable
+        if let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            cacheDirectory = cachesDir.appendingPathComponent("ExerciseVideos", isDirectory: true)
+        } else {
+            // Fallback to temp directory - this should never happen on iOS but handles edge cases gracefully
+            ErrorLogger.shared.logError(
+                NSError(domain: "ExerciseVideoService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to access caches directory, using temp directory"]),
+                context: "ExerciseVideoService.init"
+            )
+            cacheDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("ExerciseVideos", isDirectory: true)
         }
-        cacheDirectory = cachesDir.appendingPathComponent("ExerciseVideos", isDirectory: true)
 
         // Create cache directory if needed
-        try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "ExerciseVideoService.init.createCacheDirectory")
+        }
 
         // Configure preload queue
         preloadQueue.maxConcurrentOperationCount = 2
@@ -501,8 +512,11 @@ class ExerciseVideoService: ObservableObject {
     }
 
     private func saveAllCacheMetadata(_ metadata: [String: VideoCacheMetadata]) {
-        if let data = try? JSONEncoder().encode(metadata) {
-            try? data.write(to: metadataUrl)
+        do {
+            let data = try JSONEncoder().encode(metadata)
+            try data.write(to: metadataUrl)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "ExerciseVideoService.saveAllCacheMetadata")
         }
     }
 

@@ -2,7 +2,6 @@
 //  AccountDeletionViewModel.swift
 //  PTPerformance
 //
-//  Created by BUILD 119 on 2026-01-03
 //  Purpose: Account deletion with 30-day grace period (GDPR Right to Erasure)
 //
 
@@ -55,7 +54,8 @@ final class AccountDeletionViewModel: ObservableObject {
             showSuccessAlert = true
 
             // Step 4: Log out user after 3 seconds
-            try await Task.sleep(nanoseconds: 3_000_000_000)
+            // Intentional delay: allows user to read success message before logout
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             await signOut()
 
         } catch {

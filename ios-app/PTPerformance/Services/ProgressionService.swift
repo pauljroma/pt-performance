@@ -1,8 +1,21 @@
 import Foundation
 import Supabase
 
-/// Service for managing load progression and deload logic
-/// Part of the Auto-Regulation System (Build 38 - Phase 2)
+/// Service for managing exercise load progression and automatic deload scheduling.
+///
+/// This service implements the Auto-Regulation System's progression logic:
+/// - Tracks load changes based on RPE feedback
+/// - Monitors deload triggers (missed reps, RPE overshoot, joint pain, low readiness)
+/// - Automatically schedules deload periods when multiple triggers accumulate
+///
+/// ## Progression Rules
+/// - Load increases when actual RPE is below target
+/// - Load holds when actual RPE matches target range
+/// - Load decreases (5%) when actual RPE exceeds target
+///
+/// ## Deload Triggers
+/// A deload is scheduled when 2 or more different trigger types occur
+/// within a 7-day window.
 class ProgressionService: ObservableObject {
     private let supabase: PTSupabaseClient
 
@@ -12,20 +25,32 @@ class ProgressionService: ObservableObject {
 
     // MARK: - Load Progression
 
-    /// Record progression after a set and calculate next load
+    /// Record exercise progression and calculate the recommended load for the next session.
+    ///
+    /// This method is the core of the auto-regulation system. It:
+    /// 1. Calculates the next recommended load based on RPE feedback
+    /// 2. Records the progression decision to `load_progression_history`
+    /// 3. Evaluates whether a deload should be triggered
+    ///
+    /// Load adjustments vary by exercise type and body region:
+    /// - Primary lower body: +/- 10 lbs
+    /// - Primary upper body or secondary lower: +/- 5 lbs
+    /// - Accessory exercises: +/- 2.5 lbs
+    ///
     /// - Parameters:
-    ///   - patientId: The patient performing the exercise
-    ///   - exerciseTemplateId: The exercise being performed
-    ///   - sessionId: The current session (optional)
-    ///   - currentLoad: The load used for this set
-    ///   - actualRpe: The RPE reported by the patient
+    ///   - patientId: The patient's UUID string
+    ///   - exerciseTemplateId: The exercise template UUID string
+    ///   - sessionId: The current session UUID string (optional)
+    ///   - currentLoad: The load used for this set in pounds
+    ///   - actualRpe: The RPE reported by the patient (1-10 scale)
     ///   - targetRpeLow: Lower bound of target RPE range
     ///   - targetRpeHigh: Upper bound of target RPE range
     ///   - setsCompleted: Number of sets completed
     ///   - repsCompleted: Number of reps completed
-    ///   - formQuality: Form quality rating (1-5)
-    ///   - exerciseType: Type of exercise (primary, secondary, accessory)
-    ///   - bodyRegion: Body region (upper or lower)
+    ///   - formQuality: Form quality rating (1-5, where 5 is perfect)
+    ///   - exerciseType: Classification affecting load increments
+    ///   - bodyRegion: Body region affecting load increments
+    /// - Throws: Database errors if the insert fails
     func recordProgression(
         patientId: String,
         exerciseTemplateId: String,
@@ -131,10 +156,20 @@ class ProgressionService: ObservableObject {
 
     // MARK: - Deload Evaluation
 
-    /// Evaluate if deload triggers have been met
-    /// Checks for unresolved triggers in a 7-day window
-    /// Triggers deload if ≥2 different trigger types are present
-    /// - Parameter patientId: The patient to evaluate
+    /// Evaluate whether a patient should enter a deload period.
+    ///
+    /// Checks for unresolved deload triggers within a rolling 7-day window.
+    /// If 2 or more different trigger types are present, automatically
+    /// schedules a deload period.
+    ///
+    /// Trigger types include:
+    /// - `missedRepsPrimary`: Failed to complete prescribed reps on primary lifts
+    /// - `rpeOvershoot`: Actual RPE significantly exceeded target
+    /// - `jointPain`: Patient reported joint pain during exercise
+    /// - `readinessLow`: Daily readiness score below threshold
+    ///
+    /// - Parameter patientId: The patient's UUID string to evaluate
+    /// - Throws: Database errors if trigger fetch or deload scheduling fails
     func evaluateDeloadTriggers(patientId: String) async throws {
         let logger = DebugLogger.shared
         let windowDays = 7
@@ -185,14 +220,22 @@ class ProgressionService: ObservableObject {
         }
     }
 
-    /// Schedule a deload period for a patient
-    /// Creates a deload_history record with standard reductions
-    /// Marks all contributing triggers as resolved
+    /// Schedule a deload period for a patient with standard recovery parameters.
+    ///
+    /// Creates a `deload_history` record with the following defaults:
+    /// - Load reduction: 12%
+    /// - Volume reduction: 35%
+    /// - Duration: 7 days
+    ///
+    /// All contributing triggers are marked as resolved to prevent
+    /// re-triggering during the deload period.
+    ///
     /// - Parameters:
-    ///   - patientId: The patient to schedule deload for
-    ///   - triggers: The triggers that caused the deload
-    ///   - windowStart: Start of the trigger evaluation window
-    ///   - windowEnd: End of the trigger evaluation window
+    ///   - patientId: The patient's UUID string
+    ///   - triggers: Array of triggers that caused this deload
+    ///   - windowStart: Start date of the trigger evaluation window
+    ///   - windowEnd: End date of the trigger evaluation window
+    /// - Throws: Database errors if deload scheduling or trigger updates fail
     func scheduleDeload(
         patientId: String,
         triggers: [DeloadTrigger],
@@ -288,11 +331,16 @@ class ProgressionService: ObservableObject {
 
     // MARK: - Helper Methods
 
-    /// Fetch the most recent progression record for an exercise
+    /// Fetch the most recent progression record for a specific exercise.
+    ///
+    /// Use this to get the recommended load for a patient's next set
+    /// based on their previous performance.
+    ///
     /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - exerciseTemplateId: The exercise template ID
-    /// - Returns: The most recent progression record, or nil if none exists
+    ///   - patientId: The patient's UUID string
+    ///   - exerciseTemplateId: The exercise template UUID string
+    /// - Returns: The most recent progression record, or nil if no history exists
+    /// - Throws: Database errors if the query fails
     func fetchLastProgression(
         patientId: String,
         exerciseTemplateId: String
@@ -313,12 +361,17 @@ class ProgressionService: ObservableObject {
         return records.first
     }
 
-    /// Fetch progression history for an exercise
+    /// Fetch progression history for an exercise over time.
+    ///
+    /// Returns a chronological history of load changes and RPE feedback
+    /// for trend analysis and progress visualization.
+    ///
     /// - Parameters:
-    ///   - patientId: The patient ID
-    ///   - exerciseTemplateId: The exercise template ID
-    ///   - limit: Maximum number of records to return
-    /// - Returns: Array of progression records, ordered by date descending
+    ///   - patientId: The patient's UUID string
+    ///   - exerciseTemplateId: The exercise template UUID string
+    ///   - limit: Maximum records to return (default: 20)
+    /// - Returns: Array of progression records, newest first
+    /// - Throws: Database errors if the query fails
     func fetchProgressionHistory(
         patientId: String,
         exerciseTemplateId: String,
@@ -341,16 +394,28 @@ class ProgressionService: ObservableObject {
 
 // MARK: - Progression Calculator
 
-/// Static calculator for load progression logic
+/// Pure function calculator for load progression decisions.
+///
+/// Implements the RPE-based auto-regulation algorithm without side effects.
+/// Used by `ProgressionService` for consistent load calculations.
 struct ProgressionCalculator {
-    /// Calculate next load based on RPE feedback
+    /// Calculate the recommended next load based on RPE feedback.
+    ///
+    /// Uses a 0.5 RPE buffer to determine the appropriate action:
+    /// - RPE <= target - 0.5: Increase load
+    /// - RPE within target +/- 0.5: Maintain load
+    /// - RPE > target + 0.5: Decrease load by 5%
+    ///
     /// - Parameters:
-    ///   - currentLoad: Current load used
-    ///   - targetRpeHigh: Upper bound of target RPE range
-    ///   - actualRpe: Actual RPE reported
-    ///   - exerciseType: Type of exercise (primary gets larger increments)
-    ///   - bodyRegion: Body region (lower body gets larger increments)
-    /// - Returns: Tuple of (action, nextLoad, reason)
+    ///   - currentLoad: Current load in pounds
+    ///   - targetRpeHigh: Upper bound of the target RPE range
+    ///   - actualRpe: Actual RPE reported by patient
+    ///   - exerciseType: Exercise classification (primary/secondary/accessory)
+    ///   - bodyRegion: Body region (upper/lower) for increment sizing
+    /// - Returns: Tuple containing:
+    ///   - action: The progression action (increase/hold/decrease)
+    ///   - nextLoad: Recommended load for next session
+    ///   - reason: Human-readable explanation of the decision
     static func calculateNextLoad(
         currentLoad: Double,
         targetRpeHigh: Double,

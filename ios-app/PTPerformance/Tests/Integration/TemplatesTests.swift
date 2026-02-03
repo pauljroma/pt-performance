@@ -328,7 +328,12 @@ final class TemplatesTests: IntegrationTestBase {
         XCTAssertNotNil(programId)
 
         // Verify program has phases and sessions copied from template
-        // TODO: Fetch program and verify structure matches template
+        let programBuilderService = ProgramBuilderService()
+        let createdProgram = try await programBuilderService.getProgram(id: UUID(uuidString: programId)!)
+
+        // Verify program structure matches template
+        XCTAssertEqual(createdProgram.name, "Patient's Custom Program")
+        XCTAssertGreaterThan(createdProgram.phases.count, 0, "Program should have phases copied from template")
 
         // Verify template usage count was incremented
         let details = try await templatesService.fetchTemplateDetails(templateId: template.id)
@@ -336,7 +341,7 @@ final class TemplatesTests: IntegrationTestBase {
 
         // Cleanup
         try await templatesService.deleteTemplate(templateId: template.id)
-        // TODO: Delete created program
+        try await programBuilderService.deleteProgram(id: UUID(uuidString: programId)!)
     }
 
     // MARK: - Search Tests

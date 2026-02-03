@@ -285,6 +285,9 @@ struct EditorPhaseRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(phase.name)\(phase.durationWeeks != nil ? ", \(phase.durationWeeks!) weeks" : "")\(phase.goals != nil && !phase.goals!.isEmpty ? ", Goals: \(phase.goals!)" : "")")
+        .accessibilityHint("Double tap to edit this phase")
     }
 }
 

@@ -17,11 +17,22 @@ class VideoService {
     static let shared = VideoService()
 
     private init() {
-        guard let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-            fatalError("VideoService: Unable to access caches directory. This should never happen on iOS.")
+        // Attempt to get caches directory; fallback to temp directory if unavailable
+        if let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            cacheDirectory = cachesDir.appendingPathComponent("VideoCache", isDirectory: true)
+        } else {
+            // Fallback to temp directory - this should never happen on iOS but handles edge cases gracefully
+            ErrorLogger.shared.logError(
+                NSError(domain: "VideoService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to access caches directory, using temp directory"]),
+                context: "VideoService.init"
+            )
+            cacheDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("VideoCache", isDirectory: true)
         }
-        cacheDirectory = cachesDir.appendingPathComponent("VideoCache", isDirectory: true)
-        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "VideoService.init.createCacheDirectory")
+        }
     }
 
     // MARK: - Properties

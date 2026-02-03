@@ -361,6 +361,8 @@ struct ManualWorkoutCreatorView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Discards workout and returns to previous screen")
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -375,6 +377,8 @@ struct ManualWorkoutCreatorView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityLabel("More options")
+                    .accessibilityHint("Shows additional workout options like save as template")
                 }
             }
             .sheet(isPresented: $viewModel.showingSaveTemplateSheet) {
@@ -411,6 +415,8 @@ struct ManualWorkoutCreatorView: View {
                 .padding()
                 .background(Color(.systemBackground))
                 .cornerRadius(12)
+                .accessibilityLabel("Workout name")
+                .accessibilityHint("Enter a name for your workout")
         }
         .padding(.top, 8)
     }
@@ -438,6 +444,8 @@ struct ManualWorkoutCreatorView: View {
             .cornerRadius(12)
         }
         .disabled(!viewModel.canStartWorkout || viewModel.isStartingWorkout)
+        .accessibilityLabel("Start Workout")
+        .accessibilityHint(viewModel.canStartWorkout ? "Begins your workout session with \(viewModel.totalExerciseCount) exercises" : "Add exercises and a workout name to start")
     }
 }
 
@@ -485,11 +493,15 @@ struct BlockSection: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(8)
+                        .accessibilityHidden(true)
                 }
                 .padding()
                 .background(Color(.systemBackground))
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(blockType.displayName) block, \(exercises.count) exercise\(exercises.count == 1 ? "" : "s")")
+            .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
 
             // Expanded Content
             if isExpanded {
@@ -523,6 +535,8 @@ struct BlockSection: View {
                     }
                     .buttonStyle(.plain)
                     .background(blockType.color.opacity(0.08))
+                    .accessibilityLabel("Add exercise to \(blockType.displayName)")
+                    .accessibilityHint("Opens exercise picker to add to this block")
                 }
                 .background(Color(.systemBackground))
             }
@@ -543,6 +557,7 @@ private struct CreatorExerciseRow: View {
             Image(systemName: "line.3.horizontal")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
 
             // Exercise Info
             VStack(alignment: .leading, spacing: 4) {
@@ -561,6 +576,7 @@ private struct CreatorExerciseRow: View {
                         Text("-")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .accessibilityHidden(true)
 
                         Label(exercise.loadDisplay, systemImage: "scalemass")
                             .font(.caption)
@@ -576,9 +592,12 @@ private struct CreatorExerciseRow: View {
                 Image(systemName: "play.circle.fill")
                     .font(.caption)
                     .foregroundColor(.blue)
+                    .accessibilityLabel("Has video demonstration")
             }
         }
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(exercise.name), \(exercise.setsRepsDisplay), \(exercise.loadDisplay)")
     }
 }
 
@@ -634,6 +653,8 @@ struct SaveTemplateSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Discards template and returns to workout creator")
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -644,12 +665,15 @@ struct SaveTemplateSheet: View {
                     } label: {
                         if viewModel.isSaving {
                             ProgressView()
+                                .accessibilityLabel("Saving template")
                         } else {
                             Text("Save")
                                 .fontWeight(.semibold)
                         }
                     }
                     .disabled(!viewModel.canSaveAsTemplate || viewModel.isSaving)
+                    .accessibilityLabel("Save template")
+                    .accessibilityHint(viewModel.canSaveAsTemplate ? "Saves this workout as a reusable template" : "Enter a template name to save")
                 }
             }
         }
@@ -819,6 +843,8 @@ struct ExercisePickerSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Closes exercise picker without adding")
                 }
             }
             .task {
@@ -966,6 +992,8 @@ struct ExercisePickerRowView: View {
                     .foregroundColor(isFavorite ? .yellow : .secondary.opacity(0.5))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+            .accessibilityHint(isFavorite ? "Removes \(exercise.name) from your favorite exercises" : "Adds \(exercise.name) to your favorite exercises")
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(exercise.name)
@@ -1005,9 +1033,13 @@ struct ExercisePickerRowView: View {
             Image(systemName: "plus.circle.fill")
                 .font(.title3)
                 .foregroundColor(blockType.color)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(exercise.name), \(exercise.category?.capitalized ?? ""), \(exercise.body_region?.capitalized ?? "")")
+        .accessibilityHint("Double tap to add to \(blockType.displayName)")
     }
 }
 

@@ -2,7 +2,7 @@
 //  NutritionService.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Core nutrition service
+//  Nutrition Module - Core nutrition service
 //
 
 import Foundation
@@ -39,7 +39,7 @@ struct UpdateNutritionLogInput: Codable {
 }
 
 /// Service for managing nutrition logging, goals, and analytics
-/// BUILD 251: Uses PTSupabaseClient.flexibleDecoder for all date handling
+/// Uses PTSupabaseClient.flexibleDecoder for all date handling
 @MainActor
 class NutritionService {
     static let shared = NutritionService()
@@ -56,7 +56,7 @@ class NutritionService {
         endDate: Date? = nil,
         limit: Int = 50
     ) async throws -> [NutritionLog] {
-        // BUILD 251: Use .execute().value pattern with flexible decoder
+        // Use .execute().value pattern with flexible decoder
         let logger = DebugLogger.shared
         logger.info("FETCH LOGS", "Starting for patient: \(patientId)")
 
@@ -130,7 +130,7 @@ class NutritionService {
 
     /// Create a new nutrition log
     func createNutritionLog(_ log: CreateNutritionLogDTO) async throws -> NutritionLog {
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let result: NutritionLog = try await supabase.client
             .from("nutrition_logs")
             .insert(log)
@@ -163,7 +163,7 @@ class NutritionService {
 
     /// Fetch active nutrition goal for a patient
     func fetchActiveGoal(patientId: String) async throws -> NutritionGoal? {
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let goals: [NutritionGoal] = try await supabase.client
             .from("nutrition_goals")
             .select()
@@ -178,7 +178,7 @@ class NutritionService {
 
     /// Fetch all nutrition goals for a patient
     func fetchAllGoals(patientId: String) async throws -> [NutritionGoal] {
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let goals: [NutritionGoal] = try await supabase.client
             .from("nutrition_goals")
             .select()
@@ -200,7 +200,7 @@ class NutritionService {
             .eq("active", value: true)
             .execute()
 
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let result: NutritionGoal = try await supabase.client
             .from("nutrition_goals")
             .insert(goal)
@@ -224,7 +224,7 @@ class NutritionService {
 
     /// Fetch current goal progress from view
     func fetchGoalProgress(patientId: String) async throws -> NutritionGoalProgress? {
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let progress: [NutritionGoalProgress] = try await supabase.client
             .from("vw_nutrition_goal_progress")
             .select()
@@ -243,7 +243,7 @@ class NutritionService {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateStr = dateFormatter.string(from: date)
 
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let summaries: [DailyNutritionSummary] = try await supabase.client
             .from("vw_daily_nutrition")
             .select()
@@ -257,7 +257,7 @@ class NutritionService {
 
     /// Fetch weekly nutrition trends
     func fetchWeeklyTrends(patientId: String, weeks: Int = 4) async throws -> [WeeklyNutritionTrend] {
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let trends: [WeeklyNutritionTrend] = try await supabase.client
             .from("vw_nutrition_trend")
             .select()
@@ -275,7 +275,7 @@ class NutritionService {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateStr = dateFormatter.string(from: date)
 
-        // BUILD 251: Use .execute().value with flexible decoder
+        // Use .execute().value with flexible decoder
         let distributions: [MacroDistribution] = try await supabase.client
             .from("vw_macro_distribution")
             .select()

@@ -242,7 +242,7 @@ final class OnboardingFlowTests: XCTestCase {
         let startPoint = coordinate.withOffset(CGVector(dx: 100, dy: 0))
         let endPoint = coordinate.withOffset(CGVector(dx: -100, dy: 0))
         startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
-        sleep(1) // Wait for animation
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for animation
     }
 
     /// Swipe right to go to previous page
@@ -252,7 +252,7 @@ final class OnboardingFlowTests: XCTestCase {
         let startPoint = coordinate.withOffset(CGVector(dx: -100, dy: 0))
         let endPoint = coordinate.withOffset(CGVector(dx: 100, dy: 0))
         startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
-        sleep(1) // Wait for animation
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for animation
     }
 
     /// Take a screenshot with a given name

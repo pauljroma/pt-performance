@@ -74,6 +74,7 @@ struct BigLiftsScorecard: View {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "trophy.fill")
                         .foregroundColor(.yellow)
+                        .accessibilityHidden(true)
                     Text("\(viewModel.totalPRCount)")
                         .fontWeight(.semibold)
                 }
@@ -82,12 +83,15 @@ struct BigLiftsScorecard: View {
                 .padding(.vertical, Spacing.xxs)
                 .background(Color.yellow.opacity(0.15))
                 .cornerRadius(CornerRadius.xs)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(viewModel.totalPRCount) personal records")
             }
 
             if viewModel.improvingCount > 0 {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "arrow.up.right")
                         .foregroundColor(.green)
+                        .accessibilityHidden(true)
                     Text("\(viewModel.improvingCount)")
                         .fontWeight(.semibold)
                 }
@@ -96,6 +100,8 @@ struct BigLiftsScorecard: View {
                 .padding(.vertical, Spacing.xxs)
                 .background(Color.green.opacity(0.15))
                 .cornerRadius(CornerRadius.xs)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(viewModel.improvingCount) lifts improving")
             }
         }
     }
@@ -222,6 +228,22 @@ struct BigLiftCard: View {
             x: Shadow.medium.x,
             y: Shadow.medium.y
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var description = "\(lift.exerciseName), current max \(lift.formattedMaxWeight), estimated 1RM \(lift.formattedEstimated1rm)"
+        if lift.prCount > 0 {
+            description += ", \(lift.prCount) personal records"
+        }
+        if let improvement = lift.formattedImprovement {
+            description += ", \(lift.isImproving ? "improved" : "decreased") \(improvement)"
+        }
+        if lift.hasRecentPR {
+            description += ", recent PR achieved"
+        }
+        return description
     }
 
     // MARK: - Card Header
@@ -491,6 +513,8 @@ struct BigLiftsScorecardGrid: View {
                     .font(.title2)
                     .fontWeight(.bold)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Estimated total: \(Int(viewModel.estimatedTotal)) pounds")
 
             Spacer()
 
@@ -502,11 +526,14 @@ struct BigLiftsScorecardGrid: View {
                 HStack(spacing: Spacing.xxs) {
                     Image(systemName: "trophy.fill")
                         .foregroundColor(.yellow)
+                        .accessibilityHidden(true)
                     Text("\(viewModel.totalPRCount)")
                         .fontWeight(.bold)
                 }
                 .font(.title3)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Total personal records: \(viewModel.totalPRCount)")
         }
         .padding(Spacing.md)
         .background(Color(.systemGray6))

@@ -1,10 +1,10 @@
 import Foundation
 import SwiftUI
 
-// MARK: - BUILD 351: Readiness Band System Types
+// MARK: - Readiness Band System Types
 
 /// Readiness band levels for workout modification
-enum ReadinessBand: String, Codable, CaseIterable {
+enum ReadinessBand: String, Codable, CaseIterable, Sendable {
     case green = "green"    // Full intensity - go hard
     case yellow = "yellow"  // Slight reduction - be mindful
     case orange = "orange"  // Moderate reduction - take it easy
@@ -62,7 +62,7 @@ enum ReadinessBand: String, Codable, CaseIterable {
 }
 
 /// Joint pain location enum for readiness assessment
-enum JointPainLocation: String, Codable, CaseIterable {
+enum JointPainLocation: String, Codable, CaseIterable, Sendable {
     case shoulder
     case elbow
     case hip
@@ -75,7 +75,7 @@ enum JointPainLocation: String, Codable, CaseIterable {
 }
 
 /// Input for WHOOP-style readiness calculations (distinct from ReadinessInput for database)
-struct BandCalculationInput {
+struct BandCalculationInput: Sendable {
     var sleepHours: Double?
     var sleepQuality: Int?         // 1-5 scale
     var hrvValue: Double?
@@ -88,7 +88,7 @@ struct BandCalculationInput {
 }
 
 /// Preview of readiness calculation result
-struct ReadinessPreview {
+struct ReadinessPreview: Sendable {
     let band: ReadinessBand
     let score: Double?
 }
@@ -97,7 +97,7 @@ struct ReadinessPreview {
 
 /// Daily readiness check-in
 /// Simplified schema with core wellness metrics
-struct DailyReadiness: Codable, Identifiable, Hashable, Equatable {
+struct DailyReadiness: Codable, Identifiable, Hashable, Equatable, Sendable {
     let id: UUID
     let patientId: UUID
     let date: Date
@@ -166,7 +166,7 @@ struct DailyReadiness: Codable, Identifiable, Hashable, Equatable {
         id = try container.decode(UUID.self, forKey: .id)
         patientId = try container.decode(UUID.self, forKey: .patientId)
 
-        // BUILD 133: Handle DATE column format "YYYY-MM-DD" from PostgreSQL
+        // Handle DATE column format "YYYY-MM-DD" from PostgreSQL
         // Database returns DATE as "2026-01-04" (not ISO8601 with time component)
         if let dateString = try? container.decode(String.self, forKey: .date) {
             let dateFormatter = DateFormatter()
@@ -206,7 +206,7 @@ struct DailyReadiness: Codable, Identifiable, Hashable, Equatable {
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 
-    // MARK: - BUILD 351: Computed Readiness Band
+    // MARK: - Computed Readiness Band
 
     /// Convert readiness score to ReadinessBand for UI display
     var readinessBand: ReadinessBand {
@@ -224,7 +224,7 @@ struct DailyReadiness: Codable, Identifiable, Hashable, Equatable {
 }
 
 /// Input model for creating/updating daily readiness
-struct ReadinessInput: Codable {
+struct ReadinessInput: Codable, Sendable {
     var sleepHours: Double?
     var sorenessLevel: Int?     // 1-10
     var energyLevel: Int?       // 1-10
@@ -280,7 +280,7 @@ struct ReadinessInput: Codable {
 }
 
 /// Readiness trend data returned from database function
-struct ReadinessTrend: Codable {
+struct ReadinessTrend: Codable, Sendable {
     let patientId: UUID
     let daysAnalyzed: Int
     let currentDate: Date
@@ -295,7 +295,7 @@ struct ReadinessTrend: Codable {
         case statistics
     }
 
-    struct TrendDataPoint: Codable {
+    struct TrendDataPoint: Codable, Sendable {
         let date: Date
         let readinessScore: Double?
         let sleepHours: Double?
@@ -315,7 +315,7 @@ struct ReadinessTrend: Codable {
         }
     }
 
-    struct TrendStatistics: Codable {
+    struct TrendStatistics: Codable, Sendable {
         let avgReadiness: Double?
         let minReadiness: Double?
         let maxReadiness: Double?
@@ -348,6 +348,7 @@ enum ReadinessError: LocalizedError {
     case scoreCalculationFailed
     case noDataFound
     case trendCalculationFailed
+    case fetchFailed(Error)
 
     var errorDescription: String? {
         switch self {
@@ -367,6 +368,26 @@ enum ReadinessError: LocalizedError {
             return "No readiness data found"
         case .trendCalculationFailed:
             return "Failed to calculate readiness trend"
+        case .fetchFailed:
+            return "Failed to load readiness data"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .fetchFailed:
+            return "Please check your internet connection and try again."
+        default:
+            return nil
+        }
+    }
+
+    var underlyingError: Error? {
+        switch self {
+        case .fetchFailed(let error):
+            return error
+        default:
+            return nil
         }
     }
 }

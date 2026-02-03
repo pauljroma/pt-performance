@@ -14,7 +14,7 @@ class TodaySessionViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
-    // BUILD 269: Daily workout tracking
+    // Daily workout tracking
     @Published var completedTodayCount: Int = 0
     @Published var todaysCompletedWorkouts: [TodayWorkoutSummary] = []
 
@@ -26,7 +26,7 @@ class TodaySessionViewModel: ObservableObject {
     /// Task tracking for fetchTodaysCompletedWorkouts to prevent concurrent duplicate calls
     private var fetchCompletedWorkoutsTask: Task<Void, Never>?
 
-    /// BUILD 290: Offline status passthrough for views (ACP-600)
+    /// Offline status passthrough for views (ACP-600)
     var isOffline: Bool {
         supabase.isOffline
     }
@@ -37,7 +37,7 @@ class TodaySessionViewModel: ObservableObject {
         return UUID(uuidString: userIdString)
     }
 
-    // MARK: - BUILD 120: Codable Models
+    // MARK: - Codable Models
 
     /// Codable struct for exercise log insertion
     private struct ExerciseLogInsert: Codable {
@@ -53,7 +53,7 @@ class TodaySessionViewModel: ObservableObject {
         let notes: String?
     }
 
-    /// BUILD 290: Codable wrapper for offline caching of today's session data (ACP-600)
+    /// Codable wrapper for offline caching of today's session data (ACP-600)
     private struct CachedTodaySession: Codable {
         let session: Session?
         let exercises: [Exercise]
@@ -124,7 +124,7 @@ class TodaySessionViewModel: ObservableObject {
                 print("✅ [TodaySession] Supabase fetch succeeded")
                 #endif
 
-                // BUILD 290: Cache session data for offline use (ACP-600)
+                // Cache session data for offline use (ACP-600)
                 let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
                 supabase.cacheData(cachedData, forKey: "today_session_\(patientId)")
                 logger.log("💾 Cached today's session for offline use", level: .success)
@@ -137,7 +137,7 @@ class TodaySessionViewModel: ObservableObject {
                 )
                 logger.log("⚡ Updated preload cache", level: .success)
 
-                // BUILD 269: Also fetch today's completed workouts count
+                // Also fetch today's completed workouts count
                 await fetchTodaysCompletedWorkouts()
 
                 isLoading = false
@@ -153,7 +153,7 @@ class TodaySessionViewModel: ObservableObject {
                 print("   Error: \(error.localizedDescription)")
                 #endif
 
-                // BUILD 290: Serve cached data when offline (ACP-600)
+                // Serve cached data when offline (ACP-600)
                 if supabase.isOffline,
                    let cached = supabase.getCachedData(
                        forKey: "today_session_\(patientId)",
@@ -292,7 +292,7 @@ class TodaySessionViewModel: ObservableObject {
         let logger = DebugLogger.shared
         logger.log("📱 Fetching session from Supabase for patient: \(patientId)")
 
-        // BUILD 218: First check scheduled_sessions for today
+        // First check scheduled_sessions for today
         let today = ISO8601DateFormatter().string(from: Date()).prefix(10) // YYYY-MM-DD
         logger.log("📱 Checking scheduled_sessions for today: \(today)")
         #if DEBUG
@@ -340,7 +340,7 @@ class TodaySessionViewModel: ObservableObject {
         if let sessionId = sessionId {
             logger.log("📱 Fetching scheduled session by ID: \(sessionId)")
             do {
-                // BUILD 325: Use limit(1) instead of .single() to avoid "Cannot coerce" error
+                // Use limit(1) instead of .single() to avoid "Cannot coerce" error
                 // when query returns empty or multiple rows
                 let response = try await supabase.client
                     .from("sessions")
@@ -474,12 +474,12 @@ class TodaySessionViewModel: ObservableObject {
         }
     }
 
-    /// BUILD 218: Helper to fetch exercises for a session
+    /// Helper to fetch exercises for a session
     private func fetchExercisesForSession(_ session: Session) async throws {
         let logger = DebugLogger.shared
         logger.log("📱 Fetching exercises for session \(session.id)...")
 
-        // BUILD 177: Include video and technique fields for ExerciseTechniqueView
+        // Include video and technique fields for ExerciseTechniqueView
         let response = try await supabase.client
             .from("session_exercises")
             .select("""
@@ -553,7 +553,7 @@ class TodaySessionViewModel: ObservableObject {
         await fetchTodaysCompletedWorkouts()
     }
 
-    // MARK: - BUILD 269: Today's Completed Workouts Counter
+    // MARK: - Today's Completed Workouts Counter
 
     /// Fetch all workouts completed today (both prescribed and manual)
     /// Uses request deduplication to prevent concurrent duplicate API calls
@@ -759,12 +759,12 @@ class TodaySessionViewModel: ObservableObject {
             let now = Date()
             let updateData = SessionUpdateData(
                 completed: true,
-                started_at: ISO8601DateFormatter().string(from: startedAt), // BUILD 123: Save actual start time
+                started_at: ISO8601DateFormatter().string(from: startedAt), // Save actual start time
                 completed_at: ISO8601DateFormatter().string(from: now),
                 total_volume: metrics.totalVolume,
                 avg_rpe: metrics.avgRpe,
                 avg_pain: metrics.avgPain,
-                duration_minutes: Int(now.timeIntervalSince(startedAt) / 60) // BUILD 123: Calculate duration from actual times
+                duration_minutes: Int(now.timeIntervalSince(startedAt) / 60) // Calculate duration from actual times
             )
 
             _ = try await supabase.client
@@ -775,7 +775,7 @@ class TodaySessionViewModel: ObservableObject {
 
             logger.log("✅ Session marked as complete!", level: .success)
 
-            // BUILD 174: Fetch the specific completed session by ID (not fetchTodaySession which gets wrong session)
+            // Fetch the specific completed session by ID (not fetchTodaySession which gets wrong session)
             let fetchResponse = try await supabase.client
                 .from("sessions")
                 .select("*")
@@ -857,7 +857,7 @@ class TodaySessionViewModel: ObservableObject {
         )
     }
 
-    // MARK: - BUILD 120: Quick Complete & Inline Editing
+    // MARK: - Quick Complete & Inline Editing
 
     /// Quick-complete exercise with prescribed values (1-tap logging)
     func quickCompleteExercise(
@@ -926,7 +926,7 @@ class TodaySessionViewModel: ObservableObject {
             // Notify therapist if pain exceeds threshold
             if pain > Self.painNotificationThreshold {
                 logger.log("⚠️  High pain level (\(pain)) - therapist notification triggered", level: .warning)
-                // BUILD 286: Notify therapist of high pain (ACP-597)
+                // Notify therapist of high pain (ACP-597)
                 Task {
                     await notifyTherapistOfHighPain(exerciseName: exercise.exercise_name ?? "Unknown", painLevel: pain)
                 }
@@ -938,7 +938,7 @@ class TodaySessionViewModel: ObservableObject {
         }
     }
 
-    /// BUILD 286: Notify therapist when patient reports pain > 5 (ACP-597)
+    /// Notify therapist when patient reports pain > 5 (ACP-597)
     private func notifyTherapistOfHighPain(exerciseName: String, painLevel: Int) async {
         let logger = DebugLogger.shared
         guard let patientId = supabase.userId else { return }
@@ -968,7 +968,7 @@ class TodaySessionViewModel: ObservableObject {
 /// Session update data for completing a session
 struct SessionUpdateData: Codable {
     let completed: Bool
-    let started_at: String? // BUILD 123: Track actual workout start time
+    let started_at: String? // Track actual workout start time
     let completed_at: String
     let total_volume: Double
     let avg_rpe: Double
@@ -1002,7 +1002,7 @@ struct ExerciseLogRecord: Codable {
     let created_at: Date?  // Added: returned by SELECT *
 }
 
-// MARK: - BUILD 269: Today's Workout Summary
+// MARK: - Today's Workout Summary
 
 /// Summary of a completed workout for today's counter
 struct TodayWorkoutSummary: Identifiable {

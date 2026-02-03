@@ -36,6 +36,7 @@ struct ProgramCoverImage: View {
         }
         .frame(width: size.width, height: size.height)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .accessibilityHidden(true)
     }
 
     private var placeholderView: some View {

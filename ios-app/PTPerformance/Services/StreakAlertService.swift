@@ -530,8 +530,11 @@ class StreakAlertService: ObservableObject {
 
     /// Save configuration to UserDefaults
     private func saveConfiguration() {
-        if let data = try? JSONEncoder().encode(configuration) {
+        do {
+            let data = try JSONEncoder().encode(configuration)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "StreakAlertService.saveConfiguration")
         }
     }
 

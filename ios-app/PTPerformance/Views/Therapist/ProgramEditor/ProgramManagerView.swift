@@ -129,6 +129,9 @@ struct ProgramRowView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(program.name)\(program.status != nil ? ", \(program.status!.capitalized)" : ""), \(program.durationWeeks) \(program.durationWeeks == 1 ? "week" : "weeks"), \(program.targetLevel.capitalized) level")
+        .accessibilityHint("Double tap to view and edit program")
     }
 }
 
@@ -144,6 +147,7 @@ struct ProgramStatusBadge: View {
             .background(backgroundColor)
             .foregroundColor(.white)
             .cornerRadius(8)
+            .accessibilityLabel("Status: \(status.capitalized)")
     }
 
     private var backgroundColor: Color {

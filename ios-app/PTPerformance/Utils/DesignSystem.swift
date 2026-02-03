@@ -1,7 +1,6 @@
 import SwiftUI
 
 // MARK: - Design System
-// BUILD 95 - Agent 14: UI/UX Final Polish
 // Centralized design system with spacing, colors, animations, and haptic feedback
 
 /// Consistent spacing system throughout the app

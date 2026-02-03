@@ -2,7 +2,6 @@
 //  IntervalTimerService.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 Agent 9 (Interval Timer Service)
 //  Service for interval timer operations and countdown logic
 //
 
@@ -103,7 +102,7 @@ class IntervalTimerService: ObservableObject {
 
     /// Fetch timer presets by category
     func fetchPresets(category: TimerCategory? = nil) async throws -> [TimerPreset] {
-        // BUILD 133: Enhanced logging for timer preset loading
+        // Enhanced logging for timer preset loading
         let categoryFilter = category?.rawValue ?? "all"
         DebugLogger.shared.logQuery(
             table: "timer_presets",
@@ -130,7 +129,7 @@ class IntervalTimerService: ObservableObject {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        // BUILD 133: Try to decode with detailed error logging
+        // Try to decode with detailed error logging
         do {
             let presets = try decoder.decode([TimerPreset].self, from: response.data)
             DebugLogger.shared.success("TIMER_DATA", "Decoded \(presets.count) timer presets successfully")

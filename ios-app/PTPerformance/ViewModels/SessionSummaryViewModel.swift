@@ -27,7 +27,7 @@ class SessionSummaryViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        // BUILD 132: Debug logging for session summary bug
+        // Debug logging for session summary
         DebugLogger.shared.info("SESSION_SUMMARY", """
             Calculating summary for session:
             Session ID: \(session.id.uuidString)
@@ -38,7 +38,7 @@ class SessionSummaryViewModel: ObservableObject {
             """)
 
         do {
-            // BUILD 133: Add time-based filtering to prevent retrieving logs from other session completions
+            // Add time-based filtering to prevent retrieving logs from other session completions
             // Bug fix: session_id alone isn't enough - need to filter by time range too
             var queryParams: [String: String] = [
                 "patient_id": patientId,
@@ -67,7 +67,7 @@ class SessionSummaryViewModel: ObservableObject {
                 This prevents retrieving logs from other completions of the same session
                 """)
 
-            // BUILD 286: Query via session_exercises join instead of session_id
+            // Query via session_exercises join instead of session_id
             // exercise_logs use session_exercise_id (FK to session_exercises.id),
             // NOT session_id directly. First get the exercise IDs for this session.
             let exerciseIdsResponse = try await supabase.client
@@ -117,7 +117,7 @@ class SessionSummaryViewModel: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             let exerciseLogs = try decoder.decode([ExerciseLogResponse].self, from: response.data)
 
-            // BUILD 133: Enhanced logging to verify time-based filtering worked
+            // Enhanced logging to verify time-based filtering worked
             let sortedLogs = exerciseLogs.sorted { $0.logged_at < $1.logged_at }
             let dateRange: String
             if let firstLog = sortedLogs.first, let lastLog = sortedLogs.last {
@@ -224,7 +224,7 @@ class SessionSummaryViewModel: ObservableObject {
     }
 
     /// Calculate workout duration
-    /// BUILD 123: Use actual session start/end times if available, fallback to exercise log timestamps
+    /// Use actual session start/end times if available, fallback to exercise log timestamps
     private func calculateDuration(from logs: [ExerciseLogResponse], session: Session) -> TimeInterval {
         // Prefer actual session times if both exist
         if let startedAt = session.started_at, let completedAt = session.completed_at {

@@ -2,7 +2,6 @@
 //  BackgroundTimerManager.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 - Agent 10
 //  Background timer continuation with notifications
 //
 
@@ -31,12 +30,12 @@ class BackgroundTimerManager: ObservableObject {
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: backgroundTaskIdentifier,
             using: nil
-        ) { task in
+        ) { [weak self] task in
             guard let refreshTask = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
                 return
             }
-            self.handleBackgroundTask(task: refreshTask)
+            self?.handleBackgroundTask(task: refreshTask)
         }
     }
 

@@ -1,10 +1,8 @@
 import Foundation
 
 /// Represents a configurable readiness factor used in score calculation
-/// BUILD 116 - Agent 6: Daily Readiness Models
-///
 /// Maps to the `readiness_factors` table in Supabase
-struct ReadinessFactor: Codable, Identifiable, Hashable, Equatable {
+struct ReadinessFactor: Codable, Identifiable, Hashable, Equatable, Sendable {
     let id: UUID
     let name: String
     let weight: Double

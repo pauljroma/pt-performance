@@ -2,7 +2,7 @@
 //  PatientWorkoutTemplate.swift
 //  PTPerformance
 //
-//  BUILD 240: Manual Workout Entry
+//  Manual Workout Entry
 //
 
 import Foundation

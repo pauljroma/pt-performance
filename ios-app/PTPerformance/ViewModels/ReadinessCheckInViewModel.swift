@@ -42,8 +42,6 @@ private enum ColorThresholds {
 }
 
 /// ViewModel for managing daily readiness check-in form
-/// BUILD 116 - Agent 11: ReadinessCheckInViewModel
-///
 /// Responsibilities:
 /// - Input state management (sleep, soreness, energy, stress)
 /// - Form validation
@@ -95,7 +93,7 @@ class ReadinessCheckInViewModel: ObservableObject {
         return ReadinessCategory.category(for: score)
     }
 
-    // MARK: - BUILD 123: Live Score Calculation
+    // MARK: - Live Score Calculation
 
     /// Calculate live readiness score from current form inputs
     /// Algorithm approximates database trigger calculation:
@@ -152,6 +150,7 @@ class ReadinessCheckInViewModel: ObservableObject {
     /// Populates form with existing values or defaults
     func loadTodayEntry() async {
         isLoading = true
+        showError = false
 
         do {
             todayEntry = try await readinessService.getTodayReadiness(for: patientId)
@@ -165,12 +164,22 @@ class ReadinessCheckInViewModel: ObservableObject {
                 notes = entry.notes ?? ""
                 hasSubmittedToday = true
             } else {
-                // No entry for today - use defaults
+                // No entry for today - use defaults (this is expected for new users)
                 hasSubmittedToday = false
                 resetForm()
             }
         } catch {
-            // No entry for today is expected, not an error
+            // This is an actual error (network failure, etc.), not just "no data"
+            print("❌ Failed to load today's readiness: \(error)")
+
+            if error.localizedDescription.contains("network") || error.localizedDescription.contains("connection") {
+                errorMessage = "Couldn't load your previous check-in. Please check your connection."
+            } else {
+                errorMessage = "Couldn't load your previous check-in. Please try again."
+            }
+            showError = true
+
+            // Still allow user to submit a new check-in
             hasSubmittedToday = false
             resetForm()
         }

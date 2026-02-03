@@ -88,7 +88,7 @@ struct ProgramsHubPage {
     @discardableResult
     func selectProgramsSegment() -> Self {
         TestHelpers.safeTap(programsSegment, named: "Programs Segment")
-        sleep(1) // Wait for content to load
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for content to load
         return self
     }
 
@@ -96,7 +96,7 @@ struct ProgramsHubPage {
     @discardableResult
     func selectHistorySegment() -> Self {
         TestHelpers.safeTap(historySegment, named: "History Segment")
-        sleep(1) // Wait for content to load
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for content to load
         return self
     }
 

@@ -2,7 +2,6 @@
 //  TabBarBadgeManager.swift
 //  PTPerformance
 //
-//  BUILD 319: Tab Navigation Polish
 //  Centralized badge management for tab bar notifications
 //
 

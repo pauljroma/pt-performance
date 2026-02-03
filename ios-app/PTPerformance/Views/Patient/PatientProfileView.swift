@@ -26,6 +26,8 @@ struct PatientProfileView: View {
                                 Text(viewModel.age.isEmpty ? "Not set" : viewModel.age)
                                     .foregroundColor(.secondary)
                             }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("Age: \(viewModel.age.isEmpty ? "Not set" : viewModel.age)")
 
                             // Gender
                             Picker("Gender", selection: $viewModel.gender) {
@@ -33,6 +35,8 @@ struct PatientProfileView: View {
                                     Text(option.isEmpty ? "Not specified" : option).tag(option)
                                 }
                             }
+                            .accessibilityLabel("Gender")
+                            .accessibilityValue(viewModel.gender.isEmpty ? "Not specified" : viewModel.gender)
 
                             // Height
                             VStack(alignment: .leading, spacing: 4) {
@@ -43,12 +47,15 @@ struct PatientProfileView: View {
                                         .keyboardType(.decimalPad)
                                         .multilineTextAlignment(.trailing)
                                         .frame(width: 80)
+                                        .accessibilityLabel("Height in inches")
+                                        .accessibilityValue(viewModel.heightInches.isEmpty ? "Not set" : "\(viewModel.heightInches) inches")
                                 }
 
                                 if let error = viewModel.heightError {
                                     Text(error)
                                         .font(.caption)
                                         .foregroundColor(.red)
+                                        .accessibilityLabel("Height error: \(error)")
                                 }
                             }
 
@@ -61,12 +68,15 @@ struct PatientProfileView: View {
                                         .keyboardType(.decimalPad)
                                         .multilineTextAlignment(.trailing)
                                         .frame(width: 80)
+                                        .accessibilityLabel("Weight in pounds")
+                                        .accessibilityValue(viewModel.weightLbs.isEmpty ? "Not set" : "\(viewModel.weightLbs) pounds")
                                 }
 
                                 if let error = viewModel.weightError {
                                     Text(error)
                                         .font(.caption)
                                         .foregroundColor(.red)
+                                        .accessibilityLabel("Weight error: \(error)")
                                 }
                             }
                         }
@@ -83,6 +93,8 @@ struct PatientProfileView: View {
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                     )
+                                    .accessibilityLabel("Injury History")
+                                    .accessibilityHint("Enter each injury on a new line")
                                 Text("Enter each injury on a new line (e.g., \"2025: Grade 1 tricep strain (elbow)\")")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -98,6 +110,8 @@ struct PatientProfileView: View {
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                                     )
+                                    .accessibilityLabel("Surgery History")
+                                    .accessibilityHint("Enter each surgery on a new line")
                                 Text("Enter each surgery on a new line (e.g., \"2023: Tommy John Surgery\")")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -109,6 +123,8 @@ struct PatientProfileView: View {
                                     .foregroundColor(.secondary)
                                 TextField("Enter allergies separated by commas", text: $viewModel.allergies)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .accessibilityLabel("Allergies")
+                                    .accessibilityHint("Enter allergies separated by commas")
                                 Text("Example: penicillin, peanuts, latex")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -121,10 +137,13 @@ struct PatientProfileView: View {
                                 HStack {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.red)
+                                        .accessibilityHidden(true)
                                     Text(errorMessage)
                                         .foregroundColor(.red)
                                         .font(.subheadline)
                                 }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel("Error: \(errorMessage)")
                             }
                         }
                     }
@@ -138,6 +157,8 @@ struct PatientProfileView: View {
                         dismiss()
                     }
                     .disabled(viewModel.isSaving)
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Closes without saving changes")
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -149,12 +170,15 @@ struct PatientProfileView: View {
                         if viewModel.isSaving {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
+                                .accessibilityHidden(true)
                         } else {
                             Text("Save")
                                 .bold()
                         }
                     }
                     .disabled(viewModel.isSaving || viewModel.isLoading)
+                    .accessibilityLabel(viewModel.isSaving ? "Saving profile" : "Save")
+                    .accessibilityHint("Saves your profile changes")
                 }
             }
             .alert("Success", isPresented: $viewModel.showingSuccessAlert) {

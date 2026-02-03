@@ -2,7 +2,6 @@
 //  SessionManager.swift
 //  PTPerformance
 //
-//  Created by BUILD 119 on 2026-01-03
 //  Purpose: Automatic session timeout (15 minutes) - HIPAA Technical Safeguard requirement
 //
 
@@ -156,7 +155,7 @@ final class SessionManager: ObservableObject {
         stopMonitoring()
 
         // Trigger logout on main thread
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.shouldLogout = true
         }
     }

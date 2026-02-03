@@ -2,7 +2,6 @@
 //  ActiveTimerViewModel.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 Agent 14 (Active Timer ViewModel)
 //  ViewModel for active timer display with real-time countdown updates
 //
 

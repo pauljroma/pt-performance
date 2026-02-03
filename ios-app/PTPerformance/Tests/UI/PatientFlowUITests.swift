@@ -31,33 +31,33 @@ final class PatientFlowUITests: XCTestCase {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
 
         // Verify demo patient login button exists
-        let demoPatientButton = app.buttons["Sign in as Demo Patient"]
+        let demoPatientButton = app.buttons["Demo Patient"]
         XCTAssertTrue(demoPatientButton.waitForExistence(timeout: 5),
             "Demo patient login button should be visible")
 
         // Verify demo therapist login button exists
-        let demoTherapistButton = app.buttons["Sign in as Demo Therapist"]
+        let demoTherapistButton = app.buttons["Demo Therapist"]
         XCTAssertTrue(demoTherapistButton.exists,
             "Demo therapist login button should be visible")
 
-        // Verify Nic Roma login button exists
-        let nicRomaButton = app.buttons["Sign in as Nic Roma"]
-        XCTAssertTrue(nicRomaButton.exists,
-            "Nic Roma login button should be visible")
+        // Verify Sign in with Apple button exists
+        let appleButton = app.buttons["Sign in with Apple"]
+        XCTAssertTrue(appleButton.exists,
+            "Apple Sign In button should be visible")
 
-        // Verify Skip button exists
-        let skipButton = app.buttons["Skip"]
-        XCTAssertTrue(skipButton.exists,
-            "Skip button should be visible")
+        // Verify Continue with Email button exists
+        let emailButton = app.buttons["Continue with Email"]
+        XCTAssertTrue(emailButton.exists,
+            "Email Sign In button should be visible")
     }
 
-    /// Test that Skip button allows bypassing login
-    func testSkipButtonExists() throws {
+    /// Test that Continue with Email button exists
+    func testContinueWithEmailButtonExists() throws {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
 
-        let skipButton = app.buttons["Skip"]
-        XCTAssertTrue(skipButton.waitForExistence(timeout: 5),
-            "Skip button should be visible on login screen")
+        let emailButton = app.buttons["Continue with Email"]
+        XCTAssertTrue(emailButton.waitForExistence(timeout: 5),
+            "Continue with Email button should be visible on login screen")
     }
 
     // MARK: - Login Flow Tests (Network Dependent)
@@ -68,7 +68,7 @@ final class PatientFlowUITests: XCTestCase {
     func testPatientLoginFlow() throws {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 5))
 
-        let patientButton = app.buttons["Sign in as Demo Patient"]
+        let patientButton = app.buttons["Demo Patient"]
         XCTAssertTrue(patientButton.waitForExistence(timeout: 5),
             "Demo patient login button should be visible")
 
@@ -102,7 +102,7 @@ final class PatientFlowUITests: XCTestCase {
                 foundResult = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
         }
 
         // If login button still visible after 15 seconds, network likely down
@@ -120,7 +120,7 @@ final class PatientFlowUITests: XCTestCase {
         try testPatientLoginFlow()
 
         // Give additional time for data to load
-        Thread.sleep(forTimeInterval: 2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Check for error messages
         let errorMessage = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'could not be read'")).firstMatch

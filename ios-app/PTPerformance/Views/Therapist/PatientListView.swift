@@ -152,6 +152,7 @@ struct PatientListView: View {
                                 HapticFeedback.selectionChanged()
                             }
                         )
+                        .id(patient.id)
                     } else {
                         NavigationLink(destination: PatientDetailView(patient: patient)) {
                             PatientRowCard(patient: patient)
@@ -225,6 +226,7 @@ struct PatientListView: View {
                                 }
                             }
                         }
+                        .id(patient.id)
                     }
                 }
             }

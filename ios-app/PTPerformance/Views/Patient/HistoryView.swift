@@ -91,6 +91,7 @@ struct SummaryCardsView: View {
             Text("Summary")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: 16) {
                 SummaryCard(
@@ -145,6 +146,7 @@ private struct SummaryCard: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.title2)
@@ -158,6 +160,8 @@ private struct SummaryCard: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -171,6 +175,7 @@ struct PainTrendSection: View {
             Text("Pain Trend (14 Days)")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
             Chart {
                 ForEach(dataPoints) { point in
@@ -206,12 +211,25 @@ struct PainTrendSection: View {
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(12)
+            .accessibilityLabel(chartAccessibilityLabel)
+            .accessibilityHint("Shows pain levels over the last 14 days")
 
             Text("Pain above 5 indicates potential risk and triggers therapist alerts")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private var chartAccessibilityLabel: String {
+        guard !dataPoints.isEmpty else {
+            return "No pain data available"
+        }
+        let avgPain = dataPoints.map { $0.painScore }.reduce(0, +) / Double(dataPoints.count)
+        let maxPain = dataPoints.map { $0.painScore }.max() ?? 0
+        let minPain = dataPoints.map { $0.painScore }.min() ?? 0
+        let latestPain = dataPoints.sorted { $0.date > $1.date }.first?.painScore ?? 0
+        return "Pain trend chart showing \(dataPoints.count) data points. Average pain \(String(format: "%.1f", avgPain)), range \(String(format: "%.1f", minPain)) to \(String(format: "%.1f", maxPain)), most recent \(String(format: "%.1f", latestPain))"
     }
 }
 
@@ -225,6 +243,7 @@ struct AdherenceSection: View {
             Text("Adherence")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: 32) {
                 // Circular adherence chart
@@ -250,6 +269,9 @@ struct AdherenceSection: View {
                     }
                 }
                 .frame(width: 150, height: 150)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Adherence: \(Int(adherence.adherencePercentage)) percent complete")
+                .accessibilityValue("\(adherence.completedSessions) of \(adherence.totalSessions) sessions completed")
 
                 // Stats
                 VStack(alignment: .leading, spacing: 12) {
@@ -300,6 +322,7 @@ struct StatRow: View {
         HStack {
             Image(systemName: icon)
                 .foregroundColor(color)
+                .accessibilityHidden(true)
             Text(label)
                 .font(.subheadline)
             Spacer()
@@ -307,6 +330,8 @@ struct StatRow: View {
                 .font(.subheadline)
                 .bold()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 
@@ -320,6 +345,7 @@ struct RecentSessionsSection: View {
             Text("Recent Sessions")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 12) {
                 ForEach(sessions) { session in
@@ -359,6 +385,8 @@ struct SessionRow: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Session \(session.sessionNumber), \(session.sessionDate.formatted(date: .abbreviated, time: .omitted)), \(session.completed == true ? "completed" : "pending")")
     }
 }
 
@@ -376,6 +404,7 @@ struct RecentWorkoutsSection: View {
             Text("Recent Workouts")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 12) {
                 ForEach(workouts) { workout in
@@ -430,6 +459,7 @@ struct WorkoutHistoryRow: View {
                 .font(.title2)
                 .foregroundColor(workout.isManual ? .orange : .blue)
                 .frame(width: 40)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
@@ -500,20 +530,26 @@ struct WorkoutHistoryRow: View {
                 if workout.isCompleted {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
+                        .accessibilityHidden(true)
                 } else {
                     Image(systemName: "circle")
                         .foregroundColor(.gray)
+                        .accessibilityHidden(true)
                 }
 
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
         }
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(workoutAccessibilityLabel)
+        .accessibilityHint("Double tap to view workout details")
         .contextMenu {
             Button {
                 HapticFeedback.light()
@@ -571,6 +607,25 @@ struct WorkoutHistoryRow: View {
         case 2...5: return .yellow
         default: return .red
         }
+    }
+
+    private var workoutAccessibilityLabel: String {
+        var label = workout.name
+        if workout.isManual {
+            label += ", manual workout"
+        }
+        label += ", \(workout.date.formatted(date: .abbreviated, time: .omitted))"
+        if let count = workout.exerciseCount, count > 0 {
+            label += ", \(count) exercises"
+        }
+        if let duration = workout.duration {
+            label += ", \(duration) minutes"
+        }
+        if let volume = workout.volume, volume > 0 {
+            label += ", volume \(formatVolume(volume))"
+        }
+        label += workout.isCompleted ? ", completed" : ", not completed"
+        return label
     }
 }
 

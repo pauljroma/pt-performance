@@ -2,8 +2,7 @@
 //  WorkoutTemplate.swift
 //  PTPerformance
 //
-//  BUILD 240: Manual Workout Entry
-//  Models for workout template system
+//  Manual Workout Entry - Models for workout template system
 //
 
 import Foundation

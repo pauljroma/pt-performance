@@ -76,7 +76,7 @@ final class ProgramFlowTests: XCTestCase {
         createProgram(name: programName, phaseCount: 1, sessionsPerPhase: 1, exercisesPerSession: 2)
 
         // Wait for program to be created
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Navigate to edit the program
         let programRow = app.cells.containing(NSPredicate(format: "label CONTAINS[c] %@", programName)).firstMatch
@@ -146,7 +146,7 @@ final class ProgramFlowTests: XCTestCase {
         let programName = "Edit Session Test \(Date().timeIntervalSince1970)"
         createProgram(name: programName, phaseCount: 1, sessionsPerPhase: 2, exercisesPerSession: 3)
 
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Navigate to program
         let programRow = app.cells.containing(NSPredicate(format: "label CONTAINS[c] %@", programName)).firstMatch
@@ -198,7 +198,7 @@ final class ProgramFlowTests: XCTestCase {
         let programName = "Workout Execution Test \(Date().timeIntervalSince1970)"
         createProgram(name: programName, phaseCount: 1, sessionsPerPhase: 1, exercisesPerSession: 2)
 
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Assign program to a patient (if applicable)
         // For now, we'll test as therapist executing workout
@@ -247,7 +247,7 @@ final class ProgramFlowTests: XCTestCase {
         let programName = "Delete Test \(Date().timeIntervalSince1970)"
         createProgram(name: programName, phaseCount: 1, sessionsPerPhase: 1, exercisesPerSession: 1)
 
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // WHEN: Delete the program
         let programRow = app.cells.containing(NSPredicate(format: "label CONTAINS[c] %@", programName)).firstMatch
@@ -266,7 +266,7 @@ final class ProgramFlowTests: XCTestCase {
                 }
 
                 // THEN: Program should be removed from list
-                sleep(1)
+                RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
                 XCTAssertFalse(
                     programRow.exists,
                     "Deleted program should not appear in list"

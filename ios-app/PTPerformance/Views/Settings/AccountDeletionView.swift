@@ -27,6 +27,8 @@ struct AccountDeletionView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Closes without deleting account")
                 }
             }
             .alert("Account Scheduled for Deletion", isPresented: $viewModel.showSuccessAlert) {
@@ -54,6 +56,7 @@ struct AccountDeletionView: View {
                 Label("Warning", systemImage: "exclamationmark.triangle.fill")
                     .font(.headline)
                     .foregroundColor(.red)
+                    .accessibilityLabel("Warning")
 
                 Text("Deleting your account will:")
                     .font(.subheadline)
@@ -86,10 +89,14 @@ struct AccountDeletionView: View {
             SecureField("Enter your password", text: $viewModel.password)
                 .textContentType(.password)
                 .autocapitalization(.none)
+                .accessibilityLabel("Password")
+                .accessibilityHint("Enter your password to confirm account deletion")
 
             TextField("Type 'DELETE' to confirm", text: $viewModel.confirmationText)
                 .autocapitalization(.allCharacters)
                 .autocorrectionDisabled()
+                .accessibilityLabel("Confirmation text")
+                .accessibilityHint("Type DELETE in capital letters to confirm account deletion")
 
             if !viewModel.confirmationText.isEmpty && viewModel.confirmationText != "DELETE" {
                 Text("Must type 'DELETE' exactly")
@@ -110,6 +117,7 @@ struct AccountDeletionView: View {
                     if viewModel.isDeleting {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
+                            .accessibilityHidden(true)
                     }
                     Text(viewModel.isDeleting ? "Deleting..." : "Delete My Account")
                         .fontWeight(.semibold)
@@ -119,6 +127,8 @@ struct AccountDeletionView: View {
             .foregroundColor(.white)
             .listRowBackground(viewModel.isFormValid ? Color.red : Color.gray)
             .disabled(!viewModel.isFormValid || viewModel.isDeleting)
+            .accessibilityLabel(viewModel.isDeleting ? "Deleting account" : "Delete My Account")
+            .accessibilityHint(viewModel.isFormValid ? "Permanently deletes your account after confirmation" : "Complete password and confirmation fields to enable")
         }
     }
 

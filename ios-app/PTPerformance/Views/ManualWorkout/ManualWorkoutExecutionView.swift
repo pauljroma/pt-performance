@@ -712,466 +712,8 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
 }
 
 // MARK: - Gesture-Based Input Components
-
-/// Tappable rep counter with gesture interactions for fast logging
-/// - Tap: +1 rep
-/// - Long press: -1 rep
-/// - Double tap: Reset to prescribed
-struct TappableRepCounter: View {
-    @Binding var reps: Int
-    let prescribedReps: Int
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Text("\(reps)")
-            .font(.system(size: 24, weight: .bold, design: .rounded))
-            .monospacedDigit()
-            .frame(minWidth: 50)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(reps == prescribedReps ? Color.green.opacity(0.15) : Color.gray.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(reps == prescribedReps ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
-            )
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-            .contentShape(Rectangle())
-            .simultaneousGesture(
-                TapGesture(count: 2)
-                    .onEnded {
-                        // Double tap = reset to prescribed
-                        withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                            reps = prescribedReps
-                            isPressed = true
-                        }
-                        HapticFeedback.success()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation(.spring(response: 0.2)) {
-                                isPressed = false
-                            }
-                        }
-                    }
-            )
-            .simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.3)
-                    .onEnded { _ in
-                        // Long press = -1
-                        withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                            reps = max(0, reps - 1)
-                            isPressed = true
-                        }
-                        HapticFeedback.medium()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation(.spring(response: 0.2)) {
-                                isPressed = false
-                            }
-                        }
-                    }
-            )
-            .onTapGesture {
-                // Single tap = +1
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                    reps += 1
-                    isPressed = true
-                }
-                HapticFeedback.light()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.spring(response: 0.2)) {
-                        isPressed = false
-                    }
-                }
-            }
-            .accessibilityLabel("Reps: \(reps)")
-            .accessibilityHint("Tap to add one rep, long press to subtract, double tap to reset to \(prescribedReps)")
-            .accessibilityAddTraits(.isButton)
-    }
-}
-
-/// Swipeable weight control with drag gestures for fast adjustment
-/// - Swipe up: +5 lbs (or custom increment)
-/// - Swipe down: -5 lbs (or custom increment)
-struct SwipeableWeightControl: View {
-    @Binding var weight: Double
-    var increment: Double = 5.0
-
-    @State private var dragOffset: CGFloat = 0
-    @State private var showIncrement = false
-    @State private var lastChangeDirection: Int = 0 // -1 down, 0 none, 1 up
-
-    private let threshold: CGFloat = 30
-
-    var body: some View {
-        VStack(spacing: 2) {
-            // Up indicator (appears on drag up)
-            Image(systemName: "chevron.up")
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(.blue)
-                .opacity(dragOffset < -10 ? min(1, abs(dragOffset) / threshold) : 0)
-                .scaleEffect(dragOffset < -threshold ? 1.2 : 1.0)
-
-            ZStack {
-                // Weight display
-                Text("\(Int(weight))")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .frame(minWidth: 60)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.blue.opacity(0.1))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(abs(dragOffset) > threshold ? Color.blue.opacity(0.5) : Color.clear, lineWidth: 2)
-                    )
-                    .offset(y: min(max(dragOffset * 0.2, -15), 15))
-
-                // Increment indicator overlay
-                if showIncrement && lastChangeDirection != 0 {
-                    Text(lastChangeDirection > 0 ? "+\(Int(increment))" : "-\(Int(increment))")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(lastChangeDirection > 0 ? .green : .orange)
-                        .offset(y: lastChangeDirection > 0 ? -30 : 30)
-                        .transition(.opacity.combined(with: .scale))
-                }
-            }
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        dragOffset = value.translation.height
-                    }
-                    .onEnded { value in
-                        if value.translation.height < -threshold {
-                            // Swiped up = increase weight
-                            withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
-                                weight += increment
-                                lastChangeDirection = 1
-                                showIncrement = true
-                            }
-                            HapticFeedback.light()
-                        } else if value.translation.height > threshold {
-                            // Swiped down = decrease weight
-                            withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
-                                weight = max(0, weight - increment)
-                                lastChangeDirection = -1
-                                showIncrement = true
-                            }
-                            HapticFeedback.light()
-                        }
-
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            dragOffset = 0
-                        }
-
-                        // Hide increment indicator after delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                showIncrement = false
-                            }
-                        }
-                    }
-            )
-
-            // Down indicator (appears on drag down)
-            Image(systemName: "chevron.down")
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(.blue)
-                .opacity(dragOffset > 10 ? min(1, dragOffset / threshold) : 0)
-                .scaleEffect(dragOffset > threshold ? 1.2 : 1.0)
-        }
-        .accessibilityLabel("Weight: \(Int(weight)) pounds")
-        .accessibilityHint("Swipe up to add \(Int(increment)) pounds, swipe down to subtract")
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment:
-                weight += increment
-                HapticFeedback.light()
-            case .decrement:
-                weight = max(0, weight - increment)
-                HapticFeedback.light()
-            @unknown default:
-                break
-            }
-        }
-    }
-}
-
-/// Combined gesture-enabled set row with tappable reps and swipeable weight
-struct GestureSetRow: View {
-    let setNumber: Int
-    @Binding var reps: Int
-    @Binding var weight: Double
-    let prescribedReps: Int
-    let prescribedWeight: Double
-    let loadUnit: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Set number indicator
-            ZStack {
-                Circle()
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(width: 32, height: 32)
-
-                Text("\(setNumber)")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.blue)
-            }
-
-            Spacer()
-
-            // Reps (tappable)
-            VStack(spacing: 4) {
-                Text("Reps")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                TappableRepCounter(reps: $reps, prescribedReps: prescribedReps)
-            }
-
-            Text("x")
-                .font(.title3)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 4)
-
-            // Weight (swipeable)
-            VStack(spacing: 4) {
-                Text(loadUnit)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                SwipeableWeightControl(weight: $weight, increment: 5.0)
-            }
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(.systemBackground))
-                .adaptiveShadow(Shadow.subtle)
-        )
-    }
-}
-
-/// Hint overlay to teach gesture interactions
-struct GestureHintOverlay: View {
-    @Binding var isVisible: Bool
-
-    var body: some View {
-        if isVisible {
-            VStack(spacing: 20) {
-                VStack(spacing: 12) {
-                    Text("Quick Gestures")
-                        .font(.headline)
-                        .fontWeight(.bold)
-
-                    VStack(alignment: .leading, spacing: 16) {
-                        gestureHintRow(
-                            icon: "hand.tap.fill",
-                            title: "Tap Reps",
-                            description: "+1 rep"
-                        )
-                        gestureHintRow(
-                            icon: "hand.tap.fill",
-                            title: "Long Press Reps",
-                            description: "-1 rep"
-                        )
-                        gestureHintRow(
-                            icon: "hand.tap.fill",
-                            title: "Double Tap Reps",
-                            description: "Reset to prescribed"
-                        )
-
-                        Divider()
-
-                        gestureHintRow(
-                            icon: "arrow.up",
-                            title: "Swipe Weight Up",
-                            description: "+5 lbs"
-                        )
-                        gestureHintRow(
-                            icon: "arrow.down",
-                            title: "Swipe Weight Down",
-                            description: "-5 lbs"
-                        )
-
-                        Divider()
-
-                        gestureHintRow(
-                            icon: "hand.draw.fill",
-                            title: "Swipe Exercise Right",
-                            description: "Complete as prescribed"
-                        )
-                        gestureHintRow(
-                            icon: "hand.draw.fill",
-                            title: "Swipe Exercise Left",
-                            description: "Skip exercise"
-                        )
-                    }
-                }
-                .padding(24)
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .adaptiveShadow(Shadow.prominent)
-
-                Button {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        isVisible = false
-                    }
-                } label: {
-                    Text("Got it!")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal, 24)
-            }
-            .padding(32)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black.opacity(0.4))
-            .transition(.opacity)
-        }
-    }
-
-    private func gestureHintRow(icon: String, title: String, description: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.blue)
-                .frame(width: 28)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-    }
-}
-
-/// Swipeable wrapper for exercise rows with complete/skip gestures
-/// - Swipe RIGHT: Complete exercise with prescribed values
-/// - Swipe LEFT: Skip exercise
-struct SwipeableExerciseRow<Content: View>: View {
-    let exercise: ManualSessionExercise
-    let isCompleted: Bool
-    let isSkipped: Bool
-    let onComplete: () -> Void
-    let onSkip: () -> Void
-    @ViewBuilder let content: () -> Content
-
-    @State private var offset: CGFloat = 0
-    @State private var actionTriggered = false
-
-    private let completeThreshold: CGFloat = 100
-    private let skipThreshold: CGFloat = -100
-
-    var body: some View {
-        ZStack {
-            // Background actions (revealed on swipe)
-            HStack {
-                // Complete action (revealed on right swipe)
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                    Text("Complete")
-                }
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .frame(width: 100)
-                .frame(maxHeight: .infinity)
-                .background(Color.green)
-                .opacity(offset > 20 ? 1 : 0)
-
-                Spacer()
-
-                // Skip action (revealed on left swipe)
-                HStack(spacing: 8) {
-                    Text("Skip")
-                    Image(systemName: "forward.fill")
-                }
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .frame(width: 100)
-                .frame(maxHeight: .infinity)
-                .background(Color.orange)
-                .opacity(offset < -20 ? 1 : 0)
-            }
-            .cornerRadius(8)
-
-            // Main content
-            content()
-                .offset(x: offset)
-                .gesture(
-                    isCompleted || isSkipped ? nil :
-                    DragGesture()
-                        .onChanged { value in
-                            // Only allow horizontal swipes
-                            if abs(value.translation.width) > abs(value.translation.height) {
-                                withAnimation(.interactiveSpring()) {
-                                    offset = value.translation.width
-                                }
-                            }
-                        }
-                        .onEnded { value in
-                            if value.translation.width > completeThreshold && !actionTriggered {
-                                // Complete exercise
-                                actionTriggered = true
-                                HapticFeedback.success()
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    offset = UIScreen.main.bounds.width
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    onComplete()
-                                    offset = 0
-                                    actionTriggered = false
-                                }
-                            } else if value.translation.width < skipThreshold && !actionTriggered {
-                                // Skip exercise
-                                actionTriggered = true
-                                HapticFeedback.medium()
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    offset = -UIScreen.main.bounds.width
-                                }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    onSkip()
-                                    offset = 0
-                                    actionTriggered = false
-                                }
-                            } else {
-                                // Snap back
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                    offset = 0
-                                }
-                            }
-                        }
-                )
-        }
-        .accessibilityAction(named: "Complete as Prescribed") {
-            onComplete()
-        }
-        .accessibilityAction(named: "Skip Exercise") {
-            onSkip()
-        }
-    }
-}
+// NOTE: TappableRepCounter, SwipeableWeightControl, GestureSetRow, GestureHintOverlay,
+// and SwipeableExerciseRow have been extracted to Components/SetLoggingComponents.swift
 
 // MARK: - Main View
 
@@ -1298,6 +840,8 @@ struct ManualWorkoutExecutionView: View {
                         }
                     }
                     .foregroundColor(.red)
+                    .accessibilityLabel("End workout")
+                    .accessibilityHint(viewModel.completedCount > 0 ? "Saves your progress and ends the workout" : "Exits without saving")
                 }
             }
             .task {
@@ -1560,83 +1104,18 @@ struct ManualWorkoutExecutionView: View {
     }
 
     // MARK: - Progress Header
+    // NOTE: Progress header view extracted to Components/WorkoutProgressHeader.swift
 
+    @ViewBuilder
     private var progressHeader: some View {
-        VStack(spacing: 12) {
-            // Timer and Progress Row
-            HStack {
-                // Elapsed Time (conditionally visible, but always tracked)
-                if viewModel.isTimerVisible {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Time")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        HStack(spacing: 4) {
-                            Image(systemName: "clock.fill")
-                                .foregroundColor(.blue)
-                            Text(viewModel.elapsedTimeDisplay)
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .monospacedDigit()
-                        }
-                    }
-                }
-
-                Spacer()
-
-                // Timer visibility toggle button
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewModel.isTimerVisible.toggle()
-                    }
-                } label: {
-                    Image(systemName: viewModel.isTimerVisible ? "eye.fill" : "eye.slash.fill")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .padding(8)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
-                }
-                .accessibilityLabel(viewModel.isTimerVisible ? "Hide timer" : "Show timer")
-
-                Spacer()
-
-                // Progress
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Progress")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text(viewModel.progressText)
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                    }
-                }
-            }
-
-            // Progress Bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(height: 8)
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.green)
-                        .frame(width: geometry.size.width * viewModel.progressPercentage, height: 8)
-                        .animation(.easeInOut, value: viewModel.progressPercentage)
-                }
-            }
-            .frame(height: 8)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .adaptiveShadow(Shadow.subtle)
+        WorkoutProgressHeader(
+            elapsedTimeDisplay: viewModel.elapsedTimeDisplay,
+            progressText: viewModel.progressText,
+            completedCount: viewModel.completedCount,
+            totalExercises: viewModel.totalExercises,
+            progressPercentage: viewModel.progressPercentage,
+            isTimerVisible: $viewModel.isTimerVisible
+        )
     }
 
     // MARK: - Block Navigation Section
@@ -1655,8 +1134,10 @@ struct ManualWorkoutExecutionView: View {
                     // All exercises in this block (always visible)
                     ForEach(block.exercises) { exercise in
                         exerciseRow(exercise)
+                            .id(exercise.id)
                     }
                 }
+                .id(block.blockType)
             }
         }
     }
@@ -1689,6 +1170,9 @@ struct ManualWorkoutExecutionView: View {
         .padding(12)
         .background(isCurrent ? Color.blue.opacity(0.1) : Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(blockTypeEnum?.displayName ?? blockType) block, \(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count) of \(exercises.count) completed")
+        .accessibilityAddTraits(isCompleted ? [.isSelected] : [])
     }
 
     // BUILD 216: Expandable exercise row with inline completion
@@ -1745,18 +1229,22 @@ struct ManualWorkoutExecutionView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title3)
                             .foregroundColor(.green)
+                            .accessibilityHidden(true)
                     } else if isSkipped {
                         Image(systemName: "forward.fill")
                             .font(.title3)
                             .foregroundColor(.orange)
+                            .accessibilityHidden(true)
                     } else if isCurrent {
                         Image(systemName: "play.circle.fill")
                             .font(.title3)
                             .foregroundColor(.blue)
+                            .accessibilityHidden(true)
                     } else {
                         Image(systemName: "circle")
                             .font(.title3)
                             .foregroundColor(.gray)
+                            .accessibilityHidden(true)
                     }
 
                     // Exercise Details
@@ -1797,12 +1285,16 @@ struct ManualWorkoutExecutionView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .rotationEffect(.degrees(isExpanded ? 0 : 0))
+                            .accessibilityHidden(true)
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(isCurrent ? Color.blue.opacity(0.08) : Color(.systemBackground))
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(exerciseAccessibilityLabel(exercise: exercise, isCompleted: isCompleted, isSkipped: isSkipped, isCurrent: isCurrent))
+            .accessibilityHint(isCompleted || isSkipped ? "" : (isExpanded ? "Double tap to collapse" : "Double tap to expand options"))
 
             // Expanded content
             if isExpanded && !isCompleted && !isSkipped {
@@ -1836,6 +1328,8 @@ struct ManualWorkoutExecutionView: View {
                         .cornerRadius(8)
                     }
                     .padding(.horizontal, 12)
+                    .accessibilityLabel("Complete as prescribed")
+                    .accessibilityHint("Logs this exercise with the prescribed sets and reps")
 
                     // Or log with details button
                     Button {
@@ -1854,6 +1348,8 @@ struct ManualWorkoutExecutionView: View {
                         .cornerRadius(8)
                     }
                     .padding(.horizontal, 12)
+                    .accessibilityLabel("Log with custom values")
+                    .accessibilityHint("Opens detailed logging to enter actual sets, reps, and weight")
 
                     // Skip button - ACP-515: Immediate action with undo
                     Button {
@@ -1878,6 +1374,8 @@ struct ManualWorkoutExecutionView: View {
                         .foregroundColor(.orange)
                     }
                     .padding(.bottom, 8)
+                    .accessibilityLabel("Skip exercise")
+                    .accessibilityHint("Skips this exercise and marks it as not completed")
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -1939,6 +1437,7 @@ struct ManualWorkoutExecutionView: View {
                             .foregroundColor(.blue)
                     }
                     .accessibilityLabel("Exercise details")
+                    .accessibilityHint("Shows video demonstration and technique cues")
 
                     // AI substitute button
                     Button {
@@ -1950,6 +1449,7 @@ struct ManualWorkoutExecutionView: View {
                             .foregroundColor(.orange)
                     }
                     .accessibilityLabel("Find substitute")
+                    .accessibilityHint("Opens AI-powered exercise substitution finder")
 
                     // Add exercise button
                     Button {
@@ -1960,6 +1460,7 @@ struct ManualWorkoutExecutionView: View {
                             .foregroundColor(.green)
                     }
                     .accessibilityLabel("Add exercise")
+                    .accessibilityHint("Adds a new exercise to this workout")
                 }
             }
 
@@ -2044,6 +1545,7 @@ struct ManualWorkoutExecutionView: View {
                         prescribedWeight: prescribedWeight,
                         loadUnit: viewModel.loadUnit
                     )
+                    .id("\(viewModel.currentExercise?.id.uuidString ?? "set")-\(index)")
                 }
             }
 
@@ -2068,6 +1570,8 @@ struct ManualWorkoutExecutionView: View {
 
                             Slider(value: $viewModel.rpe, in: 1...10, step: 1)
                                 .accentColor(rpeColor(Int(viewModel.rpe)))
+                                .accessibilityLabel("Rate of perceived exertion")
+                                .accessibilityValue("\(Int(viewModel.rpe)) out of 10")
 
                             HStack {
                                 Text("Easy")
@@ -2096,6 +1600,8 @@ struct ManualWorkoutExecutionView: View {
 
                             Slider(value: $viewModel.painScore, in: 0...10, step: 1)
                                 .accentColor(painColor(Int(viewModel.painScore)))
+                                .accessibilityLabel("Pain score")
+                                .accessibilityValue("\(Int(viewModel.painScore)) out of 10")
 
                             HStack {
                                 Text("No Pain")
@@ -2146,6 +1652,8 @@ struct ManualWorkoutExecutionView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(.separator), lineWidth: 1)
                     )
+                    .accessibilityLabel("Exercise notes")
+                    .accessibilityHint("Optional notes about how this exercise felt")
             }
         }
         .padding()
@@ -2156,6 +1664,7 @@ struct ManualWorkoutExecutionView: View {
 
     // MARK: - Action Buttons
 
+    @ViewBuilder
     private var actionButtons: some View {
         VStack(spacing: 12) {
             // Complete Exercise Button
@@ -2182,6 +1691,8 @@ struct ManualWorkoutExecutionView: View {
                 .cornerRadius(12)
             }
             .disabled(viewModel.currentExercise == nil)
+            .accessibilityLabel("Complete exercise")
+            .accessibilityHint("Logs your sets and reps for this exercise")
 
             // Skip Exercise Button - ACP-515: Immediate action with undo
             Button {
@@ -2209,6 +1720,8 @@ struct ManualWorkoutExecutionView: View {
                 .cornerRadius(12)
             }
             .disabled(viewModel.currentExercise == nil)
+            .accessibilityLabel("Skip exercise")
+            .accessibilityHint("Skips this exercise and moves to the next one")
 
             // Complete Workout Button (visible when all exercises done)
             if viewModel.allExercisesCompleted {
@@ -2228,6 +1741,8 @@ struct ManualWorkoutExecutionView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
+                .accessibilityLabel("Complete workout")
+                .accessibilityHint("Finishes the workout and shows your summary")
             }
         }
     }
@@ -2255,76 +1770,19 @@ struct ManualWorkoutExecutionView: View {
     }
 
     // MARK: - Workout Completed View
+    // NOTE: Workout completion view extracted to Components/WorkoutCompletionView.swift
 
     private var workoutCompletedView: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Success Icon
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 80))
-                    .foregroundColor(.green)
-                    .padding(.top, 40)
-
-                Text("Workout Complete!")
-                    .font(.title)
-                    .fontWeight(.bold)
-
-                Text(viewModel.workoutName)
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-
-                // Summary Stats
-                VStack(spacing: 16) {
-                    summaryStatRow(title: "Duration", value: viewModel.elapsedTimeDisplay, icon: "clock.fill", color: .blue)
-                    summaryStatRow(title: "Exercises", value: "\(viewModel.completedCount)/\(viewModel.totalExercises)", icon: "list.bullet", color: .purple)
-                    summaryStatRow(title: "Total Volume", value: viewModel.volumeDisplay, icon: "scalemass.fill", color: .green)
-
-                    if let avgRpe = viewModel.averageRPE {
-                        summaryStatRow(title: "Avg RPE", value: String(format: "%.1f", avgRpe), icon: "bolt.fill", color: rpeColor(Int(avgRpe)))
-                    }
-
-                    if let avgPain = viewModel.averagePain {
-                        summaryStatRow(title: "Avg Pain", value: String(format: "%.1f", avgPain), icon: "hand.raised.fill", color: painColor(Int(avgPain)))
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-
-                // Done Button
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-                .padding(.top, 16)
-            }
-            .padding()
-        }
-    }
-
-    private func summaryStatRow(title: String, value: String, icon: String, color: Color) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-                .frame(width: 40)
-
-            Text(title)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(value)
-                .font(.headline)
-        }
-        .padding(.vertical, 4)
+        WorkoutCompletionView(
+            workoutName: viewModel.workoutName,
+            elapsedTimeDisplay: viewModel.elapsedTimeDisplay,
+            completedCount: viewModel.completedCount,
+            totalExercises: viewModel.totalExercises,
+            volumeDisplay: viewModel.volumeDisplay,
+            averageRPE: viewModel.averageRPE,
+            averagePain: viewModel.averagePain,
+            onDismiss: { dismiss() }
+        )
     }
 
     // MARK: - Fatigue & Progression Helpers
@@ -2461,79 +1919,32 @@ struct ManualWorkoutExecutionView: View {
         default: return .gray
         }
     }
+
+    // MARK: - Accessibility Helpers
+
+    private func exerciseAccessibilityLabel(exercise: ManualSessionExercise, isCompleted: Bool, isSkipped: Bool, isCurrent: Bool) -> String {
+        let displayName = exercise.exerciseName.count <= 2 && Int(exercise.exerciseName) != nil
+            ? (exercise.notes ?? exercise.exerciseName)
+            : exercise.exerciseName
+
+        var statusText = ""
+        if isCompleted {
+            statusText = ", completed"
+        } else if isSkipped {
+            statusText = ", skipped"
+        } else if isCurrent {
+            statusText = ", current exercise"
+        }
+
+        let prescription = "\(exercise.targetSets ?? 3) sets, \(exercise.targetReps ?? "10") reps"
+        let loadText = exercise.targetLoad != nil ? ", \(Int(exercise.targetLoad!)) \(exercise.loadUnit ?? "lbs")" : ""
+
+        return "\(displayName)\(statusText), \(prescription)\(loadText)"
+    }
 }
 
 // MARK: - Rest Timer Overlay
-
-/// Full-screen overlay for rest timer between exercises
-struct RestTimerOverlay: View {
-    let timeRemaining: TimeInterval
-    let totalTime: TimeInterval
-    let onSkip: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Text("Rest")
-                .font(.title2)
-                .foregroundColor(.secondary)
-
-            // Circular progress
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-
-                Circle()
-                    .trim(from: 0, to: totalTime > 0 ? timeRemaining / totalTime : 0)
-                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: timeRemaining)
-
-                Text(formatTime(timeRemaining))
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-            }
-            .frame(width: 200, height: 200)
-
-            Text("Next exercise coming up...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Button {
-                HapticFeedback.light()
-                onSkip()
-            } label: {
-                HStack {
-                    Image(systemName: "forward.fill")
-                    Text("Skip Rest")
-                }
-                .font(.headline)
-                .foregroundColor(.blue)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 16)
-                .background(
-                    Capsule()
-                        .stroke(Color.blue, lineWidth: 2)
-                )
-            }
-            .padding(.bottom, 60)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Rest timer, \(Int(timeRemaining)) seconds remaining")
-        .accessibilityHint("Swipe up or tap Skip Rest to continue to next exercise")
-    }
-
-    private func formatTime(_ seconds: TimeInterval) -> String {
-        let mins = Int(seconds) / 60
-        let secs = Int(seconds) % 60
-        return String(format: "%d:%02d", mins, secs)
-    }
-}
+// NOTE: RestTimerOverlay extracted to Components/RestTimerOverlay.swift
 
 // MARK: - BUILD 285: Exercise Info Sheet (with video, technique cues, safety notes)
 
@@ -2899,6 +2310,7 @@ struct AISubstitutionSheetForManual: View {
                                     .background(Color(.systemGray6))
                                     .cornerRadius(10)
                                 }
+                                .id(alt.id)
                             }
                         }
 
@@ -3125,6 +2537,7 @@ struct ExercisePickerForWorkout: View {
                             }
                             .padding(.vertical, 4)
                         }
+                        .id(template.id)
                     }
                 }
                 .searchable(text: $searchText, prompt: "Search exercises")

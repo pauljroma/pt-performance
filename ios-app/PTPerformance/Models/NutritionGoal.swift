@@ -2,13 +2,13 @@
 //  NutritionGoal.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Goals and targets model
+//  Nutrition Module - Goals and targets model
 //
 
 import Foundation
 
 /// Patient's nutritional goals and targets
-struct NutritionGoal: Codable, Identifiable, Hashable, Equatable {
+struct NutritionGoal: Codable, Identifiable, Hashable, Equatable, Sendable {
     let id: UUID
     let patientId: String
     let goalType: GoalType
@@ -49,7 +49,7 @@ struct NutritionGoal: Codable, Identifiable, Hashable, Equatable {
 }
 
 /// Type of nutrition goal
-enum GoalType: String, Codable, CaseIterable, Hashable {
+enum GoalType: String, Codable, CaseIterable, Hashable, Sendable {
     case daily
     case weekly
 
@@ -64,8 +64,8 @@ enum GoalType: String, Codable, CaseIterable, Hashable {
 // MARK: - Goal Progress
 
 /// Progress toward nutrition goals from vw_nutrition_goal_progress view
-/// BUILD 280: Updated to match vw_nutrition_goal_progress view columns
-struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable {
+/// Updated to match vw_nutrition_goal_progress view columns
+struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable, Sendable {
     var id: String { goalId }
     let patientId: String
     let goalId: String
@@ -114,7 +114,7 @@ struct NutritionGoalProgress: Codable, Identifiable, Hashable, Equatable {
 
 // MARK: - Create/Update DTOs
 
-struct CreateNutritionGoalDTO: Codable {
+struct CreateNutritionGoalDTO: Codable, Sendable {
     let patientId: String
     let goalType: String
     let targetCalories: Int?
@@ -142,7 +142,7 @@ struct CreateNutritionGoalDTO: Codable {
     }
 }
 
-struct UpdateNutritionGoalDTO: Codable {
+struct UpdateNutritionGoalDTO: Codable, Sendable {
     let targetCalories: Int?
     let targetProteinG: Double?
     let targetCarbsG: Double?

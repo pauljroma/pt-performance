@@ -3,9 +3,40 @@ import StoreKit
 
 // MARK: - StoreKit 2 Subscription Service
 
+/// Service for managing in-app purchases and subscriptions using StoreKit 2
+///
+/// Handles subscription management, one-time purchases (Baseball Pack), and
+/// transaction verification. Automatically listens for transaction updates
+/// and maintains subscription status.
+///
+/// ## Subscription Products
+/// - Monthly subscription: `com.ptperformance.app.monthly`
+/// - Annual subscription: `com.ptperformance.app.annual`
+///
+/// ## One-Time Purchases
+/// - Baseball Pack: `com.ptperformance.baseballpack`
+///
+/// ## Usage Example
+/// ```swift
+/// let store = StoreKitService.shared
+///
+/// // Load products
+/// await store.loadProducts()
+///
+/// // Purchase a subscription
+/// if let monthly = store.monthlyProduct {
+///     try await store.purchase(monthly)
+/// }
+///
+/// // Check premium status
+/// if store.isPremium {
+///     // Show premium features
+/// }
+/// ```
 @MainActor
 class StoreKitService: ObservableObject {
 
+    /// Shared singleton instance
     static let shared = StoreKitService()
 
     private let logger = DebugLogger.shared
@@ -34,7 +65,7 @@ class StoreKitService: ObservableObject {
         didSet { updateIsPremium() }
     }
 
-    // BUILD 309: Changed isPremium from computed to @Published for reliable SwiftUI updates
+    // Changed isPremium from computed to @Published for reliable SwiftUI updates
     @Published private(set) var isPremium: Bool = false
 
     // MARK: - Baseball Pack Ownership
@@ -82,7 +113,7 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Premium Status Update
 
-    /// BUILD 312: Update isPremium whenever override or subscription status changes
+    /// Update isPremium whenever override or subscription status changes
     private func updateIsPremium() {
         let oldValue = isPremium
         if let override = debugPremiumOverride {
@@ -134,6 +165,14 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Load Products
 
+    /// Loads all available products from the App Store
+    ///
+    /// Fetches product information for all configured product IDs and sorts
+    /// them by price in ascending order. Products are stored in the `products`
+    /// array and can be accessed via convenience properties like `monthlyProduct`.
+    ///
+    /// - Note: This method should be called on app launch to ensure products
+    ///         are available before displaying the paywall
     func loadProducts() async {
         logger.info("StoreKit", "Loading products: \(StoreKitService.productIDs)")
         isLoading = true
@@ -153,6 +192,17 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Purchase
 
+    /// Initiates a purchase for the specified product
+    ///
+    /// Handles the complete purchase flow including transaction verification
+    /// and status updates. For subscriptions, updates `subscriptionStatus`.
+    /// For non-consumable purchases like Baseball Pack, updates ownership state.
+    ///
+    /// - Parameter product: The StoreKit Product to purchase
+    ///
+    /// - Throws: `StoreError.failedVerification` if transaction verification fails
+    ///
+    /// - Note: User cancellation does not throw an error; it's logged silently
     func purchase(_ product: Product) async throws {
         logger.info("StoreKit", "Starting purchase for: \(product.id)")
         let result = try await product.purchase()
@@ -231,6 +281,14 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Restore Purchases
 
+    /// Restores previous purchases from the App Store
+    ///
+    /// Syncs with the App Store to restore any previously purchased subscriptions
+    /// or non-consumable products. Updates both subscription status and Baseball
+    /// Pack ownership state after restoration.
+    ///
+    /// - Note: This method uses `AppStore.sync()` which may prompt for Apple ID
+    ///         authentication if needed
     func restorePurchases() async {
         logger.info("StoreKit", "Restoring purchases via AppStore.sync()")
         do {
@@ -245,6 +303,11 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Update Subscription Status
 
+    /// Updates the current subscription status by checking active entitlements
+    ///
+    /// Iterates through all current entitlements to determine subscription state.
+    /// Handles active subscriptions, expired subscriptions, and grace periods.
+    /// Updates both `purchasedProductIDs` and `subscriptionStatus` properties.
     func updateSubscriptionStatus() async {
         logger.diagnostic("StoreKit: Checking current entitlements")
         var activePurchases: Set<String> = []
@@ -322,6 +385,16 @@ class StoreKitService: ObservableObject {
 
     // MARK: - Verification
 
+    /// Verifies a StoreKit transaction result
+    ///
+    /// Extracts the verified transaction from a `VerificationResult`, ensuring
+    /// the transaction has been cryptographically verified by the App Store.
+    ///
+    /// - Parameter result: The verification result to check
+    ///
+    /// - Returns: The verified transaction value
+    ///
+    /// - Throws: `StoreError.failedVerification` if the transaction is unverified
     func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:

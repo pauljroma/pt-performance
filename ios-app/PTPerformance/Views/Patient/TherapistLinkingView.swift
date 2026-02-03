@@ -125,7 +125,7 @@ struct TherapistLinkingView: View {
                                 UIPasteboard.general.string = code
                                 showCopiedToast = true
 
-                                // Hide toast after 2 seconds
+                                // Intentional delay: show "Copied!" feedback for 2 seconds
                                 Task {
                                     try? await Task.sleep(nanoseconds: 2_000_000_000)
                                     showCopiedToast = false

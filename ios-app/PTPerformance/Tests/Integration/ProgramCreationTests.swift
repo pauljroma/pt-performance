@@ -127,8 +127,8 @@ class ProgramCreationTests: XCTestCase {
     }
 
     func testCreateProgram_WithPatient_AssociatesCorrectly() async throws {
-        // Given: Get a test patient ID
-        let patientId = "27d60616-8cb9-4434-b2b9-e84476788e08" // Nic Roma from seed data
+        // Given: Use a test patient ID (not a real user)
+        let patientId = "00000000-0000-0000-0000-000000000001" // Test patient placeholder
 
         viewModel.programName = "Patient-Specific Program"
         viewModel.phases = [
@@ -214,7 +214,7 @@ class ProgramCreationTests: XCTestCase {
         let sampleExercise1 = Exercise(
             id: UUID().uuidString,
             session_id: "",
-            exercise_template_id: "550e8400-e29b-41d4-a716-446655440000", // Bench Press from seed
+            exercise_template_id: "00000000-0000-0000-0000-000000000002", // Test exercise template placeholder
             sequence: 1,
             prescribed_sets: 3,
             prescribed_reps: "8-10",
@@ -228,7 +228,7 @@ class ProgramCreationTests: XCTestCase {
         let sampleExercise2 = Exercise(
             id: UUID().uuidString,
             session_id: "",
-            exercise_template_id: "550e8400-e29b-41d4-a716-446655440001", // Squat from seed
+            exercise_template_id: "00000000-0000-0000-0000-000000000003", // Test exercise template placeholder
             sequence: 2,
             prescribed_sets: 4,
             prescribed_reps: "6-8",

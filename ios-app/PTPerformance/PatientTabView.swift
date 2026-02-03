@@ -1,11 +1,12 @@
 import SwiftUI
 
-// BUILD 318: Tab Consolidation - Reduced from 10 tabs to 3
+// Tab Consolidation - 4-tab layout
 // Tab 1: Today (Today's workout + Quick Pick + Timers + Readiness access)
 // Tab 2: Programs (Program Library + History)
-// Tab 3: Profile (Settings + Nutrition + Learn + AI Assistant)
+// Tab 3: Health (Health Hub + Lab Results + Recovery + Fasting + Supplements + AI Coach)
+// Tab 4: Profile (Settings + Nutrition + Learn + AI Assistant)
 //
-// BUILD 319: Tab Navigation Polish
+// Tab Navigation Polish
 // - Consistent SF Symbols with .medium weight
 // - Subtle haptic feedback on tab switches
 // - Dark mode adaptive styling
@@ -21,7 +22,7 @@ struct PatientTabView: View {
     // Track selected tab for haptic feedback
     @State private var selectedTab: PatientTab = .today
 
-    // BUILD 317: State-based refresh trigger for premium changes
+    // State-based refresh trigger for premium changes
     @State private var premiumRefreshID = UUID()
 
     // MARK: - Tab Definitions
@@ -29,12 +30,14 @@ struct PatientTabView: View {
     enum PatientTab: Int, CaseIterable {
         case today = 0
         case programs = 1
-        case profile = 2
+        case health = 2
+        case profile = 3
 
         var title: String {
             switch self {
             case .today: return "Today"
             case .programs: return "Programs"
+            case .health: return "Health"
             case .profile: return "Profile"
             }
         }
@@ -44,6 +47,7 @@ struct PatientTabView: View {
             switch self {
             case .today: return "figure.run"
             case .programs: return "list.bullet.rectangle.portrait"
+            case .health: return "heart.text.square"
             case .profile: return "person.circle"
             }
         }
@@ -52,6 +56,7 @@ struct PatientTabView: View {
             switch self {
             case .today: return "figure.run"
             case .programs: return "list.bullet.rectangle.portrait.fill"
+            case .health: return "heart.text.square.fill"
             case .profile: return "person.circle.fill"
             }
         }
@@ -60,13 +65,14 @@ struct PatientTabView: View {
             switch self {
             case .today: return "Today's workout with quick access to timers and AI pick"
             case .programs: return "Browse programs and view workout history"
+            case .health: return "Health intelligence with labs, recovery, fasting, and AI coach"
             case .profile: return "Settings, nutrition, AI assistant, and more"
             }
         }
     }
 
     var body: some View {
-        // BUILD 318: Consolidated 3-tab layout
+        // Consolidated 4-tab layout
         TabView(selection: $selectedTab) {
             // Tab 1: Today Hub - Primary workout focus
             TodayHubView()
@@ -101,7 +107,22 @@ struct PatientTabView: View {
                 .accessibilityLabel(PatientTab.programs.title)
                 .accessibilityHint(PatientTab.programs.accessibilityHint)
 
-            // Tab 3: Profile Hub - Settings and Premium Features
+            // Tab 3: Health Hub - Health Intelligence
+            HealthHubView()
+                .environmentObject(storeKit)
+                .tabItem {
+                    Label {
+                        Text(PatientTab.health.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .health ? PatientTab.health.selectedIconName : PatientTab.health.iconName)
+                            .fontWeight(.medium)
+                    }
+                }
+                .tag(PatientTab.health)
+                .accessibilityLabel(PatientTab.health.title)
+                .accessibilityHint(PatientTab.health.accessibilityHint)
+
+            // Tab 4: Profile Hub - Settings and Premium Features
             ProfileHubView()
                 .environmentObject(storeKit)
                 .environmentObject(appState)
@@ -118,17 +139,17 @@ struct PatientTabView: View {
                 .accessibilityLabel(PatientTab.profile.title)
                 .accessibilityHint(PatientTab.profile.accessibilityHint)
         }
-        .id(premiumRefreshID)  // BUILD 317: Force TabView rebuild with UUID
+        .id(premiumRefreshID)  // Force TabView rebuild with UUID
         .tint(.accentColor)  // Ensure consistent tint color across light/dark mode
         .onChange(of: selectedTab) { oldTab, newTab in
-            // BUILD 319: Subtle haptic feedback for tab switching
+            // Subtle haptic feedback for tab switching
             HapticFeedback.tabSwitch()
 
             // Clear badge when tab is selected
             badgeManager.clearBadge(for: newTab.rawValue)
         }
         .onChange(of: storeKit.isPremium) { _, newValue in
-            // BUILD 317: Force complete TabView rebuild when premium changes
+            // Force complete TabView rebuild when premium changes
             #if DEBUG
             print("[PatientTabView] Premium changed to: \(newValue), refreshing tabs")
             #endif
@@ -185,7 +206,7 @@ struct PatientSettingsView: View {
     @ObservedObject private var supabase = PTSupabaseClient.shared
     @ObservedObject private var modeService = ModeService.shared  // ACP-479: Mode awareness
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
-    // BUILD 307: Use EnvironmentObject to share same instance with PatientTabView
+    // Use EnvironmentObject to share same instance with PatientTabView
     // Previously @StateObject created separate observation, so toggle didn't update tabs
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
@@ -236,7 +257,7 @@ struct PatientSettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // BUILD 305: Quick wins — Body Comp, Calculators, Goals
+                // Quick wins — Body Comp, Calculators, Goals
                 Section("Tools & Tracking") {
                     NavigationLink {
                         BodyCompositionTimelineView()

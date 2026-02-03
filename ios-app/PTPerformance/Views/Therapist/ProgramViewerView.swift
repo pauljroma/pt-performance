@@ -104,6 +104,7 @@ struct ProgramHeaderView: View {
             HStack(spacing: 4) {
                 Image(systemName: program.resolvedProgramType.icon)
                     .font(.caption2)
+                    .accessibilityHidden(true)
                 Text(program.resolvedProgramType.displayName)
                     .font(.caption2)
                     .fontWeight(.medium)
@@ -123,6 +124,8 @@ struct ProgramHeaderView: View {
             .foregroundColor(.secondary)
         }
         .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(program.name), \(program.resolvedProgramType.displayName) program, Target level \(program.targetLevel), \(program.durationWeeks) weeks")
     }
 }
 
@@ -222,6 +225,7 @@ struct ExerciseRowCompact: View {
                 .foregroundColor(.white)
                 .frame(width: 24, height: 24)
                 .background(Circle().fill(Color.blue))
+                .accessibilityHidden(true)
 
             // Exercise name
             Text(exercise.exerciseName)
@@ -254,6 +258,8 @@ struct ExerciseRowCompact: View {
         .padding(.horizontal, 8)
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Exercise \(exercise.orderIndex + 1): \(exercise.exerciseName), \(exercise.sets) sets of \(exercise.reps) reps\(exercise.load != nil ? ", \(Int(exercise.load!)) \(exercise.loadUnit ?? "lbs")" : "")\(exercise.restPeriod != nil ? ", \(exercise.restPeriod!) seconds rest" : "")")
     }
 }
 

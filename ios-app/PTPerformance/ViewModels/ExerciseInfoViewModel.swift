@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import Supabase
 
-// MARK: - BUILD 296: Exercise Info ViewModel (ACP-587)
+// MARK: - Exercise Info ViewModel (ACP-587)
 
 /// Template detail for exercise info sheet
 struct ExerciseTemplateDetail: Codable {
@@ -73,7 +73,7 @@ class ExerciseInfoViewModel: ObservableObject {
         }
     }
 
-    /// BUILD 354: Fetch exercise template details by name (fuzzy match)
+    /// Fetch exercise template details by name (fuzzy match)
     /// Used when exercise_template_id is not available (e.g., from workout templates)
     func fetchTemplateByName(_ name: String) async {
         isLoading = true

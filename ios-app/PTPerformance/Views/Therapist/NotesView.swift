@@ -347,9 +347,8 @@ struct AddNoteSheet: View {
 // Extension to get current user ID
 extension PTSupabaseClient {
     func getCurrentUserId() -> String? {
-        // This would normally come from the auth session
-        // For now, return a placeholder
-        return "therapist-user-id"
+        // Return the authenticated user's ID from the current session
+        return currentUser?.id.uuidString
     }
 }
 

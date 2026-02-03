@@ -65,7 +65,14 @@ struct FatigueSummary: Codable {
 
         // Handle fatigue score as string or double
         if let scoreString = try? container.decode(String.self, forKey: .fatigueScore) {
-            fatigueScore = Double(scoreString) ?? 0.0
+            if let parsed = Double(scoreString) {
+                fatigueScore = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse fatigueScore from string: '\(scoreString)', using default 0.0")
+                #endif
+                fatigueScore = 0.0
+            }
         } else {
             fatigueScore = try container.decodeIfPresent(Double.self, forKey: .fatigueScore) ?? 0.0
         }
@@ -74,14 +81,28 @@ struct FatigueSummary: Codable {
 
         // Handle avgReadiness7d as string or double
         if let readinessString = try? container.decode(String.self, forKey: .avgReadiness7d) {
-            avgReadiness7d = Double(readinessString) ?? 0.0
+            if let parsed = Double(readinessString) {
+                avgReadiness7d = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse avgReadiness7d from string: '\(readinessString)', using default 0.0")
+                #endif
+                avgReadiness7d = 0.0
+            }
         } else {
             avgReadiness7d = try container.decodeIfPresent(Double.self, forKey: .avgReadiness7d) ?? 0.0
         }
 
         // Handle acuteChronicRatio as string or double
         if let acrString = try? container.decode(String.self, forKey: .acuteChronicRatio) {
-            acuteChronicRatio = Double(acrString) ?? 0.0
+            if let parsed = Double(acrString) {
+                acuteChronicRatio = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse acuteChronicRatio from string: '\(acrString)', using default 0.0")
+                #endif
+                acuteChronicRatio = 0.0
+            }
         } else {
             acuteChronicRatio = try container.decodeIfPresent(Double.self, forKey: .acuteChronicRatio) ?? 0.0
         }
@@ -132,14 +153,28 @@ struct DeloadPrescription: Codable {
 
         // Handle loadReductionPct as string or double
         if let loadString = try? container.decode(String.self, forKey: .loadReductionPct) {
-            loadReductionPct = Double(loadString) ?? 0.0
+            if let parsed = Double(loadString) {
+                loadReductionPct = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse loadReductionPct from string: '\(loadString)', using default 0.0")
+                #endif
+                loadReductionPct = 0.0
+            }
         } else {
             loadReductionPct = try container.decode(Double.self, forKey: .loadReductionPct)
         }
 
         // Handle volumeReductionPct as string or double
         if let volumeString = try? container.decode(String.self, forKey: .volumeReductionPct) {
-            volumeReductionPct = Double(volumeString) ?? 0.0
+            if let parsed = Double(volumeString) {
+                volumeReductionPct = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse volumeReductionPct from string: '\(volumeString)', using default 0.0")
+                #endif
+                volumeReductionPct = 0.0
+            }
         } else {
             volumeReductionPct = try container.decode(Double.self, forKey: .volumeReductionPct)
         }
@@ -377,14 +412,28 @@ struct ActiveDeloadPeriod: Codable, Identifiable {
 
         // Handle loadReductionPct as string or double
         if let loadString = try? container.decode(String.self, forKey: .loadReductionPct) {
-            loadReductionPct = Double(loadString) ?? 0.0
+            if let parsed = Double(loadString) {
+                loadReductionPct = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse ActiveDeloadPeriod.loadReductionPct from string: '\(loadString)', using default 0.0")
+                #endif
+                loadReductionPct = 0.0
+            }
         } else {
             loadReductionPct = try container.decode(Double.self, forKey: .loadReductionPct)
         }
 
         // Handle volumeReductionPct as string or double
         if let volumeString = try? container.decode(String.self, forKey: .volumeReductionPct) {
-            volumeReductionPct = Double(volumeString) ?? 0.0
+            if let parsed = Double(volumeString) {
+                volumeReductionPct = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse ActiveDeloadPeriod.volumeReductionPct from string: '\(volumeString)', using default 0.0")
+                #endif
+                volumeReductionPct = 0.0
+            }
         } else {
             volumeReductionPct = try container.decode(Double.self, forKey: .volumeReductionPct)
         }

@@ -32,6 +32,7 @@ struct RegistrationView: View {
                     TextField("Full Name", text: $fullName)
                         .textContentType(.name)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("fullNameTextField")
                         .accessibilityLabel("Full Name")
                         .onChange(of: fullName) { _, newValue in
                             if !newValue.isEmpty {
@@ -52,6 +53,7 @@ struct RegistrationView: View {
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("registrationEmailTextField")
                         .accessibilityLabel("Email")
                         .onChange(of: email) { _, newValue in
                             if !newValue.isEmpty {
@@ -72,6 +74,7 @@ struct RegistrationView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     SecureField("Password", text: $password)
                         .textContentType(.newPassword)
+                        .accessibilityIdentifier("registrationPasswordSecureField")
                         .accessibilityLabel("Password")
                         .accessibilityHint("At least 8 characters with 1 uppercase letter and 1 number")
                         .onChange(of: password) { _, newValue in
@@ -94,6 +97,7 @@ struct RegistrationView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .textContentType(.newPassword)
+                        .accessibilityIdentifier("confirmPasswordSecureField")
                         .accessibilityLabel("Confirm Password")
                         .accessibilityHint("Re-enter your password to confirm")
                         .onChange(of: confirmPassword) { _, newValue in
@@ -123,6 +127,7 @@ struct RegistrationView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding(.trailing, 8)
+                                .accessibilityHidden(true)
                         }
                         Text("Create Account")
                             .font(.body.weight(.semibold))
@@ -130,7 +135,8 @@ struct RegistrationView: View {
                     }
                 }
                 .disabled(!isFormValid || isLoading)
-                .accessibilityLabel("Create Account")
+                .accessibilityIdentifier("createAccountButton")
+                .accessibilityLabel(isLoading ? "Creating account" : "Create Account")
                 .accessibilityHint(isFormValid ? "Create your new account" : "Complete all fields correctly to create account")
             }
 

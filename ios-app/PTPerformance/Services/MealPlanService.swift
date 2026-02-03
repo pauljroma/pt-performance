@@ -2,63 +2,13 @@
 //  MealPlanService.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Meal planning service
-//  BUILD 228: Fixed flexible date decoding for DATE vs TIMESTAMPTZ columns
+//  Nutrition Module - Meal planning service
+//  Fixed flexible date decoding for DATE vs TIMESTAMPTZ columns
+//  Standardized to use PTSupabaseClient.flexibleDecoder for consistency
 //
 
 import Foundation
 import Supabase
-
-// MARK: - Flexible Date Decoder
-
-/// Creates a decoder that handles both ISO8601 timestamps and "yyyy-MM-dd" date formats
-private func createFlexibleDecoder() -> JSONDecoder {
-    let decoder = JSONDecoder()
-
-    // Custom date decoding strategy that tries multiple formats
-    decoder.dateDecodingStrategy = .custom { decoder in
-        let container = try decoder.singleValueContainer()
-        let dateString = try container.decode(String.self)
-
-        // Try ISO8601 with fractional seconds first (most common from Supabase TIMESTAMPTZ)
-        let iso8601Formatter = ISO8601DateFormatter()
-        iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = iso8601Formatter.date(from: dateString) {
-            return date
-        }
-
-        // Try ISO8601 without fractional seconds
-        iso8601Formatter.formatOptions = [.withInternetDateTime]
-        if let date = iso8601Formatter.date(from: dateString) {
-            return date
-        }
-
-        // Try "yyyy-MM-dd" format for DATE columns (start_date, end_date)
-        let dateOnlyFormatter = DateFormatter()
-        dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
-        dateOnlyFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateOnlyFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        if let date = dateOnlyFormatter.date(from: dateString) {
-            return date
-        }
-
-        // Try "yyyy-MM-dd'T'HH:mm:ss" without timezone
-        let dateTimeFormatter = DateFormatter()
-        dateTimeFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        dateTimeFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateTimeFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        if let date = dateTimeFormatter.date(from: dateString) {
-            return date
-        }
-
-        throw DecodingError.dataCorruptedError(
-            in: container,
-            debugDescription: "Cannot decode date from: \(dateString)"
-        )
-    }
-
-    return decoder
-}
 
 // MARK: - Simple Supabase Input Models
 
@@ -106,7 +56,7 @@ class MealPlanService {
     func fetchMealPlans(patientId: String, includeInactive: Bool = false) async throws -> [MealPlan] {
         logger.info("MEAL PLAN", "Fetching meal plans for patient: \(patientId), includeInactive: \(includeInactive)")
 
-        // BUILD 234: Remove explicit PostgrestResponse<Data> type to avoid SDK decoding issues
+        // Remove explicit PostgrestResponse<Data> type to avoid SDK decoding issues
         // Use same pattern as fetchActiveMealPlan which works correctly
         do {
             let query = supabase.client
@@ -131,8 +81,9 @@ class MealPlanService {
                 logger.info("MEAL PLAN", "Raw JSON: \(json.prefix(1000))")
             }
 
-            let decoder = createFlexibleDecoder()
-            let plans = try decoder.decode([MealPlan].self, from: response.data)
+            // Uses shared flexible decoder that handles ISO8601 (with/without fractional seconds),
+            // DATE (yyyy-MM-dd), and TIME (HH:mm:ss) formats from Supabase
+            let plans = try PTSupabaseClient.flexibleDecoder.decode([MealPlan].self, from: response.data)
             logger.success("MEAL PLAN", "Fetched \(plans.count) meal plans")
             return plans
         } catch let decodingError as DecodingError {
@@ -172,7 +123,7 @@ class MealPlanService {
             logger.info("MEAL PLAN", "Fetch plan response: \(json)")
         }
 
-        let decoder = createFlexibleDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
         let plans = try decoder.decode([MealPlan].self, from: response.data)
         logger.success("MEAL PLAN", "Decoded plan with \(plans.first?.items?.count ?? 0) items")
         return plans.first
@@ -195,7 +146,7 @@ class MealPlanService {
             logger.info("MEAL PLAN", "Active plan JSON: \(json.prefix(500))")
         }
 
-        let decoder = createFlexibleDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
         do {
             let plans = try decoder.decode([MealPlan].self, from: response.data)
             logger.success("MEAL PLAN", "Active plan: \(plans.first?.name ?? "none")")
@@ -238,7 +189,7 @@ class MealPlanService {
                 logger.info("MEAL PLAN", "Insert response: \(json.prefix(500))")
             }
 
-            let decoder = createFlexibleDecoder()
+            let decoder = PTSupabaseClient.flexibleDecoder
             let newPlan = try decoder.decode(MealPlan.self, from: response.data)
             logger.success("MEAL PLAN", "Created meal plan: \(newPlan.id)")
             return newPlan
@@ -313,7 +264,7 @@ class MealPlanService {
             logger.info("MEAL PLAN", "Insert meal response: \(json)")
         }
 
-        let decoder = createFlexibleDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
         let result = try decoder.decode(MealPlanItem.self, from: response.data)
         logger.success("MEAL PLAN", "Added meal item: \(result.id)")
         return result
@@ -383,7 +334,7 @@ class MealPlanService {
             .order("sequence", ascending: true)
             .execute()
 
-        let decoder = createFlexibleDecoder()
+        let decoder = PTSupabaseClient.flexibleDecoder
         return try decoder.decode([MealPlanItem].self, from: response.data)
     }
 

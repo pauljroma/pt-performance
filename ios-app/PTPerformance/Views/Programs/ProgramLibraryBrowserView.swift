@@ -84,10 +84,13 @@ struct ProgramLibraryBrowserView: View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
 
             TextField("Search programs...", text: $viewModel.searchText)
                 .textFieldStyle(PlainTextFieldStyle())
                 .autocorrectionDisabled()
+                .accessibilityLabel("Search programs")
+                .accessibilityHint("Enter text to filter programs by name")
 
             if !viewModel.searchText.isEmpty {
                 Button {
@@ -96,6 +99,8 @@ struct ProgramLibraryBrowserView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
+                .accessibilityHint("Removes search text and shows all programs")
             }
         }
         .padding(10)
@@ -224,11 +229,14 @@ struct ProgramLibraryBrowserView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
+                .accessibilityHidden(true)
             Text("Loading programs...")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Loading programs, please wait")
     }
 
     // MARK: - Empty State View
@@ -238,6 +246,7 @@ struct ProgramLibraryBrowserView: View {
             Image(systemName: viewModel.hasActiveFilters ? "magnifyingglass" : "figure.strengthtraining.traditional")
                 .font(.system(size: 56))
                 .foregroundColor(viewModel.hasActiveFilters ? .secondary : .blue.opacity(0.6))
+                .accessibilityHidden(true)
 
             Text(viewModel.hasActiveFilters ? "No Matching Programs" : "Explore Training Programs")
                 .font(.headline)
@@ -257,6 +266,8 @@ struct ProgramLibraryBrowserView: View {
                     Label("Clear All Filters", systemImage: "xmark.circle")
                 }
                 .buttonStyle(.bordered)
+                .accessibilityLabel("Clear all filters")
+                .accessibilityHint("Removes all search and category filters")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -326,6 +337,7 @@ private struct ProgramFilterChip: View {
             HStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.caption)
+                    .accessibilityHidden(true)
 
                 Text(title)
                     .font(.subheadline)
@@ -337,6 +349,10 @@ private struct ProgramFilterChip: View {
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
         }
+        .accessibilityLabel("\(title) filter")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint("Double tap to \(isSelected ? "deselect" : "select") this filter")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -355,6 +371,7 @@ private struct BaseballCategoryChip: View {
             HStack(spacing: 4) {
                 Image(systemName: "baseball.fill")
                     .font(.caption)
+                    .accessibilityHidden(true)
 
                 Text("Baseball")
                     .font(.subheadline)
@@ -365,6 +382,7 @@ private struct BaseballCategoryChip: View {
                     Image(systemName: "lock.fill")
                         .font(.caption2)
                         .foregroundColor(isSelected ? .white.opacity(0.8) : .orange)
+                        .accessibilityHidden(true)
                 }
             }
             .padding(.horizontal, 12)
@@ -381,6 +399,10 @@ private struct BaseballCategoryChip: View {
                     )
             )
         }
+        .accessibilityLabel("Baseball filter\(isPremium ? ", premium content" : "")")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(isPremium ? "Double tap to view Baseball Pack purchase options" : "Double tap to \(isSelected ? "deselect" : "select") this filter")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -400,6 +422,7 @@ struct ProgramLibraryCard: View {
             .frame(maxWidth: .infinity)
             .frame(height: 100)
             .clipped()
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 8) {
                 // Header with category badge and featured star
@@ -414,6 +437,7 @@ struct ProgramLibraryCard: View {
                         Image(systemName: "star.fill")
                             .font(.caption)
                             .foregroundColor(.yellow)
+                            .accessibilityHidden(true)
                     }
                 }
 
@@ -439,6 +463,7 @@ struct ProgramLibraryCard: View {
                     HStack(spacing: 4) {
                         Image(systemName: "calendar")
                             .font(.caption2)
+                            .accessibilityHidden(true)
                         Text(program.formattedDuration)
                             .font(.caption)
                     }
@@ -458,6 +483,9 @@ struct ProgramLibraryCard: View {
         .clipped()
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(program.title)\(program.isFeatured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty")
+        .accessibilityHint("Double tap to view program details")
         .contextMenu {
             Button {
                 HapticFeedback.light()
@@ -783,6 +811,7 @@ struct ProgramPreviewSheet: View {
             Button(action: onEnroll) {
                 HStack {
                     Image(systemName: "plus.circle.fill")
+                        .accessibilityHidden(true)
                     Text("Enroll in Program")
                         .fontWeight(.semibold)
                 }
@@ -792,6 +821,8 @@ struct ProgramPreviewSheet: View {
                 .foregroundColor(.white)
                 .cornerRadius(12)
             }
+            .accessibilityLabel("Enroll in \(program.title)")
+            .accessibilityHint("Starts this program and adds workouts to your schedule")
             .padding()
         }
         .background(Color(.systemBackground))

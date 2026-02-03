@@ -118,6 +118,7 @@ struct ProfileHubView: View {
                     Image(systemName: "bell.badge.fill")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Smart Notifications")
                             .foregroundColor(.primary)
@@ -127,6 +128,8 @@ struct ProfileHubView: View {
                     }
                 }
             }
+            .accessibilityLabel("Smart Notifications")
+            .accessibilityHint("Configure workout reminder settings")
 
             // Apple Health Sync
             NavigationLink {
@@ -137,6 +140,7 @@ struct ProfileHubView: View {
                     Image(systemName: "heart.circle.fill")
                         .foregroundColor(.red)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Apple Health")
                             .foregroundColor(.primary)
@@ -146,6 +150,9 @@ struct ProfileHubView: View {
                     }
                 }
             }
+            .accessibilityLabel("Apple Health")
+            .accessibilityValue(healthKitService.isAuthorized ? "Connected" : "Not connected")
+            .accessibilityHint("Configure Apple Health integration")
 
             // Nutrition
             NavigationLink {
@@ -158,12 +165,15 @@ struct ProfileHubView: View {
                     Image(systemName: "fork.knife")
                         .foregroundColor(.green)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Nutrition")
                         .foregroundColor(.primary)
                     Spacer()
                     premiumBadgeIfNeeded
                 }
             }
+            .accessibilityLabel("Nutrition" + (storeKit.isPremium ? "" : ", Premium feature"))
+            .accessibilityHint("Meal plans, food tracking, and nutrition guidance")
 
             // Readiness
             if let patientIdString = supabase.userId,
@@ -178,12 +188,15 @@ struct ProfileHubView: View {
                         Image(systemName: "heart.text.square")
                             .foregroundColor(.pink)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text("Readiness")
                             .foregroundColor(.primary)
                         Spacer()
                         premiumBadgeIfNeeded
                     }
                 }
+                .accessibilityLabel("Readiness" + (storeKit.isPremium ? "" : ", Premium feature"))
+                .accessibilityHint("Daily readiness check-ins and recovery scoring")
 
                 // Recovery Status (Deload Recommendations)
                 NavigationLink {
@@ -196,12 +209,15 @@ struct ProfileHubView: View {
                         Image(systemName: "bed.double.fill")
                             .foregroundColor(.indigo)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text("Recovery Status")
                             .foregroundColor(.primary)
                         Spacer()
                         premiumBadgeIfNeeded
                     }
                 }
+                .accessibilityLabel("Recovery Status" + (storeKit.isPremium ? "" : ", Premium feature"))
+                .accessibilityHint("Smart deload recommendations based on your fatigue and training load")
             }
         }
     }
@@ -217,10 +233,13 @@ struct ProfileHubView: View {
                     Image(systemName: "figure.stand")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Body Composition")
                         .foregroundColor(.primary)
                 }
             }
+            .accessibilityLabel("Body Composition")
+            .accessibilityHint("Track body measurements over time")
 
             NavigationLink {
                 BodyCompGoalsView()
@@ -229,10 +248,13 @@ struct ProfileHubView: View {
                     Image(systemName: "figure.arms.open")
                         .foregroundColor(.purple)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Body Comp Goals")
                         .foregroundColor(.primary)
                 }
             }
+            .accessibilityLabel("Body Comp Goals")
+            .accessibilityHint("Set body composition targets")
 
             NavigationLink {
                 CalculatorsMenuView()
@@ -241,10 +263,13 @@ struct ProfileHubView: View {
                     Image(systemName: "function")
                         .foregroundColor(.green)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Calculators")
                         .foregroundColor(.primary)
                 }
             }
+            .accessibilityLabel("Calculators")
+            .accessibilityHint("Access fitness and training calculators")
 
             NavigationLink {
                 PatientGoalsView()
@@ -253,10 +278,13 @@ struct ProfileHubView: View {
                     Image(systemName: "target")
                         .foregroundColor(.orange)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("My Goals")
                         .foregroundColor(.primary)
                 }
             }
+            .accessibilityLabel("My Goals")
+            .accessibilityHint("View and manage your fitness goals")
         }
     }
 
@@ -269,6 +297,7 @@ struct ProfileHubView: View {
                     .font(.title2)
                     .foregroundColor(modeThemeColor)
                     .frame(width: 28)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(modeService.currentMode.displayName)
                         .font(.headline)
@@ -286,8 +315,11 @@ struct ProfileHubView: View {
                     .background(modeThemeColor.opacity(0.15))
                     .foregroundColor(modeThemeColor)
                     .cornerRadius(4)
+                    .accessibilityHidden(true)
             }
             .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Training Mode: \(modeService.currentMode.displayName). \(modeService.currentMode.description)")
 
             // Primary metrics for current mode
             HStack(spacing: 12) {
@@ -301,6 +333,8 @@ struct ProfileHubView: View {
                 }
             }
             .padding(.vertical, 2)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Primary metrics: \(modeService.currentMode.primaryMetrics.joined(separator: ", "))")
         }
     }
 
@@ -315,10 +349,12 @@ struct ProfileHubView: View {
                     if therapistLinkingVM.isLoading {
                         ProgressView()
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                     } else {
                         Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
                             .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                     }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Therapist Linking")
@@ -335,6 +371,9 @@ struct ProfileHubView: View {
                     }
                 }
             }
+            .accessibilityLabel("Therapist Linking")
+            .accessibilityValue(therapistLinkingVM.isLoading ? "Checking status" : therapistLinkStatusText)
+            .accessibilityHint("Connect with your physical therapist")
         }
     }
 
@@ -353,12 +392,15 @@ struct ProfileHubView: View {
                     Image(systemName: "brain.head.profile")
                         .foregroundColor(.purple)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("AI Assistant")
                         .foregroundColor(.primary)
                     Spacer()
                     premiumBadgeIfNeeded
                 }
             }
+            .accessibilityLabel("AI Assistant" + (storeKit.isPremium ? "" : ", Premium feature"))
+            .accessibilityHint("AI-powered exercise recommendations and coaching")
 
             // Learn
             NavigationLink {
@@ -371,12 +413,15 @@ struct ProfileHubView: View {
                     Image(systemName: "book.fill")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Learn")
                         .foregroundColor(.primary)
                     Spacer()
                     premiumBadgeIfNeeded
                 }
             }
+            .accessibilityLabel("Learn" + (storeKit.isPremium ? "" : ", Premium feature"))
+            .accessibilityHint("Educational content and exercise technique guides")
 
             // Tutorial
             Button {
@@ -401,10 +446,13 @@ struct ProfileHubView: View {
                     Image(systemName: "hand.raised.fill")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Privacy Notice")
                         .foregroundColor(.primary)
                 }
             }
+            .accessibilityLabel("Privacy Notice")
+            .accessibilityHint("View the app privacy policy")
         }
     }
 
@@ -421,6 +469,7 @@ struct ProfileHubView: View {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Manage Subscription")
                             .foregroundColor(.primary)
@@ -430,6 +479,9 @@ struct ProfileHubView: View {
                     }
                 }
             }
+            .accessibilityLabel("Manage Subscription")
+            .accessibilityValue(subscriptionPlanText)
+            .accessibilityHint("View and manage your subscription plan")
 
             // Baseball Pack
             NavigationLink {
@@ -440,6 +492,7 @@ struct ProfileHubView: View {
                     Image(systemName: "baseball.fill")
                         .foregroundColor(.orange)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Baseball Pack")
                             .foregroundColor(.primary)
@@ -452,6 +505,7 @@ struct ProfileHubView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                             .font(.subheadline)
+                            .accessibilityHidden(true)
                     } else {
                         Text("PREMIUM")
                             .font(.caption2)
@@ -461,9 +515,13 @@ struct ProfileHubView: View {
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
                             .cornerRadius(4)
+                            .accessibilityHidden(true)
                     }
                 }
             }
+            .accessibilityLabel("Baseball Pack")
+            .accessibilityValue(storeKit.hasBaseballAccess ? "Purchased" : "Not purchased")
+            .accessibilityHint("12 or more baseball training programs")
         }
     }
 
@@ -480,6 +538,7 @@ struct ProfileHubView: View {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Log Out")
                         .foregroundColor(.primary)
                 }
@@ -494,10 +553,13 @@ struct ProfileHubView: View {
                     Image(systemName: "trash.fill")
                         .foregroundColor(.red)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Delete Account")
                         .foregroundColor(.red)
                 }
             }
+            .accessibilityLabel("Delete Account")
+            .accessibilityHint("Permanently delete your account and all data")
         }
     }
 
@@ -513,10 +575,11 @@ struct ProfileHubView: View {
                     Image(systemName: storeKit.isPremium ? "lock.open.fill" : "lock.fill")
                         .foregroundColor(storeKit.isPremium ? .green : .gray)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Premium Features")
                 }
             }
-            .accessibilityLabel("Premium Features")
+            .accessibilityLabel("Premium Features Debug Toggle")
             .accessibilityValue(storeKit.isPremium ? "Enabled" : "Disabled")
             .accessibilityHint("Toggle to test premium features")
 
@@ -544,6 +607,7 @@ struct ProfileHubView: View {
                 .background(Color.yellow.opacity(0.2))
                 .foregroundColor(.orange)
                 .cornerRadius(4)
+                .accessibilityHidden(true)
         }
     }
 

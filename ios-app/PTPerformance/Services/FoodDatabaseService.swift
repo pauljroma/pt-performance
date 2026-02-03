@@ -2,7 +2,7 @@
 //  FoodDatabaseService.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Food database service
+//  Nutrition Module - Food database service
 //
 
 import Foundation

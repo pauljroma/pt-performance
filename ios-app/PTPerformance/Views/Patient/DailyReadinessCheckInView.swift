@@ -3,21 +3,12 @@ import SwiftUI
 /// Daily Readiness Check-in UI
 /// Collects sleep, readiness, and pain data to calculate workout modifications
 /// Part of the Auto-Regulation System (Build 39 - Phase 3)
+///
+/// BUILD 116 - Migrated form state to ViewModel for better testability
+/// Form inputs now managed by DailyReadinessViewModel
 struct DailyReadinessCheckInView: View {
     @StateObject private var viewModel = DailyReadinessViewModel()
     @Environment(\.dismiss) private var dismiss
-
-    // State variables for form inputs
-    @State private var sleepHours: Double = 7.0
-    @State private var sleepQuality: Int = 3
-    @State private var subjectiveReadiness: Int = 3
-    @State private var armSoreness: Bool = false
-    @State private var armSorenessSeverity: Int = 1
-    @State private var jointPain: Set<JointPainLocation> = []
-    @State private var painNotes: String = ""
-
-    // UI state
-    @State private var showSuccess = false
 
     var body: some View {
         NavigationView {
@@ -28,72 +19,67 @@ struct DailyReadinessCheckInView: View {
                         HStack {
                             Text("Hours slept")
                             Spacer()
-                            Text("\(sleepHours, specifier: "%.1f") hours")
+                            Text(viewModel.sleepHoursLabel)
                                 .foregroundColor(.secondary)
                         }
-                        Slider(value: $sleepHours, in: 3...12, step: 0.5)
-                            .onChange(of: sleepHours) { _, _ in
-                                updatePreview()
+                        Slider(value: $viewModel.sleepHours, in: 3...12, step: 0.5)
+                            .onChange(of: viewModel.sleepHours) { _, _ in
+                                viewModel.updatePreviewFromInputs()
                             }
                     }
 
-                    Picker("Sleep Quality", selection: $sleepQuality) {
+                    Picker("Sleep Quality", selection: $viewModel.sleepQuality) {
                         Text("Very Poor (1)").tag(1)
                         Text("Poor (2)").tag(2)
                         Text("Fair (3)").tag(3)
                         Text("Good (4)").tag(4)
                         Text("Excellent (5)").tag(5)
                     }
-                    .onChange(of: sleepQuality) { _, _ in
-                        updatePreview()
+                    .onChange(of: viewModel.sleepQuality) { _, _ in
+                        viewModel.updatePreviewFromInputs()
                     }
                 }
 
                 // MARK: - Subjective Readiness Section
                 Section(header: Text("How do you feel?")) {
-                    Picker("Readiness Level", selection: $subjectiveReadiness) {
+                    Picker("Readiness Level", selection: $viewModel.subjectiveReadiness) {
                         Text("Very Low (1)").tag(1)
                         Text("Low (2)").tag(2)
                         Text("Moderate (3)").tag(3)
                         Text("Good (4)").tag(4)
                         Text("Excellent (5)").tag(5)
                     }
-                    .onChange(of: subjectiveReadiness) { _, _ in
-                        updatePreview()
+                    .onChange(of: viewModel.subjectiveReadiness) { _, _ in
+                        viewModel.updatePreviewFromInputs()
                     }
                 }
 
                 // MARK: - Soreness & Pain Section
                 Section(header: Text("Soreness & Pain")) {
                     // Arm Soreness Toggle
-                    Toggle("Arm Soreness", isOn: $armSoreness)
-                        .onChange(of: armSoreness) { _, _ in
-                            updatePreview()
+                    Toggle("Arm Soreness", isOn: $viewModel.armSoreness)
+                        .onChange(of: viewModel.armSoreness) { _, _ in
+                            viewModel.updatePreviewFromInputs()
                         }
 
                     // Arm Soreness Severity Picker (conditional)
-                    if armSoreness {
-                        Picker("Arm Soreness Severity", selection: $armSorenessSeverity) {
+                    if viewModel.armSoreness {
+                        Picker("Arm Soreness Severity", selection: $viewModel.armSorenessSeverity) {
                             Text("Mild (1)").tag(1)
                             Text("Moderate (2)").tag(2)
                             Text("Severe (3)").tag(3)
                         }
-                        .onChange(of: armSorenessSeverity) { _, _ in
-                            updatePreview()
+                        .onChange(of: viewModel.armSorenessSeverity) { _, _ in
+                            viewModel.updatePreviewFromInputs()
                         }
                     }
 
                     // Joint Pain Toggles
                     ForEach(JointPainLocation.allCases, id: \.self) { joint in
                         Toggle(joint.displayName, isOn: Binding(
-                            get: { jointPain.contains(joint) },
-                            set: { isOn in
-                                if isOn {
-                                    jointPain.insert(joint)
-                                } else {
-                                    jointPain.remove(joint)
-                                }
-                                updatePreview()
+                            get: { viewModel.jointPain.contains(joint) },
+                            set: { _ in
+                                viewModel.toggleJointPain(joint)
                             }
                         ))
                     }
@@ -103,7 +89,7 @@ struct DailyReadinessCheckInView: View {
                         Text("Pain Notes (optional)")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        TextField("Describe any pain or discomfort...", text: $painNotes, axis: .vertical)
+                        TextField("Describe any pain or discomfort...", text: $viewModel.painNotes, axis: .vertical)
                             .lineLimit(3...6)
                     }
                 }
@@ -143,7 +129,7 @@ struct DailyReadinessCheckInView: View {
                                 Text("\(Int(score))/100")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(scoreColor(score))
+                                    .foregroundColor(viewModel.scoreColor(score))
                             }
                         }
 
@@ -206,7 +192,9 @@ struct DailyReadinessCheckInView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        submitCheckIn()
+                        Task {
+                            await viewModel.submitReadinessFromForm()
+                        }
                     } label: {
                         if viewModel.isLoading {
                             ProgressView()
@@ -216,19 +204,19 @@ struct DailyReadinessCheckInView: View {
                                 .fontWeight(.semibold)
                         }
                     }
-                    .disabled(viewModel.isLoading)
+                    .disabled(!viewModel.canSubmit)
                 }
             }
             .onAppear {
                 // Initialize preview on appear
-                updatePreview()
+                viewModel.updatePreviewFromInputs()
 
                 // Fetch today's check-in if it exists
                 Task {
                     await viewModel.fetchTodayReadiness()
                 }
             }
-            .alert("Check-in Saved", isPresented: $showSuccess) {
+            .alert("Check-in Saved", isPresented: $viewModel.showSuccess) {
                 Button("OK") {
                     dismiss()
                 }
@@ -245,51 +233,6 @@ struct DailyReadinessCheckInView: View {
         }
     }
 
-    // MARK: - Helper Functions
-
-    /// Update live readiness preview based on current form inputs
-    private func updatePreview() {
-        viewModel.updatePreview(
-            sleepHours: sleepHours,
-            sleepQuality: sleepQuality,
-            subjectiveReadiness: subjectiveReadiness,
-            armSoreness: armSoreness,
-            armSorenessSeverity: armSorenessSeverity,
-            jointPain: Array(jointPain)
-        )
-    }
-
-    /// Submit the daily readiness check-in
-    private func submitCheckIn() {
-        Task {
-            await viewModel.submitReadiness(
-                sleepHours: sleepHours,
-                sleepQuality: sleepQuality,
-                subjectiveReadiness: subjectiveReadiness,
-                armSoreness: armSoreness,
-                armSorenessSeverity: armSoreness ? armSorenessSeverity : nil,
-                jointPain: Array(jointPain),
-                painNotes: painNotes.isEmpty ? nil : painNotes
-            )
-
-            if viewModel.errorMessage == nil {
-                showSuccess = true
-            }
-        }
-    }
-
-    /// Get color for readiness score display
-    private func scoreColor(_ score: Double) -> Color {
-        if score >= 85 {
-            return .green
-        } else if score >= 70 {
-            return .yellow
-        } else if score >= 50 {
-            return .orange
-        } else {
-            return .red
-        }
-    }
 }
 
 // MARK: - Preview

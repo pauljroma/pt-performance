@@ -167,7 +167,7 @@ class OfflineQueueManager: ObservableObject {
             .sink { [weak self] isOffline in
                 if !isOffline {
                     // Network came back online - trigger sync
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         await self?.syncPendingLogs()
                     }
                 }

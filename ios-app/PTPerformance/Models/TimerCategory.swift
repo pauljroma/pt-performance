@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Timer category enum - maps to database timer_category enum
 /// Used for organizing and filtering timer presets
-enum TimerCategory: String, Codable, CaseIterable {
+enum TimerCategory: String, Codable, CaseIterable, Sendable {
     case cardio
     case strength
     case warmup

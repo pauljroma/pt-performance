@@ -2,7 +2,7 @@
 //  MealLogViewModel.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Meal logging ViewModel
+//  Nutrition Module - Meal logging ViewModel
 //
 
 import Foundation

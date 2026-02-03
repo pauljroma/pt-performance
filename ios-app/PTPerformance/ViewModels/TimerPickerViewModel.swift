@@ -2,7 +2,6 @@
 //  TimerPickerViewModel.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 Agent 13 (Timer Picker ViewModel)
 //  ViewModel for browsing and selecting timer presets
 //
 
@@ -107,7 +106,7 @@ class TimerPickerViewModel: ObservableObject {
         isLoading = true
         showError = false
 
-        // BUILD 133: Enhanced logging for timer screen errors
+        // Enhanced logging for timer screen errors
         DebugLogger.shared.info("TIMER_SCREEN", """
             Loading timer presets:
             Patient ID: \(patientId.uuidString)
@@ -128,7 +127,7 @@ class TimerPickerViewModel: ObservableObject {
             errorMessage = "Unable to load timer options. Pull down to refresh."
             showError = true
 
-            // BUILD 133: Detailed error logging
+            // Detailed error logging
             DebugLogger.shared.error("TIMER_SCREEN", """
                 FAILED to load timer presets:
                 Error: \(error.localizedDescription)

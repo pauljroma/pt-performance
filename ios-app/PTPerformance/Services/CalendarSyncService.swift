@@ -85,9 +85,9 @@ final class CalendarSyncService: ObservableObject {
             return granted
         } else {
             return try await withCheckedThrowingContinuation { continuation in
-                eventStore.requestAccess(to: .event) { granted, error in
-                    Task { @MainActor in
-                        self.updateAuthorizationStatus()
+                eventStore.requestAccess(to: .event) { [weak self] granted, error in
+                    Task { @MainActor [weak self] in
+                        self?.updateAuthorizationStatus()
                     }
                     if let error = error {
                         continuation.resume(throwing: CalendarSyncError.syncFailed(error))
@@ -474,8 +474,11 @@ final class CalendarSyncService: ObservableObject {
 
     /// Save settings to UserDefaults.
     private func saveSettings() {
-        if let data = try? JSONEncoder().encode(settings) {
+        do {
+            let data = try JSONEncoder().encode(settings)
             UserDefaults.standard.set(data, forKey: settingsKey)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "CalendarSyncService.saveSettings")
         }
     }
 

@@ -96,9 +96,9 @@ final class AnalyticsFlowTests: BaseUITest {
 
         // THEN: Volume chart should display
         // Look for chart data indicators
-        let hasVolumeData = app.staticTexts.matching(
+        let hasVolumeData = !app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'volume' OR label CONTAINS[c] 'total'")
-        ).count > 0
+        ).isEmpty
 
         XCTAssertTrue(
             hasVolumeData,
@@ -106,9 +106,9 @@ final class AnalyticsFlowTests: BaseUITest {
         )
 
         // Check for chart visualization (if using SwiftUI Charts)
-        let chartExists = app.otherElements.matching(
+        let chartExists = !app.otherElements.matching(
             NSPredicate(format: "identifier CONTAINS 'chart' OR identifier CONTAINS 'graph'")
-        ).count > 0
+        ).isEmpty
 
         if chartExists {
             print("✅ Volume chart visualization found")
@@ -184,8 +184,8 @@ final class AnalyticsFlowTests: BaseUITest {
         ).firstMatch
 
         let hasExerciseSelector = exercisePicker.exists ||
-                                 app.pickers.count > 0 ||
-                                 app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'exercise'")).count > 0
+                                 !app.pickers.isEmpty ||
+                                 !app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'exercise'")).isEmpty
 
         XCTAssertTrue(
             hasExerciseSelector,
@@ -197,7 +197,7 @@ final class AnalyticsFlowTests: BaseUITest {
             exercisePicker.tap()
 
             // Wait for exercise list
-            sleep(1)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
 
             if captureKeySteps {
                 screenshots.capture(named: "analytics_06_exercise_picker")
@@ -216,9 +216,9 @@ final class AnalyticsFlowTests: BaseUITest {
                 }
 
                 // Verify strength data appears
-                let hasStrengthData = app.staticTexts.matching(
+                let hasStrengthData = !app.staticTexts.matching(
                     NSPredicate(format: "label CONTAINS[c] '1RM' OR label CONTAINS[c] 'max' OR label CONTAINS[c] 'lbs'")
-                ).count > 0
+                ).isEmpty
 
                 if hasStrengthData {
                     print("✅ Strength chart data displayed after exercise selection")
@@ -287,9 +287,9 @@ final class AnalyticsFlowTests: BaseUITest {
         }
 
         // THEN: Should display consistency metrics
-        let hasConsistencyMetrics = app.staticTexts.matching(
+        let hasConsistencyMetrics = !app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'completion' OR label CONTAINS[c] 'streak' OR label CONTAINS[c] '%'")
-        ).count > 0
+        ).isEmpty
 
         XCTAssertTrue(
             hasConsistencyMetrics,
@@ -297,9 +297,9 @@ final class AnalyticsFlowTests: BaseUITest {
         )
 
         // Look for streak information
-        let hasStreakInfo = app.staticTexts.matching(
+        let hasStreakInfo = !app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'week' OR label CONTAINS[c] 'streak'")
-        ).count > 0
+        ).isEmpty
 
         if hasStreakInfo {
             print("✅ Consistency chart shows streak information")
@@ -332,7 +332,7 @@ final class AnalyticsFlowTests: BaseUITest {
             }
 
             // THEN: Should show week-by-week data
-            if weeklyData.count > 0 {
+            if !weeklyData.isEmpty {
                 print("✅ Consistency chart shows weekly breakdown (\(weeklyData.count) weeks)")
             } else {
                 print("⚠️ Weekly breakdown not visible or not implemented")
@@ -409,7 +409,7 @@ final class AnalyticsFlowTests: BaseUITest {
 
             // Wait for reload
             TestHelpers.waitForLoadingToComplete(in: app, timeout: networkTimeout)
-            sleep(1)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
 
             // THEN: Charts should update
             let updatedVolumeData = captureChartData(section: "Volume")
@@ -446,7 +446,7 @@ final class AnalyticsFlowTests: BaseUITest {
         }
 
         // THEN: Should show trend information
-        if trendIndicators.count > 0 || trendTexts.count > 0 {
+        if !trendIndicators.isEmpty || !trendTexts.isEmpty {
             print("✅ Trend indicators found: \(trendIndicators.count) icons, \(trendTexts.count) labels")
         } else {
             print("⚠️ No trend indicators visible - may not be implemented")
@@ -465,7 +465,7 @@ final class AnalyticsFlowTests: BaseUITest {
         )
 
         // THEN: Peak data should be highlighted (if available)
-        if peakIndicators.count > 0 {
+        if !peakIndicators.isEmpty {
             print("✅ Peak performance indicators found: \(peakIndicators.count)")
 
             if captureKeySteps {
@@ -528,7 +528,7 @@ final class AnalyticsFlowTests: BaseUITest {
         navigateToAnalytics()
 
         // Wait for error to appear
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         if captureKeySteps {
             screenshots.capture(named: "analytics_16_error_state")
@@ -565,7 +565,7 @@ final class AnalyticsFlowTests: BaseUITest {
         loginAsDemoPatient()
         navigateToAnalytics()
 
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // WHEN: Look for retry button
         let retryButtons = app.buttons.matching(
@@ -731,7 +731,7 @@ final class AnalyticsFlowTests: BaseUITest {
             NSPredicate(format: "identifier CONTAINS[c] 'chart' OR identifier CONTAINS[c] 'graph'")
         )
 
-        return chartElements.count > 0
+        return !chartElements.isEmpty
     }
 
     /// Wait for specific chart to load

@@ -526,6 +526,8 @@ struct WorkoutTemplateLibraryView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Closes template library without selecting")
                 }
             }
             .sheet(isPresented: $viewModel.showingPreview) {
@@ -558,105 +560,28 @@ struct WorkoutTemplateLibraryView: View {
         }
     }
 
-    // MARK: - Search Bar
+    // MARK: - Search Bar (uses TemplateSearchBar component)
 
     private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-
-            TextField("Search templates...", text: $viewModel.searchText)
-                .textFieldStyle(PlainTextFieldStyle())
-                .autocorrectionDisabled()
-
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(10)
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
-        .padding(.horizontal)
-        .padding(.top, 8)
+        TemplateSearchBar(searchText: $viewModel.searchText)
     }
 
-    // MARK: - Category Filters
-    // BUILD 278: Removed network reloads - filtering happens locally via computed properties
+    // MARK: - Category Filters (uses TemplateCategoryFilters component)
 
     private var categoryFilters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                // All categories chip
-                TemplateCategoryChip(
-                    title: "All",
-                    icon: "list.bullet",
-                    isSelected: viewModel.selectedCategory == nil,
-                    color: .gray
-                ) {
-                    viewModel.selectedCategory = nil
-                    // No network reload - filtering is done locally
-                }
-
-                ForEach(WorkoutTemplateLibraryViewModel.TemplateCategory.allCases, id: \.self) { category in
-                    TemplateCategoryChip(
-                        title: category.displayName,
-                        icon: category.icon,
-                        isSelected: viewModel.selectedCategory == category,
-                        color: category.color
-                    ) {
-                        viewModel.selectedCategory = viewModel.selectedCategory == category ? nil : category
-                        // No network reload - filtering is done locally
-                    }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-        }
+        TemplateCategoryFilters(selectedCategory: $viewModel.selectedCategory)
     }
 
-    // MARK: - Tab Picker
-    // BUILD 282: 3-tab system - My Workouts | PT/Trainer | Full Library
+    // MARK: - Tab Picker (uses TemplateTabPicker component)
 
     private var tabPicker: some View {
-        HStack(spacing: 0) {
-            TabButton(
-                title: "My Workouts",
-                icon: "heart.fill",
-                isSelected: selectedTab == 0
-            ) {
-                withAnimation { selectedTab = 0 }
-            }
-
-            TabButton(
-                title: "PT/Trainer",
-                icon: "person.badge.shield.checkmark.fill",
-                isSelected: selectedTab == 1
-            ) {
-                withAnimation { selectedTab = 1 }
-            }
-
-            TabButton(
-                title: "Library",
-                icon: "building.2.fill",
-                isSelected: selectedTab == 2
-            ) {
-                withAnimation { selectedTab = 2 }
-            }
-        }
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
-        .padding(.horizontal)
-        .padding(.bottom, 8)
+        TemplateTabPicker(selectedTab: $selectedTab)
     }
 
     // MARK: - My Workouts Tab (BUILD 282)
     // Shows: Favorites + User-created templates
 
+    @ViewBuilder
     private var myWorkoutsTab: some View {
         Group {
             let favoriteSystem = viewModel.cachedFavoriteSystemTemplates
@@ -686,6 +611,7 @@ struct WorkoutTemplateLibraryView: View {
     // MARK: - PT/Trainer Tab (BUILD 282)
     // Shows: Trainer recommendations + Prescribed workouts
 
+    @ViewBuilder
     private var ptTrainerTab: some View {
         Group {
             if viewModel.isLoadingRecommendations && viewModel.trainerRecommendations.isEmpty {
@@ -699,19 +625,35 @@ struct WorkoutTemplateLibraryView: View {
                     iconColor: .blue.opacity(0.6)
                 )
             } else {
-                paginatedTemplateGrid(
+                PaginatedTemplateGrid(
                     templates: viewModel.paginatedTrainerRecommendations.map { AnyWorkoutTemplate(systemTemplate: $0) },
                     showFavoriteButton: true,
                     hasMore: viewModel.hasMoreTrainerRecommendations,
-                    onLoadMore: { viewModel.loadMoreTrainerRecommendations() }
+                    isLoadingMore: viewModel.isLoadingMore,
+                    isFavorite: { viewModel.isFavorite($0) },
+                    onFavoriteToggle: { template in
+                        Task {
+                            if template.isSystemTemplate {
+                                await viewModel.toggleFavoriteSystem(template.id)
+                            } else {
+                                await viewModel.toggleFavoritePatient(template.id)
+                            }
+                        }
+                    },
+                    onTemplateSelect: { template in
+                        selectTemplate(template)
+                    },
+                    onLoadMore: { viewModel.loadMoreTrainerRecommendations() },
+                    onRefresh: { await viewModel.loadAllTemplates() }
                 )
             }
         }
     }
 
     // MARK: - Full Library Tab (BUILD 282)
-    // Shows: All 535 system templates (paginated for performance)
+    // Shows: All system templates (paginated for performance)
 
+    @ViewBuilder
     private var fullLibraryTab: some View {
         Group {
             if viewModel.isLoadingSystem && viewModel.systemTemplates.isEmpty {
@@ -727,248 +669,67 @@ struct WorkoutTemplateLibraryView: View {
                     iconColor: .secondary
                 )
             } else {
-                paginatedTemplateGrid(
+                PaginatedTemplateGrid(
                     templates: viewModel.paginatedSystemTemplates.map { AnyWorkoutTemplate(systemTemplate: $0) },
                     showFavoriteButton: true,
                     hasMore: viewModel.hasMoreSystemTemplates,
-                    onLoadMore: { viewModel.loadMoreSystemTemplates() }
+                    isLoadingMore: viewModel.isLoadingMore,
+                    isFavorite: { viewModel.isFavorite($0) },
+                    onFavoriteToggle: { template in
+                        Task {
+                            if template.isSystemTemplate {
+                                await viewModel.toggleFavoriteSystem(template.id)
+                            } else {
+                                await viewModel.toggleFavoritePatient(template.id)
+                            }
+                        }
+                    },
+                    onTemplateSelect: { template in
+                        selectTemplate(template)
+                    },
+                    onLoadMore: { viewModel.loadMoreSystemTemplates() },
+                    onRefresh: { await viewModel.loadAllTemplates() }
                 )
             }
         }
     }
 
-    // MARK: - Template Grid
-    // BUILD 282: Added showFavoriteButton parameter
-
-    private func templateGrid(templates: [AnyWorkoutTemplate], showFavoriteButton: Bool = false) -> some View {
-        ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 12),
-                GridItem(.flexible(), spacing: 12)
-            ], spacing: 12) {
-                ForEach(templates) { template in
-                    TemplateCardView(
-                        template: template,
-                        isFavorite: viewModel.isFavorite(template),
-                        showFavoriteButton: showFavoriteButton,
-                        onFavoriteToggle: {
-                            Task {
-                                if template.isSystemTemplate {
-                                    await viewModel.toggleFavoriteSystem(template.id)
-                                } else {
-                                    await viewModel.toggleFavoritePatient(template.id)
-                                }
-                            }
-                        }
-                    )
-                    .onTapGesture {
-                        if template.isSystemTemplate {
-                            if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
-                                viewModel.selectSystemTemplate(systemTemplate)
-                            }
-                        } else {
-                            if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
-                                viewModel.selectPatientTemplate(patientTemplate)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding()
-        }
-        .refreshable {
-            await viewModel.loadAllTemplates()
-        }
-    }
-
-    // MARK: - Paginated Template Grid
-    // Performance optimization: Shows first 20 items, loads more on scroll
-
-    private func paginatedTemplateGrid(
-        templates: [AnyWorkoutTemplate],
-        showFavoriteButton: Bool = false,
-        hasMore: Bool,
-        onLoadMore: @escaping () -> Void
-    ) -> some View {
-        ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 12),
-                GridItem(.flexible(), spacing: 12)
-            ], spacing: 12) {
-                ForEach(templates) { template in
-                    TemplateCardView(
-                        template: template,
-                        isFavorite: viewModel.isFavorite(template),
-                        showFavoriteButton: showFavoriteButton,
-                        onFavoriteToggle: {
-                            Task {
-                                if template.isSystemTemplate {
-                                    await viewModel.toggleFavoriteSystem(template.id)
-                                } else {
-                                    await viewModel.toggleFavoritePatient(template.id)
-                                }
-                            }
-                        }
-                    )
-                    .onTapGesture {
-                        if template.isSystemTemplate {
-                            if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
-                                viewModel.selectSystemTemplate(systemTemplate)
-                            }
-                        } else {
-                            if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
-                                viewModel.selectPatientTemplate(patientTemplate)
-                            }
-                        }
-                    }
-                }
-
-                // Load more trigger
-                if hasMore {
-                    Color.clear
-                        .frame(height: 1)
-                        .onAppear {
-                            onLoadMore()
-                        }
-
-                    HStack {
-                        Spacer()
-                        if viewModel.isLoadingMore {
-                            ProgressView()
-                                .padding()
-                        } else {
-                            Button("Load More") {
-                                onLoadMore()
-                            }
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                            .padding()
-                        }
-                        Spacer()
-                    }
-                }
-            }
-            .padding()
-        }
-        .refreshable {
-            await viewModel.loadAllTemplates()
-        }
-    }
-
-    // MARK: - My Workouts Grid (BUILD 282)
-    // Shows favorites and user-created templates in sections
-    // Performance: Uses LazyVStack for lazy loading of sections
+    // MARK: - My Workouts Grid (uses MyWorkoutsGrid component)
 
     private func myWorkoutsGrid(
         favoriteSystemTemplates: [SystemWorkoutTemplate],
         favoritePatientTemplates: [PatientWorkoutTemplate],
         userCreatedTemplates: [PatientWorkoutTemplate]
     ) -> some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                // Favorites Section
-                if !favoriteSystemTemplates.isEmpty || !favoritePatientTemplates.isEmpty {
-                    LazyVStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "heart.fill")
-                                .foregroundColor(.red)
-                            Text("Favorites")
-                                .font(.headline)
-                            Spacer()
-                            Text("\(favoriteSystemTemplates.count + favoritePatientTemplates.count)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.horizontal)
+        MyWorkoutsGrid(
+            favoriteSystemTemplates: favoriteSystemTemplates,
+            favoritePatientTemplates: favoritePatientTemplates,
+            userCreatedTemplates: userCreatedTemplates,
+            isFavoriteSystem: { viewModel.isFavoriteSystem($0) },
+            isFavoritePatient: { viewModel.isFavoritePatient($0) },
+            onToggleFavoriteSystem: { id in
+                Task { await viewModel.toggleFavoriteSystem(id) }
+            },
+            onToggleFavoritePatient: { id in
+                Task { await viewModel.toggleFavoritePatient(id) }
+            },
+            onSelectSystemTemplate: { viewModel.selectSystemTemplate($0) },
+            onSelectPatientTemplate: { viewModel.selectPatientTemplate($0) },
+            onRefresh: { await viewModel.loadAllTemplates() }
+        )
+    }
 
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 12),
-                            GridItem(.flexible(), spacing: 12)
-                        ], spacing: 12) {
-                            // System favorites
-                            ForEach(favoriteSystemTemplates) { template in
-                                let anyTemplate = AnyWorkoutTemplate(systemTemplate: template)
-                                TemplateCardView(
-                                    template: anyTemplate,
-                                    isFavorite: true,
-                                    showFavoriteButton: true,
-                                    onFavoriteToggle: {
-                                        Task {
-                                            await viewModel.toggleFavoriteSystem(template.id)
-                                        }
-                                    }
-                                )
-                                .onTapGesture {
-                                    viewModel.selectSystemTemplate(template)
-                                }
-                            }
+    // MARK: - Helper: Select Template
 
-                            // Patient favorites
-                            ForEach(favoritePatientTemplates) { template in
-                                let anyTemplate = AnyWorkoutTemplate(patientTemplate: template)
-                                TemplateCardView(
-                                    template: anyTemplate,
-                                    isFavorite: true,
-                                    showFavoriteButton: true,
-                                    onFavoriteToggle: {
-                                        Task {
-                                            await viewModel.toggleFavoritePatient(template.id)
-                                        }
-                                    }
-                                )
-                                .onTapGesture {
-                                    viewModel.selectPatientTemplate(template)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-
-                // User Created Section
-                if !userCreatedTemplates.isEmpty {
-                    LazyVStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.blue)
-                            Text("My Created Workouts")
-                                .font(.headline)
-                            Spacer()
-                            Text("\(userCreatedTemplates.count)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.horizontal)
-
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 12),
-                            GridItem(.flexible(), spacing: 12)
-                        ], spacing: 12) {
-                            ForEach(userCreatedTemplates) { template in
-                                let anyTemplate = AnyWorkoutTemplate(patientTemplate: template)
-                                TemplateCardView(
-                                    template: anyTemplate,
-                                    isFavorite: viewModel.isFavoritePatient(template.id),
-                                    showFavoriteButton: true,
-                                    onFavoriteToggle: {
-                                        Task {
-                                            await viewModel.toggleFavoritePatient(template.id)
-                                        }
-                                    }
-                                )
-                                .onTapGesture {
-                                    viewModel.selectPatientTemplate(template)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
+    private func selectTemplate(_ template: AnyWorkoutTemplate) {
+        if template.isSystemTemplate {
+            if let systemTemplate = viewModel.systemTemplates.first(where: { $0.id == template.id }) {
+                viewModel.selectSystemTemplate(systemTemplate)
             }
-            .padding(.vertical)
-        }
-        .refreshable {
-            await viewModel.loadAllTemplates()
+        } else {
+            if let patientTemplate = viewModel.patientTemplates.first(where: { $0.id == template.id }) {
+                viewModel.selectPatientTemplate(patientTemplate)
+            }
         }
     }
 
@@ -1003,310 +764,6 @@ struct WorkoutTemplateLibraryView: View {
                 }
             ) : nil
         )
-    }
-}
-
-// MARK: - Template Category Chip
-
-private struct TemplateCategoryChip: View {
-    let title: String
-    let icon: String
-    let isSelected: Bool
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption)
-
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isSelected ? color : Color(.systemGray6))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
-        }
-    }
-}
-
-// MARK: - Tab Button
-
-struct TabButton: View {
-    let title: String
-    let icon: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption)
-
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(isSelected ? Color.blue : Color.clear)
-            .foregroundColor(isSelected ? .white : .secondary)
-            .cornerRadius(8)
-        }
-        .padding(4)
-    }
-}
-
-// MARK: - Template Card View
-// BUILD 282: Added favorite button support
-
-struct TemplateCardView: View {
-    let template: AnyWorkoutTemplate
-    var isFavorite: Bool = false
-    var showFavoriteButton: Bool = false
-    var onFavoriteToggle: (() -> Void)?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Header with category badge and favorite button
-            HStack {
-                if let category = template.category {
-                    TemplateCategoryBadge(category: category)
-                }
-                Spacer()
-
-                // BUILD 282: Favorite button
-                if showFavoriteButton {
-                    Button {
-                        onFavoriteToggle?()
-                    } label: {
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .font(.body)
-                            .foregroundColor(isFavorite ? .red : .secondary)
-                    }
-                    .buttonStyle(.plain)
-                } else if template.isSystemTemplate {
-                    Image(systemName: "building.2.fill")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            // Template name
-            Text(template.name)
-                .font(.headline)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-
-            // Description preview
-            if let description = template.description, !description.isEmpty {
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            }
-
-            // Exercise list - show first 5 exercises with sets/reps
-            let allExercises = template.blocks.flatMap { $0.exercises }
-            if !allExercises.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(Array(allExercises.prefix(5).enumerated()), id: \.offset) { _, exercise in
-                        // Use notes as name if exercise name is just a number
-                        let displayName = exercise.name.count <= 2 && Int(exercise.name) != nil
-                            ? (exercise.notes ?? exercise.name)
-                            : exercise.name
-
-                        HStack(spacing: 4) {
-                            Text("•")
-                                .font(.caption2)
-                                .foregroundColor(.blue)
-                            Text(displayName)
-                                .font(.caption)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(exercise.setsRepsDisplay)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    if allExercises.count > 5 {
-                        Text("+ \(allExercises.count - 5) more exercises")
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-
-            Spacer(minLength: 4)
-
-            // BUILD 216: Improved stats row for phone layout
-            HStack(spacing: 8) {
-                // Compact stats with better spacing
-                HStack(spacing: 6) {
-                    // Exercise count
-                    HStack(spacing: 2) {
-                        Image(systemName: "figure.strengthtraining.traditional")
-                        Text("\(template.exerciseCount)")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                    Text("·")
-                        .foregroundColor(.secondary.opacity(0.5))
-
-                    // Block count
-                    HStack(spacing: 2) {
-                        Image(systemName: "square.stack.3d.up")
-                        Text("\(template.blocks.count)")
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                    // Duration if available
-                    if let duration = template.durationDisplay {
-                        Text("·")
-                            .foregroundColor(.secondary.opacity(0.5))
-
-                        HStack(spacing: 2) {
-                            Image(systemName: "clock")
-                            Text(duration)
-                        }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    }
-                }
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-                Spacer(minLength: 4)
-
-                // Difficulty badge if available
-                if let difficulty = template.difficulty {
-                    TemplateDifficultyBadge(difficulty: difficulty)
-                }
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .adaptiveShadow(Shadow.subtle)
-        .contentShape(Rectangle())
-        .contextMenu {
-            Button {
-                HapticFeedback.light()
-                onFavoriteToggle?()
-            } label: {
-                Label(
-                    isFavorite ? "Remove from Favorites" : "Add to Favorites",
-                    systemImage: isFavorite ? "heart.slash" : "heart"
-                )
-            }
-
-            Button {
-                HapticFeedback.light()
-                // Copy workout name
-                UIPasteboard.general.string = template.name
-            } label: {
-                Label("Copy Name", systemImage: "doc.on.doc")
-            }
-
-            if let description = template.description, !description.isEmpty {
-                Button {
-                    HapticFeedback.light()
-                    UIPasteboard.general.string = description
-                } label: {
-                    Label("Copy Description", systemImage: "text.alignleft")
-                }
-            }
-
-            Divider()
-
-            // Exercise count info
-            Button {
-                HapticFeedback.light()
-                let allExercises = template.blocks.flatMap { $0.exercises }
-                let exerciseList = allExercises.map { $0.name }.joined(separator: "\n")
-                UIPasteboard.general.string = "\(template.name)\n\nExercises:\n\(exerciseList)"
-            } label: {
-                Label("Copy Exercise List", systemImage: "list.bullet")
-            }
-        }
-    }
-}
-
-// MARK: - Template Category Badge
-
-struct TemplateCategoryBadge: View {
-    let category: String
-
-    var body: some View {
-        Text(category.capitalized)
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .foregroundColor(categoryColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(categoryColor.opacity(0.15))
-            .cornerRadius(6)
-    }
-
-    private var categoryColor: Color {
-        switch category.lowercased() {
-        case "strength": return .blue
-        case "mobility": return .green
-        case "cardio": return .red
-        case "rehab": return .orange
-        case "hybrid": return .purple
-        default: return .gray
-        }
-    }
-}
-
-// MARK: - Template Difficulty Badge
-
-struct TemplateDifficultyBadge: View {
-    let difficulty: String
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: difficultyIcon)
-                .font(.caption2)
-
-            Text(difficulty.capitalized)
-                .font(.caption2)
-                .fontWeight(.medium)
-        }
-        .foregroundColor(difficultyColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(difficultyColor.opacity(0.15))
-        .cornerRadius(6)
-    }
-
-    private var difficultyIcon: String {
-        switch difficulty.lowercased() {
-        case "beginner": return "1.circle.fill"
-        case "intermediate": return "2.circle.fill"
-        case "advanced": return "3.circle.fill"
-        default: return "circle.fill"
-        }
-    }
-
-    private var difficultyColor: Color {
-        switch difficulty.lowercased() {
-        case "beginner": return .green
-        case "intermediate": return .orange
-        case "advanced": return .red
-        default: return .gray
-        }
     }
 }
 
@@ -1437,6 +894,7 @@ struct TemplatePreviewSheet: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.headline)
@@ -1449,6 +907,8 @@ struct TemplatePreviewSheet: View {
         .padding(.vertical, 16)
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     // MARK: - Exercises Section
@@ -1493,6 +953,8 @@ struct TemplatePreviewSheet: View {
                 .cornerRadius(12)
             }
             .padding()
+            .accessibilityLabel("Start workout")
+            .accessibilityHint("Begins \(template.name) with \(template.exerciseCount) exercises")
         }
         .background(Color(.systemBackground))
     }
@@ -1564,6 +1026,8 @@ struct BlockPreviewCard: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(block.displayName) block, \(block.exerciseCount) exercises")
     }
 }
 

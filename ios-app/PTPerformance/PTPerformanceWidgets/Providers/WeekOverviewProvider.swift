@@ -18,16 +18,16 @@ struct WeekOverviewProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (WeekOverviewEntry) -> Void) {
+    func getSnapshot(in context: Context) async -> WeekOverviewEntry {
         let entry = WeekOverviewEntry(
             date: Date(),
             adherence: SharedDataStore.shared.getAdherence() ?? .placeholder,
             nextWorkout: SharedDataStore.shared.getWorkout() ?? .placeholder
         )
-        completion(entry)
+        return entry
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WeekOverviewEntry>) -> Void) {
+    func getTimeline(in context: Context) async -> Timeline<WeekOverviewEntry> {
         let currentDate = Date()
 
         let entry = WeekOverviewEntry(
@@ -37,8 +37,8 @@ struct WeekOverviewProvider: TimelineProvider {
         )
 
         // Refresh every hour
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate) ?? currentDate.addingTimeInterval(3600)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        return timeline
     }
 }

@@ -193,7 +193,14 @@ struct FatigueAccumulation: Codable, Identifiable {
 
         // Handle fatigue score
         if let scoreString = try? container.decode(String.self, forKey: .fatigueScore) {
-            fatigueScore = Double(scoreString) ?? 0.0
+            if let parsed = Double(scoreString) {
+                fatigueScore = parsed
+            } else {
+                #if DEBUG
+                DebugLogger.shared.warning("DECODE", "Failed to parse FatigueAccumulation.fatigueScore from string: '\(scoreString)', using default 0.0")
+                #endif
+                fatigueScore = 0.0
+            }
         } else {
             fatigueScore = try container.decodeIfPresent(Double.self, forKey: .fatigueScore) ?? 0.0
         }

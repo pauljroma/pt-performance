@@ -244,6 +244,7 @@ struct TherapistProgramBuilderView: View {
                 Image(systemName: "calendar.badge.plus")
                     .font(.largeTitle)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
                 Text("No phases yet")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -253,6 +254,8 @@ struct TherapistProgramBuilderView: View {
                     .multilineTextAlignment(.center)
             }
             .padding(.vertical, 24)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("No phases yet. Add phases to structure your program.")
             Spacer()
         }
     }
@@ -352,6 +355,7 @@ private struct PhaseListRow: View {
                     .foregroundColor(.white)
                     .frame(width: 24, height: 24)
                     .background(Circle().fill(phaseColor))
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(phase.name)
@@ -386,10 +390,14 @@ private struct PhaseListRow: View {
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Phase \(phaseNumber): \(phase.name), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts")
+        .accessibilityHint("Double tap to edit phase, swipe left to delete")
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
@@ -419,11 +427,13 @@ private struct EquipmentChip: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Remove \(name)")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -444,11 +454,13 @@ private struct TagChipRemovable: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Remove tag \(text)")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color.blue.opacity(0.1))
         .cornerRadius(8)
+        .accessibilityElement(children: .contain)
     }
 }
 

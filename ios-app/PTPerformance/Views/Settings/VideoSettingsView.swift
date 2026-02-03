@@ -35,10 +35,13 @@ struct VideoSettingsView: View {
                         Image(systemName: qualityIcon(for: quality))
                             .foregroundColor(.blue)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text(quality.description)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Quality info: \(quality.description)")
                 }
             } header: {
                 Text("Quality")
@@ -54,10 +57,14 @@ struct VideoSettingsView: View {
                         Image(systemName: "play.circle.fill")
                             .foregroundColor(.green)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text("Auto-play Videos")
                     }
                 }
                 .disabled(isUpdating)
+                .accessibilityLabel("Auto-play Videos")
+                .accessibilityValue(preferencesService.isAutoPlayEnabled ? "On" : "Off")
+                .accessibilityHint("Toggle to automatically play videos when they load")
 
                 // Captions toggle
                 Toggle(isOn: captionsBinding) {
@@ -65,10 +72,14 @@ struct VideoSettingsView: View {
                         Image(systemName: "captions.bubble.fill")
                             .foregroundColor(.purple)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text("Show Captions")
                     }
                 }
                 .disabled(isUpdating)
+                .accessibilityLabel("Show Captions")
+                .accessibilityValue(preferencesService.areCaptionsEnabled ? "On" : "Off")
+                .accessibilityHint("Toggle to display captions on videos")
 
                 // Playback speed
                 Picker(selection: speedBinding) {
@@ -83,10 +94,13 @@ struct VideoSettingsView: View {
                         Image(systemName: "speedometer")
                             .foregroundColor(.orange)
                             .frame(width: 24)
+                            .accessibilityHidden(true)
                         Text("Playback Speed")
                     }
                 }
                 .disabled(isUpdating)
+                .accessibilityLabel("Playback Speed")
+                .accessibilityValue(formatSpeed(preferencesService.currentPlaybackSpeed))
             } header: {
                 Text("Playback")
             } footer: {
@@ -99,11 +113,14 @@ struct VideoSettingsView: View {
                     Image(systemName: "arrow.up.arrow.down.circle.fill")
                         .foregroundColor(.blue)
                         .frame(width: 24)
+                        .accessibilityHidden(true)
                     Text("Estimated per 5-min video")
                     Spacer()
                     Text(estimatedDataUsage)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Estimated data per 5 minute video: \(estimatedDataUsage)")
 
                 // Quality comparison
                 VStack(alignment: .leading, spacing: 8) {

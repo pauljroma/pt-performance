@@ -1,6 +1,6 @@
 import SwiftUI
 
-// BUILD 319: Tab Navigation Polish
+// Tab Navigation Polish
 // - Consistent SF Symbols with .medium weight
 // - Subtle haptic feedback on tab switches
 // - Dark mode adaptive styling

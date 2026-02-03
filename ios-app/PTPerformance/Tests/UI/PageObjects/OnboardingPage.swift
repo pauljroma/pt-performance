@@ -90,7 +90,7 @@ struct OnboardingPage {
         let startPoint = coordinate.withOffset(CGVector(dx: 100, dy: 0))
         let endPoint = coordinate.withOffset(CGVector(dx: -100, dy: 0))
         startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
-        sleep(1) // Wait for animation
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for animation
         return self
     }
 
@@ -101,7 +101,7 @@ struct OnboardingPage {
         let startPoint = coordinate.withOffset(CGVector(dx: -100, dy: 0))
         let endPoint = coordinate.withOffset(CGVector(dx: 100, dy: 0))
         startPoint.press(forDuration: 0.1, thenDragTo: endPoint)
-        sleep(1) // Wait for animation
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Wait for animation
         return self
     }
 

@@ -85,7 +85,7 @@ class DebugLogger {
         log(message, level: .info, file: file, function: function, line: line)
     }
 
-    /// Log an info message with tag (BUILD 133 enhanced logging)
+    /// Log an info message with tag
     func info(_ tag: String, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log("[\(tag)] \(message)", level: .info, file: file, function: function, line: line)
     }
@@ -95,7 +95,7 @@ class DebugLogger {
         log(message, level: .success, file: file, function: function, line: line)
     }
 
-    /// Log a success message with tag (BUILD 133 enhanced logging)
+    /// Log a success message with tag
     func success(_ tag: String, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log("[\(tag)] \(message)", level: .success, file: file, function: function, line: line)
     }
@@ -105,7 +105,7 @@ class DebugLogger {
         log(message, level: .warning, file: file, function: function, line: line)
     }
 
-    /// Log a warning message with tag (BUILD 133 enhanced logging)
+    /// Log a warning message with tag
     func warning(_ tag: String, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log("[\(tag)] \(message)", level: .warning, file: file, function: function, line: line)
     }
@@ -115,7 +115,7 @@ class DebugLogger {
         log(message, level: .error, file: file, function: function, line: line)
     }
 
-    /// Log an error message with tag (BUILD 133 enhanced logging)
+    /// Log an error message with tag
     func error(_ tag: String, _ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log("[\(tag)] \(message)", level: .error, file: file, function: function, line: line)
     }
@@ -165,7 +165,7 @@ class DebugLogger {
         logger.debug("← Exiting \(fileName):\(function)")
     }
 
-    /// Log a database query (BUILD 133 enhanced logging)
+    /// Log a database query
     func logQuery(table: String, query: String, params: [String: Any] = [:]) {
         guard isEnabled else { return }
 
@@ -179,7 +179,7 @@ class DebugLogger {
         logger.info("\(message)")
     }
 
-    /// Log a date conversion (BUILD 137 timezone debugging)
+    /// Log a date conversion for timezone debugging
     func logDateConversion(original: Date, formatted: String, formatter: String) {
         guard isEnabled else { return }
 

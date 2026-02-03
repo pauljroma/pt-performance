@@ -21,7 +21,30 @@ private struct GetStreakStatisticsParams: Encodable {
 }
 
 /// Service for managing streak tracking data
-/// Provides CRUD operations for streak records and activity history
+///
+/// Tracks workout and arm care completion streaks to encourage consistent
+/// engagement. Supports three streak types: workout-only, arm care-only,
+/// and combined streaks. Provides calendar history for visual display and
+/// comprehensive statistics.
+///
+/// ## Streak Types
+/// - **Workout**: Consecutive days with completed workouts
+/// - **Arm Care**: Consecutive days with arm care assessments
+/// - **Combined**: Consecutive days with either activity
+///
+/// ## Usage Example
+/// ```swift
+/// let streakService = StreakTrackingService.shared
+///
+/// // Record a workout completion
+/// try await streakService.recordWorkoutCompletion(for: patientId)
+///
+/// // Get current streaks
+/// let streaks = try await streakService.fetchCurrentStreaks(for: patientId)
+///
+/// // Get calendar history for display
+/// let history = try await streakService.getStreakHistory(for: patientId, days: 30)
+/// ```
 @MainActor
 class StreakTrackingService: ObservableObject {
 
@@ -137,18 +160,18 @@ class StreakTrackingService: ObservableObject {
         let dateString = dateFormatter.string(from: date)
 
         let params: [String: String?] = [
-            "p_patient_id": patientId.uuidString,
-            "p_activity_date": dateString,
-            "p_workout_completed": workoutCompleted ? "true" : "false",
-            "p_arm_care_completed": armCareCompleted ? "true" : "false",
-            "p_session_id": sessionId?.uuidString,
+            DatabaseConstants.RPCParams.patientId: patientId.uuidString,
+            DatabaseConstants.RPCParams.activityDate: dateString,
+            DatabaseConstants.RPCParams.workoutCompleted: workoutCompleted ? "true" : "false",
+            DatabaseConstants.RPCParams.armCareCompleted: armCareCompleted ? "true" : "false",
+            DatabaseConstants.RPCParams.sessionId: sessionId?.uuidString,
             "p_manual_session_id": manualSessionId?.uuidString,
-            "p_notes": notes
+            DatabaseConstants.RPCParams.notes: notes
         ]
 
         do {
             let response = try await client.client
-                .rpc("record_streak_activity", params: params.compactMapValues { $0 })
+                .rpc(DatabaseConstants.RPCFunctions.recordStreakActivity, params: params.compactMapValues { $0 })
                 .execute()
 
             let decoder = createStreakDecoder()
@@ -198,14 +221,14 @@ class StreakTrackingService: ObservableObject {
         let startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate) ?? endDate
 
         let params: [String: String] = [
-            "p_patient_id": patientId.uuidString,
-            "p_start_date": dateFormatter.string(from: startDate),
-            "p_end_date": dateFormatter.string(from: endDate)
+            DatabaseConstants.RPCParams.patientId: patientId.uuidString,
+            DatabaseConstants.RPCParams.startDate: dateFormatter.string(from: startDate),
+            DatabaseConstants.RPCParams.endDate: dateFormatter.string(from: endDate)
         ]
 
         do {
             let response = try await client.client
-                .rpc("get_streak_history_for_calendar", params: params)
+                .rpc(DatabaseConstants.RPCFunctions.getStreakHistory, params: params)
                 .execute()
 
             let decoder = createStreakDecoder()
@@ -237,7 +260,7 @@ class StreakTrackingService: ObservableObject {
         do {
             let params = GetStreakStatisticsParams(pPatientId: patientId.uuidString)
             let response = try await client.client
-                .rpc("get_streak_statistics", params: params)
+                .rpc(DatabaseConstants.RPCFunctions.getStreakStatistics, params: params)
                 .execute()
 
             let decoder = createStreakDecoder()

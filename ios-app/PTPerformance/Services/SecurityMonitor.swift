@@ -2,7 +2,6 @@
 //  SecurityMonitor.swift
 //  PTPerformance
 //
-//  Created by BUILD 119 on 2026-01-03
 //  Purpose: Failed login tracking and security alerts
 //
 

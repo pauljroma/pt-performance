@@ -178,7 +178,7 @@ final class ContentFlowTests: BaseUITest {
         searchField.typeText("program")
 
         // Wait for search results
-        sleep(1) // Allow debounce/filtering
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Allow debounce/filtering
 
         // Verify search results
         let searchResultsHeader = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'result'")).firstMatch
@@ -200,7 +200,7 @@ final class ContentFlowTests: BaseUITest {
         }
 
         // Verify all articles return
-        sleep(1)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
         let allArticlesCount = articlesList.cells.count
         XCTAssertGreaterThan(allArticlesCount, 0,
             "All articles should reappear after clearing search")
@@ -339,7 +339,7 @@ final class ContentFlowTests: BaseUITest {
         }
 
         // CRITICAL: Verify content loaded (not blank)
-        let contentExists = articleDetailView.staticTexts.count > 0
+        let contentExists = !articleDetailView.staticTexts.isEmpty
         XCTAssertTrue(contentExists,
             "Article should have content (not blank)")
 
@@ -364,7 +364,7 @@ final class ContentFlowTests: BaseUITest {
         searchField.typeText("pitch")
 
         // Wait for search filtering
-        sleep(1)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
 
         // Verify search results appear
         let searchResults = articlesList.cells.count
@@ -393,7 +393,7 @@ final class ContentFlowTests: BaseUITest {
         navigateToHelpView()
 
         // Wait extended time for content loading
-        sleep(3)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 3))
 
         // Check for any error alerts
         let errorAlert = app.alerts.firstMatch
@@ -426,7 +426,7 @@ final class ContentFlowTests: BaseUITest {
         navigateToLearningView()
 
         // Wait extended time for content loading (200+ articles)
-        sleep(5)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 5))
 
         // Check for any error alerts
         let errorAlert = app.alerts.firstMatch
@@ -495,7 +495,7 @@ final class ContentFlowTests: BaseUITest {
             start.press(forDuration: 0.1, thenDragTo: end)
 
             // Wait for refresh
-            sleep(3)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 3))
 
             // Verify still works (no crash)
             XCTAssertTrue(articlesList.exists,

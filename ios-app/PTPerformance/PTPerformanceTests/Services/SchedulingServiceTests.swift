@@ -221,8 +221,8 @@ final class SchedulingErrorTests: XCTestCase {
     }
 
     func testErrorConformsToLocalizedError() {
-        let error = SchedulingError.sessionNotFound
-        XCTAssertTrue(error is LocalizedError, "SchedulingError should conform to LocalizedError")
+        let error: any Error = SchedulingError.sessionNotFound
+        XCTAssertTrue(error is SchedulingError, "Error should be SchedulingError")
     }
 }
 

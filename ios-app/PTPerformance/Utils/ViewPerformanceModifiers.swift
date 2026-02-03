@@ -2,7 +2,6 @@
 //  ViewPerformanceModifiers.swift
 //  PTPerformance
 //
-//  BUILD 95 - Agent 8: Performance optimization
 //  SwiftUI view modifiers to reduce unnecessary re-renders and improve performance
 //
 

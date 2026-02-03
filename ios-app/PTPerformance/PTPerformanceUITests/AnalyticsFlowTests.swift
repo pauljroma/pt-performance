@@ -69,7 +69,7 @@ class AnalyticsFlowTests: XCTestCase {
         navigateToHistory()
 
         // Wait for data to load (loading state should disappear)
-        sleep(2) // Allow async data fetching
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2)) // Allow async data fetching
 
         // Then: Summary cards should be visible
         let summarySection = app.staticTexts["Summary"]
@@ -77,8 +77,8 @@ class AnalyticsFlowTests: XCTestCase {
             XCTAssertTrue(summarySection.exists, "Summary section should be visible")
 
             // Verify summary cards exist
-            XCTAssertTrue(app.staticTexts.matching(identifier: "Adherence").count > 0 ||
-                         app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Adherence'")).count > 0,
+            XCTAssertTrue(!app.staticTexts.matching(identifier: "Adherence").isEmpty ||
+                         !app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Adherence'")).isEmpty,
                          "Adherence card should exist")
         }
 
@@ -111,7 +111,7 @@ class AnalyticsFlowTests: XCTestCase {
         navigateToHistory()
 
         // Wait for loading to complete
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Then: Should show empty state if no data
         let emptyStateLabels = [
@@ -147,7 +147,7 @@ class AnalyticsFlowTests: XCTestCase {
     func testDateFiltering() throws {
         // Given: Navigate to History with data
         navigateToHistory()
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Then: Look for date range picker (if it exists in current implementation)
         let workoutHistoryTitle = app.staticTexts["Workout History"]
@@ -156,7 +156,7 @@ class AnalyticsFlowTests: XCTestCase {
 
             // Look for segmented control (date range picker)
             let segmentedControls = app.segmentedControls
-            if segmentedControls.count > 0 {
+            if !segmentedControls.isEmpty {
                 let dateRangePicker = segmentedControls.firstMatch
                 XCTAssertTrue(dateRangePicker.exists, "Date range picker should exist")
 
@@ -171,7 +171,7 @@ class AnalyticsFlowTests: XCTestCase {
                                 "Second date range option should be selected")
 
                     // Wait for data to potentially refresh
-                    sleep(1)
+                    RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
                 }
             }
         }
@@ -187,7 +187,7 @@ class AnalyticsFlowTests: XCTestCase {
     func testDataRefresh() throws {
         // Given: Navigate to History
         navigateToHistory()
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // When: Pull down to refresh
         let scrollView = app.scrollViews.firstMatch
@@ -200,7 +200,7 @@ class AnalyticsFlowTests: XCTestCase {
             start.press(forDuration: 0.1, thenDragTo: end)
 
             // Then: Content should refresh (wait a moment for refresh to complete)
-            sleep(2)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
             // Verify the view still exists and is functional
             XCTAssertTrue(scrollView.exists, "Scroll view should still exist after refresh")
@@ -220,7 +220,7 @@ class AnalyticsFlowTests: XCTestCase {
     func testChartRendering() throws {
         // Given: Navigate to History/Analytics
         navigateToHistory()
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         // Then: Verify chart-related elements exist
         // Note: Actual chart elements depend on SwiftUI Charts implementation
@@ -259,7 +259,7 @@ class AnalyticsFlowTests: XCTestCase {
     func testNavigationBetweenCharts() throws {
         // Given: Navigate to History with data
         navigateToHistory()
-        sleep(2)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 2))
 
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.exists, "Main scroll view should exist")
@@ -267,14 +267,14 @@ class AnalyticsFlowTests: XCTestCase {
         // When: Scroll through the analytics content
         // Scroll down to see more charts
         scrollView.swipeUp()
-        sleep(1)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
 
         // Verify scroll view is still functional
         XCTAssertTrue(scrollView.exists, "Scroll view should still exist after scrolling")
 
         // Scroll back up
         scrollView.swipeDown()
-        sleep(1)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
 
         // Then: Navigation should be smooth without crashes
         XCTAssertTrue(scrollView.exists, "Scroll view should remain functional")

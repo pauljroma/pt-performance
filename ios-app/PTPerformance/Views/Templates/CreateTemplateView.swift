@@ -128,9 +128,13 @@ struct CreateTemplateView: View {
         Section("Basic Information") {
             TextField("Template Name", text: $templateName)
                 .textInputAutocapitalization(.words)
+                .accessibilityLabel("Template Name")
+                .accessibilityHint("Enter a name for this template")
 
             TextField("Description", text: $templateDescription, axis: .vertical)
                 .lineLimit(3...6)
+                .accessibilityLabel("Template Description")
+                .accessibilityHint("Optional description for the template")
         }
     }
 
@@ -226,6 +230,8 @@ struct CreateTemplateView: View {
     private var visibilitySection: some View {
         Section {
             Toggle("Make Public", isOn: $isPublic)
+                .accessibilityLabel("Make template public")
+                .accessibilityHint(isPublic ? "Template is visible to all therapists" : "Template is only visible to you")
         } header: {
             Text("Visibility")
         } footer: {
@@ -307,11 +313,13 @@ struct TagChip: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Remove tag \(text)")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .contain)
     }
 }
 

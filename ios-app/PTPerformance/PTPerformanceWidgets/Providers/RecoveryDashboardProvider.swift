@@ -20,17 +20,17 @@ struct RecoveryDashboardProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (RecoveryDashboardEntry) -> Void) {
+    func getSnapshot(in context: Context) async -> RecoveryDashboardEntry {
         let entry = RecoveryDashboardEntry(
             date: Date(),
             readiness: SharedDataStore.shared.getReadiness() ?? .placeholder,
             weekTrend: SharedDataStore.shared.getWeekTrend() ?? generatePlaceholderTrend(),
             workout: SharedDataStore.shared.getWorkout()
         )
-        completion(entry)
+        return entry
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<RecoveryDashboardEntry>) -> Void) {
+    func getTimeline(in context: Context) async -> Timeline<RecoveryDashboardEntry> {
         let currentDate = Date()
 
         let entry = RecoveryDashboardEntry(
@@ -41,9 +41,9 @@ struct RecoveryDashboardProvider: TimelineProvider {
         )
 
         // Refresh every 30 minutes
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate) ?? currentDate.addingTimeInterval(1800)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        return timeline
     }
 
     private func generatePlaceholderTrend() -> [WidgetReadiness] {
@@ -51,7 +51,7 @@ struct RecoveryDashboardProvider: TimelineProvider {
         let today = Date()
 
         return (0..<7).map { offset in
-            let date = calendar.date(byAdding: .day, value: -6 + offset, to: today)!
+            let date = calendar.date(byAdding: .day, value: -6 + offset, to: today) ?? today
             let scores = [85, 72, 90, 65, 78, 55, 88]
             let bands = ["green", "yellow", "green", "orange", "yellow", "red", "green"]
             return WidgetReadiness(

@@ -1,9 +1,9 @@
 import Foundation
 
-// MARK: - BUILD 296: Session Detail Models (ACP-588)
+// MARK: - Session Detail Models (ACP-588)
 
 /// Session with its exercise logs — used by detail view and export
-struct SessionWithLogs: Identifiable {
+struct SessionWithLogs: Identifiable, Sendable {
     let id: String
     let sessionNumber: Int?
     let sessionDate: Date
@@ -17,7 +17,7 @@ struct SessionWithLogs: Identifiable {
 }
 
 /// Individual exercise log with exercise name (fetched via join)
-struct ExerciseLogDetail: Identifiable, Codable, Hashable {
+struct ExerciseLogDetail: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let exerciseName: String
     let actualSets: Int

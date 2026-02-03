@@ -8,7 +8,7 @@
 import Foundation
 
 /// Exercise template data model from Supabase
-struct ExerciseTemplateData: Codable, Identifiable, Hashable, Equatable {
+struct ExerciseTemplateData: Codable, Identifiable, Hashable, Equatable, Sendable {
     let id: UUID
     let name: String
     let category: String?
@@ -27,7 +27,7 @@ struct ExerciseTemplateData: Codable, Identifiable, Hashable, Equatable {
         case formCues = "form_cues"
     }
 
-    struct FormCueData: Codable, Hashable, Equatable {
+    struct FormCueData: Codable, Hashable, Equatable, Sendable {
         let cue: String
         let timestamp: Int?
     }

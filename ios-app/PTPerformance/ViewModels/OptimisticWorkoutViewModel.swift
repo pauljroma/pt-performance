@@ -166,7 +166,7 @@ class OptimisticWorkoutViewModel: ObservableObject {
     }
 
     var progressPercentage: Double {
-        guard exercises.count > 0 else { return 0 }
+        guard !exercises.isEmpty else { return 0 }
         return Double(workoutState.completedCount + workoutState.skippedCount) / Double(exercises.count)
     }
 

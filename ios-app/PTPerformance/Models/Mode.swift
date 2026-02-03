@@ -2,7 +2,6 @@
 //  Mode.swift
 //  PTPerformance
 //
-//  Created by Claude (BUILD 115) on 2026-01-02.
 //  Mode system for 3-mode UX architecture
 //
 

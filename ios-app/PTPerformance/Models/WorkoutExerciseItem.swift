@@ -2,7 +2,7 @@
 //  WorkoutExerciseItem.swift
 //  PTPerformance
 //
-//  BUILD 258: Unified exercise model for both prescribed and manual workouts
+//  Unified exercise model for both prescribed and manual workouts
 //  Enables single execution view for all workout types
 //
 

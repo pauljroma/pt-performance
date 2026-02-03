@@ -43,7 +43,7 @@ struct WeeklySummaryHistoryView: View {
             }
             .padding()
         }
-        .navigationTitle("Weekly History")
+        .navigationTitle(LocalizedStrings.NavigationTitles.weeklyHistory)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedSummary) { summary in
             WeeklySummaryDetailSheet(summary: summary)
@@ -60,8 +60,9 @@ struct WeeklySummaryHistoryView: View {
 
     private var trendChart: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Adherence Trend")
+            Text(LocalizedStrings.SectionHeaders.adherenceTrend)
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             if #available(iOS 16.0, *) {
                 Chart(summaries.reversed()) { summary in
@@ -109,6 +110,8 @@ struct WeeklySummaryHistoryView: View {
                 }
                 .frame(height: 180)
                 .padding(.vertical, 8)
+                .accessibilityLabel(chartAccessibilityLabel)
+                .accessibilityHint("Shows adherence percentage trend over time")
             } else {
                 // Fallback for iOS 15
                 Text("Upgrade to iOS 16 for charts")
@@ -122,12 +125,22 @@ struct WeeklySummaryHistoryView: View {
         )
     }
 
+    private var chartAccessibilityLabel: String {
+        guard !summaries.isEmpty else {
+            return "No adherence data available"
+        }
+        let avgAdherence = summaries.map { $0.adherencePercentage }.reduce(0, +) / Double(summaries.count)
+        let latestAdherence = summaries.first?.adherencePercentage ?? 0
+        return "Adherence trend chart showing \(summaries.count) weeks, average \(Int(avgAdherence)) percent, latest week \(Int(latestAdherence)) percent"
+    }
+
     // MARK: - Weekly List
 
     private var weeklyList: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Past Weeks")
+            Text(LocalizedStrings.SectionHeaders.pastWeeks)
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(summaries) { summary in
                 Button {
@@ -136,6 +149,7 @@ struct WeeklySummaryHistoryView: View {
                     weeklyRow(summary)
                 }
                 .buttonStyle(.plain)
+                .id(summary.id)
             }
         }
     }
@@ -147,6 +161,7 @@ struct WeeklySummaryHistoryView: View {
                 .font(.system(size: 24))
                 .foregroundColor(summary.performanceCategory.color)
                 .frame(width: 40)
+                .accessibilityHidden(true)
 
             // Week info
             VStack(alignment: .leading, spacing: 4) {
@@ -170,6 +185,7 @@ struct WeeklySummaryHistoryView: View {
             VStack(alignment: .trailing, spacing: 4) {
                 Image(systemName: summary.volumeChangeEmoji)
                     .foregroundColor(summary.volumeChangePercent >= 0 ? .green : .red)
+                    .accessibilityHidden(true)
 
                 Text("\(summary.volumeChangePercent >= 0 ? "+" : "")\(Int(summary.volumeChangePercent))%")
                     .font(.caption.bold())
@@ -179,12 +195,16 @@ struct WeeklySummaryHistoryView: View {
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.secondarySystemBackground))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(summary.dateRangeString), \(summary.performanceCategory.displayName), \(summary.workoutsCompleted) of \(summary.workoutsScheduled) workouts, \(Int(summary.adherencePercentage)) percent adherence, volume \(summary.volumeChangePercent >= 0 ? "up" : "down") \(abs(Int(summary.volumeChangePercent))) percent")
+        .accessibilityHint("Double tap for details")
     }
 
     // MARK: - Loading View
@@ -193,7 +213,7 @@ struct WeeklySummaryHistoryView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading history...")
+            Text(LocalizedStrings.LoadingStates.loadingHistory)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -209,7 +229,7 @@ struct WeeklySummaryHistoryView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.orange)
 
-            Text("Couldn't Load History")
+            Text(LocalizedStrings.ErrorStates.couldntLoadHistory)
                 .font(.headline)
 
             Text(error.localizedDescription)
@@ -217,7 +237,7 @@ struct WeeklySummaryHistoryView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button("Try Again") {
+            Button(LocalizedStrings.ErrorStates.tryAgain) {
                 Task {
                     await loadHistory()
                 }
@@ -231,7 +251,7 @@ struct WeeklySummaryHistoryView: View {
 
     private var emptyStateView: some View {
         EmptyStateView(
-            title: "No Weekly History Yet",
+            title: LocalizedStrings.EmptyStates.noWeeklyHistoryYet,
             message: "Complete workouts throughout the week to see your progress summaries here. Track your adherence trends and celebrate your weekly wins.",
             icon: "calendar.badge.clock",
             iconColor: .blue,
@@ -300,11 +320,12 @@ struct WeeklySummaryDetailSheet: View {
                         statCard("Streak", value: "\(summary.currentStreak) days")
                     }
                     .padding(.horizontal)
+                    .accessibilityElement(children: .contain)
 
                     // Wins
                     if !summary.wins.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Wins")
+                            Text(LocalizedStrings.SectionHeaders.winsThisWeek)
                                 .font(.headline)
                                 .padding(.horizontal)
 
@@ -317,6 +338,7 @@ struct WeeklySummaryDetailSheet: View {
                                     Spacer()
                                 }
                                 .padding(.horizontal)
+                                .id(win)
                             }
                         }
                     }
@@ -324,7 +346,7 @@ struct WeeklySummaryDetailSheet: View {
                     // Focus areas
                     if !summary.improvementAreas.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Focus Areas")
+                            Text(LocalizedStrings.SectionHeaders.focusAreas)
                                 .font(.headline)
                                 .padding(.horizontal)
 
@@ -337,17 +359,18 @@ struct WeeklySummaryDetailSheet: View {
                                     Spacer()
                                 }
                                 .padding(.horizontal)
+                                .id(area)
                             }
                         }
                     }
                 }
                 .padding(.bottom, 40)
             }
-            .navigationTitle("Week Details")
+            .navigationTitle(LocalizedStrings.NavigationTitles.weekDetails)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(LocalizedStrings.Common.done) {
                         dismiss()
                     }
                 }
@@ -369,6 +392,8 @@ struct WeeklySummaryDetailSheet: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.secondarySystemBackground))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

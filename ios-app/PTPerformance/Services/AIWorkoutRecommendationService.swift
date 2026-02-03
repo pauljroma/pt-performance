@@ -9,19 +9,57 @@
 import Foundation
 import Supabase
 
-/// Service for calling AI workout recommendation edge function
+/// Service for AI-powered workout recommendations
+///
+/// Calls the `ai-workout-recommendation` edge function to generate personalized
+/// workout suggestions based on patient context including readiness, recent
+/// workout history, and active goals.
+///
+/// ## Features
+/// - Personalized recommendations based on readiness band
+/// - Category and duration preferences
+/// - Caching for faster repeated requests
+/// - Match scores indicating recommendation quality
+///
+/// ## Usage Example
+/// ```swift
+/// let service = AIWorkoutRecommendationService()
+///
+/// let recommendations = try await service.getRecommendations(
+///     patientId: patientId,
+///     categoryPreferences: ["strength", "mobility"],
+///     durationPreference: 30
+/// )
+///
+/// for rec in recommendations {
+///     print("\(rec.templateName): \(rec.matchScore)% match")
+/// }
+/// ```
 @MainActor
 class AIWorkoutRecommendationService: ObservableObject {
     nonisolated(unsafe) private let client: PTSupabaseClient
 
     // MARK: - Published State
 
+    /// Indicates whether a recommendation request is in progress
     @Published var isLoading = false
+
+    /// Array of workout recommendations from the last request
     @Published var recommendations: [AIWorkoutRecommendation] = []
+
+    /// AI-generated reasoning for the recommendations
     @Published var reasoning: String?
+
+    /// Summary of the patient's current context used for recommendations
     @Published var contextSummary: RecommendationContext?
+
+    /// Error message from the last failed request
     @Published var error: String?
+
+    /// The unique identifier for the current recommendation batch
     @Published var currentRecommendationId: String?
+
+    /// Indicates whether the recommendations were served from cache
     @Published var isCached = false
 
     // MARK: - Initialization
@@ -32,7 +70,23 @@ class AIWorkoutRecommendationService: ObservableObject {
 
     // MARK: - Get Recommendations
 
-    /// Get AI workout recommendations based on patient context
+    /// Gets AI-powered workout recommendations based on patient context
+    ///
+    /// Analyzes the patient's readiness, recent workout history, and goals to
+    /// generate personalized workout template recommendations. Results include
+    /// match scores and AI-generated reasoning.
+    ///
+    /// - Parameters:
+    ///   - patientId: The patient's unique identifier
+    ///   - categoryPreferences: Optional preferred workout categories (e.g., "strength", "mobility")
+    ///   - durationPreference: Optional preferred workout duration in minutes
+    ///   - timeOfDay: Optional time context (e.g., "morning", "evening")
+    ///
+    /// - Returns: Array of `AIWorkoutRecommendation` objects sorted by match score
+    ///
+    /// - Throws: `FunctionsError` if the edge function fails
+    ///
+    /// - Note: Results may be cached. Check `isCached` property after calling.
     func getRecommendations(
         patientId: UUID,
         categoryPreferences: [String]? = nil,
@@ -160,7 +214,15 @@ class AIWorkoutRecommendationService: ObservableObject {
         }
     }
 
-    /// Mark a recommendation as selected (for analytics)
+    /// Records when a user selects a recommended workout template
+    ///
+    /// Updates the recommendation record in the database to track which
+    /// template was actually chosen. Used for analytics to improve future
+    /// recommendation quality.
+    ///
+    /// - Parameter templateId: The ID of the selected workout template
+    ///
+    /// - Note: This method fails silently to avoid blocking the user flow
     func markAsSelected(templateId: UUID) async {
         guard let recommendationId = currentRecommendationId else {
             DebugLogger.shared.warning("AI_WORKOUT", "No recommendation ID to mark as selected")
@@ -187,7 +249,11 @@ class AIWorkoutRecommendationService: ObservableObject {
         }
     }
 
-    /// Clear current recommendations
+    /// Clears current recommendations and resets service state
+    ///
+    /// Resets all published properties to their initial values. Call this
+    /// when navigating away from the recommendations view or starting a
+    /// fresh recommendation flow.
     func clearRecommendations() {
         recommendations = []
         reasoning = nil

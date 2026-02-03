@@ -2,12 +2,20 @@
 //  MealPlan.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Meal planning model
+//  Nutrition Module - Meal planning model
+//  Documentation for date column types
 //
 
 import Foundation
 
 /// A meal plan for scheduling nutrition
+///
+/// **Date Property Types:**
+/// - `startDate`, `endDate`: PostgreSQL DATE columns (format: `yyyy-MM-dd`)
+/// - `createdAt`, `updatedAt`: PostgreSQL TIMESTAMPTZ columns (ISO8601 with timezone)
+///
+/// All date properties are decoded using `PTSupabaseClient.flexibleDecoder` which handles
+/// both DATE and TIMESTAMPTZ formats automatically.
 struct MealPlan: Codable, Identifiable, Hashable, Equatable {
     let id: UUID
     let patientId: String
@@ -15,10 +23,14 @@ struct MealPlan: Codable, Identifiable, Hashable, Equatable {
     let description: String?
     let planType: MealPlanType?
     let isActive: Bool
+    /// PostgreSQL DATE column - calendar date without time component
     let startDate: Date?
+    /// PostgreSQL DATE column - calendar date without time component
     let endDate: Date?
     let createdBy: String?
+    /// PostgreSQL TIMESTAMPTZ column - precise timestamp with timezone
     let createdAt: Date?
+    /// PostgreSQL TIMESTAMPTZ column - precise timestamp with timezone
     let updatedAt: Date?
     var items: [MealPlanItem]?
 

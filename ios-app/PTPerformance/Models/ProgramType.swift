@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// The three program categories available in the system
-enum ProgramType: String, Codable, CaseIterable, Identifiable {
+enum ProgramType: String, Codable, CaseIterable, Identifiable, Sendable {
     case rehab = "rehab"
     case performance = "performance"
     case lifestyle = "lifestyle"

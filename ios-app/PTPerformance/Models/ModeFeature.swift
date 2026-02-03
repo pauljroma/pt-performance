@@ -2,7 +2,6 @@
 //  ModeFeature.swift
 //  PTPerformance
 //
-//  Created by Claude (BUILD 115) on 2026-01-02.
 //  Feature visibility per mode
 //
 

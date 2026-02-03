@@ -2,7 +2,7 @@
 //  SentryConfig.swift
 //  PTPerformance
 //
-//  BUILD 95 - Agent 10: Sentry configuration and initialization
+//  Sentry configuration and initialization
 //
 
 import Foundation

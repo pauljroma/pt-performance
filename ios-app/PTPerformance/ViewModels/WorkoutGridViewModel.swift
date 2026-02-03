@@ -325,7 +325,7 @@ class WorkoutGridViewModel: ObservableObject {
                 try validateExercise(exercise)
 
                 // Check if this is a new exercise (UUID format)
-                let isNew = UUID(uuidString: exerciseId) != nil && !exercises.contains(where: { $0.id == exerciseId && $0.exerciseTemplateId.isEmpty == false })
+                let isNew = UUID(uuidString: exerciseId) != nil && !exercises.contains(where: { $0.id == exerciseId && !$0.exerciseTemplateId.isEmpty })
 
                 if isNew && !exercise.exerciseTemplateId.isEmpty {
                     // Insert new exercise

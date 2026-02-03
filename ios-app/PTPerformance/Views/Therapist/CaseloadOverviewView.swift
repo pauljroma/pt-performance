@@ -186,6 +186,7 @@ struct CaseloadOverviewView: View {
                             selectedPatient = patient
                         }
                         .transition(.scale.combined(with: .opacity))
+                        .id(patient.id)
                     }
                 }
                 .padding(.horizontal)

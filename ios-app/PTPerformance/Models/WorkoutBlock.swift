@@ -2,7 +2,7 @@
 //  WorkoutBlock.swift
 //  PTPerformance
 //
-//  BUILD 240: Manual Workout Entry
+//  Manual Workout Entry
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - Workout Block Type
 
 /// Types of workout blocks for organizing exercises
-enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
+enum WorkoutBlockType: String, Codable, CaseIterable, Hashable, Sendable {
     case cardio = "cardio"
     case dynamicStretch = "dynamic_stretch"
     case prehab = "prehab"
@@ -242,7 +242,7 @@ enum WorkoutBlockType: String, Codable, CaseIterable, Hashable {
 // MARK: - Block Exercise
 
 /// Represents an exercise within a workout block
-struct BlockExercise: Codable, Identifiable, Hashable {
+struct BlockExercise: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let name: String
     let sets: Int?
@@ -311,7 +311,7 @@ struct BlockExercise: Codable, Identifiable, Hashable {
 // MARK: - Workout Block
 
 /// Represents a workout block containing a group of related exercises
-struct WorkoutBlock: Codable, Identifiable, Hashable {
+struct WorkoutBlock: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let name: String
     let blockType: WorkoutBlockType

@@ -72,6 +72,7 @@ struct PasswordResetView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding(.trailing, 8)
+                                .accessibilityHidden(true)
                         }
                         Text("Send Reset Link")
                             .font(.body.weight(.semibold))
@@ -79,7 +80,7 @@ struct PasswordResetView: View {
                     }
                 }
                 .disabled(!isEmailValid || isLoading || showConfirmation)
-                .accessibilityLabel("Send Reset Link")
+                .accessibilityLabel(isLoading ? "Sending reset link" : "Send Reset Link")
                 .accessibilityHint(isEmailValid ? "Send a password reset link to your email" : "Enter a valid email address first")
             }
 
@@ -90,6 +91,7 @@ struct PasswordResetView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title)
                             .foregroundColor(.green)
+                            .accessibilityHidden(true)
 
                         Text("Reset link sent!")
                             .font(.headline)

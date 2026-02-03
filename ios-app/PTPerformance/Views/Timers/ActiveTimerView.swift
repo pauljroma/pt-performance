@@ -272,7 +272,7 @@ struct ActiveTimerView: View {
                 VStack(spacing: 20) {
                     statsRow(label: "Total Time", value: viewModel.formattedTotalElapsed)
                     statsRow(label: "Rounds Completed", value: "\(viewModel.currentRound) of \(viewModel.totalRounds)")
-                    if viewModel.templateName.count > 0 {
+                    if !viewModel.templateName.isEmpty {
                         statsRow(label: "Template", value: viewModel.templateName)
                     }
                 }

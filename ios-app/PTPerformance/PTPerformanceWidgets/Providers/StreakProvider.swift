@@ -13,23 +13,23 @@ struct StreakProvider: TimelineProvider {
         StreakEntry(date: Date(), streak: .placeholder)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (StreakEntry) -> Void) {
+    func getSnapshot(in context: Context) async -> StreakEntry {
         let entry = StreakEntry(
             date: Date(),
             streak: SharedDataStore.shared.getStreak() ?? .placeholder
         )
-        completion(entry)
+        return entry
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<StreakEntry>) -> Void) {
+    func getTimeline(in context: Context) async -> Timeline<StreakEntry> {
         let currentDate = Date()
         let streak = SharedDataStore.shared.getStreak()
 
         let entry = StreakEntry(date: currentDate, streak: streak)
 
         // Refresh every hour (streaks don't change frequently)
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate)!
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: currentDate) ?? currentDate.addingTimeInterval(3600)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        return timeline
     }
 }

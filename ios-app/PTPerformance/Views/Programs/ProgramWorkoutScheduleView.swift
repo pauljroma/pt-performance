@@ -194,6 +194,7 @@ struct ProgramWorkoutScheduleView: View {
                         selectedWorkout = workout
                     }
                 )
+                .id(week.id)
             }
         }
     }
@@ -245,18 +246,23 @@ private struct WeekSection: View {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.systemGray6))
                 .cornerRadius(10)
             }
+            .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(week.workoutCount) \(week.workoutCount == 1 ? "workout" : "workouts")")
+            .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand") week details")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
 
             // Week Content
             if isExpanded {
                 VStack(spacing: 8) {
                     ForEach(week.activeDays) { day in
                         DayRow(day: day, onWorkoutTap: onWorkoutTap)
+                            .id(day.id)
                     }
 
                     if week.activeDays.isEmpty {
@@ -299,6 +305,7 @@ private struct DayRow: View {
                         HapticFeedback.light()
                         onWorkoutTap(workout)
                     }
+                    .id(workout.id)
             }
         }
     }
@@ -318,6 +325,7 @@ private struct WorkoutCard: View {
                 .frame(width: 44, height: 44)
                 .background(categoryColor.opacity(0.15))
                 .cornerRadius(10)
+                .accessibilityHidden(true)
 
             // Workout Info
             VStack(alignment: .leading, spacing: 2) {
@@ -346,6 +354,7 @@ private struct WorkoutCard: View {
             Image(systemName: "play.circle.fill")
                 .font(.title2)
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
         }
         .padding(12)
         .background(Color(.systemBackground))
@@ -355,6 +364,9 @@ private struct WorkoutCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(workout.name)\(workout.durationMinutes != nil ? ", \(workout.durationMinutes!) minutes" : "")\(workout.difficulty != nil ? ", \(workout.difficulty!.capitalized) difficulty" : "")")
+        .accessibilityHint("Double tap to start workout")
     }
 
     private var categoryIcon: String {
@@ -424,15 +436,15 @@ struct WorkoutStartSheet: View {
                 // Stats
                 HStack(spacing: 24) {
                     if let duration = workout.durationMinutes {
-                        statItem(icon: "clock", value: "\(duration)", label: "minutes")
+                        workoutStatItem(icon: "clock", value: "\(duration)", label: "minutes")
                     }
 
                     if let difficulty = workout.difficulty {
-                        statItem(icon: "chart.bar.fill", value: difficulty.capitalized, label: "difficulty")
+                        workoutStatItem(icon: "chart.bar.fill", value: difficulty.capitalized, label: "difficulty")
                     }
 
                     if let category = workout.category {
-                        statItem(icon: "tag.fill", value: category.capitalized, label: "category")
+                        workoutStatItem(icon: "tag.fill", value: category.capitalized, label: "category")
                     }
                 }
 
@@ -444,6 +456,7 @@ struct WorkoutStartSheet: View {
                 } label: {
                     HStack {
                         Image(systemName: "play.fill")
+                            .accessibilityHidden(true)
                         Text("Start Workout")
                     }
                     .font(.headline)
@@ -453,6 +466,8 @@ struct WorkoutStartSheet: View {
                     .background(Color.blue)
                     .cornerRadius(14)
                 }
+                .accessibilityLabel("Start \(workout.name) workout")
+                .accessibilityHint("Begins the workout session")
                 .padding(.horizontal)
                 .padding(.bottom)
             }
@@ -467,17 +482,20 @@ struct WorkoutStartSheet: View {
                             .font(.title2)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Close")
+                    .accessibilityHint("Dismiss this sheet")
                 }
             }
         }
         .presentationDetents([.medium, .large])
     }
 
-    private func statItem(icon: String, value: String, label: String) -> some View {
+    private func workoutStatItem(icon: String, value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.subheadline)
@@ -487,6 +505,8 @@ struct WorkoutStartSheet: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 
@@ -639,6 +659,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                 } label: {
                     HStack {
                         Image(systemName: "play.fill")
+                            .accessibilityHidden(true)
                         Text("Start Workout")
                     }
                     .font(.headline)
@@ -648,6 +669,8 @@ struct WorkoutTemplatePlayerWrapper: View {
                     .background(Color.blue)
                     .cornerRadius(14)
                 }
+                .accessibilityLabel("Start \(template.name) workout")
+                .accessibilityHint("Begins the workout session with \(template.exerciseCount) exercises")
                 .padding(.top)
             }
             .padding()
@@ -775,8 +798,13 @@ class ProgramWorkoutScheduleViewModel: ObservableObject {
     }
 
     var currentWeek: Int? {
-        // TODO: Calculate based on enrollment start date
-        // For now, return week 1
+        // Current week calculation based on enrollment start date
+        // Implementation notes:
+        // - The ViewModel needs access to enrollment.startedAt or enrollment.enrolledAt
+        // - To implement: Add enrollmentStartDate property to ViewModel, pass from View in loadSchedule()
+        // - Calculate: let weeksSinceStart = Calendar.current.dateComponents([.weekOfYear], from: startDate, to: Date()).weekOfYear ?? 0
+        // - Return: min(weeksSinceStart + 1, totalWeeks) clamped to valid range
+        // For now, return week 1 until enrollment date is passed to ViewModel
         if usesPhaseBasedStructure {
             return programStructure?.phases.isEmpty == false ? 1 : nil
         }
@@ -1086,6 +1114,7 @@ struct PhaseSessionStartSheet: View {
                 } label: {
                     HStack {
                         Image(systemName: "play.fill")
+                            .accessibilityHidden(true)
                         Text("Start Workout")
                     }
                     .font(.headline)
@@ -1095,6 +1124,8 @@ struct PhaseSessionStartSheet: View {
                     .background(Color.blue)
                     .cornerRadius(14)
                 }
+                .accessibilityLabel("Start \(session.session.name) workout")
+                .accessibilityHint("Begins the workout session with \(session.exercises.count) exercises")
                 .padding(.horizontal)
                 .padding(.bottom)
             }
@@ -1109,6 +1140,8 @@ struct PhaseSessionStartSheet: View {
                             .font(.title2)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Close")
+                    .accessibilityHint("Dismiss this sheet")
                 }
             }
         }
@@ -1120,6 +1153,7 @@ struct PhaseSessionStartSheet: View {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.subheadline)
@@ -1129,6 +1163,8 @@ struct PhaseSessionStartSheet: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

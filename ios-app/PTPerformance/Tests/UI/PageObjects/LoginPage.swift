@@ -17,12 +17,12 @@ struct LoginPage {
 
     // MARK: - Elements
 
-    var patientLoginButton: XCUIElement {
-        app.buttons["Patient Login"]
+    var demoPatientButton: XCUIElement {
+        app.buttons["Demo Patient"]
     }
 
-    var therapistLoginButton: XCUIElement {
-        app.buttons["Therapist Login"]
+    var demoTherapistButton: XCUIElement {
+        app.buttons["Demo Therapist"]
     }
 
     var emailField: XCUIElement {
@@ -57,17 +57,17 @@ struct LoginPage {
 
     // MARK: - Interactions
 
-    /// Tap the patient login button
+    /// Tap the demo patient button
     @discardableResult
-    func tapPatientLogin() -> Self {
-        TestHelpers.safeTap(patientLoginButton, named: "Patient Login Button")
+    func tapDemoPatient() -> Self {
+        TestHelpers.safeTap(demoPatientButton, named: "Demo Patient Button")
         return self
     }
 
-    /// Tap the therapist login button
+    /// Tap the demo therapist button
     @discardableResult
-    func tapTherapistLogin() -> Self {
-        TestHelpers.safeTap(therapistLoginButton, named: "Therapist Login Button")
+    func tapDemoTherapist() -> Self {
+        TestHelpers.safeTap(demoTherapistButton, named: "Demo Therapist Button")
         return self
     }
 
@@ -122,8 +122,8 @@ struct LoginPage {
 
     /// Assert login screen is displayed
     func assertIsDisplayed() {
-        TestHelpers.assertExists(patientLoginButton, named: "Patient Login Button")
-        TestHelpers.assertExists(therapistLoginButton, named: "Therapist Login Button")
+        TestHelpers.assertExists(demoPatientButton, named: "Demo Patient Button")
+        TestHelpers.assertExists(demoTherapistButton, named: "Demo Therapist Button")
     }
 
     /// Assert login form is displayed
@@ -155,51 +155,14 @@ struct LoginPage {
 
     // MARK: - Workflows
 
-    /// Perform login with credentials
-    /// - Parameters:
-    ///   - email: Email address
-    ///   - password: Password
-    ///   - userType: "Patient" or "Therapist"
-    func login(
-        email: String,
-        password: String,
-        as userType: String = "Patient"
-    ) {
-        if userType == "Patient" {
-            tapPatientLogin()
-        } else {
-            tapTherapistLogin()
-        }
-
-        enterEmail(email)
-            .enterPassword(password)
-            .tapLogin()
-    }
-
-    /// Login as test patient
+    /// Login as demo patient
     func loginAsDemoPatient() {
-        login(
-            email: MockData.TestPatient.email,
-            password: MockData.TestPatient.password,
-            as: "Patient"
-        )
+        tapDemoPatient()
     }
 
-    /// Login as test therapist
+    /// Login as demo therapist
     func loginAsDemoTherapist() {
-        login(
-            email: MockData.TestTherapist.email,
-            password: MockData.TestTherapist.password,
-            as: "Therapist"
-        )
+        tapDemoTherapist()
     }
 
-    /// Login with invalid credentials
-    func loginWithInvalidCredentials() {
-        login(
-            email: "invalid@example.com",
-            password: "wrongpassword",
-            as: "Patient"
-        )
-    }
 }

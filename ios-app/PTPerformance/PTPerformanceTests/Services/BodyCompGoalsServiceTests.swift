@@ -409,7 +409,7 @@ final class BodyCompGoalsServiceTests: XCTestCase {
         )
 
         // When: Checking achievement via progress
-        let result = await service.isGoalAchieved(progress: progress)
+        let result = service.isGoalAchieved(progress: progress)
 
         // Then: Goal should not be achieved (no targets)
         XCTAssertFalse(result, "Goal with no targets should not be achieved")

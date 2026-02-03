@@ -11,7 +11,7 @@ struct ErrorStateView: View {
     var secondaryAction: ErrorAction?
 
     init(
-        title: String = "Something Went Wrong",
+        title: String = LocalizedStrings.ErrorStates.somethingWentWrong,
         message: String,
         icon: String = "exclamationmark.triangle.fill",
         iconColor: Color = .orange,
@@ -114,7 +114,7 @@ extension ErrorStateView {
             message: "Unable to connect to the server. Please check your internet connection and try again.",
             icon: "wifi.exclamationmark",
             iconColor: .orange,
-            primaryAction: ErrorAction(title: "Retry", icon: "arrow.clockwise", action: retry),
+            primaryAction: ErrorAction(title: LocalizedStrings.ErrorStates.retry, icon: "arrow.clockwise", action: retry),
             secondaryAction: nil
         )
     }
@@ -154,7 +154,7 @@ extension ErrorStateView {
             message: "We're experiencing technical difficulties. Our team has been notified and is working to fix the issue.",
             icon: "exclamationmark.triangle.fill",
             iconColor: .red,
-            primaryAction: ErrorAction(title: "Retry", icon: "arrow.clockwise", action: retry),
+            primaryAction: ErrorAction(title: LocalizedStrings.ErrorStates.retry, icon: "arrow.clockwise", action: retry),
             secondaryAction: ErrorAction(title: "Contact Support", icon: "envelope.fill", action: contactSupport)
         )
     }
@@ -181,7 +181,7 @@ extension ErrorStateView {
             message: message,
             icon: "exclamationmark.circle.fill",
             iconColor: .orange,
-            primaryAction: ErrorAction(title: "Retry", icon: "arrow.clockwise", action: retry),
+            primaryAction: ErrorAction(title: LocalizedStrings.ErrorStates.retry, icon: "arrow.clockwise", action: retry),
             secondaryAction: nil
         )
     }
@@ -207,7 +207,7 @@ extension ErrorStateView {
         var secondaryAction: ErrorAction?
 
         if let retry = retry, shouldRetry {
-            primaryAction = ErrorAction(title: "Try Again", icon: "arrow.clockwise", action: retry)
+            primaryAction = ErrorAction(title: LocalizedStrings.ErrorStates.tryAgain, icon: "arrow.clockwise", action: retry)
         }
 
         if let contactSupport = contactSupport {
@@ -240,7 +240,7 @@ extension ErrorStateView {
 
         var primaryAction: ErrorAction?
         if let retry = retry, appError.shouldRetry {
-            primaryAction = ErrorAction(title: "Try Again", icon: "arrow.clockwise", action: retry)
+            primaryAction = ErrorAction(title: LocalizedStrings.ErrorStates.tryAgain, icon: "arrow.clockwise", action: retry)
         }
 
         return ErrorStateView(
@@ -437,7 +437,7 @@ struct ErrorBannerView: View {
                         } else {
                             Image(systemName: "arrow.clockwise")
                         }
-                        Text("Try Again")
+                        Text(LocalizedStrings.ErrorStates.tryAgain)
                     }
                     .font(.caption.weight(.semibold))
                     .foregroundColor(.white)

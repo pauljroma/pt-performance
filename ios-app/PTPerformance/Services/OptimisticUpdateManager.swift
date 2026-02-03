@@ -475,7 +475,7 @@ class OptimisticUpdateManager: ObservableObject {
     private func scheduleDebouncedSync() {
         syncDebounceTimer?.invalidate()
         syncDebounceTimer = Timer.scheduledTimer(withTimeInterval: syncDebounceInterval, repeats: false) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 await self?.syncPendingUpdates()
             }
         }
@@ -702,7 +702,7 @@ class OptimisticUpdateManager: ObservableObject {
             .removeDuplicates()
             .sink { [weak self] isOffline in
                 if !isOffline {
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         await self?.syncPendingUpdates()
                     }
                 }

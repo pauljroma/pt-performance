@@ -2,13 +2,13 @@
 //  NutritionAnalytics.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Analytics and trend models
+//  Nutrition Module - Analytics and trend models
 //
 
 import Foundation
 
 /// Daily nutrition summary from vw_daily_nutrition view
-/// BUILD 280: Updated to match vw_daily_nutrition view columns
+/// Updated to match vw_daily_nutrition view columns
 struct DailyNutritionSummary: Codable, Identifiable {
     var id: String { "\(patientId)-\(logDate)" }
     let patientId: String
@@ -31,7 +31,7 @@ struct DailyNutritionSummary: Codable, Identifiable {
 }
 
 /// Weekly nutrition trend from vw_nutrition_trend view
-/// BUILD 280: Updated to match vw_nutrition_trend view columns
+/// Updated to match vw_nutrition_trend view columns
 struct WeeklyNutritionTrend: Codable, Identifiable {
     var id: String { "\(patientId)-\(weekStart)" }
     let patientId: String
@@ -55,7 +55,7 @@ struct WeeklyNutritionTrend: Codable, Identifiable {
 }
 
 /// Macro distribution from vw_macro_distribution view
-/// BUILD 280: Updated to match vw_macro_distribution view columns (percentages only)
+/// Updated to match vw_macro_distribution view columns (percentages only)
 struct MacroDistribution: Codable, Identifiable {
     var id: String { "\(patientId)-\(logDate)" }
     let patientId: String

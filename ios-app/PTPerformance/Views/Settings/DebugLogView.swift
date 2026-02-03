@@ -57,13 +57,17 @@ struct DebugLogView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
+                        .accessibilityHidden(true)
                     TextField("Search logs...", text: $searchText)
                         .textFieldStyle(.plain)
+                        .accessibilityLabel("Search logs")
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.gray)
                         }
+                        .accessibilityLabel("Clear search")
+                        .accessibilityHint("Clears the search text")
                     }
                 }
                 .padding(.horizontal)
@@ -79,6 +83,8 @@ struct DebugLogView: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
+                .accessibilityLabel("Log filter")
+                .accessibilityHint("Filter logs by type")
 
                 // Stats bar
                 statsBar
@@ -103,6 +109,8 @@ struct DebugLogView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityLabel("Done")
+                    .accessibilityHint("Closes the debug log view")
                 }
             }
             .sheet(isPresented: $showShareSheet) {
@@ -159,11 +167,14 @@ struct DebugLogView: View {
                             Image(systemName: "tray")
                                 .font(.system(size: 48))
                                 .foregroundColor(.gray)
+                                .accessibilityHidden(true)
                             Text(searchText.isEmpty ? "No logs yet" : "No matching logs")
                                 .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.top, 60)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(searchText.isEmpty ? "No logs yet" : "No matching logs")
                     } else {
                         ForEach(filteredMessages) { message in
                             logRow(for: message)
@@ -207,6 +218,8 @@ struct DebugLogView: View {
                 .font(.caption)
                 .foregroundColor(.red)
             }
+            .accessibilityLabel("Clear All")
+            .accessibilityHint("Removes all log messages")
 
             Button(action: {
                 UIPasteboard.general.string = logger.getAllLogs()
@@ -218,12 +231,15 @@ struct DebugLogView: View {
                 .font(.caption)
                 .foregroundColor(.blue)
             }
+            .accessibilityLabel("Copy All")
+            .accessibilityHint("Copies all log messages to clipboard")
 
             Spacer()
 
             Text("\(filteredMessages.count) messages")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+                .accessibilityLabel("\(filteredMessages.count) messages displayed")
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -240,6 +256,8 @@ struct DebugLogView: View {
             }
             .font(.caption)
         }
+        .accessibilityLabel("Export")
+        .accessibilityHint("Exports log messages to a file for sharing")
     }
 
     private func colorForLevel(_ level: LoggingService.LogLevel) -> Color {

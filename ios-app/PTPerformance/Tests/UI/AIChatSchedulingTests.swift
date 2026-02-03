@@ -219,7 +219,7 @@ final class AIChatSchedulingTests: BaseUITest {
             // Verify session rows exist (if any sessions are scheduled)
             let sessionRows = app.cells
 
-            if sessionRows.count > 0 {
+            if !sessionRows.isEmpty {
                 // Verify first session row has expected elements
                 let firstRow = sessionRows.firstMatch
                 XCTAssertTrue(firstRow.exists, "Session row should exist")

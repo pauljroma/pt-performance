@@ -114,6 +114,7 @@ struct NotificationSettingsView: View {
                     .foregroundColor(hasPermission ? .green : .red)
                     .font(.title2)
                     .frame(width: 32)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(hasPermission ? "Notifications Enabled" : "Notifications Disabled")
@@ -135,9 +136,13 @@ struct NotificationSettingsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .accessibilityLabel("Enable Notifications")
+                    .accessibilityHint("Requests permission to send notifications")
                 }
             }
             .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(hasPermission ? "Notifications enabled. You'll receive workout reminders" : "Notifications disabled. Enable notifications to get reminders")
         } header: {
             Text("Permission")
         } footer: {
@@ -161,12 +166,16 @@ struct NotificationSettingsView: View {
                 }
             }
             .toggleStyle(SwitchToggleStyle(tint: .blue))
+            .accessibilityLabel("Smart Timing")
+            .accessibilityValue(smartTimingEnabled ? "On" : "Off")
+            .accessibilityHint("Toggle to automatically learn your workout schedule")
 
             if smartTimingEnabled {
                 HStack {
                     Image(systemName: "brain.head.profile")
                         .foregroundColor(.purple)
                         .frame(width: 28)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("How It Works")
                             .font(.subheadline)
@@ -177,6 +186,8 @@ struct NotificationSettingsView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("How It Works: We analyze when you usually train and send reminders at the optimal time for each day")
             }
         } header: {
             Text("Smart Timing")
@@ -230,6 +241,7 @@ struct NotificationSettingsView: View {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .foregroundColor(.secondary)
                         .frame(width: 28)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("No Patterns Yet")
                             .font(.subheadline)
@@ -240,6 +252,8 @@ struct NotificationSettingsView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No patterns yet. Complete more workouts to see your training patterns")
             } else {
                 ForEach(patterns) { pattern in
                     patternRow(pattern)
@@ -257,6 +271,8 @@ struct NotificationSettingsView: View {
                     Text("Refresh Patterns")
                 }
             }
+            .accessibilityLabel("Refresh Patterns")
+            .accessibilityHint("Analyzes your workout history to detect training patterns")
         } header: {
             Text("Your Training Patterns")
         } footer: {
@@ -323,6 +339,9 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
+            .accessibilityLabel("Streak Alerts")
+            .accessibilityValue(streakAlertsEnabled ? "On" : "Off")
+            .accessibilityHint("Toggle to get notified about workout milestones")
 
             Toggle(isOn: $weeklySummaryEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -333,6 +352,9 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
+            .accessibilityLabel("Weekly Summary")
+            .accessibilityValue(weeklySummaryEnabled ? "On" : "Off")
+            .accessibilityHint("Toggle to receive a weekly progress report")
         } header: {
             Text("Other Notifications")
         }

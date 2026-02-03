@@ -27,6 +27,10 @@ struct StartWorkoutIntent: AppIntent {
         print("[StartWorkoutIntent] Starting workout via Siri")
 
         // Check if user is authenticated by looking for stored session
+        // TODO: SECURITY - The hasActiveSession flag itself is not sensitive (just a boolean),
+        // but consider using SecureStore to check for auth token presence instead.
+        // This would be more reliable than a separate flag that could get out of sync.
+        // Example: let hasSession = (try? SecureStore.shared.getString(forKey: .authToken)) != nil
         let hasSession = UserDefaults.standard.bool(forKey: "hasActiveSession")
 
         guard hasSession else {

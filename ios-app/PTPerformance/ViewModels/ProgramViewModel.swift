@@ -28,7 +28,7 @@ class ProgramViewModel: ObservableObject {
         logger.log("🏋️ Starting fetchProgram for patient: \(patientId)")
 
         do {
-            // 1. Fetch program(s) - BUILD 283: Handle 0 or multiple programs gracefully
+            // 1. Fetch program(s) - Handle 0 or multiple programs gracefully
             logger.log("🏋️ Step 1: Fetching program...")
             let programResponse = try await supabase.client
                 .from("programs")

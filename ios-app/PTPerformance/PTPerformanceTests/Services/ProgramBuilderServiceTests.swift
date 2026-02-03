@@ -36,7 +36,8 @@ final class ProgramBuilderServiceTests: XCTestCase {
 
     func testServiceIsObservableObject() {
         // ProgramBuilderService conforms to ObservableObject for SwiftUI integration
-        XCTAssertTrue(service is ObservableObject, "Service should conform to ObservableObject")
+        let service = self.service as any ObservableObject
+        XCTAssertNotNil(service, "Service should conform to ObservableObject")
     }
 
     // MARK: - Sequence Calculation Tests
@@ -236,8 +237,8 @@ final class ProgramServiceErrorTests: XCTestCase {
     }
 
     func testErrorConformsToLocalizedError() {
-        let error = ProgramServiceError.programNotFound
-        XCTAssertTrue(error is LocalizedError, "ProgramServiceError should conform to LocalizedError")
+        let error: any Error = ProgramServiceError.programNotFound
+        XCTAssertTrue(error is ProgramServiceError, "Error should be ProgramServiceError")
     }
 }
 

@@ -2,7 +2,6 @@
 //  ModeService.swift
 //  PTPerformance
 //
-//  Created by Claude (BUILD 115) on 2026-01-02.
 //  Mode querying and feature visibility
 //
 
@@ -26,7 +25,7 @@ class ModeService: ObservableObject {
         supabase.$userId
             .sink { [weak self] userId in
                 if userId != nil {
-                    Task { await self?.loadPatientMode() }
+                    Task { [weak self] in await self?.loadPatientMode() }
                 }
             }
             .store(in: &cancellables)

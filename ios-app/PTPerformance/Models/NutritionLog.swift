@@ -2,7 +2,7 @@
 //  NutritionLog.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Meal logging model
+//  Nutrition Module - Meal logging model
 //
 
 import Foundation
@@ -20,7 +20,7 @@ struct NutritionLog: Codable, Identifiable, Hashable, Equatable {
     let totalFatG: Double?
     let totalFiberG: Double?
     let notes: String?
-    let description: String?  // BUILD 244: Added for DB compatibility
+    let description: String?  // Added for DB compatibility
     let photoUrl: String?
     let createdAt: Date?
     let updatedAt: Date?

@@ -2,17 +2,43 @@
 //  AnalyticsTracker.swift
 //  PTPerformance
 //
-//  BUILD 95 - Agent 10: Analytics event tracking for key user actions
+//  Analytics event tracking for key user actions
 //
 
 import Foundation
 import os.log
 
 /// Analytics event tracker for monitoring user actions and feature usage
+///
+/// Provides a centralized interface for tracking user interactions, feature usage,
+/// and performance metrics throughout the app. Events are logged locally and
+/// synced to the backend for analysis.
+///
+/// ## Event Categories
+/// - **Program Events**: Creation, editing, deletion of workout programs
+/// - **Session Events**: Workout session lifecycle (start, complete, exercise completion)
+/// - **AI Events**: Chat interactions, substitution suggestions, recommendations
+/// - **Learning Events**: Article views, searches, video watching
+/// - **Scheduling Events**: Session scheduling and rescheduling
+/// - **Authentication Events**: Login, logout tracking
+/// - **Error Events**: Feature and API error tracking
+/// - **Performance Events**: Screen load times, slow operations
+///
+/// ## Usage Example
+/// ```swift
+/// // Track a session completion
+/// AnalyticsTracker.shared.trackSessionCompleted(
+///     sessionId: session.id,
+///     duration: 45 * 60,
+///     exerciseCount: 8,
+///     completedCount: 8
+/// )
+/// ```
 class AnalyticsTracker {
 
     // MARK: - Singleton
 
+    /// Shared singleton instance
     static let shared = AnalyticsTracker()
 
     // MARK: - Properties
@@ -28,7 +54,16 @@ class AnalyticsTracker {
 
     // MARK: - Event Tracking
 
-    /// Track a generic analytics event
+    /// Tracks a generic analytics event with optional properties
+    ///
+    /// This is the core tracking method used by all specific event methods.
+    /// Events are logged locally and asynchronously synced to the backend.
+    ///
+    /// - Parameters:
+    ///   - event: The event name (e.g., "session_completed", "exercise_logged")
+    ///   - properties: Key-value pairs of event metadata (default: empty)
+    ///
+    /// - Note: Events are fire-and-forget; backend sync failures are logged but don't block
     func track(event: String, properties: [String: Any] = [:]) {
         var logMessage = "[Analytics] \(event)"
 
@@ -50,7 +85,12 @@ class AnalyticsTracker {
 
     // MARK: - Program Events
 
-    /// Track program creation
+    /// Tracks when a new workout program is created
+    ///
+    /// - Parameters:
+    ///   - exerciseCount: Total number of exercises in the program
+    ///   - sessionCount: Total number of sessions in the program
+    ///   - patientId: The patient ID the program was created for
     func trackProgramCreated(exerciseCount: Int, sessionCount: Int, patientId: String) {
         track(event: "program_created", properties: [
             "exercise_count": exerciseCount,
@@ -59,7 +99,11 @@ class AnalyticsTracker {
         ])
     }
 
-    /// Track program edited
+    /// Tracks when a workout program is edited
+    ///
+    /// - Parameters:
+    ///   - programId: The unique identifier of the program
+    ///   - changeType: Description of the type of change made
     func trackProgramEdited(programId: String, changeType: String) {
         track(event: "program_edited", properties: [
             "program_id": programId,
@@ -67,7 +111,9 @@ class AnalyticsTracker {
         ])
     }
 
-    /// Track program deleted
+    /// Tracks when a workout program is deleted
+    ///
+    /// - Parameter programId: The unique identifier of the deleted program
     func trackProgramDeleted(programId: String) {
         track(event: "program_deleted", properties: [
             "program_id": programId
@@ -76,7 +122,11 @@ class AnalyticsTracker {
 
     // MARK: - Session Events
 
-    /// Track session started
+    /// Tracks when a workout session is started
+    ///
+    /// - Parameters:
+    ///   - sessionId: The unique identifier of the session
+    ///   - exerciseCount: Number of exercises in the session
     func trackSessionStarted(sessionId: String, exerciseCount: Int) {
         track(event: "session_started", properties: [
             "session_id": sessionId,
@@ -84,7 +134,13 @@ class AnalyticsTracker {
         ])
     }
 
-    /// Track session completed
+    /// Tracks when a workout session is completed
+    ///
+    /// - Parameters:
+    ///   - sessionId: The unique identifier of the session
+    ///   - duration: Total time spent on the session in seconds
+    ///   - exerciseCount: Total number of exercises in the session
+    ///   - completedCount: Number of exercises actually completed
     func trackSessionCompleted(sessionId: String, duration: TimeInterval, exerciseCount: Int, completedCount: Int) {
         track(event: "session_completed", properties: [
             "session_id": sessionId,
@@ -95,7 +151,13 @@ class AnalyticsTracker {
         ])
     }
 
-    /// Track exercise completed
+    /// Tracks when an individual exercise is completed
+    ///
+    /// - Parameters:
+    ///   - exerciseId: The unique identifier of the exercise
+    ///   - sets: Number of sets completed
+    ///   - reps: Number of reps (optional, bodyweight exercises may not have reps)
+    ///   - weight: Weight used in pounds (optional)
     func trackExerciseCompleted(exerciseId: String, sets: Int, reps: Int?, weight: Double?) {
         var properties: [String: Any] = [
             "exercise_id": exerciseId,

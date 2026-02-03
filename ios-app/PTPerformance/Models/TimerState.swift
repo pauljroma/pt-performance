@@ -2,7 +2,7 @@ import Foundation
 
 /// Timer runtime state enum
 /// Used by UI to track and display current timer state
-enum TimerState: String, Codable, CaseIterable {
+enum TimerState: String, Codable, CaseIterable, Sendable {
     case idle       // Timer not started
     case running    // Timer actively running
     case paused     // Timer temporarily paused

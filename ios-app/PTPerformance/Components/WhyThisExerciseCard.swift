@@ -356,6 +356,32 @@ struct WhyThisExerciseCompactCard: View {
 // MARK: - Preview
 
 #if DEBUG
+// Preview-only extension to provide a fallback explanation
+private extension ExerciseExplanation {
+    static var previewFallback: ExerciseExplanation {
+        ExerciseExplanation(
+            id: UUID(),
+            exerciseTemplateId: UUID(),
+            programId: nil,
+            whyIncluded: "Sample exercise explanation",
+            whatItTargets: nil,
+            howItHelps: nil,
+            whenToFeelIt: nil,
+            signsOfProgress: nil,
+            warningSigns: nil,
+            easierVariation: nil,
+            harderVariation: nil,
+            equipmentAlternatives: nil,
+            baseballBenefit: "Sample baseball benefit",
+            performanceConnection: "Sample performance connection",
+            primaryMuscles: ["core"],
+            secondaryMuscles: nil,
+            movementPattern: nil,
+            researchNote: nil
+        )
+    }
+}
+
 struct WhyThisExerciseCard_Previews: PreviewProvider {
     static var sampleExplanation: ExerciseExplanation {
         // Create a sample explanation for preview using JSON decoding
@@ -385,7 +411,10 @@ struct WhyThisExerciseCard_Previews: PreviewProvider {
         do {
             return try JSONDecoder().decode(ExerciseExplanation.self, from: json)
         } catch {
-            fatalError("Preview sample data failed to decode: \(error)")
+            // Preview-only fallback: return a minimal explanation if decoding fails
+            // This allows previews to render even if the model changes
+            assertionFailure("Preview sample data failed to decode: \(error)")
+            return ExerciseExplanation.previewFallback
         }
     }
 

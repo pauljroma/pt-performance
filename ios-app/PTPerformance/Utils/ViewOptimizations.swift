@@ -242,7 +242,7 @@ struct PerformanceTracking: ViewModifier {
                 PerformanceMonitor.shared.startViewLoad(viewName)
             }
             .task {
-                // Finish tracking after first render completes
+                // Intentional delay: wait for first render to complete before finishing measurement
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s
                 PerformanceMonitor.shared.finishViewLoad(viewName)
             }

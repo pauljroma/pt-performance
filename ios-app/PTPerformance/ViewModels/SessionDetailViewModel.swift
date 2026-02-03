@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: - BUILD 296: Session Detail ViewModel (ACP-588)
+// MARK: - Session Detail ViewModel (ACP-588)
 
 @MainActor
 class SessionDetailViewModel: ObservableObject {

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Exercise model from Supabase session_exercises and exercise_templates
-struct Exercise: Codable, Identifiable, Hashable {
+struct Exercise: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let session_id: UUID
     let exercise_template_id: UUID
@@ -14,7 +14,7 @@ struct Exercise: Codable, Identifiable, Hashable {
     let notes: String?
 
     // From exercise_templates (joined data)
-    struct ExerciseTemplate: Codable, Hashable, Identifiable {
+    struct ExerciseTemplate: Codable, Hashable, Identifiable, Sendable {
         let id: UUID
         let name: String
         let category: String?
@@ -43,7 +43,7 @@ struct Exercise: Codable, Identifiable, Hashable {
             case safetyNotes = "safety_notes"
         }
 
-        struct FormCue: Codable, Hashable {
+        struct FormCue: Codable, Hashable, Sendable {
             let cue: String
             let timestamp: Int? // Seconds into video
 
@@ -72,7 +72,7 @@ struct Exercise: Codable, Identifiable, Hashable {
     }
 
     // Build 61: Technique cues structure
-    struct TechniqueCues: Codable, Hashable {
+    struct TechniqueCues: Codable, Hashable, Sendable {
         let setup: [String]
         let execution: [String]
         let breathing: [String]
@@ -184,7 +184,7 @@ struct Exercise: Codable, Identifiable, Hashable {
 /// Session model from Supabase sessions table
 /// Matches actual database schema: id, phase_id, name, sequence, weekday, notes, created_at
 /// Build 33: Added completion tracking fields
-struct Session: Codable, Identifiable, Hashable {
+struct Session: Codable, Identifiable, Hashable, Sendable {
     static func == (lhs: Session, rhs: Session) -> Bool {
         lhs.id == rhs.id
     }
@@ -201,10 +201,10 @@ struct Session: Codable, Identifiable, Hashable {
     let notes: String?
     let created_at: Date?
 
-    // Build 33: Completion tracking
-    // BUILD 123: Added started_at for accurate workout duration tracking
+    // Completion tracking
+    // Added started_at for accurate workout duration tracking
     let completed: Bool?
-    let started_at: Date? // BUILD 123: When workout actually began
+    let started_at: Date? // When workout actually began
     let completed_at: Date?
     let total_volume: Double?
     let avg_rpe: Double?
@@ -223,7 +223,7 @@ struct Session: Codable, Identifiable, Hashable {
         case notes
         case created_at
         case completed
-        case started_at // BUILD 123
+        case started_at
         case completed_at
         case total_volume
         case avg_rpe
@@ -254,7 +254,7 @@ struct Session: Codable, Identifiable, Hashable {
 }
 
 /// Today's session response from backend /today-session endpoint
-struct TodaySessionResponse: Codable {
+struct TodaySessionResponse: Codable, Sendable {
     let session: Session?
     let exercises: [Exercise]
     let patient_name: String

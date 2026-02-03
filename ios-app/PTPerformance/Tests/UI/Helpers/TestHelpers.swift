@@ -293,29 +293,17 @@ enum TestHelpers {
 
     // MARK: - Login Helpers
 
-    /// Perform login flow with given credentials
+    /// Perform demo login flow
     /// - Parameters:
     ///   - app: The XCUIApplication instance
-    ///   - email: Email address
-    ///   - password: Password
     ///   - userType: "Patient" or "Therapist"
     static func performLogin(
         in app: XCUIApplication,
-        email: String,
-        password: String,
         userType: String = "Patient"
     ) {
-        let loginButton = app.buttons["\(userType) Login"]
-        safeTap(loginButton, named: "\(userType) Login Button")
-
-        let emailField = app.textFields["Email"]
-        safeTypeText(into: emailField, text: email, named: "Email Field")
-
-        let passwordField = app.secureTextFields["Password"]
-        safeTypeText(into: passwordField, text: password, named: "Password Field")
-
-        let submitButton = app.buttons["Log In"]
-        safeTap(submitButton, named: "Submit Login Button")
+        let buttonLabel = userType == "Patient" ? "Demo Patient" : "Demo Therapist"
+        let loginButton = app.buttons[buttonLabel]
+        safeTap(loginButton, named: "\(buttonLabel) Button")
 
         // Wait for login to complete
         waitForLoadingToComplete(in: app)

@@ -2,7 +2,7 @@
 //  FoodItem.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Food database model
+//  Nutrition Module - Food database model
 //
 
 import Foundation

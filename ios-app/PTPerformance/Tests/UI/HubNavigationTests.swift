@@ -498,7 +498,7 @@ final class HubNavigationTests: BaseUITest {
 
         // Background and foreground app
         XCUIDevice.shared.press(.home)
-        sleep(1)
+        RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
         app.activate()
 
         // Verify Programs tab is still selected

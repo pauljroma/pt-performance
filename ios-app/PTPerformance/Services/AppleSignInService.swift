@@ -22,10 +22,105 @@ final class AppleSignInService: NSObject, ObservableObject {
     private var continuation: CheckedContinuation<Void, Error>?
 
     private let logger = DebugLogger.shared
+    private let secureStore = SecureStore.shared
 
     override private init() {
         super.init()
         logger.info("AppleSignIn", "AppleSignInService initialized")
+    }
+
+    // MARK: - Token Storage
+
+    /// Store authentication tokens securely in the keychain
+    /// - Parameters:
+    ///   - token: The primary auth token (identity token from Apple/session token from Supabase)
+    ///   - refreshToken: Optional refresh token for session renewal
+    private func storeTokens(token: String, refreshToken: String?) {
+        do {
+            try secureStore.set(token, forKey: SecureStore.Keys.authToken)
+            logger.diagnostic("AppleSignIn: Stored auth token securely")
+
+            if let refresh = refreshToken {
+                try secureStore.set(refresh, forKey: SecureStore.Keys.refreshToken)
+                logger.diagnostic("AppleSignIn: Stored refresh token securely")
+            }
+        } catch {
+            ErrorLogger.shared.logError(error, context: "AppleSignInService.storeTokens")
+            logger.error("AppleSignIn", "Failed to store tokens: \(error.localizedDescription)")
+        }
+    }
+
+    /// Store the Apple user identifier for credential state checks
+    /// - Parameter userIdentifier: The unique Apple user identifier
+    private func storeUserIdentifier(_ userIdentifier: String) {
+        do {
+            try secureStore.set(userIdentifier, forKey: SecureStore.Keys.userIdentifier)
+            logger.diagnostic("AppleSignIn: Stored user identifier securely")
+        } catch {
+            ErrorLogger.shared.logError(error, context: "AppleSignInService.storeUserIdentifier")
+            logger.error("AppleSignIn", "Failed to store user identifier: \(error.localizedDescription)")
+        }
+    }
+
+    /// Clear all stored authentication tokens and user identifier
+    /// Called during sign out to ensure no credentials persist
+    func clearStoredCredentials() {
+        do {
+            try secureStore.delete(forKey: SecureStore.Keys.authToken)
+            try secureStore.delete(forKey: SecureStore.Keys.refreshToken)
+            try secureStore.delete(forKey: SecureStore.Keys.userIdentifier)
+            logger.info("AppleSignIn", "Cleared all stored credentials")
+        } catch {
+            ErrorLogger.shared.logError(error, context: "AppleSignInService.clearStoredCredentials")
+            logger.error("AppleSignIn", "Failed to clear credentials: \(error.localizedDescription)")
+        }
+    }
+
+    /// Retrieve the stored Apple user identifier for credential state validation
+    /// - Returns: The stored user identifier, or nil if not found
+    func getStoredUserIdentifier() -> String? {
+        do {
+            return try secureStore.getString(forKey: SecureStore.Keys.userIdentifier)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "AppleSignInService.getStoredUserIdentifier")
+            return nil
+        }
+    }
+
+    /// Check if the stored Apple credentials are still valid
+    /// - Returns: True if credentials are valid, false otherwise
+    func checkCredentialState() async -> Bool {
+        guard let userIdentifier = getStoredUserIdentifier() else {
+            logger.info("AppleSignIn", "No stored user identifier found")
+            return false
+        }
+
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        do {
+            let credentialState = try await appleIDProvider.credentialState(forUserID: userIdentifier)
+            switch credentialState {
+            case .authorized:
+                logger.info("AppleSignIn", "Apple credentials are authorized")
+                return true
+            case .revoked:
+                logger.warning("AppleSignIn", "Apple credentials have been revoked")
+                clearStoredCredentials()
+                return false
+            case .notFound:
+                logger.info("AppleSignIn", "Apple credentials not found")
+                clearStoredCredentials()
+                return false
+            case .transferred:
+                logger.info("AppleSignIn", "Apple credentials transferred to different team")
+                return false
+            @unknown default:
+                logger.warning("AppleSignIn", "Unknown credential state")
+                return false
+            }
+        } catch {
+            ErrorLogger.shared.logError(error, context: "AppleSignInService.checkCredentialState")
+            return false
+        }
     }
 
     // MARK: - Public API
@@ -35,10 +130,18 @@ final class AppleSignInService: NSObject, ObservableObject {
     func signIn() async throws {
         logger.info("AppleSignIn", "Starting Sign in with Apple flow")
 
+        // Generate nonce before entering continuation to properly propagate errors
+        let nonce: String
+        do {
+            nonce = try randomNonceString()
+        } catch {
+            logger.error("AppleSignIn", "Failed to generate nonce: \(error.localizedDescription)")
+            throw error
+        }
+
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.continuation = cont
 
-            let nonce = randomNonceString()
             self.currentNonce = nonce
             let hashedNonce = sha256(nonce)
 
@@ -61,12 +164,13 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Generates a cryptographically secure random nonce string
     /// - Parameter length: The length of the nonce (default 32)
     /// - Returns: A random string suitable for use as a nonce
-    private func randomNonceString(length: Int = 32) -> String {
+    /// - Throws: AppleSignInError.nonceGenerationFailed if SecRandomCopyBytes fails
+    private func randomNonceString(length: Int = 32) throws -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
         if errorCode != errSecSuccess {
-            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+            throw AppleSignInError.nonceGenerationFailed(errorCode)
         }
 
         let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
@@ -124,6 +228,18 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
 
         logger.diagnostic("AppleSignIn: Received valid ID token, authenticating with Supabase")
 
+        // Store Apple user identifier for credential state checks
+        let userIdentifier = appleIDCredential.user
+        self.storeUserIdentifier(userIdentifier)
+
+        // Extract authorization code if available (can be used for refresh)
+        let authorizationCode: String?
+        if let codeData = appleIDCredential.authorizationCode {
+            authorizationCode = String(data: codeData, encoding: .utf8)
+        } else {
+            authorizationCode = nil
+        }
+
         // Capture continuation before starting async work
         let capturedContinuation = self.continuation
         self.continuation = nil
@@ -133,6 +249,11 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 // Sign in with Supabase using the Apple ID token
                 try await PTSupabaseClient.shared.signInWithApple(idToken: idTokenString, nonce: nonce)
                 logger.success("AppleSignIn", "Supabase authentication successful")
+
+                // Store tokens securely after successful Supabase authentication
+                // The identity token is stored as the auth token
+                // Authorization code (if available) is stored as refresh token for potential server-side use
+                self.storeTokens(token: idTokenString, refreshToken: authorizationCode)
 
                 let supabase = PTSupabaseClient.shared
                 guard let userId = supabase.currentUser?.id.uuidString,
@@ -175,6 +296,8 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
                 capturedContinuation?.resume()
             } catch {
                 logger.error("AppleSignIn", "Authentication failed: \(error.localizedDescription)")
+                // Clear any partially stored credentials on failure
+                self.clearStoredCredentials()
                 capturedContinuation?.resume(throwing: error)
             }
         }
@@ -240,6 +363,7 @@ enum AppleSignInError: LocalizedError {
     case invalidCredential
     case missingIdentityToken
     case missingNonce
+    case nonceGenerationFailed(OSStatus)
 
     var errorDescription: String? {
         switch self {
@@ -249,6 +373,8 @@ enum AppleSignInError: LocalizedError {
             return "Unable to retrieve identity token from Apple."
         case .missingNonce:
             return "Authentication nonce was not set. Please try again."
+        case .nonceGenerationFailed(let status):
+            return "Unable to generate secure nonce (OSStatus \(status))."
         }
     }
 
@@ -260,6 +386,8 @@ enum AppleSignInError: LocalizedError {
             return "There was a problem communicating with Apple. Please try again."
         case .missingNonce:
             return "Please close and reopen the app, then try signing in again."
+        case .nonceGenerationFailed:
+            return "There was a security error. Please restart the app and try again."
         }
     }
 }

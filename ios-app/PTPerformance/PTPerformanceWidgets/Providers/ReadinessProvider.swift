@@ -13,23 +13,23 @@ struct ReadinessProvider: TimelineProvider {
         ReadinessEntry(date: Date(), readiness: .placeholder)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (ReadinessEntry) -> Void) {
+    func getSnapshot(in context: Context) async -> ReadinessEntry {
         let entry = ReadinessEntry(
             date: Date(),
             readiness: SharedDataStore.shared.getReadiness() ?? .placeholder
         )
-        completion(entry)
+        return entry
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ReadinessEntry>) -> Void) {
+    func getTimeline(in context: Context) async -> Timeline<ReadinessEntry> {
         let currentDate = Date()
         let readiness = SharedDataStore.shared.getReadiness()
 
         let entry = ReadinessEntry(date: currentDate, readiness: readiness)
 
         // Refresh every 15 minutes
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)!
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate) ?? currentDate.addingTimeInterval(900)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        return timeline
     }
 }

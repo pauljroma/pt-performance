@@ -73,6 +73,7 @@ struct AuthLandingView: View {
                         .cornerRadius(12)
                     }
                     .disabled(isLoading)
+                    .accessibilityIdentifier("signInWithAppleButton")
                     .accessibilityLabel("Sign in with Apple")
                     .accessibilityHint("Use your Apple ID to sign in")
 
@@ -94,6 +95,7 @@ struct AuthLandingView: View {
                         .cornerRadius(12)
                     }
                     .disabled(isLoading)
+                    .accessibilityIdentifier("continueWithEmailButton")
                     .accessibilityLabel("Continue with Email")
                     .accessibilityHint("Sign in using your email and password")
 
@@ -119,6 +121,7 @@ struct AuthLandingView: View {
                         )
                     }
                     .disabled(isLoading)
+                    .accessibilityIdentifier("createAccountButton")
                     .accessibilityLabel("Create Account")
                     .accessibilityHint("Register a new account")
                 }
@@ -127,6 +130,7 @@ struct AuthLandingView: View {
                 if isLoading {
                     ProgressView("Signing in...")
                         .padding(.top, 8)
+                        .accessibilityLabel("Signing in, please wait")
                 }
 
                 // MARK: - Error Display
@@ -173,6 +177,8 @@ struct AuthLandingView: View {
                             .foregroundColor(.green)
                             .cornerRadius(8)
                         }
+                        .accessibilityLabel("Demo Patient")
+                        .accessibilityHint("Sign in as a demo patient user for testing")
 
                         // Demo Therapist
                         Button(action: {
@@ -191,6 +197,8 @@ struct AuthLandingView: View {
                             .foregroundColor(.purple)
                             .cornerRadius(8)
                         }
+                        .accessibilityLabel("Demo Therapist")
+                        .accessibilityHint("Sign in as a demo therapist user for testing")
                     }
                 }
 

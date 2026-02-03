@@ -281,7 +281,7 @@ class VideoPlayerController: ObservableObject {
 
         // Observe player status
         statusObserver = playerItem.observe(\.status) { [weak self] item, _ in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 switch item.status {
                 case .readyToPlay:
                     self?.error = nil

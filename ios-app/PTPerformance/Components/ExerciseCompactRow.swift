@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// BUILD 120: Enhanced workout execution component with quick-complete and inline editing
+/// Enhanced workout execution component with quick-complete and inline editing
 /// Replaces ExerciseRow with mobile-first inline editing UX
 struct ExerciseCompactRow: View {
     let exercise: Exercise

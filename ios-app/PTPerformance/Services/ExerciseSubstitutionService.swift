@@ -9,17 +9,46 @@
 import Foundation
 import Supabase
 
-/// Service for calling AI exercise substitution edge function
+/// Service for AI-powered exercise substitution recommendations
+///
+/// Calls the `ai-exercise-substitution` edge function to generate intelligent
+/// exercise alternatives based on equipment availability, patient readiness,
+/// and intensity preferences. Also handles applying approved substitutions.
+///
+/// ## Usage Example
+/// ```swift
+/// let service = ExerciseSubstitutionService()
+///
+/// // Get substitution suggestions
+/// let subs = try await service.getSubstitutions(
+///     patientId: patientId,
+///     sessionId: sessionId,
+///     scheduledDate: "2025-01-15",
+///     equipmentAvailable: ["dumbbells", "bench"]
+/// )
+///
+/// // Review and apply if approved
+/// if !subs.isEmpty {
+///     try await service.applySubstitution()
+/// }
+/// ```
 @MainActor
 class ExerciseSubstitutionService: ObservableObject {
     nonisolated(unsafe) private let client: PTSupabaseClient
 
     // MARK: - Published State
 
+    /// Indicates whether a request is in progress
     @Published var isLoading = false
+
+    /// Array of suggested exercise substitutions
     @Published var substitutions: [ExerciseSubstitution] = []
+
+    /// Error message from the last failed request
     @Published var error: String?
-    @Published var currentRecommendationId: String?  // BUILD 183: Store for apply-substitution
+
+    /// The recommendation ID for the current substitution batch (used when applying)
+    @Published var currentRecommendationId: String?
 
     // MARK: - Initialization
 
@@ -29,7 +58,23 @@ class ExerciseSubstitutionService: ObservableObject {
 
     // MARK: - Get Substitutions
 
-    /// Get AI exercise substitution suggestions
+    /// Gets AI-powered exercise substitution suggestions
+    ///
+    /// Analyzes the scheduled workout session and generates intelligent
+    /// substitutions based on equipment availability, readiness scores,
+    /// and intensity preferences.
+    ///
+    /// - Parameters:
+    ///   - patientId: The patient's unique identifier
+    ///   - sessionId: The workout session ID to analyze
+    ///   - scheduledDate: The scheduled date in "yyyy-MM-dd" format
+    ///   - equipmentAvailable: Array of available equipment names
+    ///   - intensityPreference: Intensity level ("light", "standard", "intense")
+    ///   - readinessScore: Optional readiness score (0-100) to factor in
+    ///
+    /// - Returns: Array of `ExerciseSubstitution` suggestions, empty if none needed
+    ///
+    /// - Throws: `FunctionsError` if the edge function fails
     func getSubstitutions(
         patientId: UUID,
         sessionId: UUID,
@@ -57,8 +102,10 @@ class ExerciseSubstitutionService: ObservableObject {
             request["readiness_score"] = readiness
         }
 
+        #if DEBUG
         DebugLogger.shared.info("SUBSTITUTION", "Calling ai-exercise-substitution edge function")
         DebugLogger.shared.info("SUBSTITUTION", "Request: \(request)")
+        #endif
 
         do {
             // Call edge function
@@ -71,6 +118,7 @@ class ExerciseSubstitutionService: ObservableObject {
                 data
             }
 
+            #if DEBUG
             DebugLogger.shared.success("SUBSTITUTION", "Edge function returned successfully")
             DebugLogger.shared.info("SUBSTITUTION", "Response data size: \(responseDataRaw.count) bytes")
 
@@ -78,6 +126,7 @@ class ExerciseSubstitutionService: ObservableObject {
             if let responseString = String(data: responseDataRaw, encoding: .utf8) {
                 DebugLogger.shared.info("SUBSTITUTION", "Full raw response: \(responseString)")
             }
+            #endif
 
             // Decode response - edge function returns different structures
             let decoder = JSONDecoder()
@@ -85,16 +134,15 @@ class ExerciseSubstitutionService: ObservableObject {
 
             // First, check if this is a "no substitutions needed" response
             if let noSubstitutionsResponse = try? decoder.decode(NoSubstitutionsResponse.self, from: responseDataRaw) {
-                DebugLogger.shared.warning("SUBSTITUTION", "BUILD 176 DEBUG: Decoded as NoSubstitutionsResponse!")
+                #if DEBUG
                 DebugLogger.shared.success("SUBSTITUTION", noSubstitutionsResponse.message)
                 DebugLogger.shared.info("SUBSTITUTION", "Exercises checked: \(noSubstitutionsResponse.exercisesChecked)")
+                #endif
 
                 // No substitutions needed - return empty array
                 substitutions = []
                 return substitutions
             }
-
-            DebugLogger.shared.info("SUBSTITUTION", "BUILD 176 DEBUG: NoSubstitutionsResponse decode failed, trying SubstitutionResponse...")
 
             // Otherwise, decode as substitution response
             let responseData = try decoder.decode(SubstitutionResponse.self, from: responseDataRaw)
@@ -104,23 +152,14 @@ class ExerciseSubstitutionService: ObservableObject {
                 ExerciseSubstitution(from: item, confidence: 85)
             }
 
-            DebugLogger.shared.info("SUBSTITUTION", "BUILD 181 DEBUG: About to set substitutions array with \(mappedSubstitutions.count) items")
-
-            // BUILD 181 FIX: Explicitly notify SwiftUI before updating
-            // This ensures the view observes the change
-            objectWillChange.send()
             substitutions = mappedSubstitutions
-
-            // Also explicitly set isLoading to false here (before defer runs)
-            isLoading = false
-
-            // BUILD 183: Store recommendation ID for apply-substitution
             currentRecommendationId = responseData.recommendationId
 
-            DebugLogger.shared.success("SUBSTITUTION", "BUILD 181 DEBUG: substitutions.count is now \(substitutions.count), isLoading=\(isLoading)")
+            #if DEBUG
             DebugLogger.shared.success("SUBSTITUTION", "Found \(substitutions.count) substitutions")
-            DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId) (stored for apply)")
+            DebugLogger.shared.info("SUBSTITUTION", "Recommendation ID: \(responseData.recommendationId)")
             DebugLogger.shared.info("SUBSTITUTION", "Rationale: \(responseData.rationale)")
+            #endif
 
             return substitutions
 
@@ -128,33 +167,50 @@ class ExerciseSubstitutionService: ObservableObject {
             // Supabase edge function error - extract error body
             switch functionsError {
             case .httpError(let statusCode, let data):
+                #if DEBUG
                 DebugLogger.shared.error("SUBSTITUTION", "Edge function HTTP error: \(statusCode)")
                 if let errorString = String(data: data, encoding: .utf8) {
                     DebugLogger.shared.error("SUBSTITUTION", "Error body: \(errorString)")
                 } else {
                     DebugLogger.shared.error("SUBSTITUTION", "Error body (raw): \(data.count) bytes, unable to decode as UTF-8")
                 }
+                #endif
                 let errorMessage = "We couldn't get exercise alternatives right now. Please try again later."
                 self.error = errorMessage
                 throw functionsError
             case .relayError:
+                #if DEBUG
                 DebugLogger.shared.error("SUBSTITUTION", "Edge function relay error")
+                #endif
                 let errorMessage = "We couldn't connect to our servers. Please check your internet connection."
                 self.error = errorMessage
                 throw functionsError
             }
         } catch {
             let errorMessage = "We couldn't get exercise alternatives. Please check your connection and try again."
+            #if DEBUG
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
             DebugLogger.shared.error("SUBSTITUTION", "Error type: \(type(of: error))")
             DebugLogger.shared.error("SUBSTITUTION", "Full error: \(error)")
+            #endif
             self.error = errorMessage
             throw error
         }
     }
 
-    /// Apply all substitutions from the current recommendation (calls apply-substitution edge function)
-    /// BUILD 183 FIX: Edge function expects recommendation_id, not individual exercise IDs
+    /// Applies all substitutions from the current recommendation
+    ///
+    /// Calls the `apply-substitution` edge function to permanently apply the
+    /// suggested substitutions to the workout session. This updates the session
+    /// exercises in the database.
+    ///
+    /// - Throws: `NSError` if no recommendation ID is available (call `getSubstitutions` first),
+    ///           or if the edge function fails
+    ///
+    /// - Important: After calling this method, the session should be refreshed
+    ///              to display the updated exercises
+    ///
+    /// - Note: Clears `currentRecommendationId` and `substitutions` on success
     func applySubstitution() async throws {
         guard let recommendationId = currentRecommendationId else {
             throw NSError(domain: "ExerciseSubstitutionService", code: 1, userInfo: [
@@ -166,7 +222,9 @@ class ExerciseSubstitutionService: ObservableObject {
             "recommendation_id": recommendationId
         ]
 
+        #if DEBUG
         DebugLogger.shared.info("SUBSTITUTION", "Applying substitution with recommendation_id: \(recommendationId)")
+        #endif
 
         do {
             let bodyData = try JSONSerialization.data(withJSONObject: request)
@@ -178,7 +236,9 @@ class ExerciseSubstitutionService: ObservableObject {
                 data
             }
 
+            #if DEBUG
             DebugLogger.shared.success("SUBSTITUTION", "Substitution applied successfully")
+            #endif
 
             // Clear state after successful apply
             currentRecommendationId = nil
@@ -186,7 +246,9 @@ class ExerciseSubstitutionService: ObservableObject {
 
         } catch {
             let errorMessage = "We couldn't apply the exercise change. Please try again."
+            #if DEBUG
             DebugLogger.shared.error("SUBSTITUTION", errorMessage)
+            #endif
             throw error
         }
     }
@@ -318,7 +380,6 @@ struct ExerciseSubstitution: Identifiable {
     let equipment: [String]?
     let musclesTargeted: [String]?
 
-    // BUILD 184: Track which exercise this is a substitute FOR
     let originalExerciseId: UUID?
     let originalExerciseName: String?
 

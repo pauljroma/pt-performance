@@ -191,6 +191,7 @@ struct ProgramListCard: View {
             HStack(spacing: 4) {
                 Image(systemName: program.resolvedProgramType.icon)
                     .font(.caption2)
+                    .accessibilityHidden(true)
                 Text(program.resolvedProgramType.displayName)
                     .font(.caption2)
                     .fontWeight(.medium)
@@ -206,6 +207,7 @@ struct ProgramListCard: View {
                 Image(systemName: "person.circle.fill")
                     .font(.caption)
                     .foregroundColor(.blue)
+                    .accessibilityHidden(true)
                 Text(program.patientName)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -230,6 +232,9 @@ struct ProgramListCard: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(program.programName), \(program.resolvedProgramType.displayName) program for \(program.patientName), \(program.durationWeeks) weeks, \(program.targetLevel) level")
+        .accessibilityHint("Double tap to view program details, swipe left to edit")
     }
 }
 

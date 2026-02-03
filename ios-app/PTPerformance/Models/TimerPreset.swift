@@ -2,7 +2,7 @@ import Foundation
 
 /// Timer preset model - maps to database timer_presets table
 /// Represents curated timer configurations with metadata
-struct TimerPreset: Codable, Identifiable, Hashable, Equatable {
+struct TimerPreset: Codable, Identifiable, Hashable, Equatable, Sendable {
     let id: UUID
     let name: String
     let description: String?
@@ -24,15 +24,15 @@ struct TimerPreset: Codable, Identifiable, Hashable, Equatable {
     // MARK: - Template JSON Structure
 
     /// JSONB structure for template configuration
-    struct TemplateJSON: Codable, Hashable, Equatable {
+    struct TemplateJSON: Codable, Hashable, Equatable, Sendable {
         let type: TimerType
         let workSeconds: Int
         let restSeconds: Int
         let rounds: Int
         let cycles: Int
-        let totalDuration: Int?  // BUILD 136: Optional - some presets missing this field
-        let difficulty: Difficulty?  // BUILD 136: Optional - not always in database
-        let equipment: String?  // BUILD 136: Optional - not always specified
+        let totalDuration: Int?  // Optional - some presets missing this field
+        let difficulty: Difficulty?  // Optional - not always in database
+        let equipment: String?  // Optional - not always specified
 
         enum CodingKeys: String, CodingKey {
             case type
@@ -46,7 +46,7 @@ struct TimerPreset: Codable, Identifiable, Hashable, Equatable {
         }
 
         /// Difficulty levels for presets
-        enum Difficulty: String, Codable, CaseIterable, Hashable {
+        enum Difficulty: String, Codable, CaseIterable, Hashable, Sendable {
             case easy
             case moderate
             case hard

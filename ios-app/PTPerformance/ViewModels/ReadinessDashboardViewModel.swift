@@ -2,8 +2,6 @@ import Foundation
 import SwiftUI
 
 /// ViewModel for displaying readiness trends and statistics
-/// BUILD 116 - Agent 12: ReadinessDashboardViewModel
-///
 /// Manages state for the readiness dashboard with trend charts and statistics
 @MainActor
 class ReadinessDashboardViewModel: ObservableObject {

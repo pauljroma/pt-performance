@@ -916,7 +916,7 @@ final class DeloadPrescriptionFormattingTests: XCTestCase {
     func testDateRangeText_SpansCorrectDuration() {
         let startDate = Date()
         let durationDays = 7
-        let prescription = DeloadPrescription(
+        _ = DeloadPrescription(
             durationDays: durationDays,
             loadReductionPct: 0.30,
             volumeReductionPct: 0.40,

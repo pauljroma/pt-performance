@@ -196,6 +196,7 @@ struct TemplateRowView: View {
                         Image(systemName: "person.2.fill")
                             .font(.caption)
                             .foregroundColor(.blue)
+                            .accessibilityHidden(true)
                     }
                 }
 
@@ -221,6 +222,9 @@ struct TemplateRowView: View {
             .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(template.name)\(template.isShared ? ", shared template" : ""), \(template.phases.count) phases, \(template.totalDurationWeeks) weeks\(template.totalSessionCount > 0 ? ", \(template.totalSessionCount) sessions" : "")")
+        .accessibilityHint("Double tap to use this template, swipe for more options")
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
                 // Handled by onDelete modifier

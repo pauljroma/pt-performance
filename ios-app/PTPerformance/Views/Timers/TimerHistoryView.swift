@@ -344,20 +344,20 @@ struct TimerHistoryView: View {
             VStack(alignment: .leading, spacing: 8) {
                 // Template details
                 if let template = template {
-                    DetailRow(
+                    TimerDetailRow(
                         icon: "waveform.path.ecg",
                         label: "Template",
                         value: template.name
                     )
 
-                    DetailRow(
+                    TimerDetailRow(
                         icon: "speedometer",
                         label: "Work/Rest",
                         value: "\(template.workSeconds)s / \(template.restSeconds)s"
                     )
 
                     if let percentage = percentage {
-                        DetailRow(
+                        TimerDetailRow(
                             icon: "percent",
                             label: "Progress",
                             value: String(format: "%.0f%%", percentage)
@@ -367,7 +367,7 @@ struct TimerHistoryView: View {
 
                 // Paused time (if any)
                 if session.pausedSeconds > 0 {
-                    DetailRow(
+                    TimerDetailRow(
                         icon: "pause.circle",
                         label: "Paused",
                         value: session.formattedPausedTime
@@ -375,14 +375,14 @@ struct TimerHistoryView: View {
                 }
 
                 // Full timestamp
-                DetailRow(
+                TimerDetailRow(
                     icon: "calendar",
                     label: "Started",
                     value: viewModel.formattedDateTime(session.startedAt)
                 )
 
                 if let completed = session.completedAt {
-                    DetailRow(
+                    TimerDetailRow(
                         icon: "checkmark.circle",
                         label: "Completed",
                         value: viewModel.formattedDateTime(completed)
@@ -638,8 +638,8 @@ private struct StatCell: View {
     }
 }
 
-/// Detail row for expanded session view
-private struct DetailRow: View {
+/// Detail row for expanded timer session view
+private struct TimerDetailRow: View {
     let icon: String
     let label: String
     let value: String

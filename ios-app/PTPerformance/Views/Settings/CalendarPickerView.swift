@@ -116,6 +116,8 @@ struct CalendarPickerView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityLabel("Done")
+                    .accessibilityHint("Confirms calendar selection and closes")
                 }
 
                 if allowMultiple && !selectedCalendarIds.isEmpty {
@@ -123,6 +125,8 @@ struct CalendarPickerView: View {
                         Button("Clear") {
                             selectedCalendarIds = []
                         }
+                        .accessibilityLabel("Clear")
+                        .accessibilityHint("Deselects all calendars")
                     }
                 }
             }
@@ -148,6 +152,7 @@ struct CalendarPickerView: View {
         }) {
             HStack {
                 calendarIcon(for: calendar)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(calendar.title)
@@ -166,10 +171,14 @@ struct CalendarPickerView: View {
                     Image(systemName: "checkmark")
                         .foregroundStyle(.blue)
                         .fontWeight(.semibold)
+                        .accessibilityHidden(true)
                 }
             }
         }
         .disabled(!calendar.isWritable && !allowMultiple)
+        .accessibilityLabel(calendar.title + (calendar.isWritable ? "" : ", Read Only"))
+        .accessibilityValue(selectedCalendarId == calendar.id ? "Selected" : "Not selected")
+        .accessibilityHint("Select this calendar for workouts")
     }
 
     // MARK: - Multiple Selection Content
@@ -190,6 +199,7 @@ struct CalendarPickerView: View {
         }) {
             HStack {
                 calendarIcon(for: calendar)
+                    .accessibilityHidden(true)
 
                 Text(calendar.title)
                     .foregroundStyle(.primary)
@@ -199,12 +209,17 @@ struct CalendarPickerView: View {
                 if selectedCalendarIds.contains(calendar.id) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.blue)
+                        .accessibilityHidden(true)
                 } else {
                     Image(systemName: "circle")
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                 }
             }
         }
+        .accessibilityLabel(calendar.title)
+        .accessibilityValue(selectedCalendarIds.contains(calendar.id) ? "Selected" : "Not selected")
+        .accessibilityHint("Toggle selection for this calendar")
     }
 
     // MARK: - Helper Views
@@ -241,6 +256,7 @@ struct CalendarRowView: View {
                 Circle()
                     .fill(Color(cgColor: calendar.color))
                     .frame(width: 12, height: 12)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(calendar.title)
@@ -257,11 +273,14 @@ struct CalendarRowView: View {
                     Image(systemName: "checkmark")
                         .foregroundStyle(.blue)
                         .fontWeight(.semibold)
+                        .accessibilityHidden(true)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(calendar.title) from \(calendar.source)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 

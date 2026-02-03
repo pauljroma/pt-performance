@@ -96,6 +96,7 @@ struct CalendarSettingsView: View {
                 Image(systemName: permissionIcon)
                     .foregroundStyle(permissionColor)
                     .font(.title2)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(permissionTitle)
@@ -111,6 +112,7 @@ struct CalendarSettingsView: View {
                     Button(action: requestCalendarAccess) {
                         if isRequestingAccess {
                             ProgressView()
+                                .accessibilityHidden(true)
                         } else {
                             Text("Enable")
                                 .font(.subheadline.weight(.semibold))
@@ -118,9 +120,13 @@ struct CalendarSettingsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(isRequestingAccess)
+                    .accessibilityLabel(isRequestingAccess ? "Requesting calendar access" : "Enable Calendar Access")
+                    .accessibilityHint("Requests permission to access your calendars")
                 }
             }
             .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(permissionTitle). \(permissionSubtitle)")
         } header: {
             Text("Calendar Access")
         } footer: {
@@ -151,7 +157,13 @@ struct CalendarSettingsView: View {
     private var syncSettingsSection: some View {
         Section {
             Toggle("Sync Workouts", isOn: $calendarService.settings.syncWorkouts)
+                .accessibilityLabel("Sync Workouts")
+                .accessibilityValue(calendarService.settings.syncWorkouts ? "On" : "Off")
+                .accessibilityHint("Toggle to sync workouts to your calendar")
             Toggle("Include Rest Days", isOn: $calendarService.settings.syncRestDays)
+                .accessibilityLabel("Include Rest Days")
+                .accessibilityValue(calendarService.settings.syncRestDays ? "On" : "Off")
+                .accessibilityHint("Toggle to include rest days in calendar sync")
 
             Picker("Default Duration", selection: $calendarService.settings.defaultWorkoutDuration) {
                 Text("30 minutes").tag(30)
@@ -160,6 +172,8 @@ struct CalendarSettingsView: View {
                 Text("90 minutes").tag(90)
                 Text("120 minutes").tag(120)
             }
+            .accessibilityLabel("Default Duration")
+            .accessibilityValue("\(calendarService.settings.defaultWorkoutDuration) minutes")
         } header: {
             Text("Sync Settings")
         } footer: {
@@ -186,8 +200,11 @@ struct CalendarSettingsView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityLabel("Target Calendar: \(targetCalendarName)")
+            .accessibilityHint("Opens calendar selection")
         } header: {
             Text("Calendar")
         } footer: {
@@ -247,11 +264,17 @@ struct CalendarSettingsView: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityLabel("Import Game Schedule: \(gameCalendarsSubtitle)")
+            .accessibilityHint("Opens calendar selection for game schedules")
 
             if !calendarService.settings.importGameCalendarIds.isEmpty {
                 Toggle("Auto-Adjust Training", isOn: $calendarService.settings.autoAdjustForGames)
+                    .accessibilityLabel("Auto-Adjust Training")
+                    .accessibilityValue(calendarService.settings.autoAdjustForGames ? "On" : "Off")
+                    .accessibilityHint("Toggle to automatically adjust training around game days")
             }
         } header: {
             Text("Game Schedule")
@@ -293,20 +316,26 @@ struct CalendarSettingsView: View {
                     if calendarService.isSyncing {
                         ProgressView()
                             .padding(.trailing, 8)
+                            .accessibilityHidden(true)
                     }
                     Text(calendarService.isSyncing ? "Syncing..." : "Sync Now")
                 }
             }
             .disabled(calendarService.isSyncing)
+            .accessibilityLabel(calendarService.isSyncing ? "Syncing calendar" : "Sync Now")
+            .accessibilityHint("Synchronizes workouts with your calendar")
 
             if let result = calendarService.lastSyncResult, result.hasErrors {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
                     Text("Some events failed to sync")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Warning: Some events failed to sync")
             }
         } header: {
             Text("Status")

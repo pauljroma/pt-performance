@@ -143,6 +143,7 @@ struct ExerciseHistorySheet: View {
 
             ForEach(viewModel.sessions) { session in
                 SessionHistoryRow(session: session, fallbackUnit: preferredWeightUnit)
+                    .id(session.id)
             }
 
             // Pagination: Load More button or loading indicator
@@ -208,6 +209,7 @@ private struct StatCard: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(highlight ? .yellow : .accentColor)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.title3)
@@ -221,6 +223,8 @@ private struct StatCard: View {
         .padding(.vertical, 12)
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -280,6 +284,9 @@ private struct Estimated1RMCard: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Estimated one rep max: \(formatWeight(estimated1RM))\(formula != nil ? ", \(formula!)" : "")")
+        .accessibilityCustomContent("Percentage breakdown", "90% is \(formatWeight(estimated1RM * 0.90)), 80% is \(formatWeight(estimated1RM * 0.80)), 70% is \(formatWeight(estimated1RM * 0.70)), 60% is \(formatWeight(estimated1RM * 0.60))")
     }
 
     private var percentageBreakdown: [(label: String, percentage: Double)] {
@@ -342,12 +349,32 @@ private struct SessionHistoryRow: View {
                 Image(systemName: "trophy.fill")
                     .foregroundColor(.yellow)
                     .font(.title3)
+                    .accessibilityHidden(true)
             }
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .adaptiveShadow(Shadow.subtle)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(sessionAccessibilityLabel)
+    }
+
+    private var sessionAccessibilityLabel: String {
+        var label = "Session on \(session.date.formatted(date: .abbreviated, time: .omitted))"
+        if let sets = session.sets {
+            label += ", \(sets) sets"
+        }
+        if let reps = session.reps {
+            label += ", \(reps) reps"
+        }
+        if let weight = session.weight, weight > 0 {
+            label += " at \(formatWeight(weight, unit: session.loadUnit))"
+        }
+        if session.isPersonalRecord {
+            label += ", personal record"
+        }
+        return label
     }
 
     private func formatWeight(_ weight: Double, unit: String?) -> String {

@@ -13,7 +13,7 @@ struct FloatingActionButton: View {
     @Environment(\.colorScheme) private var colorScheme
     // MARK: - Callbacks
 
-    let onAddToToday: (() -> Void)?  // BUILD 259: Made optional
+    let onAddToToday: (() -> Void)?
     let onNewWorkout: () -> Void
     let onFromLibrary: () -> Void
 
@@ -72,7 +72,7 @@ struct FloatingActionButton: View {
                         removal: .opacity
                     ))
 
-                    // BUILD 259: Only show "Add to Today" if callback is provided
+                    // Only show "Add to Today" if callback is provided
                     if let addToToday = onAddToToday {
                         menuItem(
                             title: "Add to Today",

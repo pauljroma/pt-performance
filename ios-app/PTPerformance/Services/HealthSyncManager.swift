@@ -52,13 +52,13 @@ class HealthSyncManager: ObservableObject {
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: HealthSyncManager.syncTaskIdentifier,
             using: nil
-        ) { task in
+        ) { [weak self] task in
             guard let refreshTask = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
                 return
             }
             Task { @MainActor in
-                await self.handleBackgroundSync(task: refreshTask)
+                await self?.handleBackgroundSync(task: refreshTask)
             }
         }
 
@@ -66,13 +66,13 @@ class HealthSyncManager: ObservableObject {
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: HealthSyncManager.processingTaskIdentifier,
             using: nil
-        ) { task in
+        ) { [weak self] task in
             guard let processingTask = task as? BGProcessingTask else {
                 task.setTaskCompleted(success: false)
                 return
             }
             Task { @MainActor in
-                await self.handleBackgroundProcessing(task: processingTask)
+                await self?.handleBackgroundProcessing(task: processingTask)
             }
         }
 
@@ -130,9 +130,9 @@ class HealthSyncManager: ObservableObject {
         scheduleBackgroundSync()
 
         // Set up expiration handler
-        task.expirationHandler = {
-            Task { @MainActor in
-                self.isSyncing = false
+        task.expirationHandler = { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.isSyncing = false
                 print("[HealthSyncManager] Background sync expired")
             }
         }
@@ -165,9 +165,9 @@ class HealthSyncManager: ObservableObject {
     private func handleBackgroundProcessing(task: BGProcessingTask) async {
         print("[HealthSyncManager] Starting background processing")
 
-        task.expirationHandler = {
-            Task { @MainActor in
-                self.isSyncing = false
+        task.expirationHandler = { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.isSyncing = false
                 print("[HealthSyncManager] Background processing expired")
             }
         }

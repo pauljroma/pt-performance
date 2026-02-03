@@ -86,7 +86,7 @@ final class OnboardingFlowTests: BaseUITest {
         onboardingPage.assertIsDismissed()
 
         // AND: Should navigate to auth view or dashboard
-        let authView = app.buttons["Patient Login"]
+        let authView = app.buttons["Demo Patient"]
         let dashboard = app.staticTexts["Today's Session"]
 
         let navigatedToExpectedScreen = TestHelpers.waitForElement(authView, timeout: 3) ||
@@ -122,7 +122,7 @@ final class OnboardingFlowTests: BaseUITest {
         onboardingPage.assertIsDismissed()
 
         // AND: Should navigate to expected screen
-        let authOrDashboard = app.buttons["Patient Login"].exists ||
+        let authOrDashboard = app.buttons["Demo Patient"].exists ||
                              app.staticTexts["Today's Session"].exists
 
         XCTAssertTrue(authOrDashboard, "Should show auth or dashboard after skip")
@@ -181,7 +181,7 @@ final class OnboardingFlowTests: BaseUITest {
         onboardingPage.assertDoesNotAppear()
 
         // AND: Auth view should be displayed
-        let authView = app.buttons["Patient Login"]
+        let authView = app.buttons["Demo Patient"]
         TestHelpers.assertExists(
             authView,
             named: "Auth View on subsequent launch",
@@ -302,7 +302,7 @@ final class OnboardingFlowTests: BaseUITest {
             let startPoint = coordinate.withOffset(CGVector(dx: 100, dy: 0))
             let endPoint = coordinate.withOffset(CGVector(dx: -100, dy: 0))
             startPoint.press(forDuration: 0.05, thenDragTo: endPoint)
-            sleep(UInt32(0.5)) // Shorter wait
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5)) // Shorter wait
         }
 
         // THEN: Should still land on a valid page
@@ -395,7 +395,7 @@ final class OnboardingFlowTests: BaseUITest {
         let loginPage = LoginPage(app: app)
 
         // Wait for login page to appear
-        if loginPage.patientLoginButton.waitForExistence(timeout: 5) {
+        if loginPage.demoPatientButton.waitForExistence(timeout: 5) {
             loginPage.loginAsDemoPatient()
 
             // Wait for login to complete
@@ -422,8 +422,8 @@ final class OnboardingFlowTests: BaseUITest {
         // THEN: Should be able to access login screen
         let loginPage = LoginPage(app: app)
 
-        let loginScreenAppears = loginPage.patientLoginButton.waitForExistence(timeout: 5) ||
-                                loginPage.therapistLoginButton.waitForExistence(timeout: 5)
+        let loginScreenAppears = loginPage.demoPatientButton.waitForExistence(timeout: 5) ||
+                                loginPage.demoTherapistButton.waitForExistence(timeout: 5)
 
         XCTAssertTrue(
             loginScreenAppears,
@@ -463,7 +463,7 @@ final class OnboardingFlowTests: BaseUITest {
             onboardingPage.swipeToNextPage()
 
             // Wait for new page to appear
-            sleep(1) // Allow animation to complete
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 1)) // Allow animation to complete
 
             let transitionTime = Date().timeIntervalSince(startTime)
 

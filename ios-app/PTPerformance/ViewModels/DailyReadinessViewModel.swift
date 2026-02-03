@@ -1,18 +1,149 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Constants
+
+private enum DailyReadinessDefaults {
+    static let sleepHours: Double = 7.0
+    static let sleepQuality: Int = 3
+    static let subjectiveReadiness: Int = 3
+    static let armSorenessSeverity: Int = 1
+}
+
+private enum DailyReadinessLimits {
+    static let minSleepHours: Double = 3.0
+    static let maxSleepHours: Double = 12.0
+    static let minQualityRating: Int = 1
+    static let maxQualityRating: Int = 5
+    static let minSeverity: Int = 1
+    static let maxSeverity: Int = 3
+}
+
 /// ViewModel for Daily Readiness Check-in UI
 /// Manages state and live preview of readiness band calculation
+///
+/// BUILD 116 - Migrated form state from view for better testability
+/// Responsibilities:
+/// - Form input state management (sleep, soreness, readiness, pain)
+/// - Live preview calculation
+/// - Form validation
+/// - Submission to ReadinessService
+/// - Loading/error/success states
 @MainActor
 class DailyReadinessViewModel: ObservableObject {
+    // MARK: - Form Input State
+
+    @Published var sleepHours: Double = DailyReadinessDefaults.sleepHours
+    @Published var sleepQuality: Int = DailyReadinessDefaults.sleepQuality
+    @Published var subjectiveReadiness: Int = DailyReadinessDefaults.subjectiveReadiness
+    @Published var armSoreness: Bool = false
+    @Published var armSorenessSeverity: Int = DailyReadinessDefaults.armSorenessSeverity
+    @Published var jointPain: Set<JointPainLocation> = []
+    @Published var painNotes: String = ""
+
+    // MARK: - UI State
+
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var readinessPreview: ReadinessPreview?
+    @Published var showSuccess = false
+    @Published var hasSubmittedToday = false
+
+    // MARK: - Dependencies
 
     private let readinessService: ReadinessService
 
+    // MARK: - Computed Properties
+
+    /// Whether form inputs are valid
+    var isValid: Bool {
+        sleepHours >= DailyReadinessLimits.minSleepHours &&
+        sleepHours <= DailyReadinessLimits.maxSleepHours &&
+        (DailyReadinessLimits.minQualityRating...DailyReadinessLimits.maxQualityRating).contains(sleepQuality) &&
+        (DailyReadinessLimits.minQualityRating...DailyReadinessLimits.maxQualityRating).contains(subjectiveReadiness)
+    }
+
+    /// Whether form can be submitted
+    var canSubmit: Bool {
+        isValid && !isLoading
+    }
+
+    /// Formatted sleep hours display
+    var sleepHoursLabel: String {
+        String(format: "%.1f hours", sleepHours)
+    }
+
+    /// Get color for readiness score display
+    func scoreColor(_ score: Double) -> Color {
+        if score >= 85 {
+            return .green
+        } else if score >= 70 {
+            return .yellow
+        } else if score >= 50 {
+            return .orange
+        } else {
+            return .red
+        }
+    }
+
+    // MARK: - Initialization
+
     init(readinessService: ReadinessService = ReadinessService()) {
         self.readinessService = readinessService
+    }
+
+    // MARK: - Form Actions
+
+    /// Toggle joint pain location
+    func toggleJointPain(_ location: JointPainLocation) {
+        if jointPain.contains(location) {
+            jointPain.remove(location)
+        } else {
+            jointPain.insert(location)
+        }
+        updatePreviewFromInputs()
+    }
+
+    /// Reset form to default values
+    func resetForm() {
+        sleepHours = DailyReadinessDefaults.sleepHours
+        sleepQuality = DailyReadinessDefaults.sleepQuality
+        subjectiveReadiness = DailyReadinessDefaults.subjectiveReadiness
+        armSoreness = false
+        armSorenessSeverity = DailyReadinessDefaults.armSorenessSeverity
+        jointPain = []
+        painNotes = ""
+        showSuccess = false
+        errorMessage = nil
+    }
+
+    /// Update preview based on current form inputs
+    func updatePreviewFromInputs() {
+        updatePreview(
+            sleepHours: sleepHours,
+            sleepQuality: sleepQuality,
+            subjectiveReadiness: subjectiveReadiness,
+            armSoreness: armSoreness,
+            armSorenessSeverity: armSorenessSeverity,
+            jointPain: Array(jointPain)
+        )
+    }
+
+    /// Submit readiness using current form values
+    func submitReadinessFromForm() async {
+        await submitReadiness(
+            sleepHours: sleepHours,
+            sleepQuality: sleepQuality,
+            subjectiveReadiness: subjectiveReadiness,
+            armSoreness: armSoreness,
+            armSorenessSeverity: armSoreness ? armSorenessSeverity : nil,
+            jointPain: Array(jointPain),
+            painNotes: painNotes.isEmpty ? nil : painNotes
+        )
+
+        if errorMessage == nil {
+            showSuccess = true
+        }
     }
 
     /// Update live preview of readiness band based on current inputs
@@ -120,7 +251,13 @@ class DailyReadinessViewModel: ObservableObject {
     /// Fetch today's readiness check-in if it exists
     func fetchTodayReadiness() async {
         guard let patientIdString = PTSupabaseClient.shared.userId,
-              let patientId = UUID(uuidString: patientIdString) else { return }
+              let patientId = UUID(uuidString: patientIdString) else {
+            errorMessage = "Please sign in to view your readiness check-in."
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
 
         do {
             if let readiness = try await readinessService.getTodayReadiness(for: patientId) {
@@ -130,9 +267,16 @@ class DailyReadinessViewModel: ObservableObject {
                     score: readiness.readinessScore
                 )
             }
+            // nil result means no check-in yet today - this is expected, not an error
         } catch {
-            // Silently fail - it's OK if no check-in exists yet today
-            errorMessage = nil
+            // Actual error occurred (network failure, etc.)
+            if error.localizedDescription.contains("network") || error.localizedDescription.contains("connection") {
+                errorMessage = "Couldn't load your readiness data. Please check your connection."
+            } else {
+                errorMessage = "Couldn't load your readiness data. Please try again."
+            }
         }
+
+        isLoading = false
     }
 }

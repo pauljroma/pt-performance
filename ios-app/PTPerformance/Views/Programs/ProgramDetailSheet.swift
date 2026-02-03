@@ -36,6 +36,7 @@ struct ProgramDetailSheet: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 200)
                     .clipped()
+                    .accessibilityHidden(true)
 
                     // MARK: - Header
                     VStack(alignment: .leading, spacing: 8) {
@@ -211,8 +212,10 @@ struct ProgramDetailSheet: View {
                             if isEnrolling {
                                 ProgressView()
                                     .tint(.white)
+                                    .accessibilityHidden(true)
                             } else {
                                 Image(systemName: "play.circle.fill")
+                                    .accessibilityHidden(true)
                                 Text("Start This Program")
                                     .fontWeight(.semibold)
                             }
@@ -230,6 +233,8 @@ struct ProgramDetailSheet: View {
                         .cornerRadius(14)
                     }
                     .disabled(isEnrolling)
+                    .accessibilityLabel(isEnrolling ? "Enrolling in program" : "Start \(program.title)")
+                    .accessibilityHint(isEnrolling ? "Please wait" : "Enrolls you in this program and adds workouts to your schedule")
                     .padding()
                     .background(.ultraThinMaterial)
                 }
@@ -317,6 +322,7 @@ private struct InfoPill: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption)
+                .accessibilityHidden(true)
             Text(text)
                 .font(.caption)
                 .fontWeight(.medium)
@@ -326,6 +332,8 @@ private struct InfoPill: View {
         .background(color.opacity(0.15))
         .foregroundColor(color)
         .cornerRadius(20)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text)
     }
 }
 
@@ -337,6 +345,7 @@ private struct EquipmentItem: View {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
                 .font(.caption)
+                .accessibilityHidden(true)
 
             Text(name)
                 .font(.subheadline)
@@ -347,6 +356,8 @@ private struct EquipmentItem: View {
         .padding(10)
         .background(Color(.systemGray6))
         .cornerRadius(8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(name), required equipment")
     }
 }
 
@@ -379,6 +390,7 @@ private struct PhasePreviewCard: View {
                         Circle()
                             .fill(phaseColor)
                     )
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(phase.phaseName)
@@ -416,6 +428,8 @@ private struct PhasePreviewCard: View {
         .padding(12)
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Phase \(phase.phaseNumber): \(phase.phaseName), \(phase.formattedWeekRange), \(phase.workoutCount) \(phase.workoutCount == 1 ? "workout" : "workouts")")
     }
 
     /// Color based on phase number for visual variety

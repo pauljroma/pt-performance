@@ -64,11 +64,11 @@ struct WeeklySummaryView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Weekly Summary")
+            .navigationTitle(LocalizedStrings.NavigationTitles.weeklySummary)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(LocalizedStrings.Common.done) {
                         dismiss()
                     }
                 }
@@ -86,8 +86,8 @@ struct WeeklySummaryView: View {
 
     private var weekSelector: some View {
         Picker("Week", selection: $selectedWeek) {
-            Text("This Week").tag(0)
-            Text("Last Week").tag(1)
+            Text(LocalizedStrings.TimePeriods.thisWeek).tag(0)
+            Text(LocalizedStrings.TimePeriods.lastWeek).tag(1)
         }
         .pickerStyle(.segmented)
         .onChange(of: selectedWeek) { _, newValue in
@@ -106,6 +106,7 @@ struct WeeklySummaryView: View {
                 Image(systemName: summary.performanceCategory.emoji)
                     .font(.system(size: 24))
                     .foregroundColor(summary.performanceCategory.color)
+                    .accessibilityHidden(true)
 
                 Text(summary.performanceCategory.displayName)
                     .font(.title2.bold())
@@ -123,6 +124,8 @@ struct WeeklySummaryView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(summary.performanceCategory.color.opacity(0.1))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Weekly performance: \(summary.performanceCategory.displayName), \(summary.dateRangeString)")
     }
 
     // MARK: - Metrics Grid
@@ -191,6 +194,7 @@ struct WeeklySummaryView: View {
                 Image(systemName: icon)
                     .font(.system(size: 14))
                     .foregroundColor(color)
+                    .accessibilityHidden(true)
 
                 Text(title)
                     .font(.caption)
@@ -214,6 +218,8 @@ struct WeeklySummaryView: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.secondarySystemBackground))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 
     // MARK: - Wins Section
@@ -223,8 +229,10 @@ struct WeeklySummaryView: View {
             HStack {
                 Image(systemName: "trophy.fill")
                     .foregroundColor(.yellow)
-                Text("Wins This Week")
+                    .accessibilityHidden(true)
+                Text(LocalizedStrings.SectionHeaders.winsThisWeek)
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
             }
 
             VStack(spacing: 8) {
@@ -233,6 +241,7 @@ struct WeeklySummaryView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                             .font(.system(size: 20))
+                            .accessibilityHidden(true)
 
                         Text(win)
                             .font(.subheadline)
@@ -246,6 +255,8 @@ struct WeeklySummaryView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.green.opacity(0.1))
                     )
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Win: \(win)")
                 }
             }
         }
@@ -259,8 +270,10 @@ struct WeeklySummaryView: View {
             HStack {
                 Image(systemName: "arrow.up.circle.fill")
                     .foregroundColor(.blue)
-                Text("Focus Areas")
+                    .accessibilityHidden(true)
+                Text(LocalizedStrings.SectionHeaders.focusAreas)
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
             }
 
             VStack(spacing: 8) {
@@ -269,6 +282,7 @@ struct WeeklySummaryView: View {
                         Image(systemName: "target")
                             .foregroundColor(.blue)
                             .font(.system(size: 18))
+                            .accessibilityHidden(true)
 
                         Text(area)
                             .font(.subheadline)
@@ -282,6 +296,8 @@ struct WeeklySummaryView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.blue.opacity(0.1))
                     )
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Focus area: \(area)")
                 }
             }
         }
@@ -295,7 +311,7 @@ struct WeeklySummaryView: View {
             HStack {
                 Image(systemName: "bell.fill")
                     .foregroundColor(.purple)
-                Text("Weekly Notifications")
+                Text(LocalizedStrings.SectionHeaders.weeklyNotifications)
                     .font(.headline)
             }
 
@@ -304,7 +320,7 @@ struct WeeklySummaryView: View {
             } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.preferences?.notificationEnabled == true ? "Enabled" : "Disabled")
+                        Text(viewModel.preferences?.notificationEnabled == true ? LocalizedStrings.Status.enabled : LocalizedStrings.Status.disabled)
                             .font(.subheadline.bold())
                             .foregroundColor(.primary)
 
@@ -339,7 +355,7 @@ struct WeeklySummaryView: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundColor(.blue)
-                Text("View History")
+                Text(LocalizedStrings.Common.viewHistory)
                     .font(.headline)
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -360,7 +376,7 @@ struct WeeklySummaryView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading your week...")
+            Text(LocalizedStrings.LoadingStates.loadingYourWeek)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -376,7 +392,7 @@ struct WeeklySummaryView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.orange)
 
-            Text("Couldn't Load Summary")
+            Text(LocalizedStrings.ErrorStates.couldntLoadSummary)
                 .font(.headline)
 
             Text(error.localizedDescription)
@@ -384,7 +400,7 @@ struct WeeklySummaryView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button("Try Again") {
+            Button(LocalizedStrings.ErrorStates.tryAgain) {
                 Task {
                     await viewModel.refresh()
                 }
@@ -402,10 +418,10 @@ struct WeeklySummaryView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.blue)
 
-            Text("No Data Yet")
+            Text(LocalizedStrings.EmptyStates.noDataYet)
                 .font(.headline)
 
-            Text("Complete some workouts to see your weekly summary")
+            Text(LocalizedStrings.EmptyStates.completeWorkoutsToSee)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

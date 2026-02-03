@@ -1,12 +1,12 @@
 import Foundation
 import SwiftUI
 
-// MARK: - BUILD 219: Unified Workout History Item
+// MARK: - Unified Workout History Item
 
 /// Represents either a prescribed session or manual workout in history
 enum WorkoutHistoryItem: Identifiable {
     case prescribed(SessionSummary)
-    case manual(AnalyticsService.ManualWorkoutSummary)
+    case manual(ManualWorkoutSummary)
 
     var id: String {
         switch self {
@@ -92,7 +92,7 @@ class HistoryViewModel: ObservableObject {
     @Published var painTrend: [PainDataPoint] = []
     @Published var adherence: AdherenceData?
     @Published var recentSessions: [SessionSummary] = []
-    @Published var manualWorkouts: [AnalyticsService.ManualWorkoutSummary] = []
+    @Published var manualWorkouts: [ManualWorkoutSummary] = []
     @Published var summaryStats: SummaryStats?
 
     @Published var isLoading = false

@@ -20,6 +20,7 @@ struct HealthKitSettingsView: View {
                     Image(systemName: healthKitService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .foregroundColor(healthKitService.isAuthorized ? .green : .red)
                         .font(.title2)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(healthKitService.isAuthorized ? "Connected" : "Not Connected")
                             .font(.headline)
@@ -32,6 +33,8 @@ struct HealthKitSettingsView: View {
                     Spacer()
                 }
                 .padding(.vertical, 4)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(healthKitService.isAuthorized ? "Connected. Bidirectional sync enabled" : "Not connected. Connect to sync HRV, sleep, and heart rate")
 
                 if !healthKitService.isAuthorized {
                     Button {
@@ -50,6 +53,8 @@ struct HealthKitSettingsView: View {
                         .cornerRadius(10)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Connect Apple Health")
+                    .accessibilityHint("Requests access to sync data with Apple Health")
                 }
             } header: {
                 Text("Connection Status")
@@ -63,6 +68,7 @@ struct HealthKitSettingsView: View {
                         Image(systemName: "waveform.path.ecg")
                             .foregroundColor(.purple)
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                         Text("HRV (SDNN)")
                         Spacer()
                         if let hrv = healthKitService.todayHRV {
@@ -73,12 +79,15 @@ struct HealthKitSettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Heart Rate Variability: \(healthKitService.todayHRV != nil ? "\(Int(healthKitService.todayHRV!)) milliseconds" : "No data")")
 
                     // Resting Heart Rate
                     HStack {
                         Image(systemName: "heart.fill")
                             .foregroundColor(.red)
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                         Text("Resting HR")
                         Spacer()
                         if let hr = healthKitService.todayRestingHR {
@@ -89,12 +98,15 @@ struct HealthKitSettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Resting Heart Rate: \(healthKitService.todayRestingHR != nil ? "\(Int(healthKitService.todayRestingHR!)) beats per minute" : "No data")")
 
                     // Sleep
                     HStack {
                         Image(systemName: "bed.double.fill")
                             .foregroundColor(.indigo)
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                         Text("Sleep")
                         Spacer()
                         if let sleep = healthKitService.todaySleep {
@@ -105,23 +117,29 @@ struct HealthKitSettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Sleep: \(healthKitService.todaySleep != nil ? String(format: "%.1f hours", healthKitService.todaySleep!.totalHours) : "No data")")
 
                     // ACP-827: Exported Workouts
                     HStack {
                         Image(systemName: "arrow.up.circle.fill")
                             .foregroundColor(.green)
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                         Text("Workouts Exported")
                         Spacer()
                         Text("\(healthKitService.exportedWorkoutsCount)")
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Workouts Exported: \(healthKitService.exportedWorkoutsCount)")
 
                     // Last Sync
                     HStack {
                         Image(systemName: "arrow.clockwise")
                             .foregroundColor(.blue)
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                         Text("Last Synced")
                         Spacer()
                         if let lastSync = healthKitService.lastSyncDate {
@@ -132,6 +150,8 @@ struct HealthKitSettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Last Synced: \(healthKitService.lastSyncDate != nil ? "recently" : "Never")")
 
                     // Sync Button
                     Button {
@@ -144,6 +164,8 @@ struct HealthKitSettingsView: View {
                             Text("Sync Now")
                         }
                     }
+                    .accessibilityLabel("Sync Now")
+                    .accessibilityHint("Synchronizes health data with Apple Health")
                 } header: {
                     Text("Today's Health Data")
                 }
@@ -253,6 +275,7 @@ private struct DataTypeChip: View {
         HStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption2)
+                .accessibilityHidden(true)
             Text(text)
                 .font(.caption)
         }
@@ -260,6 +283,7 @@ private struct DataTypeChip: View {
         .padding(.vertical, 4)
         .background(Color(.systemGray5))
         .cornerRadius(8)
+        .accessibilityLabel(text)
     }
 }
 
@@ -275,6 +299,7 @@ private struct FeatureRow: View {
             Image(systemName: icon)
                 .foregroundColor(.blue)
                 .frame(width: 24)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline)
@@ -284,6 +309,8 @@ private struct FeatureRow: View {
                     .foregroundColor(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(description)")
     }
 }
 

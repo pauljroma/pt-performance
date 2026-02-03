@@ -2,8 +2,7 @@
 //  WorkoutPickerViewModel.swift
 //  PTPerformance
 //
-//  BUILD 327: Quick Pick Workout Finder
-//  BUILD 352: AI Quick Pick Mode
+//  Quick Pick Workout Finder with AI Quick Pick Mode
 //  Questionnaire-based workout recommendation system with AI-powered suggestions
 //
 
@@ -13,12 +12,12 @@ import SwiftUI
 @MainActor
 class WorkoutPickerViewModel: ObservableObject {
 
-    // MARK: - Mode State (BUILD 352)
+    // MARK: - Mode State
 
     /// AI mode uses intelligent recommendations; Shuffle mode uses random selection
     @Published var isAIMode: Bool = true
 
-    // MARK: - AI State (BUILD 352)
+    // MARK: - AI State
 
     @Published var aiRecommendations: [AIWorkoutRecommendation] = []
     @Published var aiReasoning: String?
@@ -221,7 +220,7 @@ class WorkoutPickerViewModel: ObservableObject {
 
     // MARK: - Filtering Logic
 
-    /// BUILD 346: Enhanced filtering to check category, tags, block types, and content keywords
+    /// Enhanced filtering to check category, tags, block types, and content keywords
     private func matchesAnyFilter(_ template: SystemWorkoutTemplate) -> Bool {
         let templateCategory = template.category?.lowercased() ?? ""
         let templateTags = Set((template.tags ?? []).map { $0.lowercased() })
@@ -270,7 +269,7 @@ class WorkoutPickerViewModel: ObservableObject {
                 filter.contentKeywords.contains(where: { exerciseName.contains($0) })
             }.count
 
-            if exerciseNames.count > 0 && matchingExerciseCount >= max(1, exerciseNames.count / 3) {
+            if !exerciseNames.isEmpty && matchingExerciseCount >= max(1, exerciseNames.count / 3) {
                 return true
             }
         }
@@ -339,7 +338,7 @@ class WorkoutPickerViewModel: ObservableObject {
         includeMobility = false
     }
 
-    // MARK: - AI Mode (BUILD 352)
+    // MARK: - AI Mode
 
     /// Toggle between AI and Shuffle modes
     func toggleMode() {

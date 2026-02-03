@@ -2,7 +2,7 @@ import Foundation
 
 /// Timer type enum - maps to database timer_type enum
 /// Represents different interval training protocols
-enum TimerType: String, Codable, CaseIterable {
+enum TimerType: String, Codable, CaseIterable, Sendable {
     case tabata
     case emom
     case amrap

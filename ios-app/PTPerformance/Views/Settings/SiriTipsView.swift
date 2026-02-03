@@ -41,6 +41,8 @@ struct SiriTipsView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityLabel("Done")
+                    .accessibilityHint("Closes the Siri Shortcuts view")
                 }
             }
         }
@@ -57,6 +59,7 @@ struct SiriTipsView: View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
+                .accessibilityHidden(true)
 
             Text("Hey Siri, let's train!")
                 .font(.title2.bold())
@@ -68,6 +71,8 @@ struct SiriTipsView: View {
                 .padding(.horizontal)
         }
         .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Hey Siri, let's train! Control PT Performance with your voice. Use these phrases to start workouts, log exercises, and track your progress hands-free.")
     }
 
     // MARK: - Shortcut Cards
@@ -251,6 +256,7 @@ struct ShortcutCard: View {
                         .frame(width: 44, height: 44)
                         .background(iconColor)
                         .cornerRadius(10)
+                        .accessibilityHidden(true)
 
                     Text(title)
                         .font(.headline)
@@ -261,8 +267,12 @@ struct ShortcutCard: View {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(.secondary)
                         .animation(.easeInOut, value: isExpanded)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityLabel(title)
+            .accessibilityHint(isExpanded ? "Collapse to hide Siri phrases" : "Expand to see Siri phrases")
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
 
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {
@@ -310,6 +320,7 @@ struct SetupStepRow: View {
                 .frame(width: 24, height: 24)
                 .background(Color.blue)
                 .clipShape(Circle())
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -321,6 +332,8 @@ struct SetupStepRow: View {
 
             Spacer()
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Step \(number): \(title). \(description)")
     }
 }
 
@@ -334,11 +347,14 @@ struct TipRow: View {
                 .font(.body)
                 .foregroundColor(.blue)
                 .frame(width: 24)
+                .accessibilityHidden(true)
 
             Text(text)
                 .font(.subheadline)
                 .foregroundColor(.primary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text)
     }
 }
 
@@ -358,6 +374,8 @@ struct SiriTipsButton: View {
                 Text("Siri Shortcuts")
             }
         }
+        .accessibilityLabel("Siri Shortcuts")
+        .accessibilityHint("Opens a list of available Siri voice commands")
         .sheet(isPresented: $showingSiriTips) {
             SiriTipsView()
         }
@@ -382,6 +400,7 @@ struct CompactSiriTipCard: View {
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Use Siri Shortcuts")
@@ -397,12 +416,15 @@ struct CompactSiriTipCard: View {
 
                 Image(systemName: "chevron.right")
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Use Siri Shortcuts")
+        .accessibilityHint("Opens Siri voice command options. Example: Hey Siri, start my workout")
         .sheet(isPresented: $showingSiriTips) {
             SiriTipsView()
         }

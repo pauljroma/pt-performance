@@ -138,32 +138,26 @@ class BaseUITest: XCTestCase {
 
     // MARK: - Common Test Flows
 
-    /// Login as test patient
+    /// Login as test patient using demo account
     func loginAsDemoPatient() {
-        TestHelpers.performLogin(
-            in: app,
-            email: MockData.TestPatient.email,
-            password: MockData.TestPatient.password,
-            userType: "Patient"
-        )
+        // Use demo patient button (direct login, no credentials needed)
+        let demoPatientButton = app.buttons["Demo Patient"]
+        TestHelpers.safeTap(demoPatientButton, named: "Demo Patient Button")
 
         // Wait for patient dashboard
         let dashboard = app.staticTexts["Today's Session"]
-        TestHelpers.assertExists(dashboard, named: "Patient Dashboard")
+        TestHelpers.assertExists(dashboard, named: "Patient Dashboard", timeout: networkTimeout)
     }
 
-    /// Login as test therapist
+    /// Login as test therapist using demo account
     func loginAsDemoTherapist() {
-        TestHelpers.performLogin(
-            in: app,
-            email: MockData.TestTherapist.email,
-            password: MockData.TestTherapist.password,
-            userType: "Therapist"
-        )
+        // Use demo therapist button (direct login, no credentials needed)
+        let demoTherapistButton = app.buttons["Demo Therapist"]
+        TestHelpers.safeTap(demoTherapistButton, named: "Demo Therapist Button")
 
         // Wait for therapist dashboard
         let dashboard = app.staticTexts["Patients"]
-        TestHelpers.assertExists(dashboard, named: "Therapist Dashboard")
+        TestHelpers.assertExists(dashboard, named: "Therapist Dashboard", timeout: networkTimeout)
     }
 
     /// Logout from the app

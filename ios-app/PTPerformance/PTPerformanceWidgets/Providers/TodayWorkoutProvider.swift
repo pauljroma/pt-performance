@@ -13,23 +13,23 @@ struct TodayWorkoutProvider: TimelineProvider {
         TodayWorkoutEntry(date: Date(), workout: .placeholder)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (TodayWorkoutEntry) -> Void) {
+    func getSnapshot(in context: Context) async -> TodayWorkoutEntry {
         let entry = TodayWorkoutEntry(
             date: Date(),
             workout: SharedDataStore.shared.getWorkout() ?? .placeholder
         )
-        completion(entry)
+        return entry
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<TodayWorkoutEntry>) -> Void) {
+    func getTimeline(in context: Context) async -> Timeline<TodayWorkoutEntry> {
         let currentDate = Date()
         let workout = SharedDataStore.shared.getWorkout()
 
         let entry = TodayWorkoutEntry(date: currentDate, workout: workout)
 
         // Refresh every 15 minutes
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate)!
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: currentDate) ?? currentDate.addingTimeInterval(900)
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        return timeline
     }
 }

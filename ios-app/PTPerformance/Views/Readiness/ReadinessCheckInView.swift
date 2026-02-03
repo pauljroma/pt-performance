@@ -117,6 +117,8 @@ struct ReadinessCheckInView: View {
                         Button("Cancel") {
                             dismiss()
                         }
+                        .accessibilityLabel("Cancel check-in")
+                        .accessibilityHint("Closes check-in form without saving")
                     }
                 }
                 .disabled(viewModel.isLoading)
@@ -178,6 +180,8 @@ struct ReadinessCheckInView: View {
                             }
                         }
                         .disabled(isAutoFilling)
+                        .accessibilityLabel("Fill from Apple Watch")
+                        .accessibilityHint("Imports sleep and HRV data from your Apple Watch")
 
                         // Show today's HRV with trend indicator
                         if let hrv = healthKitService.todayHRV {
@@ -208,6 +212,8 @@ struct ReadinessCheckInView: View {
                     Button("Connect Apple Watch") {
                         showHealthKitPrompt = true
                     }
+                    .accessibilityLabel("Connect Apple Watch")
+                    .accessibilityHint("Opens Apple Health permissions to sync watch data")
                 }
             }
         } header: {
@@ -281,7 +287,9 @@ struct ReadinessCheckInView: View {
                         .font(.caption)
                 }
                 .tint(.blue)
+                .accessibilityLabel("Hours of sleep")
                 .accessibilityValue(viewModel.sleepHoursLabel)
+                .accessibilityHint("Adjust to set hours slept last night")
             }
             .padding(.vertical, 4)
         } header: {
@@ -339,7 +347,9 @@ struct ReadinessCheckInView: View {
                     }
                 }
                 .tint(viewModel.sorenessColor)
-                .accessibilityValue(viewModel.sorenessLevelLabel)
+                .accessibilityLabel("Muscle soreness level")
+                .accessibilityValue("\(viewModel.sorenessLevel) out of 10, \(viewModel.sorenessLevelLabel)")
+                .accessibilityHint("1 is no soreness, 10 is severe soreness")
             }
             .padding(.vertical, 4)
         } header: {
@@ -397,7 +407,9 @@ struct ReadinessCheckInView: View {
                     }
                 }
                 .tint(viewModel.energyColor)
-                .accessibilityValue(viewModel.energyLevelLabel)
+                .accessibilityLabel("Energy level")
+                .accessibilityValue("\(viewModel.energyLevel) out of 10, \(viewModel.energyLevelLabel)")
+                .accessibilityHint("1 is exhausted, 10 is fully energized")
             }
             .padding(.vertical, 4)
         } header: {
@@ -455,7 +467,9 @@ struct ReadinessCheckInView: View {
                     }
                 }
                 .tint(viewModel.stressColor)
-                .accessibilityValue(viewModel.stressLevelLabel)
+                .accessibilityLabel("Stress level")
+                .accessibilityValue("\(viewModel.stressLevel) out of 10, \(viewModel.stressLevelLabel)")
+                .accessibilityHint("1 is calm, 10 is extreme stress")
             }
             .padding(.vertical, 4)
         } header: {

@@ -17,14 +17,14 @@ struct EnrolledProgramsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             // Section Header
             HStack {
-                Text("My Programs")
+                Text(LocalizedStrings.SectionHeaders.myPrograms)
                     .font(.headline)
                     .foregroundColor(.primary)
 
                 Spacer()
 
                 if viewModel.activeEnrollmentCount > 0 {
-                    Text("\(viewModel.activeEnrollmentCount) active")
+                    Text("\(viewModel.activeEnrollmentCount) \(LocalizedStrings.Programs.active)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -56,7 +56,7 @@ struct EnrolledProgramsSection: View {
             Spacer()
             ProgressView()
                 .scaleEffect(0.8)
-            Text("Loading programs...")
+            Text(LocalizedStrings.LoadingStates.loadingPrograms)
                 .font(.caption)
                 .foregroundColor(.secondary)
             Spacer()
@@ -76,6 +76,7 @@ struct EnrolledProgramsSection: View {
                         progressPercentage: viewModel.progressPercentage(for: enrollment),
                         daysRemainingDisplay: viewModel.daysRemainingDisplay(for: enrollment)
                     )
+                    .id(enrollment.id)
                     .onTapGesture {
                         HapticFeedback.light()
                         selectedEnrollment = enrollment
@@ -209,7 +210,7 @@ struct EnrolledProgramDetailSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Program Details")
+            .navigationTitle(LocalizedStrings.Programs.programDetails)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -268,7 +269,7 @@ struct EnrolledProgramDetailSheet: View {
 
     private var progressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your Progress")
+            Text(LocalizedStrings.SectionHeaders.yourProgress)
                 .font(.headline)
 
             // Progress card
@@ -333,7 +334,7 @@ struct EnrolledProgramDetailSheet: View {
 
     private var workoutScheduleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Workout Schedule")
+            Text(LocalizedStrings.SectionHeaders.workoutSchedule)
                 .font(.headline)
 
             NavigationLink {
@@ -348,12 +349,12 @@ struct EnrolledProgramDetailSheet: View {
                         .cornerRadius(10)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("View Weekly Workouts")
+                        Text(LocalizedStrings.Programs.viewWeeklyWorkouts)
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
 
-                        Text("See your workout schedule by week")
+                        Text(LocalizedStrings.Programs.seeYourScheduleByWeek)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -375,7 +376,7 @@ struct EnrolledProgramDetailSheet: View {
 
     private var detailsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("About This Program")
+            Text(LocalizedStrings.SectionHeaders.aboutThisProgram)
                 .font(.headline)
 
             if let description = enrollment.program.description, !description.isEmpty {
@@ -419,7 +420,7 @@ struct EnrolledProgramDetailSheet: View {
 
     private var equipmentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Equipment Required")
+            Text(LocalizedStrings.SectionHeaders.equipmentRequired)
                 .font(.headline)
 
             LazyVGrid(columns: [
@@ -441,6 +442,7 @@ struct EnrolledProgramDetailSheet: View {
                     .padding(8)
                     .background(Color(.systemGray6))
                     .cornerRadius(6)
+                    .id(equipment)
                 }
             }
         }

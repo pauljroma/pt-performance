@@ -27,17 +27,55 @@ struct ChatMessage: Identifiable, Codable {
     }
 }
 
+/// Service for AI-powered chat interactions with athletes
+///
+/// Provides conversational AI assistance for workout-related questions,
+/// exercise guidance, and personalized recommendations. Messages are
+/// persisted to the database for conversation continuity.
+///
+/// - Note: Uses the `ai-chat-completion` edge function for AI responses
+///
+/// ## Usage Example
+/// ```swift
+/// let chatService = AIChatService.shared
+/// let response = try await chatService.sendMessage("How should I warm up?")
+/// print(response.content)
+/// ```
 class AIChatService: ObservableObject {
+
+    /// Shared singleton instance
     static let shared = AIChatService()
 
+    /// Array of messages in the current chat session
     @Published var messages: [ChatMessage] = []
+
+    /// Indicates whether a message is currently being processed
     @Published var isLoading: Bool = false
+
+    /// The unique identifier for the current chat session
     @Published var currentSessionId: UUID?
 
     private let supabase = PTSupabaseClient.shared
 
     // MARK: - Send Message
 
+    /// Sends a message to the AI assistant and receives a response
+    ///
+    /// This method calls the AI chat completion edge function, which processes
+    /// the message using Claude and returns a contextual response. Both the
+    /// user message and assistant response are added to the local messages array.
+    ///
+    /// - Parameter text: The message text to send to the AI assistant
+    ///
+    /// - Returns: The `ChatMessage` containing the AI assistant's response
+    ///
+    /// - Throws: `NSError` if the response is invalid or the request fails
+    ///
+    /// - Example:
+    ///   ```swift
+    ///   let response = try await chatService.sendMessage("What exercises help with shoulder mobility?")
+    ///   print(response.content) // AI's response about shoulder exercises
+    ///   ```
     func sendMessage(_ text: String) async throws -> ChatMessage {
         isLoading = true
         defer { isLoading = false }
@@ -103,6 +141,12 @@ class AIChatService: ObservableObject {
 
     // MARK: - Load History
 
+    /// Loads the chat history for the current athlete
+    ///
+    /// Fetches the most recent chat session and its messages from the database.
+    /// Updates the `currentSessionId` and `messages` properties with the loaded data.
+    ///
+    /// - Note: This method fails silently on error, logging the failure in debug builds
     func loadHistory() async {
         do {
             let athleteId = PTSupabaseClient.shared.userId.flatMap { UUID(uuidString: $0) } ?? UUID()
@@ -151,6 +195,11 @@ class AIChatService: ObservableObject {
 
     // MARK: - New Session
 
+    /// Starts a new chat session
+    ///
+    /// Clears the current session ID and all messages, allowing a fresh
+    /// conversation to begin. The next message sent will create a new
+    /// session in the database.
     func startNewSession() {
         currentSessionId = nil
         messages = []

@@ -176,7 +176,7 @@ struct PatientDashboardPage {
 
     /// Assert data loaded successfully (either exercises or empty state)
     func assertDataLoaded() {
-        let hasExercises = exerciseList.exists && exerciseList.cells.count > 0
+        let hasExercises = exerciseList.exists && !exerciseList.cells.isEmpty
         let hasEmptyState = emptyStateMessage.exists
 
         XCTAssertTrue(

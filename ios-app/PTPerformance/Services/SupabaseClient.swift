@@ -14,7 +14,30 @@ class PTSupabaseClient: ObservableObject {
     @Published var userId: String?
     @Published var isOffline = false
 
-    // BUILD 251: Shared flexible decoder for all Supabase queries
+    /// Indicates whether the client was initialized with a valid configuration
+    /// When false, all operations will fail gracefully
+    private(set) var isConfigurationValid = true
+
+    // MARK: - Shared Flexible Date Decoder
+
+    /// Shared decoder for all Supabase queries that handles multiple date formats.
+    ///
+    /// **Why flexible decoding is required:**
+    /// Supabase/PostgreSQL uses different column types for temporal data, each returning different formats:
+    /// - `TIMESTAMPTZ` columns return ISO8601 with fractional seconds: `2024-01-15T10:30:00.123456+00:00`
+    /// - `TIMESTAMP` columns return ISO8601 without timezone: `2024-01-15T10:30:00`
+    /// - `DATE` columns return simple date format: `2024-01-15`
+    /// - `TIME` columns return time only: `10:30:00`
+    ///
+    /// The meal_plans table uses DATE columns for start_date/end_date (calendar dates without time),
+    /// while created_at/updated_at use TIMESTAMPTZ (precise timestamps). This decoder handles both
+    /// seamlessly so model code doesn't need to worry about the underlying column types.
+    ///
+    /// **Usage:**
+    /// - This decoder is automatically configured in the SupabaseClient options for `.execute().value` calls
+    /// - For manual decoding with `.execute()`, use `PTSupabaseClient.flexibleDecoder`
+    ///
+    /// Flexible decoder with comprehensive documentation
     static let flexibleDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
@@ -37,6 +60,8 @@ class PTSupabaseClient: ObservableObject {
             // Try simple date format (yyyy-MM-dd for DATE columns)
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
+            dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
             if let date = dateFormatter.date(from: dateString) {
                 return date
             }
@@ -67,14 +92,20 @@ class PTSupabaseClient: ObservableObject {
         logger.log("Supabase URL: \(supabaseURL)")
         logger.log("Anon Key: \(supabaseAnonKey.prefix(20))...")
 
-        guard let url = URL(string: supabaseURL) else {
-            logger.log("Invalid Supabase URL: \(supabaseURL)", level: .error)
-            fatalError("Invalid Supabase URL: \(supabaseURL)")
+        // Validate URL; use a placeholder if invalid to prevent crash (client will be non-functional)
+        let url: URL
+        if let validUrl = URL(string: supabaseURL) {
+            url = validUrl
+        } else {
+            logger.log("Invalid Supabase URL: \(supabaseURL). Client will be non-functional.", level: .error)
+            isConfigurationValid = false
+            // Use a placeholder URL to allow initialization; all operations will fail gracefully
+            url = URL(string: "https://invalid.supabase.co")!
         }
 
-        // BUILD 251: Use flexible decoder for all database queries
+        // Use flexible decoder for all database queries
         // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
-        // BUILD 366: Added auth configuration to ensure JWT is included in all requests
+        // Auth configuration ensures JWT is included in all requests
         logger.log("Creating Supabase client with flexible decoder and auth config...")
         client = Supabase.SupabaseClient(
             supabaseURL: url,
@@ -96,7 +127,13 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Check for existing session (persisted auth)
+    /// Checks for an existing persisted authentication session
+    ///
+    /// Called automatically on initialization to restore any previously
+    /// authenticated session. If a valid session exists, updates
+    /// `currentSession`, `currentUser`, and fetches the user role.
+    ///
+    /// - Note: Fails silently if no session exists, logging in debug builds
     func checkSession() async {
         do {
             let session = try await client.auth.session
@@ -114,7 +151,17 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Sign in with email and password
+    /// Signs in a user with email and password credentials
+    ///
+    /// Authenticates against Supabase Auth and fetches the user's role from
+    /// the database. If no role is found, automatically registers the user
+    /// as a patient (handles edge cases from incomplete signups).
+    ///
+    /// - Parameters:
+    ///   - email: The user's email address
+    ///   - password: The user's password
+    ///
+    /// - Throws: Supabase authentication errors if credentials are invalid
     func signIn(email: String, password: String) async throws {
         let session = try await client.auth.signIn(email: email, password: password)
 
@@ -141,8 +188,16 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Fetch user role from database (patient or therapist)
-    /// Looks up by user_id first (exact match), then falls back to email for legacy records
+    /// Fetches the user role from the database (patient or therapist)
+    ///
+    /// Determines whether the authenticated user is a patient or therapist by
+    /// querying both tables. Prioritizes lookup by `user_id` (exact match to
+    /// Supabase auth user), then falls back to email lookup for legacy records.
+    ///
+    /// - Parameter userId: The Supabase auth user ID (UUID string)
+    ///
+    /// - Note: Updates `userRole` and `userId` published properties on success.
+    ///         Fails silently on error, logging in debug builds.
     func fetchUserRole(userId: String) async {
         // Get user email from auth session
         guard let userEmail = currentUser?.email else {
@@ -238,8 +293,21 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Sign up with email and password
-    /// BUILD 317: Fixed to handle both immediate session and email confirmation flows
+    /// Creates a new user account with email and password
+    ///
+    /// Registers a new user with Supabase Auth and creates the corresponding
+    /// patient record. Handles both immediate session flows (no email confirmation)
+    /// and email confirmation flows.
+    ///
+    /// - Parameters:
+    ///   - email: The user's email address
+    ///   - password: The user's password (minimum 6 characters)
+    ///   - fullName: The user's display name
+    ///
+    /// - Throws: Supabase authentication errors if registration fails
+    ///
+    /// - Note: New users are always registered as patients. Therapist accounts
+    ///         must be created through a separate administrative process.
     func signUp(email: String, password: String, fullName: String) async throws {
         let response = try await client.auth.signUp(email: email, password: password)
 
@@ -270,9 +338,21 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Sign in with Apple via Supabase
-    /// Note: Does NOT call fetchUserRole() — caller must handle role detection
-    /// after any registration step to avoid race conditions with new users.
+    /// Signs in a user using Apple Sign In credentials
+    ///
+    /// Authenticates with Supabase using the Apple ID token. Does NOT call
+    /// `fetchUserRole()` — the caller must handle role detection after any
+    /// registration step to avoid race conditions with new users.
+    ///
+    /// - Parameters:
+    ///   - idToken: The identity token from Apple Sign In
+    ///   - nonce: The cryptographic nonce used during the sign-in request
+    ///
+    /// - Throws: Supabase authentication errors if sign-in fails
+    ///
+    /// - Important: After calling this method, the caller should check if
+    ///              the user needs to be registered as a patient before
+    ///              calling `fetchUserRole()`.
     func signInWithApple(idToken: String, nonce: String) async throws {
         let session = try await client.auth.signInWithIdToken(
             credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
@@ -283,7 +363,19 @@ class PTSupabaseClient: ObservableObject {
         }
     }
 
-    /// Register patient via edge function
+    /// Registers a new patient record via the edge function
+    ///
+    /// Creates a patient record in the database linked to the authenticated user.
+    /// This is called automatically during sign-up or when a user signs in without
+    /// an existing role.
+    ///
+    /// - Parameters:
+    ///   - userId: The Supabase auth user ID
+    ///   - email: The user's email address
+    ///   - fullName: The user's display name
+    ///   - authProvider: The authentication provider ("email" or "apple")
+    ///
+    /// - Throws: Edge function errors if registration fails
     func registerPatient(userId: String, email: String, fullName: String, authProvider: String) async throws {
         let body: [String: String] = [
             "userId": userId, "email": email, "fullName": fullName, "authProvider": authProvider
@@ -291,7 +383,13 @@ class PTSupabaseClient: ObservableObject {
         _ = try await client.functions.invoke("register-patient", options: .init(body: body))
     }
 
-    /// Reset password
+    /// Sends a password reset email to the specified address
+    ///
+    /// - Parameter email: The email address to send the reset link to
+    ///
+    /// - Throws: Supabase authentication errors if the request fails
+    ///
+    /// - Note: The reset link redirects to `ptperformance://reset-password`
     func resetPassword(email: String) async throws {
         try await client.auth.resetPasswordForEmail(
             email,
@@ -300,8 +398,14 @@ class PTSupabaseClient: ObservableObject {
     }
 
     /// Sign out
+    /// Clears Supabase session and all securely stored credentials
     func signOut() async throws {
         try await client.auth.signOut()
+
+        // Clear securely stored tokens and credentials
+        await MainActor.run {
+            AppleSignInService.shared.clearStoredCredentials()
+        }
 
         await MainActor.run {
             self.currentSession = nil

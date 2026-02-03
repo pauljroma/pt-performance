@@ -2,7 +2,6 @@
 //  TimerHistoryViewModel.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 Agent 15 (Timer History ViewModel)
 //  ViewModel for timer session history and weekly statistics
 //
 

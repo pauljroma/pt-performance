@@ -33,6 +33,7 @@ struct EmailSignInView: View {
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("emailTextField")
                         .accessibilityLabel("Email")
                         .accessibilityHint("Enter your email address")
                         .onChange(of: email) { _, newValue in
@@ -51,6 +52,7 @@ struct EmailSignInView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     SecureField("Password", text: $password)
                         .textContentType(.password)
+                        .accessibilityIdentifier("passwordSecureField")
                         .accessibilityLabel("Password")
                         .accessibilityHint("Enter your password")
                         .onChange(of: password) { _, newValue in
@@ -80,6 +82,7 @@ struct EmailSignInView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .padding(.trailing, 8)
+                                .accessibilityHidden(true)
                         }
                         Text("Sign In")
                             .font(.body.weight(.semibold))
@@ -87,7 +90,8 @@ struct EmailSignInView: View {
                     }
                 }
                 .disabled(!isFormValid || isLoading)
-                .accessibilityLabel("Sign In")
+                .accessibilityIdentifier("signInButton")
+                .accessibilityLabel(isLoading ? "Signing in" : "Sign In")
                 .accessibilityHint(isFormValid ? "Sign in with your credentials" : "Complete all fields correctly to sign in")
             }
 

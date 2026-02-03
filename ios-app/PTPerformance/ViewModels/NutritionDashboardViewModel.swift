@@ -2,7 +2,7 @@
 //  NutritionDashboardViewModel.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Dashboard ViewModel
+//  Nutrition Module - Dashboard ViewModel
 //
 
 import Foundation
@@ -22,7 +22,7 @@ class NutritionDashboardViewModel: ObservableObject {
     @Published var goalProgress: NutritionGoalProgress?
     @Published var weeklyTrends: [WeeklyNutritionTrend] = []
     @Published var todaysLogs: [NutritionLog] = []
-    @Published var todaysPlannedMeals: [MealPlanItem] = []  // BUILD 244: Today's planned meals
+    @Published var todaysPlannedMeals: [MealPlanItem] = []  // Today's planned meals
     @Published var macroDistribution: MacroDistribution?
     @Published var activeGoal: NutritionGoal?
 
@@ -35,10 +35,10 @@ class NutritionDashboardViewModel: ObservableObject {
     // MARK: - Private Properties
 
     private let nutritionService = NutritionService.shared
-    private let mealPlanService = MealPlanService.shared  // BUILD 244: For today's planned meals
+    private let mealPlanService = MealPlanService.shared  // For today's planned meals
     private let supabase = PTSupabaseClient.shared
 
-    // BUILD 279: Track if data has been loaded to prevent duplicate fetches
+    // Track if data has been loaded to prevent duplicate fetches
     private var hasLoadedInitialData = false
 
     // MARK: - Computed Properties
@@ -98,7 +98,7 @@ class NutritionDashboardViewModel: ObservableObject {
     }
 
     // Macro chart data
-    // BUILD 280: Updated to calculate calories from grams since view only provides percentages
+    // Calculate calories from grams since view only provides percentages
     var macroChartData: [MacroChartData] {
         guard let macro = macroDistribution else {
             return defaultMacroData
@@ -151,7 +151,7 @@ class NutritionDashboardViewModel: ObservableObject {
     // MARK: - Load Data
 
     func loadDashboard() async {
-        // BUILD 279: Prevent duplicate fetches when switching tabs
+        // Prevent duplicate fetches when switching tabs
         guard !hasLoadedInitialData else {
             #if DEBUG
             print("🍎 [NUTRITION VM] Skipping reload - data already loaded")
@@ -239,7 +239,7 @@ class NutritionDashboardViewModel: ObservableObject {
             #endif
         }
 
-        // BUILD 244: Fetch today's planned meals from active meal plan
+        // Fetch today's planned meals from active meal plan
         do {
             todaysPlannedMeals = try await mealPlanService.fetchTodaysMeals(patientId: patientId)
             #if DEBUG
@@ -292,7 +292,7 @@ class NutritionDashboardViewModel: ObservableObject {
         await loadDashboard()
     }
 
-    // BUILD 279: Force refresh for pull-to-refresh
+    // Force refresh for pull-to-refresh
     func forceRefresh() async {
         hasLoadedInitialData = false
         await loadDashboard()

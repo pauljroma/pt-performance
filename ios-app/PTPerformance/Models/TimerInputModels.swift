@@ -2,7 +2,6 @@
 //  TimerInputModels.swift
 //  PTPerformance
 //
-//  Created by BUILD 116 Agent 20 (Active Timer View)
 //  Input models for timer database operations
 //
 

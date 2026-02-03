@@ -43,7 +43,7 @@ struct ProgressChartsView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Progress")
+            .navigationTitle(LocalizedStrings.NavigationTitles.progress)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     ContextualHelpButton(articleId: nil)
@@ -66,10 +66,10 @@ struct ProgressChartsView: View {
 
     private var periodPicker: some View {
         Picker("Time Period", selection: $viewModel.selectedPeriod) {
-            Text("Week").tag(TimePeriod.week)
-            Text("Month").tag(TimePeriod.month)
-            Text("3 Months").tag(TimePeriod.threeMonths)
-            Text("Year").tag(TimePeriod.year)
+            Text(LocalizedStrings.TimePeriods.week).tag(TimePeriod.week)
+            Text(LocalizedStrings.TimePeriods.month).tag(TimePeriod.month)
+            Text(LocalizedStrings.TimePeriods.threeMonths).tag(TimePeriod.threeMonths)
+            Text(LocalizedStrings.TimePeriods.year).tag(TimePeriod.year)
         }
         .pickerStyle(SegmentedPickerStyle())
         .onChange(of: viewModel.selectedPeriod) { _, _ in
@@ -88,7 +88,7 @@ struct ProgressChartsView: View {
             ProgressView()
                 .scaleEffect(1.2)
 
-            Text("Loading analytics...")
+            Text(LocalizedStrings.LoadingStates.loadingAnalytics)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -103,7 +103,7 @@ struct ProgressChartsView: View {
             // Total volume
             if let volume = viewModel.volumeData {
                 SummaryCard(
-                    title: "Total Volume",
+                    title: LocalizedStrings.Analytics.totalVolume,
                     value: volume.formattedTotal,
                     subtitle: viewModel.selectedPeriod.displayName,
                     icon: "scalemass.fill",
@@ -114,9 +114,9 @@ struct ProgressChartsView: View {
             // Average volume
             if let volume = viewModel.volumeData {
                 SummaryCard(
-                    title: "Avg Volume",
+                    title: LocalizedStrings.Analytics.avgVolume,
                     value: volume.formattedAverage,
-                    subtitle: "per week",
+                    subtitle: LocalizedStrings.Analytics.perWeek,
                     icon: "chart.line.uptrend.xyaxis",
                     color: .cyan
                 )
@@ -125,7 +125,7 @@ struct ProgressChartsView: View {
             // Peak week
             if let volume = viewModel.volumeData, let peakDate = volume.peakDate {
                 SummaryCard(
-                    title: "Peak Week",
+                    title: LocalizedStrings.Analytics.peakWeek,
                     value: String(format: "%.0f lbs", volume.peakVolume),
                     subtitle: peakDate.formatted(date: .abbreviated, time: .omitted),
                     icon: "arrow.up.circle.fill",
@@ -136,7 +136,7 @@ struct ProgressChartsView: View {
             // Strength improvement
             if let strength = viewModel.strengthData {
                 SummaryCard(
-                    title: "Strength Gain",
+                    title: LocalizedStrings.Analytics.strengthGain,
                     value: strength.improvementPercentage,
                     subtitle: strength.exerciseName,
                     icon: "figure.strengthtraining.traditional",
@@ -188,7 +188,7 @@ struct ProgressChartsView: View {
     private var strengthLoadingView: some View {
         VStack(spacing: 12) {
             ProgressView()
-            Text("Loading strength data...")
+            Text(LocalizedStrings.LoadingStates.loadingStrengthData)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -202,8 +202,8 @@ struct ProgressChartsView: View {
 
     private var strengthEmptyState: some View {
         EmptyStateView(
-            title: "No Strength Data",
-            message: "Log weighted exercises to track your strength progression over time. Your personal records and improvement trends will appear here.",
+            title: LocalizedStrings.EmptyStates.noStrengthData,
+            message: LocalizedStrings.EmptyStates.logWeightedExercises + " Your personal records and improvement trends will appear here.",
             icon: "figure.strengthtraining.traditional",
             iconColor: .green
         )
@@ -217,8 +217,8 @@ struct ProgressChartsView: View {
 
     private var emptyState: some View {
         EmptyStateView(
-            title: "No Analytics Data Yet",
-            message: "Complete your first workout to start tracking your progress. Volume trends, strength gains, and performance insights will appear here.",
+            title: LocalizedStrings.EmptyStates.noAnalyticsDataYet,
+            message: LocalizedStrings.EmptyStates.completeFirstWorkout + " Volume trends, strength gains, and performance insights will appear here.",
             icon: "chart.bar.xaxis",
             iconColor: .blue,
             action: nil
@@ -230,7 +230,7 @@ struct ProgressChartsView: View {
 
     private var notSignedInView: some View {
         EmptyStateView(
-            title: "Sign In Required",
+            title: LocalizedStrings.EmptyStates.signInRequired,
             message: "Sign in to your account to view your progress analytics, track workout volume, and monitor strength gains.",
             icon: "person.crop.circle.badge.exclamationmark",
             iconColor: .orange,
@@ -255,7 +255,7 @@ struct ProgressChartsView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button("Try Again") {
+            Button(LocalizedStrings.ErrorStates.tryAgain) {
                 retry()
             }
             .buttonStyle(.bordered)

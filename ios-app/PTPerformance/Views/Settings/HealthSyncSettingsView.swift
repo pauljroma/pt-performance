@@ -60,6 +60,7 @@ struct HealthSyncSettingsView: View {
                 Image(systemName: healthKitService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundColor(healthKitService.isAuthorized ? .green : .red)
                     .font(.title2)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(healthKitService.isAuthorized ? "Connected" : "Not Connected")
                         .font(.headline)
@@ -72,6 +73,8 @@ struct HealthSyncSettingsView: View {
                 Spacer()
             }
             .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(healthKitService.isAuthorized ? "Connected. Bidirectional sync enabled" : "Not connected. Connect to sync with Apple Health")
 
             if !healthKitService.isAuthorized {
                 Button {
@@ -90,6 +93,8 @@ struct HealthSyncSettingsView: View {
                     .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Connect Apple Health")
+                .accessibilityHint("Requests access to sync data with Apple Health")
             }
         } header: {
             Text("Connection")
@@ -113,6 +118,9 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.green)
                 }
             }
+            .accessibilityLabel("Export Workouts")
+            .accessibilityValue(config.exportWorkouts ? "On" : "Off")
+            .accessibilityHint("Toggle to send completed workouts to Apple Health")
 
             if config.exportWorkouts {
                 Toggle(isOn: $config.exportOnCompletion) {
@@ -128,6 +136,9 @@ struct HealthSyncSettingsView: View {
                             .foregroundColor(.orange)
                     }
                 }
+                .accessibilityLabel("Auto-Export")
+                .accessibilityValue(config.exportOnCompletion ? "On" : "Off")
+                .accessibilityHint("Toggle to export immediately after completing a workout")
             }
         } header: {
             Text("Export to Apple Health")
@@ -148,6 +159,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.indigo)
                 }
             }
+            .accessibilityLabel("Sleep Data")
+            .accessibilityValue(config.importSleep ? "On" : "Off")
 
             Toggle(isOn: $config.importHRV) {
                 Label {
@@ -157,6 +170,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.purple)
                 }
             }
+            .accessibilityLabel("Heart Rate Variability")
+            .accessibilityValue(config.importHRV ? "On" : "Off")
 
             Toggle(isOn: $config.importRestingHR) {
                 Label {
@@ -166,6 +181,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.red)
                 }
             }
+            .accessibilityLabel("Resting Heart Rate")
+            .accessibilityValue(config.importRestingHR ? "On" : "Off")
 
             Toggle(isOn: $config.importActiveEnergy) {
                 Label {
@@ -175,6 +192,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.orange)
                 }
             }
+            .accessibilityLabel("Active Energy")
+            .accessibilityValue(config.importActiveEnergy ? "On" : "Off")
 
             Toggle(isOn: $config.importExerciseMinutes) {
                 Label {
@@ -184,6 +203,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.green)
                 }
             }
+            .accessibilityLabel("Exercise Minutes")
+            .accessibilityValue(config.importExerciseMinutes ? "On" : "Off")
 
             Toggle(isOn: $config.importStepCount) {
                 Label {
@@ -193,6 +214,8 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.blue)
                 }
             }
+            .accessibilityLabel("Step Count")
+            .accessibilityValue(config.importStepCount ? "On" : "Off")
         } header: {
             Text("Import from Apple Health")
         } footer: {
@@ -223,6 +246,9 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.blue)
                 }
             }
+            .accessibilityLabel("Background Sync")
+            .accessibilityValue(config.backgroundSyncEnabled ? "On" : "Off")
+            .accessibilityHint("Toggle to sync health data while the app is closed")
 
             Toggle(isOn: $config.syncOnLaunch) {
                 Label {
@@ -237,6 +263,9 @@ struct HealthSyncSettingsView: View {
                         .foregroundColor(.teal)
                 }
             }
+            .accessibilityLabel("Sync on Launch")
+            .accessibilityValue(config.syncOnLaunch ? "On" : "Off")
+            .accessibilityHint("Toggle to refresh health data when opening the app")
         } header: {
             Text("Sync Schedule")
         } footer: {
@@ -301,6 +330,7 @@ struct HealthSyncSettingsView: View {
                     if healthKitService.isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
+                            .accessibilityHidden(true)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
                     }
@@ -308,6 +338,8 @@ struct HealthSyncSettingsView: View {
                 }
             }
             .disabled(healthKitService.isLoading)
+            .accessibilityLabel(healthKitService.isLoading ? "Syncing health data" : "Sync Now")
+            .accessibilityHint("Synchronizes health data with Apple Health")
         } header: {
             Text("Sync Status")
         }
@@ -326,6 +358,8 @@ struct HealthSyncSettingsView: View {
                     Spacer()
                 }
             }
+            .accessibilityLabel("Reset to Defaults")
+            .accessibilityHint("Restores all sync settings to their default values")
         }
     }
 }

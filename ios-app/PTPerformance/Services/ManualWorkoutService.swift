@@ -134,7 +134,7 @@ struct CreateManualExerciseLogInput: Codable {
     }
 }
 
-/// BUILD 258: Input for logging prescribed exercise (session_exercise_id reference)
+/// Input for logging prescribed exercise (session_exercise_id reference)
 struct CreatePrescribedExerciseLogInput: Codable {
     let sessionExerciseId: UUID
     let patientId: UUID
@@ -236,7 +236,16 @@ class ManualWorkoutService: ObservableObject {
 
     // MARK: - System Templates
 
-    /// Fetch system workout templates with optional filters
+    /// Fetch system workout templates with optional category and search filters.
+    ///
+    /// System templates are pre-defined workout templates created by trainers that
+    /// all patients can access. Results are ordered alphabetically by name.
+    ///
+    /// - Parameters:
+    ///   - category: Optional category filter (e.g., "strength", "mobility")
+    ///   - search: Optional search string to filter by template name (case-insensitive)
+    /// - Returns: Array of matching system workout templates
+    /// - Throws: Database errors if the query fails
     func fetchSystemTemplates(category: String? = nil, search: String? = nil) async throws -> [SystemWorkoutTemplate] {
         let logger = DebugLogger.shared
         logger.log("Fetching system workout templates...", level: .diagnostic)
@@ -265,15 +274,22 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(templates.count) system templates", level: .success)
             return templates
         } catch {
-            logger.log("Failed to fetch system templates: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchSystemTemplates")
             throw error
         }
     }
 
     // MARK: - Patient Templates
 
-    /// Fetch patient-specific workout templates
-    /// Returns empty array if table doesn't exist or other errors occur
+    /// Fetch workout templates created by a specific patient.
+    ///
+    /// Patient templates are custom workouts saved by the user for reuse.
+    /// Results are ordered by usage count (most used first).
+    ///
+    /// - Parameter patientId: The UUID of the patient whose templates to fetch
+    /// - Returns: Array of patient workout templates, or empty array if none exist
+    /// - Note: Returns empty array instead of throwing if the table doesn't exist,
+    ///         allowing graceful degradation for new installations.
     func fetchPatientTemplates(patientId: UUID) async throws -> [PatientWorkoutTemplate] {
         let logger = DebugLogger.shared
         logger.log("Fetching patient templates for: \(patientId)", level: .diagnostic)
@@ -299,7 +315,8 @@ class ManualWorkoutService: ObservableObject {
             return templates
         } catch {
             // Log detailed error info
-            logger.log("Failed to fetch patient templates: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchPatientTemplates", metadata: ["patient_id": patientId.uuidString])
+            #if DEBUG
             if let decodingError = error as? DecodingError {
                 switch decodingError {
                 case .keyNotFound(let key, let context):
@@ -312,13 +329,26 @@ class ManualWorkoutService: ObservableObject {
                     break
                 }
             }
+            #endif
             // Return empty array instead of throwing - table may not exist yet
             logger.log("Returning empty patient templates (table may not exist)", level: .warning)
             return []
         }
     }
 
-    /// Save exercises as a patient template
+    /// Save a collection of exercises as a reusable patient template.
+    ///
+    /// Creates a new patient-owned template that can be used to quickly start
+    /// future workouts with the same exercise configuration.
+    ///
+    /// - Parameters:
+    ///   - name: Display name for the template
+    ///   - description: Optional description of the template's purpose
+    ///   - blocks: The workout blocks containing exercises to save
+    ///   - patientId: The UUID of the patient who owns this template
+    ///   - category: Optional category for organizing templates
+    /// - Returns: The newly created patient workout template
+    /// - Throws: Database errors if the insert fails
     func saveAsTemplate(
         name: String,
         description: String?,
@@ -352,7 +382,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Template saved with ID: \(template.id)", level: .success)
             return template
         } catch {
-            logger.log("Failed to save template: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.saveAsTemplate", metadata: ["patient_id": patientId.uuidString, "name": name])
             throw error
         }
     }
@@ -371,7 +401,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Template deleted successfully", level: .success)
         } catch {
-            logger.log("Failed to delete template: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.deleteTemplate", metadata: ["template_id": templateId.uuidString])
             throw error
         }
     }
@@ -409,14 +439,26 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Usage count incremented to \(newCount)", level: .success)
         } catch {
-            logger.log("Failed to increment usage count: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.incrementUsageCount", metadata: ["template_id": templateId.uuidString])
             throw error
         }
     }
 
     // MARK: - Manual Sessions
 
-    /// Create a new manual workout session
+    /// Create a new manual workout session for a patient.
+    ///
+    /// A manual session represents an ad-hoc workout that the patient creates
+    /// themselves, as opposed to a prescribed session from their program.
+    /// The session can optionally be based on a template.
+    ///
+    /// - Parameters:
+    ///   - name: Display name for the session
+    ///   - patientId: The UUID of the patient performing the workout
+    ///   - sourceTemplateId: Optional ID of the template this session is based on
+    ///   - sourceTemplateType: Type of source template (system or patient)
+    /// - Returns: The newly created manual session
+    /// - Throws: Database errors if the insert fails
     func createManualSession(
         name: String,
         patientId: UUID,
@@ -453,8 +495,9 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Manual session created with ID: \(session.id)", level: .success)
             return session
         } catch {
-            logger.log("Failed to create manual session: \(error.localizedDescription)", level: .error)
-            // Log detailed decode error
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.createManualSession", metadata: ["patient_id": patientId.uuidString, "name": name])
+            #if DEBUG
+            // Log detailed decode error for debugging
             if let decodingError = error as? DecodingError {
                 switch decodingError {
                 case .keyNotFound(let key, let context):
@@ -467,6 +510,7 @@ class ManualWorkoutService: ObservableObject {
                     logger.log("  Decode error: \(decodingError)", level: .error)
                 }
             }
+            #endif
             throw error
         }
     }
@@ -509,7 +553,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Exercise added with ID: \(sessionExercise.id)", level: .success)
             return sessionExercise
         } catch {
-            logger.log("Failed to add exercise: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.addExercise", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
@@ -537,7 +581,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Exercise updated successfully", level: .success)
         } catch {
-            logger.log("Failed to update exercise: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.updateExercise", metadata: ["exercise_id": exercise.id.uuidString])
             throw error
         }
     }
@@ -556,7 +600,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Exercise removed successfully", level: .success)
         } catch {
-            logger.log("Failed to remove exercise: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.removeExercise", metadata: ["exercise_id": exerciseId.uuidString])
             throw error
         }
     }
@@ -579,12 +623,19 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Exercises reordered successfully", level: .success)
         } catch {
-            logger.log("Failed to reorder exercises: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.reorderExercises", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
 
-    /// Start a manual workout session
+    /// Start a manual workout session by recording the start timestamp.
+    ///
+    /// This marks the beginning of an active workout. The `started_at` timestamp
+    /// is used to calculate workout duration when the session is completed.
+    ///
+    /// - Parameter sessionId: The UUID of the manual session to start
+    /// - Returns: The updated manual session with `started_at` set
+    /// - Throws: Database errors if the update fails or session not found
     func startWorkout(_ sessionId: UUID) async throws -> ManualSession {
         let logger = DebugLogger.shared
         logger.log("Starting workout session: \(sessionId)", level: .diagnostic)
@@ -612,19 +663,33 @@ class ManualWorkoutService: ObservableObject {
 
             do {
                 let session = try decoder.decode(ManualSession.self, from: response.data)
-                logger.log("✅ Workout started at \(now)", level: .success)
+                logger.log("Workout started at \(now)", level: .success)
                 return session
             } catch let decodeError {
-                logger.log("❌ Decode error: \(decodeError)", level: .error)
+                ErrorLogger.shared.logError(decodeError, context: "ManualWorkoutService.startWorkout.decode", metadata: ["session_id": sessionId.uuidString])
                 throw decodeError
             }
         } catch {
-            logger.log("❌ Failed to start workout: \(error)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.startWorkout", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
 
-    /// Complete a manual workout session
+    /// Complete a manual workout session with summary metrics.
+    ///
+    /// Marks the session as completed and records aggregate workout metrics.
+    /// Also triggers side effects including:
+    /// - Recording workout completion for smart notification learning
+    /// - Exporting the workout to Apple Health (if enabled)
+    ///
+    /// - Parameters:
+    ///   - sessionId: The UUID of the manual session to complete
+    ///   - totalVolume: Total workout volume (sets x reps x load)
+    ///   - avgRpe: Average RPE across all exercises
+    ///   - avgPain: Average pain score across all exercises
+    ///   - durationMinutes: Total workout duration in minutes
+    /// - Returns: The completed manual session with all metrics recorded
+    /// - Throws: Database errors if the update fails
     func completeWorkout(
         _ sessionId: UUID,
         totalVolume: Double?,
@@ -683,14 +748,25 @@ class ManualWorkoutService: ObservableObject {
 
             return session
         } catch {
-            logger.log("Failed to complete workout: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.completeWorkout", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
 
-    /// BUILD 265: Complete a prescribed session (in sessions table)
-    /// BUILD 272: Include all metrics in update
-    /// BUILD 309: Added startedAt parameter for accurate session duration and summary filtering
+    /// Complete a prescribed workout session from the patient's program.
+    ///
+    /// Unlike manual sessions, prescribed sessions come from the patient's
+    /// assigned program and are stored in the `sessions` table. This method
+    /// records completion metrics for trainer review and progress tracking.
+    ///
+    /// - Parameters:
+    ///   - sessionId: The UUID of the prescribed session to complete
+    ///   - startedAt: When the patient started the workout (for duration calculation)
+    ///   - totalVolume: Total workout volume (sets x reps x load)
+    ///   - avgRpe: Average RPE across all exercises
+    ///   - avgPain: Average pain score across all exercises
+    ///   - durationMinutes: Total workout duration in minutes
+    /// - Throws: Database errors if the update fails
     func completePrescribedSession(
         _ sessionId: UUID,
         startedAt: Date?,
@@ -707,7 +783,7 @@ class ManualWorkoutService: ObservableObject {
             let formatter = ISO8601DateFormatter()
             let now = formatter.string(from: Date())
 
-            // BUILD 309: Include started_at for proper session summary time-based filtering
+            // Include started_at for proper session summary time-based filtering
             struct CompletePrescribedInput: Codable {
                 let completed: Bool
                 let startedAt: String?
@@ -761,7 +837,7 @@ class ManualWorkoutService: ObservableObject {
                 }
             }
         } catch {
-            logger.log("Failed to complete prescribed session: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.completePrescribedSession", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
@@ -786,7 +862,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Session fetched successfully", level: .success)
             return session
         } catch {
-            logger.log("Failed to fetch session: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchManualSession", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
@@ -812,7 +888,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(exercises.count) exercises for session", level: .success)
             return exercises
         } catch {
-            logger.log("Failed to fetch session exercises: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchSessionExercises", metadata: ["session_id": sessionId.uuidString])
             throw error
         }
     }
@@ -839,14 +915,30 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(sessions.count) completed sessions", level: .success)
             return sessions
         } catch {
-            logger.log("Failed to fetch workout history: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchManualWorkoutHistory", metadata: ["patient_id": patientId.uuidString])
             throw error
         }
     }
 
     // MARK: - Exercise Logging
 
-    /// Log exercise completion in a manual session
+    /// Log completion of an exercise within a manual workout session.
+    ///
+    /// Records the actual performance data for an exercise, including sets,
+    /// reps per set, load used, and subjective feedback (RPE and pain).
+    /// This data is used for progression calculations and trainer review.
+    ///
+    /// - Parameters:
+    ///   - manualSessionExerciseId: The UUID of the exercise to log
+    ///   - patientId: The UUID of the patient performing the exercise
+    ///   - actualSets: Number of sets completed
+    ///   - actualReps: Array of reps completed per set
+    ///   - actualLoad: Weight/load used (optional for bodyweight exercises)
+    ///   - loadUnit: Unit of measurement for load (defaults to "lbs")
+    ///   - rpe: Rate of Perceived Exertion (1-10 scale)
+    ///   - painScore: Pain level during exercise (0-10 scale)
+    ///   - notes: Optional notes about the exercise performance
+    /// - Throws: Database errors if the insert fails
     func logManualExercise(
         manualSessionExerciseId: UUID,
         patientId: UUID,
@@ -882,12 +974,28 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Manual exercise logged successfully to exercise_logs", level: .success)
         } catch {
-            logger.log("Failed to log exercise: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.logManualExercise", metadata: ["exercise_id": manualSessionExerciseId.uuidString, "patient_id": patientId.uuidString])
             throw error
         }
     }
 
-    /// BUILD 258: Log exercise completion in a prescribed session
+    /// Log completion of an exercise within a prescribed workout session.
+    ///
+    /// Similar to `logManualExercise`, but for exercises that are part of
+    /// the patient's assigned program. The logged data is compared against
+    /// prescribed targets for compliance tracking.
+    ///
+    /// - Parameters:
+    ///   - sessionExerciseId: The UUID of the prescribed exercise to log
+    ///   - patientId: The UUID of the patient performing the exercise
+    ///   - actualSets: Number of sets completed
+    ///   - actualReps: Array of reps completed per set
+    ///   - actualLoad: Weight/load used (optional for bodyweight exercises)
+    ///   - loadUnit: Unit of measurement for load (defaults to "lbs")
+    ///   - rpe: Rate of Perceived Exertion (1-10 scale)
+    ///   - painScore: Pain level during exercise (0-10 scale)
+    ///   - notes: Optional notes about the exercise performance
+    /// - Throws: Database errors if the insert fails
     func logPrescribedExercise(
         sessionExerciseId: UUID,
         patientId: UUID,
@@ -924,12 +1032,12 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Prescribed exercise logged successfully to exercise_logs", level: .success)
         } catch {
-            logger.log("Failed to log prescribed exercise: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.logPrescribedExercise", metadata: ["exercise_id": sessionExerciseId.uuidString, "patient_id": patientId.uuidString])
             throw error
         }
     }
 
-    // MARK: - Favorites (BUILD 282)
+    // MARK: - Favorites
 
     /// Fetch patient's favorite template IDs
     func fetchFavoriteTemplateIds(patientId: UUID) async throws -> (systemIds: Set<UUID>, patientIds: Set<UUID>) {
@@ -971,7 +1079,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(systemIds.count) system favorites, \(patientIds.count) patient favorites", level: .success)
             return (systemIds, patientIds)
         } catch {
-            logger.log("Failed to fetch favorites: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchFavoriteTemplateIds", metadata: ["patient_id": patientId.uuidString])
             // Return empty sets if table doesn't exist
             return ([], [])
         }
@@ -1000,7 +1108,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("System template added to favorites", level: .success)
         } catch {
-            logger.log("Failed to add to favorites: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.addSystemTemplateToFavorites", metadata: ["patient_id": patientId.uuidString, "template_id": templateId.uuidString])
             throw error
         }
     }
@@ -1028,7 +1136,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Patient template added to favorites", level: .success)
         } catch {
-            logger.log("Failed to add to favorites: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.addPatientTemplateToFavorites", metadata: ["patient_id": patientId.uuidString, "template_id": templateId.uuidString])
             throw error
         }
     }
@@ -1048,7 +1156,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("System template removed from favorites", level: .success)
         } catch {
-            logger.log("Failed to remove from favorites: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.removeSystemTemplateFromFavorites", metadata: ["patient_id": patientId.uuidString, "template_id": templateId.uuidString])
             throw error
         }
     }
@@ -1068,12 +1176,12 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Patient template removed from favorites", level: .success)
         } catch {
-            logger.log("Failed to remove from favorites: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.removePatientTemplateFromFavorites", metadata: ["patient_id": patientId.uuidString, "template_id": templateId.uuidString])
             throw error
         }
     }
 
-    // MARK: - Trainer Recommendations (BUILD 282)
+    // MARK: - Trainer Recommendations
 
     /// Fetch trainer-recommended templates for a patient
     func fetchTrainerRecommendations(patientId: UUID) async throws -> [SystemWorkoutTemplate] {
@@ -1120,7 +1228,7 @@ class ManualWorkoutService: ObservableObject {
             logger.log("Fetched \(templates.count) trainer-recommended templates", level: .success)
             return templates
         } catch {
-            logger.log("Failed to fetch trainer recommendations: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.fetchTrainerRecommendations", metadata: ["patient_id": patientId.uuidString])
             // Return empty array if table doesn't exist
             return []
         }
@@ -1159,7 +1267,7 @@ class ManualWorkoutService: ObservableObject {
 
             logger.log("Exercise added to prescribed session successfully", level: .success)
         } catch {
-            logger.log("Failed to add exercise to prescribed session: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "ManualWorkoutService.addExerciseToPrescribedSession", metadata: ["session_id": sessionId.uuidString, "exercise_template_id": exerciseTemplateId.uuidString])
             throw error
         }
     }

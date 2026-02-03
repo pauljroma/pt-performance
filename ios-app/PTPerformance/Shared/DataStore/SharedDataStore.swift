@@ -99,6 +99,11 @@ public final class SharedDataStore {
     }
 
     // MARK: - User ID
+    // TODO: SECURITY - Migrate userId to SecureStore (Keychain)
+    // User IDs are sensitive PII that could identify a person and should not be stored in UserDefaults.
+    // Use SecureStore.shared.set(userId, forKey: SecureStore.Keys.userIdentifier) instead.
+    // This requires coordinating with widget extension which may have limited Keychain access.
+    // See: Services/Security/SecureStore.swift
 
     public func saveUserId(_ userId: String) {
         userDefaults?.set(userId, forKey: Keys.userId)

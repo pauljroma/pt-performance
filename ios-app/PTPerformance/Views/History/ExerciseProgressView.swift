@@ -6,6 +6,7 @@
 //  Shows progress charts, personal records, and recent history for each exercise
 //
 //  BUILD 340: Added Big Lifts Scorecard integration for prominent PR display
+//  BUILD 341: Refactored - extracted components to Views/History/Components/
 //
 
 import SwiftUI
@@ -182,6 +183,7 @@ struct ExerciseProgressView: View {
                         },
                         fallbackUnit: preferredWeightUnit
                     )
+                    .id(exercise.id)
                 }
 
                 // Pagination: Load More button or loading indicator
@@ -226,25 +228,10 @@ struct ExerciseProgressView: View {
 
     private var bigLiftsSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Section header
-            HStack {
-                Image(systemName: "figure.strengthtraining.traditional")
-                    .font(.title2)
-                    .foregroundColor(.orange)
-                Text("Big Lifts")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                if bigLiftsExercises.count > 4 {
-                    Text("\(bigLiftsExercises.count) lifts")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Big Lifts Section, \(bigLiftsExercises.count) compound lifts tracked")
+            // Section header - using extracted component
+            BigLiftsSectionHeader(liftCount: bigLiftsExercises.count)
 
-            // Big lifts grid
+            // Big lifts grid - using extracted component
             InlineBigLiftsGrid(
                 exercises: bigLiftsExercises,
                 preferredUnit: preferredWeightUnit,
@@ -284,46 +271,18 @@ struct ExerciseProgressView: View {
     // MARK: - Progress Summary Header
 
     private var progressSummaryHeader: some View {
-        VStack(spacing: Spacing.sm) {
-            HStack {
-                Text("Progress Overview")
-                    .font(.headline)
-                Spacer()
-                Text("\(filteredExercises.count) exercises")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
-            HStack(spacing: Spacing.md) {
-                ProgressStatCard(
-                    title: "Total PRs",
-                    value: "\(viewModel.totalPersonalRecords)",
-                    icon: "trophy.fill",
-                    color: .yellow
-                )
-
-                ProgressStatCard(
-                    title: "Improving",
-                    value: "\(viewModel.improvingExercisesCount)",
-                    icon: "arrow.up.right",
-                    color: .green
-                )
-
-                ProgressStatCard(
-                    title: "This Week",
-                    value: "\(viewModel.exercisesThisWeek)",
-                    icon: "calendar",
-                    color: .blue
-                )
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        // Using extracted ProgressSummaryHeader component
+        ProgressSummaryHeader(
+            exerciseCount: filteredExercises.count,
+            totalPersonalRecords: viewModel.totalPersonalRecords,
+            improvingCount: viewModel.improvingExercisesCount,
+            thisWeekCount: viewModel.exercisesThisWeek
+        )
     }
 
     // MARK: - Empty State
 
+    @ViewBuilder
     private var emptyState: some View {
         VStack(spacing: Spacing.lg) {
             if !searchText.isEmpty {
@@ -369,384 +328,16 @@ enum ExerciseSortOption: String, CaseIterable {
 }
 
 // MARK: - Progress Stat Card
-
-private struct ProgressStatCard: View {
-    let title: String
-    let value: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: Spacing.xs) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(color)
-
-            Text(value)
-                .font(.title3)
-                .bold()
-
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.sm)
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-    }
-}
+// NOTE: ProgressStatCard moved to Views/History/Components/ExerciseStatsCard.swift
 
 // MARK: - Exercise Progress Row
-
-struct ExerciseProgressRow: View {
-    let exercise: ExerciseProgressItem
-    let isExpanded: Bool
-    let onTap: () -> Void
-    var fallbackUnit: String = "lbs"
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Main row (always visible)
-            Button(action: onTap) {
-                HStack(spacing: Spacing.md) {
-                    // Exercise icon
-                    Circle()
-                        .fill(trendColor.opacity(0.2))
-                        .frame(width: 44, height: 44)
-                        .overlay(
-                            Image(systemName: exercise.trend.icon)
-                                .foregroundColor(trendColor)
-                        )
-
-                    // Exercise info
-                    VStack(alignment: .leading, spacing: Spacing.xxs) {
-                        HStack {
-                            Text(exercise.exerciseName)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-
-                            if exercise.hasPersonalRecord {
-                                Image(systemName: "trophy.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.yellow)
-                            }
-                        }
-
-                        HStack(spacing: Spacing.sm) {
-                            if let lastDate = exercise.lastPerformed {
-                                Text(lastDate, style: .date)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Text("\(exercise.sessionCount) sessions")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    // Improvement badge
-                    if exercise.improvementPercentage != 0 {
-                        Text(exercise.formattedImprovement)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(trendColor.opacity(0.2))
-                            .foregroundColor(trendColor)
-                            .cornerRadius(8)
-                    }
-
-                    // Expand indicator
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            // Expanded detail view
-            if isExpanded {
-                ExerciseProgressDetailView(exercise: exercise, fallbackUnit: fallbackUnit)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
-    }
-
-    private var trendColor: Color {
-        switch exercise.trend {
-        case .increasing: return .green
-        case .decreasing: return .red
-        case .stable: return .gray
-        }
-    }
-}
+// NOTE: ExerciseProgressRow moved to Views/History/Components/ExerciseProgressRowComponents.swift
 
 // MARK: - Exercise Progress Detail View
-
-struct ExerciseProgressDetailView: View {
-    let exercise: ExerciseProgressItem
-    var fallbackUnit: String = "lbs"
-
-    /// Returns the appropriate unit to display - prefers data unit, falls back to user preference
-    private var displayUnit: String {
-        exercise.loadUnit ?? fallbackUnit
-    }
-
-    var body: some View {
-        VStack(spacing: Spacing.md) {
-            Divider()
-
-            // Progress Chart - show loading state if no data points yet
-            if !exercise.dataPoints.isEmpty {
-                progressChart
-            } else {
-                // BUILD 333: Loading state while fetching time-series data
-                chartLoadingPlaceholder
-            }
-
-            // Personal Record Badge
-            if let pr = exercise.personalRecord {
-                personalRecordBadge(pr)
-            }
-
-            // Recent History
-            if !exercise.recentHistory.isEmpty {
-                recentHistorySection
-            }
-
-            // Summary stats
-            summaryStats
-        }
-        .padding([.horizontal, .bottom])
-    }
-
-    // MARK: - Chart Loading Placeholder
-
-    private var chartLoadingPlaceholder: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Progress Over Time")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            HStack {
-                Spacer()
-                VStack(spacing: Spacing.sm) {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                    Text("Loading chart data...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-            }
-            .frame(height: 180)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-    }
-
-    // MARK: - Progress Chart
-
-    private var progressChart: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Progress Over Time")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            Chart {
-                ForEach(exercise.dataPoints) { point in
-                    LineMark(
-                        x: .value("Date", point.date, unit: .day),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(.blue)
-                    .interpolationMethod(.catmullRom)
-
-                    PointMark(
-                        x: .value("Date", point.date, unit: .day),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(.blue)
-                    .symbolSize(30)
-                }
-            }
-            .chartYAxisLabel("Weight (\(displayUnit))")
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 7)) { value in
-                    AxisGridLine()
-                    AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                }
-            }
-            .frame(height: 180)
-            .padding(.vertical, Spacing.xs)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-    }
-
-    // MARK: - Personal Record Badge
-
-    private func personalRecordBadge(_ pr: PersonalRecord) -> some View {
-        HStack(spacing: Spacing.md) {
-            Image(systemName: "trophy.fill")
-                .font(.title2)
-                .foregroundColor(.yellow)
-
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Personal Record")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-
-                Text(pr.formattedValue)
-                    .font(.title3)
-                    .bold()
-
-                Text("Achieved \(pr.achievedDate, style: .date)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            if let improvement = pr.formattedImprovement {
-                VStack {
-                    Text(improvement)
-                        .font(.headline)
-                        .foregroundColor(.green)
-                    Text("vs previous")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding()
-        .background(
-            LinearGradient(
-                colors: [.yellow.opacity(0.1), .orange.opacity(0.1)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
-        )
-        .cornerRadius(8)
-    }
-
-    // MARK: - Recent History Section
-
-    private var recentHistorySection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Recent Sessions")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            ForEach(exercise.recentHistory.prefix(5)) { session in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(session.date, style: .date)
-                            .font(.caption)
-                            .fontWeight(.medium)
-
-                        Text("\(session.sets) sets x \(session.reps) reps")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    if let weight = session.weight {
-                        Text(String(format: "%.1f %@", weight, session.loadUnit ?? displayUnit))
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    }
-
-                    if session.isPersonalRecord {
-                        Image(systemName: "star.fill")
-                            .font(.caption2)
-                            .foregroundColor(.yellow)
-                    }
-                }
-                .padding(.vertical, Spacing.xxs)
-
-                if session.id != exercise.recentHistory.prefix(5).last?.id {
-                    Divider()
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-    }
-
-    // MARK: - Summary Stats
-
-    private var summaryStats: some View {
-        HStack(spacing: Spacing.md) {
-            StatItem(
-                label: "Avg Weight",
-                value: String(format: "%.1f %@", exercise.averageWeight, displayUnit)
-            )
-
-            Divider()
-                .frame(height: 30)
-
-            StatItem(
-                label: "Total Volume",
-                value: formatVolume(exercise.totalVolume)
-            )
-
-            Divider()
-                .frame(height: 30)
-
-            StatItem(
-                label: "Sessions",
-                value: "\(exercise.sessionCount)"
-            )
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(8)
-    }
-
-    private func formatVolume(_ volume: Double) -> String {
-        if volume >= 1000 {
-            return String(format: "%.1fK", volume / 1000)
-        }
-        return String(format: "%.0f", volume)
-    }
-}
+// NOTE: ExerciseProgressDetailView moved to Views/History/Components/ExerciseProgressRowComponents.swift
 
 // MARK: - Stat Item
-
-private struct StatItem: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        VStack(spacing: Spacing.xxs) {
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
+// NOTE: StatItem moved to Views/History/Components/ExerciseStatsCard.swift
 
 // MARK: - Exercise Progress Item Model
 
@@ -775,20 +366,8 @@ struct ExerciseProgressItem: Identifiable {
     }
 }
 
-// MARK: - Exercise Session Record
-
-struct ExerciseSessionRecord: Identifiable {
-    let id: String
-    let date: Date
-    let sets: Int
-    let reps: Int
-    let weight: Double?
-    let volume: Double
-    let isPersonalRecord: Bool
-    let loadUnit: String?
-}
-
 // MARK: - View Model
+// Note: ExerciseSessionRecord is defined in WorkoutHistoryService.swift
 
 @MainActor
 class ExerciseProgressViewModel: ObservableObject {
@@ -1086,178 +665,7 @@ extension String: @retroactive Identifiable {
 }
 
 // MARK: - Inline Big Lifts Grid (BUILD 340)
-
-/// Displays a grid of "big lift" compound exercises with their PRs prominently
-/// Uses ExerciseProgressItem data from the parent view
-/// Tapping a card navigates to detailed history for that exercise
-private struct InlineBigLiftsGrid: View {
-    let exercises: [ExerciseProgressItem]
-    let preferredUnit: String
-    let onExerciseTap: (String) -> Void
-
-    private let columns = [
-        GridItem(.flexible(), spacing: Spacing.sm),
-        GridItem(.flexible(), spacing: Spacing.sm)
-    ]
-
-    var body: some View {
-        if exercises.isEmpty {
-            emptyBigLiftsState
-        } else {
-            LazyVGrid(columns: columns, spacing: Spacing.sm) {
-                ForEach(exercises.prefix(6)) { exercise in
-                    InlineBigLiftCard(
-                        exercise: exercise,
-                        preferredUnit: preferredUnit,
-                        onTap: { onExerciseTap(exercise.exerciseName) }
-                    )
-                }
-            }
-        }
-    }
-
-    private var emptyBigLiftsState: some View {
-        VStack(spacing: Spacing.sm) {
-            Image(systemName: "dumbbell.fill")
-                .font(.largeTitle)
-                .foregroundColor(.secondary)
-            Text("No Big Lifts Yet")
-                .font(.headline)
-            Text("Log bench press, squat, deadlift, or overhead press to see your PRs here")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(Spacing.lg)
-        .background(Color(.systemGray6))
-        .cornerRadius(CornerRadius.md)
-    }
-}
-
-// MARK: - Inline Big Lift Card
-
-/// Individual card for a big lift exercise showing weight, estimated 1RM, and improvement
-private struct InlineBigLiftCard: View {
-    let exercise: ExerciseProgressItem
-    let preferredUnit: String
-    let onTap: () -> Void
-
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var displayUnit: String {
-        exercise.loadUnit ?? preferredUnit
-    }
-
-    private var cardBackgroundColor: Color {
-        colorScheme == .dark ? Color(.systemGray5) : Color(.systemBackground)
-    }
-
-    var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                // Exercise name with trophy if PR
-                HStack {
-                    Text(shortExerciseName)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .lineLimit(1)
-                        .foregroundColor(.primary)
-
-                    Spacer()
-
-                    if exercise.hasPersonalRecord {
-                        Image(systemName: "trophy.fill")
-                            .font(.caption)
-                            .foregroundColor(.yellow)
-                    }
-                }
-
-                Spacer()
-
-                // Max weight prominently displayed
-                if let pr = exercise.personalRecord {
-                    Text(formatWeight(pr.value))
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .monospacedDigit()
-
-                    // Estimated 1RM (if different from max weight)
-                    if let estimated1RM = estimated1RMValue, estimated1RM > pr.value {
-                        HStack(spacing: 2) {
-                            Text("Est 1RM:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(formatWeight(estimated1RM))
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.purple)
-                        }
-                    }
-                } else {
-                    Text(formatWeight(exercise.averageWeight))
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .monospacedDigit()
-
-                    Text("Avg Weight")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                // Improvement badge
-                if exercise.improvementPercentage != 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: exercise.improvementPercentage > 0 ? "arrow.up.right" : "arrow.down.right")
-                            .font(.caption2)
-                        Text(exercise.formattedImprovement)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(exercise.improvementPercentage > 0 ? .green : .red)
-                }
-            }
-            .padding(Spacing.sm)
-            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-            .background(cardBackgroundColor)
-            .cornerRadius(CornerRadius.md)
-            .adaptiveShadow(Shadow.subtle)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(exercise.exerciseName), \(exercise.personalRecord.map { formatWeight($0.value) } ?? formatWeight(exercise.averageWeight))")
-        .accessibilityHint("Double tap to view exercise history")
-    }
-
-    /// Shortened exercise name for compact display
-    private var shortExerciseName: String {
-        let name = exercise.exerciseName
-        // Remove common prefixes for compact display
-        let shortened = name
-            .replacingOccurrences(of: "Barbell ", with: "")
-            .replacingOccurrences(of: "Dumbbell ", with: "DB ")
-        return shortened
-    }
-
-    /// Estimates 1RM using Epley formula if we have rep data
-    /// This is a simplified calculation - the full RMCalculator is used in ExerciseHistorySheet
-    private var estimated1RMValue: Double? {
-        guard exercise.personalRecord != nil else { return nil }
-        // Simple Epley formula estimate: weight * (1 + reps/30)
-        // Since we don't have rep count in ExerciseProgressItem, return nil
-        // The actual 1RM is calculated in ExerciseHistorySheet with full session data
-        return nil
-    }
-
-    private func formatWeight(_ weight: Double) -> String {
-        if weight == floor(weight) {
-            return "\(Int(weight)) \(displayUnit)"
-        }
-        return String(format: "%.1f %@", weight, displayUnit)
-    }
-}
+// NOTE: InlineBigLiftsGrid and InlineBigLiftCard moved to Views/History/Components/BigLiftsGrid.swift
 
 // MARK: - Loading View
 

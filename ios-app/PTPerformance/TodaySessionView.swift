@@ -2,13 +2,13 @@ import SwiftUI
 
 struct TodaySessionView: View {
     @EnvironmentObject var appState: AppState
-    @EnvironmentObject var supabase: PTSupabaseClient  // BUILD 264: For ManualWorkoutExecutionView
+    @EnvironmentObject var supabase: PTSupabaseClient
     @StateObject private var viewModel = TodaySessionViewModel()
     @StateObject private var enrolledProgramsViewModel = EnrolledProgramsViewModel()
     @State private var selectedExercise: Exercise?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
-    // BUILD 307: Removed showSessionSummary bool - use sheet(item:) pattern instead
+    // Use sheet(item:) pattern for session summary instead of boolean
     @State private var isCompletingSession = false
     @State private var completionError: String?
     @State private var showReadinessCheckIn = false
@@ -22,17 +22,17 @@ struct TodaySessionView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
-    // BUILD 120: Exercise state management
+    // Exercise state management
     @State private var completedExercises: [UUID: Bool] = [:]
     @State private var expandedExercises: [UUID: Bool] = [:]
 
-    // BUILD 124: Explicit workout session tracking
+    // Explicit workout session tracking
     @State private var sessionStartTime: Date?
     @State private var isWorkoutStarted = false
     @State private var currentTime = Date() // For running clock
     @State private var timer: Timer?
 
-    // BUILD 174: Store completed session with correct started_at/completed_at
+    // Store completed session with correct started_at/completed_at
     @State private var completedSession: Session?
 
     // Manual Workout Navigation
@@ -44,7 +44,7 @@ struct TodaySessionView: View {
     @State private var createdManualSession: ManualSession?
     @State private var isCreatingManualSession = false
 
-    // BUILD 258: Unified workout execution
+    // Unified workout execution
     @State private var showUnifiedWorkoutExecution = false
 
     var shouldUseSplitView: Bool {
@@ -62,13 +62,13 @@ struct TodaySessionView: View {
         .sheet(isPresented: $showDebugLogs) {
             DebugLogView()
         }
-        // BUILD 307: Use sheet(item:) pattern to prevent black screen when session is nil
+        // Use sheet(item:) pattern to prevent black screen when session is nil
         .sheet(item: $completedSession) { session in
             SessionSummaryView(session: session)
                 .environmentObject(appState)
         }
         .sheet(isPresented: $showReadinessCheckIn, onDismiss: {
-            // BUILD 127: Reload readiness data after check-in submission
+            // Reload readiness data after check-in submission
             Task {
                 await loadTodayReadiness()
             }
@@ -121,7 +121,7 @@ struct TodaySessionView: View {
                 }
             }
         }
-        // BUILD 220: Add exercise to today's session picker
+        // Add exercise to today's session picker
         .sheet(isPresented: $showAddToTodayPicker) {
             NavigationStack {
                 AddExerciseToTodaySheet(
@@ -141,7 +141,7 @@ struct TodaySessionView: View {
                     onComplete: {
                         createdManualSession = nil
                         selectedWorkoutTemplate = nil
-                        // BUILD 275: Refresh completed workouts and fetch next session in parallel
+                        // Refresh completed workouts and fetch next session in parallel
                         Task {
                             async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
                             async let sessionTask: () = viewModel.fetchTodaySession()
@@ -149,10 +149,10 @@ struct TodaySessionView: View {
                         }
                     }
                 )
-                .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
+                .environmentObject(supabase)
             }
         }
-        // BUILD 258: Unified workout execution for prescribed sessions
+        // Unified workout execution for prescribed sessions
         .fullScreenCover(isPresented: $showUnifiedWorkoutExecution) {
             if let session = viewModel.session, let patientId = appState.userId {
                 ManualWorkoutExecutionView(
@@ -164,7 +164,7 @@ struct TodaySessionView: View {
                         isWorkoutStarted = false
                         timer?.invalidate()
                         timer = nil
-                        // BUILD 275: Refresh completed workouts and fetch next session in parallel
+                        // Refresh completed workouts and fetch next session in parallel
                         Task {
                             async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
                             async let sessionTask: () = viewModel.fetchTodaySession()
@@ -172,7 +172,7 @@ struct TodaySessionView: View {
                         }
                     }
                 )
-                .environmentObject(supabase)  // BUILD 264: Pass supabase to workout execution
+                .environmentObject(supabase)
             }
         }
         .task {
@@ -186,7 +186,7 @@ struct TodaySessionView: View {
             await enrolledProgramsViewModel.loadEnrolledPrograms()
         }
         .onDisappear {
-            // BUILD 124: Stop timer when view disappears
+            // Stop timer when view disappears
             timer?.invalidate()
             timer = nil
         }
@@ -247,7 +247,7 @@ struct TodaySessionView: View {
                     sessionContent
                 }
 
-                // BUILD 286: Re-enabled Add to Today FAB option (ACP-591)
+                // Add to Today FAB option (ACP-591)
                 FloatingActionButton(
                     onAddToToday: { showAddToTodayPicker = true },
                     onNewWorkout: {
@@ -296,589 +296,78 @@ struct TodaySessionView: View {
         }
     }
 
-    // BUILD 259: Simplified session content - just cards and Start Workout button
+    // Simplified session content - just cards and Start Workout button
     @ViewBuilder
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Enrolled Programs Section (only shows if user has enrolled programs)
                 if enrolledProgramsViewModel.hasEnrolledPrograms {
-                    enrolledProgramsSection
+                    TodayEnrolledProgramsSection(
+                        enrolledPrograms: enrolledProgramsViewModel.enrolledPrograms,
+                        activeEnrollmentCount: enrolledProgramsViewModel.activeEnrollmentCount,
+                        isLoading: enrolledProgramsViewModel.isLoading,
+                        currentWeek: { enrolledProgramsViewModel.currentWeek(for: $0) },
+                        progressPercentage: { enrolledProgramsViewModel.progressPercentage(for: $0) },
+                        daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) }
+                    )
                 }
 
-                // BUILD 269: Today's completed workouts counter
+                // Today's completed workouts counter
                 if viewModel.completedTodayCount > 0 {
-                    completedTodaySection
+                    CompletedWorkoutsSection(
+                        completedCount: viewModel.completedTodayCount,
+                        completedWorkouts: viewModel.todaysCompletedWorkouts
+                    )
                 }
 
                 // Readiness Section
-                readinessSection
+                ReadinessStatusCard(
+                    todayReadiness: todayReadiness,
+                    isLoading: isLoadingReadiness,
+                    onCheckIn: { showReadinessCheckIn = true },
+                    onShowDashboard: { showReadinessDashboard = true }
+                )
 
                 // ACP-522: Arm Care Section (for baseball/throwing athletes)
-                armCareSection
+                ArmCareStatusCard(
+                    todayArmCare: todayArmCare,
+                    isLoading: isLoadingArmCare,
+                    onCheckIn: { showArmCareAssessment = true },
+                    onShowDetails: { showArmCareAssessment = true }
+                )
 
                 // Session Card with Start Workout
                 if let session = viewModel.session {
                     if session.isCompleted {
-                        sessionCompletedView
+                        SessionCompletedView(
+                            session: session,
+                            onBrowseLibrary: { showTemplateLibrary = true },
+                            onCreateCustomWorkout: { showWorkoutCreator = true },
+                            onViewSummary: { completedSession = viewModel.session }
+                        )
                     } else {
-                        todaySessionCard(session)
-                    }
-                }
-
-                Spacer()
-            }
-            .padding()
-        }
-    }
-
-    // BUILD 269: Section showing today's completed workouts
-    @ViewBuilder
-    private var completedTodaySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-                    .font(.title2)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    if let lastWorkout = viewModel.todaysCompletedWorkouts.first {
-                        Text("Last: \(lastWorkout.name)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
-            }
-            .padding()
-            .background(Color.green.opacity(0.1))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
-            )
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(viewModel.completedTodayCount) workout\(viewModel.completedTodayCount == 1 ? "" : "s") completed today")
-
-            // List of completed workouts today with context menus
-            if viewModel.todaysCompletedWorkouts.count > 0 {
-                ForEach(viewModel.todaysCompletedWorkouts) { workout in
-                    HStack(spacing: 12) {
-                        Image(systemName: workout.isPrescribed ? "clipboard.fill" : "dumbbell.fill")
-                            .foregroundColor(workout.isPrescribed ? .blue : .orange)
-                            .frame(width: 24)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(workout.name)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-
-                            HStack(spacing: 8) {
-                                if let duration = workout.durationMinutes {
-                                    Text("\(duration) min")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                if let volume = workout.totalVolume, volume > 0 {
-                                    Text(volume >= 1000 ? String(format: "%.1fk lbs", volume / 1000) : "\(Int(volume)) lbs")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-
-                                Text(workout.completedAt, style: .time)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(8)
-                    .contentShape(Rectangle())
-                    .contextMenu {
-                        Button {
-                            HapticFeedback.light()
-                            // Copy workout summary to clipboard
-                            var summary = workout.name
-                            if let duration = workout.durationMinutes {
-                                summary += " - \(duration) min"
-                            }
-                            if let volume = workout.totalVolume, volume > 0 {
-                                summary += " - \(Int(volume)) lbs"
-                            }
-                            UIPasteboard.general.string = summary
-                        } label: {
-                            Label("Copy Summary", systemImage: "doc.on.doc")
-                        }
-
-                        Button {
-                            HapticFeedback.light()
-                            // Share workout details
-                            let summary = "Completed \(workout.name) at \(workout.completedAt.formatted(date: .omitted, time: .shortened))"
-                            UIPasteboard.general.string = summary
-                        } label: {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // BUILD 259: Clean session card with exercise preview and Start button
-    @ViewBuilder
-    private func todaySessionCard(_ session: Session) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Session Info Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("TODAY'S WORKOUT")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-
-                    Text(session.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-
-                Spacer()
-
-                // Exercise count badge
-                VStack {
-                    Text("\(viewModel.exercises.count)")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-                    Text("exercises")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            // Exercise preview (first 3) with context menus
-            if !viewModel.exercises.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(viewModel.exercises.prefix(3)) { exercise in
-                        HStack(spacing: 12) {
-                            Image(systemName: "circle")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Text(exercise.exercise_name ?? "Exercise")
-                                .font(.subheadline)
-
-                            Spacer()
-
-                            Text("\(exercise.prescribed_sets) × \(exercise.repsDisplay)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .contentShape(Rectangle())
-                        .contextMenu {
-                            Button {
-                                HapticFeedback.light()
+                        TodayWorkoutCard(
+                            session: session,
+                            exercises: viewModel.exercises,
+                            onStartWorkout: startWorkout,
+                            onRefresh: { await viewModel.refresh() },
+                            onExerciseSelected: { exercise in
                                 selectedExercise = exercise
-                            } label: {
-                                Label("View Details", systemImage: "info.circle")
                             }
-
-                            Button {
-                                HapticFeedback.light()
-                                // Copy exercise name to clipboard
-                                UIPasteboard.general.string = exercise.exercise_name ?? "Exercise"
-                            } label: {
-                                Label("Copy Name", systemImage: "doc.on.doc")
-                            }
-                        }
-                    }
-
-                    if viewModel.exercises.count > 3 {
-                        Text("+ \(viewModel.exercises.count - 3) more exercises")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, 24)
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-
-            Divider()
-
-            // Start Workout Button
-            Button(action: startWorkout) {
-                HStack {
-                    Image(systemName: "play.circle.fill")
-                        .font(.title2)
-                    Text("Start Workout")
-                        .font(.headline)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-            }
-            .accessibilityLabel("Start Workout")
-            .accessibilityHint("Begins today's prescribed workout session")
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .adaptiveShadow(Shadow.medium)
-        .contextMenu {
-            Button {
-                HapticFeedback.medium()
-                startWorkout()
-            } label: {
-                Label("Start Workout", systemImage: "play.circle.fill")
-            }
-
-            Button {
-                HapticFeedback.light()
-                // Copy session name
-                UIPasteboard.general.string = session.name
-            } label: {
-                Label("Copy Session Name", systemImage: "doc.on.doc")
-            }
-
-            Divider()
-
-            Button {
-                HapticFeedback.light()
-                Task { await viewModel.refresh() }
-            } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
-            }
-        }
-    }
-
-    // MARK: - Enrolled Programs Section
-
-    @ViewBuilder
-    private var enrolledProgramsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Section Header
-            HStack {
-                Text("My Programs")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                if enrolledProgramsViewModel.activeEnrollmentCount > 0 {
-                    Text("\(enrolledProgramsViewModel.activeEnrollmentCount) active")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            // Horizontal scrolling cards
-            if enrolledProgramsViewModel.isLoading {
-                HStack {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Loading programs...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding(.vertical, 20)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(enrolledProgramsViewModel.enrolledPrograms) { enrollment in
-                            EnrolledProgramCardInline(
-                                enrollment: enrollment,
-                                currentWeek: enrolledProgramsViewModel.currentWeek(for: enrollment),
-                                progressPercentage: enrolledProgramsViewModel.progressPercentage(for: enrollment),
-                                daysRemainingDisplay: enrolledProgramsViewModel.daysRemainingDisplay(for: enrollment)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator), lineWidth: 1)
-        )
-        .adaptiveShadow(Shadow.subtle)
-    }
-
-    // MARK: - BUILD 116: Readiness Section (Agent 18)
-
-    @ViewBuilder
-    private var readinessSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Section title
-            Text("Daily Readiness")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            if isLoadingReadiness {
-                // Loading state
-                ProgressView("Loading readiness...")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-            } else if let readiness = todayReadiness,
-                      let score = readiness.readinessScore,
-                      let category = readiness.category {
-                // Checked in today - show score card
-                readinessScoreCard(score: score, category: category)
-            } else {
-                // Not checked in - show prompt
-                readinessCheckInPrompt
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator), lineWidth: 1)
-        )
-        .adaptiveShadow(Shadow.subtle)
-    }
-
-    @ViewBuilder
-    private func readinessScoreCard(score: Double, category: ReadinessCategory) -> some View {
-        Button(action: {
-            showReadinessDashboard = true
-        }) {
-            HStack(spacing: 16) {
-                // Score circle
-                ZStack {
-                    Circle()
-                        .fill(category.color.opacity(0.2))
-                        .frame(width: 64, height: 64)
-
-                    VStack(spacing: 2) {
-                        Text(String(format: "%.0f", score))
-                            .font(.title2)
-                            .bold()
-                            .foregroundColor(category.color)
-
-                        Text("/ 100")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        )
                     }
                 }
 
-                // Category and recommendation
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(category.displayName)
-                        .font(.headline)
-                        .foregroundColor(category.color)
-
-                    Text(category.recommendation)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
-                    .accessibilityHidden(true)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Readiness score \(String(format: "%.0f", score)) out of 100, \(category.displayName)")
-        .accessibilityHint("Opens readiness dashboard with detailed trends")
-    }
-
-    @ViewBuilder
-    private var readinessCheckInPrompt: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "heart.text.square")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("How are you feeling today?")
-                        .font(.headline)
-
-                    Text("Complete your daily check-in")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
                 Spacer()
             }
-
-            Button(action: {
-                HapticFeedback.light()
-                showReadinessCheckIn = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Check In Now")
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            .accessibilityLabel("Check In Now")
-            .accessibilityHint("Opens daily readiness check-in form")
+            .padding()
         }
     }
 
-    // MARK: - ACP-522: Arm Care Section
 
-    @ViewBuilder
-    private var armCareSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Section title
-            Text("Arm Care Status")
-                .font(.headline)
-                .foregroundColor(.secondary)
 
-            if isLoadingArmCare {
-                // Loading state
-                ProgressView("Checking arm status...")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-            } else if let armCare = todayArmCare {
-                // Checked in today - show traffic light card
-                armCareStatusCard(assessment: armCare)
-            } else {
-                // Not checked in - show prompt
-                armCareCheckInPrompt
-            }
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator), lineWidth: 1)
-        )
-        .adaptiveShadow(Shadow.subtle)
-    }
-
-    @ViewBuilder
-    private func armCareStatusCard(assessment: ArmCareAssessment) -> some View {
-        Button(action: {
-            showArmCareAssessment = true
-        }) {
-            HStack(spacing: 16) {
-                // Traffic light indicator
-                ZStack {
-                    Circle()
-                        .fill(assessment.trafficLight.color.opacity(0.2))
-                        .frame(width: 64, height: 64)
-
-                    Image(systemName: assessment.trafficLight.iconName)
-                        .font(.title)
-                        .foregroundColor(assessment.trafficLight.color)
-                }
-
-                // Status and recommendation
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(assessment.trafficLight.displayName)
-                        .font(.headline)
-                        .foregroundColor(assessment.trafficLight.color)
-
-                    Text(armCareRecommendation(for: assessment.trafficLight))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.gray)
-                    .accessibilityHidden(true)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Arm care status: \(assessment.trafficLight.displayName)")
-        .accessibilityHint("Opens arm care assessment details")
-    }
-
-    private func armCareRecommendation(for trafficLight: ArmCareTrafficLight) -> String {
-        switch trafficLight {
-        case .green:
-            return "Full throwing program OK"
-        case .yellow:
-            return "Reduce throwing 50%, add arm care"
-        case .red:
-            return "No throwing - recovery only"
-        }
-    }
-
-    @ViewBuilder
-    private var armCareCheckInPrompt: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "figure.baseball")
-                    .font(.title2)
-                    .foregroundColor(.orange)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("How's your arm today?")
-                        .font(.headline)
-
-                    Text("30-second shoulder/elbow check")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-
-            Button(action: {
-                HapticFeedback.light()
-                showArmCareAssessment = true
-            }) {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Quick Arm Check")
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-            }
-            .accessibilityLabel("Quick Arm Check")
-            .accessibilityHint("Opens 30-second arm care assessment")
-        }
-    }
-
-    // MARK: - BUILD 124: Start Workout Section with Running Clock
+    // MARK: - Start Workout Section with Running Clock
 
     @ViewBuilder
     private var startWorkoutSection: some View {
@@ -896,7 +385,7 @@ struct TodaySessionView: View {
                     .padding()
                     .background(Color.green)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(DesignTokens.cornerRadiusMedium)
                 }
             } else {
                 // Running Clock
@@ -929,9 +418,9 @@ struct TodaySessionView: View {
                 }
                 .padding()
                 .background(Color.green.opacity(0.1))
-                .cornerRadius(12)
+                .cornerRadius(DesignTokens.cornerRadiusMedium)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                         .stroke(Color.green.opacity(0.3), lineWidth: 2)
                 )
             }
@@ -939,7 +428,7 @@ struct TodaySessionView: View {
         .padding(.horizontal)
     }
 
-    // MARK: - BUILD 124: Workout Timing Helpers
+    // MARK: - Workout Timing Helpers
 
     private var elapsedTimeFormatted: String {
         guard let startTime = sessionStartTime else { return "00:00:00" }
@@ -953,7 +442,7 @@ struct TodaySessionView: View {
     private func startWorkout() {
         // Haptic feedback for starting workout
         HapticFeedback.medium()
-        // BUILD 258: Launch unified workout execution view
+        // Launch unified workout execution view
         showUnifiedWorkoutExecution = true
         DebugLogger.shared.log("Launching unified workout execution view")
     }
@@ -979,7 +468,7 @@ struct TodaySessionView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
 
     @ViewBuilder
@@ -1002,6 +491,7 @@ struct TodaySessionView: View {
         .padding()
     }
 
+    @ViewBuilder
     private var noSessionView: some View {
         VStack(spacing: 20) {
             Image(systemName: "calendar.badge.checkmark")
@@ -1015,7 +505,7 @@ struct TodaySessionView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, DesignTokens.spacingXLarge)
 
             Button {
                 HapticFeedback.light()
@@ -1024,148 +514,13 @@ struct TodaySessionView: View {
                 Label("Browse Workout Library", systemImage: "books.vertical")
                     .font(.headline)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, DesignTokens.spacingXLarge)
+                    .padding(.vertical, DesignTokens.spacingMedium)
                     .background(Color.blue)
-                    .cornerRadius(12)
+                    .cornerRadius(DesignTokens.cornerRadiusMedium)
             }
             .padding(.top, 8)
         }
-        .padding()
-    }
-
-    // MARK: - Session Completed View (BUILD 215)
-
-    @ViewBuilder
-    private var sessionCompletedView: some View {
-        VStack(spacing: 24) {
-            // Success icon and message
-            VStack(spacing: 12) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 72))
-                    .foregroundColor(.green)
-
-                Text("Session Complete!")
-                    .font(.title)
-                    .bold()
-
-                if let session = viewModel.session {
-                    Text(session.name)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                }
-
-                // Show metrics if available
-                if let session = viewModel.session {
-                    HStack(spacing: 24) {
-                        if let volume = session.total_volume, volume > 0 {
-                            VStack {
-                                Text(volume >= 1000 ? String(format: "%.1fk", volume / 1000) : "\(Int(volume))")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text("lbs")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-
-                        if let duration = session.duration_minutes {
-                            VStack {
-                                Text("\(duration)")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text("min")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-
-                        if let rpe = session.avg_rpe {
-                            VStack {
-                                Text(String(format: "%.1f", rpe))
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                Text("RPE")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding(.top, 8)
-                }
-            }
-
-            Divider()
-                .padding(.vertical, 8)
-
-            // Options for next steps
-            VStack(spacing: 12) {
-                Text("Want to do more?")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-
-                // Start another workout from library
-                Button(action: {
-                    HapticFeedback.light()
-                    showTemplateLibrary = true
-                }) {
-                    HStack {
-                        Image(systemName: "books.vertical.fill")
-                        Text("Browse Workout Library")
-                    }
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                }
-                .accessibilityLabel("Browse Workout Library")
-                .accessibilityHint("Opens saved workout templates")
-
-                // Create custom workout
-                Button(action: {
-                    HapticFeedback.light()
-                    showWorkoutCreator = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Create Custom Workout")
-                    }
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.green.opacity(0.15))
-                    .foregroundColor(.green)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.green, lineWidth: 1)
-                    )
-                }
-                .accessibilityLabel("Create Custom Workout")
-                .accessibilityHint("Opens workout builder to create a new workout")
-
-                // View summary - BUILD 307: sheet(item:) shows when completedSession is set
-                Button(action: {
-                    completedSession = viewModel.session
-                }) {
-                    HStack {
-                        Image(systemName: "chart.bar.fill")
-                        Text("View Session Summary")
-                    }
-                    .font(.subheadline)
-                    .foregroundColor(.blue)
-                }
-                .padding(.top, 8)
-                .accessibilityLabel("View Session Summary")
-                .accessibilityHint("Shows detailed summary of completed workout")
-            }
-        }
-        .padding(24)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .adaptiveShadow(Shadow.medium)
         .padding()
     }
 
@@ -1192,13 +547,13 @@ struct TodaySessionView: View {
         isCompletingSession = true
         completionError = nil
 
-        // BUILD 123: Pass session start time to completion
+        // Pass session start time to completion
         let startTime = sessionStartTime ?? Date() // Fallback to current time if not captured
         let result = await viewModel.completeSession(startedAt: startTime)
 
         switch result {
         case .success(let session):
-            // BUILD 307: sheet(item:) shows automatically when completedSession is set
+            // sheet(item:) shows automatically when completedSession is set
             completedSession = session
             isCompletingSession = false
         case .failure(let error):
@@ -1207,7 +562,7 @@ struct TodaySessionView: View {
         }
     }
 
-    // MARK: - BUILD 124: Readiness Data Loading (Fixed)
+    // MARK: - Readiness Data Loading
 
     private func loadTodayReadiness() async {
         guard let userId = appState.userId,
@@ -1322,7 +677,7 @@ struct TodaySessionView: View {
     }
 }
 
-// MARK: - BUILD 116: ReadinessService Extension (Agent 18)
+// MARK: - ReadinessService Extension
 
 extension ReadinessService {
     /// Fetch today's readiness check-in for a patient (UUID version)
@@ -1333,342 +688,3 @@ extension ReadinessService {
     }
 }
 
-// MARK: - Enrolled Program Card (Inline for Today tab)
-
-/// Compact card for displaying enrolled programs in the Today tab horizontal scroll
-struct EnrolledProgramCardInline: View {
-    let enrollment: EnrollmentWithProgram
-    let currentWeek: Int
-    let progressPercentage: Int
-    let daysRemainingDisplay: String
-
-    @State private var showDetailSheet = false
-
-    var body: some View {
-        Button {
-            HapticFeedback.light()
-            showDetailSheet = true
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                // Category Badge
-                HStack {
-                    ProgramCategoryBadge(category: enrollment.program.category)
-                    Spacer()
-                }
-
-                // Program Title
-                Text(enrollment.program.title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    .foregroundColor(.primary)
-
-                // Current Week
-                Text("Week \(currentWeek)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Spacer(minLength: 4)
-
-                // Progress Bar
-                VStack(alignment: .leading, spacing: 4) {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            // Background track
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(.systemGray5))
-                                .frame(height: 8)
-
-                            // Progress fill
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(progressColor)
-                                .frame(width: geometry.size.width * CGFloat(progressPercentage) / 100, height: 8)
-                        }
-                    }
-                    .frame(height: 8)
-
-                    // Progress label
-                    HStack {
-                        Text("\(progressPercentage)%")
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .foregroundColor(progressColor)
-
-                        Spacer()
-
-                        Text(daysRemainingDisplay)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding(12)
-            .frame(width: 160, height: 150)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(enrollment.program.title), Week \(currentWeek), \(progressPercentage) percent complete, \(daysRemainingDisplay)")
-        .accessibilityHint("Tap to view program details")
-        .contextMenu {
-            Button {
-                HapticFeedback.light()
-                showDetailSheet = true
-            } label: {
-                Label("View Details", systemImage: "info.circle")
-            }
-
-            Button {
-                HapticFeedback.light()
-                // Copy program summary
-                let summary = "\(enrollment.program.title) - Week \(currentWeek) (\(progressPercentage)% complete)"
-                UIPasteboard.general.string = summary
-            } label: {
-                Label("Copy Progress", systemImage: "doc.on.doc")
-            }
-
-            Divider()
-
-            Button {
-                HapticFeedback.light()
-                // Share program progress
-                let summary = "Working on \(enrollment.program.title) - Week \(currentWeek), \(progressPercentage)% complete!"
-                UIPasteboard.general.string = summary
-            } label: {
-                Label("Share Progress", systemImage: "square.and.arrow.up")
-            }
-        }
-        .sheet(isPresented: $showDetailSheet) {
-            EnrolledProgramDetailSheet(enrollment: enrollment)
-        }
-    }
-
-    private var progressColor: Color {
-        if progressPercentage >= 75 {
-            return .green
-        } else if progressPercentage >= 50 {
-            return .blue
-        } else if progressPercentage >= 25 {
-            return .orange
-        } else {
-            return .purple
-        }
-    }
-}
-
-/// Exercise row component
-struct ExerciseRow: View {
-    let exercise: Exercise
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Exercise order badge
-            Text("\(exercise.exercise_order)")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(width: 32, height: 32)
-                .background(Color.blue)
-                .clipShape(Circle())
-
-            // Exercise details
-            VStack(alignment: .leading, spacing: 4) {
-                Text(exercise.exercise_name ?? "Exercise \(exercise.exercise_order)")
-                    .font(.headline)
-
-                HStack(spacing: 12) {
-                    Label(exercise.setsDisplay, systemImage: "repeat")
-                    Label(exercise.repsDisplay + " reps", systemImage: "number")
-                    Label(exercise.loadDisplay, systemImage: "scalemass")
-                }
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-                if let notes = exercise.notes, !notes.isEmpty {
-                    Text(notes)
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                        .lineLimit(2)
-                }
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
-        }
-        .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator), lineWidth: 1)
-        )
-        .adaptiveShadow(Shadow.subtle)
-        .contentShape(Rectangle())
-        .contextMenu {
-            Button {
-                HapticFeedback.light()
-                // Copy exercise prescription
-                var prescription = exercise.exercise_name ?? "Exercise"
-                prescription += ": \(exercise.setsDisplay) × \(exercise.repsDisplay)"
-                if let load = exercise.prescribed_load {
-                    prescription += " @ \(Int(load)) \(exercise.load_unit ?? "lbs")"
-                }
-                UIPasteboard.general.string = prescription
-            } label: {
-                Label("Copy Prescription", systemImage: "doc.on.doc")
-            }
-
-            if let notes = exercise.notes, !notes.isEmpty {
-                Button {
-                    HapticFeedback.light()
-                    UIPasteboard.general.string = notes
-                } label: {
-                    Label("Copy Notes", systemImage: "note.text")
-                }
-            }
-        }
-    }
-}
-
-/// Exercise detail view placeholder
-struct ExerciseDetailView: View {
-    let exercise: Exercise
-    @EnvironmentObject var appState: AppState
-    @State private var showTechniqueGuide = false
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text(exercise.exercise_name ?? "Exercise")
-                    .font(.largeTitle)
-                    .bold()
-
-                VStack(alignment: .leading, spacing: 12) {
-                    DetailRow(label: "Sets", value: exercise.setsDisplay)
-                    DetailRow(label: "Reps", value: exercise.repsDisplay)
-                    DetailRow(label: "Load", value: exercise.loadDisplay)
-
-                    if let rest = exercise.rest_seconds {
-                        DetailRow(label: "Rest", value: "\(rest) seconds")
-                    }
-
-                    if let notes = exercise.notes {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Notes")
-                                .font(.headline)
-                            Text(notes)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-
-                // View Technique Guide button
-                Button(action: {
-                    showTechniqueGuide = true
-                }) {
-                    HStack {
-                        Image(systemName: "play.circle.fill")
-                        Text("View Technique Guide")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.purple)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                }
-                .accessibilityLabel("View Technique Guide")
-                .accessibilityHint("Shows video and instructions for proper exercise form")
-
-                Spacer()
-
-                // Log exercise button - navigates to exercise logging form
-                if let patientId = appState.userId {
-                    NavigationLink(destination: ExerciseLogView(
-                        exercise: exercise,
-                        sessionExerciseId: exercise.id.uuidString,
-                        patientId: patientId
-                    )) {
-                        Text("Log This Exercise")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                    }
-                } else {
-                    Text("Log This Exercise")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            Text("Sign in to log exercises")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.8))
-                        )
-                }
-            }
-            .padding()
-        }
-        .navigationTitle("Exercise Detail")
-        .sheet(isPresented: $showTechniqueGuide) {
-            ExerciseTechniqueView(exercise: exercise)
-        }
-    }
-}
-
-private struct DetailRow: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .font(.headline)
-        }
-    }
-}
-
-// MARK: - One-Tap Start Button
-
-/// Floating action button for quick workout start - always visible when session available
-struct OneTapStartButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            HapticFeedback.medium()
-            action()
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: "play.fill")
-                    .font(.title2)
-                Text("Start Workout")
-                    .fontWeight(.semibold)
-            }
-            .foregroundColor(.white)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 16)
-            .background(
-                Capsule()
-                    .fill(Color.green)
-                    .shadow(color: .green.opacity(0.4), radius: 8, y: 4)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Start Workout")
-        .accessibilityHint("Tap to begin today's workout session")
-    }
-}

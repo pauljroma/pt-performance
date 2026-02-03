@@ -77,7 +77,7 @@ struct PTPerformanceApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        // BUILD 286: Initialize Sentry error monitoring (ACP-599)
+        // Initialize Sentry error monitoring (ACP-599)
         SentryConfig.initialize()
 
         // Track app launch performance
@@ -90,6 +90,9 @@ struct PTPerformanceApp: App {
 
         // ACP-827: Register background tasks for Apple Health sync
         HealthSyncManager.shared.registerBackgroundTasks()
+
+        // Initialize CacheCoordinator for unified memory management
+        _ = CacheCoordinator.shared
 
         // Log app startup
         ErrorLogger.shared.logUserAction(
@@ -185,7 +188,9 @@ struct PTPerformanceApp: App {
                     }
                 }
             } catch {
+                #if DEBUG
                 print("Failed to handle auth deep link: \(error.localizedDescription)")
+                #endif
             }
         }
     }
@@ -201,7 +206,9 @@ struct PTPerformanceApp: App {
         WidgetCenter.shared.reloadAllTimelines()
 
         // Log refresh for debugging
+        #if DEBUG
         print("[PTPerformanceApp] Refreshed widget timelines on app active")
+        #endif
     }
 }
 
@@ -295,7 +302,7 @@ class LoggingService: ObservableObject {
     func log(_ message: String, level: LogLevel = .diagnostic) {
         guard isEnabled else { return }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in
             // Also print to console
             print("\(level.emoji) [\(level)] \(message)")
 
@@ -311,7 +318,7 @@ class LoggingService: ObservableObject {
     }
 
     func clear() {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             self.messages.removeAll()
         }
     }

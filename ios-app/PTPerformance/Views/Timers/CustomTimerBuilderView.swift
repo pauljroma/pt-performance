@@ -14,29 +14,8 @@ struct CustomTimerBuilderView: View {
     // MARK: - Dependencies
 
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var timerService: IntervalTimerService
-    private let patientId: UUID
+    @StateObject private var viewModel: CustomTimerBuilderViewModel
     private let onTimerCreated: ((IntervalTemplate) -> Void)?
-
-    // MARK: - Form State
-
-    @State private var templateName: String = ""
-    @State private var timerType: TimerType = .custom
-    @State private var workSeconds: Int = 30
-    @State private var restSeconds: Int = 30
-    @State private var rounds: Int = 5
-    @State private var cycles: Int = 1
-    @State private var cycleRestSeconds: Int = 60
-    @State private var saveAsTemplate: Bool = false
-    @State private var makePublic: Bool = false
-
-    // MARK: - UI State
-
-    @State private var isCreating: Bool = false
-    @State private var showError: Bool = false
-    @State private var errorMessage: String = ""
-    @State private var showValidationError: Bool = false
-    @State private var validationError: String = ""
 
     // MARK: - Initialization
 
@@ -44,124 +23,8 @@ struct CustomTimerBuilderView: View {
         patientId: UUID,
         onTimerCreated: ((IntervalTemplate) -> Void)? = nil
     ) {
-        self.patientId = patientId
         self.onTimerCreated = onTimerCreated
-        // Initialize StateObject with shared IntervalTimerService instance
-        _timerService = StateObject(wrappedValue: .shared)
-    }
-
-    // MARK: - Computed Properties
-
-    /// Total duration for a single cycle (work + rest) × rounds
-    private var singleCycleDuration: Int {
-        (workSeconds + restSeconds) * rounds
-    }
-
-    /// Total duration including all cycles and cycle rest
-    private var totalDuration: Int {
-        if cycles == 1 {
-            return singleCycleDuration
-        } else {
-            // Multi-cycle: (cycle + cycle rest) × cycles - final cycle rest
-            return (singleCycleDuration + cycleRestSeconds) * cycles - cycleRestSeconds
-        }
-    }
-
-    /// Formatted total time string (e.g., "5m 30s")
-    private var formattedTotalTime: String {
-        let minutes = totalDuration / 60
-        let seconds = totalDuration % 60
-
-        if minutes > 0 {
-            if seconds > 0 {
-                return "\(minutes)m \(seconds)s"
-            }
-            return "\(minutes)m"
-        } else {
-            return "\(seconds)s"
-        }
-    }
-
-    /// Whether the current configuration is valid
-    private var isValid: Bool {
-        // Template name validation
-        let trimmedName = templateName.trimmingCharacters(in: .whitespaces)
-        guard trimmedName.count >= 2 && trimmedName.count <= 50 else {
-            return false
-        }
-
-        // Work duration validation
-        guard workSeconds > 0 else {
-            return false
-        }
-
-        // Rest duration validation
-        guard restSeconds >= 0 else {
-            return false
-        }
-
-        // Rounds validation
-        guard rounds >= 1 && rounds <= 50 else {
-            return false
-        }
-
-        // Cycles validation
-        guard cycles >= 1 && cycles <= 10 else {
-            return false
-        }
-
-        // Type-specific validation
-        if timerType == .emom {
-            // EMOM should have rest = 0 or work + rest = 60
-            if restSeconds != 0 && (workSeconds + restSeconds) != 60 {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    /// Validation error message (if invalid)
-    private var validationMessage: String? {
-        let trimmedName = templateName.trimmingCharacters(in: .whitespaces)
-
-        if trimmedName.isEmpty {
-            return "Template name is required"
-        }
-        if trimmedName.count < 2 {
-            return "Template name must be at least 2 characters"
-        }
-        if trimmedName.count > 50 {
-            return "Template name must be 50 characters or less"
-        }
-        if workSeconds <= 0 {
-            return "Work duration must be greater than 0"
-        }
-        if restSeconds < 0 {
-            return "Rest duration cannot be negative"
-        }
-        if rounds < 1 {
-            return "Rounds must be at least 1"
-        }
-        if rounds > 50 {
-            return "Rounds cannot exceed 50"
-        }
-        if cycles < 1 {
-            return "Cycles must be at least 1"
-        }
-        if cycles > 10 {
-            return "Cycles cannot exceed 10"
-        }
-        if totalDuration > 7200 {
-            return "Total duration cannot exceed 2 hours"
-        }
-
-        return nil
-    }
-
-    /// Whether to show cycle rest field
-    private var showCycleRest: Bool {
-        cycles > 1 && timerType != .tabata
+        _viewModel = StateObject(wrappedValue: CustomTimerBuilderViewModel(patientId: patientId))
     }
 
     // MARK: - Body
@@ -173,7 +36,7 @@ struct CustomTimerBuilderView: View {
                 timerTypeSection
                 durationSection
                 roundsAndCyclesSection
-                if showCycleRest {
+                if viewModel.showCycleRest {
                     cycleRestSection
                 }
                 previewSection
@@ -186,6 +49,8 @@ struct CustomTimerBuilderView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Discards timer and returns to previous screen")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create & Start") {
@@ -193,22 +58,28 @@ struct CustomTimerBuilderView: View {
                             await createAndStartTimer()
                         }
                     }
-                    .disabled(!isValid || isCreating)
+                    .disabled(!viewModel.isValid || viewModel.isCreating)
                     .fontWeight(.semibold)
+                    .accessibilityLabel("Create and start timer")
+                    .accessibilityHint(viewModel.isValid ? "Creates timer and starts it immediately" : "Complete the form to create timer")
                 }
             }
-            .alert("Validation Error", isPresented: $showValidationError) {
-                Button("OK", role: .cancel) { }
+            .alert("Validation Error", isPresented: $viewModel.showValidationError) {
+                Button("OK", role: .cancel) {
+                    viewModel.dismissValidationError()
+                }
             } message: {
-                Text(validationError)
+                Text(viewModel.validationError)
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK", role: .cancel) {
+                    viewModel.dismissError()
+                }
             } message: {
-                Text(errorMessage)
+                Text(viewModel.errorMessage)
             }
             .overlay {
-                if isCreating {
+                if viewModel.isCreating {
                     ProgressView()
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -223,13 +94,15 @@ struct CustomTimerBuilderView: View {
     /// Template info section (name)
     private var templateInfoSection: some View {
         Section {
-            TextField("Template Name", text: $templateName)
+            TextField("Template Name", text: $viewModel.templateName)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
+                .accessibilityLabel("Timer name")
+                .accessibilityHint("Enter a descriptive name for your timer")
         } header: {
             Text("Template Info")
         } footer: {
-            if let error = validationMessage, !templateName.isEmpty {
+            if let error = viewModel.validationMessage, !viewModel.templateName.isEmpty {
                 Text(error)
                     .foregroundColor(.red)
                     .font(.caption)
@@ -243,7 +116,7 @@ struct CustomTimerBuilderView: View {
     /// Timer type picker section
     private var timerTypeSection: some View {
         Section {
-            Picker("Type", selection: $timerType) {
+            Picker("Type", selection: $viewModel.timerType) {
                 ForEach(TimerType.allCases, id: \.self) { type in
                     HStack {
                         Image(systemName: type.iconName)
@@ -253,13 +126,10 @@ struct CustomTimerBuilderView: View {
                 }
             }
             .pickerStyle(.menu)
-            .onChange(of: timerType) { _, newType in
-                applyTypeDefaults(newType)
-            }
         } header: {
             Text("Timer Type")
         } footer: {
-            Text(timerType.description)
+            Text(viewModel.timerType.description)
                 .font(.caption)
         }
     }
@@ -273,14 +143,17 @@ struct CustomTimerBuilderView: View {
                     .foregroundColor(.red)
                 Spacer()
                 Stepper(
-                    value: $workSeconds,
+                    value: $viewModel.workSeconds,
                     in: 5...300,
                     step: 5
                 ) {
-                    Text("\(workSeconds)s")
+                    Text("\(viewModel.workSeconds)s")
                         .font(.body.monospacedDigit())
                         .foregroundColor(.primary)
                 }
+                .accessibilityLabel("Work duration")
+                .accessibilityValue("\(viewModel.workSeconds) seconds")
+                .accessibilityHint("Adjust work interval duration in 5-second increments")
             }
 
             // Rest Duration
@@ -289,20 +162,23 @@ struct CustomTimerBuilderView: View {
                     .foregroundColor(.green)
                 Spacer()
                 Stepper(
-                    value: $restSeconds,
+                    value: $viewModel.restSeconds,
                     in: 0...300,
                     step: 5
                 ) {
-                    Text(restSeconds == 0 ? "None" : "\(restSeconds)s")
+                    Text(viewModel.restSeconds == 0 ? "None" : "\(viewModel.restSeconds)s")
                         .font(.body.monospacedDigit())
                         .foregroundColor(.primary)
                 }
+                .accessibilityLabel("Rest duration")
+                .accessibilityValue(viewModel.restSeconds == 0 ? "No rest" : "\(viewModel.restSeconds) seconds")
+                .accessibilityHint("Adjust rest interval duration in 5-second increments")
             }
-            .disabled(timerType == .emom && restSeconds == 0)
+            .disabled(viewModel.timerType == .emom && viewModel.restSeconds == 0)
         } header: {
             Text("Duration")
         } footer: {
-            if timerType == .emom {
+            if viewModel.timerType == .emom {
                 Text("EMOM: Work duration + rest should equal 60s, or set rest to 0 for continuous work")
                     .font(.caption)
             } else {
@@ -321,38 +197,44 @@ struct CustomTimerBuilderView: View {
                     .foregroundColor(.blue)
                 Spacer()
                 Stepper(
-                    value: $rounds,
+                    value: $viewModel.rounds,
                     in: 1...50
                 ) {
-                    Text("\(rounds)")
+                    Text("\(viewModel.rounds)")
                         .font(.body.monospacedDigit())
                         .foregroundColor(.primary)
                 }
+                .accessibilityLabel("Number of rounds")
+                .accessibilityValue("\(viewModel.rounds) rounds")
+                .accessibilityHint("Adjust the number of work-rest intervals")
             }
 
             // Cycles (if not Tabata)
-            if timerType != .tabata {
+            if viewModel.timerType != .tabata {
                 HStack {
                     Label("Cycles", systemImage: "arrow.triangle.2.circlepath")
                         .foregroundColor(.purple)
                     Spacer()
                     Stepper(
-                        value: $cycles,
+                        value: $viewModel.cycles,
                         in: 1...10
                     ) {
-                        Text("\(cycles)")
+                        Text("\(viewModel.cycles)")
                             .font(.body.monospacedDigit())
                             .foregroundColor(.primary)
                     }
+                    .accessibilityLabel("Number of cycles")
+                    .accessibilityValue("\(viewModel.cycles) cycles")
+                    .accessibilityHint("Adjust the number of complete round sets")
                 }
             }
         } header: {
             Text("Rounds & Cycles")
         } footer: {
-            if timerType == .tabata {
+            if viewModel.timerType == .tabata {
                 Text("Classic Tabata uses 8 rounds in a single cycle")
                     .font(.caption)
-            } else if timerType == .amrap {
+            } else if viewModel.timerType == .amrap {
                 Text("AMRAP: Complete as many rounds as possible in the time limit")
                     .font(.caption)
             } else {
@@ -370,14 +252,17 @@ struct CustomTimerBuilderView: View {
                     .foregroundColor(.orange)
                 Spacer()
                 Stepper(
-                    value: $cycleRestSeconds,
+                    value: $viewModel.cycleRestSeconds,
                     in: 10...600,
                     step: 10
                 ) {
-                    Text("\(cycleRestSeconds)s")
+                    Text("\(viewModel.cycleRestSeconds)s")
                         .font(.body.monospacedDigit())
                         .foregroundColor(.primary)
                 }
+                .accessibilityLabel("Rest between cycles")
+                .accessibilityValue("\(viewModel.cycleRestSeconds) seconds")
+                .accessibilityHint("Adjust rest duration between complete cycles")
             }
         } header: {
             Text("Rest Between Cycles")
@@ -395,25 +280,28 @@ struct CustomTimerBuilderView: View {
                 HStack {
                     Image(systemName: "clock.fill")
                         .foregroundColor(.blue)
+                        .accessibilityHidden(true)
                     Text("Total Time:")
                         .font(.headline)
                     Spacer()
-                    Text(formattedTotalTime)
+                    Text(viewModel.formattedTotalTime)
                         .font(.title2.monospacedDigit())
                         .fontWeight(.bold)
                         .foregroundColor(.blue)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Total time: \(viewModel.formattedTotalTime)")
 
                 Divider()
 
                 // Breakdown
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Work × Rest:")
+                        Text("Work x Rest:")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(workSeconds)s × \(restSeconds)s")
+                        Text("\(viewModel.workSeconds)s x \(viewModel.restSeconds)s")
                             .font(.subheadline.monospacedDigit())
                     }
 
@@ -422,17 +310,17 @@ struct CustomTimerBuilderView: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(rounds)")
+                        Text("\(viewModel.rounds)")
                             .font(.subheadline.monospacedDigit())
                     }
 
-                    if cycles > 1 {
+                    if viewModel.cycles > 1 {
                         HStack {
                             Text("Cycles:")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("\(cycles)")
+                            Text("\(viewModel.cycles)")
                                 .font(.subheadline.monospacedDigit())
                         }
 
@@ -441,7 +329,7 @@ struct CustomTimerBuilderView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("\(cycleRestSeconds)s")
+                            Text("\(viewModel.cycleRestSeconds)s")
                                 .font(.subheadline.monospacedDigit())
                         }
                     }
@@ -451,12 +339,12 @@ struct CustomTimerBuilderView: View {
         } header: {
             Text("Preview")
         } footer: {
-            if cycles > 1 {
-                Text("Total: (\(singleCycleDuration)s cycle + \(cycleRestSeconds)s rest) × \(cycles) cycles")
+            if viewModel.cycles > 1 {
+                Text("Total: (\(viewModel.singleCycleDuration)s cycle + \(viewModel.cycleRestSeconds)s rest) x \(viewModel.cycles) cycles")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                Text("(\(workSeconds)s work + \(restSeconds)s rest) × \(rounds) rounds = \(totalDuration)s")
+                Text("(\(viewModel.workSeconds)s work + \(viewModel.restSeconds)s rest) x \(viewModel.rounds) rounds = \(viewModel.totalDuration)s")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -466,7 +354,7 @@ struct CustomTimerBuilderView: View {
     /// Save options section
     private var saveOptionsSection: some View {
         Section {
-            Toggle(isOn: $saveAsTemplate) {
+            Toggle(isOn: $viewModel.saveAsTemplate) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Save as Template")
                         .font(.body)
@@ -476,8 +364,8 @@ struct CustomTimerBuilderView: View {
                 }
             }
 
-            if saveAsTemplate {
-                Toggle(isOn: $makePublic) {
+            if viewModel.saveAsTemplate {
+                Toggle(isOn: $viewModel.makePublic) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Make Public")
                             .font(.body)
@@ -494,120 +382,14 @@ struct CustomTimerBuilderView: View {
 
     // MARK: - Actions
 
-    /// Apply default values when timer type changes
-    private func applyTypeDefaults(_ type: TimerType) {
-        switch type {
-        case .tabata:
-            workSeconds = 20
-            restSeconds = 10
-            rounds = 8
-            cycles = 1
-
-        case .emom:
-            workSeconds = 40
-            restSeconds = 20
-            rounds = 10
-            cycles = 1
-
-        case .amrap:
-            workSeconds = 30
-            restSeconds = 30
-            rounds = 10
-            cycles = 1
-
-        case .intervals:
-            workSeconds = 40
-            restSeconds = 20
-            rounds = 8
-            cycles = 1
-
-        case .custom:
-            // No defaults for custom - keep current values
-            break
-        }
-    }
-
-    /// Create timer and start it
+    /// Create timer and start it via ViewModel
     private func createAndStartTimer() async {
-        // Validate
-        if let error = validationMessage {
-            validationError = error
-            showValidationError = true
-            return
-        }
-
-        guard isValid else {
-            validationError = "Invalid timer configuration"
-            showValidationError = true
-            return
-        }
-
-        isCreating = true
-
-        do {
-            // Create template (save to database if saveAsTemplate is enabled)
-            let template: IntervalTemplate
-
-            if saveAsTemplate {
-                // Save to database
-                template = try await timerService.createTemplate(
-                    name: templateName.trimmingCharacters(in: .whitespaces),
-                    type: timerType,
-                    workSeconds: workSeconds,
-                    restSeconds: restSeconds,
-                    rounds: rounds,
-                    cycles: cycles,
-                    isPublic: makePublic
-                )
-
-                #if DEBUG
-                print("✅ Template saved to database: \(template.id)")
-                #endif
-            } else {
-                // Create temporary template (not saved to database)
-                template = IntervalTemplate(
-                    id: UUID(),
-                    name: templateName.trimmingCharacters(in: .whitespaces),
-                    type: timerType,
-                    workSeconds: workSeconds,
-                    restSeconds: restSeconds,
-                    rounds: rounds,
-                    cycles: cycles,
-                    createdBy: nil,
-                    isPublic: false,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                )
-
-                #if DEBUG
-                print("✅ Temporary template created: \(template.id)")
-                #endif
-            }
-
-            // Start timer with template
-            try await timerService.startTimer(template: template, patientId: patientId)
-
-            #if DEBUG
-            print("✅ Timer started with template: \(template.name)")
-            #endif
-
+        if let template = await viewModel.createAndStartTimer() {
             // Notify callback
             onTimerCreated?(template)
 
             // Dismiss sheet
             dismiss()
-
-        } catch {
-            isCreating = false
-            errorMessage = error.localizedDescription
-            showError = true
-
-            DebugLogger.shared.error("CUSTOM_TIMER", """
-                Failed to create timer:
-                Template name: \(templateName)
-                Error: \(error.localizedDescription)
-                Type: \(type(of: error))
-                """)
         }
     }
 }

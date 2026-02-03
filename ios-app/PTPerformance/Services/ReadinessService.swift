@@ -26,7 +26,7 @@ private struct GetReadinessTrendParams: Encodable {
     }
 }
 
-/// RPC parameters for upsert_daily_readiness function (BUILD 385)
+/// RPC parameters for upsert_daily_readiness function
 private struct UpsertDailyReadinessParams: Encodable {
     let pPatientId: String
     let pDate: String
@@ -47,7 +47,7 @@ private struct UpsertDailyReadinessParams: Encodable {
     }
 }
 
-/// RPC parameters for get_daily_readiness function (BUILD 385)
+/// RPC parameters for get_daily_readiness function
 private struct GetDailyReadinessParams: Encodable {
     let pPatientId: String
     let pDate: String
@@ -58,9 +58,24 @@ private struct GetDailyReadinessParams: Encodable {
     }
 }
 
-/// Service for managing daily readiness data
-/// Provides CRUD operations for daily readiness check-ins
-/// Uses database functions for automatic score calculation
+/// Service for managing daily readiness check-ins and score calculations.
+///
+/// Readiness is a daily subjective assessment that helps auto-regulate training intensity.
+/// The service handles:
+/// - Daily check-in submission and retrieval
+/// - Automatic score calculation via database triggers
+/// - Historical trend analysis
+/// - WHOOP-style band calculation for training recommendations
+///
+/// ## Score Calculation
+/// Readiness scores (0-100) are calculated from:
+/// - Sleep hours and quality
+/// - Soreness levels
+/// - Energy levels
+/// - Stress levels
+///
+/// ## Thread Safety
+/// This service is `@MainActor` isolated for UI updates via `@Published` properties.
 @MainActor
 class ReadinessService: ObservableObject {
     nonisolated(unsafe) private let client: PTSupabaseClient
@@ -98,7 +113,7 @@ class ReadinessService: ObservableObject {
 
         // Create and validate input
         // Format date as YYYY-MM-DD for PostgreSQL DATE column
-        // BUILD 137: Use local timezone for consistency with getTodayReadiness
+        // Use local timezone for consistency with getTodayReadiness
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = TimeZone.current
@@ -117,11 +132,13 @@ class ReadinessService: ObservableObject {
         try input.validate()
 
         do {
-            // DEBUG: Log what we're sending
-            print("📤 Submitting readiness for patient: \(patientId.uuidString), date: \(dateString)")
-            print("📤 Input: sleep=\(sleepHours ?? 0), soreness=\(sorenessLevel ?? 0), energy=\(energyLevel ?? 0), stress=\(stressLevel ?? 0)")
+            #if DEBUG
+            // Debug: Log what we're sending
+            DebugLogger.shared.log("Submitting readiness for patient: \(patientId.uuidString), date: \(dateString)", level: .diagnostic)
+            DebugLogger.shared.log("Input: sleep=\(sleepHours ?? 0), soreness=\(sorenessLevel ?? 0), energy=\(energyLevel ?? 0), stress=\(stressLevel ?? 0)", level: .diagnostic)
+            #endif
 
-            // BUILD 385: Use SECURITY DEFINER function to bypass RLS issues
+            // Use SECURITY DEFINER function to bypass RLS issues
             // This function runs with elevated privileges while keeping RLS enabled on the table
             let params = UpsertDailyReadinessParams(
                 pPatientId: patientId.uuidString,
@@ -137,22 +154,22 @@ class ReadinessService: ObservableObject {
                 .rpc("upsert_daily_readiness", params: params)
                 .execute()
 
-            // DEBUG: Log response
-            print("📥 Response status: \(response.status)")
+            #if DEBUG
+            // Debug: Log response
+            DebugLogger.shared.log("Response status: \(response.status)", level: .diagnostic)
             if let rawJSON = String(data: response.data, encoding: .utf8) {
-                print("📥 Response data: \(rawJSON.prefix(500))")
+                DebugLogger.shared.log("Response data: \(rawJSON.prefix(500))", level: .diagnostic)
             }
+            #endif
 
             // Use custom decoder that handles both DATE and TIMESTAMP formats
             let decoder = createReadinessDecoder()
             let readiness = try decoder.decode(DailyReadiness.self, from: response.data)
 
-            print("✅ Readiness saved successfully: score=\(readiness.readinessScore ?? 0)")
+            DebugLogger.shared.log("Readiness saved successfully: score=\(readiness.readinessScore ?? 0)", level: .success)
             return readiness
         } catch {
-            print("❌ ReadinessService Error: \(error)")
-            print("❌ Error type: \(type(of: error))")
-            print("❌ Error details: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "ReadinessService.submitReadiness", metadata: ["patient_id": patientId.uuidString, "date": dateString])
             self.error = error
             throw error
         }
@@ -252,7 +269,7 @@ class ReadinessService: ObservableObject {
     /// - Parameter patientId: Patient UUID
     /// - Returns: Today's readiness or nil if not found
     func getTodayReadiness(for patientId: UUID) async throws -> DailyReadiness? {
-        // BUILD 137: Fix timezone - use local timezone instead of GMT for daily check-ins
+        // Use local timezone instead of GMT for daily check-ins
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         dateFormatter.timeZone = TimeZone.current  // Use device's local timezone
@@ -273,96 +290,20 @@ class ReadinessService: ObservableObject {
             ]
         )
 
-        do {
-            // BUILD 385: Use SECURITY DEFINER function to bypass RLS issues
-            let params = GetDailyReadinessParams(
-                pPatientId: patientId.uuidString,
-                pDate: today
-            )
+        // Use SECURITY DEFINER function to bypass RLS issues
+        let params = GetDailyReadinessParams(
+            pPatientId: patientId.uuidString,
+            pDate: today
+        )
 
+        let responseData: Data
+        do {
             let response = try await client.client
                 .rpc("get_daily_readiness", params: params)
                 .execute()
-
-            // DEBUG: Log response details
-            let dataSize = response.data.count
-            DebugLogger.shared.info("READINESS", "Response data size: \(dataSize) bytes")
-
-            // Check if response has data (RPC returns null for no data)
-            if let rawJSON = String(data: response.data, encoding: .utf8) {
-                DebugLogger.shared.info("READINESS", "Raw response: \(rawJSON)")
-                if rawJSON == "null" || rawJSON.isEmpty {
-                    DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
-                    return nil
-                }
-            }
-
-            let decoder = createReadinessDecoder()
-
-            // BUILD 385: RPC returns single object, not array
-            do {
-                let readiness = try decoder.decode(DailyReadiness.self, from: response.data)
-
-                // DEBUG: Log successful fetch
-                DebugLogger.shared.success("READINESS", """
-                    Found readiness for \(today):
-                    Score: \(readiness.readinessScore ?? 0)
-                    Sleep: \(readiness.sleepHours ?? 0)h
-                    Energy: \(readiness.energyLevel ?? 0)
-                    Soreness: \(readiness.sorenessLevel ?? 0)
-                    Stress: \(readiness.stressLevel ?? 0)
-                    """)
-
-                return readiness
-            } catch let decodingError as DecodingError {
-                // BUILD 133: Enhanced error logging to diagnose decoding failures
-                let rawJSON = String(data: response.data, encoding: .utf8) ?? "Unable to decode as UTF-8"
-
-                DebugLogger.shared.error("READINESS", """
-                    DECODING ERROR - Raw JSON follows:
-                    \(rawJSON)
-
-                    Decoding error details:
-                    \(decodingError)
-                    """)
-
-                // Log specific decoding error type
-                switch decodingError {
-                case .typeMismatch(let type, let context):
-                    DebugLogger.shared.error("READINESS", """
-                        Type Mismatch:
-                        Expected type: \(type)
-                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
-                        Debug description: \(context.debugDescription)
-                        """)
-                case .valueNotFound(let type, let context):
-                    DebugLogger.shared.error("READINESS", """
-                        Value Not Found:
-                        Expected type: \(type)
-                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
-                        Debug description: \(context.debugDescription)
-                        """)
-                case .keyNotFound(let key, let context):
-                    DebugLogger.shared.error("READINESS", """
-                        Key Not Found:
-                        Missing key: \(key.stringValue)
-                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
-                        Debug description: \(context.debugDescription)
-                        """)
-                case .dataCorrupted(let context):
-                    DebugLogger.shared.error("READINESS", """
-                        Data Corrupted:
-                        Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
-                        Debug description: \(context.debugDescription)
-                        """)
-                @unknown default:
-                    DebugLogger.shared.error("READINESS", "Unknown decoding error: \(decodingError)")
-                }
-
-                return nil
-            }
+            responseData = response.data
         } catch {
-            // DEBUG: Log other error types (network errors, etc.)
+            // Network or RPC execution error - this is a real failure, throw it
             DebugLogger.shared.error("READINESS", """
                 Error fetching readiness:
                 Error: \(error.localizedDescription)
@@ -370,8 +311,88 @@ class ReadinessService: ObservableObject {
                 Date queried: \(today)
                 Patient: \(patientId.uuidString)
                 """)
-            // Return nil if not found (not an error condition)
-            return nil
+            self.error = error
+            throw ReadinessError.fetchFailed(error)
+        }
+
+        // DEBUG: Log response details
+        let dataSize = responseData.count
+        DebugLogger.shared.info("READINESS", "Response data size: \(dataSize) bytes")
+
+        // Check if response has data (RPC returns null for no data)
+        if let rawJSON = String(data: responseData, encoding: .utf8) {
+            DebugLogger.shared.info("READINESS", "Raw response: \(rawJSON)")
+            if rawJSON == "null" || rawJSON.isEmpty {
+                DebugLogger.shared.warning("READINESS", "No readiness found for date: \(today)")
+                return nil  // No data - this is expected for users who haven't checked in
+            }
+        }
+
+        let decoder = createReadinessDecoder()
+
+        // RPC returns single object, not array
+        do {
+            let readiness = try decoder.decode(DailyReadiness.self, from: responseData)
+
+            // DEBUG: Log successful fetch
+            DebugLogger.shared.success("READINESS", """
+                Found readiness for \(today):
+                Score: \(readiness.readinessScore ?? 0)
+                Sleep: \(readiness.sleepHours ?? 0)h
+                Energy: \(readiness.energyLevel ?? 0)
+                Soreness: \(readiness.sorenessLevel ?? 0)
+                Stress: \(readiness.stressLevel ?? 0)
+                """)
+
+            return readiness
+        } catch let decodingError as DecodingError {
+            // Enhanced error logging to diagnose decoding failures
+            let rawJSON = String(data: responseData, encoding: .utf8) ?? "Unable to decode as UTF-8"
+
+            DebugLogger.shared.error("READINESS", """
+                DECODING ERROR - Raw JSON follows:
+                \(rawJSON)
+
+                Decoding error details:
+                \(decodingError)
+                """)
+
+            // Log specific decoding error type
+            switch decodingError {
+            case .typeMismatch(let type, let context):
+                DebugLogger.shared.error("READINESS", """
+                    Type Mismatch:
+                    Expected type: \(type)
+                    Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                    Debug description: \(context.debugDescription)
+                    """)
+            case .valueNotFound(let type, let context):
+                DebugLogger.shared.error("READINESS", """
+                    Value Not Found:
+                    Expected type: \(type)
+                    Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                    Debug description: \(context.debugDescription)
+                    """)
+            case .keyNotFound(let key, let context):
+                DebugLogger.shared.error("READINESS", """
+                    Key Not Found:
+                    Missing key: \(key.stringValue)
+                    Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                    Debug description: \(context.debugDescription)
+                    """)
+            case .dataCorrupted(let context):
+                DebugLogger.shared.error("READINESS", """
+                    Data Corrupted:
+                    Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: "."))
+                    Debug description: \(context.debugDescription)
+                    """)
+            @unknown default:
+                DebugLogger.shared.error("READINESS", "Unknown decoding error: \(decodingError)")
+            }
+
+            // Decoding error is a real failure, throw it
+            self.error = decodingError
+            throw ReadinessError.fetchFailed(decodingError)
         }
     }
 
@@ -472,11 +493,24 @@ class ReadinessService: ObservableObject {
     /// Check if readiness has been logged for today
     /// - Parameter patientId: Patient UUID
     /// - Returns: True if today's entry exists
-    func hasLoggedToday(patientId: UUID) async -> Bool {
+    /// - Throws: ReadinessError.fetchFailed if unable to check (network error, etc.)
+    func hasLoggedToday(patientId: UUID) async throws -> Bool {
+        let todayEntry = try await getTodayReadiness(for: patientId)
+        return todayEntry != nil
+    }
+
+    /// Check if readiness has been logged for today, with fallback to false on errors.
+    ///
+    /// Use this variant when you want to gracefully handle errors
+    /// (e.g., background checks where UI feedback is not needed).
+    ///
+    /// - Parameter patientId: Patient UUID
+    /// - Returns: True if today's entry exists, false if no entry or on error
+    func hasLoggedTodayWithFallback(patientId: UUID) async -> Bool {
         do {
-            let todayEntry = try await getTodayReadiness(for: patientId)
-            return todayEntry != nil
+            return try await hasLoggedToday(patientId: patientId)
         } catch {
+            DebugLogger.shared.warning("READINESS", "hasLoggedToday failed, returning false: \(error.localizedDescription)")
             return false
         }
     }
@@ -511,7 +545,7 @@ class ReadinessService: ObservableObject {
             }
 
             // Try DATE format (YYYY-MM-DD) for the 'date' column
-            // BUILD 137: Use local timezone for date decoding
+            // Use local timezone for date decoding
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             dateFormatter.timeZone = TimeZone.current
@@ -555,8 +589,16 @@ extension ReadinessService {
         )
     }
 
-    /// Get comprehensive readiness summary for a patient
-    /// Includes today's entry, recent history, and 7-day trend
+    /// Fetch a comprehensive readiness summary for dashboard display.
+    ///
+    /// Performs three concurrent fetches for optimal performance:
+    /// - Today's readiness entry
+    /// - Last 7 days of entries
+    /// - 7-day trend statistics
+    ///
+    /// - Parameter patientId: The patient's UUID
+    /// - Returns: ReadinessSummary containing today's data, recent history, and trends
+    /// - Throws: Database errors if any of the fetches fail
     func getReadinessSummary(for patientId: UUID) async throws -> ReadinessSummary {
         async let todayEntry = getTodayReadiness(for: patientId)
         async let recentEntries = fetchRecentReadiness(for: patientId, limit: 7)
@@ -597,7 +639,7 @@ struct ReadinessSummary {
     }
 }
 
-// MARK: - BUILD 351: ReadinessService Extension for Daily Check-in
+// MARK: - ReadinessService Extension for Daily Check-in
 
 /// Thresholds for determining readiness band from calculated score
 private enum ReadinessThreshold {
@@ -611,10 +653,22 @@ private enum ReadinessThreshold {
 }
 
 extension ReadinessService {
-    /// Calculate readiness band from WHOOP-style input
-    /// Uses algorithm from Auto-Regulation System (Build 39)
-    /// - Parameter input: BandCalculationInput with sleep, soreness, and subjective data
-    /// - Returns: Tuple of (ReadinessBand, Optional score)
+    /// Calculate a readiness band (green/yellow/orange/red) from WHOOP-style input.
+    ///
+    /// This is a pure function that can be called synchronously for immediate UI feedback.
+    /// The algorithm weights factors as follows:
+    /// - Sleep hours: 30%
+    /// - Sleep quality: 20%
+    /// - Subjective readiness: 25%
+    /// - HRV (if available): 15%
+    /// - WHOOP recovery (if available): 25%
+    ///
+    /// Penalties are applied for:
+    /// - Arm soreness: 10-30 points based on severity
+    /// - Joint pain: 5 points per affected joint
+    ///
+    /// - Parameter input: BandCalculationInput containing all readiness metrics
+    /// - Returns: Tuple of (readiness band color, calculated score 0-100)
     nonisolated func calculateReadinessBand(input: BandCalculationInput) -> (ReadinessBand, Double?) {
         // Calculate weighted score (0-100)
         var score: Double = 50.0 // Default baseline

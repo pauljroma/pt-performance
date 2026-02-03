@@ -2,7 +2,7 @@
 //  NutritionGoalViewModel.swift
 //  PTPerformance
 //
-//  BUILD 222: Nutrition Module - Goals ViewModel
+//  Nutrition Module - Goals ViewModel
 //
 
 import Foundation

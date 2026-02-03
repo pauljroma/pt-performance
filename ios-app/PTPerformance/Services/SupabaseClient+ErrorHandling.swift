@@ -128,7 +128,7 @@ extension PTSupabaseClient {
 
 extension PTSupabaseClient {
 
-    /// BUILD 286: UserDefaults-based offline caching (ACP-600)
+    /// UserDefaults-based offline caching (ACP-600)
     private static let cachePrefix = "pt_offline_cache_"
     private static let cacheTimestampPrefix = "pt_cache_ts_"
     private static let maxCacheAge: TimeInterval = 24 * 60 * 60 // 24 hours
