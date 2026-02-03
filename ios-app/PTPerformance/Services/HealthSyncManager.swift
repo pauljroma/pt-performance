@@ -99,9 +99,9 @@ class HealthSyncManager: ObservableObject {
 
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("[HealthSyncManager] Scheduled background sync for \(interval/3600) hours from now")
+            DebugLogger.shared.info("HealthSyncManager", "Scheduled background sync for \(interval/3600) hours from now")
         } catch {
-            print("[HealthSyncManager] Failed to schedule background sync: \(error)")
+            DebugLogger.shared.error("HealthSyncManager", "Failed to schedule background sync: \(error.localizedDescription)")
         }
     }
 
@@ -114,9 +114,9 @@ class HealthSyncManager: ObservableObject {
 
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("[HealthSyncManager] Scheduled background processing task")
+            DebugLogger.shared.info("HealthSyncManager", "Scheduled background processing task")
         } catch {
-            print("[HealthSyncManager] Failed to schedule processing task: \(error)")
+            DebugLogger.shared.error("HealthSyncManager", "Failed to schedule processing task: \(error.localizedDescription)")
         }
     }
 
@@ -339,7 +339,7 @@ class HealthSyncManager: ObservableObject {
                 print("[HealthSyncManager] Pending export would require session fetch: \(sessionId)")
 
             } catch {
-                print("[HealthSyncManager] Failed to check export status: \(error)")
+                DebugLogger.shared.warning("HealthSyncManager", "Failed to check export status: \(error.localizedDescription)")
             }
         }
 

@@ -126,7 +126,7 @@ struct EnrolledProgramCard: View {
                     ZStack(alignment: .leading) {
                         // Background track
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.systemGray5))
+                            .fill(Color(.tertiarySystemGroupedBackground))
                             .frame(height: 8)
 
                         // Progress fill
@@ -289,7 +289,7 @@ struct EnrolledProgramDetailSheet: View {
                     // Circular progress
                     ZStack {
                         Circle()
-                            .stroke(Color(.systemGray5), lineWidth: 8)
+                            .stroke(Color(.tertiarySystemGroupedBackground), lineWidth: 8)
                             .frame(width: 80, height: 80)
 
                         Circle()
@@ -325,7 +325,7 @@ struct EnrolledProgramDetailSheet: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
     }
@@ -366,7 +366,7 @@ struct EnrolledProgramDetailSheet: View {
                         .foregroundColor(.secondary)
                 }
                 .padding(12)
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
             }
         }
@@ -412,7 +412,7 @@ struct EnrolledProgramDetailSheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 
@@ -440,7 +440,7 @@ struct EnrolledProgramDetailSheet: View {
                         Spacer()
                     }
                     .padding(8)
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(6)
                     .id(equipment)
                 }

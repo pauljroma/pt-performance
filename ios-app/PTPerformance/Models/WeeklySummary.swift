@@ -6,7 +6,6 @@
 //  Model for weekly workout progress summary
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Weekly Summary Model

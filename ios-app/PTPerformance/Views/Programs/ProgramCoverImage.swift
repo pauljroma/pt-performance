@@ -79,7 +79,7 @@ struct ProgramCoverImage_Previews: PreviewProvider {
             )
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 }
 #endif

@@ -5,7 +5,6 @@
 //  ViewModel for therapist-side program building (creating programs for program_library)
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Data Models

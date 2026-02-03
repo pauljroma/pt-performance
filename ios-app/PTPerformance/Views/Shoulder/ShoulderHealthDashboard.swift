@@ -518,7 +518,7 @@ struct ShoulderDiagramView: View {
                 .foregroundColor(.secondary)
         }
         .padding(8)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 
@@ -533,7 +533,7 @@ struct ShoulderDiagramView: View {
                 .foregroundColor(strength.category.color)
         }
         .padding(6)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(6)
         .offset(y: 50)
     }

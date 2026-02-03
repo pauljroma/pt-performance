@@ -5,7 +5,6 @@
 //  Model representing a browsable program in the program_library table
 //
 
-import Foundation
 import SwiftUI
 
 /// A browsable program in the program library

@@ -5,7 +5,6 @@
 //  Feature visibility logic based on patient mode
 //
 
-import Foundation
 import Combine
 import SwiftUI
 

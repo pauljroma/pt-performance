@@ -93,12 +93,16 @@ struct CompletedWorkoutsSection: View {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
                 .font(.caption)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(DesignTokens.cornerRadiusSmall)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(workoutAccessibilityLabel(workout))
+        .accessibilityHint("Long press for more options")
         .contextMenu {
             Button {
                 HapticFeedback.light()
@@ -124,6 +128,18 @@ struct CompletedWorkoutsSection: View {
                 Label("Share", systemImage: "square.and.arrow.up")
             }
         }
+    }
+
+    private func workoutAccessibilityLabel(_ workout: TodayWorkoutSummary) -> String {
+        var label = workout.name
+        if let duration = workout.durationMinutes {
+            label += ", \(duration) minutes"
+        }
+        if let volume = workout.totalVolume, volume > 0 {
+            label += ", \(Int(volume)) pounds"
+        }
+        label += ", completed at \(workout.completedAt.formatted(date: .omitted, time: .shortened))"
+        return label
     }
 }
 

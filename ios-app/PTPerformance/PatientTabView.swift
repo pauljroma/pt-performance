@@ -338,7 +338,7 @@ struct PatientSettingsView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color(.systemGray6))
+                                .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(4)
                         }
                     }

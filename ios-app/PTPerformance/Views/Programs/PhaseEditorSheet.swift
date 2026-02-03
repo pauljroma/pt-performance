@@ -299,7 +299,7 @@ struct WorkoutSearchSheet: View {
                     }
                 }
                 .padding(10)
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(10)
                 .padding(.horizontal)
                 .padding(.top, 8)

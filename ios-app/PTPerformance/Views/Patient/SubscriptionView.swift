@@ -66,7 +66,7 @@ struct SubscriptionView: View {
                         .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(Color(.systemGray6))
+                                .fill(Color(.secondarySystemGroupedBackground))
                         )
                         .padding(.horizontal)
                     }

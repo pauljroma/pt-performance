@@ -113,7 +113,7 @@ struct NutritionRecommendationView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .padding(.horizontal)
     }
@@ -309,9 +309,7 @@ struct NutritionRecommendationView: View {
             // Also get the active plan for context
             activePlan = try await MealPlanService.shared.fetchActiveMealPlan(patientId: patientId.uuidString)
         } catch {
-            #if DEBUG
-            print("Failed to load nutrition data: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionRecommendationView", "Failed to load nutrition data: \(error.localizedDescription)")
         }
     }
 

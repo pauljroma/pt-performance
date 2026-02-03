@@ -103,7 +103,7 @@ struct FoodSearchView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 
     // MARK: - Category Filter
@@ -120,7 +120,7 @@ struct FoodSearchView: View {
                         .font(.caption)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(selectedCategory == nil ? Color.blue : Color(.systemGray5))
+                        .background(selectedCategory == nil ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == nil ? .white : .primary)
                         .cornerRadius(16)
                 }
@@ -138,7 +138,7 @@ struct FoodSearchView: View {
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(selectedCategory == category ? Color.blue : Color(.systemGray5))
+                        .background(selectedCategory == category ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == category ? .white : .primary)
                         .cornerRadius(16)
                     }

@@ -5,7 +5,6 @@
 //  ViewModel for browsing and selecting timer presets
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for timer preset picker

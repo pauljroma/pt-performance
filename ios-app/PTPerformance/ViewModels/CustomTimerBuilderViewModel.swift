@@ -5,7 +5,6 @@
 //  ViewModel for custom timer builder with form validation and template creation
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for custom timer builder

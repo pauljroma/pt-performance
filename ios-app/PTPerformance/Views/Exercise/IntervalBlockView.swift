@@ -151,7 +151,7 @@ struct IntervalBlockCard: View {
         if block.isCompleted {
             return .green.opacity(0.3)
         }
-        return Color(.systemGray5)
+        return Color(.separator)
     }
 }
 

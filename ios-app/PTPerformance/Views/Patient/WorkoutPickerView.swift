@@ -132,7 +132,7 @@ struct WorkoutPickerView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(10)
         }
 
@@ -399,7 +399,7 @@ struct WorkoutPickerView: View {
                 }
             }
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .padding(.horizontal)
     }
@@ -494,7 +494,7 @@ private struct DurationChip: View {
                 .fontWeight(isSelected ? .semibold : .regular)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(isSelected ? Color.orange : Color(.systemGray6))
+                .background(isSelected ? Color.orange : Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(isSelected ? .white : .primary)
                 .cornerRadius(10)
         }
@@ -518,7 +518,7 @@ private struct PresetButton: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(10)
         }
         .foregroundColor(.primary)
@@ -559,7 +559,7 @@ private struct CategoryToggle: View {
                     .foregroundColor(isOn ? .orange : .secondary)
             }
             .padding(12)
-            .background(isOn ? Color.orange.opacity(0.1) : Color(.systemGray6))
+            .background(isOn ? Color.orange.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
             .cornerRadius(12)
         }
         .foregroundColor(.primary)
@@ -834,7 +834,7 @@ private struct AIContextBanner: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }

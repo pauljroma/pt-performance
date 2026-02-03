@@ -289,7 +289,7 @@ struct BaseballProgramDetailView: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(8)
                 }
             }
@@ -598,7 +598,7 @@ private struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -635,7 +635,7 @@ private struct PhaseRow: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(.systemGray6))
+                .fill(Color(.secondarySystemGroupedBackground))
         )
     }
 }
@@ -677,7 +677,7 @@ private struct RealPhaseRow: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(.systemGray6))
+                .fill(Color(.secondarySystemGroupedBackground))
         )
     }
 }

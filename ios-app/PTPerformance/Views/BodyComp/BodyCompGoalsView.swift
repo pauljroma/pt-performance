@@ -182,7 +182,7 @@ struct BodyCompGoalsView: View {
             Spacer()
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -292,7 +292,7 @@ struct BodyCompGoalsView: View {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(.systemGray5))
+                            .fill(Color(.tertiarySystemGroupedBackground))
                             .frame(height: 8)
 
                         Capsule()
@@ -304,7 +304,7 @@ struct BodyCompGoalsView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -338,7 +338,7 @@ struct BodyCompGoalsView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -358,7 +358,7 @@ struct BodyCompGoalsView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 

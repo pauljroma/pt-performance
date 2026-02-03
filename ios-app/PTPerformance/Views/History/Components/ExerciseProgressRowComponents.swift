@@ -97,7 +97,7 @@ struct ExerciseProgressRow: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 

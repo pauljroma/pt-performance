@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 // MARK: - Readiness Band System Types

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 // MARK: - ACP-522: Arm Care Daily Assessment Model

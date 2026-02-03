@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 // MARK: - Unified Workout History Item

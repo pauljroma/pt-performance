@@ -40,6 +40,7 @@ struct ExerciseRow: View {
 
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
+                .accessibilityHidden(true)
         }
         .padding()
         .background(Color(.systemBackground))
@@ -50,6 +51,9 @@ struct ExerciseRow: View {
         )
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(exerciseAccessibilityLabel)
+        .accessibilityHint("Tap to view exercise details. Long press for more options")
         .contextMenu {
             Button {
                 HapticFeedback.light()
@@ -73,6 +77,16 @@ struct ExerciseRow: View {
                 }
             }
         }
+    }
+
+    private var exerciseAccessibilityLabel: String {
+        var label = "Exercise \(exercise.exercise_order): \(exercise.exercise_name ?? "Exercise")"
+        label += ", \(exercise.setsDisplay) sets, \(exercise.repsDisplay) reps"
+        label += ", \(exercise.loadDisplay)"
+        if let notes = exercise.notes, !notes.isEmpty {
+            label += ", Note: \(notes)"
+        }
+        return label
     }
 }
 
@@ -179,6 +193,8 @@ struct DetailRow: View {
             Text(value)
                 .font(.headline)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

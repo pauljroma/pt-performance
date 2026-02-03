@@ -149,7 +149,7 @@ struct ReadinessDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -232,7 +232,7 @@ struct ReadinessDashboardView: View {
             .chartPlotStyle { plotArea in
                 plotArea
                     .background(
-                        Color(colorScheme == .dark ? .systemGray6 : .systemGray6).opacity(0.3)
+                        Color(.separator)
                     )
                     .cornerRadius(8)
             }
@@ -271,7 +271,7 @@ struct ReadinessDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -343,7 +343,7 @@ struct ReadinessDashboardView: View {
         .frame(width: 140, height: 100)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
         .accessibilityElement(children: .combine)
@@ -421,7 +421,7 @@ struct ReadinessDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
         .padding(.horizontal)

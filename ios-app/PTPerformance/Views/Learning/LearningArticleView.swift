@@ -100,7 +100,7 @@ struct LearningArticleView: View {
                                     .font(.caption)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 6)
-                                    .background(Color(.systemGray6))
+                                    .background(Color(.secondarySystemGroupedBackground))
                                     .foregroundColor(.primary)
                                     .cornerRadius(8)
                             }

@@ -905,7 +905,7 @@ struct TemplatePreviewSheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
@@ -924,7 +924,7 @@ struct TemplatePreviewSheet: View {
                     .foregroundColor(.secondary)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(10)
             } else {
                 ForEach(template.blocks) { block in
@@ -1024,7 +1024,7 @@ struct BlockPreviewCard: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(block.displayName) block, \(block.exerciseCount) exercises")

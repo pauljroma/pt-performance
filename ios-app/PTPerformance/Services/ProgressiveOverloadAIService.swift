@@ -7,7 +7,6 @@
 //  readiness state, and fatigue levels.
 //
 
-import Foundation
 import SwiftUI
 import Supabase
 

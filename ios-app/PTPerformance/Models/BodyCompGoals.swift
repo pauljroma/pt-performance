@@ -5,7 +5,6 @@
 //  Body Composition Goals model for goal setting and progress tracking
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Body Comp Goal Status

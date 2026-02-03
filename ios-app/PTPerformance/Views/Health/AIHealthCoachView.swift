@@ -7,7 +7,9 @@ struct AIHealthCoachView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Health Score Summary
-                if let score = viewModel.healthScore {
+                if viewModel.isLoading && viewModel.healthScore == nil {
+                    scoreLoadingHeader
+                } else if let score = viewModel.healthScore {
                     scoreHeader(score)
                 }
 
@@ -61,6 +63,30 @@ struct AIHealthCoachView: View {
         }
     }
 
+    // MARK: - Score Loading Header
+
+    private var scoreLoadingHeader: some View {
+        HStack(spacing: 16) {
+            // Placeholder Score Circle
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 6)
+                ProgressView()
+            }
+            .frame(width: 60, height: 60)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Loading health score...")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+    }
+
     private func scoreHeader(_ score: HealthScore) -> some View {
         HStack(spacing: 16) {
             // Score Circle
@@ -106,9 +132,12 @@ struct AIHealthCoachView: View {
                 Image(systemName: "arrow.clockwise")
             }
             .disabled(viewModel.isLoading)
+            .accessibilityLabel("Refresh health score")
+            .accessibilityHint("Recalculates your health score based on latest data")
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
+        .accessibilityElement(children: .contain)
     }
 
     private var quickQuestionsSection: some View {
@@ -146,6 +175,8 @@ struct AIHealthCoachView: View {
                 .onSubmit {
                     Task { await viewModel.sendMessage() }
                 }
+                .accessibilityLabel("Message input")
+                .accessibilityHint("Type your health question here")
 
             Button {
                 Task { await viewModel.sendMessage() }
@@ -154,6 +185,8 @@ struct AIHealthCoachView: View {
                     .font(.title2)
             }
             .disabled(viewModel.inputMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .accessibilityLabel("Send message")
+            .accessibilityHint("Sends your question to the AI Health Coach")
         }
         .padding()
     }
@@ -173,12 +206,13 @@ struct MessageBubble: View {
                     Label(category.displayName, systemImage: category.icon)
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                        .accessibilityLabel("Category: \(category.displayName)")
                 }
 
                 Text(message.content)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
-                    .background(message.role == .user ? Color.blue : Color(.systemGray5))
+                    .background(message.role == .user ? Color.blue : Color(.tertiarySystemGroupedBackground))
                     .foregroundColor(message.role == .user ? .white : .primary)
                     .cornerRadius(18)
 
@@ -186,6 +220,8 @@ struct MessageBubble: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(message.role == .user ? "You" : "AI Coach") said: \(message.content), at \(message.timestamp.formatted(date: .omitted, time: .shortened))")
 
             if message.role == .assistant {
                 Spacer()
@@ -204,16 +240,19 @@ struct QuickQuestionButton: View {
             HStack {
                 Image(systemName: icon)
                     .foregroundColor(.blue)
+                    .accessibilityHidden(true)
                 Text(text)
                     .font(.caption)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .padding(.horizontal, 8)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(10)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Ask: \(text)")
+        .accessibilityHint("Sends this quick question to the AI Coach")
     }
 }
 
@@ -231,12 +270,13 @@ struct TypingIndicator: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color(.systemGray5))
+        .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(18)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.4).repeatForever()) {
                 animationOffset = (animationOffset + 1) % 3
             }
         }
+        .accessibilityLabel("AI Coach is typing")
     }
 }

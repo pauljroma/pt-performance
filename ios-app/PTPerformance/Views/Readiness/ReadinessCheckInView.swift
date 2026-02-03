@@ -771,7 +771,7 @@ struct ReadinessCheckInView: View {
         do {
             _ = try await healthKitService.requestAuthorization()
         } catch {
-            print("HealthKit authorization failed: \(error.localizedDescription)")
+            DebugLogger.shared.warning("ReadinessCheckInView", "HealthKit authorization failed: \(error.localizedDescription)")
         }
     }
 

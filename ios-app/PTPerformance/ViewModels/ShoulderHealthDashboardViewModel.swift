@@ -6,7 +6,6 @@
 //  Manages state and data loading for the shoulder health dashboard
 //
 
-import Foundation
 import SwiftUI
 
 @MainActor

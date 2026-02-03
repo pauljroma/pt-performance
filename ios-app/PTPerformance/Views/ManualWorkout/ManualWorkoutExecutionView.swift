@@ -1168,7 +1168,7 @@ struct ManualWorkoutExecutionView: View {
             }
         }
         .padding(12)
-        .background(isCurrent ? Color.blue.opacity(0.1) : Color(.systemGray6))
+        .background(isCurrent ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(blockTypeEnum?.displayName ?? blockType) block, \(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count) of \(exercises.count) completed")
@@ -1715,7 +1715,7 @@ struct ManualWorkoutExecutionView: View {
                 .font(.subheadline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color(.systemGray5))
+                .background(Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(.primary)
                 .cornerRadius(12)
             }
@@ -2022,7 +2022,7 @@ struct ExerciseInfoSheet: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
 
                     // Technique Cues
@@ -2061,7 +2061,7 @@ struct ExerciseInfoSheet: View {
                                                 .foregroundColor(.secondary)
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 2)
-                                                .background(Color(.systemGray5))
+                                                .background(Color(.tertiarySystemGroupedBackground))
                                                 .cornerRadius(4)
                                         }
                                     }
@@ -2069,7 +2069,7 @@ struct ExerciseInfoSheet: View {
                             }
                         }
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                     }
 
@@ -2307,7 +2307,7 @@ struct AISubstitutionSheetForManual: View {
                                             .foregroundColor(.orange)
                                     }
                                     .padding()
-                                    .background(Color(.systemGray6))
+                                    .background(Color(.secondarySystemGroupedBackground))
                                     .cornerRadius(10)
                                 }
                                 .id(alt.id)
@@ -2366,7 +2366,7 @@ struct AISubstitutionSheetForManual: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(10)
         }
         .buttonStyle(.plain)
@@ -2476,7 +2476,7 @@ struct ExercisePickerForWorkout: View {
                                 .background(
                                     (selectedCategory == nil && category == "All") || selectedCategory == category
                                     ? Color.blue
-                                    : Color(.systemGray5)
+                                    : Color(.tertiarySystemGroupedBackground)
                                 )
                                 .foregroundColor(
                                     (selectedCategory == nil && category == "All") || selectedCategory == category

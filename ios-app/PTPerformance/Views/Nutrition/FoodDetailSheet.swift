@@ -139,7 +139,7 @@ struct FoodDetailSheet: View {
                             .font(.subheadline)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(servings == value ? Color.blue : Color(.systemGray5))
+                            .background(servings == value ? Color.blue : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(servings == value ? .white : .primary)
                             .cornerRadius(8)
                     }
@@ -147,7 +147,7 @@ struct FoodDetailSheet: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 

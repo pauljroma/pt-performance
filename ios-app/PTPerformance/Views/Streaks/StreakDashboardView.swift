@@ -90,7 +90,7 @@ struct StreakDashboardView: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                        .fill(Color(.secondarySystemGroupedBackground))
                         .adaptiveShadow(Shadow.subtle)
                 )
             }
@@ -175,7 +175,7 @@ struct StreakDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -256,7 +256,7 @@ struct StreakDashboardView: View {
         .frame(width: 130, height: 100)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
     }
@@ -307,7 +307,7 @@ struct StreakDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -366,7 +366,7 @@ struct StreakDashboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }

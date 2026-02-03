@@ -101,7 +101,7 @@ struct TemplateLibraryView: View {
                 }
             }
             .padding(10)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(10)
             .padding(.horizontal)
 
@@ -341,7 +341,7 @@ struct TemplateCard: View {
                                 .font(.caption)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color(.systemGray6))
+                                .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(6)
                         }
                     }
@@ -403,7 +403,7 @@ struct FilterChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.blue : Color(.systemGray6))
+            .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(8)
         }

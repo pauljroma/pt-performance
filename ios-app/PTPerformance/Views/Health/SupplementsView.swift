@@ -25,6 +25,8 @@ struct SupplementsView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                     }
+                    .accessibilityLabel("Add supplement")
+                    .accessibilityHint("Opens form to add a new supplement to your routine")
                 }
             }
             .sheet(isPresented: $viewModel.showingAddSheet) {
@@ -67,6 +69,7 @@ struct SupplementsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
+                        .accessibilityHidden(true)
                     Text("All supplements taken today!")
                         .font(.subheadline)
                         .foregroundColor(.green)
@@ -75,6 +78,8 @@ struct SupplementsView: View {
                 .frame(maxWidth: .infinity)
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(12)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("All supplements taken today")
             } else if viewModel.todaySchedule.isEmpty {
                 ContentUnavailableView {
                     Label("No Supplements", systemImage: "pill")
@@ -92,7 +97,7 @@ struct SupplementsView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
 
@@ -129,6 +134,7 @@ struct ScheduledSupplementRow: View {
             Image(systemName: scheduled.supplement.category.icon)
                 .foregroundColor(.blue)
                 .frame(width: 32)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(scheduled.supplement.name)
@@ -150,8 +156,11 @@ struct ScheduledSupplementRow: View {
                     .font(.title2)
             }
             .disabled(scheduled.taken)
+            .accessibilityLabel(scheduled.taken ? "Taken" : "Mark as taken")
+            .accessibilityHint(scheduled.taken ? "Already taken" : "Double tap to mark \(scheduled.supplement.name) as taken")
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -186,15 +195,30 @@ struct SupplementRow: View {
                         .cornerRadius(4)
                 }
             }
+            .accessibilityHidden(true)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
             }
+            .accessibilityLabel("Delete \(supplement.name)")
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(supplementAccessibilityLabel)
+    }
+
+    private var supplementAccessibilityLabel: String {
+        var label = supplement.name
+        if let brand = supplement.brand {
+            label += " by \(brand)"
+        }
+        label += ", \(supplement.dosage), \(supplement.frequency.displayName)"
+        let times = supplement.timeOfDay.map { $0.displayName }.joined(separator: ", ")
+        label += ", taken \(times)"
+        return label
     }
 }
 

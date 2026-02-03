@@ -5,7 +5,6 @@
 //  Model representing a user's enrollment in a program
 //
 
-import Foundation
 import SwiftUI
 
 /// A user's enrollment in a program from the program library

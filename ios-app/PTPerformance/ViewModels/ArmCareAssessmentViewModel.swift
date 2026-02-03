@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// ViewModel for Arm Care Assessment UI

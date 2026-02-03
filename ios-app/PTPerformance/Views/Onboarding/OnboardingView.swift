@@ -12,7 +12,7 @@ struct OnboardingView: View {
         ZStack {
             // Background gradient
             LinearGradient(
-                gradient: Gradient(colors: [Color(.systemBackground), Color(.systemGray6)]),
+                gradient: Gradient(colors: [Color(.systemBackground), Color(.secondarySystemGroupedBackground)]),
                 startPoint: .top,
                 endPoint: .bottom
             )

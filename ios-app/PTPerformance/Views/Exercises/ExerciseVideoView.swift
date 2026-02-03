@@ -83,7 +83,7 @@ struct ExerciseVideoView: View {
         }
         .frame(height: 300)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 
     // MARK: - Form Cues Section
@@ -163,7 +163,7 @@ struct ExerciseVideoView: View {
         }
         .frame(height: 300)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 
     // MARK: - Player Setup

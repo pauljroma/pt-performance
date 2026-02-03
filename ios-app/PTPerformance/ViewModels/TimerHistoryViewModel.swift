@@ -5,7 +5,6 @@
 //  ViewModel for timer session history and weekly statistics
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for timer history view displaying completed sessions and statistics
@@ -168,9 +167,7 @@ class TimerHistoryViewModel: ObservableObject {
             print("✅ Loaded \(templates.count) templates")
             #endif
         } catch {
-            #if DEBUG
-            print("⚠️ Failed to load templates: \(error)")
-            #endif
+            DebugLogger.shared.warning("TimerHistoryViewModel", "Failed to load templates: \(error.localizedDescription)")
             // Continue without templates - not critical for display
         }
     }

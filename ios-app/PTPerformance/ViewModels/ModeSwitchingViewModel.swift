@@ -76,9 +76,7 @@ class ModeSwitchingViewModel: ObservableObject {
             print("✅ Loaded patient mode: \(currentMode.displayName)")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ Failed to load patient mode: \(error)")
-            #endif
+            DebugLogger.shared.error("ModeSwitchingViewModel", "Failed to load patient mode: \(error.localizedDescription)")
             errorMessage = "We couldn't load the patient's current mode. Please try again."
             showingError = true
         }
@@ -115,9 +113,7 @@ class ModeSwitchingViewModel: ObservableObject {
             print("✅ Mode changed successfully to \(selectedMode.displayName)")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ Failed to change mode: \(error)")
-            #endif
+            DebugLogger.shared.error("ModeSwitchingViewModel", "Failed to change mode: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
         }

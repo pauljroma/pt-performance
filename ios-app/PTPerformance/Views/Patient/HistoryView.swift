@@ -158,7 +158,7 @@ private struct SummaryCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
@@ -209,7 +209,7 @@ struct PainTrendSection: View {
             }
             .frame(height: 200)
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
             .accessibilityLabel(chartAccessibilityLabel)
             .accessibilityHint("Shows pain levels over the last 14 days")
@@ -298,7 +298,7 @@ struct AdherenceSection: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
     }
@@ -383,7 +383,7 @@ struct SessionRow: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Session \(session.sessionNumber), \(session.sessionDate.formatted(date: .abbreviated, time: .omitted)), \(session.completed == true ? "completed" : "pending")")
@@ -439,7 +439,7 @@ struct RecentWorkoutsSection: View {
                             .foregroundColor(.accentColor)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                         }
                     }
@@ -544,7 +544,7 @@ struct WorkoutHistoryRow: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
@@ -702,7 +702,7 @@ struct EmptyDataSection: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -770,7 +770,7 @@ struct SkeletonSummaryCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .onAppear {
             withAnimation(
@@ -808,7 +808,7 @@ struct SkeletonAdherenceCard: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
         .onAppear {
@@ -847,7 +847,7 @@ struct SkeletonSessionRow: View {
                 .shimmer(isAnimating: isAnimating)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .onAppear {
             withAnimation(

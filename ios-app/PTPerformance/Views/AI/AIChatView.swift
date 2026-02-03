@@ -110,7 +110,7 @@ struct AIChatView: View {
             do {
                 _ = try await chatService.sendMessage(text)
             } catch {
-                print("❌ Failed to send message: \(error)")
+                DebugLogger.shared.error("AIChatView", "Failed to send message: \(error.localizedDescription)")
             }
         }
     }

@@ -31,7 +31,7 @@ struct AddExerciseToTodaySheet: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(10)
             .padding()
 

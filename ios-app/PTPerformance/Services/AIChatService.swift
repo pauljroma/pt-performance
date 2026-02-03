@@ -5,7 +5,6 @@
 //  Build 77 - AI Helper MVP
 //
 
-import Foundation
 import SwiftUI
 import Supabase
 
@@ -187,9 +186,7 @@ class AIChatService: ObservableObject {
                 self.messages = loadedMessages
             }
         } catch {
-            #if DEBUG
-            print("❌ Failed to load chat history: \(error)")
-            #endif
+            DebugLogger.shared.error("AIChatService", "Failed to load chat history: \(error.localizedDescription)")
         }
     }
 

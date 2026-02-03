@@ -5,7 +5,6 @@
 //  Efficient image caching service to reduce network requests and memory usage
 //
 
-import Foundation
 import UIKit
 import SwiftUI
 

@@ -128,7 +128,7 @@ struct GestureSetLogger: View {
                     ZStack(alignment: .leading) {
                         // Background track
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.systemGray5))
+                            .fill(Color(.tertiarySystemGroupedBackground))
                             .frame(height: 8)
 
                         // Progress fill

@@ -79,7 +79,7 @@ struct HealthKitAuthorizationView: View {
                         )
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
                     .padding(.horizontal)
 

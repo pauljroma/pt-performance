@@ -5,25 +5,12 @@ struct RecoveryView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Weekly Stats Card
-                    weeklyStatsCard
-
-                    // Recommendations
-                    if !viewModel.recommendations.isEmpty {
-                        recommendationsSection
-                    }
-
-                    // Protocol Buttons
-                    protocolGrid
-
-                    // Recent Sessions
-                    if !viewModel.sessions.isEmpty {
-                        recentSessionsSection
-                    }
+            Group {
+                if viewModel.isLoading && viewModel.sessions.isEmpty {
+                    loadingView
+                } else {
+                    contentView
                 }
-                .padding()
             }
             .navigationTitle("Recovery")
             .toolbar {
@@ -33,6 +20,8 @@ struct RecoveryView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                     }
+                    .accessibilityLabel("Log recovery session")
+                    .accessibilityHint("Opens form to log a new recovery session")
                 }
             }
             .sheet(isPresented: $viewModel.showingLogSheet) {
@@ -45,6 +34,76 @@ struct RecoveryView: View {
                 await viewModel.loadData()
             }
         }
+    }
+
+    // MARK: - Loading View
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("Loading recovery data...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Content View
+
+    private var contentView: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Weekly Stats Card
+                weeklyStatsCard
+
+                // Recommendations
+                if !viewModel.recommendations.isEmpty {
+                    recommendationsSection
+                }
+
+                // Protocol Buttons
+                protocolGrid
+
+                // Recent Sessions
+                if !viewModel.sessions.isEmpty {
+                    recentSessionsSection
+                } else if !viewModel.isLoading {
+                    emptySessionsView
+                }
+            }
+            .padding()
+        }
+    }
+
+    // MARK: - Empty Sessions View
+
+    private var emptySessionsView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "figure.mind.and.body")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary.opacity(0.6))
+
+            Text("No Recovery Sessions")
+                .font(.headline)
+
+            Text("Log your first recovery session to start tracking your wellness routine.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                viewModel.showingLogSheet = true
+            } label: {
+                Label("Log Session", systemImage: "plus.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.top, 8)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
     }
 
     private var weeklyStatsCard: some View {
@@ -78,7 +137,7 @@ struct RecoveryView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
 
@@ -138,6 +197,7 @@ struct RecoveryStatItem: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
             Text(value)
                 .font(.title3)
                 .fontWeight(.semibold)
@@ -146,6 +206,8 @@ struct RecoveryStatItem: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 
@@ -159,6 +221,7 @@ struct RecommendationCard: View {
                 .font(.title2)
                 .foregroundColor(priorityColor)
                 .frame(width: 44)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(recommendation.protocolType.displayName)
@@ -176,10 +239,13 @@ struct RecommendationCard: View {
 
             Button("Log", action: action)
                 .buttonStyle(.bordered)
+                .accessibilityLabel("Log \(recommendation.protocolType.displayName)")
+                .accessibilityHint("Starts logging a \(recommendation.protocolType.displayName) session")
         }
         .padding()
         .background(priorityColor.opacity(0.1))
         .cornerRadius(12)
+        .accessibilityElement(children: .contain)
     }
 
     private var priorityColor: Color {
@@ -200,15 +266,18 @@ struct ProtocolButton: View {
             VStack(spacing: 8) {
                 Image(systemName: protocol_.icon)
                     .font(.title)
+                    .accessibilityHidden(true)
                 Text(protocol_.displayName)
                     .font(.caption)
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(protocol_.displayName)
+        .accessibilityHint("Log a \(protocol_.displayName) session")
     }
 }
 
@@ -236,6 +305,8 @@ struct RecoverySessionRow: View {
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(session.protocolType.displayName), \(session.startTime.formatted(date: .abbreviated, time: .shortened)), \(session.duration / 60) minutes")
     }
 }
 

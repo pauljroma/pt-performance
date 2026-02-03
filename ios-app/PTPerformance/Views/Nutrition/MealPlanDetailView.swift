@@ -337,12 +337,12 @@ struct DaySelectorButton: View {
                         .foregroundColor(isSelected ? .white : .secondary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(isSelected ? Color.blue : Color(.systemGray5))
+                        .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(8)
                 }
             }
             .frame(width: 50, height: 55)
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .cornerRadius(8)
             .foregroundColor(isSelected ? .blue : .primary)
         }
@@ -429,7 +429,7 @@ struct MealItemCard: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }

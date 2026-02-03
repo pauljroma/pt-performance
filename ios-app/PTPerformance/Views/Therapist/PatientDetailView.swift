@@ -68,7 +68,7 @@ struct PatientDetailView: View {
 
                             PainTrendChart(dataPoints: viewModel.painTrend, height: 180)
                                 .padding()
-                                .background(Color(.systemGray6))
+                                .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(12)
                         }
                     }
@@ -185,7 +185,7 @@ struct PatientHeaderCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -244,7 +244,7 @@ struct FlagSummaryCard: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -368,7 +368,7 @@ struct ActionButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
     }

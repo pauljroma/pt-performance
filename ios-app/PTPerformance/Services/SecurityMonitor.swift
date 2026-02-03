@@ -5,7 +5,6 @@
 //  Purpose: Failed login tracking and security alerts
 //
 
-import Foundation
 import SwiftUI
 #if canImport(Sentry)
 import Sentry
@@ -148,7 +147,7 @@ final class SecurityMonitor: ObservableObject {
                 .insert(input)
                 .execute()
         } catch {
-            print("[SecurityMonitor] Failed to log failed attempt: \(error)")
+            DebugLogger.shared.error("SecurityMonitor", "Failed to log failed attempt: \(error.localizedDescription)")
         }
     }
 

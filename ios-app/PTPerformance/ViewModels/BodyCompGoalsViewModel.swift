@@ -5,7 +5,6 @@
 //  ViewModel for body composition goals management and progress tracking
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for managing body composition goals and tracking progress
@@ -188,9 +187,7 @@ class BodyCompGoalsViewModel: ObservableObject {
                 latestMuscleMass = latest.muscleMassLb
             }
         } catch {
-            #if DEBUG
-            print("[BodyCompGoals] Error loading latest measurements: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.warning("BodyCompGoalsViewModel", "Error loading latest measurements: \(error.localizedDescription)")
         }
     }
 
@@ -435,9 +432,7 @@ class BodyCompGoalsViewModel: ObservableObject {
                 print("[BodyCompGoals] Goal automatically marked as achieved!")
                 #endif
             } catch {
-                #if DEBUG
-                print("[BodyCompGoals] Error auto-marking goal as achieved: \(error)")
-                #endif
+                DebugLogger.shared.warning("BodyCompGoalsViewModel", "Error auto-marking goal as achieved: \(error.localizedDescription)")
             }
         }
 

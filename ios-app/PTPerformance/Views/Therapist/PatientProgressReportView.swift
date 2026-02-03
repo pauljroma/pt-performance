@@ -432,7 +432,7 @@ struct PatientProgressReportView: View {
                             .foregroundColor(selectedDateRange == range ? .white : .primary)
                             .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, Spacing.xs)
-                            .background(selectedDateRange == range ? Color.blue : Color(.systemGray5))
+                            .background(selectedDateRange == range ? Color.blue : Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("\(range.displayName)")
@@ -492,7 +492,7 @@ struct PatientProgressReportView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
     }
@@ -529,7 +529,7 @@ struct PatientProgressReportView: View {
 
                     PainTrendChart(dataPoints: viewModel.painTrend, height: 180)
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.md)
                 }
             }
@@ -573,7 +573,7 @@ struct PatientProgressReportView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
     }
@@ -592,7 +592,7 @@ struct PatientProgressReportView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
     }
@@ -687,7 +687,7 @@ struct ReportPatientHeader: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Patient: \(patient.fullName), \(patient.injuryType ?? "No injury type specified")")

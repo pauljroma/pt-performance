@@ -5,7 +5,6 @@
 //  ViewModel for displaying enrolled programs on the Today tab
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - ViewModel

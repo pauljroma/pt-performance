@@ -144,9 +144,7 @@ class ArmCareAssessmentService: ObservableObject {
 
             return assessment
         } catch {
-            #if DEBUG
-            print("Error saving arm care assessment: \(error)")
-            #endif
+            DebugLogger.shared.error("ArmCareAssessmentService", "Error saving arm care assessment: \(error.localizedDescription)")
             self.error = error
             throw ArmCareError.saveFailed
         }
@@ -184,9 +182,7 @@ class ArmCareAssessmentService: ObservableObject {
             let decoder = createDecoder()
             return try decoder.decode(ArmCareAssessment.self, from: response.data)
         } catch {
-            #if DEBUG
-            print("Error fetching today's arm care assessment: \(error)")
-            #endif
+            DebugLogger.shared.warning("ArmCareAssessmentService", "Error fetching today's arm care assessment: \(error.localizedDescription)")
             return nil
         }
     }

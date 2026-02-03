@@ -6,7 +6,6 @@
 //  Questionnaire-based workout recommendation system with AI-powered suggestions
 //
 
-import Foundation
 import SwiftUI
 
 @MainActor

@@ -5,7 +5,6 @@
 //  Nutrition Module - Meal logging ViewModel
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for logging meals and managing food items

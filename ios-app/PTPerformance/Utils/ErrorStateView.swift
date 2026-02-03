@@ -77,7 +77,7 @@ struct ErrorStateView: View {
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .foregroundColor(.primary)
                         .cornerRadius(12)
                     }
@@ -330,7 +330,7 @@ struct CompactErrorView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 

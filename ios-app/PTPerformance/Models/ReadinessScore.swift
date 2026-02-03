@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// Helper model for readiness score ranges and categories

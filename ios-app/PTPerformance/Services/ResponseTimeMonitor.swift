@@ -6,7 +6,6 @@
 //  Debug-only tool to measure tap-to-response times and ensure sub-100ms interactions
 //
 
-import Foundation
 import os.log
 
 // MARK: - Interaction Types

@@ -5,7 +5,6 @@
 //  Nutrition Module - Goals ViewModel
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for setting and managing nutrition goals

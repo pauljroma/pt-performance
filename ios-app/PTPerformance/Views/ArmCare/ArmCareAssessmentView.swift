@@ -550,7 +550,7 @@ struct ArmCareAssessmentView: View {
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(.systemGray6))
+                        .fill(Color(.secondarySystemGroupedBackground))
                 )
         }
     }

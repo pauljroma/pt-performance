@@ -133,7 +133,7 @@ struct ExerciseVideoDemoView: View {
         }
         .frame(height: 200)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .padding(.horizontal)
     }
@@ -157,7 +157,7 @@ struct ExerciseVideoDemoView: View {
         }
         .frame(height: 200)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .padding(.horizontal)
     }

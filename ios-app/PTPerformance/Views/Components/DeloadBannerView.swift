@@ -48,7 +48,7 @@ struct DeloadBannerView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                    .fill(Color(.secondarySystemGroupedBackground))
                     .adaptiveShadow(Shadow.subtle)
             )
             .overlay(
@@ -260,7 +260,7 @@ struct AnimatedDeloadBanner: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                    .fill(Color(.secondarySystemGroupedBackground))
                     .shadow(color: urgency.color.opacity(0.2), radius: 8, x: 0, y: 4)
             )
             .overlay(

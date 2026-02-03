@@ -45,7 +45,7 @@ struct FoodPickerView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
 
             // Category Filter
             ScrollView(.horizontal, showsIndicators: false) {
@@ -210,7 +210,7 @@ struct FoodCategoryChip: View {
                 .font(.caption)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.blue : Color(.systemGray5))
+                .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(isSelected ? .white : .primary)
                 .cornerRadius(16)
         }

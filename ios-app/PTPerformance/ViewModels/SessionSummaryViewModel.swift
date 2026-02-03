@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// View Model for Session Summary
@@ -284,9 +283,7 @@ class SessionSummaryViewModel: ObservableObject {
 
             return Array(prMap.values)
         } catch {
-            #if DEBUG
-            print("Failed to fetch PRs: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("SessionSummaryViewModel", "Failed to fetch PRs: \(error.localizedDescription)")
             return []
         }
     }
@@ -353,9 +350,7 @@ class SessionSummaryViewModel: ObservableObject {
 
             return exerciseLogs.isEmpty ? 0 : totalComplianceScore / Double(exerciseLogs.count)
         } catch {
-            #if DEBUG
-            print("Failed to calculate compliance: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("SessionSummaryViewModel", "Failed to calculate compliance: \(error.localizedDescription)")
             return 0
         }
     }

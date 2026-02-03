@@ -308,9 +308,7 @@ class NutritionService {
             print("🍎 [NUTRITION] ✓ Daily summary fetched")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] ✗ Daily summary error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionService", "Daily summary error: \(error.localizedDescription)")
         }
 
         do {
@@ -319,9 +317,7 @@ class NutritionService {
             print("🍎 [NUTRITION] ✓ Goal progress fetched")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] ✗ Goal progress error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionService", "Goal progress error: \(error.localizedDescription)")
         }
 
         do {
@@ -330,9 +326,7 @@ class NutritionService {
             print("🍎 [NUTRITION] ✓ Weekly trends fetched: \(weeklyTrendResult.count) weeks")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] ✗ Weekly trends error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionService", "Weekly trends error: \(error.localizedDescription)")
         }
 
         do {
@@ -341,9 +335,7 @@ class NutritionService {
             print("🍎 [NUTRITION] ✓ Today's logs fetched: \(recentLogsResult.count) logs")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] ✗ Today's logs error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionService", "Today's logs error: \(error.localizedDescription)")
         }
 
         do {
@@ -352,9 +344,7 @@ class NutritionService {
             print("🍎 [NUTRITION] ✓ Macro distribution fetched")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION] ✗ Macro distribution error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionService", "Macro distribution error: \(error.localizedDescription)")
         }
 
         #if DEBUG

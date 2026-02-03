@@ -104,7 +104,7 @@ struct ProgramLibraryBrowserView: View {
             }
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
         .padding(.horizontal)
         .padding(.top, 8)
@@ -345,7 +345,7 @@ private struct ProgramFilterChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? color : Color(.systemGray6))
+            .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
         }
@@ -387,7 +387,7 @@ private struct BaseballCategoryChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.orange : Color(.systemGray6))
+            .background(isSelected ? Color.orange : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
             .overlay(
@@ -757,7 +757,7 @@ struct ProgramPreviewSheet: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -774,7 +774,7 @@ struct ProgramPreviewSheet: View {
                         .font(.caption)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                 }
             }

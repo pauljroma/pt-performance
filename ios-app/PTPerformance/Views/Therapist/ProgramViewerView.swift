@@ -256,7 +256,7 @@ struct ExerciseRowCompact: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Exercise \(exercise.orderIndex + 1): \(exercise.exerciseName), \(exercise.sets) sets of \(exercise.reps) reps\(exercise.load != nil ? ", \(Int(exercise.load!)) \(exercise.loadUnit ?? "lbs")" : "")\(exercise.restPeriod != nil ? ", \(exercise.restPeriod!) seconds rest" : "")")

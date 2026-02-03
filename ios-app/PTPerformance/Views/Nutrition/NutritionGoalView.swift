@@ -290,7 +290,7 @@ private struct GoalPresetCard: View {
             }
             .frame(width: 140)
             .padding()
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+            .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)

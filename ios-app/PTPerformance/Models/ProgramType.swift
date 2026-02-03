@@ -5,7 +5,6 @@
 //  Build 294: Program type classification for rehab, performance, and lifestyle programs
 //
 
-import Foundation
 import SwiftUI
 
 /// The three program categories available in the system

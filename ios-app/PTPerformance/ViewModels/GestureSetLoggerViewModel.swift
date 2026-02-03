@@ -12,7 +12,6 @@
 //  - Swipe down: -5 lbs weight
 //
 
-import Foundation
 import SwiftUI
 import Combine
 

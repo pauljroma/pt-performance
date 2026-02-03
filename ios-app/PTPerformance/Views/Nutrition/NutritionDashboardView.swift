@@ -411,7 +411,7 @@ struct QuickLogButton: View {
                     .font(.caption)
             }
             .frame(width: 80, height: 70)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
         .buttonStyle(.plain)

@@ -5,7 +5,6 @@
 //  Nutrition Module - Dashboard ViewModel
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for the nutrition dashboard screen
@@ -179,9 +178,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Daily summary loaded")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Daily summary error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Daily summary error: \(error.localizedDescription)")
         }
 
         do {
@@ -190,9 +187,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Goal progress loaded")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Goal progress error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Goal progress error: \(error.localizedDescription)")
         }
 
         do {
@@ -201,9 +196,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Weekly trends loaded: \(weeklyTrends.count) weeks")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Weekly trends error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Weekly trends error: \(error.localizedDescription)")
         }
 
         do {
@@ -212,9 +205,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Today's logs loaded: \(todaysLogs.count) logs")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Today's logs error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Today's logs error: \(error.localizedDescription)")
         }
 
         do {
@@ -223,9 +214,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Macro distribution loaded")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Macro distribution error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Macro distribution error: \(error.localizedDescription)")
         }
 
         do {
@@ -234,9 +223,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Active goal loaded")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Active goal error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Active goal error: \(error.localizedDescription)")
         }
 
         // Fetch today's planned meals from active meal plan
@@ -246,9 +233,7 @@ class NutritionDashboardViewModel: ObservableObject {
             print("🍎 [NUTRITION VM] ✓ Today's planned meals loaded: \(todaysPlannedMeals.count) meals")
             #endif
         } catch {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✗ Today's planned meals error: \(error)")
-            #endif
+            DebugLogger.shared.warning("NutritionDashboardViewModel", "Today's planned meals error: \(error.localizedDescription)")
         }
 
         #if DEBUG

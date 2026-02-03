@@ -214,7 +214,7 @@ struct ExerciseProgressView: View {
                             .foregroundColor(.accentColor)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                         }
                     }
@@ -811,7 +811,7 @@ struct ExerciseProgressLoadingView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -847,7 +847,7 @@ struct ExerciseProgressLoadingView: View {
                 .shimmer(isAnimating: isAnimating)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }

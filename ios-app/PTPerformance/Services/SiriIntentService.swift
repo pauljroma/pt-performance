@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// Service to handle pending Siri intents when the app opens

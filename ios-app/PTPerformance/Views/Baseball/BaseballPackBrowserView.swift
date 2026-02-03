@@ -305,7 +305,7 @@ struct BaseballPackBrowserView: View {
             }
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
         .padding(.horizontal)
         .padding(.top, 8)
@@ -335,7 +335,7 @@ struct BaseballPackBrowserView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedCategory != .all ? viewModel.selectedCategory.color : Color(.systemGray6))
+            .background(viewModel.selectedCategory != .all ? viewModel.selectedCategory.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedCategory != .all ? .white : .primary)
             .cornerRadius(20)
         }
@@ -365,7 +365,7 @@ struct BaseballPackBrowserView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedPosition != .all ? baseballNavy : Color(.systemGray6))
+            .background(viewModel.selectedPosition != .all ? baseballNavy : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedPosition != .all ? .white : .primary)
             .cornerRadius(20)
         }
@@ -395,7 +395,7 @@ struct BaseballPackBrowserView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(viewModel.selectedSeason != .all ? viewModel.selectedSeason.color : Color(.systemGray6))
+            .background(viewModel.selectedSeason != .all ? viewModel.selectedSeason.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedSeason != .all ? .white : .primary)
             .cornerRadius(20)
         }
@@ -538,7 +538,7 @@ struct BaseballProgramCard: View {
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color(.systemGray5))
+                            .background(Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(4)
                     }
                 }

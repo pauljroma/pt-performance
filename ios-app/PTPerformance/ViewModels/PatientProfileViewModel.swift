@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 import Supabase
 
@@ -83,9 +82,7 @@ class PatientProfileViewModel: ObservableObject {
             #endif
 
         } catch {
-            #if DEBUG
-            print("❌ [PatientProfile] Error loading profile: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientProfileViewModel", "Error loading profile: \(error.localizedDescription)")
             errorMessage = "Unable to load profile. Please try again."
             ErrorLogger.shared.logError(error, context: "Load Patient Profile")
         }
@@ -300,9 +297,7 @@ class PatientProfileViewModel: ObservableObject {
             await loadProfile(patientId: patientId)
 
         } catch {
-            #if DEBUG
-            print("❌ [PatientProfile] Error saving profile: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientProfileViewModel", "Error saving profile: \(error.localizedDescription)")
             errorMessage = "We couldn't save your profile changes. Please check your connection and try again."
             ErrorLogger.shared.logError(error, context: "Save Patient Profile")
         }

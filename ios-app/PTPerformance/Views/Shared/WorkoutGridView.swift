@@ -131,7 +131,7 @@ struct WorkoutGridView: View {
 
             // Grid header
             gridHeader
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
 
             Divider()
 
@@ -336,7 +336,7 @@ struct WorkoutGridView: View {
             .frame(maxWidth: .infinity)
             .padding()
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 }
 

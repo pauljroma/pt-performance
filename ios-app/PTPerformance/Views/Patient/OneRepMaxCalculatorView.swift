@@ -182,7 +182,7 @@ struct OneRepMaxCalculatorView: View {
                         .font(.system(.body, design: .monospaced))
                         .padding(8)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(8)
 
                     Text("The Epley formula is one of the most widely used methods for estimating one-rep max from submaximal lifts. It provides a reasonable estimate for most compound exercises when reps are between 2 and 10.")

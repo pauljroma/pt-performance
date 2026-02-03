@@ -119,7 +119,7 @@ struct StandaloneTimerView: View {
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray5), lineWidth: 1)
+                                    .stroke(Color(.tertiarySystemGroupedBackground), lineWidth: 1)
                             )
                         }
                         .buttonStyle(.plain)

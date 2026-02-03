@@ -11,7 +11,6 @@
 //  - Last-write-wins strategy for concurrent edits
 //
 
-import Foundation
 import SwiftUI
 import Supabase
 

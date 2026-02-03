@@ -173,7 +173,7 @@ struct ExerciseHistorySheet: View {
                         .foregroundColor(.accentColor)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                     }
                 }
@@ -221,7 +221,7 @@ private struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
@@ -282,7 +282,7 @@ private struct Estimated1RMCard: View {
             .padding(.top, 4)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Estimated one rep max: \(formatWeight(estimated1RM))\(formula != nil ? ", \(formula!)" : "")")

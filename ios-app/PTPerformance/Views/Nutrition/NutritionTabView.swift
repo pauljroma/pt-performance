@@ -102,7 +102,7 @@ struct NutritionTabView: View {
         .overlay(
             Rectangle()
                 .frame(height: 1)
-                .foregroundColor(Color(.systemGray5)),
+                .foregroundColor(Color(.separator)),
             alignment: .bottom
         )
     }
@@ -170,7 +170,7 @@ struct FoodLibraryView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
 
             // Category Filter
             ScrollView(.horizontal, showsIndicators: false) {
@@ -182,7 +182,7 @@ struct FoodLibraryView: View {
                             .font(.caption)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(selectedCategory == nil ? Color.blue : Color(.systemGray5))
+                            .background(selectedCategory == nil ? Color.blue : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(selectedCategory == nil ? .white : .primary)
                             .cornerRadius(16)
                     }
@@ -196,7 +196,7 @@ struct FoodLibraryView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(selectedCategory == category ? Color.blue : Color(.systemGray5))
+                                .background(selectedCategory == category ? Color.blue : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(selectedCategory == category ? .white : .primary)
                                 .cornerRadius(16)
                         }

@@ -325,11 +325,7 @@ class IntervalTimerViewModel: ObservableObject {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            #if DEBUG
-            print("Failed to setup audio session: \(error)")
-            #else
-            // Log silently in production - audio setup failure is not critical
-            #endif
+            DebugLogger.shared.warning("IntervalTimerComponent", "Failed to setup audio session: \(error.localizedDescription)")
         }
     }
 

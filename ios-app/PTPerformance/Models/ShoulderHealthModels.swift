@@ -6,7 +6,6 @@
 //  Defines data structures for ROM tracking, strength balance, and trend alerts
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Shoulder ROM Measurement

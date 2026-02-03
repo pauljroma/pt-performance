@@ -6,7 +6,6 @@
 //  ViewModel with optimistic updates for instant workout execution response
 //
 
-import Foundation
 import SwiftUI
 import Combine
 

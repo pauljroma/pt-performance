@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 // MARK: - Session Detail ViewModel (ACP-588)

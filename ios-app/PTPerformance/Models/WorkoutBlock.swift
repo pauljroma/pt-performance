@@ -5,7 +5,6 @@
 //  Manual Workout Entry
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Workout Block Type

@@ -197,7 +197,7 @@ struct TimerHistoryView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color(.systemGray5))
+                .background(Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(8)
         }
         .padding(.horizontal)

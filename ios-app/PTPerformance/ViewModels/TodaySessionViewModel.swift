@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// ViewModel for Today's Session screen

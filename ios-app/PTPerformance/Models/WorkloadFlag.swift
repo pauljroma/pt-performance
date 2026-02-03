@@ -5,7 +5,6 @@
 //  Model for throwing workload alerts and flags
 //
 
-import Foundation
 import SwiftUI
 
 struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {

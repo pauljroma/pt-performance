@@ -98,7 +98,7 @@ struct StreakAlertView: View {
             }
             .frame(width: 80)
             .padding(.vertical, 12)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -146,7 +146,7 @@ struct StreakAlertView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(Color(.systemGray5))
+            .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(10)
         }
         .buttonStyle(.plain)
@@ -180,7 +180,7 @@ struct StreakAlertView: View {
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                 }
 
@@ -192,7 +192,7 @@ struct StreakAlertView: View {
                         .foregroundColor(.red.opacity(0.8))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                 }
             }

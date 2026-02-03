@@ -272,9 +272,7 @@ class FoodDatabaseService {
 
             return results
         } catch {
-            #if DEBUG
-            print("🍎 [FOOD DB] ✗ Popular foods error: \(error)")
-            #endif
+            DebugLogger.shared.error("FoodDatabaseService", "Popular foods error: \(error.localizedDescription)")
             throw error
         }
     }

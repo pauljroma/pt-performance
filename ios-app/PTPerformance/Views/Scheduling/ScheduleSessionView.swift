@@ -155,7 +155,7 @@ struct ScheduleSessionView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? Color.blue : Color(.systemGray5))
+                                .background(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? Color.blue : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? .white : .primary)
                                 .cornerRadius(8)
                         }

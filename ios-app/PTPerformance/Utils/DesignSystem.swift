@@ -208,8 +208,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.md)
             .background(
-                isDisabled ? Color(.systemGray5) :
-                configuration.isPressed ? Color(.systemGray5) : Color(.systemGray6)
+                isDisabled ? Color(.tertiarySystemGroupedBackground) :
+                configuration.isPressed ? Color(.tertiarySystemGroupedBackground) : Color(.secondarySystemGroupedBackground)
             )
             .cornerRadius(CornerRadius.md)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)

@@ -5,7 +5,6 @@
 //  ViewModel for browsing and discovering programs in the program library
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - ViewModel

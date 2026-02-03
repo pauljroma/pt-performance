@@ -78,7 +78,7 @@ struct BaseballPackLockedView: View {
             featureRow(icon: "person.fill.checkmark", title: "Position-Specific", description: "Tailored for pitchers and position players")
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 

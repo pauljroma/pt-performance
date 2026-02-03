@@ -51,7 +51,7 @@ struct WorkoutProgressHeader: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                         .padding(8)
-                        .background(Color(.systemGray5))
+                        .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(8)
                 }
                 .accessibilityLabel(isTimerVisible ? "Hide timer" : "Show timer")

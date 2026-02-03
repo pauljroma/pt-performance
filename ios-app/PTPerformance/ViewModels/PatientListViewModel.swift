@@ -5,7 +5,6 @@
 //  ViewModel for therapist patient list with workload flags
 //
 
-import Foundation
 import SwiftUI
 
 @MainActor

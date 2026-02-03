@@ -250,7 +250,7 @@ private struct WeekSection: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.systemGray6))
+                .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
                 .cornerRadius(10)
             }
             .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(week.workoutCount) \(week.workoutCount == 1 ? "workout" : "workouts")")
@@ -645,7 +645,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
                 }
 
@@ -887,7 +887,7 @@ private struct PhaseSection: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -963,7 +963,7 @@ private struct SessionCard: View {
                 .buttonStyle(.plain)
             }
             .padding(12)
-            .background(Color(.systemGray5))
+            .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(10)
 
             // Exercises
@@ -1023,7 +1023,7 @@ private struct PhaseExerciseRow: View {
             Spacer()
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }
@@ -1092,7 +1092,7 @@ struct PhaseSessionStartSheet: View {
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
-                                .background(Color(.systemGray6))
+                                .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(8)
                             }
                             if session.exercises.count > 5 {

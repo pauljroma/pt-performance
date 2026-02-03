@@ -166,7 +166,7 @@ struct TemplateDetailView: View {
             )
         }
         .frame(height: 80)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 
@@ -197,7 +197,7 @@ struct TemplateDetailView: View {
                             .font(.subheadline)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color(.systemGray6))
+                            .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(8)
                     }
                 }
@@ -440,7 +440,7 @@ struct SessionDetailRow: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }

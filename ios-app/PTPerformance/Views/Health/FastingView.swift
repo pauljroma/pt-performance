@@ -5,31 +5,12 @@ struct FastingView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Current Fast Status
-                    if viewModel.isFasting {
-                        activeFastCard
-                    } else {
-                        startFastCard
-                    }
-
-                    // Stats
-                    if let stats = viewModel.stats {
-                        statsSection(stats)
-                    }
-
-                    // Eating Window Recommendation
-                    if let recommendation = viewModel.recommendation {
-                        recommendationCard(recommendation)
-                    }
-
-                    // History
-                    if !viewModel.history.isEmpty {
-                        historySection
-                    }
+            Group {
+                if viewModel.isLoading && viewModel.stats == nil {
+                    loadingView
+                } else {
+                    contentView
                 }
-                .padding()
             }
             .navigationTitle("Fasting")
             .sheet(isPresented: $viewModel.showingStartSheet) {
@@ -46,6 +27,74 @@ struct FastingView: View {
                 await viewModel.loadData()
             }
         }
+    }
+
+    // MARK: - Loading View
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("Loading fasting data...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Content View
+
+    private var contentView: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Current Fast Status
+                if viewModel.isFasting {
+                    activeFastCard
+                } else {
+                    startFastCard
+                }
+
+                // Stats
+                if let stats = viewModel.stats {
+                    statsSection(stats)
+                }
+
+                // Eating Window Recommendation
+                if let recommendation = viewModel.recommendation {
+                    recommendationCard(recommendation)
+                }
+
+                // History
+                if !viewModel.history.isEmpty {
+                    historySection
+                } else if !viewModel.isLoading {
+                    emptyHistoryView
+                }
+            }
+            .padding()
+        }
+    }
+
+    // MARK: - Empty History View
+
+    private var emptyHistoryView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "clock.arrow.circlepath")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary.opacity(0.6))
+
+            Text("No Fasting History")
+                .font(.headline)
+
+            Text("Complete your first fast to start tracking your progress over time.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
     }
 
     private var activeFastCard: some View {
@@ -108,10 +157,13 @@ struct FastingView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.orange)
+            .accessibilityLabel("End Fast")
+            .accessibilityHint("Opens form to complete and log your fasting session")
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
+        .accessibilityElement(children: .contain)
     }
 
     private var startFastCard: some View {
@@ -119,6 +171,7 @@ struct FastingView: View {
             Image(systemName: "fork.knife.circle")
                 .font(.system(size: 48))
                 .foregroundColor(.green)
+                .accessibilityHidden(true)
 
             Text("Ready to start fasting?")
                 .font(.headline)
@@ -135,9 +188,11 @@ struct FastingView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("Start Fast")
+            .accessibilityHint("Opens fasting protocol selection")
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
 
@@ -163,6 +218,7 @@ struct FastingView: View {
             HStack {
                 Image(systemName: "lightbulb.fill")
                     .foregroundColor(.yellow)
+                    .accessibilityHidden(true)
                 Text("Recommended Eating Window")
                     .font(.headline)
             }
@@ -179,6 +235,7 @@ struct FastingView: View {
 
                 Image(systemName: "arrow.right")
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
 
                 VStack {
                     Text("End")
@@ -198,6 +255,8 @@ struct FastingView: View {
         .padding()
         .background(Color.yellow.opacity(0.1))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Recommended eating window: \(recommendation.suggestedStart.formatted(date: .omitted, time: .shortened)) to \(recommendation.suggestedEnd.formatted(date: .omitted, time: .shortened)). \(recommendation.reason)")
     }
 
     private var historySection: some View {
@@ -228,6 +287,7 @@ struct FastingStatCard: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .foregroundColor(color)
+                .accessibilityHidden(true)
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
@@ -237,8 +297,10 @@ struct FastingStatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -264,9 +326,21 @@ struct FastingHistoryRow: View {
 
                 Image(systemName: hours >= Double(fast.targetHours) * 0.9 ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundColor(hours >= Double(fast.targetHours) * 0.9 ? .green : .orange)
+                    .accessibilityHidden(true)
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(fastAccessibilityLabel)
+    }
+
+    private var fastAccessibilityLabel: String {
+        var label = "\(fast.fastingType.displayName), \(fast.startTime.formatted(date: .abbreviated, time: .omitted))"
+        if let hours = fast.actualHours {
+            label += ", \(String(format: "%.1f", hours)) hours"
+            label += hours >= Double(fast.targetHours) * 0.9 ? ", goal reached" : ", below goal"
+        }
+        return label
     }
 }
 

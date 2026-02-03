@@ -455,7 +455,7 @@ struct WeeklySummaryCard_Previews: PreviewProvider {
             }
             .padding(.vertical)
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .previewDisplayName("Weekly Summary Cards")
     }
 }

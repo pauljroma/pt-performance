@@ -106,7 +106,7 @@ struct StreakCardView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                    .fill(Color(.secondarySystemGroupedBackground))
                     .adaptiveShadow(Shadow.subtle)
             )
         }
@@ -135,7 +135,7 @@ struct StreakIndicator: View {
         .padding(.vertical, 4)
         .background(
             Capsule()
-                .fill(Color(.systemGray6))
+                .fill(Color(.secondarySystemGroupedBackground))
         )
     }
 }
@@ -201,9 +201,7 @@ class StreakCardViewModel: ObservableObject {
                 isAtRisk = streak.isAtRisk
             }
         } catch {
-            #if DEBUG
-            print("[StreakCard] Error loading data: \(error)")
-            #endif
+            DebugLogger.shared.warning("StreakCardView", "Error loading data: \(error.localizedDescription)")
         }
     }
 }

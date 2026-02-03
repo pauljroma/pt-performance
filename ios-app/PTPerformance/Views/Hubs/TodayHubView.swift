@@ -210,7 +210,7 @@ struct TodayHubView: View {
             .padding(.vertical, 4)
             .background(
                 Capsule()
-                    .fill(Color(.systemGray6))
+                    .fill(Color(.secondarySystemGroupedBackground))
             )
         }
         .accessibilityLabel("Current streak: \(streakViewModel.currentStreak) days")
@@ -294,9 +294,7 @@ class StreakIndicatorViewModel: ObservableObject {
                 isAtRisk = streak.isAtRisk
             }
         } catch {
-            #if DEBUG
-            print("[StreakIndicator] Error loading streak: \(error)")
-            #endif
+            DebugLogger.shared.warning("TodayHubView", "Error loading streak: \(error.localizedDescription)")
         }
     }
 }

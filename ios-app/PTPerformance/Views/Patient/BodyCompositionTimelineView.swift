@@ -103,7 +103,7 @@ struct BodyCompositionTimelineView: View {
                         .background(
                             selectedPeriod == period
                                 ? Color.accentColor.opacity(0.2)
-                                : Color(.systemGray6)
+                                : Color(.tertiarySystemGroupedBackground)
                         )
                         .foregroundColor(selectedPeriod == period ? .accentColor : .primary)
                         .cornerRadius(8)
@@ -206,7 +206,7 @@ struct BodyCompositionTimelineView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
     }
 

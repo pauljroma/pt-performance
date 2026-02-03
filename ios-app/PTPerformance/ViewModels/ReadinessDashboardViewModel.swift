@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// ViewModel for displaying readiness trends and statistics

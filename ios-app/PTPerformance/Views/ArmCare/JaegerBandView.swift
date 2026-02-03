@@ -101,7 +101,7 @@ private struct ProtocolSelectionView: View {
                         .pickerStyle(.menu)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
                 }
                 .padding(.horizontal)
@@ -254,7 +254,7 @@ private struct ProgressHeaderView: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(Color(.systemGray5))
+                        .fill(Color(.tertiarySystemGroupedBackground))
                         .frame(height: 8)
                         .cornerRadius(4)
 
@@ -287,7 +287,7 @@ private struct ProgressHeaderView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 }
 
@@ -351,7 +351,7 @@ private struct JaegerVideoThumbnailView: View {
         Button(action: { showVideo = true }) {
             ZStack {
                 Rectangle()
-                    .fill(Color(.systemGray5))
+                    .fill(Color(.tertiarySystemGroupedBackground))
                     .aspectRatio(16/9, contentMode: .fit)
                     .cornerRadius(12)
 
@@ -481,7 +481,7 @@ private struct TimerSection: View {
                         .font(.title2)
                         .foregroundColor(.secondary)
                         .frame(width: 44, height: 44)
-                        .background(Color(.systemGray5))
+                        .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(22)
                 }
                 .accessibilityLabel("Reset timer")
@@ -500,7 +500,7 @@ private struct TimerSection: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
 
@@ -553,7 +553,7 @@ private struct CoachingCuesSection: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -619,7 +619,7 @@ private struct TargetMusclesSection: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
@@ -683,7 +683,7 @@ private struct NavigationButtonsView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color(.systemGray5))
+                .background(Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(.primary)
                 .cornerRadius(12)
             }
@@ -763,7 +763,7 @@ private struct SessionCompleteView: View {
                     JaegerStatRow(title: "Exercises Skipped", value: "\(viewModel.skippedExerciseCount)", icon: "forward")
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(16)
 
                 // Post-Routine Soreness
@@ -787,7 +787,7 @@ private struct SessionCompleteView: View {
                     }
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(16)
 
                 // Notes
@@ -800,7 +800,7 @@ private struct SessionCompleteView: View {
                         .textFieldStyle(.roundedBorder)
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(16)
 
                 // Save Button

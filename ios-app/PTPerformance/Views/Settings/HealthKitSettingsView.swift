@@ -281,7 +281,7 @@ private struct DataTypeChip: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color(.systemGray5))
+        .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityLabel(text)
     }

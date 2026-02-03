@@ -5,7 +5,6 @@
 //  Purpose: Account deletion with 30-day grace period (GDPR Right to Erasure)
 //
 
-import Foundation
 import SwiftUI
 import Supabase
 

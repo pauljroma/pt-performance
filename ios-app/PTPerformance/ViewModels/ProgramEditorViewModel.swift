@@ -13,7 +13,6 @@
 //  - NO additional therapist_id checks needed in client code - RLS handles authorization
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Constants

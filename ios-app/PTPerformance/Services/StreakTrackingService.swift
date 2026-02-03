@@ -6,7 +6,6 @@
 //  Service for managing workout and arm care streaks
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Encodable Structs for Supabase RPC
@@ -94,9 +93,7 @@ class StreakTrackingService: ObservableObject {
 
             return records
         } catch {
-            #if DEBUG
-            print("[StreakService] Error fetching streaks: \(error)")
-            #endif
+            DebugLogger.shared.error("StreakTrackingService", "Error fetching streaks: \(error.localizedDescription)")
             self.error = error
             throw error
         }
@@ -191,9 +188,7 @@ class StreakTrackingService: ObservableObject {
 
             return history
         } catch {
-            #if DEBUG
-            print("[StreakService] Error recording activity: \(error)")
-            #endif
+            DebugLogger.shared.error("StreakTrackingService", "Error recording activity: \(error.localizedDescription)")
             self.error = error
             throw error
         }
@@ -243,9 +238,7 @@ class StreakTrackingService: ObservableObject {
 
             return history
         } catch {
-            #if DEBUG
-            print("[StreakService] Error fetching history: \(error)")
-            #endif
+            DebugLogger.shared.error("StreakTrackingService", "Error fetching history: \(error.localizedDescription)")
             self.error = error
             throw error
         }
@@ -266,9 +259,7 @@ class StreakTrackingService: ObservableObject {
             let decoder = createStreakDecoder()
             return try decoder.decode([StreakStatistics].self, from: response.data)
         } catch {
-            #if DEBUG
-            print("[StreakService] Error fetching statistics: \(error)")
-            #endif
+            DebugLogger.shared.error("StreakTrackingService", "Error fetching statistics: \(error.localizedDescription)")
             self.error = error
             throw error
         }

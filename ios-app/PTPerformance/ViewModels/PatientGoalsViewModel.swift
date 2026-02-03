@@ -5,7 +5,6 @@
 //  ACP-523: Patient Profile Goals & Progress
 //
 
-import Foundation
 import SwiftUI
 import UIKit
 

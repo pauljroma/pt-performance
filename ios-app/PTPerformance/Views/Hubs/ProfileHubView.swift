@@ -328,7 +328,7 @@ struct ProfileHubView: View {
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(4)
                 }
             }
@@ -637,7 +637,7 @@ struct ProfileHubView: View {
                 appState.userId = nil
             }
         } catch {
-            print("Logout error: \(error.localizedDescription)")
+            DebugLogger.shared.error("ProfileHubView", "Logout failed: \(error.localizedDescription)")
         }
     }
 }

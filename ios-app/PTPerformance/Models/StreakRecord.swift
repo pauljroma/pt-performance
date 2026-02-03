@@ -6,7 +6,6 @@
 //  Models for streak records and history
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Streak Type

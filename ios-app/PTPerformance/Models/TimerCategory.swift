@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 /// Timer category enum - maps to database timer_category enum

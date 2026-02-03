@@ -6,7 +6,6 @@
 //  ViewModel for managing weekly summary state and notifications
 //
 
-import Foundation
 import SwiftUI
 import Combine
 import UserNotifications

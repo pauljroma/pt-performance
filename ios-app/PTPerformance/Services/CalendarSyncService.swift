@@ -7,7 +7,6 @@
 //
 
 import EventKit
-import Foundation
 import SwiftUI
 
 /// Service for synchronizing PTPerformance sessions with the iOS Calendar.

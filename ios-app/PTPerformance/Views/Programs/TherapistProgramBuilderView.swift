@@ -431,7 +431,7 @@ private struct EquipmentChip: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .contain)
     }

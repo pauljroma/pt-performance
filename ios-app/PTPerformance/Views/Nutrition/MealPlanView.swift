@@ -182,7 +182,7 @@ struct MealPlanView: View {
                                 .frame(width: 6, height: 6)
                         }
                         .frame(width: 44, height: 50)
-                        .background(selectedDay == day ? Color.blue.opacity(0.1) : Color(.systemGray6))
+                        .background(selectedDay == day ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
                         .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
@@ -411,7 +411,7 @@ struct MealPlanRowWithActivate: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }
@@ -455,7 +455,7 @@ struct MealPlanItemRow: View {
             Spacer()
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }

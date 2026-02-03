@@ -5,7 +5,6 @@
 //  ViewModel for active timer display with real-time countdown updates
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for active timer full-screen countdown display

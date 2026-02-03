@@ -31,7 +31,7 @@ struct TemplateSearchBar: View {
             }
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
         .padding(.horizontal)
         .padding(.top, 8)
@@ -94,7 +94,7 @@ struct TemplateCategoryChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? color : Color(.systemGray6))
+            .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
         }
@@ -160,7 +160,7 @@ struct TemplateTabPicker: View {
                 withAnimation { selectedTab = 2 }
             }
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(10)
         .padding(.horizontal)
         .padding(.bottom, 8)

@@ -175,7 +175,7 @@ struct DeloadRecommendationView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -316,7 +316,7 @@ struct DeloadRecommendationView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
         .overlay(
@@ -384,7 +384,7 @@ struct DeloadRecommendationView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -460,7 +460,7 @@ struct DeloadRecommendationView: View {
             .chartPlotStyle { plotArea in
                 plotArea
                     .background(
-                        Color(colorScheme == .dark ? .systemGray6 : .systemGray6).opacity(0.3)
+                        Color(.separator)
                     )
                     .cornerRadius(8)
             }
@@ -502,7 +502,7 @@ struct DeloadRecommendationView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -724,7 +724,7 @@ struct DeloadPrescriptionCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
         .overlay(
@@ -840,7 +840,7 @@ struct FatigueTrendChart: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -901,7 +901,7 @@ struct FatigueTrendChart: View {
         .chartPlotStyle { plotArea in
             plotArea
                 .background(
-                    Color(colorScheme == .dark ? .systemGray6 : .systemGray6).opacity(0.3)
+                    Color(.separator)
                 )
                 .cornerRadius(8)
         }

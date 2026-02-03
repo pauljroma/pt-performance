@@ -302,7 +302,7 @@ private struct SummaryCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value), \(subtitle)")

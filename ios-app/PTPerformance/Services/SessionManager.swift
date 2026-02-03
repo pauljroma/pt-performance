@@ -5,7 +5,6 @@
 //  Purpose: Automatic session timeout (15 minutes) - HIPAA Technical Safeguard requirement
 //
 
-import Foundation
 import SwiftUI
 import Combine
 

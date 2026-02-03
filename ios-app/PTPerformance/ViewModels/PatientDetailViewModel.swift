@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 import Supabase
 
@@ -70,9 +69,7 @@ class PatientDetailViewModel: ObservableObject {
             print("✅ [PatientDetail] Loaded \(flags.count) flags")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ [PatientDetail] Flags error: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientDetailViewModel", "Flags error: \(error.localizedDescription)")
             flagsError = "Unable to load flags"
             flags = []
         }
@@ -85,9 +82,7 @@ class PatientDetailViewModel: ObservableObject {
             print("✅ [PatientDetail] Loaded pain trend (\(painTrend.count) points)")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ [PatientDetail] Pain trend error: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientDetailViewModel", "Pain trend error: \(error.localizedDescription)")
             painTrendError = "Unable to load pain trend"
             painTrend = []
         }
@@ -100,9 +95,7 @@ class PatientDetailViewModel: ObservableObject {
             print("✅ [PatientDetail] Loaded adherence data")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ [PatientDetail] Adherence error: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientDetailViewModel", "Adherence error: \(error.localizedDescription)")
             adherenceError = "Unable to load adherence"
             adherence = nil
         }
@@ -115,9 +108,7 @@ class PatientDetailViewModel: ObservableObject {
             print("✅ [PatientDetail] Loaded \(recentSessions.count) recent sessions")
             #endif
         } catch {
-            #if DEBUG
-            print("❌ [PatientDetail] Recent sessions error: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.error("PatientDetailViewModel", "Recent sessions error: \(error.localizedDescription)")
             recentSessionsError = "Unable to load recent sessions"
             recentSessions = []
         }

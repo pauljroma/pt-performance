@@ -186,11 +186,12 @@ public final class SharedDataStore {
     // MARK: - Private Helpers
 
     private func save<T: Encodable>(_ data: T, forKey key: String) {
-        guard let encoded = try? encoder.encode(data) else {
-            print("[SharedDataStore] Failed to encode data for key: \(key)")
-            return
+        do {
+            let encoded = try encoder.encode(data)
+            userDefaults?.set(encoded, forKey: key)
+        } catch {
+            DebugLogger.shared.error("SharedDataStore", "Failed to encode data for key: \(key), error: \(error.localizedDescription)")
         }
-        userDefaults?.set(encoded, forKey: key)
     }
 
     private func get<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
@@ -200,7 +201,7 @@ public final class SharedDataStore {
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            print("[SharedDataStore] Failed to decode data for key: \(key), error: \(error)")
+            DebugLogger.shared.error("SharedDataStore", "Failed to decode data for key: \(key), error: \(error.localizedDescription)")
             return nil
         }
     }

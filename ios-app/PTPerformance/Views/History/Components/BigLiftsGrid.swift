@@ -54,7 +54,7 @@ struct InlineBigLiftsGrid: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }
 }
@@ -74,7 +74,7 @@ struct InlineBigLiftCard: View {
     }
 
     private var cardBackgroundColor: Color {
-        colorScheme == .dark ? Color(.systemGray5) : Color(.systemBackground)
+        Color(.secondarySystemGroupedBackground)
     }
 
     var body: some View {

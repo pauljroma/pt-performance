@@ -122,7 +122,7 @@ struct StreakCalendarView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
         )
     }
@@ -270,7 +270,7 @@ struct StreakCalendarView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
     }
@@ -329,7 +329,7 @@ struct StreakCalendarView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
         )
     }
@@ -461,9 +461,7 @@ class StreakCalendarViewModel: ObservableObject {
             // Load 90 days of history to cover 3 months of navigation
             historyEntries = try await service.getStreakHistory(for: patientId, days: 90)
         } catch {
-            #if DEBUG
-            print("[StreakCalendar] Error loading data: \(error)")
-            #endif
+            DebugLogger.shared.warning("StreakCalendarView", "Error loading data: \(error.localizedDescription)")
         }
     }
 

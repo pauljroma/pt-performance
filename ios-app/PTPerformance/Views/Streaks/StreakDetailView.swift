@@ -151,7 +151,7 @@ struct StreakDetailView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
         )
     }
@@ -209,7 +209,7 @@ struct StreakDetailView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -230,7 +230,7 @@ struct StreakDetailView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -330,7 +330,7 @@ struct StreakDetailView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(colorScheme == .dark ? Color(.systemGray6) : Color.white)
+                .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
@@ -514,9 +514,7 @@ class StreakDetailViewModel: ObservableObject {
 
             historyEntries = history
         } catch {
-            #if DEBUG
-            print("[StreakDetail] Error loading data: \(error)")
-            #endif
+            DebugLogger.shared.warning("StreakDetailView", "Error loading data: \(error.localizedDescription)")
         }
     }
 

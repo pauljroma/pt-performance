@@ -549,7 +549,7 @@ struct ArmCareCategoryChip: View {
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background(isSelected ? Color.blue : Color(.systemGray5))
+            .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(20)
         }
@@ -750,7 +750,7 @@ struct ArmCareArticleDetailView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
     }

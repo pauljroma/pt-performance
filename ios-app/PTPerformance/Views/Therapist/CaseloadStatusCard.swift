@@ -113,7 +113,7 @@ struct CaseloadStatusCard: View {
     }
 
     private var cardBackgroundColor: Color {
-        colorScheme == .dark ? Color(.systemGray6) : Color.white
+        Color(.secondarySystemGroupedBackground)
     }
 
     var body: some View {
@@ -248,7 +248,7 @@ struct CaseloadStatusLegend: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Status legend: Green for good, yellow for attention needed, red for critical")
@@ -289,7 +289,7 @@ struct CaseloadStatusSummary: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(greenCount) patients good, \(yellowCount) need attention, \(redCount) critical")

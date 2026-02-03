@@ -146,7 +146,7 @@ struct ProgramDetailSheet: View {
                             }
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color(.systemGray6))
+                            .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                         } else if phases.isEmpty {
                             Text("Phase information will be available once you start the program.")
@@ -154,7 +154,7 @@ struct ProgramDetailSheet: View {
                                 .foregroundColor(.secondary)
                                 .padding()
                                 .frame(maxWidth: .infinity)
-                                .background(Color(.systemGray6))
+                                .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(12)
                         } else {
                             VStack(spacing: 10) {
@@ -354,7 +354,7 @@ private struct EquipmentItem: View {
             Spacer()
         }
         .padding(10)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(name), required equipment")
@@ -369,7 +369,7 @@ private struct ProgramTagChip: View {
             .font(.caption)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color(.systemGray5))
+            .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(16)
     }
 }
@@ -426,7 +426,7 @@ private struct PhasePreviewCard: View {
             }
         }
         .padding(12)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Phase \(phase.phaseNumber): \(phase.phaseName), \(phase.formattedWeekRange), \(phase.workoutCount) \(phase.workoutCount == 1 ? "workout" : "workouts")")

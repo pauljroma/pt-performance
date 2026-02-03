@@ -273,7 +273,7 @@ struct QuickWorkoutExecutionView: View {
                         .font(.title2)
                         .foregroundColor(.secondary)
                         .frame(width: 50, height: 50)
-                        .background(Color(.systemGray5))
+                        .background(Color(.tertiarySystemGroupedBackground))
                         .clipShape(Circle())
                 }
             }
@@ -332,7 +332,7 @@ struct QuickWorkoutExecutionView: View {
             .foregroundColor(completedExercises.contains(exercise.id) ? .white : workoutTypeColor)
             .padding(.horizontal, 32)
             .padding(.vertical, 16)
-            .background(completedExercises.contains(exercise.id) ? workoutTypeColor : Color(.systemGray5))
+            .background(completedExercises.contains(exercise.id) ? workoutTypeColor : Color(.tertiarySystemGroupedBackground))
             .cornerRadius(30)
         }
     }

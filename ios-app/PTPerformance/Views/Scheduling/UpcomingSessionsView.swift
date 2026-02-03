@@ -259,7 +259,7 @@ struct UpcomingSessionRow: View {
             }
             .frame(width: 50)
             .padding(.vertical, 8)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(8)
 
             // Session details

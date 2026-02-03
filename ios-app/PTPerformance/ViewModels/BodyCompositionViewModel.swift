@@ -5,7 +5,6 @@
 //  Body Composition tracking ViewModel (ACP-510, ACP-509)
 //
 
-import Foundation
 import SwiftUI
 
 /// ViewModel for body composition entry form and timeline

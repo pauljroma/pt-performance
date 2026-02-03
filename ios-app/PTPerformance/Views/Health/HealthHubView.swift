@@ -61,6 +61,7 @@ struct HealthHubView: View {
                         Image(systemName: "brain.head.profile")
                             .font(.title)
                             .foregroundColor(.purple)
+                            .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("AI Health Coach")
@@ -75,11 +76,14 @@ struct HealthHubView: View {
 
                         Image(systemName: "chevron.right")
                             .foregroundColor(.secondary)
+                            .accessibilityHidden(true)
                     }
                     .padding()
                     .background(Color.purple.opacity(0.1))
                     .cornerRadius(16)
                 }
+                .accessibilityLabel("AI Health Coach")
+                .accessibilityHint("Get personalized health insights powered by AI")
             }
             .padding()
         }
@@ -93,6 +97,7 @@ struct HealthHubView: View {
             Image(systemName: "heart.text.square.fill")
                 .font(.system(size: 64))
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
 
             Text("Health Intelligence")
                 .font(.title)
@@ -112,7 +117,7 @@ struct HealthHubView: View {
                 HealthFeatureRow(icon: "brain.head.profile", text: "AI Health Coach")
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(16)
             .padding(.horizontal)
 
@@ -131,6 +136,8 @@ struct HealthHubView: View {
                     .cornerRadius(12)
             }
             .padding(.horizontal)
+            .accessibilityLabel("Upgrade to Premium")
+            .accessibilityHint("Opens subscription options to unlock all Health Intelligence features")
 
             Spacer()
         }
@@ -153,46 +160,68 @@ struct HealthScoreCard: View {
                     Text("Details")
                         .font(.caption)
                 }
+                .accessibilityLabel("View health score details")
             }
 
-            HStack(spacing: 20) {
-                // Main Score
-                ZStack {
-                    Circle()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 8)
+            if viewModel.isLoading && viewModel.healthScore == nil {
+                // Loading state
+                HStack(spacing: 20) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 8)
+                        ProgressView()
+                    }
+                    .frame(width: 80, height: 80)
 
-                    Circle()
-                        .trim(from: 0, to: Double(viewModel.overallScore) / 100)
-                        .stroke(viewModel.scoreColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-
-                    VStack {
-                        Text("\(viewModel.overallScore)")
-                            .font(.title)
-                            .fontWeight(.bold)
-                        Text("/ 100")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Loading health data...")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    Spacer()
                 }
-                .frame(width: 80, height: 80)
+            } else {
+                HStack(spacing: 20) {
+                    // Main Score
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 8)
 
-                // Breakdown
-                VStack(alignment: .leading, spacing: 6) {
-                    if let score = viewModel.healthScore {
-                        HealthScoreRow(label: "Sleep", value: score.sleepScore)
-                        HealthScoreRow(label: "Recovery", value: score.recoveryScore)
-                        HealthScoreRow(label: "Activity", value: score.activityScore)
-                    } else {
-                        Text("Loading...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Circle()
+                            .trim(from: 0, to: Double(viewModel.overallScore) / 100)
+                            .stroke(viewModel.scoreColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+
+                        VStack {
+                            Text("\(viewModel.overallScore)")
+                                .font(.title)
+                                .fontWeight(.bold)
+                            Text("/ 100")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(width: 80, height: 80)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Health score \(viewModel.overallScore) out of 100")
+
+                    // Breakdown
+                    VStack(alignment: .leading, spacing: 6) {
+                        if let score = viewModel.healthScore {
+                            HealthScoreRow(label: "Sleep", value: score.sleepScore)
+                            HealthScoreRow(label: "Recovery", value: score.recoveryScore)
+                            HealthScoreRow(label: "Activity", value: score.activityScore)
+                        } else {
+                            Text("No health data available")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
         .task {
             await viewModel.loadData()
@@ -225,7 +254,10 @@ struct HealthScoreRow: View {
                 }
             }
             .frame(width: 50, height: 4)
+            .accessibilityHidden(true)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label) score: \(value) out of 100")
     }
 
     private func scoreColor(_ value: Int) -> Color {
@@ -252,6 +284,7 @@ struct HealthFeatureCard: View {
                 Image(systemName: icon)
                     .font(.title)
                     .foregroundColor(color)
+                    .accessibilityHidden(true)
 
                 Text(title)
                     .font(.subheadline)
@@ -263,6 +296,8 @@ struct HealthFeatureCard: View {
             .background(color.opacity(0.1))
             .cornerRadius(16)
         }
+        .accessibilityLabel(title)
+        .accessibilityHint("Opens \(title) feature")
     }
 }
 
@@ -275,11 +310,15 @@ struct HealthFeatureRow: View {
             Image(systemName: icon)
                 .foregroundColor(.blue)
                 .frame(width: 24)
+                .accessibilityHidden(true)
             Text(text)
                 .font(.subheadline)
             Spacer()
             Image(systemName: "checkmark")
                 .foregroundColor(.green)
+                .accessibilityHidden(true)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(text), included in premium")
     }
 }

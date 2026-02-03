@@ -5,7 +5,6 @@
 //  Service for managing Baseball Pack premium content access and program loading
 //
 
-import Foundation
 import SwiftUI
 
 /// Service for managing Baseball Pack premium content

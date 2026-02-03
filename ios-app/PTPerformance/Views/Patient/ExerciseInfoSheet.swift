@@ -136,7 +136,7 @@ struct ExerciseTemplateInfoSheet: View {
             }
             .frame(height: 200)
             .frame(maxWidth: .infinity)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         } else if let videoUrl = template.videoUrl {
             // Legacy single video fallback
@@ -202,7 +202,7 @@ struct ExerciseTemplateInfoSheet: View {
                                     }
                                     .foregroundColor(.primary)
                                     .frame(width: 70, height: 50)
-                                    .background(Color(.systemGray6))
+                                    .background(Color(.secondarySystemGroupedBackground))
                                     .cornerRadius(8)
                                     .overlay(
                                         Group {

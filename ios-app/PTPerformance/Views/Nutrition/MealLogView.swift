@@ -100,7 +100,7 @@ struct MealLogView: View {
                         .font(.subheadline)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(viewModel.mealType == type ? Color.blue : Color(.systemGray5))
+                        .background(viewModel.mealType == type ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(viewModel.mealType == type ? .white : .primary)
                         .cornerRadius(20)
                     }
@@ -143,7 +143,7 @@ struct MealLogView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 
     // MARK: - Selected Foods Section
@@ -265,7 +265,7 @@ struct MealLogView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(Color(.systemGray6))
+                            .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(8)
                         }
                         .buttonStyle(.plain)

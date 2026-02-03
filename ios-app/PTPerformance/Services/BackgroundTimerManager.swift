@@ -56,10 +56,7 @@ class BackgroundTimerManager: ObservableObject {
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {
-            print("❌ Failed to schedule background refresh: \(error)")
-            DebugLogger.shared.info("DEBUG", 
-                "Background refresh scheduling failed: \(error.localizedDescription)",
-            )
+            DebugLogger.shared.warning("BackgroundTimerManager", "Background refresh scheduling failed: \(error.localizedDescription)")
         }
     }
 
@@ -81,10 +78,7 @@ class BackgroundTimerManager: ObservableObject {
 
             return granted
         } catch {
-            print("❌ Failed to request notification permission: \(error)")
-            DebugLogger.shared.info("DEBUG", 
-                "Notification permission request failed: \(error.localizedDescription)",
-            )
+            DebugLogger.shared.warning("BackgroundTimerManager", "Notification permission request failed: \(error.localizedDescription)")
             return false
         }
     }
@@ -316,10 +310,7 @@ class BackgroundTimerManager: ObservableObject {
                     startTime: Date()
                 )
             } catch {
-                print("❌ Failed to schedule notifications: \(error)")
-                DebugLogger.shared.info("DEBUG", 
-                    "Notification scheduling failed: \(error.localizedDescription)",
-                )
+                DebugLogger.shared.warning("BackgroundTimerManager", "Notification scheduling failed: \(error.localizedDescription)")
             }
         }
 

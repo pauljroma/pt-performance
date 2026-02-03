@@ -22,6 +22,8 @@ struct LabResultsView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                     }
+                    .accessibilityLabel("Add lab result")
+                    .accessibilityHint("Opens form to add a new lab result")
                 }
             }
             .sheet(isPresented: $viewModel.showingAddSheet) {
@@ -116,13 +118,24 @@ struct LabResultRow: View {
 
             Image(systemName: "chevron.right")
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(result.testType.displayName), \(result.testDate.formatted(date: .abbreviated, time: .omitted)), \(statusAccessibilityLabel)")
+        .accessibilityHint("Tap to view lab result details")
     }
 
     private var abnormalMarkers: Int? {
         let abnormal = result.results.filter { $0.status != .normal }
         return abnormal.count
+    }
+
+    private var statusAccessibilityLabel: String {
+        if let abnormalCount = abnormalMarkers {
+            return abnormalCount > 0 ? "\(abnormalCount) markers flagged" : "all markers normal"
+        }
+        return ""
     }
 }
 
@@ -168,7 +181,7 @@ struct LabResultDetailView: View {
                                 .foregroundColor(.secondary)
                         }
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                         .padding(.horizontal)
                     } else {
@@ -191,6 +204,8 @@ struct LabResultDetailView: View {
                         .buttonStyle(.borderedProminent)
                         .disabled(isAnalyzing)
                         .padding(.horizontal)
+                        .accessibilityLabel(isAnalyzing ? "Analyzing lab results" : "Get AI Analysis")
+                        .accessibilityHint("Uses AI to analyze your lab result markers")
                     }
                 }
                 .padding(.vertical)
@@ -230,10 +245,13 @@ struct MarkerRow: View {
             Circle()
                 .fill(statusColor)
                 .frame(width: 10, height: 10)
+                .accessibilityHidden(true)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(marker.status != .normal ? statusColor.opacity(0.1) : Color.clear)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(marker.name), \(String(format: "%.1f", marker.value)) \(marker.unit), \(statusAccessibilityLabel)")
     }
 
     private var statusColor: Color {
@@ -241,6 +259,15 @@ struct MarkerRow: View {
         case .normal: return .green
         case .low, .high: return .orange
         case .critical: return .red
+        }
+    }
+
+    private var statusAccessibilityLabel: String {
+        switch marker.status {
+        case .normal: return "normal"
+        case .low: return "low"
+        case .high: return "high"
+        case .critical: return "critical"
         }
     }
 }

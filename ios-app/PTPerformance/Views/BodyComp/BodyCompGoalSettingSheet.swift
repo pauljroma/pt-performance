@@ -397,7 +397,7 @@ struct BodyCompGoalSettingSheet: View {
                     .font(.caption)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color(.systemGray5))
+                    .background(Color(.tertiarySystemGroupedBackground))
                     .cornerRadius(8)
             }
             .buttonStyle(.plain)

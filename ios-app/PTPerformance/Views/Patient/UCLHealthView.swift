@@ -163,7 +163,7 @@ struct UCLHealthView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(8)
             } else {
                 // No assessment yet
@@ -340,7 +340,7 @@ struct UCLHealthView: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(8)
         }
         .padding()
@@ -403,7 +403,7 @@ private struct ScoreRow: View {
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Rectangle()
-                        .fill(Color(.systemGray5))
+                        .fill(Color(.tertiarySystemGroupedBackground))
                         .frame(height: 6)
                         .cornerRadius(3)
 

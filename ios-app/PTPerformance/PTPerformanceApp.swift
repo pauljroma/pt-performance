@@ -188,9 +188,7 @@ struct PTPerformanceApp: App {
                     }
                 }
             } catch {
-                #if DEBUG
-                print("Failed to handle auth deep link: \(error.localizedDescription)")
-                #endif
+                DebugLogger.shared.error("PTPerformanceApp", "Failed to handle auth deep link: \(error.localizedDescription)")
             }
         }
     }
@@ -338,7 +336,7 @@ class LoggingService: ObservableObject {
             try logContent.write(to: fileURL, atomically: true, encoding: .utf8)
             return fileURL
         } catch {
-            print("Failed to export logs: \(error)")
+            DebugLogger.shared.error("LoggingService", "Failed to export logs: \(error.localizedDescription)")
             return nil
         }
     }

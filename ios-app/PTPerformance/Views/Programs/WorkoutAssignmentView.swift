@@ -90,7 +90,7 @@ struct WorkoutAssignmentView: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
     }
 
     // MARK: - Week Grid View
@@ -106,7 +106,7 @@ struct WorkoutAssignmentView: View {
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
-                            .background(Color(.systemGray5))
+                            .background(Color(.tertiarySystemGroupedBackground))
                     }
                 }
 
@@ -162,7 +162,7 @@ struct WorkoutAssignmentView: View {
                     .textFieldStyle(PlainTextFieldStyle())
             }
             .padding(8)
-            .background(Color(.systemGray6))
+            .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(8)
             .padding(8)
 
@@ -349,7 +349,7 @@ private struct DaySlotView: View {
         .background(Color(.systemBackground))
         .overlay(
             Rectangle()
-                .fill(Color(.systemGray5))
+                .fill(Color(.tertiarySystemGroupedBackground))
                 .frame(width: 1),
             alignment: .trailing
         )
@@ -421,7 +421,7 @@ private struct DraggableTemplateRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(.systemGray6))
+                    .fill(Color(.secondarySystemGroupedBackground))
             )
         }
         .buttonStyle(.plain)
@@ -458,7 +458,7 @@ private struct QuickWorkoutPickerSheet: View {
                     }
                 }
                 .padding(10)
-                .background(Color(.systemGray6))
+                .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(10)
                 .padding(.horizontal)
                 .padding(.top, 8)

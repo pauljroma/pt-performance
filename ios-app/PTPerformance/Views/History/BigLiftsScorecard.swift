@@ -162,7 +162,7 @@ struct BigLiftsScorecard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .padding(.horizontal, Spacing.md)
     }
@@ -187,7 +187,7 @@ struct BigLiftsScorecard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.xl)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .padding(.horizontal, Spacing.md)
     }
@@ -417,7 +417,7 @@ struct BigLiftCardSkeleton: View {
         }
         .padding(Spacing.md)
         .frame(width: 160)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .shimmer(isAnimating: isAnimating)
         .onAppear {
@@ -536,7 +536,7 @@ struct BigLiftsScorecardGrid: View {
             .accessibilityLabel("Total personal records: \(viewModel.totalPRCount)")
         }
         .padding(Spacing.md)
-        .background(Color(.systemGray6))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .padding(.horizontal, Spacing.md)
     }

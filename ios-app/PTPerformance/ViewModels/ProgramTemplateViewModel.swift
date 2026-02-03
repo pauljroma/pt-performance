@@ -5,7 +5,6 @@
 //  ViewModel for managing program templates with local storage
 //
 
-import Foundation
 import SwiftUI
 
 @MainActor

@@ -7,7 +7,6 @@
 //  and pre-loads workout data for immediate execution without dialogs or confirmations.
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - Quick Start Result

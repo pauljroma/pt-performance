@@ -3,7 +3,6 @@
 //  PTPerformance
 //
 
-import Foundation
 import SwiftUI
 import Supabase
 

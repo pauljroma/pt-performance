@@ -6,7 +6,6 @@
 //  Weekly elbow stress questionnaire focused on UCL injury prevention
 //
 
-import Foundation
 import SwiftUI
 
 // MARK: - UCL Health Assessment Model
