@@ -145,6 +145,8 @@ final class SupplementService: ObservableObject {
             components.hour = 12
         case .evening:
             components.hour = 18
+        case .night:
+            components.hour = 22
         case .beforeBed:
             components.hour = 21
         case .preWorkout:

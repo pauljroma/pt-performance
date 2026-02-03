@@ -28,7 +28,7 @@ struct UnifiedAICoachView: View {
 
                             // Chat Messages
                             ForEach(viewModel.messages) { message in
-                                ChatBubble(message: message, onQuestionTap: { question in
+                                AICoachChatBubble(message: message, onQuestionTap: { question in
                                     Task { await viewModel.askQuestion(question) }
                                 })
                                 .id(message.id)
@@ -216,7 +216,7 @@ struct UnifiedAICoachView: View {
 
 // MARK: - Chat Bubble
 
-struct ChatBubble: View {
+struct AICoachChatBubble: View {
     let message: AICoachMessage
     let onQuestionTap: (String) -> Void
 
@@ -247,7 +247,6 @@ struct ChatBubble: View {
                     .background(message.role == .user ? Color.modusCyan : Color.modusLightTeal)
                     .foregroundColor(message.role == .user ? .white : .primary)
                     .cornerRadius(18)
-                    .cornerRadius(message.role == .user ? 18 : 4, corners: message.role == .user ? [.bottomRight] : [.bottomLeft])
 
                 // Inline Insights (for coach messages)
                 if let insights = message.insights, !insights.isEmpty {
@@ -460,71 +459,7 @@ struct CoachTypingIndicator: View {
     }
 }
 
-// MARK: - Flow Layout
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                      y: bounds.minY + result.positions[index].y),
-                         proposal: .unspecified)
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-
-                if x + size.width > maxWidth && x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, size.height)
-                x += size.width + spacing
-            }
-
-            self.size = CGSize(width: maxWidth, height: y + rowHeight)
-        }
-    }
-}
-
-// MARK: - Corner Radius Extension
-
-extension View {
-    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners))
-    }
-}
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-        return Path(path.cgPath)
-    }
-}
+// FlowLayout and RoundedCorner defined in ExerciseDetailSheet.swift and ExerciseVideoView.swift
 
 #Preview {
     UnifiedAICoachView()

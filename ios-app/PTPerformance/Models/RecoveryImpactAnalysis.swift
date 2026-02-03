@@ -261,31 +261,7 @@ struct PersonalizedRecoveryRecommendation: Identifiable, Codable, Equatable {
     }
 }
 
-/// Time of day for recommendations
-enum TimeOfDay: String, Codable, CaseIterable {
-    case morning = "morning"
-    case afternoon = "afternoon"
-    case evening = "evening"
-    case night = "night"
-
-    var displayName: String {
-        switch self {
-        case .morning: return "Morning"
-        case .afternoon: return "Afternoon"
-        case .evening: return "Evening"
-        case .night: return "Night"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .morning: return "sunrise.fill"
-        case .afternoon: return "sun.max.fill"
-        case .evening: return "sunset.fill"
-        case .night: return "moon.fill"
-        }
-    }
-}
+// TimeOfDay is defined in Supplement.swift
 
 // MARK: - Preview Support
 

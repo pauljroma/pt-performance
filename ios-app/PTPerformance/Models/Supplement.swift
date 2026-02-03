@@ -92,10 +92,11 @@ enum SupplementFrequency: String, Codable, CaseIterable {
     }
 }
 
-enum TimeOfDay: String, Codable, CaseIterable {
+enum TimeOfDay: String, Codable, CaseIterable, Equatable {
     case morning = "morning"
     case afternoon = "afternoon"
     case evening = "evening"
+    case night = "night"
     case beforeBed = "before_bed"
     case preWorkout = "pre_workout"
     case postWorkout = "post_workout"
@@ -106,10 +107,24 @@ enum TimeOfDay: String, Codable, CaseIterable {
         case .morning: return "Morning"
         case .afternoon: return "Afternoon"
         case .evening: return "Evening"
+        case .night: return "Night"
         case .beforeBed: return "Before Bed"
         case .preWorkout: return "Pre-Workout"
         case .postWorkout: return "Post-Workout"
         case .withMeals: return "With Meals"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .morning: return "sunrise.fill"
+        case .afternoon: return "sun.max.fill"
+        case .evening: return "sunset.fill"
+        case .night: return "moon.stars.fill"
+        case .beforeBed: return "moon.fill"
+        case .preWorkout: return "figure.run"
+        case .postWorkout: return "figure.cooldown"
+        case .withMeals: return "fork.knife"
         }
     }
 }

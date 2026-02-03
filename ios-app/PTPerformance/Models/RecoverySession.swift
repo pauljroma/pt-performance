@@ -28,7 +28,7 @@ struct RecoverySession: Identifiable, Codable, Hashable {
     }
 }
 
-enum RecoveryProtocolType: String, Codable, CaseIterable {
+enum RecoveryProtocolType: String, Codable, CaseIterable, Equatable {
     case sauna = "sauna"
     case coldPlunge = "cold_plunge"
     case contrast = "contrast"
@@ -81,7 +81,7 @@ struct RecoveryRecommendation: Identifiable, Codable {
     }
 }
 
-enum RecoveryPriority: String, Codable {
+enum RecoveryPriority: String, Codable, Equatable {
     case high
     case medium
     case low
