@@ -129,12 +129,14 @@ struct ReadinessCheckInView: View {
                 }
                 .task {
                     await viewModel.loadTodayEntry()
-                    // Load HRV baseline for trend indicator and sync today's data
+                    // Show form immediately - don't block on HealthKit
+                    isInitialLoading = false
+
+                    // Load HRV baseline for trend indicator and sync today's data (non-blocking)
                     if healthKitService.isAuthorized {
                         hrvBaseline = try? await healthKitService.getHRVBaseline()
                         _ = try? await healthKitService.syncTodayData()
                     }
-                    isInitialLoading = false
                 }
                 .sheet(isPresented: $showHealthKitPrompt) {
                     HealthKitAuthorizationView()
