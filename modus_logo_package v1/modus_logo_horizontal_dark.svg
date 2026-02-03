@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120">
+  <!-- Horizontal combo logo - dark (for light backgrounds) -->
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d4f4f"/>
+      <stop offset="100%" style="stop-color:#14b8a6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon -->
+  <rect x="0" y="0" width="120" height="120" rx="27" fill="url(#iconGrad)"/>
+  <path d="M30 87 L30 51 L60 77 L90 36 L90 87" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="90" cy="36" r="6" fill="white"/>
+
+  <!-- Wordmark -->
+  <text x="145" y="85" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="80" font-weight="700" fill="#0d4f4f">modus</text>
+</svg>

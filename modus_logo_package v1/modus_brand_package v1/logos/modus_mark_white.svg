@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Mark only - white on transparent (for dark backgrounds) -->
+  <path d="M256 725 L256 427 L512 640 L768 299 L768 725" stroke="white" stroke-width="68" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="768" cy="299" r="51" fill="white"/>
+</svg>
