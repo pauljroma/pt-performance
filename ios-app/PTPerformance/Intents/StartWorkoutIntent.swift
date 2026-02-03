@@ -2,11 +2,11 @@ import AppIntents
 import Foundation
 
 /// Siri Intent to start today's scheduled workout
-/// Phrase: "Hey Siri, start my workout in PT Performance"
+/// Phrase: "Hey Siri, start my workout in Modus"
 @available(iOS 16.0, *)
 struct StartWorkoutIntent: AppIntent {
     static var title: LocalizedStringResource = "Start Workout"
-    static var description = IntentDescription("Start today's scheduled workout in PT Performance")
+    static var description = IntentDescription("Start today's scheduled workout in Modus")
 
     /// Optional workout name to start a specific workout
     @Parameter(title: "Workout Name")
@@ -35,7 +35,7 @@ struct StartWorkoutIntent: AppIntent {
 
         guard hasSession else {
             return .result(
-                dialog: "Please open PT Performance and sign in first to start your workout."
+                dialog: "Please open Modus and sign in first to start your workout."
             ) {
                 // Open app for login
             }

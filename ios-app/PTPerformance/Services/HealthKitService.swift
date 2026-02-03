@@ -117,7 +117,7 @@ enum HealthKitError: LocalizedError {
         case .notAvailable:
             return "HealthKit requires an iPhone or Apple Watch. This feature is not available on this device."
         case .notAuthorized:
-            return "Go to Settings > Privacy > Health > PT Performance to grant access to your health data."
+            return "Go to Settings > Privacy > Health > Modus to grant access to your health data."
         case .noDataAvailable:
             return "Make sure you're wearing your Apple Watch and it's syncing data to your iPhone."
         case .queryFailed:

@@ -14,7 +14,7 @@ import SwiftUI
 /// Provides functionality to:
 /// - Export scheduled sessions to the calendar
 /// - Import game schedules from external calendars
-/// - Manage the PT Performance calendar
+/// - Manage the Modus calendar
 /// - Handle calendar permissions
 ///
 /// ## Usage
@@ -45,7 +45,7 @@ final class CalendarSyncService: ObservableObject {
     // MARK: - Private Properties
 
     private let eventStore = EKEventStore()
-    private let calendarName = "PT Performance"
+    private let calendarName = "Modus"
     private let calendarIdentifierKey = "PTPerformanceCalendarIdentifier"
     private let settingsKey = "CalendarSyncSettings"
     private let eventMappingKey = "CalendarEventMapping" // Maps session ID to calendar event ID
@@ -117,11 +117,11 @@ final class CalendarSyncService: ObservableObject {
 
     // MARK: - Calendar Management
 
-    /// Get or create the PT Performance calendar.
+    /// Get or create the Modus calendar.
     ///
     /// Creates a new calendar if one doesn't exist, or returns the existing one.
     ///
-    /// - Returns: The PT Performance calendar
+    /// - Returns: The Modus calendar
     /// - Throws: `CalendarSyncError` if calendar creation fails
     func getOrCreatePTCalendar() async throws -> EKCalendar {
         // Check for existing calendar
@@ -152,7 +152,7 @@ final class CalendarSyncService: ObservableObject {
             throw CalendarSyncError.calendarNotFound
         }
 
-        // Set calendar color (blue to match PT Performance branding)
+        // Set calendar color (blue to match Modus branding)
         newCalendar.cgColor = UIColor.systemBlue.cgColor
 
         do {
@@ -426,7 +426,7 @@ final class CalendarSyncService: ObservableObject {
 
     /// Update an existing event with session data.
     private func updateEvent(_ event: EKEvent, from session: ScheduledSession) {
-        event.title = "PT Performance: \(session.displayName)"
+        event.title = "Modus: \(session.displayName)"
         event.startDate = session.scheduledDateTime
         event.endDate = session.scheduledDateTime.addingTimeInterval(TimeInterval(settings.defaultWorkoutDuration * 60))
 
@@ -492,7 +492,7 @@ final class CalendarSyncService: ObservableObject {
 
     // MARK: - Cleanup
 
-    /// Remove all PT Performance events from the calendar.
+    /// Remove all Modus events from the calendar.
     ///
     /// Use with caution - this removes all synced events.
     func removeAllSyncedEvents() async throws {

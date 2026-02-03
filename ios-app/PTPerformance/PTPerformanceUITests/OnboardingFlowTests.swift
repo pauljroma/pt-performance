@@ -83,7 +83,7 @@ final class OnboardingFlowTests: XCTestCase {
         getStartedButton.tap()
 
         // Then: Should navigate to auth view or main dashboard
-        let authOrDashboard = app.staticTexts["PT Performance"].exists ||
+        let authOrDashboard = app.staticTexts["Modus"].exists ||
                               app.staticTexts["Sign in as Demo Patient"].exists ||
                               app.tabBars.firstMatch.exists
         XCTAssertTrue(authOrDashboard, "Should navigate to auth or dashboard after onboarding")
@@ -117,7 +117,7 @@ final class OnboardingFlowTests: XCTestCase {
         XCTAssertTrue(onboardingDismissed, "Onboarding should be dismissed after skip")
 
         // Verify we're on auth view or main view
-        let authOrDashboard = app.staticTexts["PT Performance"].exists ||
+        let authOrDashboard = app.staticTexts["Modus"].exists ||
                               app.buttons["Sign in as Demo Patient"].exists ||
                               app.tabBars.firstMatch.exists
         XCTAssertTrue(authOrDashboard, "Should show auth or dashboard after skip")
@@ -185,7 +185,7 @@ final class OnboardingFlowTests: XCTestCase {
         XCTAssertFalse(onboardingReappears, "Onboarding should not appear on second launch")
 
         // Should show auth view instead
-        XCTAssertTrue(app.staticTexts["PT Performance"].exists || app.buttons["Sign in as Demo Patient"].exists,
+        XCTAssertTrue(app.staticTexts["Modus"].exists || app.buttons["Sign in as Demo Patient"].exists,
                      "Should show auth view on subsequent launches")
     }
 

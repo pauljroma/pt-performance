@@ -217,7 +217,7 @@ struct CalendarSettingsView: View {
            let calendar = availableCalendars.first(where: { $0.id == targetId }) {
             return calendar.title
         }
-        return "PT Performance (Default)"
+        return "Modus (Default)"
     }
 
     // MARK: - Reminder Section

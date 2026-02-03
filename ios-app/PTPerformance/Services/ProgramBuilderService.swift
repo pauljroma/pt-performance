@@ -771,7 +771,7 @@ class ProgramBuilderService: ObservableObject {
             programId: programId,
             isFeatured: isFeatured,
             tags: tags,
-            author: "PT Performance"
+            author: "Modus"
         )
 
         do {

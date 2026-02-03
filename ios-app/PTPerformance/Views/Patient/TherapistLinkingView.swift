@@ -135,7 +135,7 @@ struct TherapistLinkingView: View {
                             }
                             .buttonStyle(.bordered)
 
-                            ShareLink(item: "My PT Performance linking code is: \(code)") {
+                            ShareLink(item: "My Modus linking code is: \(code)") {
                                 Label("Share", systemImage: "square.and.arrow.up")
                             }
                             .buttonStyle(.bordered)

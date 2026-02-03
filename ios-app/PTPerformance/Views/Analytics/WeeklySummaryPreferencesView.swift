@@ -67,7 +67,7 @@ struct WeeklySummaryPreferencesView: View {
                                 .font(.system(size: 32))
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("PT Performance")
+                                Text("Modus")
                                     .font(.caption.bold())
                                     .foregroundColor(.secondary)
 

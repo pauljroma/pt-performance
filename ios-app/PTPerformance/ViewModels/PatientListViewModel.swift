@@ -365,7 +365,7 @@ class PatientListViewModel: ObservableObject {
             return "No patients selected."
         }
 
-        var summary = "PT Performance - Patient Summary\n"
+        var summary = "Modus - Patient Summary\n"
         summary += "Generated: \(DateFormatter.localizedString(from: Date(), dateStyle: .long, timeStyle: .short))\n"
         summary += "Total Patients: \(selectedPatients.count)\n"
         summary += String(repeating: "=", count: 50) + "\n\n"

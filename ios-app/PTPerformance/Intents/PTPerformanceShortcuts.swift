@@ -1,7 +1,7 @@
 import AppIntents
 import Foundation
 
-/// App Shortcuts Provider for PT Performance
+/// App Shortcuts Provider for Modus
 /// Defines all Siri shortcuts available for the app
 @available(iOS 16.0, *)
 struct PTPerformanceShortcuts: AppShortcutsProvider {

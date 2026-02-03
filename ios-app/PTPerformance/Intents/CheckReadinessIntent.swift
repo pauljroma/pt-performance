@@ -2,7 +2,7 @@ import AppIntents
 import Foundation
 
 /// Siri Intent to check today's readiness score
-/// Phrase: "Hey Siri, check my readiness in PT Performance"
+/// Phrase: "Hey Siri, check my readiness in Modus"
 @available(iOS 16.0, *)
 struct CheckReadinessIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Readiness"
@@ -31,7 +31,7 @@ struct CheckReadinessIntent: AppIntent {
 
         // No cached score available
         return .result(
-            dialog: "I don't have your readiness score yet. Open PT Performance to complete your daily check-in."
+            dialog: "I don't have your readiness score yet. Open Modus to complete your daily check-in."
         )
     }
 
@@ -55,7 +55,7 @@ struct CheckReadinessIntent: AppIntent {
 // MARK: - Log Readiness Intent
 
 /// Siri Intent to log readiness check-in
-/// Phrase: "Hey Siri, log my readiness in PT Performance"
+/// Phrase: "Hey Siri, log my readiness in Modus"
 @available(iOS 16.0, *)
 struct LogReadinessIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Readiness"

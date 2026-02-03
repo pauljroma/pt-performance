@@ -254,7 +254,7 @@ class HelpContentLoader: ObservableObject {
                 content: """
                 # Analytics & Progress Tracking
 
-                PT Performance tracks your progress automatically.
+                Modus tracks your progress automatically.
 
                 ## Key Metrics
 

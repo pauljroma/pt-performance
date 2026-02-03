@@ -60,7 +60,7 @@ final class HealthKitErrorTests: XCTestCase {
 
     func testHealthKitError_NotAuthorized_RecoverySuggestion() {
         let error = HealthKitError.notAuthorized
-        XCTAssertEqual(error.recoverySuggestion, "Go to Settings > Privacy > Health > PT Performance to grant access to your health data.")
+        XCTAssertEqual(error.recoverySuggestion, "Go to Settings > Privacy > Health > Modus to grant access to your health data.")
     }
 
     func testHealthKitError_NoDataAvailable_RecoverySuggestion() {

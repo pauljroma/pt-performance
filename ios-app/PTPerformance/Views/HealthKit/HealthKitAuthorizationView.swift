@@ -31,7 +31,7 @@ struct HealthKitAuthorizationView: View {
                         .font(.title.bold())
 
                     // Description
-                    Text("PT Performance can read health data from your Apple Watch to automatically fill in your daily readiness check-in.")
+                    Text("Modus can read health data from your Apple Watch to automatically fill in your daily readiness check-in.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

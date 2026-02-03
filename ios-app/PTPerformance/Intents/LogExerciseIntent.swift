@@ -2,7 +2,7 @@ import AppIntents
 import Foundation
 
 /// Siri Intent to log exercise sets and reps
-/// Phrase: "Hey Siri, log 3 sets of 10 in PT Performance"
+/// Phrase: "Hey Siri, log 3 sets of 10 in Modus"
 @available(iOS 16.0, *)
 struct LogExerciseIntent: AppIntent {
     static var title: LocalizedStringResource = "Log Exercise"
@@ -78,7 +78,7 @@ struct LogExerciseIntent: AppIntent {
 // MARK: - Quick Log Intent (Simplified)
 
 /// Simplified intent for quick logging without exercise name
-/// Phrase: "Hey Siri, log my set in PT Performance"
+/// Phrase: "Hey Siri, log my set in Modus"
 @available(iOS 16.0, *)
 struct QuickLogIntent: AppIntent {
     static var title: LocalizedStringResource = "Quick Log Set"

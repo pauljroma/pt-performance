@@ -40,11 +40,11 @@ struct AuthLandingView: View {
                     }
                     .accessibilityHidden(true)
 
-                    Text("PT Performance")
+                    Text("Modus")
                         .font(.largeTitle)
                         .bold()
 
-                    Text("Physical Therapy Progress Tracking")
+                    Text("Stop Guessing. Start Recovering.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

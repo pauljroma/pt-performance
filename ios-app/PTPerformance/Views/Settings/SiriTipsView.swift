@@ -64,7 +64,7 @@ struct SiriTipsView: View {
             Text("Hey Siri, let's train!")
                 .font(.title2.bold())
 
-            Text("Control PT Performance with your voice. Use these phrases to start workouts, log exercises, and track your progress hands-free.")
+            Text("Control Modus with your voice. Use these phrases to start workouts, log exercises, and track your progress hands-free.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -72,7 +72,7 @@ struct SiriTipsView: View {
         }
         .padding()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Hey Siri, let's train! Control PT Performance with your voice. Use these phrases to start workouts, log exercises, and track your progress hands-free.")
+        .accessibilityLabel("Hey Siri, let's train! Control Modus with your voice. Use these phrases to start workouts, log exercises, and track your progress hands-free.")
     }
 
     // MARK: - Shortcut Cards
@@ -84,9 +84,9 @@ struct SiriTipsView: View {
             title: "Start Workout",
             isExpanded: expandedSection == "workout",
             phrases: [
-                "Hey Siri, start my workout in PT Performance",
-                "Hey Siri, begin training in PT Performance",
-                "Hey Siri, start today's workout in PT Performance"
+                "Hey Siri, start my workout in Modus",
+                "Hey Siri, begin training in Modus",
+                "Hey Siri, start today's workout in Modus"
             ],
             description: "Opens your scheduled workout for today and gets you ready to train."
         ) {
@@ -103,9 +103,9 @@ struct SiriTipsView: View {
             title: "Log Exercise",
             isExpanded: expandedSection == "exercise",
             phrases: [
-                "Hey Siri, log 3 sets of 10 in PT Performance",
-                "Hey Siri, log exercise in PT Performance",
-                "Hey Siri, record my sets in PT Performance"
+                "Hey Siri, log 3 sets of 10 in Modus",
+                "Hey Siri, log exercise in Modus",
+                "Hey Siri, record my sets in Modus"
             ],
             description: "Quickly log sets and reps for your current exercise without touching your phone."
         ) {
@@ -122,9 +122,9 @@ struct SiriTipsView: View {
             title: "Check Readiness",
             isExpanded: expandedSection == "readiness",
             phrases: [
-                "Hey Siri, check my readiness in PT Performance",
-                "Hey Siri, am I ready to train in PT Performance",
-                "Hey Siri, log my readiness in PT Performance"
+                "Hey Siri, check my readiness in Modus",
+                "Hey Siri, am I ready to train in Modus",
+                "Hey Siri, log my readiness in Modus"
             ],
             description: "Check your daily readiness score or complete your morning check-in."
         ) {
@@ -141,9 +141,9 @@ struct SiriTipsView: View {
             title: "View Progress",
             isExpanded: expandedSection == "progress",
             phrases: [
-                "Hey Siri, show my progress in PT Performance",
-                "Hey Siri, check my streak in PT Performance",
-                "Hey Siri, view workout stats in PT Performance"
+                "Hey Siri, show my progress in Modus",
+                "Hey Siri, check my streak in Modus",
+                "Hey Siri, view workout stats in Modus"
             ],
             description: "See your workout streak, completed sessions, and overall progress."
         ) {
@@ -160,9 +160,9 @@ struct SiriTipsView: View {
             title: "Rest Timer",
             isExpanded: expandedSection == "timer",
             phrases: [
-                "Hey Siri, start rest timer in PT Performance",
-                "Hey Siri, start 90 second rest in PT Performance",
-                "Hey Siri, time my rest in PT Performance"
+                "Hey Siri, start rest timer in Modus",
+                "Hey Siri, start 90 second rest in Modus",
+                "Hey Siri, time my rest in Modus"
             ],
             description: "Start a rest timer between sets without interrupting your flow."
         ) {
@@ -189,8 +189,8 @@ struct SiriTipsView: View {
 
                 SetupStepRow(
                     number: 2,
-                    title: "Find PT Performance",
-                    description: "Search for PT Performance shortcuts in the app gallery"
+                    title: "Find Modus",
+                    description: "Search for Modus shortcuts in the app gallery"
                 )
 
                 SetupStepRow(
