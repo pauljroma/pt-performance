@@ -11,7 +11,7 @@ BEGIN;
 -- Stores user nutrition profiles with stats for BMR/TDEE calculations
 
 CREATE TABLE IF NOT EXISTS nutrition_profiles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
 
     -- Athlete type (matches pack code: BASE, BASEBALL, RUNNING, etc.)
