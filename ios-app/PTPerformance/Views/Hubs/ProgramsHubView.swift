@@ -27,6 +27,7 @@ struct ProgramsHubView: View {
 
     enum ProgramsSection: String, CaseIterable {
         case programs = "Programs"
+        case packs = "Packs"
         case baseball = "Baseball"
         case history = "History"
 
@@ -69,6 +70,15 @@ struct ProgramsHubView: View {
             // Use the existing ProgramLibraryBrowserView which has its own NavigationStack
             ProgramLibraryBrowserView()
                 .environmentObject(storeKit)
+
+        case .packs:
+            // Premium Packs browser
+            NavigationStack {
+                PremiumPacksBrowserView()
+                    .environmentObject(storeKit)
+                    .navigationTitle("Premium Packs")
+                    .navigationBarTitleDisplayMode(.large)
+            }
 
         case .baseball:
             // Baseball Pack section with premium gating
