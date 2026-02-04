@@ -294,7 +294,7 @@ extension RecoveryInsight {
             RecoveryInsight(
                 type: .hrvImprovement,
                 metric: .hrv,
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 impactPercentage: 15.2,
                 confidence: 0.85,
                 description: "Your HRV improved 15% after sauna sessions",
@@ -332,7 +332,7 @@ extension RecoveryCorrelation {
     static var sampleCorrelations: [RecoveryCorrelation] {
         [
             RecoveryCorrelation(
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 metric: .hrv,
                 correlationCoefficient: 0.68,
                 pValue: 0.02,
@@ -355,7 +355,7 @@ extension PersonalizedRecoveryRecommendation {
     static var sampleRecommendations: [PersonalizedRecoveryRecommendation] {
         [
             PersonalizedRecoveryRecommendation(
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 title: "Continue Sauna Sessions",
                 reason: "Your data shows consistent HRV improvement after sauna use",
                 expectedBenefit: "+12-15% HRV improvement",

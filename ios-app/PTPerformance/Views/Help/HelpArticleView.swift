@@ -13,7 +13,7 @@ struct HelpArticleView: View {
     @State private var showShareSheet = false
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 20) {
                 // Article header
                 VStack(alignment: .leading, spacing: 8) {

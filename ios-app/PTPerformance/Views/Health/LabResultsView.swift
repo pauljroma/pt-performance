@@ -74,7 +74,7 @@ struct LabResultsView: View {
         } description: {
             Text("Upload your blood work and lab results to track your health markers over time.")
         } actions: {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.sm) {
                 Button {
                     showingPDFUpload = true
                 } label: {
@@ -259,9 +259,9 @@ struct LabResultDetailView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(healthScoreColor(score).opacity(0.15))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func healthScoreColor(_ score: Int) -> Color {
@@ -374,7 +374,7 @@ struct LabResultDetailView: View {
                 )
             )
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(viewModel.isAnalyzing)
         .accessibilityLabel(viewModel.isAnalyzing ? "Analyzing lab results" : "Analyze with AI")
@@ -410,7 +410,7 @@ struct LabResultDetailView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func analysisResultsView(_ analysis: LabAnalysis) -> some View {
@@ -441,7 +441,7 @@ struct LabResultDetailView: View {
                 .foregroundColor(.primary)
                 .padding()
                 .background(Color.modusLightTeal)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
             // Concerning Biomarkers
             if !analysis.concerningBiomarkers.isEmpty {
@@ -482,7 +482,7 @@ struct LabResultDetailView: View {
     }
 
     private func concerningBiomarkersSection(_ biomarkers: [BiomarkerAnalysis]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "exclamationmark.circle")
                     .foregroundColor(.orange)
@@ -492,9 +492,9 @@ struct LabResultDetailView: View {
             }
 
             ForEach(biomarkers) { biomarker in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: Spacing.sm) {
                     Image(systemName: biomarker.status.iconName)
-                        .foregroundColor(biomarkerStatusColor(biomarker.status))
+                        .foregroundColor(biomarker.status.statusColor)
 
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
@@ -513,8 +513,8 @@ struct LabResultDetailView: View {
                     }
                 }
                 .padding()
-                .background(biomarkerStatusColor(biomarker.status).opacity(0.1))
-                .cornerRadius(8)
+                .background(biomarker.status.statusColor.opacity(0.1))
+                .cornerRadius(CornerRadius.sm)
             }
         }
     }
@@ -546,11 +546,11 @@ struct LabResultDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func priorityActionsSection(_ actions: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "star.fill")
                     .foregroundColor(.modusCyan)
@@ -560,7 +560,7 @@ struct LabResultDetailView: View {
             }
 
             ForEach(Array(actions.enumerated()), id: \.offset) { index, action in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: Spacing.sm) {
                     Image(systemName: "checkmark.circle")
                         .foregroundColor(.modusCyan)
 
@@ -571,11 +571,11 @@ struct LabResultDetailView: View {
         }
         .padding()
         .background(Color.modusCyan.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func correlationsSection(title: String, icon: String, correlations: [TrainingCorrelation]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: icon)
                     .foregroundColor(.modusCyan)
@@ -605,12 +605,12 @@ struct LabResultDetailView: View {
                 }
                 .padding()
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func disclaimerSection(_ disclaimer: String) -> some View {
@@ -633,14 +633,6 @@ struct LabResultDetailView: View {
         .cornerRadius(8)
     }
 
-    private func biomarkerStatusColor(_ status: BiomarkerStatus) -> Color {
-        switch status {
-        case .optimal: return .modusTealAccent
-        case .normal: return .modusCyan
-        case .low, .high: return .orange
-        case .critical: return .red
-        }
-    }
 }
 
 struct MarkerRow: View {

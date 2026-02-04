@@ -467,16 +467,8 @@ struct WorkoutHistoryRow: View {
                         .font(.headline)
                         .lineLimit(1)
 
-                    if workout.isManual {
-                        Text("Manual")
-                            .font(.caption2)
-                            .fontWeight(.medium)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.2))
-                            .foregroundColor(.orange)
-                            .cornerRadius(4)
-                    }
+                    // Session source badge
+                    SessionSourceBadge(source: workout.sessionSource)
                 }
 
                 HStack(spacing: 12) {
@@ -611,9 +603,7 @@ struct WorkoutHistoryRow: View {
 
     private var workoutAccessibilityLabel: String {
         var label = workout.name
-        if workout.isManual {
-            label += ", manual workout"
-        }
+        label += ", \(workout.sessionSource.displayName) workout"
         label += ", \(workout.date.formatted(date: .abbreviated, time: .omitted))"
         if let count = workout.exerciseCount, count > 0 {
             label += ", \(count) exercises"
@@ -626,6 +616,39 @@ struct WorkoutHistoryRow: View {
         }
         label += workout.isCompleted ? ", completed" : ", not completed"
         return label
+    }
+}
+
+// MARK: - Session Source Badge
+
+/// Badge showing the source of a workout (program, prescribed, chosen, quick_pick)
+struct SessionSourceBadge: View {
+    let source: SessionSource
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: source.icon)
+                .font(.caption2)
+            Text(source.displayName)
+                .font(.caption2)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(backgroundColor.opacity(0.2))
+        .foregroundColor(backgroundColor)
+        .cornerRadius(4)
+        .accessibilityLabel("\(source.displayName) workout")
+        .accessibilityHint("Indicates how this workout was initiated")
+    }
+
+    private var backgroundColor: Color {
+        switch source {
+        case .program: return .blue
+        case .prescribed: return .purple
+        case .chosen: return .green
+        case .quickPick: return .orange
+        }
     }
 }
 

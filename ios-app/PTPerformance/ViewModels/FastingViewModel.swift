@@ -13,12 +13,11 @@ final class FastingViewModel: ObservableObject {
     @Published var error: String?
 
     // Start fast form
-    @Published var selectedFastType: FastingType = .intermittent16_8
+    @Published var selectedFastType: FastingType = .intermittent
     @Published var showingStartSheet = false
 
     // End fast form
     @Published var showingEndSheet = false
-    @Published var breakfastFood: String = ""
     @Published var energyLevel: Int = 5
     @Published var endNotes: String = ""
 
@@ -38,10 +37,20 @@ final class FastingViewModel: ObservableObject {
     func loadData() async {
         isLoading = true
         error = nil
-        await service.fetchFastingData()
-        currentFast = service.currentFast
-        history = service.fastingHistory
-        stats = service.stats
+        await service.fetchAllData()
+        currentFast = service.activeFast
+        history = service.recentFasts
+        // Build stats from service data
+        let streakData = service.currentStreak
+        let weeklyData = service.weeklyStats
+        stats = FastingStats(
+            totalFasts: weeklyData?.totalFasts ?? 0,
+            completedFasts: weeklyData?.completedFasts ?? 0,
+            averageHours: weeklyData?.averageFastDuration ?? 0,
+            longestFast: weeklyData?.longestFast ?? 0,
+            currentStreak: streakData?.currentStreak ?? 0,
+            bestStreak: streakData?.longestStreak ?? 0
+        )
         recommendation = service.eatingWindowRecommendation
         if let serviceError = service.error {
             error = serviceError.localizedDescription
@@ -71,7 +80,7 @@ final class FastingViewModel: ObservableObject {
     func startFast() async {
         do {
             try await service.startFast(type: selectedFastType)
-            currentFast = service.currentFast
+            currentFast = service.activeFast
             showingStartSheet = false
             // Refresh workout recommendation when fast starts
             await fetchWorkoutRecommendation()
@@ -83,7 +92,6 @@ final class FastingViewModel: ObservableObject {
     func endFast() async {
         do {
             try await service.endFast(
-                breakfastFood: breakfastFood.isEmpty ? nil : breakfastFood,
                 energyLevel: energyLevel,
                 notes: endNotes.isEmpty ? nil : endNotes
             )
@@ -104,7 +112,6 @@ final class FastingViewModel: ObservableObject {
     }
 
     private func resetEndForm() {
-        breakfastFood = ""
         energyLevel = 5
         endNotes = ""
     }
@@ -121,7 +128,7 @@ final class FastingViewModel: ObservableObject {
 
     var elapsedHours: Double {
         guard let fast = currentFast else { return 0 }
-        return Date().timeIntervalSince(fast.startTime) / 3600
+        return Date().timeIntervalSince(fast.startedAt) / 3600
     }
 
     var remainingHours: Double {
@@ -130,12 +137,12 @@ final class FastingViewModel: ObservableObject {
     }
 
     var completedFasts: [FastingLog] {
-        history.filter { $0.endTime != nil }
+        history.filter { $0.endedAt != nil }
     }
 
     var completionRate: Double {
         guard !history.isEmpty else { return 0 }
-        let completed = history.filter { $0.endTime != nil && ($0.actualHours ?? 0) >= Double($0.targetHours) * 0.9 }
+        let completed = history.filter { $0.endedAt != nil && ($0.actualHours ?? 0) >= Double($0.targetHours) * 0.9 }
         return Double(completed.count) / Double(history.count)
     }
 

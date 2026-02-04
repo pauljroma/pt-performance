@@ -382,34 +382,6 @@ struct TemplateCard: View {
     }
 }
 
-// MARK: - Filter Chip
-
-struct FilterChip: View {
-    let title: String
-    var icon: String?
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                if let icon = icon {
-                    Image(systemName: icon)
-                        .font(.caption)
-                }
-
-                Text(title)
-                    .font(.subheadline)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(8)
-        }
-    }
-}
-
 // MARK: - Badges
 
 struct CategoryBadge: View {

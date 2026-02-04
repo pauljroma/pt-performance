@@ -52,12 +52,16 @@ struct CreateManualSessionInput: Codable {
     let name: String
     let sourceTemplateId: UUID?
     let sourceTemplateType: String?
+    let assignedByUserId: UUID?
+    let sessionSource: String?
 
     enum CodingKeys: String, CodingKey {
         case name
         case patientId = "patient_id"
         case sourceTemplateId = "source_template_id"
         case sourceTemplateType = "source_template_type"
+        case assignedByUserId = "assigned_by_user_id"
+        case sessionSource = "session_source"
     }
 }
 
@@ -457,22 +461,28 @@ class ManualWorkoutService: ObservableObject {
     ///   - patientId: The UUID of the patient performing the workout
     ///   - sourceTemplateId: Optional ID of the template this session is based on
     ///   - sourceTemplateType: Type of source template (system or patient)
+    ///   - assignedByUserId: Optional ID of trainer who assigned the workout
+    ///   - sessionSource: How the workout was initiated (defaults to .chosen)
     /// - Returns: The newly created manual session
     /// - Throws: Database errors if the insert fails
     func createManualSession(
         name: String,
         patientId: UUID,
         sourceTemplateId: UUID? = nil,
-        sourceTemplateType: SourceTemplateType? = nil
+        sourceTemplateType: SourceTemplateType? = nil,
+        assignedByUserId: UUID? = nil,
+        sessionSource: SessionSource = .chosen
     ) async throws -> ManualSession {
         let logger = DebugLogger.shared
-        logger.log("Creating manual session '\(name)' for patient: \(patientId)", level: .diagnostic)
+        logger.log("Creating manual session '\(name)' for patient: \(patientId) with source: \(sessionSource.rawValue)", level: .diagnostic)
 
         let input = CreateManualSessionInput(
             patientId: patientId,
             name: name,
             sourceTemplateId: sourceTemplateId,
-            sourceTemplateType: sourceTemplateType?.rawValue
+            sourceTemplateType: sourceTemplateType?.rawValue,
+            assignedByUserId: assignedByUserId,
+            sessionSource: sessionSource.rawValue
         )
 
         do {

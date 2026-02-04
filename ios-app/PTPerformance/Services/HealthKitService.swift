@@ -327,38 +327,69 @@ class HealthKitService: ObservableObject {
     }
 
     /// Check if HealthKit authorization has been granted
-    /// - Returns: True if at least HRV or sleep data can be read
+    /// Note: iOS doesn't allow apps to check read permission status for privacy reasons.
+    /// authorizationStatus(for:) always returns .sharingAuthorized for read types.
+    /// We check write permissions and trust that if user granted write, they likely granted read.
+    /// - Returns: True if user has been prompted and likely granted access
     func checkAuthorizationStatus() -> Bool {
         guard let healthStore = healthStore else {
             return false
         }
 
-        // Check HRV authorization
-        var canReadHRV = false
-        if let hrvType = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) {
-            canReadHRV = healthStore.authorizationStatus(for: hrvType) == .sharingAuthorized
+        // Check WRITE authorization (this actually works)
+        // If user granted write access, they were prompted and likely also granted read
+        var canWriteWorkouts = false
+        let workoutType = HKObjectType.workoutType()
+        canWriteWorkouts = healthStore.authorizationStatus(for: workoutType) == .sharingAuthorized
+
+        // Also check active energy write permission
+        var canWriteActiveEnergy = false
+        if let activeEnergyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            canWriteActiveEnergy = healthStore.authorizationStatus(for: activeEnergyType) == .sharingAuthorized
         }
 
-        // Check sleep authorization
-        var canReadSleep = false
-        if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
-            canReadSleep = healthStore.authorizationStatus(for: sleepType) == .sharingAuthorized
-        }
-
-        // Consider authorized if we can read at least one key metric
-        let authorized = canReadHRV || canReadSleep
+        // Consider authorized if we have write permission (means user was prompted)
+        let authorized = canWriteWorkouts || canWriteActiveEnergy
         isAuthorized = authorized
         return authorized
+    }
+
+    /// Verify HealthKit connection by attempting to query data
+    /// This is the most reliable way to check if authorization was actually granted
+    /// - Returns: True if we can successfully query HealthKit data
+    func verifyConnection() async -> Bool {
+        guard healthStore != nil else {
+            return false
+        }
+
+        // Try to fetch HRV or sleep data - if we get any result (even nil), authorization works
+        do {
+            // Attempt to fetch HRV - if this doesn't throw, we have permission
+            _ = try await fetchHRV(for: Date())
+            isAuthorized = true
+            return true
+        } catch HealthKitError.notAvailable {
+            return false
+        } catch {
+            // Query might fail for other reasons, but if it ran, we're authorized
+            isAuthorized = true
+            return true
+        }
     }
 
     // MARK: - Data Fetching
 
     /// Sync all today's health data
     /// - Returns: HealthKitDayData with all available metrics
-    /// - Throws: HealthKitError if HealthKit is not available
+    /// - Throws: HealthKitError if HealthKit is not available or not authorized
     func syncTodayData() async throws -> HealthKitDayData {
         guard healthStore != nil else {
             throw HealthKitError.notAvailable
+        }
+
+        // Check authorization before attempting to sync
+        guard isAuthorized || checkAuthorizationStatus() else {
+            throw HealthKitError.notAuthorized
         }
 
         isLoading = true
@@ -468,6 +499,15 @@ class HealthKitService: ObservableObject {
     func getReadinessAutoFill() async throws -> ReadinessAutoFill {
         guard healthStore != nil else {
             throw HealthKitError.notAvailable
+        }
+
+        // Check authorization - return manual source if not authorized
+        guard isAuthorized || checkAuthorizationStatus() else {
+            return ReadinessAutoFill(
+                suggestedSleepHours: nil,
+                suggestedEnergyLevel: nil,
+                dataSource: "manual"
+            )
         }
 
         let today = Date()

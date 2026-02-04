@@ -1,4 +1,51 @@
 import Foundation
+import SwiftUI
+
+/// Evidence level for supplement research
+enum EvidenceLevel: String, Codable, CaseIterable, Identifiable {
+    case high
+    case moderate
+    case low
+    case emerging
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .high: return "Strong Evidence"
+        case .moderate: return "Moderate Evidence"
+        case .low: return "Limited Evidence"
+        case .emerging: return "Emerging Research"
+        }
+    }
+
+    var shortName: String {
+        switch self {
+        case .high: return "Strong"
+        case .moderate: return "Moderate"
+        case .low: return "Limited"
+        case .emerging: return "Emerging"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .high: return .modusTealAccent
+        case .moderate: return .modusCyan
+        case .low: return .orange
+        case .emerging: return .gray
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .high: return "checkmark.seal.fill"
+        case .moderate: return "checkmark.seal"
+        case .low: return "questionmark.circle"
+        case .emerging: return "sparkle"
+        }
+    }
+}
 
 /// Supplement in user's stack
 struct Supplement: Identifiable, Codable, Hashable {
@@ -27,6 +74,11 @@ struct Supplement: Identifiable, Codable, Hashable {
         case isActive = "is_active"
         case createdAt = "created_at"
     }
+
+    // Computed properties for view compatibility
+    var recommendedDosage: String { dosage }
+    var shouldTakeWithFood: Bool { withFood }
+    var evidenceLevel: EvidenceLevel { .moderate }
 }
 
 enum SupplementCategory: String, Codable, CaseIterable {

@@ -33,8 +33,8 @@ final class RecoveryService: ObservableObject {
                 .from("recovery_sessions")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
-                .gte("start_time", value: ISO8601DateFormatter().string(from: startDate))
-                .order("start_time", ascending: false)
+                .gte("logged_at", value: ISO8601DateFormatter().string(from: startDate))
+                .order("logged_at", ascending: false)
                 .execute()
                 .value
 
@@ -51,11 +51,12 @@ final class RecoveryService: ObservableObject {
 
     func logSession(
         protocolType: RecoveryProtocolType,
-        duration: Int,
+        durationSeconds: Int,
         temperature: Double? = nil,
         heartRateAvg: Int? = nil,
         heartRateMax: Int? = nil,
         perceivedEffort: Int? = nil,
+        rating: Int? = nil,
         notes: String? = nil
     ) async throws {
         guard let patientId = try await getPatientId() else {
@@ -66,12 +67,13 @@ final class RecoveryService: ObservableObject {
             id: UUID(),
             patientId: patientId,
             protocolType: protocolType,
-            startTime: Date(),
-            duration: duration,
+            loggedAt: Date(),
+            durationSeconds: durationSeconds,
             temperature: temperature,
             heartRateAvg: heartRateAvg,
             heartRateMax: heartRateMax,
             perceivedEffort: perceivedEffort,
+            rating: rating,
             notes: notes,
             createdAt: Date()
         )
@@ -92,7 +94,7 @@ final class RecoveryService: ObservableObject {
         recommendations = [
             RecoveryRecommendation(
                 id: UUID(),
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 reason: "High training volume this week",
                 priority: .high,
                 suggestedDuration: 20
@@ -111,9 +113,9 @@ final class RecoveryService: ObservableObject {
 
     func weeklyStats() -> (totalSessions: Int, totalMinutes: Int, favoriteProtocol: RecoveryProtocolType?) {
         let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        let weeklySessions = sessions.filter { $0.startTime >= weekAgo }
+        let weeklySessions = sessions.filter { $0.loggedAt >= weekAgo }
 
-        let totalMinutes = weeklySessions.reduce(0) { $0 + $1.duration / 60 }
+        let totalMinutes = weeklySessions.reduce(0) { $0 + $1.durationMinutes }
 
         let protocolCounts = Dictionary(grouping: weeklySessions, by: { $0.protocolType })
         let favorite = protocolCounts.max(by: { $0.value.count < $1.value.count })?.key
@@ -261,7 +263,7 @@ final class RecoveryService: ObservableObject {
 
                     // Check if there was a recovery session the day before
                     let hadSessionDayBefore = protocolSessions.contains { session in
-                        let sessionDate = calendar.startOfDay(for: session.startTime)
+                        let sessionDate = calendar.startOfDay(for: session.loggedAt)
                         guard let nextDay = calendar.date(byAdding: .day, value: 1, to: sessionDate) else {
                             return false
                         }
@@ -440,7 +442,7 @@ final class RecoveryService: ObservableObject {
 
             // Calculate average session duration for this protocol
             let protocolSessions = sessions.filter { $0.protocolType == protocolType }
-            let avgDuration = protocolSessions.isEmpty ? nil : protocolSessions.map { $0.duration / 60 }.reduce(0, +) / protocolSessions.count
+            let avgDuration = protocolSessions.isEmpty ? nil : protocolSessions.map { $0.durationMinutes }.reduce(0, +) / protocolSessions.count
 
             // Determine suggested frequency based on session count
             let sessionCount = protocolSessions.count
@@ -505,7 +507,7 @@ final class RecoveryService: ObservableObject {
         var timeDistribution: [TimeOfDay: Int] = [:]
 
         for session in sessions {
-            let hour = calendar.component(.hour, from: session.startTime)
+            let hour = calendar.component(.hour, from: session.loggedAt)
             let timeOfDay: TimeOfDay
             switch hour {
             case 5..<12: timeOfDay = .morning
@@ -522,22 +524,20 @@ final class RecoveryService: ObservableObject {
     /// Get default benefit description for a protocol
     private func defaultBenefitForProtocol(_ protocolType: RecoveryProtocolType) -> (String, Int) {
         switch protocolType {
-        case .sauna:
+        case .saunaTraditional:
             return ("Improved HRV, better sleep quality", 20)
+        case .saunaInfrared:
+            return ("Deep tissue relaxation, detoxification", 30)
+        case .saunaSteam:
+            return ("Respiratory health, skin cleansing", 15)
         case .coldPlunge:
             return ("Reduced inflammation, faster recovery", 3)
+        case .coldShower:
+            return ("Increased alertness, improved circulation", 3)
+        case .iceBath:
+            return ("Muscle recovery, reduced soreness", 5)
         case .contrast:
             return ("Enhanced circulation, muscle recovery", 15)
-        case .cryotherapy:
-            return ("Rapid inflammation reduction", 3)
-        case .floatTank:
-            return ("Deep relaxation, stress reduction", 60)
-        case .massage:
-            return ("Muscle tension relief, improved sleep", 60)
-        case .stretching:
-            return ("Improved flexibility, injury prevention", 15)
-        case .meditation:
-            return ("Stress reduction, improved HRV", 15)
         }
     }
 

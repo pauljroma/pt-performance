@@ -797,3 +797,587 @@ extension ReadinessService {
         )
     }
 }
+
+// MARK: - Recovery Intelligence: HealthKit Integration
+
+/// Composite readiness score combining subjective and objective data
+struct CompositeReadinessScore: Sendable {
+    let overallScore: Double              // 0-100
+    let hrvScore: Double?                 // HRV component (0-100)
+    let sleepScore: Double?               // Sleep component (0-100)
+    let restingHRScore: Double?           // Resting HR component (0-100)
+    let subjectiveScore: Double?          // Subjective check-in component (0-100)
+    let readinessBand: ReadinessBand
+    let breakdown: ReadinessBreakdown
+    let confidence: ReadinessConfidence   // How confident we are in the score
+
+    /// Breakdown of individual components
+    struct ReadinessBreakdown: Sendable {
+        let hrvValue: Double?
+        let hrvBaseline: Double?
+        let hrvDeviation: Double?         // Percentage deviation from baseline
+        let sleepHours: Double?
+        let sleepEfficiency: Double?
+        let restingHR: Double?
+        let restingHRBaseline: Double?
+        let energyLevel: Int?
+        let sorenessLevel: Int?
+        let stressLevel: Int?
+    }
+
+    /// Confidence level based on data availability
+    enum ReadinessConfidence: String, Sendable {
+        case high = "high"       // All data sources available
+        case medium = "medium"   // Some objective data available
+        case low = "low"         // Only subjective data
+
+        var description: String {
+            switch self {
+            case .high: return "Based on HRV, sleep, and check-in data"
+            case .medium: return "Based on partial health data"
+            case .low: return "Based on check-in data only"
+            }
+        }
+    }
+}
+
+/// Predictive readiness forecast
+struct ReadinessForecast: Sendable {
+    let date: Date
+    let predictedScore: Double
+    let confidence: Double           // 0-1, decreases with distance
+    let factors: [ForecastFactor]
+
+    struct ForecastFactor: Sendable {
+        let name: String
+        let impact: Double           // Positive or negative impact
+        let description: String
+    }
+}
+
+/// Historical readiness analysis
+struct ReadinessAnalysis: Sendable {
+    let averageScore: Double
+    let trend: ReadinessTrendDirection
+    let volatility: Double           // Standard deviation
+    let bestDay: DayOfWeek?
+    let worstDay: DayOfWeek?
+    let correlations: [CorrelationInsight]
+    let patterns: [ReadinessPattern]
+
+    enum ReadinessTrendDirection: String, Sendable {
+        case improving = "improving"
+        case stable = "stable"
+        case declining = "declining"
+    }
+
+    enum DayOfWeek: Int, Sendable, CaseIterable {
+        case sunday = 1, monday, tuesday, wednesday, thursday, friday, saturday
+
+        var name: String {
+            switch self {
+            case .sunday: return "Sunday"
+            case .monday: return "Monday"
+            case .tuesday: return "Tuesday"
+            case .wednesday: return "Wednesday"
+            case .thursday: return "Thursday"
+            case .friday: return "Friday"
+            case .saturday: return "Saturday"
+            }
+        }
+    }
+
+    struct CorrelationInsight: Sendable {
+        let factor: String           // e.g., "sleep", "training_volume"
+        let correlation: Double      // -1 to 1
+        let description: String
+    }
+
+    struct ReadinessPattern: Sendable {
+        let name: String
+        let description: String
+        let recommendation: String
+    }
+}
+
+extension ReadinessService {
+
+    // MARK: - Composite Readiness Score
+
+    /// Calculate a composite readiness score combining HealthKit data with subjective check-in
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - healthKitService: HealthKit service for objective data
+    /// - Returns: CompositeReadinessScore with breakdown and confidence level
+    func calculateCompositeReadiness(
+        for patientId: UUID,
+        using healthKitService: HealthKitService
+    ) async throws -> CompositeReadinessScore {
+        // Fetch all data sources concurrently
+        async let subjectiveData = getTodayReadiness(for: patientId)
+        async let hrvData = healthKitService.fetchHRV(for: Date())
+        async let hrvBaseline = healthKitService.getHRVBaseline(days: 7)
+        async let sleepData = healthKitService.fetchSleepData(for: Date())
+        async let restingHR = healthKitService.fetchRestingHeartRate(for: Date())
+
+        // Await all results
+        let subjective = try? await subjectiveData
+        let hrv = try? await hrvData
+        let baseline = try? await hrvBaseline
+        let sleep = try? await sleepData
+        let rhr = try? await restingHR
+
+        // Calculate individual component scores
+        var hrvScore: Double?
+        var hrvDeviation: Double?
+        if let hrv = hrv, let baseline = baseline, baseline > 0 {
+            hrvDeviation = ((hrv - baseline) / baseline) * 100
+            // HRV score: 100 at +20% above baseline, 50 at baseline, 0 at -40% below
+            hrvScore = min(100, max(0, 50 + (hrvDeviation! * 2.5)))
+        }
+
+        var sleepScore: Double?
+        if let sleep = sleep {
+            // Optimal sleep: 7-9 hours = 100, <5 or >10 hours = lower
+            let hours = sleep.totalHours
+            if hours >= 7 && hours <= 9 {
+                sleepScore = 100
+            } else if hours >= 6 {
+                sleepScore = 70 + (hours - 6) * 30
+            } else if hours >= 5 {
+                sleepScore = 50 + (hours - 5) * 20
+            } else {
+                sleepScore = max(0, hours * 10)
+            }
+            // Factor in sleep efficiency
+            let efficiency = sleep.sleepEfficiency
+            sleepScore = sleepScore.map { $0 * (0.5 + efficiency / 200) }
+        }
+
+        var rhrScore: Double?
+        // RHR score: lower is better, assuming baseline around 60
+        if let rhr = rhr {
+            if rhr <= 50 {
+                rhrScore = 100
+            } else if rhr <= 60 {
+                rhrScore = 90 - (rhr - 50)
+            } else if rhr <= 70 {
+                rhrScore = 80 - (rhr - 60) * 2
+            } else {
+                rhrScore = max(0, 60 - (rhr - 70) * 3)
+            }
+        }
+
+        var subjectiveScore: Double?
+        if let subjective = subjective, let score = subjective.readinessScore {
+            subjectiveScore = score
+        }
+
+        // Calculate overall score with weighted components
+        var totalWeight: Double = 0
+        var weightedScore: Double = 0
+
+        // HRV: 30% weight when available
+        if let hrvScore = hrvScore {
+            weightedScore += hrvScore * 0.30
+            totalWeight += 0.30
+        }
+
+        // Sleep: 25% weight when available
+        if let sleepScore = sleepScore {
+            weightedScore += sleepScore * 0.25
+            totalWeight += 0.25
+        }
+
+        // Resting HR: 15% weight when available
+        if let rhrScore = rhrScore {
+            weightedScore += rhrScore * 0.15
+            totalWeight += 0.15
+        }
+
+        // Subjective: 30% base weight, increases if other data missing
+        if let subjectiveScore = subjectiveScore {
+            let subjectiveWeight = totalWeight > 0 ? 0.30 : 1.0
+            weightedScore += subjectiveScore * subjectiveWeight
+            totalWeight += subjectiveWeight
+        }
+
+        // Normalize score
+        let overallScore = totalWeight > 0 ? weightedScore / totalWeight : 50.0
+
+        // Determine confidence level
+        let confidence: CompositeReadinessScore.ReadinessConfidence
+        if hrvScore != nil && sleepScore != nil && subjectiveScore != nil {
+            confidence = .high
+        } else if hrvScore != nil || sleepScore != nil {
+            confidence = .medium
+        } else {
+            confidence = .low
+        }
+
+        // Determine readiness band
+        let band: ReadinessBand
+        if overallScore >= 80 {
+            band = .green
+        } else if overallScore >= 60 {
+            band = .yellow
+        } else if overallScore >= 40 {
+            band = .orange
+        } else {
+            band = .red
+        }
+
+        let breakdown = CompositeReadinessScore.ReadinessBreakdown(
+            hrvValue: hrv,
+            hrvBaseline: baseline,
+            hrvDeviation: hrvDeviation,
+            sleepHours: sleep?.totalHours,
+            sleepEfficiency: sleep?.sleepEfficiency,
+            restingHR: rhr,
+            restingHRBaseline: nil, // Could add RHR baseline calculation
+            energyLevel: subjective?.energyLevel,
+            sorenessLevel: subjective?.sorenessLevel,
+            stressLevel: subjective?.stressLevel
+        )
+
+        return CompositeReadinessScore(
+            overallScore: overallScore,
+            hrvScore: hrvScore,
+            sleepScore: sleepScore,
+            restingHRScore: rhrScore,
+            subjectiveScore: subjectiveScore,
+            readinessBand: band,
+            breakdown: breakdown,
+            confidence: confidence
+        )
+    }
+
+    // MARK: - Predictive Readiness
+
+    /// Forecast readiness scores for the next 3 days
+    /// Uses historical patterns and current trends
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - healthKitService: HealthKit service for current data
+    /// - Returns: Array of ReadinessForecast for next 3 days
+    func predictReadiness(
+        for patientId: UUID,
+        using healthKitService: HealthKitService
+    ) async throws -> [ReadinessForecast] {
+        // Fetch historical data (last 14 days)
+        let calendar = Calendar.current
+        let today = Date()
+        guard let startDate = calendar.date(byAdding: .day, value: -14, to: today) else {
+            return []
+        }
+
+        let historicalData = try await fetchReadiness(for: patientId, from: startDate, to: today)
+
+        // Calculate averages and trends
+        let scores = historicalData.compactMap { $0.readinessScore }
+        guard !scores.isEmpty else {
+            // No historical data, return baseline forecasts
+            return (1...3).map { days in
+                let forecastDate = calendar.date(byAdding: .day, value: days, to: today)!
+                return ReadinessForecast(
+                    date: forecastDate,
+                    predictedScore: 65.0,  // Default moderate readiness
+                    confidence: 0.3,
+                    factors: [
+                        ReadinessForecast.ForecastFactor(
+                            name: "Limited Data",
+                            impact: 0,
+                            description: "Not enough historical data for accurate prediction"
+                        )
+                    ]
+                )
+            }
+        }
+
+        let avgScore = scores.reduce(0, +) / Double(scores.count)
+
+        // Calculate recent trend (last 7 days vs previous 7 days)
+        let recentScores = Array(scores.prefix(7))
+        let olderScores = Array(scores.dropFirst(7))
+
+        let recentAvg = recentScores.isEmpty ? avgScore : recentScores.reduce(0, +) / Double(recentScores.count)
+        let olderAvg = olderScores.isEmpty ? avgScore : olderScores.reduce(0, +) / Double(olderScores.count)
+        let trendDirection = recentAvg - olderAvg
+
+        // Get day-of-week patterns
+        var dayOfWeekScores: [Int: [Double]] = [:]
+        for entry in historicalData {
+            let weekday = calendar.component(.weekday, from: entry.date)
+            if let score = entry.readinessScore {
+                dayOfWeekScores[weekday, default: []].append(score)
+            }
+        }
+
+        // Generate forecasts
+        var forecasts: [ReadinessForecast] = []
+
+        for daysAhead in 1...3 {
+            guard let forecastDate = calendar.date(byAdding: .day, value: daysAhead, to: today) else {
+                continue
+            }
+
+            let weekday = calendar.component(.weekday, from: forecastDate)
+
+            // Base prediction on average + trend + day-of-week adjustment
+            var prediction = avgScore
+
+            // Apply trend (diminishing with distance)
+            let trendFactor = trendDirection * (0.3 / Double(daysAhead))
+            prediction += trendFactor
+
+            // Apply day-of-week adjustment
+            var factors: [ReadinessForecast.ForecastFactor] = []
+
+            if let dowScores = dayOfWeekScores[weekday], !dowScores.isEmpty {
+                let dowAvg = dowScores.reduce(0, +) / Double(dowScores.count)
+                let dowAdjustment = (dowAvg - avgScore) * 0.3
+                prediction += dowAdjustment
+
+                if abs(dowAdjustment) > 3 {
+                    let dayName = ReadinessAnalysis.DayOfWeek(rawValue: weekday)?.name ?? "This day"
+                    factors.append(ReadinessForecast.ForecastFactor(
+                        name: "Day Pattern",
+                        impact: dowAdjustment,
+                        description: dowAdjustment > 0
+                            ? "\(dayName)s tend to be better recovery days for you"
+                            : "\(dayName)s are typically lower readiness days"
+                    ))
+                }
+            }
+
+            // Add trend factor
+            if abs(trendDirection) > 2 {
+                factors.append(ReadinessForecast.ForecastFactor(
+                    name: "Recent Trend",
+                    impact: trendFactor,
+                    description: trendDirection > 0
+                        ? "Your readiness has been improving recently"
+                        : "Your readiness has been declining - consider extra rest"
+                ))
+            }
+
+            // Confidence decreases with distance
+            let confidence = max(0.3, 0.8 - Double(daysAhead - 1) * 0.2)
+
+            // Clamp prediction
+            prediction = min(100, max(0, prediction))
+
+            forecasts.append(ReadinessForecast(
+                date: forecastDate,
+                predictedScore: prediction,
+                confidence: confidence,
+                factors: factors
+            ))
+        }
+
+        return forecasts
+    }
+
+    // MARK: - Historical Analysis
+
+    /// Analyze historical readiness patterns and correlations
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - days: Number of days to analyze (default 30)
+    /// - Returns: ReadinessAnalysis with trends, patterns, and correlations
+    func analyzeReadinessHistory(
+        for patientId: UUID,
+        days: Int = 30
+    ) async throws -> ReadinessAnalysis {
+        let calendar = Calendar.current
+        let today = Date()
+        guard let startDate = calendar.date(byAdding: .day, value: -days, to: today) else {
+            throw ReadinessError.noDataFound
+        }
+
+        let data = try await fetchReadiness(for: patientId, from: startDate, to: today)
+
+        guard !data.isEmpty else {
+            throw ReadinessError.noDataFound
+        }
+
+        let scores = data.compactMap { $0.readinessScore }
+
+        // Calculate average
+        let avgScore = scores.reduce(0, +) / Double(scores.count)
+
+        // Calculate standard deviation (volatility)
+        let variance = scores.map { pow($0 - avgScore, 2) }.reduce(0, +) / Double(scores.count)
+        let volatility = sqrt(variance)
+
+        // Determine trend direction
+        let midpoint = data.count / 2
+        let recentScores = data.prefix(midpoint).compactMap { $0.readinessScore }
+        let olderScores = data.suffix(midpoint).compactMap { $0.readinessScore }
+
+        let recentAvg = recentScores.isEmpty ? avgScore : recentScores.reduce(0, +) / Double(recentScores.count)
+        let olderAvg = olderScores.isEmpty ? avgScore : olderScores.reduce(0, +) / Double(olderScores.count)
+
+        let trend: ReadinessAnalysis.ReadinessTrendDirection
+        if recentAvg - olderAvg > 5 {
+            trend = .improving
+        } else if olderAvg - recentAvg > 5 {
+            trend = .declining
+        } else {
+            trend = .stable
+        }
+
+        // Analyze day-of-week patterns
+        var dayScores: [Int: [Double]] = [:]
+        for entry in data {
+            let weekday = calendar.component(.weekday, from: entry.date)
+            if let score = entry.readinessScore {
+                dayScores[weekday, default: []].append(score)
+            }
+        }
+
+        var dayAverages: [(ReadinessAnalysis.DayOfWeek, Double)] = []
+        for (weekday, scores) in dayScores where !scores.isEmpty {
+            if let day = ReadinessAnalysis.DayOfWeek(rawValue: weekday) {
+                let avg = scores.reduce(0, +) / Double(scores.count)
+                dayAverages.append((day, avg))
+            }
+        }
+
+        let bestDay = dayAverages.max(by: { $0.1 < $1.1 })?.0
+        let worstDay = dayAverages.min(by: { $0.1 < $1.1 })?.0
+
+        // Analyze correlations
+        var correlations: [ReadinessAnalysis.CorrelationInsight] = []
+
+        // Sleep correlation
+        let sleepEntries = data.filter { $0.sleepHours != nil && $0.readinessScore != nil }
+        if sleepEntries.count >= 5 {
+            let sleepCorr = calculateCorrelation(
+                x: sleepEntries.compactMap { $0.sleepHours },
+                y: sleepEntries.compactMap { $0.readinessScore }
+            )
+            if let corr = sleepCorr {
+                correlations.append(ReadinessAnalysis.CorrelationInsight(
+                    factor: "Sleep",
+                    correlation: corr,
+                    description: corr > 0.5
+                        ? "Sleep duration strongly affects your readiness"
+                        : corr > 0.2
+                            ? "Sleep has a moderate impact on your readiness"
+                            : "Sleep duration has minimal impact on your readiness"
+                ))
+            }
+        }
+
+        // Soreness correlation (inverted - higher soreness = lower readiness expected)
+        let sorenessEntries = data.filter { $0.sorenessLevel != nil && $0.readinessScore != nil }
+        if sorenessEntries.count >= 5 {
+            let sorenessCorr = calculateCorrelation(
+                x: sorenessEntries.compactMap { $0.sorenessLevel.map { Double($0) } },
+                y: sorenessEntries.compactMap { $0.readinessScore }
+            )
+            if let corr = sorenessCorr {
+                correlations.append(ReadinessAnalysis.CorrelationInsight(
+                    factor: "Soreness",
+                    correlation: corr,
+                    description: corr < -0.3
+                        ? "Muscle soreness significantly impacts your readiness"
+                        : "Your soreness levels don't strongly affect readiness"
+                ))
+            }
+        }
+
+        // Detect patterns
+        var patterns: [ReadinessAnalysis.ReadinessPattern] = []
+
+        // High volatility pattern
+        if volatility > 15 {
+            patterns.append(ReadinessAnalysis.ReadinessPattern(
+                name: "High Variability",
+                description: "Your readiness scores vary significantly day to day",
+                recommendation: "Try to maintain more consistent sleep and recovery habits"
+            ))
+        }
+
+        // Weekend vs weekday pattern
+        let weekendScores = data.filter {
+            let wd = calendar.component(.weekday, from: $0.date)
+            return wd == 1 || wd == 7
+        }.compactMap { $0.readinessScore }
+
+        let weekdayScores = data.filter {
+            let wd = calendar.component(.weekday, from: $0.date)
+            return wd >= 2 && wd <= 6
+        }.compactMap { $0.readinessScore }
+
+        if !weekendScores.isEmpty && !weekdayScores.isEmpty {
+            let weekendAvg = weekendScores.reduce(0, +) / Double(weekendScores.count)
+            let weekdayAvg = weekdayScores.reduce(0, +) / Double(weekdayScores.count)
+
+            if weekendAvg - weekdayAvg > 10 {
+                patterns.append(ReadinessAnalysis.ReadinessPattern(
+                    name: "Weekend Recovery",
+                    description: "You recover better on weekends than weekdays",
+                    recommendation: "Consider scheduling harder workouts on weekends when you're more recovered"
+                ))
+            } else if weekdayAvg - weekendAvg > 10 {
+                patterns.append(ReadinessAnalysis.ReadinessPattern(
+                    name: "Weekday Strength",
+                    description: "Your readiness is better on weekdays",
+                    recommendation: "Plan key training sessions during the week"
+                ))
+            }
+        }
+
+        // Consecutive low days pattern
+        var consecutiveLow = 0
+        var maxConsecutiveLow = 0
+        for entry in data.sorted(by: { $0.date < $1.date }) {
+            if let score = entry.readinessScore, score < 50 {
+                consecutiveLow += 1
+                maxConsecutiveLow = max(maxConsecutiveLow, consecutiveLow)
+            } else {
+                consecutiveLow = 0
+            }
+        }
+
+        if maxConsecutiveLow >= 3 {
+            patterns.append(ReadinessAnalysis.ReadinessPattern(
+                name: "Extended Fatigue",
+                description: "You've had \(maxConsecutiveLow) consecutive days of low readiness",
+                recommendation: "Consider a deload week or extra rest days to recover"
+            ))
+        }
+
+        return ReadinessAnalysis(
+            averageScore: avgScore,
+            trend: trend,
+            volatility: volatility,
+            bestDay: bestDay,
+            worstDay: worstDay,
+            correlations: correlations,
+            patterns: patterns
+        )
+    }
+
+    // MARK: - Helper Methods
+
+    /// Calculate Pearson correlation coefficient between two arrays
+    private func calculateCorrelation(x: [Double], y: [Double]) -> Double? {
+        guard x.count == y.count && x.count >= 3 else { return nil }
+
+        let n = Double(x.count)
+        let sumX = x.reduce(0, +)
+        let sumY = y.reduce(0, +)
+        let sumXY = zip(x, y).map(*).reduce(0, +)
+        let sumX2 = x.map { $0 * $0 }.reduce(0, +)
+        let sumY2 = y.map { $0 * $0 }.reduce(0, +)
+
+        let numerator = n * sumXY - sumX * sumY
+        let denominator = sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY))
+
+        guard denominator > 0 else { return nil }
+        return numerator / denominator
+    }
+}

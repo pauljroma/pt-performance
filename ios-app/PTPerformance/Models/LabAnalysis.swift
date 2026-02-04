@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Lab Analysis Response
 
@@ -131,6 +132,16 @@ enum BiomarkerStatus: String, Codable {
         case .low: return "arrow.down.circle.fill"
         case .high: return "arrow.up.circle.fill"
         case .critical: return "exclamationmark.triangle.fill"
+        }
+    }
+
+    /// SwiftUI Color for the status (used in views)
+    var statusColor: Color {
+        switch self {
+        case .optimal: return .modusTealAccent
+        case .normal: return .modusCyan
+        case .low, .high: return .orange
+        case .critical: return .red
         }
     }
 }

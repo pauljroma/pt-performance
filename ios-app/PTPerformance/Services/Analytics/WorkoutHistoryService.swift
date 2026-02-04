@@ -208,6 +208,8 @@ final class WorkoutHistoryService {
                 avg_rpe,
                 avg_pain,
                 duration_minutes,
+                assigned_by_user_id,
+                session_source,
                 manual_session_exercises(count)
             """)
             .eq("patient_id", value: patientId)
@@ -238,6 +240,8 @@ final class WorkoutHistoryService {
                 avg_rpe,
                 avg_pain,
                 duration_minutes,
+                assigned_by_user_id,
+                session_source,
                 manual_session_exercises(count)
             """)
             .eq("patient_id", value: patientId)
@@ -357,6 +361,8 @@ final class WorkoutHistoryService {
             let avg_pain: Double?
             let duration_minutes: Int?
             let manual_session_exercises: [CountResult]?
+            let assigned_by_user_id: UUID?
+            let session_source: String?
 
             struct CountResult: Codable {
                 let count: Int
@@ -379,7 +385,16 @@ final class WorkoutHistoryService {
                 avgRpe: raw.avg_rpe,
                 avgPain: raw.avg_pain,
                 durationMinutes: raw.duration_minutes,
-                exerciseCount: raw.manual_session_exercises?.first?.count
+                exerciseCount: raw.manual_session_exercises?.first?.count,
+                assignedByUserId: raw.assigned_by_user_id,
+                sessionSource: raw.session_source.flatMap { sourceString in
+                    if let source = SessionSource(rawValue: sourceString) {
+                        return source
+                    } else {
+                        DebugLogger.shared.log("Unknown session source '\(sourceString)' for workout \(raw.id), defaulting to nil", level: .warning)
+                        return nil
+                    }
+                }
             )
         }
     }

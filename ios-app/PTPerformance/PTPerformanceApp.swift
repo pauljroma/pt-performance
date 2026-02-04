@@ -1,9 +1,106 @@
 import SwiftUI
 import WidgetKit
 import AppIntents
+import UserNotifications
 #if canImport(Sentry)
 import Sentry
 #endif
+
+// MARK: - AppDelegate for Push Notifications
+
+/// AppDelegate adapter for handling push notification registration and callbacks.
+/// Required for APNs device token handling in SwiftUI apps.
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        // Set notification center delegate
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    // MARK: - APNs Registration
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Task {
+            await PushNotificationService.shared.didRegisterForRemoteNotifications(withDeviceToken: deviceToken)
+        }
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        Task {
+            await PushNotificationService.shared.didFailToRegisterForRemoteNotifications(withError: error)
+        }
+    }
+
+    // MARK: - Remote Notification Handling
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        Task {
+            await PushNotificationService.shared.handleNotification(
+                userInfo: userInfo,
+                completionHandler: completionHandler
+            )
+        }
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    /// Handle notification when app is in foreground
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notification banner even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+
+    /// Handle notification action response
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        Task {
+            let destination = await PushNotificationService.shared.handleNotificationAction(response)
+
+            // If we got a deep link destination, update the app state
+            if let destination = destination {
+                await MainActor.run {
+                    // Find the app state and set the pending deep link
+                    // This will be observed by views to navigate accordingly
+                    NotificationCenter.default.post(
+                        name: .didReceiveNotificationDeepLink,
+                        object: nil,
+                        userInfo: ["destination": destination]
+                    )
+                }
+            }
+
+            completionHandler()
+        }
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    /// Posted when a notification action results in a deep link destination
+    static let didReceiveNotificationDeepLink = Notification.Name("didReceiveNotificationDeepLink")
+}
 
 // MARK: - Deep Link Destination
 
@@ -22,6 +119,9 @@ enum DeepLinkDestination: Equatable {
     case progress
     // ACP-544: UCL Health Assessment
     case uclHealth
+    // Prescription notifications
+    case prescription(prescriptionId: String)
+    case patient(patientId: String)
 
     /// Parse URL into destination
     static func from(url: URL) -> DeepLinkDestination? {
@@ -64,6 +164,17 @@ enum DeepLinkDestination: Equatable {
         // ACP-544: UCL Health Assessment
         case "ucl-health":
             return .uclHealth
+        // Prescription notifications
+        case "prescription":
+            if let prescriptionId = pathComponents.first {
+                return .prescription(prescriptionId: prescriptionId)
+            }
+            return .today
+        case "patient":
+            if let patientId = pathComponents.first {
+                return .patient(patientId: patientId)
+            }
+            return nil
         default:
             return nil
         }
@@ -72,6 +183,9 @@ enum DeepLinkDestination: Equatable {
 
 @main
 struct PTPerformanceApp: App {
+    // AppDelegate adapter for push notification handling
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     @StateObject private var appState = AppState()
     @ObservedObject private var storeKit = StoreKitService.shared
     @Environment(\.scenePhase) private var scenePhase
@@ -110,6 +224,10 @@ struct PTPerformanceApp: App {
             await MainActor.run {
                 _ = CacheCoordinator.shared
             }
+
+            // Initialize PushNotificationService for prescription alerts
+            // Sets up notification categories and actions
+            await PushNotificationService.shared.initialize()
 
             // ACP-932: Log app startup with deferred device info collection
             // UIDevice.current access can be slow, so defer it
@@ -177,11 +295,20 @@ struct PTPerformanceApp: App {
                         Task { @MainActor in
                             await WorkoutPreloadService.shared.preloadIfNeeded()
                         }
+                        // Clear badge when app becomes active
+                        Task {
+                            await PushNotificationService.shared.clearBadge()
+                        }
                     } else if newPhase == .background {
                         // ACP-827: Schedule background health sync when entering background
                         Task { @MainActor in
                             HealthSyncManager.shared.scheduleBackgroundSync()
                         }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .didReceiveNotificationDeepLink)) { notification in
+                    if let destination = notification.userInfo?["destination"] as? DeepLinkDestination {
+                        appState.pendingDeepLink = destination
                     }
                 }
         }

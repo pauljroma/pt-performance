@@ -22,6 +22,9 @@ struct HealthHubView: View {
                 // Health Score Card
                 HealthScoreCard()
 
+                // Biomarker Dashboard Card (Prominent)
+                biomarkerDashboardCard
+
                 // Feature Grid
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -91,6 +94,58 @@ struct HealthHubView: View {
             .padding()
         }
         .navigationTitle("Health")
+    }
+
+    // MARK: - Biomarker Dashboard Card
+
+    private var biomarkerDashboardCard: some View {
+        NavigationLink {
+            BiomarkerDashboardView()
+        } label: {
+            HStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.modusTealAccent, Color.modusCyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+
+                    Image(systemName: "chart.bar.doc.horizontal.fill")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                }
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Biomarker Dashboard")
+                        .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
+
+                    Text("Track your health markers with trends and insights")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.modusCyan)
+                    .accessibilityHidden(true)
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Biomarker Dashboard")
+        .accessibilityHint("View all your biomarkers organized by category with trends and status indicators")
     }
 
     // MARK: - Unified AI Coach Card

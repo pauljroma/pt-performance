@@ -3,19 +3,20 @@
 //  PTPerformance
 //
 //  ACP-841: Smart Notification Timing Feature
-//  Settings UI for managing workout notification preferences
+//  Settings UI for managing workout and prescription notification preferences
 //
 
 import SwiftUI
 import UserNotifications
 
-/// Settings view for managing smart workout notifications.
+/// Settings view for managing smart workout and prescription notifications.
 ///
 /// Allows users to:
 /// - Enable/disable smart timing
 /// - Set fallback reminder time
 /// - Configure reminder lead time
 /// - View learned workout patterns
+/// - Configure prescription notification preferences
 struct NotificationSettingsView: View {
 
     // MARK: - Environment
@@ -39,6 +40,10 @@ struct NotificationSettingsView: View {
     @State private var reminderMinutesBefore = 30
     @State private var streakAlertsEnabled = true
     @State private var weeklySummaryEnabled = true
+
+    // Prescription notification settings
+    @State private var prescriptionPreferences = PrescriptionNotificationPreferences.defaults
+    @State private var showPrescriptionSection = true
 
     // MARK: - Computed Properties
 
@@ -68,6 +73,9 @@ struct NotificationSettingsView: View {
 
                 // Reminder Time Section
                 reminderTimeSection
+
+                // Prescription Notifications Section
+                prescriptionNotificationsSection
 
                 // Patterns Section
                 patternsSection
@@ -120,7 +128,7 @@ struct NotificationSettingsView: View {
                     Text(hasPermission ? "Notifications Enabled" : "Notifications Disabled")
                         .font(.headline)
                     Text(hasPermission
-                         ? "You'll receive workout reminders"
+                         ? "You'll receive workout and prescription reminders"
                          : "Enable notifications to get reminders")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -142,12 +150,12 @@ struct NotificationSettingsView: View {
             }
             .padding(.vertical, 4)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(hasPermission ? "Notifications enabled. You'll receive workout reminders" : "Notifications disabled. Enable notifications to get reminders")
+            .accessibilityLabel(hasPermission ? "Notifications enabled. You'll receive workout and prescription reminders" : "Notifications disabled. Enable notifications to get reminders")
         } header: {
             Text("Permission")
         } footer: {
             if !hasPermission {
-                Text("Workout reminders help you stay consistent with your training.")
+                Text("Workout reminders and prescription alerts help you stay on track with your training.")
             }
         }
     }
@@ -229,6 +237,79 @@ struct NotificationSettingsView: View {
             } else {
                 Text("Reminders will be sent at this time every day.")
             }
+        }
+    }
+
+    // MARK: - Prescription Notifications Section
+
+    private var prescriptionNotificationsSection: some View {
+        Section {
+            // New prescription assigned
+            Toggle(isOn: $prescriptionPreferences.newPrescriptionEnabled) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("New Prescription Alerts")
+                        .font(.body)
+                    Text("Get notified when a new prescription is assigned")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .onChange(of: prescriptionPreferences.newPrescriptionEnabled) { _, _ in
+                savePrescriptionPreferences()
+            }
+            .accessibilityLabel("New Prescription Alerts")
+            .accessibilityValue(prescriptionPreferences.newPrescriptionEnabled ? "On" : "Off")
+
+            // Deadline reminders group
+            DisclosureGroup {
+                Toggle("24 Hours Before", isOn: $prescriptionPreferences.deadline24hEnabled)
+                    .onChange(of: prescriptionPreferences.deadline24hEnabled) { _, _ in
+                        savePrescriptionPreferences()
+                    }
+
+                Toggle("6 Hours Before", isOn: $prescriptionPreferences.deadline6hEnabled)
+                    .onChange(of: prescriptionPreferences.deadline6hEnabled) { _, _ in
+                        savePrescriptionPreferences()
+                    }
+
+                Toggle("1 Hour Before", isOn: $prescriptionPreferences.deadline1hEnabled)
+                    .onChange(of: prescriptionPreferences.deadline1hEnabled) { _, _ in
+                        savePrescriptionPreferences()
+                    }
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Deadline Reminders")
+                        .font(.body)
+                    Text("Get reminded before prescriptions are due")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .accessibilityLabel("Deadline Reminders")
+
+            // Overdue alerts
+            Toggle(isOn: $prescriptionPreferences.overdueEnabled) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Overdue Alerts")
+                        .font(.body)
+                    Text("Get notified when a prescription becomes overdue")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .onChange(of: prescriptionPreferences.overdueEnabled) { _, _ in
+                savePrescriptionPreferences()
+            }
+            .accessibilityLabel("Overdue Alerts")
+            .accessibilityValue(prescriptionPreferences.overdueEnabled ? "On" : "Off")
+        } header: {
+            HStack {
+                Image(systemName: "doc.text.fill")
+                    .foregroundColor(.blue)
+                Text("Prescription Notifications")
+            }
+        } footer: {
+            Text("Stay on top of your therapist-assigned workouts with timely reminders.")
         }
     }
 
@@ -391,6 +472,12 @@ struct NotificationSettingsView: View {
             await MainActor.run {
                 patterns = loadedPatterns
             }
+
+            // Load prescription preferences
+            let loadedPrescriptionPrefs = try await SmartNotificationService.shared.fetchPrescriptionPreferences(for: patientId)
+            await MainActor.run {
+                prescriptionPreferences = loadedPrescriptionPrefs
+            }
         } catch {
             await MainActor.run {
                 errorMessage = error.localizedDescription
@@ -411,6 +498,11 @@ struct NotificationSettingsView: View {
             let status = await SmartNotificationService.shared.checkPermissionStatus()
             await MainActor.run {
                 permissionStatus = status
+            }
+
+            // Also register for push notifications
+            if status == .authorized {
+                try? await PushNotificationService.shared.registerForRemoteNotifications()
             }
         } catch {
             await MainActor.run {
@@ -463,6 +555,31 @@ struct NotificationSettingsView: View {
             } catch {
                 await MainActor.run {
                     errorMessage = "Couldn't save settings. Please try again."
+                    showError = true
+                }
+            }
+
+            await MainActor.run {
+                isSaving = false
+            }
+        }
+    }
+
+    private func savePrescriptionPreferences() {
+        guard let patientId = patientId else { return }
+        guard !isSaving else { return }
+
+        isSaving = true
+
+        Task {
+            do {
+                try await SmartNotificationService.shared.updatePrescriptionPreferences(
+                    for: patientId,
+                    preferences: prescriptionPreferences
+                )
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Couldn't save prescription notification settings. Please try again."
                     showError = true
                 }
             }

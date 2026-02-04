@@ -4,6 +4,7 @@
 //
 //  ACP-841: Smart Notification Timing Feature
 //  Analyzes workout patterns and schedules intelligent reminders
+//  Extended with prescription notification support for deadline alerts
 //
 
 import Foundation
@@ -40,6 +41,15 @@ private struct RecordWorkoutCompletionTimeParams: Encodable {
     enum CodingKeys: String, CodingKey {
         case pPatientId = "p_patient_id"
         case pCompletionTime = "p_completion_time"
+    }
+}
+
+/// RPC parameters for getting active prescriptions
+private struct GetActivePrescriptionsParams: Encodable {
+    let pPatientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case pPatientId = "p_patient_id"
     }
 }
 
@@ -86,6 +96,10 @@ actor SmartNotificationService {
         static let workoutReminder = "com.getmodus.workout.reminder"
         static let streakAlert = "com.getmodus.streak.alert"
         static let weeklySummary = "com.getmodus.weekly.summary"
+        static let prescriptionAssigned = "com.getmodus.prescription.assigned"
+        static let prescriptionDeadline = "com.getmodus.prescription.deadline"
+        static let prescriptionOverdue = "com.getmodus.prescription.overdue"
+        static let therapistFollowUp = "com.getmodus.therapist.followup"
     }
 
     // MARK: - Initialization
@@ -519,6 +533,473 @@ actor SmartNotificationService {
         }
     }
 
+    // MARK: - Prescription Notifications
+
+    /// Schedule a notification for a newly assigned prescription.
+    ///
+    /// Creates a rich notification with quick actions (Start Workout, Snooze).
+    ///
+    /// - Parameters:
+    ///   - prescription: The prescription that was assigned
+    ///   - therapistName: Name of the therapist who assigned it
+    func scheduleNewPrescriptionNotification(
+        for prescription: WorkoutPrescription,
+        therapistName: String?
+    ) async throws {
+        let preferences = try await fetchPrescriptionPreferences(for: prescription.patientId)
+
+        guard preferences.newPrescriptionEnabled else {
+            DebugLogger.shared.log("New prescription notifications disabled for patient", level: .info)
+            return
+        }
+
+        let status = await checkPermissionStatus()
+        guard status == .authorized else {
+            throw SmartNotificationError.permissionDenied
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = "New Prescription Assigned"
+
+        if let therapist = therapistName {
+            content.body = "\(therapist) has assigned you a new workout: \(prescription.name)"
+        } else {
+            content.body = "You have a new workout prescription: \(prescription.name)"
+        }
+
+        if let instructions = prescription.instructions, !instructions.isEmpty {
+            content.subtitle = instructions.prefix(50) + (instructions.count > 50 ? "..." : "")
+        }
+
+        content.sound = .default
+        content.badge = 1
+        content.categoryIdentifier = PushNotificationType.prescriptionAssigned.categoryIdentifier
+        content.userInfo = [
+            "prescription_id": prescription.id.uuidString,
+            "notification_type": PushNotificationType.prescriptionAssigned.rawValue,
+            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+        ]
+
+        // Use thread ID for grouping related notifications
+        content.threadIdentifier = "prescription_\(prescription.id.uuidString)"
+
+        // Deliver immediately
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+        let request = UNNotificationRequest(
+            identifier: "\(NotificationIdentifier.prescriptionAssigned).\(prescription.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        try await notificationCenter.add(request)
+
+        // Record in history
+        try? await recordNotificationScheduled(
+            patientId: prescription.patientId,
+            type: PushNotificationType.prescriptionAssigned.rawValue,
+            title: content.title,
+            body: content.body,
+            scheduledFor: Date(),
+            prescriptionId: prescription.id
+        )
+
+        DebugLogger.shared.log(
+            "New prescription notification scheduled for \(prescription.name)",
+            level: .success
+        )
+    }
+
+    /// Schedule deadline reminder notifications for a prescription.
+    ///
+    /// Creates reminders at 24 hours, 6 hours, and 1 hour before the deadline.
+    ///
+    /// - Parameter prescription: The prescription with a due date
+    func schedulePrescriptionDeadlineReminders(for prescription: WorkoutPrescription) async throws {
+        guard let dueDate = prescription.dueDate else {
+            DebugLogger.shared.log("No due date for prescription, skipping deadline reminders", level: .info)
+            return
+        }
+
+        let preferences = try await fetchPrescriptionPreferences(for: prescription.patientId)
+        let status = await checkPermissionStatus()
+        guard status == .authorized else {
+            throw SmartNotificationError.permissionDenied
+        }
+
+        let now = Date()
+
+        // Define reminder intervals
+        let reminders: [(hours: Int, type: PushNotificationType, enabled: Bool)] = [
+            (24, .prescriptionDeadline24h, preferences.deadline24hEnabled),
+            (6, .prescriptionDeadline6h, preferences.deadline6hEnabled),
+            (1, .prescriptionDeadline1h, preferences.deadline1hEnabled)
+        ]
+
+        for (hours, notificationType, isEnabled) in reminders {
+            guard isEnabled else { continue }
+
+            let reminderDate = Calendar.current.date(byAdding: .hour, value: -hours, to: dueDate) ?? dueDate
+
+            // Only schedule if the reminder time is in the future
+            guard reminderDate > now else {
+                DebugLogger.shared.log(
+                    "\(hours)h reminder for prescription already passed, skipping",
+                    level: .info
+                )
+                continue
+            }
+
+            let content = createDeadlineNotificationContent(
+                prescription: prescription,
+                hoursRemaining: hours,
+                notificationType: notificationType
+            )
+
+            let trigger = UNCalendarNotificationTrigger(
+                dateMatching: Calendar.current.dateComponents(
+                    [.year, .month, .day, .hour, .minute],
+                    from: reminderDate
+                ),
+                repeats: false
+            )
+
+            let request = UNNotificationRequest(
+                identifier: "\(NotificationIdentifier.prescriptionDeadline).\(prescription.id.uuidString).\(hours)h",
+                content: content,
+                trigger: trigger
+            )
+
+            try await notificationCenter.add(request)
+
+            try? await recordNotificationScheduled(
+                patientId: prescription.patientId,
+                type: notificationType.rawValue,
+                title: content.title,
+                body: content.body,
+                scheduledFor: reminderDate,
+                prescriptionId: prescription.id
+            )
+        }
+
+        DebugLogger.shared.log(
+            "Scheduled deadline reminders for prescription \(prescription.name)",
+            level: .success
+        )
+    }
+
+    /// Create notification content for deadline reminders.
+    private func createDeadlineNotificationContent(
+        prescription: WorkoutPrescription,
+        hoursRemaining: Int,
+        notificationType: PushNotificationType
+    ) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+
+        let timeString: String
+        if hoursRemaining == 1 {
+            timeString = "1 hour"
+        } else {
+            timeString = "\(hoursRemaining) hours"
+        }
+
+        content.title = "Prescription Due Soon"
+        content.body = "\"\(prescription.name)\" is due in \(timeString). Tap to start your workout."
+
+        // Add urgency indicator based on time remaining
+        if hoursRemaining == 1 {
+            content.subtitle = "Final Reminder"
+        }
+
+        content.sound = hoursRemaining == 1 ? .defaultCritical : .default
+        content.badge = 1
+        content.categoryIdentifier = notificationType.categoryIdentifier
+        content.userInfo = [
+            "prescription_id": prescription.id.uuidString,
+            "notification_type": notificationType.rawValue,
+            "hours_remaining": hoursRemaining,
+            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+        ]
+        content.threadIdentifier = "prescription_\(prescription.id.uuidString)"
+
+        return content
+    }
+
+    /// Schedule an overdue notification for a prescription.
+    ///
+    /// - Parameter prescription: The overdue prescription
+    func schedulePrescriptionOverdueNotification(for prescription: WorkoutPrescription) async throws {
+        let preferences = try await fetchPrescriptionPreferences(for: prescription.patientId)
+
+        guard preferences.overdueEnabled else {
+            DebugLogger.shared.log("Overdue notifications disabled for patient", level: .info)
+            return
+        }
+
+        let status = await checkPermissionStatus()
+        guard status == .authorized else {
+            throw SmartNotificationError.permissionDenied
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Prescription Overdue"
+        content.body = "\"\(prescription.name)\" is past due. Please complete it as soon as possible."
+        content.subtitle = "Overdue"
+        content.sound = .defaultCritical
+        content.badge = 1
+        content.categoryIdentifier = PushNotificationType.prescriptionOverdue.categoryIdentifier
+        content.userInfo = [
+            "prescription_id": prescription.id.uuidString,
+            "notification_type": PushNotificationType.prescriptionOverdue.rawValue,
+            "deep_link": "modus://prescription/\(prescription.id.uuidString)"
+        ]
+        content.threadIdentifier = "prescription_\(prescription.id.uuidString)"
+
+        // Set interruption level for urgent notifications
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = .timeSensitive
+        }
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+        let request = UNNotificationRequest(
+            identifier: "\(NotificationIdentifier.prescriptionOverdue).\(prescription.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        try await notificationCenter.add(request)
+
+        try? await recordNotificationScheduled(
+            patientId: prescription.patientId,
+            type: PushNotificationType.prescriptionOverdue.rawValue,
+            title: content.title,
+            body: content.body,
+            scheduledFor: Date(),
+            prescriptionId: prescription.id
+        )
+
+        DebugLogger.shared.log(
+            "Overdue notification scheduled for prescription \(prescription.name)",
+            level: .success
+        )
+    }
+
+    /// Schedule a therapist follow-up reminder.
+    ///
+    /// - Parameters:
+    ///   - therapistId: The therapist's UUID
+    ///   - patientName: Name of the patient to follow up with
+    ///   - prescriptionName: Optional prescription name
+    ///   - prescriptionId: Optional prescription ID
+    ///   - reason: The reason for the follow-up
+    ///   - reminderDate: When to send the reminder
+    func scheduleTherapistFollowUpReminder(
+        therapistId: UUID,
+        patientId: UUID,
+        patientName: String,
+        prescriptionName: String?,
+        prescriptionId: UUID?,
+        reason: FollowUpReason,
+        reminderDate: Date
+    ) async throws {
+        let status = await checkPermissionStatus()
+        guard status == .authorized else {
+            throw SmartNotificationError.permissionDenied
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Patient Follow-up Reminder"
+
+        switch reason {
+        case .prescriptionCompleted:
+            content.body = "\(patientName) completed \"\(prescriptionName ?? "their prescription")\". Consider checking in."
+        case .prescriptionOverdue:
+            content.body = "\(patientName)'s prescription \"\(prescriptionName ?? "")\" is overdue. You may want to follow up."
+        case .patientInactive:
+            content.body = "\(patientName) has been inactive. Consider reaching out to check their progress."
+        case .weeklyCheckIn:
+            content.body = "Weekly check-in reminder for \(patientName)."
+        }
+
+        content.sound = .default
+        content.categoryIdentifier = PushNotificationType.therapistFollowUp.categoryIdentifier
+        content.userInfo = [
+            "patient_id": patientId.uuidString,
+            "notification_type": PushNotificationType.therapistFollowUp.rawValue,
+            "prescription_id": prescriptionId?.uuidString ?? "",
+            "follow_up_reason": reason.rawValue,
+            "deep_link": "modus://patient/\(patientId.uuidString)"
+        ]
+
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute],
+                from: reminderDate
+            ),
+            repeats: false
+        )
+
+        let identifier = "\(NotificationIdentifier.therapistFollowUp).\(patientId.uuidString).\(UUID().uuidString)"
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: trigger
+        )
+
+        try await notificationCenter.add(request)
+
+        DebugLogger.shared.log(
+            "Therapist follow-up reminder scheduled for \(patientName)",
+            level: .success
+        )
+    }
+
+    /// Cancel all pending notifications for a specific prescription.
+    ///
+    /// - Parameter prescriptionId: The prescription UUID
+    func cancelPrescriptionNotifications(for prescriptionId: UUID) async {
+        let pending = await notificationCenter.pendingNotificationRequests()
+        let toRemove = pending
+            .filter { request in
+                if let prescId = request.content.userInfo["prescription_id"] as? String {
+                    return prescId == prescriptionId.uuidString
+                }
+                return request.identifier.contains(prescriptionId.uuidString)
+            }
+            .map { $0.identifier }
+
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: toRemove)
+
+        DebugLogger.shared.log(
+            "Cancelled \(toRemove.count) notifications for prescription \(prescriptionId)",
+            level: .info
+        )
+    }
+
+    /// Schedule all necessary notifications for a prescription.
+    ///
+    /// Convenience method that schedules new assignment and deadline reminders.
+    ///
+    /// - Parameters:
+    ///   - prescription: The prescription to schedule notifications for
+    ///   - therapistName: Optional therapist name for the new assignment notification
+    func scheduleAllPrescriptionNotifications(
+        for prescription: WorkoutPrescription,
+        therapistName: String?
+    ) async throws {
+        // Schedule new prescription notification
+        try await scheduleNewPrescriptionNotification(for: prescription, therapistName: therapistName)
+
+        // Schedule deadline reminders if there's a due date
+        if prescription.dueDate != nil {
+            try await schedulePrescriptionDeadlineReminders(for: prescription)
+        }
+
+        DebugLogger.shared.log(
+            "All notifications scheduled for prescription \(prescription.name)",
+            level: .success
+        )
+    }
+
+    /// Refresh prescription notifications for a patient.
+    ///
+    /// Fetches active prescriptions and reschedules all notifications.
+    ///
+    /// - Parameter patientId: The patient's UUID
+    func refreshPrescriptionNotifications(for patientId: UUID) async throws {
+        // Clear existing prescription notifications
+        await clearAllReminders(matching: NotificationIdentifier.prescriptionDeadline)
+        await clearAllReminders(matching: NotificationIdentifier.prescriptionOverdue)
+
+        // Fetch active prescriptions
+        let prescriptions: [WorkoutPrescription] = try await supabase
+            .from("workout_prescriptions")
+            .select()
+            .eq("patient_id", value: patientId.uuidString)
+            .in("status", values: ["pending", "viewed", "started"])
+            .execute()
+            .value
+
+        // Schedule notifications for each
+        for prescription in prescriptions {
+            if prescription.isOverdue {
+                try? await schedulePrescriptionOverdueNotification(for: prescription)
+            } else if prescription.dueDate != nil {
+                try? await schedulePrescriptionDeadlineReminders(for: prescription)
+            }
+        }
+
+        DebugLogger.shared.log(
+            "Refreshed prescription notifications for patient, \(prescriptions.count) active prescriptions",
+            level: .success
+        )
+    }
+
+    // MARK: - Prescription Preferences
+
+    /// Fetch prescription notification preferences for a patient.
+    ///
+    /// - Parameter patientId: The patient's UUID
+    /// - Returns: PrescriptionNotificationPreferences
+    func fetchPrescriptionPreferences(for patientId: UUID) async throws -> PrescriptionNotificationPreferences {
+        do {
+            let results: [PrescriptionNotificationPreferencesRow] = try await supabase
+                .from("prescription_notification_preferences")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .limit(1)
+                .execute()
+                .value
+
+            if let row = results.first {
+                return PrescriptionNotificationPreferences(
+                    newPrescriptionEnabled: row.newPrescriptionEnabled,
+                    deadline24hEnabled: row.deadline24hEnabled,
+                    deadline6hEnabled: row.deadline6hEnabled,
+                    deadline1hEnabled: row.deadline1hEnabled,
+                    overdueEnabled: row.overdueEnabled,
+                    therapistFollowUpEnabled: row.therapistFollowUpEnabled
+                )
+            }
+
+            return PrescriptionNotificationPreferences.defaults
+        } catch {
+            errorLogger.logError(error, context: "SmartNotificationService.fetchPrescriptionPreferences(patient=\(patientId))")
+            return PrescriptionNotificationPreferences.defaults
+        }
+    }
+
+    /// Update prescription notification preferences for a patient.
+    ///
+    /// - Parameters:
+    ///   - patientId: The patient's UUID
+    ///   - preferences: Updated preferences
+    func updatePrescriptionPreferences(for patientId: UUID, preferences: PrescriptionNotificationPreferences) async throws {
+        let row = PrescriptionNotificationPreferencesRow(
+            patientId: patientId.uuidString,
+            newPrescriptionEnabled: preferences.newPrescriptionEnabled,
+            deadline24hEnabled: preferences.deadline24hEnabled,
+            deadline6hEnabled: preferences.deadline6hEnabled,
+            deadline1hEnabled: preferences.deadline1hEnabled,
+            overdueEnabled: preferences.overdueEnabled,
+            therapistFollowUpEnabled: preferences.therapistFollowUpEnabled
+        )
+
+        try await supabase
+            .from("prescription_notification_preferences")
+            .upsert(row, onConflict: "patient_id")
+            .execute()
+
+        // Refresh notifications with new preferences
+        try await refreshPrescriptionNotifications(for: patientId)
+
+        DebugLogger.shared.log(
+            "Prescription notification preferences updated for patient \(patientId)",
+            level: .success
+        )
+    }
+
     // MARK: - Notification Management
 
     /// Clear all pending workout reminders.
@@ -550,14 +1031,16 @@ actor SmartNotificationService {
         type: String,
         title: String,
         body: String?,
-        scheduledFor: Date
+        scheduledFor: Date,
+        prescriptionId: UUID? = nil
     ) async throws {
-        let record = NotificationHistoryInsert(
+        let record = NotificationHistoryInsertExtended(
             patientId: patientId.uuidString,
             notificationType: type,
             title: title,
             body: body,
-            scheduledFor: dateFormatter.string(from: scheduledFor)
+            scheduledFor: dateFormatter.string(from: scheduledFor),
+            prescriptionId: prescriptionId?.uuidString
         )
 
         try await supabase
@@ -820,6 +1303,46 @@ private struct NotificationHistoryInsert: Encodable {
         case title
         case body
         case scheduledFor = "scheduled_for"
+    }
+}
+
+/// Extended notification history insert payload with prescription support.
+private struct NotificationHistoryInsertExtended: Encodable {
+    let patientId: String
+    let notificationType: String
+    let title: String
+    let body: String?
+    let scheduledFor: String
+    let prescriptionId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case notificationType = "notification_type"
+        case title
+        case body
+        case scheduledFor = "scheduled_for"
+        case prescriptionId = "prescription_id"
+    }
+}
+
+/// Database row for prescription notification preferences.
+private struct PrescriptionNotificationPreferencesRow: Codable {
+    let patientId: String
+    let newPrescriptionEnabled: Bool
+    let deadline24hEnabled: Bool
+    let deadline6hEnabled: Bool
+    let deadline1hEnabled: Bool
+    let overdueEnabled: Bool
+    let therapistFollowUpEnabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case newPrescriptionEnabled = "new_prescription_enabled"
+        case deadline24hEnabled = "deadline_24h_enabled"
+        case deadline6hEnabled = "deadline_6h_enabled"
+        case deadline1hEnabled = "deadline_1h_enabled"
+        case overdueEnabled = "overdue_enabled"
+        case therapistFollowUpEnabled = "therapist_follow_up_enabled"
     }
 }
 

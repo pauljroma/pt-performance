@@ -10,7 +10,7 @@ final class RecoveryViewModel: ObservableObject {
     @Published var error: String?
     @Published var showingLogSheet = false
     @Published var showingInsightsSheet = false
-    @Published var selectedProtocol: RecoveryProtocolType = .sauna
+    @Published var selectedProtocol: RecoveryProtocolType = .saunaTraditional
 
     // Log session form
     @Published var logDuration: Int = 15
@@ -55,7 +55,7 @@ final class RecoveryViewModel: ObservableObject {
         do {
             try await service.logSession(
                 protocolType: selectedProtocol,
-                duration: logDuration * 60, // Convert to seconds
+                durationSeconds: logDuration * 60, // Convert to seconds
                 temperature: logTemperature,
                 heartRateAvg: logHeartRate,
                 perceivedEffort: logEffort,
@@ -85,12 +85,12 @@ final class RecoveryViewModel: ObservableObject {
     }
 
     var todaySessions: [RecoverySession] {
-        sessions.filter { Calendar.current.isDateInToday($0.startTime) }
+        sessions.filter { Calendar.current.isDateInToday($0.loggedAt) }
     }
 
     var thisWeekSessions: [RecoverySession] {
         let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        return sessions.filter { $0.startTime >= weekAgo }
+        return sessions.filter { $0.loggedAt >= weekAgo }
     }
 
     func sessionsForProtocol(_ type: RecoveryProtocolType) -> [RecoverySession] {

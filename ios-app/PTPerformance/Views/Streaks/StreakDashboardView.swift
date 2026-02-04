@@ -75,6 +75,28 @@ struct StreakDashboardView: View {
             // Badge progress
             badgeProgressCard
 
+            // Achievements link
+            NavigationLink {
+                AchievementsDashboardView(patientId: patientId)
+            } label: {
+                HStack {
+                    Image(systemName: "trophy.fill")
+                        .foregroundColor(.yellow)
+                    Text("View All Achievements")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .adaptiveShadow(Shadow.subtle)
+                )
+            }
+            .buttonStyle(.plain)
+
             // Navigation to full calendar
             NavigationLink {
                 StreakCalendarView(patientId: patientId)

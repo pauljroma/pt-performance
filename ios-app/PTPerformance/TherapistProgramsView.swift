@@ -11,6 +11,9 @@ struct TherapistProgramsView: View {
     @State private var editingPatientId: UUID?
     @State private var showEditor = false
     @State private var selectedTypeFilter: ProgramType? = nil
+    @State private var showProgramAnalytics = false
+    @State private var showComparePrograms = false
+    @State private var analyticsProgramId: UUID?
 
     var body: some View {
         NavigationStack {
@@ -69,6 +72,20 @@ struct TherapistProgramsView: View {
                         } label: {
                             Label("Manage Programs", systemImage: "pencil.circle")
                         }
+
+                        Divider()
+
+                        Button {
+                            showProgramAnalytics = true
+                        } label: {
+                            Label("Program Analytics", systemImage: "chart.bar.xaxis")
+                        }
+
+                        Button {
+                            showComparePrograms = true
+                        } label: {
+                            Label("Compare Programs", systemImage: "arrow.left.arrow.right")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
@@ -108,6 +125,16 @@ struct TherapistProgramsView: View {
                     ProgramEditorView(programId: programId, patientId: patientId)
                 }
             }
+            .sheet(isPresented: $showProgramAnalytics) {
+                NavigationStack {
+                    ProgramEffectivenessView()
+                }
+            }
+            .sheet(isPresented: $showComparePrograms) {
+                NavigationStack {
+                    ProgramEffectivenessView()
+                }
+            }
             .task {
                 await viewModel.loadPrograms()
             }
@@ -122,21 +149,38 @@ struct TherapistProgramsView: View {
             filterBar
 
             List(filteredPrograms) { program in
-                ProgramListCard(program: program)
-                    .swipeActions(edge: .trailing) {
-                        Button {
-                            // Navigate to editor
-                            if let patientId = UUID(uuidString: program.patientId) {
-                                showProgramEditor(programId: program.id, patientId: patientId)
-                            }
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
+                ProgramListCard(program: program) {
+                    // Open analytics for this program
+                    if let programUUID = UUID(uuidString: program.id) {
+                        analyticsProgramId = programUUID
+                        showProgramAnalytics = true
+                    }
+                }
+                .swipeActions(edge: .trailing) {
+                    Button {
+                        // Navigate to editor
+                        if let patientId = UUID(uuidString: program.patientId) {
+                            showProgramEditor(programId: program.id, patientId: patientId)
                         }
-                        .tint(.blue)
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
                     }
-                    .onTapGesture {
-                        selectedProgram = program
+                    .tint(.blue)
+
+                    Button {
+                        // Open analytics
+                        if let programUUID = UUID(uuidString: program.id) {
+                            analyticsProgramId = programUUID
+                            showProgramAnalytics = true
+                        }
+                    } label: {
+                        Label("Analytics", systemImage: "chart.bar.xaxis")
                     }
+                    .tint(.purple)
+                }
+                .onTapGesture {
+                    selectedProgram = program
+                }
             }
         }
     }
@@ -179,13 +223,21 @@ struct TherapistProgramsView: View {
 
 struct ProgramListCard: View {
     let program: ProgramListItem
+    var onAnalytics: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Program name
-            Text(program.programName)
-                .font(.headline)
-                .foregroundColor(.primary)
+            // Header with name and effectiveness badge
+            HStack {
+                Text(program.programName)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                // Effectiveness score badge (placeholder - would be fetched from analytics)
+                ProgramEffectivenessIndicator()
+            }
 
             // Program type badge
             HStack(spacing: 4) {
@@ -224,17 +276,87 @@ struct ProgramListCard: View {
                     .foregroundColor(.secondary)
             }
 
-            // Created date
-            if let createdAt = program.createdAt {
-                Text("Created \(createdAt, style: .relative)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+            // Footer with created date and analytics button
+            HStack {
+                if let createdAt = program.createdAt {
+                    Text("Created \(createdAt, style: .relative)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                if let onAnalytics = onAnalytics {
+                    Button {
+                        onAnalytics()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chart.bar.xaxis")
+                            Text("Analytics")
+                        }
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
             }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(program.programName), \(program.resolvedProgramType.displayName) program for \(program.patientName), \(program.durationWeeks) weeks, \(program.targetLevel) level")
         .accessibilityHint("Double tap to view program details, swipe left to edit")
+    }
+}
+
+// MARK: - Program Effectiveness Indicator
+
+/// Small badge showing program effectiveness score
+struct ProgramEffectivenessIndicator: View {
+    // In a real implementation, this would receive the actual score
+    // For now, we show a placeholder that indicates analytics are available
+    var score: Double? = nil
+
+    var body: some View {
+        if let score = score {
+            HStack(spacing: 2) {
+                Image(systemName: iconForScore(score))
+                    .font(.caption2)
+                Text(String(format: "%.0f%%", score * 100))
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(colorForScore(score))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(colorForScore(score).opacity(0.15))
+            .cornerRadius(6)
+        } else {
+            // Show analytics available indicator
+            Image(systemName: "chart.bar.xaxis")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .padding(4)
+                .background(Color(.systemGray5))
+                .cornerRadius(4)
+        }
+    }
+
+    private func iconForScore(_ score: Double) -> String {
+        switch score {
+        case 0.8...: return "star.fill"
+        case 0.6..<0.8: return "hand.thumbsup.fill"
+        case 0.4..<0.6: return "minus.circle.fill"
+        default: return "exclamationmark.triangle.fill"
+        }
+    }
+
+    private func colorForScore(_ score: Double) -> Color {
+        switch score {
+        case 0.8...: return .green
+        case 0.6..<0.8: return .blue
+        case 0.4..<0.6: return .orange
+        default: return .red
+        }
     }
 }
 

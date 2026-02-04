@@ -104,7 +104,7 @@ final class HealthScoreService: ObservableObject {
     private func calculateRecoveryScore() async -> Int {
         let sessions = RecoveryService.shared.sessions
         let weeklyCount = sessions.filter {
-            Calendar.current.isDate($0.startTime, equalTo: Date(), toGranularity: .weekOfYear)
+            Calendar.current.isDate($0.loggedAt, equalTo: Date(), toGranularity: .weekOfYear)
         }.count
 
         // Target: 3-5 recovery sessions per week

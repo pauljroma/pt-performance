@@ -160,11 +160,21 @@ struct HealthKitAuthorizationView: View {
         defer { isRequesting = false }
 
         do {
-            let authorized = try await healthKitService.requestAuthorization()
-            if authorized {
+            // Request authorization - this shows the iOS HealthKit permission dialog
+            _ = try await healthKitService.requestAuthorization()
+
+            // Verify connection by actually trying to query data
+            // This is the only reliable way to check if user granted read permissions
+            let connected = await healthKitService.verifyConnection()
+
+            if connected {
+                // Try to sync data immediately to populate the UI
+                _ = try? await healthKitService.syncTodayData()
                 dismiss()
             } else {
-                errorMessage = "HealthKit access was not granted. You can enable it later in Settings."
+                // User may have denied permissions or has no data
+                // Still dismiss but they can try again from settings
+                errorMessage = "HealthKit access was not fully granted. You can enable it in Settings > Privacy > Health > Modus."
                 showError = true
             }
         } catch {

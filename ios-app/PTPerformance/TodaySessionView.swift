@@ -19,6 +19,18 @@ struct TodaySessionView: View {
     @State private var showArmCareAssessment = false
     @State private var todayArmCare: ArmCareAssessment?
     @State private var isLoadingArmCare = false
+
+    // Recovery Intelligence state
+    @State private var workoutAdaptation: WorkoutAdaptation?
+    @State private var isLoadingAdaptation = false
+    @State private var showRecoveryProtocol = false
+    @State private var showReadinessInsights = false
+
+    // Prescribed workouts state
+    @State private var pendingPrescriptions: [WorkoutPrescription] = []
+    @State private var isLoadingPrescriptions = false
+    @State private var selectedPrescription: WorkoutPrescription?
+
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
@@ -94,6 +106,21 @@ struct TodaySessionView: View {
                 ArmCareAssessmentView(patientId: UUID(uuidString: patientId) ?? UUID())
             }
         }
+        // Recovery Intelligence sheets
+        .sheet(isPresented: $showRecoveryProtocol) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    RecoveryProtocolView(patientId: UUID(uuidString: patientId) ?? UUID())
+                }
+            }
+        }
+        .sheet(isPresented: $showReadinessInsights) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    ReadinessInsightsView(patientId: UUID(uuidString: patientId) ?? UUID())
+                }
+            }
+        }
         // Manual Workout Sheets
         .sheet(isPresented: $showTemplateLibrary) {
             if let patientId = appState.userId {
@@ -139,8 +166,18 @@ struct TodaySessionView: View {
                     session: session,
                     patientId: UUID(uuidString: patientId) ?? UUID(),
                     onComplete: {
+                        // If this was a prescribed workout, mark the prescription as completed
+                        if let prescription = selectedPrescription {
+                            Task {
+                                let prescriptionService = WorkoutPrescriptionService()
+                                try? await prescriptionService.markAsCompleted(prescription.id)
+                                await loadPendingPrescriptions()
+                            }
+                        }
+
                         createdManualSession = nil
                         selectedWorkoutTemplate = nil
+                        selectedPrescription = nil
                         // Refresh completed workouts and fetch next session in parallel
                         Task {
                             async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
@@ -184,6 +221,10 @@ struct TodaySessionView: View {
             await loadTodayArmCare()  // ACP-522: Load arm care assessment
             // Load enrolled programs for the My Programs section
             await enrolledProgramsViewModel.loadEnrolledPrograms()
+            // Load pending prescriptions from therapist
+            await loadPendingPrescriptions()
+            // Recovery Intelligence: Load workout adaptation based on readiness
+            await loadWorkoutAdaptation()
         }
         .onDisappear {
             // Stop timer when view disappears
@@ -336,6 +377,37 @@ struct TodaySessionView: View {
                     onCheckIn: { showArmCareAssessment = true },
                     onShowDetails: { showArmCareAssessment = true }
                 )
+
+                // Recovery Intelligence: Readiness-Based Workout Recommendation
+                if let adaptation = workoutAdaptation {
+                    ReadinessWorkoutRecommendationCard(
+                        adaptation: adaptation,
+                        onViewRecoveryProtocol: { showRecoveryProtocol = true },
+                        onViewInsights: { showReadinessInsights = true },
+                        onStartAlternative: { alternative in
+                            // TODO: Start alternative workout from template
+                            DebugLogger.shared.log("Starting alternative workout: \(alternative.name)")
+                        }
+                    )
+                } else if isLoadingAdaptation {
+                    ReadinessWorkoutRecommendationCard.loadingPlaceholder
+                }
+
+                // Prescribed Workouts from Therapist
+                if isLoadingPrescriptions || !pendingPrescriptions.isEmpty {
+                    PrescribedWorkoutsCard(
+                        prescriptions: pendingPrescriptions,
+                        isLoading: isLoadingPrescriptions,
+                        onStartPrescription: { prescription in
+                            Task {
+                                await startPrescribedWorkout(prescription)
+                            }
+                        },
+                        onViewAll: {
+                            // Could navigate to a full prescription list view if needed
+                        }
+                    )
+                }
 
                 // Session Card with Start Workout
                 if let session = viewModel.session {
@@ -606,6 +678,190 @@ struct TodaySessionView: View {
         }
     }
 
+    // MARK: - Recovery Intelligence: Workout Adaptation Loading
+
+    private func loadWorkoutAdaptation() async {
+        guard let userId = appState.userId,
+              let patientId = UUID(uuidString: userId) else {
+            return
+        }
+
+        isLoadingAdaptation = true
+        defer { isLoadingAdaptation = false }
+
+        do {
+            let adaptationService = WorkoutAdaptationService.shared
+            workoutAdaptation = try await adaptationService.getWorkoutAdaptation(for: patientId)
+            DebugLogger.shared.log("Loaded workout adaptation: \(workoutAdaptation?.recommendationType.displayName ?? "none")")
+        } catch {
+            DebugLogger.shared.log("Failed to load workout adaptation: \(error.localizedDescription)", level: .warning)
+            workoutAdaptation = nil
+        }
+    }
+
+    // MARK: - Prescription Loading
+
+    private func loadPendingPrescriptions() async {
+        guard let userId = appState.userId,
+              let patientId = UUID(uuidString: userId) else {
+            return
+        }
+
+        isLoadingPrescriptions = true
+        defer { isLoadingPrescriptions = false }
+
+        do {
+            let prescriptionService = WorkoutPrescriptionService()
+            pendingPrescriptions = try await prescriptionService.fetchMyPrescriptions(patientId: patientId)
+            DebugLogger.shared.log("Loaded \(pendingPrescriptions.count) pending prescriptions")
+
+            // Mark prescriptions as viewed if any are pending
+            for prescription in pendingPrescriptions where prescription.status == .pending {
+                try? await prescriptionService.markAsViewed(prescription.id)
+            }
+        } catch {
+            DebugLogger.shared.log("Failed to load prescriptions: \(error.localizedDescription)", level: .warning)
+            pendingPrescriptions = []
+        }
+    }
+
+    // MARK: - Starting Prescribed Workouts
+
+    private func startPrescribedWorkout(_ prescription: WorkoutPrescription) async {
+        guard let userId = appState.userId,
+              let patientUUID = UUID(uuidString: userId) else {
+            DebugLogger.shared.log("Invalid patient ID for prescribed workout", level: .error)
+            return
+        }
+
+        isCreatingManualSession = true
+        defer { isCreatingManualSession = false }
+
+        let service = ManualWorkoutService()
+        let prescriptionService = WorkoutPrescriptionService()
+
+        do {
+            DebugLogger.shared.log("Creating session from prescription: \(prescription.name)", level: .diagnostic)
+
+            // 1. Create manual session with prescribed source
+            let session = try await service.createManualSession(
+                name: prescription.name,
+                patientId: patientUUID,
+                sourceTemplateId: prescription.templateId,
+                sourceTemplateType: prescription.templateType == "system" ? .system : .patient,
+                assignedByUserId: prescription.therapistId,
+                sessionSource: .prescribed
+            )
+
+            DebugLogger.shared.log("Prescribed session created: \(session.id)", level: .success)
+
+            // 2. If there's a template, load exercises from it
+            if let templateId = prescription.templateId {
+                try await loadExercisesFromTemplate(
+                    templateId: templateId,
+                    templateType: prescription.templateType,
+                    sessionId: session.id,
+                    service: service
+                )
+            }
+
+            // 3. Mark prescription as started and link the session
+            try await prescriptionService.markAsStarted(prescription.id, sessionId: session.id)
+
+            // 4. Start the workout
+            let startedSession = try await service.startWorkout(session.id)
+
+            // 5. Store prescription for completion tracking and trigger workout execution
+            await MainActor.run {
+                selectedPrescription = prescription
+                createdManualSession = startedSession
+                DebugLogger.shared.log("Prescribed workout ready, launching execution view", level: .success)
+            }
+
+        } catch {
+            DebugLogger.shared.log("Failed to start prescribed workout: \(error)", level: .error)
+            await MainActor.run {
+                selectedPrescription = nil
+                createdManualSession = nil
+            }
+        }
+    }
+
+    /// Load exercises from a template and add them to the session
+    private func loadExercisesFromTemplate(
+        templateId: UUID,
+        templateType: String?,
+        sessionId: UUID,
+        service: ManualWorkoutService
+    ) async throws {
+        let logger = DebugLogger.shared
+
+        // Fetch the template based on type
+        if templateType == "system" {
+            let templates = try await service.fetchSystemTemplates()
+            guard let template = templates.first(where: { $0.id == templateId }) else {
+                logger.log("System template not found: \(templateId)", level: .warning)
+                return
+            }
+
+            // Add exercises from template blocks
+            var sequence = 0
+            for block in template.blocks {
+                for exercise in block.exercises {
+                    let input = AddManualSessionExerciseInput(
+                        manualSessionId: sessionId,
+                        exerciseTemplateId: nil,
+                        exerciseName: exercise.name,
+                        blockName: block.name,
+                        sequence: sequence,
+                        targetSets: exercise.sets,
+                        targetReps: exercise.reps,
+                        targetLoad: nil,
+                        loadUnit: nil,
+                        restPeriodSeconds: nil,
+                        notes: exercise.notes
+                    )
+                    _ = try await service.addExercise(to: sessionId, exercise: input)
+                    sequence += 1
+                }
+            }
+            logger.log("Added \(sequence) exercises from system template", level: .success)
+        } else {
+            // Patient template
+            guard let patientId = appState.userId,
+                  let patientUUID = UUID(uuidString: patientId) else { return }
+
+            let templates = try await service.fetchPatientTemplates(patientId: patientUUID)
+            guard let template = templates.first(where: { $0.id == templateId }) else {
+                logger.log("Patient template not found: \(templateId)", level: .warning)
+                return
+            }
+
+            // Add exercises from template blocks
+            var sequence = 0
+            for block in template.blocks {
+                for exercise in block.exercises {
+                    let input = AddManualSessionExerciseInput(
+                        manualSessionId: sessionId,
+                        exerciseTemplateId: nil,
+                        exerciseName: exercise.name,
+                        blockName: block.name,
+                        sequence: sequence,
+                        targetSets: exercise.sets,
+                        targetReps: exercise.reps,
+                        targetLoad: nil,
+                        loadUnit: nil,
+                        restPeriodSeconds: nil,
+                        notes: exercise.notes
+                    )
+                    _ = try await service.addExercise(to: sessionId, exercise: input)
+                    sequence += 1
+                }
+            }
+            logger.log("Added \(sequence) exercises from patient template", level: .success)
+        }
+    }
+
     // MARK: - Manual Workout Creation from Template
 
     private func createManualSessionFromTemplate(_ template: AnyWorkoutTemplate, patientId: String) async {
@@ -622,12 +878,13 @@ struct TodaySessionView: View {
         do {
             DebugLogger.shared.log("📝 Creating manual session from template: \(template.name)", level: .diagnostic)
 
-            // 1. Create the manual session
+            // 1. Create the manual session (chosen = self-selected from library)
             let session = try await service.createManualSession(
                 name: template.name,
                 patientId: patientUUID,
                 sourceTemplateId: template.id,
-                sourceTemplateType: template.isSystemTemplate ? .system : .patient
+                sourceTemplateType: template.isSystemTemplate ? .system : .patient,
+                sessionSource: .chosen
             )
 
             DebugLogger.shared.log("✅ Manual session created: \(session.id)", level: .success)

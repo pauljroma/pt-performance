@@ -1,5 +1,7 @@
 import Foundation
 import Supabase
+import PDFKit
+import UIKit
 
 /// Service for managing lab results
 @MainActor
@@ -250,15 +252,37 @@ final class LabResultService: ObservableObject {
             uploadProgress = 0
         }
 
-        // Convert PDF to base64
-        let base64String = pdfData.base64EncodedString()
+        DebugLogger.shared.info("LabResultService", "Processing PDF for parsing, size: \(pdfData.count) bytes")
+
+        // Convert PDF pages to images (Claude Vision doesn't support PDFs directly)
+        let pageImages = try convertPDFToImages(pdfData: pdfData)
         uploadProgress = 0.3
 
-        DebugLogger.shared.info("LabResultService", "Uploading PDF for parsing, size: \(pdfData.count) bytes")
+        guard !pageImages.isEmpty else {
+            throw LabResultError.invalidPDFData
+        }
 
-        // Call edge function
+        DebugLogger.shared.info("LabResultService", "Converted PDF to \(pageImages.count) page image(s)")
+
+        // Convert images to base64
+        var imagesBase64: [String] = []
+        for (index, image) in pageImages.enumerated() {
+            // Use JPEG for smaller size (0.8 quality)
+            guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+                DebugLogger.shared.warning("LabResultService", "Failed to convert page \(index + 1) to JPEG")
+                continue
+            }
+            imagesBase64.append(imageData.base64EncodedString())
+            DebugLogger.shared.info("LabResultService", "Page \(index + 1) converted: \(imageData.count) bytes")
+        }
+
+        guard !imagesBase64.isEmpty else {
+            throw LabResultError.parsingFailed("Failed to convert PDF pages to images")
+        }
+
+        // Call edge function with images
         let requestBody: [String: Any] = [
-            "pdf_base64": base64String
+            "images_base64": imagesBase64
         ]
 
         uploadProgress = 0.5
@@ -293,6 +317,23 @@ final class LabResultService: ObservableObject {
 
             return parsedResult
 
+        } catch let functionsError as Supabase.FunctionsError {
+            switch functionsError {
+            case .httpError(let statusCode, let data):
+                DebugLogger.shared.error("LabResultService", "Edge function HTTP error: \(statusCode)")
+                if let errorString = String(data: data, encoding: .utf8) {
+                    DebugLogger.shared.error("LabResultService", "Error body: \(errorString)")
+                    // Try to parse the error response
+                    if let errorData = errorString.data(using: .utf8),
+                       let errorResponse = try? JSONDecoder().decode(ParseLabPDFResponse.self, from: errorData) {
+                        throw LabResultError.parsingFailed(errorResponse.error ?? "Unknown parsing error")
+                    }
+                }
+                throw LabResultError.uploadFailed("Server error (code \(statusCode))")
+            case .relayError:
+                DebugLogger.shared.error("LabResultService", "Edge function relay error")
+                throw LabResultError.uploadFailed("Network connection error")
+            }
         } catch let decodingError as DecodingError {
             DebugLogger.shared.error("LabResultService", "Decoding error: \(decodingError)")
             throw LabResultError.parsingFailed("Failed to decode response: \(decodingError.localizedDescription)")
@@ -319,33 +360,90 @@ final class LabResultService: ObservableObject {
             throw LabResultError.noPatientFound
         }
 
-        // Filter to only selected biomarkers and convert to LabMarkers
-        let selectedMarkers = parsedResult.biomarkers
-            .filter { $0.isSelected }
-            .map { $0.toLabMarker() }
+        // Filter to only selected biomarkers
+        let selectedBiomarkers = parsedResult.biomarkers.filter { $0.isSelected }
 
-        guard !selectedMarkers.isEmpty else {
+        guard !selectedBiomarkers.isEmpty else {
             throw LabResultError.noBiomarkersSelected
         }
 
+        let labResultId = UUID()
+
+        // 1. Insert into lab_results table (matches database schema)
+        struct LabResultInsert: Encodable {
+            let id: UUID
+            let patient_id: UUID
+            let test_date: String  // Date as yyyy-MM-dd string
+            let provider: String
+            let pdf_url: String?
+            let notes: String?
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        let labResultInsert = LabResultInsert(
+            id: labResultId,
+            patient_id: patientId,
+            test_date: dateFormatter.string(from: testDate),
+            provider: parsedResult.provider.rawValue,
+            pdf_url: nil,
+            notes: "Parsed from PDF with \(selectedBiomarkers.count) biomarkers. Confidence: \(parsedResult.confidence.rawValue)"
+        )
+
+        DebugLogger.shared.info("LabResultService", "Inserting lab result: \(labResultId)")
+
+        try await supabase.client
+            .from("lab_results")
+            .insert(labResultInsert)
+            .execute()
+
+        DebugLogger.shared.info("LabResultService", "Lab result inserted, now inserting biomarkers...")
+
+        // 2. Insert biomarkers into biomarker_values table
+        struct BiomarkerValueInsert: Encodable {
+            let id: UUID
+            let lab_result_id: UUID
+            let biomarker_type: String
+            let value: Double
+            let unit: String
+            let reference_low: Double?
+            let reference_high: Double?
+            let flag: String?
+        }
+
+        let biomarkerInserts = selectedBiomarkers.map { biomarker in
+            BiomarkerValueInsert(
+                id: UUID(),
+                lab_result_id: labResultId,
+                biomarker_type: biomarker.name.lowercased().replacingOccurrences(of: " ", with: "_"),
+                value: biomarker.value,
+                unit: biomarker.unit,
+                reference_low: biomarker.referenceLow,
+                reference_high: biomarker.referenceHigh,
+                flag: biomarker.flag?.rawValue
+            )
+        }
+
+        try await supabase.client
+            .from("biomarker_values")
+            .insert(biomarkerInserts)
+            .execute()
+
+        DebugLogger.shared.success("LabResultService", "Saved lab result with \(selectedBiomarkers.count) biomarkers")
+
+        // Return a LabResult object for the UI
         let labResult = LabResult(
-            id: UUID(),
+            id: labResultId,
             patientId: patientId,
             testDate: testDate,
             testType: testType,
-            results: selectedMarkers,
+            results: selectedBiomarkers.map { $0.toLabMarker() },
             pdfUrl: nil,
             aiAnalysis: nil,
             createdAt: Date(),
             updatedAt: Date()
         )
-
-        try await supabase.client
-            .from("lab_results")
-            .insert(labResult)
-            .execute()
-
-        DebugLogger.shared.info("LabResultService", "Saved lab result with \(selectedMarkers.count) biomarkers")
 
         await fetchLabResults()
         return labResult
@@ -354,21 +452,90 @@ final class LabResultService: ObservableObject {
     // MARK: - Helpers
 
     private func getPatientId() async throws -> UUID? {
-        guard let userId = supabase.client.auth.currentUser?.id else { return nil }
+        // Check for authenticated user first
+        if let userId = supabase.client.auth.currentUser?.id {
+            struct PatientRow: Decodable {
+                let id: UUID
+            }
 
-        struct PatientRow: Decodable {
-            let id: UUID
+            let patients: [PatientRow] = try await supabase.client
+                .from("patients")
+                .select("id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1)
+                .execute()
+                .value
+
+            if let patientId = patients.first?.id {
+                return patientId
+            }
         }
 
-        let patients: [PatientRow] = try await supabase.client
-            .from("patients")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
-            .value
+        // Fallback to demo patient for unauthenticated users (demo mode)
+        // This allows testing without login - demo_mode_enabled must be true in database
+        DebugLogger.shared.warning("LabResultService", "No authenticated user, using demo patient")
+        return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+    }
 
-        return patients.first?.id
+    // MARK: - PDF Conversion
+
+    /// Converts PDF pages to UIImages for Claude Vision processing
+    /// - Parameter pdfData: The PDF file data
+    /// - Returns: Array of UIImage, one per page
+    /// - Throws: LabResultError if PDF cannot be loaded
+    private func convertPDFToImages(pdfData: Data) throws -> [UIImage] {
+        guard let pdfDocument = PDFDocument(data: pdfData) else {
+            DebugLogger.shared.error("LabResultService", "Failed to create PDFDocument from data")
+            throw LabResultError.invalidPDFData
+        }
+
+        let pageCount = pdfDocument.pageCount
+        DebugLogger.shared.info("LabResultService", "PDF has \(pageCount) page(s)")
+
+        // Limit to 20 pages max
+        let maxPages = min(pageCount, 20)
+        var images: [UIImage] = []
+
+        for pageIndex in 0..<maxPages {
+            guard let page = pdfDocument.page(at: pageIndex) else {
+                DebugLogger.shared.warning("LabResultService", "Failed to get page \(pageIndex + 1)")
+                continue
+            }
+
+            // Get page bounds
+            let pageRect = page.bounds(for: .mediaBox)
+
+            // Render at 2x scale for good quality (300 DPI equivalent for typical lab results)
+            let scale: CGFloat = 2.0
+            let renderSize = CGSize(
+                width: pageRect.width * scale,
+                height: pageRect.height * scale
+            )
+
+            // Create image context and render
+            let renderer = UIGraphicsImageRenderer(size: renderSize)
+            let image = renderer.image { context in
+                // White background
+                UIColor.white.setFill()
+                context.fill(CGRect(origin: .zero, size: renderSize))
+
+                // Transform for PDF coordinate system
+                context.cgContext.translateBy(x: 0, y: renderSize.height)
+                context.cgContext.scaleBy(x: scale, y: -scale)
+
+                // Render the PDF page
+                page.draw(with: .mediaBox, to: context.cgContext)
+            }
+
+            images.append(image)
+            DebugLogger.shared.info("LabResultService", "Rendered page \(pageIndex + 1): \(Int(renderSize.width))x\(Int(renderSize.height))")
+        }
+
+        if pageCount > maxPages {
+            DebugLogger.shared.warning("LabResultService", "PDF has \(pageCount) pages, only processing first \(maxPages)")
+        }
+
+        return images
     }
 }
 

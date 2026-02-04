@@ -20,6 +20,7 @@ struct LabPDFUploadView: View {
                         Button("Cancel") {
                             dismiss()
                         }
+                        .disabled(viewModel.state == .uploading)
                     }
 
                     if viewModel.state == .reviewing {
@@ -55,6 +56,7 @@ struct LabPDFUploadView: View {
                 } message: {
                     Text("Lab results saved successfully with \(viewModel.selectedBiomarkerCount) biomarkers.")
                 }
+                .interactiveDismissDisabled(viewModel.state == .uploading)
         }
     }
 
@@ -569,8 +571,13 @@ final class LabPDFUploadViewModel: ObservableObject {
         }
 
         do {
+            DebugLogger.shared.info("LabPDFUpload", "Calling uploadLabPDF...")
             let result = try await labResultService.uploadLabPDF(pdfData)
             progressTask.cancel()
+
+            DebugLogger.shared.info("LabPDFUpload", "Upload returned with \(result.biomarkers.count) biomarkers")
+            DebugLogger.shared.info("LabPDFUpload", "Provider: \(result.provider.displayName)")
+            DebugLogger.shared.info("LabPDFUpload", "Confidence: \(result.confidence.displayName)")
 
             parsedResult = result
             testDate = result.testDate ?? Date()
@@ -578,10 +585,13 @@ final class LabPDFUploadViewModel: ObservableObject {
             // Auto-detect test type based on biomarkers
             selectedTestType = detectTestType(from: result.biomarkers)
 
+            DebugLogger.shared.info("LabPDFUpload", "Transitioning to reviewing state...")
             state = .reviewing
+            DebugLogger.shared.info("LabPDFUpload", "State is now: \(state)")
 
         } catch {
             progressTask.cancel()
+            DebugLogger.shared.error("LabPDFUpload", "Upload failed: \(error.localizedDescription)")
             state = .initial
             showError(error.localizedDescription)
         }

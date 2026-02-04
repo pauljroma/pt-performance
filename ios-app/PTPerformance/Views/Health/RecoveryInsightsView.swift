@@ -6,7 +6,7 @@ struct RecoveryInsightsView: View {
     var onLogSession: ((RecoveryProtocolType) -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: Spacing.lg) {
             // Key Insights Section
             if !analysis.insights.isEmpty {
                 insightsSection
@@ -27,7 +27,7 @@ struct RecoveryInsightsView: View {
     // MARK: - Insights Section
 
     private var insightsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .foregroundColor(.modusTealAccent)
@@ -45,7 +45,7 @@ struct RecoveryInsightsView: View {
     // MARK: - Recommendations Section
 
     private var recommendationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "lightbulb.fill")
                     .foregroundColor(.modusCyan)
@@ -66,7 +66,7 @@ struct RecoveryInsightsView: View {
     // MARK: - Insufficient Data View
 
     private var insufficientDataView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.sm) {
             Image(systemName: "chart.bar.doc.horizontal")
                 .font(.system(size: 36))
                 .foregroundColor(.secondary.opacity(0.6))
@@ -86,7 +86,7 @@ struct RecoveryInsightsView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 }
 
@@ -96,7 +96,7 @@ struct RecoveryInsightCard: View {
     let insight: RecoveryInsight
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Impact Indicator
             impactIndicator
 
@@ -131,7 +131,7 @@ struct RecoveryInsightCard: View {
         }
         .padding()
         .background(impactBackgroundColor.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(insight.protocolType.displayName) insight: \(insight.description). Impact: \(insight.formattedImpact). Confidence: \(insight.confidenceLevel)")
     }
@@ -202,7 +202,7 @@ struct PersonalizedRecommendationCard: View {
     var onLogSession: ((RecoveryProtocolType) -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header
             HStack {
                 Image(systemName: recommendation.protocolType.icon)
@@ -231,12 +231,12 @@ struct PersonalizedRecommendationCard: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.modusTealAccent)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
 
             // Details
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 if let duration = recommendation.suggestedDuration {
                     DetailChip(icon: "clock", text: "\(duration) min")
                 }
@@ -277,7 +277,7 @@ struct PersonalizedRecommendationCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .contain)
     }
 
@@ -307,7 +307,7 @@ private struct DetailChip: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -317,7 +317,7 @@ struct CompactInsightRow: View {
     let insight: RecoveryInsight
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Spacing.xs) {
             // Impact badge
             Text(insight.formattedImpact)
                 .font(.caption)
@@ -326,7 +326,7 @@ struct CompactInsightRow: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(impactColor)
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
 
             // Description
             Text(insight.description)

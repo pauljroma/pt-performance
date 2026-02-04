@@ -35,6 +35,12 @@ final class TabBarBadgeManager: ObservableObject {
     /// Badge count for Patients tab
     @Published var patientsBadge: Int = 0
 
+    /// Badge count for Intelligence tab (at-risk patients)
+    @Published var intelligenceBadge: Int = 0
+
+    /// Badge count for Prescriptions tab (overdue prescriptions)
+    @Published var prescriptionsBadge: Int = 0
+
     /// Badge count for Reports tab
     @Published var reportsBadge: Int = 0
 
@@ -88,6 +94,8 @@ final class TabBarBadgeManager: ObservableObject {
         programsBadge = 0
         profileBadge = 0
         patientsBadge = 0
+        intelligenceBadge = 0
+        prescriptionsBadge = 0
         reportsBadge = 0
         scheduleBadge = 0
     }
@@ -143,6 +151,16 @@ final class TabBarBadgeManager: ObservableObject {
     /// Sets badge for upcoming schedule items needing review
     func setScheduleItemsNeedingReview(_ count: Int) {
         scheduleBadge = count
+    }
+
+    /// Sets badge for overdue prescriptions
+    func setOverduePrescriptions(_ count: Int) {
+        prescriptionsBadge = count
+    }
+
+    /// Sets badge for at-risk patients in Intelligence tab
+    func setIntelligenceBadge(_ count: Int) {
+        intelligenceBadge = count
     }
 
     // MARK: - Private Methods

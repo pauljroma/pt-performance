@@ -8,6 +8,8 @@ struct PatientDetailView: View {
     @State private var showProgramViewer = false
     @State private var showAddNote = false
     @State private var showProgressReport = false
+    @State private var showPrescribeWorkout = false
+    @State private var showReportBuilder = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -94,7 +96,9 @@ struct PatientDetailView: View {
                     // Quick actions
                     QuickActionsCard(
                         onViewProgram: { showProgramViewer = true },
-                        onAddNote: { showAddNote = true }
+                        onAddNote: { showAddNote = true },
+                        onPrescribeWorkout: { showPrescribeWorkout = true },
+                        onGenerateReport: { showReportBuilder = true }
                     )
                 }
             }
@@ -104,13 +108,34 @@ struct PatientDetailView: View {
         .navigationBarTitleDisplayMode(shouldUseSplitView ? .inline : .large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showProgressReport = true
+                Menu {
+                    Button {
+                        showReportBuilder = true
+                    } label: {
+                        Label("Generate PDF Report", systemImage: "doc.text.fill")
+                    }
+
+                    Button {
+                        showProgressReport = true
+                    } label: {
+                        Label("View Progress Summary", systemImage: "chart.line.uptrend.xyaxis")
+                    }
+
+                    Divider()
+
+                    // Quick report presets
+                    ForEach(ReportPreset.allPresets.prefix(3)) { preset in
+                        Button {
+                            generateQuickReport(preset: preset)
+                        } label: {
+                            Label(preset.name, systemImage: preset.icon)
+                        }
+                    }
                 } label: {
                     Image(systemName: "doc.text.magnifyingglass")
                 }
-                .accessibilityLabel("Progress Report")
-                .accessibilityHint("View detailed progress report for this patient")
+                .accessibilityLabel("Reports Menu")
+                .accessibilityHint("Access report generation options")
             }
         }
         .refreshable {
@@ -132,6 +157,36 @@ struct PatientDetailView: View {
         .sheet(isPresented: $showProgressReport) {
             NavigationView {
                 PatientProgressReportView(patient: patient)
+            }
+        }
+        .sheet(isPresented: $showPrescribeWorkout) {
+            PrescribeWorkoutSheet(
+                patient: patient,
+                therapistId: PTSupabaseClient.shared.userId ?? "",
+                onDismiss: {}
+            )
+        }
+        .sheet(isPresented: $showReportBuilder) {
+            ReportBuilderView(patient: patient)
+        }
+    }
+
+    // MARK: - Quick Report Generation
+
+    private func generateQuickReport(preset: ReportPreset) {
+        Task {
+            do {
+                let report = try await ReportGenerationService.shared.generateQuickReport(
+                    preset: preset,
+                    patient: patient
+                )
+                // Show report builder with the generated report
+                showReportBuilder = true
+            } catch {
+                // Error is handled by the service
+                #if DEBUG
+                print("[PatientDetailView] Quick report generation failed: \(error.localizedDescription)")
+                #endif
             }
         }
     }
@@ -323,6 +378,8 @@ struct SectionErrorBanner: View {
 struct QuickActionsCard: View {
     let onViewProgram: () -> Void
     let onAddNote: () -> Void
+    let onPrescribeWorkout: () -> Void
+    var onGenerateReport: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 12) {
@@ -330,7 +387,10 @@ struct QuickActionsCard: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 16) {
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
                 ActionButton(
                     title: "View Program",
                     icon: "doc.text.fill",
@@ -344,6 +404,22 @@ struct QuickActionsCard: View {
                     color: .green,
                     action: onAddNote
                 )
+
+                ActionButton(
+                    title: "Prescribe Workout",
+                    icon: "dumbbell.fill",
+                    color: .orange,
+                    action: onPrescribeWorkout
+                )
+
+                if let onGenerateReport = onGenerateReport {
+                    ActionButton(
+                        title: "Generate Report",
+                        icon: "doc.richtext",
+                        color: .purple,
+                        action: onGenerateReport
+                    )
+                }
             }
         }
     }

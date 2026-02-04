@@ -693,12 +693,8 @@ struct EndFastSheet: View {
                     Stepper("Energy Level: \(viewModel.energyLevel)/10", value: $viewModel.energyLevel, in: 1...10)
                 }
 
-                Section("What did you break your fast with?") {
-                    TextField("First meal", text: $viewModel.breakfastFood)
-                }
-
-                Section("Notes") {
-                    TextField("Any notes?", text: $viewModel.endNotes, axis: .vertical)
+                Section("Notes (including what you broke your fast with)") {
+                    TextField("Notes about your fast...", text: $viewModel.endNotes, axis: .vertical)
                         .lineLimit(3...6)
                 }
             }

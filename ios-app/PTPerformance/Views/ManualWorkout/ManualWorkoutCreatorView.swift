@@ -167,7 +167,8 @@ class ManualWorkoutCreatorViewModel: ObservableObject {
                 name: workoutName,
                 patientId: patientId,
                 sourceTemplateId: nil,
-                sourceTemplateType: nil
+                sourceTemplateType: nil,
+                sessionSource: .chosen
             )
 
             // Add exercises to the session

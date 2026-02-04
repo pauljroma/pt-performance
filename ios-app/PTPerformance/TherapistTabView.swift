@@ -18,15 +18,19 @@ struct TherapistTabView: View {
 
     enum TherapistTab: Int, CaseIterable {
         case patients = 0
-        case programs = 1
-        case schedule = 2
-        case reports = 3
-        case settings = 4
+        case intelligence = 1
+        case programs = 2
+        case prescriptions = 3
+        case schedule = 4
+        case reports = 5
+        case settings = 6
 
         var title: String {
             switch self {
             case .patients: return "Patients"
+            case .intelligence: return "Intelligence"
             case .programs: return "Programs"
+            case .prescriptions: return "Rx"
             case .schedule: return "Schedule"
             case .reports: return "Reports"
             case .settings: return "Settings"
@@ -37,7 +41,9 @@ struct TherapistTabView: View {
         var iconName: String {
             switch self {
             case .patients: return "person.3"
+            case .intelligence: return "brain.head.profile"
             case .programs: return "list.bullet.rectangle.portrait"
+            case .prescriptions: return "doc.badge.clock"
             case .schedule: return "calendar"
             case .reports: return "chart.bar"
             case .settings: return "gearshape"
@@ -48,7 +54,9 @@ struct TherapistTabView: View {
         var selectedIconName: String {
             switch self {
             case .patients: return "person.3.fill"
+            case .intelligence: return "brain.head.profile.fill"
             case .programs: return "list.bullet.rectangle.portrait.fill"
+            case .prescriptions: return "doc.badge.clock.fill"
             case .schedule: return "calendar"
             case .reports: return "chart.bar.fill"
             case .settings: return "gearshape.fill"
@@ -58,7 +66,9 @@ struct TherapistTabView: View {
         var accessibilityHint: String {
             switch self {
             case .patients: return "View and manage your patients"
+            case .intelligence: return "Practice intelligence with cohort analytics and reporting"
             case .programs: return "Create and manage exercise programs"
+            case .prescriptions: return "Track workout prescription compliance"
             case .schedule: return "View and manage appointments"
             case .reports: return "View patient progress reports"
             case .settings: return "App settings and account management"
@@ -82,6 +92,20 @@ struct TherapistTabView: View {
                 .accessibilityLabel(TherapistTab.patients.title)
                 .accessibilityHint(TherapistTab.patients.accessibilityHint)
 
+            TherapistIntelligenceView()
+                .tabItem {
+                    Label {
+                        Text(TherapistTab.intelligence.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .intelligence ? TherapistTab.intelligence.selectedIconName : TherapistTab.intelligence.iconName)
+                            .fontWeight(.medium)
+                    }
+                }
+                .tag(TherapistTab.intelligence)
+                .badge(badgeManager.intelligenceBadge)
+                .accessibilityLabel(TherapistTab.intelligence.title)
+                .accessibilityHint(TherapistTab.intelligence.accessibilityHint)
+
             TherapistProgramsView()
                 .tabItem {
                     Label {
@@ -94,6 +118,20 @@ struct TherapistTabView: View {
                 .tag(TherapistTab.programs)
                 .accessibilityLabel(TherapistTab.programs.title)
                 .accessibilityHint(TherapistTab.programs.accessibilityHint)
+
+            TherapistPrescriptionDashboardView()
+                .tabItem {
+                    Label {
+                        Text(TherapistTab.prescriptions.title)
+                    } icon: {
+                        Image(systemName: selectedTab == .prescriptions ? TherapistTab.prescriptions.selectedIconName : TherapistTab.prescriptions.iconName)
+                            .fontWeight(.medium)
+                    }
+                }
+                .tag(TherapistTab.prescriptions)
+                .badge(badgeManager.prescriptionsBadge)
+                .accessibilityLabel(TherapistTab.prescriptions.title)
+                .accessibilityHint(TherapistTab.prescriptions.accessibilityHint)
 
             TherapistSchedulingView()
                 .tabItem {

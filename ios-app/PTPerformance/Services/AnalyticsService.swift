@@ -93,6 +93,8 @@ struct ManualWorkoutSummary: Codable, Identifiable {
     let avgPain: Double?
     let durationMinutes: Int?
     let exerciseCount: Int?
+    let assignedByUserId: UUID?
+    let sessionSource: SessionSource?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -105,6 +107,8 @@ struct ManualWorkoutSummary: Codable, Identifiable {
         case avgPain = "avg_pain"
         case durationMinutes = "duration_minutes"
         case exerciseCount = "exercise_count"
+        case assignedByUserId = "assigned_by_user_id"
+        case sessionSource = "session_source"
     }
 
     var displayName: String {

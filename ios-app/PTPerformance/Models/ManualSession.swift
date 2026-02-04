@@ -7,6 +7,46 @@
 
 import Foundation
 
+// MARK: - Session Source
+
+/// Identifies how a workout session was initiated
+enum SessionSource: String, Codable, CaseIterable {
+    case program = "program"
+    case prescribed = "prescribed"
+    case chosen = "chosen"
+    case quickPick = "quick_pick"
+
+    /// Human-readable display name
+    var displayName: String {
+        switch self {
+        case .program: return "Program"
+        case .prescribed: return "Prescribed"
+        case .chosen: return "Self-Selected"
+        case .quickPick: return "Quick Pick"
+        }
+    }
+
+    /// SF Symbol icon name for display
+    var icon: String {
+        switch self {
+        case .program: return "calendar.badge.checkmark"
+        case .prescribed: return "person.badge.clock"
+        case .chosen: return "hand.tap"
+        case .quickPick: return "bolt.fill"
+        }
+    }
+
+    /// Icon color for display
+    var iconColorName: String {
+        switch self {
+        case .program: return "blue"
+        case .prescribed: return "purple"
+        case .chosen: return "green"
+        case .quickPick: return "orange"
+        }
+    }
+}
+
 // MARK: - Manual Session
 
 /// Represents a manually logged workout session
@@ -27,6 +67,12 @@ struct ManualSession: Codable, Identifiable, Equatable {
     let durationMinutes: Int?
     let createdAt: Date
 
+    /// User ID of trainer/therapist who assigned this workout (nil for self-selected)
+    let assignedByUserId: UUID?
+
+    /// How the workout was initiated (program, prescribed, chosen, quick_pick)
+    let sessionSource: SessionSource?
+
     /// Exercises for this manual session (loaded separately or joined)
     var exercises: [ManualSessionExercise]
 
@@ -45,6 +91,8 @@ struct ManualSession: Codable, Identifiable, Equatable {
         case avgPain = "avg_pain"
         case durationMinutes = "duration_minutes"
         case createdAt = "created_at"
+        case assignedByUserId = "assigned_by_user_id"
+        case sessionSource = "session_source"
         case exercises
     }
 
@@ -63,6 +111,8 @@ struct ManualSession: Codable, Identifiable, Equatable {
         avgPain: Double? = nil,
         durationMinutes: Int? = nil,
         createdAt: Date = Date(),
+        assignedByUserId: UUID? = nil,
+        sessionSource: SessionSource? = .chosen,
         exercises: [ManualSessionExercise] = []
     ) {
         self.id = id
@@ -79,6 +129,8 @@ struct ManualSession: Codable, Identifiable, Equatable {
         self.avgPain = avgPain
         self.durationMinutes = durationMinutes
         self.createdAt = createdAt
+        self.assignedByUserId = assignedByUserId
+        self.sessionSource = sessionSource
         self.exercises = exercises
     }
 
@@ -98,6 +150,8 @@ struct ManualSession: Codable, Identifiable, Equatable {
         avgPain = try container.decodeIfPresent(Double.self, forKey: .avgPain)
         durationMinutes = try container.decodeIfPresent(Int.self, forKey: .durationMinutes)
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        assignedByUserId = try container.decodeIfPresent(UUID.self, forKey: .assignedByUserId)
+        sessionSource = try container.decodeIfPresent(SessionSource.self, forKey: .sessionSource)
         exercises = try container.decodeIfPresent([ManualSessionExercise].self, forKey: .exercises) ?? []
     }
 
@@ -165,6 +219,8 @@ struct CreateManualSessionDTO: Codable {
     let sourceTemplateId: UUID?
     let sourceTemplateType: String?
     let startedAt: Date?
+    let assignedByUserId: UUID?
+    let sessionSource: String?
 
     enum CodingKeys: String, CodingKey {
         case patientId = "patient_id"
@@ -173,6 +229,8 @@ struct CreateManualSessionDTO: Codable {
         case sourceTemplateId = "source_template_id"
         case sourceTemplateType = "source_template_type"
         case startedAt = "started_at"
+        case assignedByUserId = "assigned_by_user_id"
+        case sessionSource = "session_source"
     }
 
     init(
@@ -181,7 +239,9 @@ struct CreateManualSessionDTO: Codable {
         notes: String? = nil,
         sourceTemplateId: UUID? = nil,
         sourceTemplateType: String? = nil,
-        startedAt: Date? = nil
+        startedAt: Date? = nil,
+        assignedByUserId: UUID? = nil,
+        sessionSource: SessionSource? = .chosen
     ) {
         self.patientId = patientId
         self.name = name
@@ -189,6 +249,8 @@ struct CreateManualSessionDTO: Codable {
         self.sourceTemplateId = sourceTemplateId
         self.sourceTemplateType = sourceTemplateType
         self.startedAt = startedAt
+        self.assignedByUserId = assignedByUserId
+        self.sessionSource = sessionSource?.rawValue
     }
 }
 

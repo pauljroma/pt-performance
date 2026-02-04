@@ -729,12 +729,13 @@ class WorkoutTemplatePlayerViewModel: ObservableObject {
         do {
             logger.log("ProgramWorkout: Creating session from template: \(template.name)", level: .diagnostic)
 
-            // 1. Create manual session
+            // 1. Create manual session (program context)
             let session = try await workoutService.createManualSession(
                 name: template.name,
                 patientId: patientId,
                 sourceTemplateId: template.id,
-                sourceTemplateType: .system
+                sourceTemplateType: .system,
+                sessionSource: .program
             )
 
             logger.log("ProgramWorkout: Session created: \(session.id)", level: .success)
@@ -1266,12 +1267,13 @@ class PhaseSessionPlayerViewModel: ObservableObject {
         do {
             logger.log("PhaseSession: Creating session from: \(sessionData.session.name)", level: .diagnostic)
 
-            // 1. Create manual session
+            // 1. Create manual session (program context - from phase session)
             let session = try await workoutService.createManualSession(
                 name: sessionData.session.name,
                 patientId: patientId,
                 sourceTemplateId: nil,
-                sourceTemplateType: nil
+                sourceTemplateType: nil,
+                sessionSource: .program
             )
 
             logger.log("PhaseSession: Session created: \(session.id)", level: .success)

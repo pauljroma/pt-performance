@@ -1,15 +1,20 @@
 import Foundation
 
-/// Fasting log entry
+/// Fasting log entry (matches fasting_logs table in Supabase)
 struct FastingLog: Identifiable, Codable, Hashable {
     let id: UUID
     let patientId: UUID
     let fastingType: FastingType
-    let startTime: Date
-    let endTime: Date?
+    let startedAt: Date
+    let endedAt: Date?
+    let plannedEndAt: Date?
     let targetHours: Int
     let actualHours: Double?
-    let breakfastFood: String?
+    let wasBrokenEarly: Bool?
+    let breakReason: String?
+    let moodStart: Int? // 1-10
+    let moodEnd: Int? // 1-10
+    let hungerLevel: Int? // 1-10
     let energyLevel: Int? // 1-10
     let notes: String?
     let createdAt: Date
@@ -18,63 +23,79 @@ struct FastingLog: Identifiable, Codable, Hashable {
         case id
         case patientId = "patient_id"
         case fastingType = "fasting_type"
-        case startTime = "start_time"
-        case endTime = "end_time"
+        case startedAt = "started_at"
+        case endedAt = "ended_at"
+        case plannedEndAt = "planned_end_at"
         case targetHours = "target_hours"
         case actualHours = "actual_hours"
-        case breakfastFood = "breakfast_food"
+        case wasBrokenEarly = "was_broken_early"
+        case breakReason = "break_reason"
+        case moodStart = "mood_start"
+        case moodEnd = "mood_end"
+        case hungerLevel = "hunger_level"
         case energyLevel = "energy_level"
         case notes
         case createdAt = "created_at"
     }
 
     var isActive: Bool {
-        endTime == nil
+        endedAt == nil
     }
 
     var progressPercent: Double {
-        guard let end = endTime else {
-            let elapsed = Date().timeIntervalSince(startTime) / 3600
+        guard let end = endedAt else {
+            let elapsed = Date().timeIntervalSince(startedAt) / 3600
             return min(elapsed / Double(targetHours), 1.0)
         }
-        let actual = end.timeIntervalSince(startTime) / 3600
+        let actual = end.timeIntervalSince(startedAt) / 3600
         return min(actual / Double(targetHours), 1.0)
     }
+
+    // MARK: - Backward Compatibility
+
+    /// Backward-compatible property for code using startTime
+    var startTime: Date { startedAt }
+
+    /// Backward-compatible property for code using endTime
+    var endTime: Date? { endedAt }
 }
 
+/// Fasting type enum matching Supabase database values
+/// Database expects: intermittent, extended, water_only, modified, custom
 enum FastingType: String, Codable, CaseIterable {
-    case intermittent16_8 = "16_8"
-    case intermittent18_6 = "18_6"
-    case intermittent20_4 = "20_4"
-    case omad = "omad"
-    case extended24 = "24"
-    case extended36 = "36"
-    case extended48 = "48"
+    case intermittent = "intermittent"
+    case extended = "extended"
+    case waterOnly = "water_only"
+    case modified = "modified"
     case custom = "custom"
 
     var displayName: String {
         switch self {
-        case .intermittent16_8: return "16:8"
-        case .intermittent18_6: return "18:6"
-        case .intermittent20_4: return "20:4"
-        case .omad: return "OMAD (23:1)"
-        case .extended24: return "24 Hour"
-        case .extended36: return "36 Hour"
-        case .extended48: return "48 Hour"
+        case .intermittent: return "Intermittent"
+        case .extended: return "Extended"
+        case .waterOnly: return "Water Only"
+        case .modified: return "Modified"
         case .custom: return "Custom"
         }
     }
 
     var targetHours: Int {
         switch self {
-        case .intermittent16_8: return 16
-        case .intermittent18_6: return 18
-        case .intermittent20_4: return 20
-        case .omad: return 23
-        case .extended24: return 24
-        case .extended36: return 36
-        case .extended48: return 48
+        case .intermittent: return 16
+        case .extended: return 24
+        case .waterOnly: return 24
+        case .modified: return 18
         case .custom: return 16
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .intermittent: return "Daily time-restricted eating (e.g., 16:8, 18:6)"
+        case .extended: return "Extended fasting period (24+ hours)"
+        case .waterOnly: return "Water-only fast with no caloric intake"
+        case .modified: return "Modified fast allowing limited calories"
+        case .custom: return "Custom fasting schedule"
         }
     }
 }
@@ -86,6 +107,7 @@ struct EatingWindowRecommendation: Identifiable, Codable {
     let suggestedEnd: Date
     let reason: String
     let trainingTime: Date?
+    let confidence: Double
 }
 
 /// Fasting statistics

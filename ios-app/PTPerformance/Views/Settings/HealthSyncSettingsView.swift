@@ -80,6 +80,10 @@ struct HealthSyncSettingsView: View {
                 Button {
                     Task {
                         _ = try? await healthKitService.requestAuthorization()
+                        // Verify connection by actually querying data
+                        _ = await healthKitService.verifyConnection()
+                        // Try to sync data immediately
+                        _ = try? await healthKitService.syncTodayData()
                     }
                 } label: {
                     HStack {

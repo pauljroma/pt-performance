@@ -1,16 +1,44 @@
 import Foundation
 
-/// Service for supplement stack management
+/// Service for supplement stack management, logging, and compliance tracking
 @MainActor
 final class SupplementService: ObservableObject {
     static let shared = SupplementService()
 
+    // MARK: - Published State
+
+    /// Supplement catalog (master list)
+    @Published private(set) var catalog: [CatalogSupplement] = []
+
+    /// Pre-built supplement stacks
+    @Published private(set) var stacks: [SupplementStack] = []
+
+    /// User's active supplement routine
+    @Published private(set) var routines: [SupplementRoutine] = []
+
+    /// Today's scheduled doses
+    @Published private(set) var todayDoses: [TodaySupplementDose] = []
+
+    /// Recent supplement logs
+    @Published private(set) var recentLogs: [SupplementLogEntry] = []
+
+    /// Compliance data
+    @Published private(set) var todayCompliance: SupplementCompliance?
+    @Published private(set) var weeklyCompliance: WeeklySupplementCompliance?
+    @Published private(set) var analytics: SupplementAnalytics?
+
+    /// Legacy support - user's supplements (from original Supplement model)
     @Published private(set) var supplements: [Supplement] = []
     @Published private(set) var todaySchedule: [ScheduledSupplement] = []
-    @Published private(set) var recentLogs: [SupplementLog] = []
+
+    /// AI recommendations
     @Published private(set) var aiRecommendations: SupplementRecommendationResponse?
+
+    /// Loading states
     @Published private(set) var isLoading = false
+    @Published private(set) var isLoadingCatalog = false
     @Published private(set) var isLoadingRecommendations = false
+    @Published private(set) var isSyncing = false
     @Published private(set) var error: Error?
 
     private let supabase = PTSupabaseClient.shared
@@ -18,14 +46,600 @@ final class SupplementService: ObservableObject {
 
     private init() {}
 
-    // MARK: - Fetch Data
+    // MARK: - Fetch Catalog & Stacks
 
+    /// Fetches the supplement catalog from the database
+    func fetchCatalog() async {
+        isLoadingCatalog = true
+        error = nil
+
+        do {
+            let results: [CatalogSupplement] = try await supabase.client
+                .from("supplements")
+                .select()
+                .eq("is_verified", value: true)
+                .order("name")
+                .execute()
+                .value
+
+            self.catalog = results
+            DebugLogger.shared.info("SupplementService", "Fetched \(results.count) catalog supplements")
+        } catch {
+            // Fallback to demo data
+            self.catalog = CatalogSupplement.demoSupplements
+            DebugLogger.shared.warning("SupplementService", "Using demo catalog: \(error.localizedDescription)")
+        }
+
+        isLoadingCatalog = false
+    }
+
+    /// Fetches pre-built supplement stacks
+    func fetchStacks() async {
+        do {
+            let results: [SupplementStack] = try await supabase.client
+                .from("supplement_stacks")
+                .select("*, items:supplement_stack_items(*)")
+                .order("name")
+                .execute()
+                .value
+
+            self.stacks = results
+            DebugLogger.shared.info("SupplementService", "Fetched \(results.count) supplement stacks")
+        } catch {
+            // Fallback to demo stacks
+            self.stacks = SupplementStack.demoStacks
+            DebugLogger.shared.warning("SupplementService", "Using demo stacks: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - User Routine Management
+
+    /// Fetches the user's supplement routine
+    func fetchRoutines() async {
+        isLoading = true
+        error = nil
+
+        do {
+            guard let patientId = try await getPatientId() else {
+                // Use demo data for unauthenticated users
+                self.routines = SupplementRoutine.demoRoutines
+                generateTodayDoses()
+                isLoading = false
+                return
+            }
+
+            let results: [SupplementRoutine] = try await supabase.client
+                .from("patient_supplement_routines")
+                .select("*, supplement:supplements(id, name, brand, category)")
+                .eq("patient_id", value: patientId.uuidString)
+                .eq("is_active", value: true)
+                .order("timing")
+                .execute()
+                .value
+
+            self.routines = results
+
+            // Generate today's schedule
+            generateTodayDoses()
+
+            // Fetch today's logs to mark taken doses
+            await fetchTodayLogs()
+
+            DebugLogger.shared.info("SupplementService", "Fetched \(results.count) active routines")
+        } catch {
+            self.error = error
+            // Fallback to demo routines
+            self.routines = SupplementRoutine.demoRoutines
+            generateTodayDoses()
+            DebugLogger.shared.warning("SupplementService", "Using demo routines: \(error.localizedDescription)")
+        }
+
+        isLoading = false
+    }
+
+    /// Adds a supplement to the user's routine
+    func addToRoutine(
+        supplementId: UUID,
+        supplementName: String,
+        brand: String?,
+        category: SupplementCatalogCategory,
+        dosage: String,
+        timing: SupplementTiming,
+        frequency: SupplementFrequency = .daily,
+        withFood: Bool = false,
+        notes: String? = nil
+    ) async throws {
+        guard let patientId = try await getPatientId() else {
+            throw SupplementServiceError.noPatientId
+        }
+
+        struct RoutineInsert: Encodable {
+            let id: UUID
+            let patient_id: UUID
+            let supplement_id: UUID
+            let dosage: String
+            let timing: String
+            let frequency: String
+            let with_food: Bool
+            let notes: String?
+            let is_active: Bool
+            let start_date: String
+        }
+
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
+
+        let insert = RoutineInsert(
+            id: UUID(),
+            patient_id: patientId,
+            supplement_id: supplementId,
+            dosage: dosage,
+            timing: timing.rawValue,
+            frequency: frequency.rawValue,
+            with_food: withFood,
+            notes: notes,
+            is_active: true,
+            start_date: dateFormatter.string(from: Date())
+        )
+
+        try await supabase.client
+            .from("patient_supplement_routines")
+            .insert(insert)
+            .execute()
+
+        DebugLogger.shared.success("SupplementService", "Added \(supplementName) to routine")
+
+        await fetchRoutines()
+    }
+
+    /// Adds a stack to the user's routine
+    func addStackToRoutine(_ stack: SupplementStack) async throws {
+        for item in stack.items where !item.isOptional {
+            try await addToRoutine(
+                supplementId: item.supplementId,
+                supplementName: item.supplementName,
+                brand: nil,
+                category: .other,
+                dosage: item.dosage,
+                timing: item.timing,
+                notes: item.notes
+            )
+        }
+
+        DebugLogger.shared.success("SupplementService", "Added stack '\(stack.name)' to routine")
+    }
+
+    /// Removes a supplement from the user's routine (soft delete)
+    func removeFromRoutine(_ routineId: UUID) async throws {
+        struct RoutineDeactivate: Encodable {
+            let is_active: Bool
+            let end_date: String
+        }
+
+        let update = RoutineDeactivate(
+            is_active: false,
+            end_date: ISO8601DateFormatter().string(from: Date())
+        )
+
+        try await supabase.client
+            .from("patient_supplement_routines")
+            .update(update)
+            .eq("id", value: routineId.uuidString)
+            .execute()
+
+        DebugLogger.shared.info("SupplementService", "Removed routine \(routineId)")
+
+        await fetchRoutines()
+    }
+
+    /// Updates a routine item
+    func updateRoutine(
+        _ routineId: UUID,
+        dosage: String? = nil,
+        timing: SupplementTiming? = nil,
+        frequency: SupplementFrequency? = nil,
+        withFood: Bool? = nil,
+        notes: String? = nil
+    ) async throws {
+        struct RoutineUpdate: Encodable {
+            var dosage: String?
+            var timing: String?
+            var frequency: String?
+            var with_food: Bool?
+            var notes: String?
+        }
+
+        let update = RoutineUpdate(
+            dosage: dosage,
+            timing: timing?.rawValue,
+            frequency: frequency?.rawValue,
+            with_food: withFood,
+            notes: notes
+        )
+
+        // Only update if at least one field is non-nil
+        guard dosage != nil || timing != nil || frequency != nil || withFood != nil || notes != nil else { return }
+
+        try await supabase.client
+            .from("patient_supplement_routines")
+            .update(update)
+            .eq("id", value: routineId.uuidString)
+            .execute()
+
+        await fetchRoutines()
+    }
+
+    // MARK: - Logging Supplements
+
+    /// Logs that a supplement was taken
+    func logSupplement(
+        dose: TodaySupplementDose,
+        perceivedEffect: PerceivedEffect? = nil,
+        sideEffects: [String]? = nil,
+        notes: String? = nil
+    ) async throws {
+        guard let patientId = try await getPatientId() else {
+            throw SupplementServiceError.noPatientId
+        }
+
+        struct LogInsert: Encodable {
+            let id: UUID
+            let patient_id: UUID
+            let supplement_id: UUID
+            let routine_id: UUID?
+            let supplement_name: String
+            let dosage: String
+            let timing: String
+            let taken_at: String
+            let skipped: Bool
+            let perceived_effect: String?
+            let side_effects: [String]?
+            let notes: String?
+        }
+
+        let logId = UUID()
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
+
+        let insert = LogInsert(
+            id: logId,
+            patient_id: patientId,
+            supplement_id: dose.supplementId,
+            routine_id: dose.routineId,
+            supplement_name: dose.supplementName,
+            dosage: dose.dosage,
+            timing: dose.timing.rawValue,
+            taken_at: dateFormatter.string(from: Date()),
+            skipped: false,
+            perceived_effect: perceivedEffect?.rawValue,
+            side_effects: sideEffects,
+            notes: notes
+        )
+
+        try await supabase.client
+            .from("patient_supplement_logs")
+            .insert(insert)
+            .execute()
+
+        // Update local state
+        if let index = todayDoses.firstIndex(where: { $0.id == dose.id }) {
+            todayDoses[index].isTaken = true
+            todayDoses[index].takenAt = Date()
+            todayDoses[index].logId = logId
+        }
+
+        DebugLogger.shared.success("SupplementService", "Logged \(dose.supplementName)")
+
+        // Recalculate compliance
+        await calculateTodayCompliance()
+    }
+
+    /// Marks a supplement as skipped
+    func skipSupplement(dose: TodaySupplementDose, reason: String?) async throws {
+        guard let patientId = try await getPatientId() else {
+            throw SupplementServiceError.noPatientId
+        }
+
+        struct LogInsert: Encodable {
+            let id: UUID
+            let patient_id: UUID
+            let supplement_id: UUID
+            let routine_id: UUID?
+            let supplement_name: String
+            let dosage: String
+            let timing: String
+            let taken_at: String
+            let skipped: Bool
+            let skip_reason: String?
+        }
+
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime]
+
+        let insert = LogInsert(
+            id: UUID(),
+            patient_id: patientId,
+            supplement_id: dose.supplementId,
+            routine_id: dose.routineId,
+            supplement_name: dose.supplementName,
+            dosage: dose.dosage,
+            timing: dose.timing.rawValue,
+            taken_at: dateFormatter.string(from: Date()),
+            skipped: true,
+            skip_reason: reason
+        )
+
+        try await supabase.client
+            .from("patient_supplement_logs")
+            .insert(insert)
+            .execute()
+
+        // Update local state
+        if let index = todayDoses.firstIndex(where: { $0.id == dose.id }) {
+            todayDoses[index].isTaken = true // Mark as handled
+            todayDoses[index].takenAt = Date()
+        }
+
+        DebugLogger.shared.info("SupplementService", "Skipped \(dose.supplementName)")
+
+        await calculateTodayCompliance()
+    }
+
+    /// Undoes a logged supplement
+    func undoLog(_ logId: UUID) async throws {
+        try await supabase.client
+            .from("patient_supplement_logs")
+            .delete()
+            .eq("id", value: logId.uuidString)
+            .execute()
+
+        // Update local state
+        if let index = todayDoses.firstIndex(where: { $0.logId == logId }) {
+            todayDoses[index].isTaken = false
+            todayDoses[index].takenAt = nil
+            todayDoses[index].logId = nil
+        }
+
+        DebugLogger.shared.info("SupplementService", "Undid log \(logId)")
+
+        await calculateTodayCompliance()
+    }
+
+    // MARK: - Fetch Logs
+
+    /// Fetches today's logs to mark taken supplements
+    private func fetchTodayLogs() async {
+        do {
+            guard let patientId = try await getPatientId() else { return }
+
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: Date())
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+            let dateFormatter = ISO8601DateFormatter()
+            dateFormatter.formatOptions = [.withInternetDateTime]
+
+            let logs: [SupplementLogEntry] = try await supabase.client
+                .from("patient_supplement_logs")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .gte("taken_at", value: dateFormatter.string(from: startOfDay))
+                .lt("taken_at", value: dateFormatter.string(from: endOfDay))
+                .execute()
+                .value
+
+            // Mark doses as taken based on logs
+            for log in logs where !log.skipped {
+                if let index = todayDoses.firstIndex(where: {
+                    $0.supplementId == log.supplementId && $0.timing == log.timing && !$0.isTaken
+                }) {
+                    todayDoses[index].isTaken = true
+                    todayDoses[index].takenAt = log.takenAt
+                    todayDoses[index].logId = log.id
+                }
+            }
+
+            self.recentLogs = logs
+        } catch {
+            DebugLogger.shared.warning("SupplementService", "Failed to fetch today's logs: \(error)")
+        }
+    }
+
+    /// Fetches log history for a date range
+    func fetchLogHistory(days: Int = 30) async -> [SupplementLogEntry] {
+        do {
+            guard let patientId = try await getPatientId() else { return [] }
+
+            let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+            let dateFormatter = ISO8601DateFormatter()
+            dateFormatter.formatOptions = [.withInternetDateTime]
+
+            let logs: [SupplementLogEntry] = try await supabase.client
+                .from("patient_supplement_logs")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .gte("taken_at", value: dateFormatter.string(from: startDate))
+                .order("taken_at", ascending: false)
+                .execute()
+                .value
+
+            return logs
+        } catch {
+            DebugLogger.shared.error("SupplementService", "Failed to fetch log history: \(error)")
+            return []
+        }
+    }
+
+    // MARK: - Compliance Analytics
+
+    /// Calculates today's compliance metrics
+    func calculateTodayCompliance() async {
+        let taken = todayDoses.filter { $0.isTaken && $0.logId != nil }.count
+        let planned = todayDoses.count
+        let skipped = recentLogs.filter { $0.skipped }.count
+
+        let rate = planned > 0 ? Double(taken) / Double(planned) : 0
+
+        // Calculate streak (simplified - would need historical data for accurate streak)
+        let streak = taken == planned ? 1 : 0
+
+        todayCompliance = SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: planned,
+            takenCount: taken,
+            skippedCount: skipped,
+            complianceRate: rate,
+            streakDays: streak
+        )
+    }
+
+    /// Fetches weekly compliance data
+    func fetchWeeklyCompliance() async {
+        do {
+            guard let patientId = try await getPatientId() else { return }
+
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+            guard let weekStart = calendar.date(byAdding: .day, value: -6, to: today) else { return }
+
+            // Fetch daily compliance records for the week
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+
+            let compliance: [SupplementCompliance] = try await supabase.client
+                .from("supplement_compliance")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .gte("date", value: dateFormatter.string(from: weekStart))
+                .order("date", ascending: true)
+                .execute()
+                .value
+
+            weeklyCompliance = WeeklySupplementCompliance(
+                weekStartDate: weekStart,
+                dailyCompliance: compliance
+            )
+        } catch {
+            DebugLogger.shared.warning("SupplementService", "Failed to fetch weekly compliance: \(error)")
+        }
+    }
+
+    /// Fetches overall supplement analytics
+    func fetchAnalytics() async {
+        do {
+            guard let patientId = try await getPatientId() else { return }
+
+            let response: SupplementAnalytics = try await supabase.client
+                .from("supplement_analytics")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .single()
+                .execute()
+                .value
+
+            self.analytics = response
+        } catch {
+            // Generate basic analytics from local data
+            let weeklyRate = todayCompliance?.complianceRate ?? 0
+
+            self.analytics = SupplementAnalytics(
+                totalSupplements: routines.count,
+                activeRoutines: routines.filter { $0.isActive }.count,
+                weeklyComplianceRate: weeklyRate,
+                monthlyComplianceRate: weeklyRate,
+                currentStreak: todayCompliance?.streakDays ?? 0,
+                longestStreak: 0,
+                topCategories: [],
+                mostConsistent: [],
+                leastConsistent: []
+            )
+        }
+    }
+
+    // MARK: - Today's Schedule Generation
+
+    /// Generates today's scheduled doses from routines
+    private func generateTodayDoses() {
+        var doses: [TodaySupplementDose] = []
+        let calendar = Calendar.current
+        let now = Date()
+        let today = calendar.startOfDay(for: now)
+
+        // Check if it's a training day (simplified - could integrate with workout schedule)
+        let isTrainingDay = true // Default to true for now
+
+        for routine in routines where routine.isActive {
+            // Check frequency
+            let shouldSchedule: Bool
+            switch routine.frequency {
+            case .daily, .twiceDaily, .threeTimesDaily:
+                shouldSchedule = true
+            case .trainingDaysOnly:
+                shouldSchedule = isTrainingDay
+            case .weekly:
+                // Check if it's the right day of week (assume Sunday)
+                shouldSchedule = calendar.component(.weekday, from: now) == 1
+            case .asNeeded:
+                shouldSchedule = false // User manually logs
+            }
+
+            guard shouldSchedule else { continue }
+
+            // Determine number of doses based on frequency
+            let timings: [SupplementTiming]
+            switch routine.frequency {
+            case .twiceDaily:
+                timings = [.morning, .evening]
+            case .threeTimesDaily:
+                timings = [.morning, .withMeals, .evening]
+            default:
+                timings = [routine.timing]
+            }
+
+            for timing in timings {
+                var scheduledComponents = calendar.dateComponents([.year, .month, .day], from: today)
+                scheduledComponents.hour = timing.approximateHour
+                scheduledComponents.minute = 0
+                let scheduledTime = calendar.date(from: scheduledComponents) ?? now
+
+                let dose = TodaySupplementDose(
+                    id: UUID(),
+                    routineId: routine.id,
+                    supplementId: routine.supplementId,
+                    supplementName: routine.supplement?.name ?? "Unknown",
+                    brand: routine.supplement?.brand,
+                    category: routine.supplement?.category ?? .other,
+                    dosage: routine.dosage,
+                    timing: timing,
+                    scheduledTime: scheduledTime,
+                    withFood: routine.withFood,
+                    isTaken: false,
+                    takenAt: nil,
+                    logId: nil
+                )
+
+                doses.append(dose)
+            }
+        }
+
+        // Sort by scheduled time
+        todayDoses = doses.sorted { $0.scheduledTime < $1.scheduledTime }
+    }
+
+    // MARK: - Legacy Support (Original Supplement model)
+
+    /// Fetches user's supplements (legacy model)
     func fetchSupplements() async {
         isLoading = true
         error = nil
 
         do {
-            guard let patientId = try await getPatientId() else { return }
+            guard let patientId = try await getPatientId() else {
+                isLoading = false
+                return
+            }
 
             let results: [Supplement] = try await supabase.client
                 .from("supplements")
@@ -37,7 +651,7 @@ final class SupplementService: ObservableObject {
                 .value
 
             self.supplements = results
-            generateTodaySchedule()
+            generateLegacyTodaySchedule()
         } catch {
             self.error = error
             DebugLogger.shared.error("SupplementService", "Failed to fetch supplements: \(error)")
@@ -45,8 +659,6 @@ final class SupplementService: ObservableObject {
 
         isLoading = false
     }
-
-    // MARK: - Add/Update/Delete
 
     func addSupplement(_ supplement: Supplement) async throws {
         try await supabase.client
@@ -77,8 +689,6 @@ final class SupplementService: ObservableObject {
         await fetchSupplements()
     }
 
-    // MARK: - Log Taking Supplement
-
     func logSupplementTaken(_ supplement: Supplement, notes: String? = nil) async throws {
         guard let patientId = try await getPatientId() else { return }
 
@@ -92,7 +702,7 @@ final class SupplementService: ObservableObject {
         )
 
         try await supabase.client
-            .from("supplement_logs")
+            .from("patient_supplement_logs")
             .insert(log)
             .execute()
 
@@ -110,9 +720,7 @@ final class SupplementService: ObservableObject {
         }
     }
 
-    // MARK: - Schedule Generation
-
-    private func generateTodaySchedule() {
+    private func generateLegacyTodaySchedule() {
         var schedule: [ScheduledSupplement] = []
         let now = Date()
 
@@ -276,21 +884,28 @@ final class SupplementService: ObservableObject {
     // MARK: - Helpers
 
     private func getPatientId() async throws -> UUID? {
-        guard let userId = supabase.client.auth.currentUser?.id else { return nil }
+        // Check for authenticated user first
+        if let userId = supabase.client.auth.currentUser?.id {
+            struct PatientRow: Decodable {
+                let id: UUID
+            }
 
-        struct PatientRow: Decodable {
-            let id: UUID
+            let patients: [PatientRow] = try await supabase.client
+                .from("patients")
+                .select("id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1)
+                .execute()
+                .value
+
+            if let patientId = patients.first?.id {
+                return patientId
+            }
         }
 
-        let patients: [PatientRow] = try await supabase.client
-            .from("patients")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
-            .value
-
-        return patients.first?.id
+        // Fallback to demo patient for unauthenticated users (demo mode)
+        DebugLogger.shared.warning("SupplementService", "No authenticated user, using demo patient")
+        return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
     }
 }
 
@@ -300,6 +915,8 @@ enum SupplementServiceError: LocalizedError {
     case noPatientId
     case invalidResponse
     case networkError(Error)
+    case routineNotFound
+    case supplementNotFound
 
     var errorDescription: String? {
         switch self {
@@ -309,6 +926,10 @@ enum SupplementServiceError: LocalizedError {
             return "Received an invalid response from the server."
         case .networkError(let error):
             return "Network error: \(error.localizedDescription)"
+        case .routineNotFound:
+            return "The supplement routine was not found."
+        case .supplementNotFound:
+            return "The supplement was not found in the catalog."
         }
     }
 }

@@ -21,7 +21,8 @@ const corsHeaders = {
 // ============================================================================
 
 interface ParseLabPDFRequest {
-  pdf_base64: string
+  pdf_base64?: string  // Deprecated: PDFs not directly supported
+  images_base64?: string[]  // Array of page images as base64 PNG/JPEG
   filename?: string
 }
 
@@ -273,14 +274,24 @@ serve(async (req) => {
   }
 
   try {
-    const { pdf_base64, filename } = await req.json() as ParseLabPDFRequest
+    // Log request details for debugging
+    console.log(`[parse-lab-pdf] Request method: ${req.method}`)
+    console.log(`[parse-lab-pdf] Content-Type: ${req.headers.get('content-type')}`)
+    console.log(`[parse-lab-pdf] Content-Length: ${req.headers.get('content-length')}`)
 
-    // Validate required fields
-    if (!pdf_base64) {
+    let requestBody: ParseLabPDFRequest
+    try {
+      requestBody = await req.json() as ParseLabPDFRequest
+      console.log(`[parse-lab-pdf] Body parsed successfully, has pdf_base64: ${!!requestBody.pdf_base64}`)
+      if (requestBody.pdf_base64) {
+        console.log(`[parse-lab-pdf] pdf_base64 length: ${requestBody.pdf_base64.length}`)
+      }
+    } catch (parseError) {
+      console.error(`[parse-lab-pdf] JSON parse error:`, parseError)
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'pdf_base64 is required',
+          error: `Failed to parse request body: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
           biomarkers: [],
           confidence: 'low'
         } as ParseLabPDFResponse),
@@ -288,12 +299,14 @@ serve(async (req) => {
       )
     }
 
-    // Validate base64 format (basic check)
-    if (pdf_base64.length < 100) {
+    const { pdf_base64, images_base64, filename } = requestBody
+
+    // Validate required fields - need either images_base64 (preferred) or pdf_base64
+    if (!images_base64 && !pdf_base64) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Invalid PDF data - file too small',
+          error: 'images_base64 array is required. Please convert PDF pages to images before uploading.',
           biomarkers: [],
           confidence: 'low'
         } as ParseLabPDFResponse),
@@ -301,7 +314,46 @@ serve(async (req) => {
       )
     }
 
-    console.log(`[parse-lab-pdf] Processing PDF${filename ? `: ${filename}` : ''}, size: ${pdf_base64.length} chars`)
+    // If pdf_base64 is provided but not images, return error with instructions
+    if (pdf_base64 && !images_base64) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'PDF format not supported directly. Please convert PDF pages to images (PNG/JPEG) and send as images_base64 array.',
+          biomarkers: [],
+          confidence: 'low'
+        } as ParseLabPDFResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate images array
+    if (!images_base64 || images_base64.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'images_base64 array cannot be empty',
+          biomarkers: [],
+          confidence: 'low'
+        } as ParseLabPDFResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Limit number of pages
+    if (images_base64.length > 20) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Too many pages. Maximum 20 pages supported.',
+          biomarkers: [],
+          confidence: 'low'
+        } as ParseLabPDFResponse),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`[parse-lab-pdf] Processing ${images_base64.length} page(s)${filename ? ` from: ${filename}` : ''}`)
 
     // Get Anthropic API key
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY')
@@ -360,11 +412,43 @@ IMPORTANT:
 - Flags marked with "H" or "HIGH" = "high", "L" or "LOW" = "low", "C" or "CRITICAL" = "critical"
 - No flag or within range = "normal"`
 
-    const userPrompt = `Please analyze this lab result document and extract all biomarker data.
-
-Return the structured JSON with all test results, reference ranges, and flags.`
+    const userPrompt = images_base64.length === 1
+      ? `Please analyze this lab result page and extract all biomarker data. Return the structured JSON with all test results, reference ranges, and flags.`
+      : `Please analyze these ${images_base64.length} lab result pages and extract all biomarker data from ALL pages. Combine results from all pages into a single response. Return the structured JSON with all test results, reference ranges, and flags.`
 
     console.log('[parse-lab-pdf] Calling Claude Vision API...')
+
+    // Build content array with text prompt and all images
+    const contentArray: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = [
+      {
+        type: 'text',
+        text: `${systemPrompt}\n\n${userPrompt}`
+      }
+    ]
+
+    // Add each page image
+    for (let i = 0; i < images_base64.length; i++) {
+      const imageData = images_base64[i]
+      // Detect media type from base64 header or default to PNG
+      let mediaType = 'image/png'
+      if (imageData.startsWith('/9j/')) {
+        mediaType = 'image/jpeg'
+      } else if (imageData.startsWith('R0lGOD')) {
+        mediaType = 'image/gif'
+      } else if (imageData.startsWith('UklGR')) {
+        mediaType = 'image/webp'
+      }
+
+      contentArray.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
+          data: imageData,
+        },
+      })
+      console.log(`[parse-lab-pdf] Added page ${i + 1}, size: ${imageData.length} chars, type: ${mediaType}`)
+    }
 
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -375,24 +459,11 @@ Return the structured JSON with all test results, reference ranges, and flags.`
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
+        max_tokens: 8192, // Increased for multi-page results
         messages: [
           {
             role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `${systemPrompt}\n\n${userPrompt}`
-              },
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: pdf_base64,
-                },
-              }
-            ]
+            content: contentArray
           }
         ],
         temperature: 0.1, // Low temperature for accurate extraction

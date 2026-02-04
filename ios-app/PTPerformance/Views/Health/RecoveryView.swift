@@ -39,7 +39,7 @@ struct RecoveryView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.md) {
             ProgressView()
                 .scaleEffect(1.2)
             Text("Loading recovery data...")
@@ -53,7 +53,7 @@ struct RecoveryView: View {
 
     private var contentView: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: Spacing.lg) {
                 // Weekly Stats Card
                 weeklyStatsCard
 
@@ -114,7 +114,7 @@ struct RecoveryView: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
             } else {
                 insightsBuildingView
@@ -165,7 +165,7 @@ struct RecoveryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var insightsBuildingView: some View {
@@ -194,7 +194,7 @@ struct RecoveryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Empty Sessions View
@@ -224,11 +224,11 @@ struct RecoveryView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var weeklyStatsCard: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.md) {
             HStack {
                 Text("This Week")
                     .font(.headline)
@@ -259,7 +259,7 @@ struct RecoveryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var recommendationsSection: some View {
@@ -365,7 +365,7 @@ struct RecommendationCard: View {
         }
         .padding()
         .background(priorityColor.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .contain)
     }
 
@@ -394,7 +394,7 @@ struct ProtocolButton: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(protocol_.displayName)
@@ -414,20 +414,20 @@ struct RecoverySessionRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.protocolType.displayName)
                     .font(.subheadline)
-                Text(session.startTime.formatted(date: .abbreviated, time: .shortened))
+                Text(session.loggedAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
 
-            Text("\(session.duration / 60) min")
+            Text("\(session.durationMinutes) min")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(session.protocolType.displayName), \(session.startTime.formatted(date: .abbreviated, time: .shortened)), \(session.duration / 60) minutes")
+        .accessibilityLabel("\(session.protocolType.displayName), \(session.loggedAt.formatted(date: .abbreviated, time: .shortened)), \(session.durationMinutes) minutes")
     }
 }
 
@@ -452,7 +452,7 @@ struct LogRecoverySessionSheet: View {
                 }
 
                 Section("Optional Details") {
-                    if viewModel.selectedProtocol == .sauna {
+                    if viewModel.selectedProtocol.isHeatTherapy {
                         HStack {
                             Text("Temperature")
                             Spacer()
@@ -463,7 +463,7 @@ struct LogRecoverySessionSheet: View {
                         }
                     }
 
-                    if viewModel.selectedProtocol == .coldPlunge {
+                    if viewModel.selectedProtocol.isColdTherapy {
                         HStack {
                             Text("Temperature")
                             Spacer()
@@ -488,8 +488,8 @@ struct LogRecoverySessionSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        Task {
-                            await viewModel.logSession()
+                        Task { [weak viewModel] in
+                            await viewModel?.logSession()
                         }
                     }
                 }

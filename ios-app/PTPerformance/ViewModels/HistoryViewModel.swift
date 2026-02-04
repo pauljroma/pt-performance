@@ -48,6 +48,16 @@ enum WorkoutHistoryItem: Identifiable {
         return false
     }
 
+    /// The source of this workout (program, prescribed, chosen, quick_pick)
+    var sessionSource: SessionSource {
+        switch self {
+        case .prescribed:
+            return .program
+        case .manual(let workout):
+            return workout.sessionSource ?? .chosen
+        }
+    }
+
     var exerciseCount: Int? {
         switch self {
         case .prescribed(let session):
