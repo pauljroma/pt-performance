@@ -186,6 +186,8 @@ struct EnrolledProgramDetailSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = EnrolledProgramsViewModel()
+    @State private var showLeaveConfirmation = false
+    @State private var isProcessing = false
 
     var body: some View {
         NavigationStack {
@@ -207,6 +209,9 @@ struct EnrolledProgramDetailSheet: View {
                     if !enrollment.program.equipmentRequired.isEmpty {
                         equipmentSection
                     }
+
+                    // Leave Program Section
+                    leaveProgramSection
                 }
                 .padding()
             }
@@ -222,6 +227,26 @@ struct EnrolledProgramDetailSheet: View {
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+            .confirmationDialog(
+                "Leave Program",
+                isPresented: $showLeaveConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Leave Program", role: .destructive) {
+                    Task {
+                        isProcessing = true
+                        let success = await viewModel.disenrollFromProgram(enrollment)
+                        isProcessing = false
+                        if success {
+                            HapticFeedback.success()
+                            dismiss()
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to leave \"\(enrollment.program.title)\"? Your progress will be saved and you can re-enroll later.")
             }
         }
     }
@@ -459,6 +484,58 @@ struct EnrolledProgramDetailSheet: View {
         } else {
             return .purple
         }
+    }
+
+    // MARK: - Leave Program Section
+
+    private var leaveProgramSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Program Options")
+                .font(.headline)
+
+            Button {
+                HapticFeedback.warning()
+                showLeaveConfirmation = true
+            } label: {
+                HStack {
+                    Image(systemName: "door.left.hand.open")
+                        .font(.title3)
+                        .foregroundColor(.red)
+                        .frame(width: 44, height: 44)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(10)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Leave Program")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.red)
+
+                        Text("Stop participating in this program")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    if isProcessing {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(12)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+            }
+            .disabled(isProcessing)
+            .accessibilityLabel("Leave program")
+            .accessibilityHint("Double tap to stop participating in this program")
+        }
+        .padding(.top, Spacing.md)
     }
 
 }

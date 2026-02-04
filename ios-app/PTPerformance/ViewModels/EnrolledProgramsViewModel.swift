@@ -141,4 +141,50 @@ class EnrolledProgramsViewModel: ObservableObject {
 
         return progress
     }
+
+    // MARK: - Enrollment Actions
+
+    /// Disenroll (cancel) from a program
+    func disenrollFromProgram(_ enrollment: EnrollmentWithProgram) async -> Bool {
+        DebugLogger.shared.log("Disenrolling from program: \(enrollment.program.title)", level: .diagnostic)
+
+        do {
+            try await service.updateEnrollmentStatus(
+                enrollmentId: enrollment.enrollment.id,
+                status: "cancelled"
+            )
+
+            // Remove from local list
+            enrolledPrograms.removeAll { $0.id == enrollment.id }
+
+            DebugLogger.shared.log("Successfully disenrolled from program", level: .success)
+            return true
+        } catch {
+            DebugLogger.shared.log("Failed to disenroll: \(error.localizedDescription)", level: .error)
+            errorMessage = "Unable to leave program. Please try again."
+            return false
+        }
+    }
+
+    /// Pause an enrollment (can be resumed later)
+    func pauseEnrollment(_ enrollment: EnrollmentWithProgram) async -> Bool {
+        DebugLogger.shared.log("Pausing enrollment: \(enrollment.program.title)", level: .diagnostic)
+
+        do {
+            try await service.updateEnrollmentStatus(
+                enrollmentId: enrollment.enrollment.id,
+                status: "paused"
+            )
+
+            // Remove from active list (will show in paused programs)
+            enrolledPrograms.removeAll { $0.id == enrollment.id }
+
+            DebugLogger.shared.log("Successfully paused enrollment", level: .success)
+            return true
+        } catch {
+            DebugLogger.shared.log("Failed to pause enrollment: \(error.localizedDescription)", level: .error)
+            errorMessage = "Unable to pause program. Please try again."
+            return false
+        }
+    }
 }
