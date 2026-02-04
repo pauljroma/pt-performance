@@ -128,8 +128,30 @@ struct ReadinessCheckInView: View {
                     Text(viewModel.errorMessage)
                 }
                 .task {
-                    await viewModel.loadTodayEntry()
-                    // Show form immediately - don't block on HealthKit
+                    // Add timeout protection to prevent infinite spinner
+                    // If loadTodayEntry() hangs (network/RPC issues), show form after 10 seconds
+                    await withTaskGroup(of: Bool.self) { group in
+                        group.addTask {
+                            await viewModel.loadTodayEntry()
+                            return true
+                        }
+                        group.addTask {
+                            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
+                            return false
+                        }
+
+                        // Wait for first to complete
+                        if let result = await group.next() {
+                            if !result {
+                                // Timeout hit - show form with error
+                                viewModel.errorMessage = "Couldn't load your previous check-in. You can still submit a new one."
+                                viewModel.showError = true
+                            }
+                        }
+                        group.cancelAll()
+                    }
+
+                    // Show form regardless of timeout
                     isInitialLoading = false
 
                     // Load HRV baseline for trend indicator and sync today's data (non-blocking)
