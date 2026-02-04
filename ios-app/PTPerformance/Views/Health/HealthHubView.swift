@@ -31,6 +31,13 @@ struct HealthHubView: View {
                     GridItem(.flexible())
                 ], spacing: 16) {
                     HealthFeatureCard(
+                        title: "Nutrition",
+                        icon: "fork.knife",
+                        color: .green,
+                        destination: AnyView(ModusNutritionDashboardView())
+                    )
+
+                    HealthFeatureCard(
                         title: "Lab Results",
                         icon: "cross.case.fill",
                         color: .red,
@@ -47,7 +54,7 @@ struct HealthHubView: View {
                     HealthFeatureCard(
                         title: "Fasting",
                         icon: "fork.knife.circle.fill",
-                        color: .green,
+                        color: .teal,
                         destination: AnyView(FastingView())
                     )
 
@@ -253,6 +260,7 @@ struct HealthHubView: View {
                 .padding(.horizontal)
 
             VStack(alignment: .leading, spacing: 12) {
+                HealthFeatureRow(icon: "fork.knife", text: "Nutrition & Meal Tracking")
                 HealthFeatureRow(icon: "cross.case.fill", text: "Lab Results Analysis")
                 HealthFeatureRow(icon: "heart.fill", text: "Recovery Protocol Tracking")
                 HealthFeatureRow(icon: "fork.knife.circle.fill", text: "Intermittent Fasting")

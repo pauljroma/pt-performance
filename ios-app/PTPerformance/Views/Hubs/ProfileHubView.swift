@@ -157,8 +157,8 @@ struct ProfileHubView: View {
             // Nutrition
             NavigationLink {
                 premiumGatedView(
-                    premium: { NutritionTabView() },
-                    locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Meal plans, food tracking, and nutrition guidance") }
+                    premium: { ModusNutritionDashboardView() },
+                    locked: { PremiumLockedView(feature: "Nutrition", icon: "fork.knife", description: "Personalized nutrition targets, meal tracking, and portion guides") }
                 )
             } label: {
                 HStack {
@@ -173,7 +173,7 @@ struct ProfileHubView: View {
                 }
             }
             .accessibilityLabel("Nutrition" + (storeKit.isPremium ? "" : ", Premium feature"))
-            .accessibilityHint("Meal plans, food tracking, and nutrition guidance")
+            .accessibilityHint("Personalized nutrition targets, meal tracking, and portion guides")
 
             // Readiness
             if let patientIdString = supabase.userId,
