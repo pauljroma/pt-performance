@@ -1,22 +1,17 @@
 import express from 'express';
 import * as therapistService from '../services/therapist.js';
+import { requireAuthenticatedUser, requireTherapistOwnership } from '../middleware/auth.js';
 
 const router = express.Router();
+
+router.use(requireAuthenticatedUser);
+router.use('/:therapistId', requireTherapistOwnership);
 
 /**
  * GET /therapist/:therapistId/patients
  * Search and filter patients for a therapist
- *
- * Query params:
- * - search: string (search by name or email)
- * - sport: string (filter by sport)
- * - position: string (filter by position)
- * - flagSeverity: 'HIGH' | 'MEDIUM' | 'LOW' (filter by flag severity)
- * - hasFlags: boolean (filter patients with/without flags)
- * - minAdherence: number (minimum adherence percentage)
- * - maxAdherence: number (maximum adherence percentage)
  */
-router.get('/:therapistId/patients', async (req, res) => {
+router.get('/:therapistId/patients', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
         const {
@@ -26,7 +21,7 @@ router.get('/:therapistId/patients', async (req, res) => {
             flagSeverity,
             hasFlags,
             minAdherence,
-            maxAdherence
+            maxAdherence,
         } = req.query;
 
         const filters = {
@@ -37,7 +32,7 @@ router.get('/:therapistId/patients', async (req, res) => {
             flagSeverity: flagSeverity || null,
             hasFlags: hasFlags === 'true' ? true : hasFlags === 'false' ? false : null,
             minAdherence: minAdherence ? parseFloat(minAdherence) : null,
-            maxAdherence: maxAdherence ? parseFloat(maxAdherence) : null
+            maxAdherence: maxAdherence ? parseFloat(maxAdherence) : null,
         };
 
         const patients = await therapistService.searchPatients(filters);
@@ -45,14 +40,10 @@ router.get('/:therapistId/patients', async (req, res) => {
         res.json({
             success: true,
             count: patients.length,
-            patients
+            patients,
         });
     } catch (error) {
-        console.error('Error searching patients:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
@@ -60,7 +51,7 @@ router.get('/:therapistId/patients', async (req, res) => {
  * GET /therapist/:therapistId/dashboard
  * Get therapist dashboard summary
  */
-router.get('/:therapistId/dashboard', async (req, res) => {
+router.get('/:therapistId/dashboard', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
 
@@ -68,14 +59,10 @@ router.get('/:therapistId/dashboard', async (req, res) => {
 
         res.json({
             success: true,
-            dashboard
+            dashboard,
         });
     } catch (error) {
-        console.error('Error fetching dashboard:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
@@ -83,7 +70,7 @@ router.get('/:therapistId/dashboard', async (req, res) => {
  * GET /therapist/:therapistId/alerts
  * Get high priority patient alerts
  */
-router.get('/:therapistId/alerts', async (req, res) => {
+router.get('/:therapistId/alerts', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
 
@@ -92,14 +79,10 @@ router.get('/:therapistId/alerts', async (req, res) => {
         res.json({
             success: true,
             count: alerts.length,
-            alerts
+            alerts,
         });
     } catch (error) {
-        console.error('Error fetching alerts:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
