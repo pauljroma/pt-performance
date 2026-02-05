@@ -42,7 +42,7 @@ struct EnrolledProgramsSection: View {
             }
         }
         .sheet(item: $selectedEnrollment) { enrollment in
-            EnrolledProgramDetailSheet(enrollment: enrollment)
+            EnrolledProgramDetailSheet(enrollment: enrollment, viewModel: viewModel)
         }
         .task {
             await viewModel.loadEnrolledPrograms()
@@ -183,11 +183,23 @@ struct EnrolledProgramCard: View {
 
 struct EnrolledProgramDetailSheet: View {
     let enrollment: EnrollmentWithProgram
+    @ObservedObject var viewModel: EnrolledProgramsViewModel
 
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var viewModel = EnrolledProgramsViewModel()
     @State private var showLeaveConfirmation = false
     @State private var isProcessing = false
+
+    /// Convenience initializer for contexts without a shared viewModel
+    init(enrollment: EnrollmentWithProgram) {
+        self.enrollment = enrollment
+        self._viewModel = ObservedObject(wrappedValue: EnrolledProgramsViewModel())
+    }
+
+    /// Initializer with shared viewModel for proper refresh after unenroll
+    init(enrollment: EnrollmentWithProgram, viewModel: EnrolledProgramsViewModel) {
+        self.enrollment = enrollment
+        self._viewModel = ObservedObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         NavigationStack {

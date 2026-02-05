@@ -434,6 +434,7 @@ struct RecoverySessionRow: View {
 struct LogRecoverySessionSheet: View {
     @ObservedObject var viewModel: RecoveryViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var isSaving = false
 
     var body: some View {
         NavigationStack {
@@ -479,19 +480,40 @@ struct LogRecoverySessionSheet: View {
                     TextField("Notes", text: $viewModel.logNotes, axis: .vertical)
                         .lineLimit(3...6)
                 }
+
+                // Show error if any
+                if let error = viewModel.error {
+                    Section {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+                }
             }
             .navigationTitle("Log Session")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        Task { [weak viewModel] in
-                            await viewModel?.logSession()
+                    Button {
+                        isSaving = true
+                        Task {
+                            await viewModel.logSession()
+                            isSaving = false
+                            // Dismiss happens via viewModel.showingLogSheet = false
+                        }
+                    } label: {
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Save")
                         }
                     }
+                    .disabled(isSaving)
                 }
             }
         }

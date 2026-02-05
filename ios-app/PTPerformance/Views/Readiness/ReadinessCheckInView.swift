@@ -77,116 +77,102 @@ struct ReadinessCheckInView: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .navigationTitle("Daily Check-In")
-                    .navigationBarTitleDisplayMode(.large)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                dismiss()
-                            }
-                        }
-                    }
                 } else {
                     // Main content
                     Form {
                         quickFillSection
 
-                    // Data from Apple Watch badge
-                    if wasAutoFilled {
-                        HStack {
-                            Image(systemName: "applewatch")
-                            Text("Data from Apple Watch")
-                        }
-                        .font(.caption)
-                        .foregroundColor(.green)
-                        .padding(.horizontal)
-                        .listRowBackground(Color.clear)
-                    }
-
-                    headerSection
-                    sleepSection
-                    sorenessSection
-                    energySection
-                    stressSection
-                    notesSection
-                    scorePreviewSection
-                    submitSection
-                }
-                .navigationTitle("Daily Check-In")
-                .navigationBarTitleDisplayMode(.large)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                        .accessibilityLabel("Cancel check-in")
-                        .accessibilityHint("Closes check-in form without saving")
-                    }
-                }
-                .disabled(viewModel.isLoading)
-                .alert("Error", isPresented: $viewModel.showError) {
-                    Button("OK", role: .cancel) { }
-                } message: {
-                    Text(viewModel.errorMessage)
-                }
-                .task {
-                    // Add timeout protection to prevent infinite spinner
-                    // If loadTodayEntry() hangs (network/RPC issues), show form after 10 seconds
-                    await withTaskGroup(of: Bool.self) { group in
-                        group.addTask {
-                            await viewModel.loadTodayEntry()
-                            return true
-                        }
-                        group.addTask {
-                            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
-                            return false
-                        }
-
-                        // Wait for first to complete
-                        if let result = await group.next() {
-                            if !result {
-                                // Timeout hit - show form with error
-                                viewModel.errorMessage = "Couldn't load your previous check-in. You can still submit a new one."
-                                viewModel.showError = true
+                        // Data from Apple Watch badge
+                        if wasAutoFilled {
+                            HStack {
+                                Image(systemName: "applewatch")
+                                Text("Data from Apple Watch")
                             }
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .padding(.horizontal)
+                            .listRowBackground(Color.clear)
                         }
-                        group.cancelAll()
+
+                        headerSection
+                        sleepSection
+                        sorenessSection
+                        energySection
+                        stressSection
+                        notesSection
+                        scorePreviewSection
+                        submitSection
                     }
-
-                    // Show form regardless of timeout
-                    isInitialLoading = false
-                }
-                .task {
-                    // Load HealthKit data in separate task (truly non-blocking)
-                    // This runs independently after view appears
-                    guard HealthKitService.isHealthKitAvailable else { return }
-
-                    let service = HealthKitService.shared
-                    healthKitIsAuthorized = service.isAuthorized
-
-                    if service.isAuthorized {
-                        // Sync HealthKit data with timeout
-                        do {
-                            async let baselineTask = service.getHRVBaseline()
-                            async let syncTask = service.syncTodayData()
-
-                            hrvBaseline = try? await baselineTask
-                            let data = try? await syncTask
-
-                            // Update local state from service
-                            todayHRV = service.todayHRV
-                            todaySleep = service.todaySleep
-                        }
+                    .disabled(viewModel.isLoading)
+                    .sheet(isPresented: $showHealthKitPrompt) {
+                        HealthKitAuthorizationView()
                     }
-                }
-                .sheet(isPresented: $showHealthKitPrompt) {
-                    HealthKitAuthorizationView()
-                }
                 }
 
                 // Success overlay
                 if viewModel.showSuccess {
                     successOverlay
+                }
+            }
+            .navigationTitle("Daily Check-In")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .accessibilityLabel("Cancel check-in")
+                    .accessibilityHint("Closes check-in form without saving")
+                }
+            }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage)
+            }
+            .task {
+                // Load readiness data with timeout protection
+                await withTaskGroup(of: Bool.self) { group in
+                    group.addTask {
+                        await viewModel.loadTodayEntry()
+                        return true
+                    }
+                    group.addTask {
+                        try? await Task.sleep(nanoseconds: 10_000_000_000) // 10 second timeout
+                        return false
+                    }
+
+                    // Wait for first to complete
+                    if let result = await group.next() {
+                        if !result {
+                            // Timeout hit - show form with error
+                            viewModel.errorMessage = "Couldn't load your previous check-in. You can still submit a new one."
+                            viewModel.showError = true
+                        }
+                    }
+                    group.cancelAll()
+                }
+
+                // Show form regardless of timeout
+                isInitialLoading = false
+            }
+            .task {
+                // Load HealthKit data in separate non-blocking task
+                guard HealthKitService.isHealthKitAvailable else { return }
+
+                let service = HealthKitService.shared
+                healthKitIsAuthorized = service.isAuthorized
+
+                if service.isAuthorized {
+                    async let baselineTask = service.getHRVBaseline()
+                    async let syncTask = service.syncTodayData()
+
+                    hrvBaseline = try? await baselineTask
+                    _ = try? await syncTask
+
+                    // Update local state from service
+                    todayHRV = service.todayHRV
+                    todaySleep = service.todaySleep
                 }
             }
         }
