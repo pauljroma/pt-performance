@@ -26,32 +26,96 @@ final class HealthScoreService: ObservableObject {
 
     // MARK: - Fetch Score
 
+    /// Model matching the v_patient_health_score database view
+    private struct DatabaseHealthScore: Decodable {
+        let patientId: UUID
+        let healthScore: Double?
+        let healthStatus: String?
+        let labScore: Double?
+        let recoverySaunaScore: Double?
+        let recoveryColdScore: Double?
+        let fastingScore: Double?
+        let supplementScore: Double?
+        let calculatedAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case patientId = "patient_id"
+            case healthScore = "health_score"
+            case healthStatus = "health_status"
+            case labScore = "lab_score"
+            case recoverySaunaScore = "recovery_sauna_score"
+            case recoveryColdScore = "recovery_cold_score"
+            case fastingScore = "fasting_score"
+            case supplementScore = "supplement_score"
+            case calculatedAt = "calculated_at"
+        }
+    }
+
     func fetchHealthScore() async {
         isLoading = true
         error = nil
 
         do {
-            guard let patientId = try await getPatientId() else { return }
+            guard let patientId = try await getPatientId() else {
+                isLoading = false
+                return
+            }
 
-            // Fetch latest scores
-            let scores: [HealthScore] = try await supabase.client
-                .from("health_scores")
+            // Fetch from the v_patient_health_score view
+            let dbScores: [DatabaseHealthScore] = try await supabase.client
+                .from("v_patient_health_score")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
-                .order("date", ascending: false)
-                .limit(30)
+                .limit(1)
                 .execute()
                 .value
 
-            self.scoreHistory = scores
-            self.currentScore = scores.first
+            if let dbScore = dbScores.first {
+                // Convert database view result to HealthScore model
+                let overallScore = Int(dbScore.healthScore ?? 0)
+                let labScore = Int(dbScore.labScore ?? 70)
+                let recoveryScore = Int(((dbScore.recoverySaunaScore ?? 0) + (dbScore.recoveryColdScore ?? 0)) / 2)
+                let fastingScore = Int(dbScore.fastingScore ?? 70)
+                let supplementScore = Int(dbScore.supplementScore ?? 70)
 
-            if let current = currentScore {
-                self.insights = current.insights
+                let breakdown = [
+                    HealthScoreComponent(id: UUID(), category: "Labs", score: labScore, weight: 0.30, trend: .stable),
+                    HealthScoreComponent(id: UUID(), category: "Recovery", score: recoveryScore, weight: 0.25, trend: .stable),
+                    HealthScoreComponent(id: UUID(), category: "Fasting", score: fastingScore, weight: 0.20, trend: .stable),
+                    HealthScoreComponent(id: UUID(), category: "Supplements", score: supplementScore, weight: 0.25, trend: .stable)
+                ]
+
+                let generatedInsights = generateInsights(from: breakdown)
+
+                let healthScore = HealthScore(
+                    id: UUID(),
+                    patientId: patientId,
+                    date: dbScore.calculatedAt ?? Date(),
+                    overallScore: overallScore,
+                    sleepScore: 70, // Not in DB view, use baseline
+                    recoveryScore: recoveryScore,
+                    nutritionScore: fastingScore, // Use fasting as proxy
+                    activityScore: 70, // Not in DB view, use baseline
+                    stressScore: 70, // Not in DB view, use baseline
+                    breakdown: breakdown,
+                    insights: generatedInsights,
+                    createdAt: dbScore.calculatedAt ?? Date()
+                )
+
+                self.currentScore = healthScore
+                self.scoreHistory = [healthScore]
+                self.insights = generatedInsights
+
+                DebugLogger.shared.info("HealthScoreService", "Fetched health score: \(overallScore) (\(dbScore.healthStatus ?? "unknown"))")
+            } else {
+                // No score in database, calculate locally
+                DebugLogger.shared.info("HealthScoreService", "No health score in database, calculating locally")
+                await calculateTodayScore()
             }
         } catch {
-            self.error = error
-            DebugLogger.shared.error("HealthScoreService", "Failed to fetch health score: \(error)")
+            // If view doesn't exist or fetch fails, fall back to local calculation
+            DebugLogger.shared.warning("HealthScoreService", "Failed to fetch from database, using local calculation: \(error.localizedDescription)")
+            await calculateTodayScore()
         }
 
         isLoading = false

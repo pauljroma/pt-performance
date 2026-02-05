@@ -258,6 +258,7 @@
 		639C98BF86F1AFC61D9920CF /* ProgramEnrollment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40C8569E4039CA6852D5C6B /* ProgramEnrollment.swift */; };
 		643B46EC9B88A45D6FDF0B66 /* ProgramComparisonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892C87BABCC1B2D2A6B17B91 /* ProgramComparisonSheet.swift */; };
 		6440121C328237292B5CB8BD /* TherapistProgramsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE38AAE80A52BD55E6D8D2 /* TherapistProgramsView.swift */; };
+		64467E53199864E32787720A /* SetNewPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E1B27DF4AB609DE125C6B6 /* SetNewPasswordView.swift */; };
 		65078CA3C6AB7953586B1B29 /* WhyThisExerciseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A08B74AC2107EB8147BCA7 /* WhyThisExerciseCard.swift */; };
 		660FB52BFEA87CD85AB50CC8 /* SupabaseContentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F52D74C44B046BB2C55F7C3 /* SupabaseContentModels.swift */; };
 		6686AACE23156587F4529C51 /* BaseballPackLockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9060B114D5D2210860E70D18 /* BaseballPackLockedView.swift */; };
@@ -1201,6 +1202,7 @@
 		F009CFB2245B175357450EBC /* FoodPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodPickerView.swift; path = Views/Nutrition/FoodPickerView.swift; sourceTree = "<group>"; };
 		F064A7082F5926EC81ED1A08 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F0C94BF4EA13C3A376111DC7 /* BaseballPackPromoCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BaseballPackPromoCard.swift; path = Views/Baseball/BaseballPackPromoCard.swift; sourceTree = "<group>"; };
+		F0E1B27DF4AB609DE125C6B6 /* SetNewPasswordView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SetNewPasswordView.swift; path = Views/Auth/SetNewPasswordView.swift; sourceTree = "<group>"; };
 		F0FE8395F6E1076EB31A86DC /* ReadinessIntelligenceViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessIntelligenceViewModel.swift; path = ViewModels/ReadinessIntelligenceViewModel.swift; sourceTree = "<group>"; };
 		F10EA35EA369C1325C88EAD8 /* BodyCompositionViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModels/BodyCompositionViewModel.swift; sourceTree = "<group>"; };
 		F1A36B849F60BD468951A818 /* PatientProgressReportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientProgressReportView.swift; path = ../Views/Therapist/PatientProgressReportView.swift; sourceTree = "<group>"; };
@@ -2484,6 +2486,7 @@
 				A9EB3DE4F5D91A12BB2F5CA3 /* RegistrationView.swift */,
 				C5C1AC4F421D26EBBD7004B5 /* EmailSignInView.swift */,
 				539700247DDC3054E3613552 /* PasswordResetView.swift */,
+				F0E1B27DF4AB609DE125C6B6 /* SetNewPasswordView.swift */,
 			);
 			name = Auth;
 			sourceTree = "<group>";
@@ -3325,6 +3328,7 @@
 				DD1FC77674374EA47D49B89A /* AdaptiveTrainingService.swift in Sources */,
 				F1B4C98E6183F3C92393602E /* WorkoutModification.swift in Sources */,
 				19096F7E7A96F6D78EAEA416 /* WorkoutModificationCard.swift in Sources */,
+				64467E53199864E32787720A /* SetNewPasswordView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

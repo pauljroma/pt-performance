@@ -311,6 +311,10 @@ struct PTPerformanceApp: App {
                         appState.pendingDeepLink = destination
                     }
                 }
+                .fullScreenCover(isPresented: $appState.showSetNewPassword) {
+                    SetNewPasswordView()
+                        .environmentObject(appState)
+                }
         }
     }
 
@@ -333,14 +337,58 @@ struct PTPerformanceApp: App {
             return
         }
 
-        // Handle auth deep links (e.g., password reset: modus://reset-password#access_token=...)
+        // Handle auth deep links
+        // modus://auth - Magic link login (just logs user in)
+        // modus://reset-password - Legacy password reset (shows password form)
+        let isMagicLink = url.host == "auth"
+        let isPasswordReset = url.host == "reset-password"
+
+        if isPasswordReset {
+            // Legacy password reset - show password change form
+            appState.showSetNewPassword = true
+            appState.pendingPasswordResetURL = url
+            DebugLogger.shared.info("PTPerformanceApp", "Password reset deep link detected, showing Set New Password view")
+            return
+        }
+
+        if isMagicLink {
+            // Magic link - just log the user in directly (no password form needed)
+            DebugLogger.shared.info("PTPerformanceApp", "Magic link detected, logging user in...")
+
+            Task {
+                do {
+                    let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
+
+                    await MainActor.run {
+                        appState.userId = session.user.id.uuidString
+                        appState.isAuthenticated = true
+                    }
+
+                    await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
+                    await MainActor.run {
+                        if let role = PTSupabaseClient.shared.userRole {
+                            appState.userRole = role
+                        }
+                    }
+
+                    DebugLogger.shared.success("PTPerformanceApp", "Magic link login successful for user: \(session.user.id)")
+                } catch {
+                    DebugLogger.shared.error("PTPerformanceApp", "Magic link login failed: \(error.localizedDescription)")
+                }
+            }
+            return
+        }
+
+        // Other auth deep link handling
         Task {
             do {
                 let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
+
                 await MainActor.run {
-                    appState.isAuthenticated = true
                     appState.userId = session.user.id.uuidString
+                    appState.isAuthenticated = true
                 }
+
                 await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
                 await MainActor.run {
                     if let role = PTSupabaseClient.shared.userRole {
@@ -390,6 +438,12 @@ final class AppState: ObservableObject {
     /// Pending deep link destination from widget tap or URL scheme
     /// Views should observe this and navigate accordingly, then set to nil
     @Published var pendingDeepLink: DeepLinkDestination? = nil
+
+    /// Flag to show the Set New Password view after a password reset deep link
+    @Published var showSetNewPassword = false
+
+    /// The password reset URL to process (contains access token)
+    @Published var pendingPasswordResetURL: URL?
 
     /// Update Sentry user context when authentication state changes
     private func updateUserContext() {

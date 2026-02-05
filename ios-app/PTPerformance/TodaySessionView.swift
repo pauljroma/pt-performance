@@ -661,35 +661,46 @@ struct TodaySessionView: View {
 
     @ViewBuilder
     private var noSessionView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "calendar.badge.checkmark")
-                .font(.system(size: 64))
-                .foregroundColor(.green)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Show completed workouts even when no prescribed session
+                if viewModel.completedTodayCount > 0 {
+                    CompletedWorkoutsSection(
+                        completedCount: viewModel.completedTodayCount,
+                        completedWorkouts: viewModel.todaysCompletedWorkouts
+                    )
+                    .padding(.bottom, 8)
+                }
 
-            Text("No Prescribed Session Today")
-                .font(.headline)
+                Image(systemName: "calendar.badge.checkmark")
+                    .font(.system(size: 64))
+                    .foregroundColor(.green)
 
-            Text("Great job staying on track! You can rest today, or start a manual workout from the library if you're feeling motivated.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignTokens.spacingXLarge)
-
-            Button {
-                HapticFeedback.light()
-                showTemplateLibrary = true
-            } label: {
-                Label("Browse Workout Library", systemImage: "books.vertical")
+                Text("No Prescribed Session Today")
                     .font(.headline)
-                    .foregroundColor(.white)
+
+                Text("Great job staying on track! You can rest today, or start a manual workout from the library if you're feeling motivated.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
                     .padding(.horizontal, DesignTokens.spacingXLarge)
-                    .padding(.vertical, DesignTokens.spacingMedium)
-                    .background(Color.blue)
-                    .cornerRadius(DesignTokens.cornerRadiusMedium)
+
+                Button {
+                    HapticFeedback.light()
+                    showTemplateLibrary = true
+                } label: {
+                    Label("Browse Workout Library", systemImage: "books.vertical")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, DesignTokens.spacingXLarge)
+                        .padding(.vertical, DesignTokens.spacingMedium)
+                        .background(Color.blue)
+                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
+            .padding()
         }
-        .padding()
     }
 
     private var placeholderDetailView: some View {

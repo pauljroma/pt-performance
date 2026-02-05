@@ -2,7 +2,7 @@
 //  PasswordResetView.swift
 //  PTPerformance
 //
-//  Auth redesign: Simple password reset request form
+//  Auth redesign: Magic link login form (simpler than password reset)
 //
 
 import SwiftUI
@@ -22,7 +22,7 @@ struct PasswordResetView: View {
         Form {
             // MARK: - Instructions
             Section {
-                Text("Enter the email address associated with your account and we'll send you a link to reset your password.")
+                Text("Enter your email address and we'll send you a magic link to sign back in. No password needed!")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -59,11 +59,11 @@ struct PasswordResetView: View {
                 }
             }
 
-            // MARK: - Send Reset Link Button
+            // MARK: - Send Magic Link Button
             Section {
                 Button(action: {
                     Task {
-                        await sendResetLink()
+                        await sendMagicLink()
                     }
                 }) {
                     HStack {
@@ -74,29 +74,29 @@ struct PasswordResetView: View {
                                 .padding(.trailing, 8)
                                 .accessibilityHidden(true)
                         }
-                        Text("Send Reset Link")
+                        Text("Send Magic Link")
                             .font(.body.weight(.semibold))
                         Spacer()
                     }
                 }
                 .disabled(!isEmailValid || isLoading || showConfirmation)
-                .accessibilityLabel(isLoading ? "Sending reset link" : "Send Reset Link")
-                .accessibilityHint(isEmailValid ? "Send a password reset link to your email" : "Enter a valid email address first")
+                .accessibilityLabel(isLoading ? "Sending magic link" : "Send Magic Link")
+                .accessibilityHint(isEmailValid ? "Send a sign-in link to your email" : "Enter a valid email address first")
             }
 
             // MARK: - Confirmation
             if showConfirmation {
                 Section {
                     VStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: "paperplane.circle.fill")
                             .font(.title)
                             .foregroundColor(.green)
                             .accessibilityHidden(true)
 
-                        Text("Reset link sent!")
+                        Text("Magic link sent!")
                             .font(.headline)
 
-                        Text("Check your email at \(email) for a link to reset your password. It may take a few minutes to arrive.")
+                        Text("Check your email at \(email) for a link to sign in. Just tap the link and you'll be logged in automatically.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -104,7 +104,7 @@ struct PasswordResetView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Reset link sent. Check your email at \(email) for a link to reset your password.")
+                    .accessibilityLabel("Magic link sent. Check your email at \(email) for a link to sign in.")
                 }
             }
 
@@ -123,7 +123,7 @@ struct PasswordResetView: View {
                 }
             }
         }
-        .navigationTitle("Reset Password")
+        .navigationTitle("Sign In with Email")
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -134,14 +134,14 @@ struct PasswordResetView: View {
         return emailValidation?.isValid ?? false
     }
 
-    // MARK: - Send Reset Link
+    // MARK: - Send Magic Link
 
-    private func sendResetLink() async {
+    private func sendMagicLink() async {
         isLoading = true
         errorMessage = nil
 
         do {
-            try await PTSupabaseClient.shared.resetPassword(
+            try await PTSupabaseClient.shared.sendMagicLink(
                 email: email.trimmingCharacters(in: .whitespacesAndNewlines)
             )
 
@@ -151,7 +151,7 @@ struct PasswordResetView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to send reset link: \(error.localizedDescription)"
+                errorMessage = "Failed to send magic link: \(error.localizedDescription)"
                 isLoading = false
             }
         }

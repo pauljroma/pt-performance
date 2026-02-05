@@ -10,7 +10,12 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if isCheckingSession {
+            // Password reset flow takes priority - don't show normal UI
+            if appState.showSetNewPassword {
+                // SetNewPasswordView is shown via fullScreenCover in PTPerformanceApp
+                // Show minimal placeholder while cover appears
+                Color.clear
+            } else if isCheckingSession {
                 // ACP-932: Show minimal loading while restoring session
                 // Keep this view lightweight to reduce initial render time
                 ProgressView()
@@ -57,6 +62,15 @@ struct RootView: View {
     /// ACP-932: Restore existing Supabase session on app launch
     /// Optimized to minimize time to first meaningful paint
     private func restoreSession() async {
+        // Skip normal session restore during password reset flow
+        // SetNewPasswordView handles its own authentication
+        if appState.showSetNewPassword {
+            await MainActor.run {
+                isCheckingSession = false
+            }
+            return
+        }
+
         let supabase = PTSupabaseClient.shared
 
         do {
@@ -68,9 +82,25 @@ struct RootView: View {
                 supabase.currentUser = session.user
             }
 
+            // Check again if password reset started during session fetch
+            if appState.showSetNewPassword {
+                await MainActor.run {
+                    isCheckingSession = false
+                }
+                return
+            }
+
             // ACP-932: Fetch role and update UI state in parallel where possible
             async let roleTask: () = supabase.fetchUserRole(userId: session.user.id.uuidString)
             await roleTask
+
+            // Final check before updating auth state - password reset takes priority
+            if appState.showSetNewPassword {
+                await MainActor.run {
+                    isCheckingSession = false
+                }
+                return
+            }
 
             // Update UI state as soon as role is known
             await MainActor.run {

@@ -393,18 +393,38 @@ class PTSupabaseClient: ObservableObject {
         _ = try await client.functions.invoke("register-patient", options: .init(body: body))
     }
 
-    /// Sends a password reset email to the specified address
+    /// Sends a magic link email to log the user back in
     ///
-    /// - Parameter email: The email address to send the reset link to
+    /// - Parameter email: The email address to send the magic link to
     ///
     /// - Throws: Supabase authentication errors if the request fails
     ///
-    /// - Note: The reset link redirects to `modus://reset-password`
+    /// - Note: The magic link redirects to `modus://auth` and logs user in directly
+    func sendMagicLink(email: String) async throws {
+        try await client.auth.signInWithOTP(
+            email: email,
+            redirectTo: URL(string: "modus://auth")
+        )
+    }
+
+    /// Legacy password reset - sends a password reset email
+    /// Use sendMagicLink() instead for simpler login flow
     func resetPassword(email: String) async throws {
         try await client.auth.resetPasswordForEmail(
             email,
             redirectTo: URL(string: "modus://reset-password")
         )
+    }
+
+    /// Updates the current user's password
+    ///
+    /// - Parameter newPassword: The new password to set
+    ///
+    /// - Throws: Supabase authentication errors if the update fails
+    ///
+    /// - Note: User must be authenticated (via password reset link session) before calling
+    func updatePassword(newPassword: String) async throws {
+        try await client.auth.update(user: .init(password: newPassword))
     }
 
     /// Sign out
