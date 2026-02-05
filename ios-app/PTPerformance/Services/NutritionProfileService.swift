@@ -228,12 +228,14 @@ class NutritionProfileService: ObservableObject {
 
     /// Fetch nutrition profile for current user
     func fetchProfile() async throws -> NutritionProfile? {
-        guard let userId = supabase.userId else {
+        // Use auth user ID directly from Supabase session, not the patient record ID
+        guard let authUserId = supabase.client.auth.currentUser?.id else {
             logger.warning("NutritionProfileService", "No user logged in - cannot fetch profile")
             return nil
         }
+        let userId = authUserId.uuidString
 
-        logger.diagnostic("NutritionProfileService: Fetching profile for user: \(userId)")
+        logger.diagnostic("NutritionProfileService: Fetching profile for auth user: \(userId)")
         isLoading = true
         error = nil
         defer { isLoading = false }
@@ -333,8 +335,8 @@ class NutritionProfileService: ObservableObject {
         activityLevel: ActivityLevel,
         goal: NutritionGoalType
     ) async throws -> NutritionProfile {
-        guard let userIdString = supabase.userId,
-              let userId = UUID(uuidString: userIdString) else {
+        // Use auth user ID directly from Supabase session, not the patient record ID
+        guard let userId = supabase.client.auth.currentUser?.id else {
             throw NSError(domain: "NutritionProfileService", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not logged in"])
         }
 

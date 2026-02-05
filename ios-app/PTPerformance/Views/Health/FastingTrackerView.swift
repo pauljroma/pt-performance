@@ -81,6 +81,16 @@ struct FastingTrackerView: View {
                     showingEndFastSheet = false
                 }
             }
+            .alert("Error", isPresented: .init(
+                get: { viewModel.error != nil },
+                set: { if !$0 { viewModel.error = nil } }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                if let error = viewModel.error {
+                    Text(error)
+                }
+            }
             .task {
                 await viewModel.loadData()
             }
@@ -167,8 +177,14 @@ struct FastingTrackerView: View {
             }
         } label: {
             HStack(spacing: Spacing.sm) {
-                Image(systemName: viewModel.isFasting ? "stop.circle.fill" : "play.circle.fill")
-                    .font(.title2)
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.9)
+                } else {
+                    Image(systemName: viewModel.isFasting ? "stop.circle.fill" : "play.circle.fill")
+                        .font(.title2)
+                }
                 Text(viewModel.isFasting ? "End Fast" : "Start Fast")
                     .font(.headline)
             }
@@ -183,6 +199,7 @@ struct FastingTrackerView: View {
             .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
+        .disabled(viewModel.isLoading)
         .shadow(color: (viewModel.isFasting ? Color.orange : Color.modusCyan).opacity(0.3), radius: 8, x: 0, y: 4)
     }
 
@@ -373,6 +390,7 @@ private struct EndFastSheetView: View {
     @State private var moodEnd: Int = 5
     @State private var hungerLevel: Int = 5
     @State private var notes: String = ""
+    @State private var isSaving = false
 
     var body: some View {
         NavigationStack {
@@ -406,6 +424,15 @@ private struct EndFastSheetView: View {
                     TextField("Any observations? (optional)", text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
+
+                // Show error if any
+                if let error = viewModel.error {
+                    Section {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+                }
             }
             .navigationTitle("End Fast")
             .navigationBarTitleDisplayMode(.inline)
@@ -414,9 +441,11 @@ private struct EndFastSheetView: View {
                     Button("Cancel") {
                         onDismiss()
                     }
+                    .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Complete") {
+                    Button {
+                        isSaving = true
                         Task {
                             await viewModel.endFast(
                                 energyLevel: energyLevel,
@@ -424,10 +453,22 @@ private struct EndFastSheetView: View {
                                 moodEnd: moodEnd,
                                 hungerLevel: hungerLevel
                             )
-                            onDismiss()
+                            isSaving = false
+                            // Only dismiss if there was no error
+                            if viewModel.error == nil {
+                                onDismiss()
+                            }
+                        }
+                    } label: {
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Complete")
                         }
                     }
                     .fontWeight(.semibold)
+                    .disabled(isSaving)
                 }
             }
         }

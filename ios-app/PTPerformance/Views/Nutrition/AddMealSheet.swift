@@ -111,9 +111,16 @@ struct AddMealSheet: View {
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
+                Button {
                     Task {
                         await saveMeal()
+                    }
+                } label: {
+                    if isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Save")
                     }
                 }
                 .disabled(isSaving)

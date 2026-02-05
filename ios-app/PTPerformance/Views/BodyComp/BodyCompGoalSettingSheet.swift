@@ -112,8 +112,15 @@ struct BodyCompGoalSettingSheet: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button {
                         saveGoals()
+                    } label: {
+                        if viewModel.isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Save")
+                        }
                     }
                     .disabled(!hasValidGoal || viewModel.isSaving)
                     .fontWeight(.semibold)
@@ -123,6 +130,16 @@ struct BodyCompGoalSettingSheet: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(validationMessage)
+            }
+            .alert("Error", isPresented: .init(
+                get: { viewModel.error != nil },
+                set: { if !$0 { viewModel.error = nil } }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                if let error = viewModel.error {
+                    Text(error.localizedDescription)
+                }
             }
             .onAppear {
                 populateExistingGoals()

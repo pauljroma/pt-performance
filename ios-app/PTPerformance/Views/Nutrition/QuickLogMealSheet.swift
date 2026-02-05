@@ -99,9 +99,16 @@ struct QuickLogMealSheet: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button {
                         Task {
                             await saveMealLog()
+                        }
+                    } label: {
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Save")
                         }
                     }
                     .disabled(selectedFoods.isEmpty || isSaving)

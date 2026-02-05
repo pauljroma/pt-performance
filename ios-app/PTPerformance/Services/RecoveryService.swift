@@ -543,22 +543,32 @@ final class RecoveryService: ObservableObject {
 
     // MARK: - Helpers
 
-    private func getPatientId() async throws -> UUID? {
-        guard let userId = supabase.client.auth.currentUser?.id else { return nil }
+    /// Demo patient ID for unauthenticated testing
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
-        struct PatientRow: Decodable {
-            let id: UUID
+    private func getPatientId() async throws -> UUID? {
+        // Check for authenticated user first
+        if let userId = supabase.client.auth.currentUser?.id {
+            struct PatientRow: Decodable {
+                let id: UUID
+            }
+
+            let patients: [PatientRow] = try await supabase.client
+                .from("patients")
+                .select("id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1)
+                .execute()
+                .value
+
+            if let patientId = patients.first?.id {
+                return patientId
+            }
         }
 
-        let patients: [PatientRow] = try await supabase.client
-            .from("patients")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
-            .value
-
-        return patients.first?.id
+        // Fallback to demo patient for unauthenticated users (demo mode)
+        DebugLogger.shared.warning("RecoveryService", "No authenticated user, using demo patient")
+        return demoPatientId
     }
 }
 

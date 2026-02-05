@@ -237,9 +237,16 @@ struct ShoulderROMEntry: View {
             }
 
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
+                Button {
                     Task {
                         await saveMeasurement()
+                    }
+                } label: {
+                    if viewModel.isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Save")
                     }
                 }
                 .disabled(viewModel.isSaving)
