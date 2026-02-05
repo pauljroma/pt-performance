@@ -3,7 +3,6 @@ import { config } from '../config.js';
 
 const supabase = createClient(config.supabase.url, config.supabase.serviceKey);
 
-
 function sanitizeSearchTerm(value) {
     return String(value)
         .replace(/[,%()]/g, ' ')
@@ -11,16 +10,9 @@ function sanitizeSearchTerm(value) {
         .replace(/\s+/g, ' ');
 }
 
-function buildPatientMetrics(patients, adherenceRows, sessionsRows) {
+function buildPatientMetrics(patients, adherenceRows, latestSessionsByPatientRows) {
     const adherenceByPatientId = new Map((adherenceRows || []).map((row) => [row.patient_id, row]));
-    const latestSessionByPatientId = new Map();
-
-    for (const session of sessionsRows || []) {
-        const existing = latestSessionByPatientId.get(session.patient_id);
-        if (!existing || session.session_date > existing.session_date) {
-            latestSessionByPatientId.set(session.patient_id, session);
-        }
-    }
+    const latestSessionByPatientId = new Map((latestSessionsByPatientRows || []).map((row) => [row.patient_id, row]));
 
     return patients.map((patient) => {
         const flags = patient.patient_flags || [];
@@ -55,13 +47,29 @@ function buildPatientMetrics(patients, adherenceRows, sessionsRows) {
     });
 }
 
-/**
- * Search patients with filters
- */
+async function getLatestSessionsByPatient(patientIds) {
+    const { data, error } = await supabase
+        .from('patients')
+        .select('id, sessions(session_date)')
+        .in('id', patientIds)
+        .order('session_date', { foreignTable: 'sessions', ascending: false })
+        .limit(1, { foreignTable: 'sessions' });
+
+    if (error) {
+        throw new Error(`Failed to fetch latest session data: ${error.message}`);
+    }
+
+    return (data || []).map((row) => ({
+        patient_id: row.id,
+        session_date: row.sessions?.[0]?.session_date || null,
+    }));
+}
+
 async function searchPatients(filters) {
     let query = supabase
         .from('patients')
-        .select(`
+        .select(
+            `
             id,
             therapist_id,
             first_name,
@@ -76,7 +84,9 @@ async function searchPatients(filters) {
                 id,
                 severity
             )
-        `)
+        `,
+            { count: 'exact' }
+        )
         .eq('therapist_id', filters.therapistId);
 
     if (filters.search) {
@@ -97,39 +107,36 @@ async function searchPatients(filters) {
         query = query.eq('position', filters.position);
     }
 
-    const { data: patients, error } = await query;
+    const { data: patients, error, count } = await query;
 
     if (error) {
         throw new Error(`Failed to fetch patients: ${error.message}`);
     }
 
     if (!patients?.length) {
-        return [];
+        return {
+            patients: [],
+            totalCount: 0,
+            offset: filters.offset,
+            limit: filters.limit,
+        };
     }
 
     const patientIds = patients.map((patient) => patient.id);
 
-    const [{ data: adherenceRows, error: adherenceError }, { data: sessionsRows, error: sessionsError }] = await Promise.all([
+    const [{ data: adherenceRows, error: adherenceError }, latestSessionsByPatientRows] = await Promise.all([
         supabase
             .from('vw_patient_adherence')
             .select('patient_id, adherence_pct, completed_sessions, total_sessions')
             .in('patient_id', patientIds),
-        supabase
-            .from('sessions')
-            .select('patient_id, session_date')
-            .in('patient_id', patientIds)
-            .order('session_date', { ascending: false }),
+        getLatestSessionsByPatient(patientIds),
     ]);
 
     if (adherenceError) {
         throw new Error(`Failed to fetch adherence data: ${adherenceError.message}`);
     }
 
-    if (sessionsError) {
-        throw new Error(`Failed to fetch session data: ${sessionsError.message}`);
-    }
-
-    const enrichedPatients = buildPatientMetrics(patients, adherenceRows, sessionsRows);
+    const enrichedPatients = buildPatientMetrics(patients, adherenceRows, latestSessionsByPatientRows);
 
     let filteredPatients = enrichedPatients;
 
@@ -145,15 +152,11 @@ async function searchPatients(filters) {
     }
 
     if (filters.minAdherence !== null) {
-        filteredPatients = filteredPatients.filter((patient) =>
-            patient.adherence_percentage >= filters.minAdherence
-        );
+        filteredPatients = filteredPatients.filter((patient) => patient.adherence_percentage >= filters.minAdherence);
     }
 
     if (filters.maxAdherence !== null) {
-        filteredPatients = filteredPatients.filter((patient) =>
-            patient.adherence_percentage <= filters.maxAdherence
-        );
+        filteredPatients = filteredPatients.filter((patient) => patient.adherence_percentage <= filters.maxAdherence);
     }
 
     filteredPatients.sort((a, b) => {
@@ -163,12 +166,16 @@ async function searchPatients(filters) {
         return a.last_name.localeCompare(b.last_name);
     });
 
-    return filteredPatients;
+    const paginatedPatients = filteredPatients.slice(filters.offset, filters.offset + filters.limit);
+
+    return {
+        patients: paginatedPatients,
+        totalCount: filteredPatients.length || count || 0,
+        offset: filters.offset,
+        limit: filters.limit,
+    };
 }
 
-/**
- * Get dashboard summary for therapist
- */
 async function getDashboardSummary(therapistId) {
     const { data: patients, error: patientsError } = await supabase
         .from('patients')
@@ -186,10 +193,7 @@ async function getDashboardSummary(therapistId) {
             total_patients: 0,
             high_severity_flags: 0,
             avg_adherence: 0,
-            sessions_this_week: {
-                completed: 0,
-                total: 0,
-            },
+            sessions_this_week: { completed: 0, total: 0 },
             patients_at_risk: 0,
         };
     }
@@ -240,17 +244,11 @@ async function getDashboardSummary(therapistId) {
         total_patients: patients.length,
         high_severity_flags: highSeverityFlags?.length || 0,
         avg_adherence: Math.round(avgAdherence * 10) / 10,
-        sessions_this_week: {
-            completed: completedThisWeek,
-            total: totalThisWeek,
-        },
+        sessions_this_week: { completed: completedThisWeek, total: totalThisWeek },
         patients_at_risk: highSeverityFlags?.length || 0,
     };
 }
 
-/**
- * Get high priority alerts
- */
 async function getHighPriorityAlerts(therapistId) {
     const { data: patients, error: patientsError } = await supabase
         .from('patients')
@@ -300,4 +298,5 @@ export {
     getHighPriorityAlerts,
     buildPatientMetrics,
     sanitizeSearchTerm,
+    getLatestSessionsByPatient,
 };

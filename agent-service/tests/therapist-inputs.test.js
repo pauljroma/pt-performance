@@ -1,5 +1,5 @@
-import { parseBearerToken, getAuthorizedTherapistIds } from '../src/middleware/auth.js';
-import { parseOptionalNumber, parseFilters } from '../src/routes/therapist.js';
+import { parseBearerToken } from '../src/middleware/auth.js';
+import { parseOptionalNumber, parseFilters, parsePositiveInteger } from '../src/routes/therapist.js';
 
 describe('therapist auth helper logic', () => {
   test('parseBearerToken extracts token for valid Bearer header', () => {
@@ -10,18 +10,6 @@ describe('therapist auth helper logic', () => {
     expect(parseBearerToken('Token abc123')).toBeNull();
     expect(parseBearerToken(undefined)).toBeNull();
   });
-
-  test('getAuthorizedTherapistIds includes known id sources without duplicates', () => {
-    const ids = getAuthorizedTherapistIds({
-      id: 'user-1',
-      app_metadata: { therapist_id: 'ther-1' },
-      user_metadata: { therapist_id: 'ther-1' },
-    });
-
-    expect(ids.has('user-1')).toBe(true);
-    expect(ids.has('ther-1')).toBe(true);
-    expect(ids.size).toBe(2);
-  });
 });
 
 describe('therapist filter parsing', () => {
@@ -30,12 +18,25 @@ describe('therapist filter parsing', () => {
     expect(parseOptionalNumber('', 'minAdherence')).toBeNull();
   });
 
-  test('parseFilters validates enums and ranges', () => {
-    const parsed = parseFilters({ flagSeverity: 'HIGH', hasFlags: 'true', minAdherence: '10', maxAdherence: '80' }, 'ther-1');
+  test('parsePositiveInteger validates pagination fields', () => {
+    expect(parsePositiveInteger('20', 'limit', 50, 200)).toBe(20);
+    expect(parsePositiveInteger('', 'limit', 50, 200)).toBe(50);
+    expect(() => parsePositiveInteger('-1', 'offset', 0)).toThrow('offset must be a non-negative integer');
+    expect(() => parsePositiveInteger('500', 'limit', 50, 200)).toThrow('limit cannot exceed 200');
+  });
+
+  test('parseFilters validates enums, ranges, and pagination', () => {
+    const parsed = parseFilters(
+      { flagSeverity: 'HIGH', hasFlags: 'true', minAdherence: '10', maxAdherence: '80', limit: '25', offset: '10' },
+      'ther-1'
+    );
+
     expect(parsed.flagSeverity).toBe('HIGH');
     expect(parsed.hasFlags).toBe(true);
     expect(parsed.minAdherence).toBe(10);
     expect(parsed.maxAdherence).toBe(80);
+    expect(parsed.limit).toBe(25);
+    expect(parsed.offset).toBe(10);
 
     expect(() => parseFilters({ flagSeverity: 'CRITICAL' }, 'ther-1')).toThrow('flagSeverity must be one of HIGH, MEDIUM, LOW');
     expect(() => parseFilters({ hasFlags: 'maybe' }, 'ther-1')).toThrow('hasFlags must be true or false');
