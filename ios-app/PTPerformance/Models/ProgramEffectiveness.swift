@@ -13,19 +13,19 @@ import SwiftUI
 /// Comprehensive metrics for a single program
 struct ProgramMetrics: Identifiable, Codable, Hashable {
     let id: UUID
-    let programId: UUID
+    let programId: UUID?
     let programName: String
     let programType: ProgramType?
-    let totalEnrollments: Int
-    let activeEnrollments: Int
-    let completedEnrollments: Int
-    let droppedEnrollments: Int
-    let completionRate: Double
-    let averageDurationWeeks: Double
-    let averagePainReduction: Double
-    let averageStrengthGain: Double
-    let averageAdherence: Double
-    let lastUpdated: Date
+    let totalEnrollments: Int?
+    let activeEnrollments: Int?
+    let completedEnrollments: Int?
+    let droppedEnrollments: Int?
+    let completionRate: Double?
+    let averageDurationWeeks: Double?
+    let averagePainReduction: Double?
+    let averageStrengthGain: Double?
+    let averageAdherence: Double?
+    let lastUpdated: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -44,6 +44,17 @@ struct ProgramMetrics: Identifiable, Codable, Hashable {
         case lastUpdated = "last_updated"
     }
 
+    // MARK: - Safe Accessors
+    var totalEnrollmentsValue: Int { totalEnrollments ?? 0 }
+    var activeEnrollmentsValue: Int { activeEnrollments ?? 0 }
+    var completedEnrollmentsValue: Int { completedEnrollments ?? 0 }
+    var droppedEnrollmentsValue: Int { droppedEnrollments ?? 0 }
+    var completionRateValue: Double { completionRate ?? 0 }
+    var averageDurationWeeksValue: Double { averageDurationWeeks ?? 0 }
+    var averagePainReductionValue: Double { averagePainReduction ?? 0 }
+    var averageStrengthGainValue: Double { averageStrengthGain ?? 0 }
+    var averageAdherenceValue: Double { averageAdherence ?? 0 }
+
     /// Resolved program type (defaults to .rehab for legacy programs)
     var resolvedProgramType: ProgramType {
         programType ?? .rehab
@@ -51,22 +62,22 @@ struct ProgramMetrics: Identifiable, Codable, Hashable {
 
     /// Formatted completion rate as percentage
     var formattedCompletionRate: String {
-        String(format: "%.0f%%", completionRate * 100)
+        String(format: "%.0f%%", completionRateValue * 100)
     }
 
     /// Formatted pain reduction
     var formattedPainReduction: String {
-        String(format: "%.1f pts", averagePainReduction)
+        String(format: "%.1f pts", averagePainReductionValue)
     }
 
     /// Formatted strength gain
     var formattedStrengthGain: String {
-        String(format: "+%.0f%%", averageStrengthGain * 100)
+        String(format: "+%.0f%%", averageStrengthGainValue * 100)
     }
 
     /// Formatted adherence
     var formattedAdherence: String {
-        String(format: "%.0f%%", averageAdherence * 100)
+        String(format: "%.0f%%", averageAdherenceValue * 100)
     }
 
     /// Effectiveness score (weighted combination of metrics)
@@ -77,12 +88,12 @@ struct ProgramMetrics: Identifiable, Codable, Hashable {
         let adherenceWeight = 0.2
 
         // Normalize pain reduction (assume max 10 points possible)
-        let normalizedPain = min(averagePainReduction / 10.0, 1.0)
+        let normalizedPain = min(averagePainReductionValue / 10.0, 1.0)
 
-        return (completionRate * completionWeight) +
+        return (completionRateValue * completionWeight) +
                (normalizedPain * painWeight) +
-               (averageStrengthGain * strengthWeight) +
-               (averageAdherence * adherenceWeight)
+               (averageStrengthGainValue * strengthWeight) +
+               (averageAdherenceValue * adherenceWeight)
     }
 
     /// Effectiveness rating based on score
@@ -144,13 +155,13 @@ struct ProgramComparison: Identifiable {
     func bestProgram(for metric: ComparisonMetric) -> ProgramMetrics? {
         switch metric {
         case .completionRate:
-            return programs.max(by: { $0.completionRate < $1.completionRate })
+            return programs.max(by: { $0.completionRateValue < $1.completionRateValue })
         case .painReduction:
-            return programs.max(by: { $0.averagePainReduction < $1.averagePainReduction })
+            return programs.max(by: { $0.averagePainReductionValue < $1.averagePainReductionValue })
         case .strengthGain:
-            return programs.max(by: { $0.averageStrengthGain < $1.averageStrengthGain })
+            return programs.max(by: { $0.averageStrengthGainValue < $1.averageStrengthGainValue })
         case .adherence:
-            return programs.max(by: { $0.averageAdherence < $1.averageAdherence })
+            return programs.max(by: { $0.averageAdherenceValue < $1.averageAdherenceValue })
         case .effectiveness:
             return programs.max(by: { $0.effectivenessScore < $1.effectivenessScore })
         }

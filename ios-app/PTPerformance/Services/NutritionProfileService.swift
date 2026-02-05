@@ -339,7 +339,11 @@ class NutritionProfileService: ObservableObject {
         }
 
         // Check if profile exists
-        if let existingProfile = currentProfile ?? (try await fetchProfile()) {
+        var existingProfile = currentProfile
+        if existingProfile == nil {
+            existingProfile = try await fetchProfile()
+        }
+        if let profile = existingProfile {
             // Update existing
             let updates = UpdateNutritionProfileDTO(
                 athleteType: athleteType,
@@ -350,7 +354,7 @@ class NutritionProfileService: ObservableObject {
                 activityLevel: activityLevel.rawValue,
                 goal: goal.rawValue
             )
-            return try await updateProfile(id: existingProfile.id, updates: updates)
+            return try await updateProfile(id: profile.id, updates: updates)
         } else {
             // Create new
             let dto = CreateNutritionProfileDTO(

@@ -92,8 +92,12 @@ struct BaseballProgramDetailView: View {
     // MARK: - Load Real Phases
 
     private func loadRealPhases() async {
+        guard let programId = program.programId else {
+            isLoadingPhases = false
+            return
+        }
         do {
-            let phases = try await BaseballPackService.shared.fetchProgramPhases(programId: program.programId)
+            let phases = try await BaseballPackService.shared.fetchProgramPhases(programId: programId)
             await MainActor.run {
                 self.realPhases = phases
                 self.isLoadingPhases = false
@@ -185,7 +189,7 @@ struct BaseballProgramDetailView: View {
                     .cornerRadius(6)
                 }
 
-                if program.isFeatured {
+                if program.featured {
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .font(.caption)

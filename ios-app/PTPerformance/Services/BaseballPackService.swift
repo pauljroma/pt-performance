@@ -469,14 +469,21 @@ struct BaseballProgram: Codable, Identifiable {
     let category: String
     let durationWeeks: Int
     let difficultyLevel: String
-    let equipmentRequired: [String]
+    let equipmentRequired: [String]?
     let coverImageUrl: String?
-    let programId: UUID
-    let isFeatured: Bool
-    let tags: [String]
+    let programId: UUID?
+    let isFeatured: Bool?
+    let tags: [String]?
     let author: String?
-    let createdAt: Date
-    let updatedAt: Date
+    let createdAt: Date?
+    let updatedAt: Date?
+
+    // New fields from premium packs migration
+    let packId: UUID?
+    let accessLevel: String?
+    let sortOrder: Int?
+    let previewVideoUrl: String?
+    let requiresEquipment: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -493,13 +500,35 @@ struct BaseballProgram: Codable, Identifiable {
         case author
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case packId = "pack_id"
+        case accessLevel = "access_level"
+        case sortOrder = "sort_order"
+        case previewVideoUrl = "preview_video_url"
+        case requiresEquipment = "requires_equipment"
+    }
+
+    // MARK: - Safe Accessors
+
+    /// Featured status with false fallback
+    var featured: Bool {
+        isFeatured ?? false
+    }
+
+    /// Tags list with empty array fallback
+    var tagsList: [String] {
+        tags ?? []
+    }
+
+    /// Equipment list with empty array fallback
+    var equipment: [String] {
+        equipmentRequired ?? []
     }
 
     // MARK: - Computed Properties
 
     /// Get the baseball subcategory from tags
     var subcategoryEnum: BaseballPackService.ProgramCategory? {
-        for tag in tags {
+        for tag in tagsList {
             if let category = BaseballPackService.ProgramCategory(rawValue: tag) {
                 return category
             }
@@ -509,7 +538,7 @@ struct BaseballProgram: Codable, Identifiable {
 
     /// Get the position from tags
     var positionEnum: BaseballPackService.Position? {
-        for tag in tags {
+        for tag in tagsList {
             if let position = BaseballPackService.Position(rawValue: tag) {
                 return position
             }
@@ -519,7 +548,7 @@ struct BaseballProgram: Codable, Identifiable {
 
     /// Get the season type from tags
     var seasonEnum: BaseballPackService.SeasonType? {
-        for tag in tags {
+        for tag in tagsList {
             if let season = BaseballPackService.SeasonType(rawValue: tag) {
                 return season
             }
@@ -552,10 +581,10 @@ struct BaseballProgram: Codable, Identifiable {
 
     /// Equipment list as formatted string
     var formattedEquipment: String {
-        if equipmentRequired.isEmpty {
+        if equipment.isEmpty {
             return "No equipment required"
         }
-        return equipmentRequired.joined(separator: ", ")
+        return equipment.joined(separator: ", ")
     }
 
     /// Icon for the subcategory

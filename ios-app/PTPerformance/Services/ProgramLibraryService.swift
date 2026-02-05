@@ -510,7 +510,10 @@ class ProgramLibraryService: ObservableObject {
 
         // First get the program_id from program_library
         let programLibrary = try await fetchProgram(id: programLibraryId)
-        let programId = programLibrary.programId
+        guard let programId = programLibrary.programId else {
+            logger.log("Program '\(programLibrary.title)' has no program_id, returning empty schedule", level: .warning)
+            return []
+        }
 
         logger.log("Program '\(programLibrary.title)' has program_id: \(programId)", level: .diagnostic)
 

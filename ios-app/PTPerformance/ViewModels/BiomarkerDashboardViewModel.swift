@@ -349,11 +349,11 @@ final class BiomarkerDashboardViewModel: ObservableObject {
         var summaries: [String: BiomarkerSummary] = [:]
 
         // Get all lab results sorted by date (newest first)
-        let sortedResults = labService.labResults.sorted { $0.testDate > $1.testDate }
+        let sortedResults = labService.labResults.sorted { ($0.testDate ?? Date.distantPast) > ($1.testDate ?? Date.distantPast) }
 
         // Process each result
         for labResult in sortedResults {
-            for marker in labResult.results {
+            for marker in labResult.resultsList {
                 // Only add if we haven't seen this biomarker yet (newest first)
                 if summaries[marker.name] == nil {
                     let category = BiomarkerCategory.category(for: marker.name)
@@ -368,7 +368,7 @@ final class BiomarkerDashboardViewModel: ObservableObject {
                         unit: marker.unit,
                         status: status,
                         trend: .unknown,
-                        lastUpdated: labResult.testDate,
+                        lastUpdated: labResult.testDate ?? Date(),
                         historyCount: 1,
                         optimalLow: nil,
                         optimalHigh: nil,

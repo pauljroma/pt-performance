@@ -15,18 +15,23 @@ final class FastingLogTests: XCTestCase {
     func testFastingLogInitialization() {
         let id = UUID()
         let patientId = UUID()
-        let startTime = Date()
+        let startedAt = Date()
         let createdAt = Date()
 
         let log = FastingLog(
             id: id,
             patientId: patientId,
-            fastingType: .intermittent16_8,
-            startTime: startTime,
-            endTime: nil,
+            fastingType: .intermittent,
+            startedAt: startedAt,
+            endedAt: nil,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: nil,
-            breakfastFood: nil,
+            wasBrokenEarly: nil,
+            breakReason: nil,
+            moodStart: nil,
+            moodEnd: nil,
+            hungerLevel: nil,
             energyLevel: nil,
             notes: nil,
             createdAt: createdAt
@@ -34,67 +39,77 @@ final class FastingLogTests: XCTestCase {
 
         XCTAssertEqual(log.id, id)
         XCTAssertEqual(log.patientId, patientId)
-        XCTAssertEqual(log.fastingType, .intermittent16_8)
-        XCTAssertEqual(log.startTime, startTime)
-        XCTAssertNil(log.endTime)
+        XCTAssertEqual(log.fastingType, .intermittent)
+        XCTAssertEqual(log.startedAt, startedAt)
+        XCTAssertNil(log.endedAt)
         XCTAssertEqual(log.targetHours, 16)
         XCTAssertNil(log.actualHours)
-        XCTAssertNil(log.breakfastFood)
+        XCTAssertNil(log.wasBrokenEarly)
         XCTAssertNil(log.energyLevel)
         XCTAssertNil(log.notes)
         XCTAssertEqual(log.createdAt, createdAt)
     }
 
     func testFastingLogWithCompletedFast() {
-        let startTime = Date().addingTimeInterval(-16 * 3600) // 16 hours ago
-        let endTime = Date()
+        let startedAt = Date().addingTimeInterval(-16 * 3600) // 16 hours ago
+        let endedAt = Date()
 
         let log = FastingLog(
             id: UUID(),
             patientId: UUID(),
-            fastingType: .intermittent16_8,
-            startTime: startTime,
-            endTime: endTime,
+            fastingType: .intermittent,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: 16.0,
-            breakfastFood: "Eggs and avocado",
+            wasBrokenEarly: false,
+            breakReason: nil,
+            moodStart: 7,
+            moodEnd: 8,
+            hungerLevel: 5,
             energyLevel: 8,
             notes: "Felt great!",
             createdAt: Date()
         )
 
-        XCTAssertNotNil(log.endTime)
+        XCTAssertNotNil(log.endedAt)
         XCTAssertEqual(log.actualHours, 16.0)
-        XCTAssertEqual(log.breakfastFood, "Eggs and avocado")
+        XCTAssertEqual(log.wasBrokenEarly, false)
         XCTAssertEqual(log.energyLevel, 8)
         XCTAssertEqual(log.notes, "Felt great!")
     }
 
     // MARK: - Computed Property Tests
 
-    func testIsActiveWhenEndTimeNil() {
-        let log = createFastingLog(endTime: nil)
+    func testIsActiveWhenEndedAtNil() {
+        let log = createFastingLog(endedAt: nil)
         XCTAssertTrue(log.isActive)
     }
 
-    func testIsActiveWhenEndTimeSet() {
-        let log = createFastingLog(endTime: Date())
+    func testIsActiveWhenEndedAtSet() {
+        let log = createFastingLog(endedAt: Date())
         XCTAssertFalse(log.isActive)
     }
 
     func testProgressPercentWhenCompleted() {
-        let startTime = Date().addingTimeInterval(-16 * 3600) // 16 hours ago
-        let endTime = Date()
+        let startedAt = Date().addingTimeInterval(-16 * 3600) // 16 hours ago
+        let endedAt = Date()
 
         let log = FastingLog(
             id: UUID(),
             patientId: UUID(),
-            fastingType: .intermittent16_8,
-            startTime: startTime,
-            endTime: endTime,
+            fastingType: .intermittent,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: 16.0,
-            breakfastFood: nil,
+            wasBrokenEarly: nil,
+            breakReason: nil,
+            moodStart: nil,
+            moodEnd: nil,
+            hungerLevel: nil,
             energyLevel: nil,
             notes: nil,
             createdAt: Date()
@@ -105,18 +120,23 @@ final class FastingLogTests: XCTestCase {
 
     func testProgressPercentCapsAtOne() {
         // Test when fast exceeds target
-        let startTime = Date().addingTimeInterval(-20 * 3600) // 20 hours ago
-        let endTime = Date()
+        let startedAt = Date().addingTimeInterval(-20 * 3600) // 20 hours ago
+        let endedAt = Date()
 
         let log = FastingLog(
             id: UUID(),
             patientId: UUID(),
-            fastingType: .intermittent16_8,
-            startTime: startTime,
-            endTime: endTime,
+            fastingType: .intermittent,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: 20.0,
-            breakfastFood: nil,
+            wasBrokenEarly: nil,
+            breakReason: nil,
+            moodStart: nil,
+            moodEnd: nil,
+            hungerLevel: nil,
             energyLevel: nil,
             notes: nil,
             createdAt: Date()
@@ -126,18 +146,23 @@ final class FastingLogTests: XCTestCase {
     }
 
     func testProgressPercentWhenHalfway() {
-        let startTime = Date().addingTimeInterval(-8 * 3600) // 8 hours ago
-        let endTime = Date()
+        let startedAt = Date().addingTimeInterval(-8 * 3600) // 8 hours ago
+        let endedAt = Date()
 
         let log = FastingLog(
             id: UUID(),
             patientId: UUID(),
-            fastingType: .intermittent16_8,
-            startTime: startTime,
-            endTime: endTime,
+            fastingType: .intermittent,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: 8.0,
-            breakfastFood: nil,
+            wasBrokenEarly: nil,
+            breakReason: nil,
+            moodStart: nil,
+            moodEnd: nil,
+            hungerLevel: nil,
             energyLevel: nil,
             notes: nil,
             createdAt: Date()
@@ -173,17 +198,17 @@ final class FastingLogTests: XCTestCase {
         let data = try encoder.encode(log)
         let jsonObject = try JSONSerialization.jsonObject(with: data) as! [String: Any]
 
-        // Verify snake_case keys
+        // Verify snake_case keys (using new column names)
         XCTAssertNotNil(jsonObject["patient_id"])
         XCTAssertNotNil(jsonObject["fasting_type"])
-        XCTAssertNotNil(jsonObject["start_time"])
+        XCTAssertNotNil(jsonObject["started_at"])
         XCTAssertNotNil(jsonObject["target_hours"])
         XCTAssertNotNil(jsonObject["created_at"])
 
         // Verify camelCase keys are NOT present
         XCTAssertNil(jsonObject["patientId"])
         XCTAssertNil(jsonObject["fastingType"])
-        XCTAssertNil(jsonObject["startTime"])
+        XCTAssertNil(jsonObject["startedAt"])
         XCTAssertNil(jsonObject["targetHours"])
     }
 
@@ -202,61 +227,49 @@ final class FastingLogTests: XCTestCase {
 
     func testFastingTypeAllCases() {
         let allCases = FastingType.allCases
-        XCTAssertEqual(allCases.count, 8)
-        XCTAssertTrue(allCases.contains(.intermittent16_8))
-        XCTAssertTrue(allCases.contains(.intermittent18_6))
-        XCTAssertTrue(allCases.contains(.intermittent20_4))
-        XCTAssertTrue(allCases.contains(.omad))
-        XCTAssertTrue(allCases.contains(.extended24))
-        XCTAssertTrue(allCases.contains(.extended36))
-        XCTAssertTrue(allCases.contains(.extended48))
+        XCTAssertEqual(allCases.count, 5)
+        XCTAssertTrue(allCases.contains(.intermittent))
+        XCTAssertTrue(allCases.contains(.extended))
+        XCTAssertTrue(allCases.contains(.waterOnly))
+        XCTAssertTrue(allCases.contains(.modified))
         XCTAssertTrue(allCases.contains(.custom))
     }
 
     func testFastingTypeRawValues() {
-        XCTAssertEqual(FastingType.intermittent16_8.rawValue, "16_8")
-        XCTAssertEqual(FastingType.intermittent18_6.rawValue, "18_6")
-        XCTAssertEqual(FastingType.intermittent20_4.rawValue, "20_4")
-        XCTAssertEqual(FastingType.omad.rawValue, "omad")
-        XCTAssertEqual(FastingType.extended24.rawValue, "24")
-        XCTAssertEqual(FastingType.extended36.rawValue, "36")
-        XCTAssertEqual(FastingType.extended48.rawValue, "48")
+        XCTAssertEqual(FastingType.intermittent.rawValue, "intermittent")
+        XCTAssertEqual(FastingType.extended.rawValue, "extended")
+        XCTAssertEqual(FastingType.waterOnly.rawValue, "water_only")
+        XCTAssertEqual(FastingType.modified.rawValue, "modified")
         XCTAssertEqual(FastingType.custom.rawValue, "custom")
     }
 
     func testFastingTypeDisplayNames() {
-        XCTAssertEqual(FastingType.intermittent16_8.displayName, "16:8")
-        XCTAssertEqual(FastingType.intermittent18_6.displayName, "18:6")
-        XCTAssertEqual(FastingType.intermittent20_4.displayName, "20:4")
-        XCTAssertEqual(FastingType.omad.displayName, "OMAD (23:1)")
-        XCTAssertEqual(FastingType.extended24.displayName, "24 Hour")
-        XCTAssertEqual(FastingType.extended36.displayName, "36 Hour")
-        XCTAssertEqual(FastingType.extended48.displayName, "48 Hour")
+        XCTAssertEqual(FastingType.intermittent.displayName, "Intermittent")
+        XCTAssertEqual(FastingType.extended.displayName, "Extended")
+        XCTAssertEqual(FastingType.waterOnly.displayName, "Water Only")
+        XCTAssertEqual(FastingType.modified.displayName, "Modified")
         XCTAssertEqual(FastingType.custom.displayName, "Custom")
     }
 
     func testFastingTypeTargetHours() {
-        XCTAssertEqual(FastingType.intermittent16_8.targetHours, 16)
-        XCTAssertEqual(FastingType.intermittent18_6.targetHours, 18)
-        XCTAssertEqual(FastingType.intermittent20_4.targetHours, 20)
-        XCTAssertEqual(FastingType.omad.targetHours, 23)
-        XCTAssertEqual(FastingType.extended24.targetHours, 24)
-        XCTAssertEqual(FastingType.extended36.targetHours, 36)
-        XCTAssertEqual(FastingType.extended48.targetHours, 48)
+        XCTAssertEqual(FastingType.intermittent.targetHours, 16)
+        XCTAssertEqual(FastingType.extended.targetHours, 24)
+        XCTAssertEqual(FastingType.waterOnly.targetHours, 24)
+        XCTAssertEqual(FastingType.modified.targetHours, 18)
         XCTAssertEqual(FastingType.custom.targetHours, 16)
     }
 
     func testFastingTypeTargetHoursIncreaseWithExtendedFasts() {
-        // Extended fasts should have longer durations
-        XCTAssertLessThan(FastingType.intermittent16_8.targetHours, FastingType.extended24.targetHours)
-        XCTAssertLessThan(FastingType.extended24.targetHours, FastingType.extended36.targetHours)
-        XCTAssertLessThan(FastingType.extended36.targetHours, FastingType.extended48.targetHours)
+        // Extended fasts should have longer durations than intermittent
+        XCTAssertLessThan(FastingType.intermittent.targetHours, FastingType.extended.targetHours)
     }
 
     func testFastingTypeInitFromRawValue() {
-        XCTAssertEqual(FastingType(rawValue: "16_8"), .intermittent16_8)
-        XCTAssertEqual(FastingType(rawValue: "omad"), .omad)
-        XCTAssertEqual(FastingType(rawValue: "24"), .extended24)
+        XCTAssertEqual(FastingType(rawValue: "intermittent"), .intermittent)
+        XCTAssertEqual(FastingType(rawValue: "extended"), .extended)
+        XCTAssertEqual(FastingType(rawValue: "water_only"), .waterOnly)
+        XCTAssertEqual(FastingType(rawValue: "modified"), .modified)
+        XCTAssertEqual(FastingType(rawValue: "custom"), .custom)
         XCTAssertNil(FastingType(rawValue: "invalid"))
         XCTAssertNil(FastingType(rawValue: ""))
     }
@@ -285,7 +298,8 @@ final class FastingLogTests: XCTestCase {
             suggestedStart: suggestedStart,
             suggestedEnd: suggestedEnd,
             reason: "Aligns with your morning workout",
-            trainingTime: trainingTime
+            trainingTime: trainingTime,
+            confidence: 0.9
         )
 
         XCTAssertEqual(recommendation.id, id)
@@ -301,7 +315,8 @@ final class FastingLogTests: XCTestCase {
             suggestedStart: Date(),
             suggestedEnd: Date().addingTimeInterval(8 * 3600),
             reason: "Rest day recommendation",
-            trainingTime: nil
+            trainingTime: nil,
+            confidence: 0.8
         )
 
         XCTAssertNil(recommendation.trainingTime)
@@ -313,7 +328,8 @@ final class FastingLogTests: XCTestCase {
             suggestedStart: Date(),
             suggestedEnd: Date().addingTimeInterval(8 * 3600),
             reason: "Test reason",
-            trainingTime: Date()
+            trainingTime: Date(),
+            confidence: 0.85
         )
 
         let encoder = JSONEncoder()
@@ -402,16 +418,21 @@ final class FastingLogTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func createFastingLog(endTime: Date? = nil) -> FastingLog {
+    private func createFastingLog(endedAt: Date? = nil) -> FastingLog {
         FastingLog(
             id: UUID(),
             patientId: UUID(),
-            fastingType: .intermittent16_8,
-            startTime: Date(),
-            endTime: endTime,
+            fastingType: .intermittent,
+            startedAt: Date(),
+            endedAt: endedAt,
+            plannedEndAt: nil,
             targetHours: 16,
             actualHours: nil,
-            breakfastFood: nil,
+            wasBrokenEarly: nil,
+            breakReason: nil,
+            moodStart: nil,
+            moodEnd: nil,
+            hungerLevel: nil,
             energyLevel: nil,
             notes: nil,
             createdAt: Date()

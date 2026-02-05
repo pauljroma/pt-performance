@@ -15,14 +15,21 @@ struct ProgramLibrary: Codable, Identifiable, Hashable, Equatable {
     let category: String
     let durationWeeks: Int
     let difficultyLevel: String
-    let equipmentRequired: [String]
+    let equipmentRequired: [String]?
     let coverImageUrl: String?
-    let programId: UUID
-    let isFeatured: Bool
-    let tags: [String]
+    let programId: UUID?
+    let isFeatured: Bool?
+    let tags: [String]?
     let author: String?
-    let createdAt: Date
-    let updatedAt: Date
+    let createdAt: Date?
+    let updatedAt: Date?
+
+    // New fields from premium packs migration
+    let packId: UUID?
+    let accessLevel: String?
+    let sortOrder: Int?
+    let previewVideoUrl: String?
+    let requiresEquipment: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -39,6 +46,43 @@ struct ProgramLibrary: Codable, Identifiable, Hashable, Equatable {
         case author
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case packId = "pack_id"
+        case accessLevel = "access_level"
+        case sortOrder = "sort_order"
+        case previewVideoUrl = "preview_video_url"
+        case requiresEquipment = "requires_equipment"
+    }
+
+    // MARK: - Safe Accessors (handle nil from database)
+
+    /// Equipment list with empty array fallback
+    var equipment: [String] {
+        equipmentRequired ?? []
+    }
+
+    /// Tags list with empty array fallback
+    var tagsList: [String] {
+        tags ?? []
+    }
+
+    /// Featured status with false fallback
+    var featured: Bool {
+        isFeatured ?? false
+    }
+
+    /// Access level with free as default
+    var access: String {
+        accessLevel ?? "free"
+    }
+
+    /// Whether program requires premium subscription
+    var isPremium: Bool {
+        access == "premium" || access == "elite"
+    }
+
+    /// Whether program requires elite/pack subscription
+    var isElite: Bool {
+        access == "elite"
     }
 
     // MARK: - Computed Properties

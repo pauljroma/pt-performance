@@ -428,12 +428,13 @@ struct WorkoutPickerView: View {
         do {
             logger.log("QuickPick: Creating session from template: \(template.name)", level: .diagnostic)
 
-            // 1. Create manual session
+            // 1. Create manual session with quick_pick source
             let session = try await service.createManualSession(
                 name: template.name,
                 patientId: patientId,
                 sourceTemplateId: template.id,
-                sourceTemplateType: .system
+                sourceTemplateType: .system,
+                sessionSource: .quickPick
             )
 
             logger.log("QuickPick: Session created: \(session.id)", level: .success)

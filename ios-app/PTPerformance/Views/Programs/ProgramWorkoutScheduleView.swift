@@ -826,18 +826,20 @@ class ProgramWorkoutScheduleViewModel: ObservableObject {
                 let program = try await service.fetchProgram(id: programLibraryId)
 
                 // Try loading from phases/sessions architecture
-                do {
-                    let structure = try await BaseballPackService.shared.fetchProgramStructure(programId: program.programId)
+                if let programId = program.programId {
+                    do {
+                        let structure = try await BaseballPackService.shared.fetchProgramStructure(programId: programId)
 
-                    if !structure.phases.isEmpty {
-                        programStructure = structure
-                        usesPhaseBasedStructure = true
-                        // Clear weeks since we're using phase-based
-                        weeks = []
+                        if !structure.phases.isEmpty {
+                            programStructure = structure
+                            usesPhaseBasedStructure = true
+                            // Clear weeks since we're using phase-based
+                            weeks = []
+                        }
+                    } catch {
+                        // If this fails too, the program truly has no workouts
+                        DebugLogger.shared.warning("ProgramWorkoutScheduleViewModel", "Failed to load phase-based structure: \(error.localizedDescription)")
                     }
-                } catch {
-                    // If this fails too, the program truly has no workouts
-                    DebugLogger.shared.warning("ProgramWorkoutScheduleViewModel", "Failed to load phase-based structure: \(error.localizedDescription)")
                 }
             }
         } catch {

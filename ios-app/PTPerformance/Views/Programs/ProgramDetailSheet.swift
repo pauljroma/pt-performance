@@ -76,7 +76,7 @@ struct ProgramDetailSheet: View {
                             // Equipment count
                             InfoPill(
                                 icon: "dumbbell.fill",
-                                text: "\(program.equipmentRequired.count) equipment",
+                                text: "\(program.equipment.count) equipment",
                                 color: .purple
                             )
 
@@ -107,7 +107,7 @@ struct ProgramDetailSheet: View {
                     }
 
                     // MARK: - Equipment List
-                    if !program.equipmentRequired.isEmpty {
+                    if !program.equipment.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Equipment Required")
                                 .font(.headline)
@@ -116,7 +116,7 @@ struct ProgramDetailSheet: View {
                                 GridItem(.flexible()),
                                 GridItem(.flexible())
                             ], spacing: 10) {
-                                ForEach(program.equipmentRequired, id: \.self) { equipment in
+                                ForEach(program.equipment, id: \.self) { equipment in
                                     EquipmentItem(name: equipment)
                                 }
                             }
@@ -167,13 +167,13 @@ struct ProgramDetailSheet: View {
                     .padding(.horizontal)
 
                     // MARK: - Tags
-                    if !program.tags.isEmpty {
+                    if !program.tagsList.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Tags")
                                 .font(.headline)
 
                             DetailFlowLayout(spacing: 8) {
-                                ForEach(program.tags, id: \.self) { tag in
+                                ForEach(program.tagsList, id: \.self) { tag in
                                     ProgramTagChip(text: tag)
                                 }
                             }
@@ -268,9 +268,17 @@ struct ProgramDetailSheet: View {
         isLoadingPhases = true
         phasesError = nil
 
+        guard let programId = program.programId else {
+            await MainActor.run {
+                phases = []
+                isLoadingPhases = false
+            }
+            return
+        }
+
         do {
             let service = ProgramLibraryService()
-            let fetchedPhases = try await service.fetchPhasePreview(programId: program.programId)
+            let fetchedPhases = try await service.fetchPhasePreview(programId: programId)
 
             await MainActor.run {
                 phases = fetchedPhases
@@ -508,7 +516,12 @@ struct ProgramDetailSheet_Previews: PreviewProvider {
             tags: ["Strength", "Muscle Building", "Intermediate", "Full Body"],
             author: "Coach Mike",
             createdAt: Date(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            packId: nil,
+            accessLevel: "free",
+            sortOrder: nil,
+            previewVideoUrl: nil,
+            requiresEquipment: true
         ))
     }
 }

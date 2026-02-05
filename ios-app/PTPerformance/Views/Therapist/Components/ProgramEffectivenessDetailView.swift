@@ -283,25 +283,25 @@ struct ProgramEffectivenessDetailView: View {
 
             Chart {
                 BarMark(
-                    x: .value("Value", program.completionRate * 100),
+                    x: .value("Value", program.completionRateValue * 100),
                     y: .value("Metric", "Completion")
                 )
                 .foregroundStyle(.green)
 
                 BarMark(
-                    x: .value("Value", program.averageAdherence * 100),
+                    x: .value("Value", program.averageAdherenceValue * 100),
                     y: .value("Metric", "Adherence")
                 )
                 .foregroundStyle(.blue)
 
                 BarMark(
-                    x: .value("Value", min(program.averagePainReduction * 10, 100)),
+                    x: .value("Value", min(program.averagePainReductionValue * 10, 100)),
                     y: .value("Metric", "Pain Relief")
                 )
                 .foregroundStyle(.orange)
 
                 BarMark(
-                    x: .value("Value", min(program.averageStrengthGain * 200, 100)),
+                    x: .value("Value", min(program.averageStrengthGainValue * 200, 100)),
                     y: .value("Metric", "Strength")
                 )
                 .foregroundStyle(.purple)
@@ -335,7 +335,7 @@ struct ProgramEffectivenessDetailView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                Text(String(format: "%.1f weeks", program.averageDurationWeeks))
+                Text(String(format: "%.1f weeks", program.averageDurationWeeksValue))
                     .font(.title3)
                     .fontWeight(.bold)
             }

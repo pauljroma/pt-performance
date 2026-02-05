@@ -442,7 +442,10 @@ final class LabResultService: ObservableObject {
             pdfUrl: nil,
             aiAnalysis: nil,
             createdAt: Date(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
         )
 
         await fetchLabResults()

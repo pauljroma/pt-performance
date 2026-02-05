@@ -3,14 +3,19 @@ import Foundation
 /// Lab result from blood work or other medical tests
 struct LabResult: Identifiable, Codable, Hashable {
     let id: UUID
-    let patientId: UUID
-    let testDate: Date
-    let testType: LabTestType
-    let results: [LabMarker]
+    let patientId: UUID?
+    let testDate: Date?
+    let testType: LabTestType?
+    let results: [LabMarker]?
     let pdfUrl: String?
     let aiAnalysis: String?
-    let createdAt: Date
-    let updatedAt: Date
+    let createdAt: Date?
+    let updatedAt: Date?
+
+    // New optional fields from database
+    let provider: String?
+    let notes: String?
+    let parsedData: [String: String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -22,6 +27,21 @@ struct LabResult: Identifiable, Codable, Hashable {
         case aiAnalysis = "ai_analysis"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case provider
+        case notes
+        case parsedData = "parsed_data"
+    }
+
+    // MARK: - Safe Accessors
+
+    /// Test type with default fallback
+    var testTypeValue: LabTestType {
+        testType ?? .other
+    }
+
+    /// Results array with empty fallback
+    var resultsList: [LabMarker] {
+        results ?? []
     }
 }
 

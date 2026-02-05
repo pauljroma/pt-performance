@@ -62,7 +62,7 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
                 let matchesSearch = searchText.isEmpty ||
                     program.title.localizedCaseInsensitiveContains(searchText) ||
                     program.description?.localizedCaseInsensitiveContains(searchText) == true ||
-                    program.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                    program.tagsList.contains { $0.localizedCaseInsensitiveContains(searchText) }
 
                 let matchesCategory = selectedCategory == nil ||
                     program.category.lowercased() == selectedCategory?.rawValue.lowercased()
@@ -74,8 +74,8 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
             }
             .sorted { lhs, rhs in
                 // Featured programs first, then alphabetical
-                if lhs.isFeatured != rhs.isFeatured {
-                    return lhs.isFeatured
+                if lhs.featured != rhs.featured {
+                    return lhs.featured
                 }
                 return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
             }

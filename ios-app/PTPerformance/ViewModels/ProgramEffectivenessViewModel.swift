@@ -114,10 +114,10 @@ class ProgramEffectivenessViewModel: ObservableObject {
     var summaryStats: ProgramSummaryStats {
         let totalPrograms = programMetrics.count
         let avgCompletionRate = programMetrics.isEmpty ? 0 :
-            programMetrics.map { $0.completionRate }.reduce(0, +) / Double(totalPrograms)
+            programMetrics.map { $0.completionRateValue }.reduce(0, +) / Double(totalPrograms)
         let avgEffectiveness = programMetrics.isEmpty ? 0 :
             programMetrics.map { $0.effectivenessScore }.reduce(0, +) / Double(totalPrograms)
-        let totalPatients = programMetrics.map { $0.totalEnrollments }.reduce(0, +)
+        let totalPatients = programMetrics.map { $0.totalEnrollmentsValue }.reduce(0, +)
 
         return ProgramSummaryStats(
             totalPrograms: totalPrograms,
@@ -213,7 +213,7 @@ class ProgramEffectivenessViewModel: ObservableObject {
         defer { isLoadingDetails = false }
 
         do {
-            let programIds = selectedProgramsForComparison.map { $0.programId }
+            let programIds = selectedProgramsForComparison.compactMap { $0.programId }
             comparison = try await effectivenessService.fetchProgramComparison(programIds: programIds)
             DebugLogger.shared.log("Loaded comparison for \(programIds.count) programs", level: .success)
         } catch {
@@ -228,9 +228,10 @@ class ProgramEffectivenessViewModel: ObservableObject {
 
         selectedHeatmapMetric = metricType
 
+        guard let programId = program.programId else { return }
         do {
             heatmapData = try await effectivenessService.fetchHeatmapData(
-                programId: program.programId,
+                programId: programId,
                 metricType: metricType
             )
         } catch {
@@ -241,8 +242,9 @@ class ProgramEffectivenessViewModel: ObservableObject {
     /// Select a program for detailed view
     func selectProgram(_ program: ProgramMetrics) {
         selectedProgram = program
+        guard let programId = program.programId else { return }
         Task {
-            await loadProgramDetails(programId: program.programId)
+            await loadProgramDetails(programId: programId)
         }
     }
 

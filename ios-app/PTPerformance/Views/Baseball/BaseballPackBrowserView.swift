@@ -108,7 +108,7 @@ extension BaseballProgram {
         case "recovery": return .recovery
         default:
             // Check tags for category
-            for tag in tags {
+            for tag in tagsList {
                 switch tag.lowercased() {
                 case "weighted_ball", "weighted ball": return .weightedBall
                 case "arm_care", "arm care": return .armCare
@@ -124,7 +124,7 @@ extension BaseballProgram {
 
     /// Map position from tags to UI enum
     var positionUIEnum: BaseballPosition {
-        for tag in tags {
+        for tag in tagsList {
             switch tag.lowercased() {
             case "pitcher": return .pitcher
             case "catcher": return .catcher
@@ -138,7 +138,7 @@ extension BaseballProgram {
 
     /// Map season from tags to UI enum
     var seasonUIEnum: BaseballSeason {
-        for tag in tags {
+        for tag in tagsList {
             switch tag.lowercased() {
             case "off_season", "off-season", "offseason": return .offSeason
             case "pre_season", "pre-season", "preseason": return .preSeason
@@ -502,7 +502,7 @@ struct BaseballProgramCard: View {
                     .foregroundColor(.white.opacity(0.3))
 
                 // Featured badge
-                if program.isFeatured {
+                if program.featured {
                     VStack {
                         HStack {
                             Spacer()

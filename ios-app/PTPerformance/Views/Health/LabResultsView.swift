@@ -122,10 +122,10 @@ struct LabResultRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(result.testType.displayName)
+                Text(result.testTypeValue.displayName)
                     .font(.headline)
                     .foregroundColor(.modusDeepTeal)
-                Text(result.testDate.formatted(date: .abbreviated, time: .omitted))
+                Text((result.testDate ?? Date()).formatted(date: .abbreviated, time: .omitted))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -167,12 +167,12 @@ struct LabResultRow: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(result.testType.displayName), \(result.testDate.formatted(date: .abbreviated, time: .omitted)), \(statusAccessibilityLabel)")
+        .accessibilityLabel("\(result.testTypeValue.displayName), \((result.testDate ?? Date()).formatted(date: .abbreviated, time: .omitted)), \(statusAccessibilityLabel)")
         .accessibilityHint("Tap to view lab result details and get AI analysis")
     }
 
     private var abnormalMarkers: Int? {
-        let abnormal = result.results.filter { $0.status != .normal }
+        let abnormal = result.resultsList.filter { $0.status != .normal }
         return abnormal.count
     }
 
@@ -230,11 +230,11 @@ struct LabResultDetailView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(result.testType.displayName)
+                    Text(result.testTypeValue.displayName)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.modusDeepTeal)
-                    Text(result.testDate.formatted(date: .long, time: .omitted))
+                    Text((result.testDate ?? Date()).formatted(date: .long, time: .omitted))
                         .foregroundColor(.secondary)
                 }
 
@@ -281,7 +281,7 @@ struct LabResultDetailView: View {
                 .foregroundColor(.modusDeepTeal)
                 .padding(.horizontal)
 
-            ForEach(result.results) { marker in
+            ForEach(result.resultsList) { marker in
                 MarkerRow(marker: marker)
                     .contentShape(Rectangle())
                     .onTapGesture {

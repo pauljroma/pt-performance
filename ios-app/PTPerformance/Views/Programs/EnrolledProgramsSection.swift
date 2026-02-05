@@ -206,7 +206,7 @@ struct EnrolledProgramDetailSheet: View {
                     detailsSection
 
                     // Equipment Section
-                    if !enrollment.program.equipmentRequired.isEmpty {
+                    if !enrollment.program.equipment.isEmpty {
                         equipmentSection
                     }
 
@@ -452,7 +452,7 @@ struct EnrolledProgramDetailSheet: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 8) {
-                ForEach(enrollment.program.equipmentRequired, id: \.self) { equipment in
+                ForEach(enrollment.program.equipment, id: \.self) { equipment in
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)

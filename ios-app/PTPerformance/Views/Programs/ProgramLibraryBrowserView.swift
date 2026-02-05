@@ -433,7 +433,7 @@ struct ProgramLibraryCard: View {
                     Spacer()
 
                     // Featured star
-                    if program.isFeatured {
+                    if program.featured {
                         Image(systemName: "star.fill")
                             .font(.caption)
                             .foregroundColor(.yellow)
@@ -484,7 +484,7 @@ struct ProgramLibraryCard: View {
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(program.title)\(program.isFeatured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty")
+        .accessibilityLabel("\(program.title)\(program.featured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty")
         .accessibilityHint("Double tap to view program details")
         .contextMenu {
             Button {
@@ -633,12 +633,12 @@ struct ProgramPreviewSheet: View {
                     statsSection
 
                     // Equipment section
-                    if !program.equipmentRequired.isEmpty {
+                    if !program.equipment.isEmpty {
                         equipmentSection
                     }
 
                     // Tags section
-                    if !program.tags.isEmpty {
+                    if !program.tagsList.isEmpty {
                         tagsSection
                     }
                 }
@@ -672,7 +672,7 @@ struct ProgramPreviewSheet: View {
                 ProgramCategoryBadge(category: program.category)
                 ProgramDifficultyBadge(difficulty: program.difficultyLevel)
 
-                if program.isFeatured {
+                if program.featured {
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .font(.caption2)
@@ -769,7 +769,7 @@ struct ProgramPreviewSheet: View {
                 .font(.headline)
 
             ProgramFlowLayout(spacing: 8) {
-                ForEach(program.equipmentRequired, id: \.self) { equipment in
+                ForEach(program.equipment, id: \.self) { equipment in
                     Text(equipment)
                         .font(.caption)
                         .padding(.horizontal, 10)
@@ -789,7 +789,7 @@ struct ProgramPreviewSheet: View {
                 .font(.headline)
 
             ProgramFlowLayout(spacing: 8) {
-                ForEach(program.tags, id: \.self) { tag in
+                ForEach(program.tagsList, id: \.self) { tag in
                     Text("#\(tag)")
                         .font(.caption)
                         .foregroundColor(.blue)

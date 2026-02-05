@@ -15,32 +15,35 @@ final class RecoverySessionTests: XCTestCase {
     func testRecoverySessionInitialization() {
         let id = UUID()
         let patientId = UUID()
-        let startTime = Date()
+        let loggedAt = Date()
         let createdAt = Date()
 
         let session = RecoverySession(
             id: id,
             patientId: patientId,
-            protocolType: .sauna,
-            startTime: startTime,
-            duration: 1200, // 20 minutes
+            protocolType: .saunaTraditional,
+            loggedAt: loggedAt,
+            durationSeconds: 1200, // 20 minutes
             temperature: 180.0,
             heartRateAvg: 120,
             heartRateMax: 145,
             perceivedEffort: 7,
+            rating: 4,
             notes: "Great session",
             createdAt: createdAt
         )
 
         XCTAssertEqual(session.id, id)
         XCTAssertEqual(session.patientId, patientId)
-        XCTAssertEqual(session.protocolType, .sauna)
-        XCTAssertEqual(session.startTime, startTime)
-        XCTAssertEqual(session.duration, 1200)
+        XCTAssertEqual(session.protocolType, .saunaTraditional)
+        XCTAssertEqual(session.loggedAt, loggedAt)
+        XCTAssertEqual(session.durationMinutes, 20)
+        XCTAssertEqual(session.durationSeconds, 1200)
         XCTAssertEqual(session.temperature, 180.0)
         XCTAssertEqual(session.heartRateAvg, 120)
         XCTAssertEqual(session.heartRateMax, 145)
         XCTAssertEqual(session.perceivedEffort, 7)
+        XCTAssertEqual(session.rating, 4)
         XCTAssertEqual(session.notes, "Great session")
         XCTAssertEqual(session.createdAt, createdAt)
     }
@@ -49,13 +52,14 @@ final class RecoverySessionTests: XCTestCase {
         let session = RecoverySession(
             id: UUID(),
             patientId: UUID(),
-            protocolType: .meditation,
-            startTime: Date(),
-            duration: 600,
+            protocolType: .contrast,
+            loggedAt: Date(),
+            durationSeconds: 600,
             temperature: nil,
             heartRateAvg: nil,
             heartRateMax: nil,
             perceivedEffort: nil,
+            rating: nil,
             notes: nil,
             createdAt: Date()
         )
@@ -64,6 +68,7 @@ final class RecoverySessionTests: XCTestCase {
         XCTAssertNil(session.heartRateAvg)
         XCTAssertNil(session.heartRateMax)
         XCTAssertNil(session.perceivedEffort)
+        XCTAssertNil(session.rating)
         XCTAssertNil(session.notes)
     }
 
@@ -102,7 +107,8 @@ final class RecoverySessionTests: XCTestCase {
         // Verify snake_case keys
         XCTAssertNotNil(jsonObject["patient_id"])
         XCTAssertNotNil(jsonObject["protocol_type"])
-        XCTAssertNotNil(jsonObject["start_time"])
+        XCTAssertNotNil(jsonObject["logged_at"])
+        XCTAssertNotNil(jsonObject["duration_minutes"])
         XCTAssertNotNil(jsonObject["heart_rate_avg"])
         XCTAssertNotNil(jsonObject["heart_rate_max"])
         XCTAssertNotNil(jsonObject["perceived_effort"])
@@ -111,7 +117,8 @@ final class RecoverySessionTests: XCTestCase {
         // Verify camelCase keys are NOT present
         XCTAssertNil(jsonObject["patientId"])
         XCTAssertNil(jsonObject["protocolType"])
-        XCTAssertNil(jsonObject["startTime"])
+        XCTAssertNil(jsonObject["loggedAt"])
+        XCTAssertNil(jsonObject["durationMinutes"])
         XCTAssertNil(jsonObject["heartRateAvg"])
         XCTAssertNil(jsonObject["heartRateMax"])
         XCTAssertNil(jsonObject["perceivedEffort"])
@@ -132,37 +139,34 @@ final class RecoverySessionTests: XCTestCase {
 
     func testRecoveryProtocolTypeAllCases() {
         let allCases = RecoveryProtocolType.allCases
-        XCTAssertEqual(allCases.count, 8)
-        XCTAssertTrue(allCases.contains(.sauna))
+        XCTAssertEqual(allCases.count, 7)
+        XCTAssertTrue(allCases.contains(.saunaTraditional))
+        XCTAssertTrue(allCases.contains(.saunaInfrared))
+        XCTAssertTrue(allCases.contains(.saunaSteam))
         XCTAssertTrue(allCases.contains(.coldPlunge))
+        XCTAssertTrue(allCases.contains(.coldShower))
+        XCTAssertTrue(allCases.contains(.iceBath))
         XCTAssertTrue(allCases.contains(.contrast))
-        XCTAssertTrue(allCases.contains(.cryotherapy))
-        XCTAssertTrue(allCases.contains(.floatTank))
-        XCTAssertTrue(allCases.contains(.massage))
-        XCTAssertTrue(allCases.contains(.stretching))
-        XCTAssertTrue(allCases.contains(.meditation))
     }
 
     func testRecoveryProtocolTypeRawValues() {
-        XCTAssertEqual(RecoveryProtocolType.sauna.rawValue, "sauna")
+        XCTAssertEqual(RecoveryProtocolType.saunaTraditional.rawValue, "sauna_traditional")
+        XCTAssertEqual(RecoveryProtocolType.saunaInfrared.rawValue, "sauna_infrared")
+        XCTAssertEqual(RecoveryProtocolType.saunaSteam.rawValue, "sauna_steam")
         XCTAssertEqual(RecoveryProtocolType.coldPlunge.rawValue, "cold_plunge")
+        XCTAssertEqual(RecoveryProtocolType.coldShower.rawValue, "cold_shower")
+        XCTAssertEqual(RecoveryProtocolType.iceBath.rawValue, "ice_bath")
         XCTAssertEqual(RecoveryProtocolType.contrast.rawValue, "contrast")
-        XCTAssertEqual(RecoveryProtocolType.cryotherapy.rawValue, "cryotherapy")
-        XCTAssertEqual(RecoveryProtocolType.floatTank.rawValue, "float_tank")
-        XCTAssertEqual(RecoveryProtocolType.massage.rawValue, "massage")
-        XCTAssertEqual(RecoveryProtocolType.stretching.rawValue, "stretching")
-        XCTAssertEqual(RecoveryProtocolType.meditation.rawValue, "meditation")
     }
 
     func testRecoveryProtocolTypeDisplayNames() {
-        XCTAssertEqual(RecoveryProtocolType.sauna.displayName, "Sauna")
+        XCTAssertEqual(RecoveryProtocolType.saunaTraditional.displayName, "Traditional Sauna")
+        XCTAssertEqual(RecoveryProtocolType.saunaInfrared.displayName, "Infrared Sauna")
+        XCTAssertEqual(RecoveryProtocolType.saunaSteam.displayName, "Steam Room")
         XCTAssertEqual(RecoveryProtocolType.coldPlunge.displayName, "Cold Plunge")
+        XCTAssertEqual(RecoveryProtocolType.coldShower.displayName, "Cold Shower")
+        XCTAssertEqual(RecoveryProtocolType.iceBath.displayName, "Ice Bath")
         XCTAssertEqual(RecoveryProtocolType.contrast.displayName, "Contrast Therapy")
-        XCTAssertEqual(RecoveryProtocolType.cryotherapy.displayName, "Cryotherapy")
-        XCTAssertEqual(RecoveryProtocolType.floatTank.displayName, "Float Tank")
-        XCTAssertEqual(RecoveryProtocolType.massage.displayName, "Massage")
-        XCTAssertEqual(RecoveryProtocolType.stretching.displayName, "Stretching")
-        XCTAssertEqual(RecoveryProtocolType.meditation.displayName, "Meditation")
     }
 
     func testRecoveryProtocolTypeDisplayNamesNotEmpty() {
@@ -174,14 +178,13 @@ final class RecoverySessionTests: XCTestCase {
     }
 
     func testRecoveryProtocolTypeIcons() {
-        XCTAssertEqual(RecoveryProtocolType.sauna.icon, "flame.fill")
+        XCTAssertEqual(RecoveryProtocolType.saunaTraditional.icon, "flame.fill")
+        XCTAssertEqual(RecoveryProtocolType.saunaInfrared.icon, "flame")
+        XCTAssertEqual(RecoveryProtocolType.saunaSteam.icon, "cloud.fill")
         XCTAssertEqual(RecoveryProtocolType.coldPlunge.icon, "snowflake")
+        XCTAssertEqual(RecoveryProtocolType.coldShower.icon, "drop.fill")
+        XCTAssertEqual(RecoveryProtocolType.iceBath.icon, "snowflake.circle.fill")
         XCTAssertEqual(RecoveryProtocolType.contrast.icon, "arrow.left.arrow.right")
-        XCTAssertEqual(RecoveryProtocolType.cryotherapy.icon, "thermometer.snowflake")
-        XCTAssertEqual(RecoveryProtocolType.floatTank.icon, "drop.fill")
-        XCTAssertEqual(RecoveryProtocolType.massage.icon, "hand.raised.fill")
-        XCTAssertEqual(RecoveryProtocolType.stretching.icon, "figure.flexibility")
-        XCTAssertEqual(RecoveryProtocolType.meditation.icon, "brain.head.profile")
     }
 
     func testRecoveryProtocolTypeIconsNotEmpty() {
@@ -191,9 +194,9 @@ final class RecoverySessionTests: XCTestCase {
     }
 
     func testRecoveryProtocolTypeInitFromRawValue() {
-        XCTAssertEqual(RecoveryProtocolType(rawValue: "sauna"), .sauna)
+        XCTAssertEqual(RecoveryProtocolType(rawValue: "sauna_traditional"), .saunaTraditional)
         XCTAssertEqual(RecoveryProtocolType(rawValue: "cold_plunge"), .coldPlunge)
-        XCTAssertEqual(RecoveryProtocolType(rawValue: "float_tank"), .floatTank)
+        XCTAssertEqual(RecoveryProtocolType(rawValue: "ice_bath"), .iceBath)
         XCTAssertNil(RecoveryProtocolType(rawValue: "invalid"))
         XCTAssertNil(RecoveryProtocolType(rawValue: ""))
     }
@@ -305,13 +308,14 @@ final class RecoverySessionTests: XCTestCase {
         RecoverySession(
             id: UUID(),
             patientId: UUID(),
-            protocolType: .sauna,
-            startTime: Date(),
-            duration: 1200,
+            protocolType: .saunaTraditional,
+            loggedAt: Date(),
+            durationSeconds: 1200,
             temperature: 180.0,
             heartRateAvg: 120,
             heartRateMax: 145,
             perceivedEffort: 7,
+            rating: 4,
             notes: "Great session",
             createdAt: Date()
         )

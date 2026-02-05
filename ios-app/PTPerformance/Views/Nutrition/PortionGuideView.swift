@@ -141,28 +141,28 @@ struct PortionGuideView: View {
                 .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 12) {
-                TipRow(
+                PortionTipRow(
                     icon: "1.circle.fill",
                     title: "Use YOUR Hand",
-                    description: "Your hand size scales with your body, making it a personalized measuring tool"
+                    tipDescription: "Your hand size scales with your body, making it a personalized measuring tool"
                 )
 
-                TipRow(
+                PortionTipRow(
                     icon: "2.circle.fill",
                     title: "Be Consistent",
-                    description: "Use the same hand measurements each time for accurate tracking"
+                    tipDescription: "Use the same hand measurements each time for accurate tracking"
                 )
 
-                TipRow(
+                PortionTipRow(
                     icon: "3.circle.fill",
                     title: "Adjust as Needed",
-                    description: "Add extra vegetables freely; adjust protein and carbs based on activity"
+                    tipDescription: "Add extra vegetables freely; adjust protein and carbs based on activity"
                 )
 
-                TipRow(
+                PortionTipRow(
                     icon: "4.circle.fill",
                     title: "Fill Half Your Plate",
-                    description: "Aim for vegetables to fill half your plate at each meal"
+                    tipDescription: "Aim for vegetables to fill half your plate at each meal"
                 )
             }
             .padding()
@@ -327,10 +327,10 @@ struct PortionVisual: View {
 
 // MARK: - Tip Row
 
-struct TipRow: View {
+struct PortionTipRow: View {
     let icon: String
     let title: String
-    let description: String
+    let tipDescription: String
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -344,13 +344,13 @@ struct TipRow: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                Text(description)
+                Text(tipDescription)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title). \(description)")
+        .accessibilityLabel("\(title). \(tipDescription)")
     }
 }
 

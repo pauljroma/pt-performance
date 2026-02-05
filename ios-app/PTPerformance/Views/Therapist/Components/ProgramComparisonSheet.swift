@@ -306,14 +306,14 @@ struct ProgramComparisonSheet: View {
 
     private var statsRows: [StatsRow] {
         [
-            StatsRow(label: "Total Patients", getValue: { "\($0.totalEnrollments)" }),
+            StatsRow(label: "Total Patients", getValue: { "\($0.totalEnrollmentsValue)" }),
             StatsRow(label: "Completion Rate", getValue: { $0.formattedCompletionRate }),
             StatsRow(label: "Adherence", getValue: { $0.formattedAdherence }),
             StatsRow(label: "Pain Reduction", getValue: { $0.formattedPainReduction }),
             StatsRow(label: "Strength Gain", getValue: { $0.formattedStrengthGain }),
-            StatsRow(label: "Avg Duration", getValue: { String(format: "%.1f wks", $0.averageDurationWeeks) }),
-            StatsRow(label: "Active", getValue: { "\($0.activeEnrollments)" }),
-            StatsRow(label: "Dropped", getValue: { "\($0.droppedEnrollments)" })
+            StatsRow(label: "Avg Duration", getValue: { String(format: "%.1f wks", $0.averageDurationWeeksValue) }),
+            StatsRow(label: "Active", getValue: { "\($0.activeEnrollmentsValue)" }),
+            StatsRow(label: "Dropped", getValue: { "\($0.droppedEnrollmentsValue)" })
         ]
     }
 
@@ -340,13 +340,13 @@ struct ProgramComparisonSheet: View {
     private func metricValue(for metric: ComparisonMetric, program: ProgramMetrics) -> Double {
         switch metric {
         case .completionRate:
-            return program.completionRate * 100
+            return program.completionRateValue * 100
         case .painReduction:
-            return program.averagePainReduction
+            return program.averagePainReductionValue
         case .strengthGain:
-            return program.averageStrengthGain * 100
+            return program.averageStrengthGainValue * 100
         case .adherence:
-            return program.averageAdherence * 100
+            return program.averageAdherenceValue * 100
         case .effectiveness:
             return program.effectivenessScore * 100
         }

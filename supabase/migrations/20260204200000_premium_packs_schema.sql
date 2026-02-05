@@ -78,19 +78,23 @@ ALTER TABLE premium_packs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_pack_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Premium packs: Public read access
+DROP POLICY IF EXISTS "Anyone can view premium packs" ON premium_packs;
 CREATE POLICY "Anyone can view premium packs"
     ON premium_packs FOR SELECT
     USING (true);
 
 -- User subscriptions: Users can view/manage their own
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON user_pack_subscriptions;
 CREATE POLICY "Users can view own subscriptions"
     ON user_pack_subscriptions FOR SELECT
     USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can insert own subscriptions" ON user_pack_subscriptions;
 CREATE POLICY "Users can insert own subscriptions"
     ON user_pack_subscriptions FOR INSERT
     WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can update own subscriptions" ON user_pack_subscriptions;
 CREATE POLICY "Users can update own subscriptions"
     ON user_pack_subscriptions FOR UPDATE
     USING (user_id = auth.uid());
@@ -298,6 +302,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS premium_packs_updated_at ON premium_packs;
 CREATE TRIGGER premium_packs_updated_at
     BEFORE UPDATE ON premium_packs
     FOR EACH ROW
@@ -311,6 +316,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS user_pack_subscriptions_updated_at ON user_pack_subscriptions;
 CREATE TRIGGER user_pack_subscriptions_updated_at
     BEFORE UPDATE ON user_pack_subscriptions
     FOR EACH ROW
