@@ -24,8 +24,28 @@ function parseBearerToken(headerValue) {
   return token;
 }
 
+function getAuthorizedTherapistIds(user) {
+  const candidateIds = [
+    user?.id,
+    user?.app_metadata?.therapist_id,
+    user?.user_metadata?.therapist_id,
+  ];
+
+  return new Set(candidateIds.filter(Boolean));
+}
+
 export async function requireAuthenticatedUser(req, res, next) {
   try {
+    if (!config.supabase.anonKey) {
+      return next(
+        createAppError(
+          'auth_configuration_error',
+          500,
+          'SUPABASE_ANON_KEY is required for authenticated user verification'
+        )
+      );
+    }
+
     const token = parseBearerToken(req.headers.authorization);
 
     if (!token) {
@@ -39,6 +59,7 @@ export async function requireAuthenticatedUser(req, res, next) {
     }
 
     req.user = data.user;
+    req.authorizedTherapistIds = getAuthorizedTherapistIds(data.user);
     return next();
   } catch (error) {
     return next(error);
@@ -47,16 +68,17 @@ export async function requireAuthenticatedUser(req, res, next) {
 
 export function requireTherapistOwnership(req, res, next) {
   const { therapistId } = req.params;
-  const userId = req.user?.id;
+  const authorizedTherapistIds = req.authorizedTherapistIds || new Set();
 
-  if (!therapistId || !userId) {
+  if (!therapistId || !authorizedTherapistIds.size) {
     return next(createAppError('forbidden', 403, 'Missing therapist ownership context'));
   }
 
-  if (therapistId !== userId) {
+  if (!authorizedTherapistIds.has(therapistId)) {
     return next(createAppError('forbidden', 403, 'User is not authorized to access this therapist scope'));
   }
 
   return next();
 }
 
+export { parseBearerToken, getAuthorizedTherapistIds };

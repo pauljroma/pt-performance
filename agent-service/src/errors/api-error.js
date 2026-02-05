@@ -15,10 +15,12 @@ export function createAppError(code, statusCode, message, details) {
 export function normalizeError(error) {
   if (error instanceof AppError) return error;
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   return new AppError({
     code: 'internal_server_error',
     statusCode: 500,
-    message: error?.message || 'Unexpected server error',
+    message: isProduction ? 'Unexpected server error' : (error?.message || 'Unexpected server error'),
   });
 }
 

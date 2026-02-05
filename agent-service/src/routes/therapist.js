@@ -1,11 +1,64 @@
 import express from 'express';
 import * as therapistService from '../services/therapist.js';
 import { requireAuthenticatedUser, requireTherapistOwnership } from '../middleware/auth.js';
+import { createAppError } from '../errors/api-error.js';
 
 const router = express.Router();
 
 router.use(requireAuthenticatedUser);
 router.use('/:therapistId', requireTherapistOwnership);
+
+function parseOptionalNumber(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+
+    const parsed = Number(value);
+
+    if (Number.isNaN(parsed)) {
+        throw createAppError('invalid_query_parameter', 400, `${fieldName} must be a valid number`);
+    }
+
+    return parsed;
+}
+
+function parseFilters(query, therapistId) {
+    const allowedSeverities = new Set(['HIGH', 'MEDIUM', 'LOW']);
+
+    if (query.flagSeverity && !allowedSeverities.has(query.flagSeverity)) {
+        throw createAppError('invalid_query_parameter', 400, 'flagSeverity must be one of HIGH, MEDIUM, LOW');
+    }
+
+    if (query.hasFlags && query.hasFlags !== 'true' && query.hasFlags !== 'false') {
+        throw createAppError('invalid_query_parameter', 400, 'hasFlags must be true or false');
+    }
+
+    const minAdherence = parseOptionalNumber(query.minAdherence, 'minAdherence');
+    const maxAdherence = parseOptionalNumber(query.maxAdherence, 'maxAdherence');
+
+    if (minAdherence !== null && (minAdherence < 0 || minAdherence > 100)) {
+        throw createAppError('invalid_query_parameter', 400, 'minAdherence must be between 0 and 100');
+    }
+
+    if (maxAdherence !== null && (maxAdherence < 0 || maxAdherence > 100)) {
+        throw createAppError('invalid_query_parameter', 400, 'maxAdherence must be between 0 and 100');
+    }
+
+    if (minAdherence !== null && maxAdherence !== null && minAdherence > maxAdherence) {
+        throw createAppError('invalid_query_parameter', 400, 'minAdherence cannot be greater than maxAdherence');
+    }
+
+    return {
+        therapistId,
+        search: query.search || null,
+        sport: query.sport || null,
+        position: query.position || null,
+        flagSeverity: query.flagSeverity || null,
+        hasFlags: query.hasFlags === 'true' ? true : query.hasFlags === 'false' ? false : null,
+        minAdherence,
+        maxAdherence,
+    };
+}
 
 /**
  * GET /therapist/:therapistId/patients
@@ -14,27 +67,7 @@ router.use('/:therapistId', requireTherapistOwnership);
 router.get('/:therapistId/patients', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
-        const {
-            search,
-            sport,
-            position,
-            flagSeverity,
-            hasFlags,
-            minAdherence,
-            maxAdherence,
-        } = req.query;
-
-        const filters = {
-            therapistId,
-            search: search || null,
-            sport: sport || null,
-            position: position || null,
-            flagSeverity: flagSeverity || null,
-            hasFlags: hasFlags === 'true' ? true : hasFlags === 'false' ? false : null,
-            minAdherence: minAdherence ? parseFloat(minAdherence) : null,
-            maxAdherence: maxAdherence ? parseFloat(maxAdherence) : null,
-        };
-
+        const filters = parseFilters(req.query, therapistId);
         const patients = await therapistService.searchPatients(filters);
 
         res.json({
@@ -87,3 +120,4 @@ router.get('/:therapistId/alerts', async (req, res, next) => {
 });
 
 export default router;
+export { parseFilters, parseOptionalNumber };

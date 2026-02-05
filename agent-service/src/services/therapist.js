@@ -3,6 +3,14 @@ import { config } from '../config.js';
 
 const supabase = createClient(config.supabase.url, config.supabase.serviceKey);
 
+
+function sanitizeSearchTerm(value) {
+    return String(value)
+        .replace(/[,%()]/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ');
+}
+
 function buildPatientMetrics(patients, adherenceRows, sessionsRows) {
     const adherenceByPatientId = new Map((adherenceRows || []).map((row) => [row.patient_id, row]));
     const latestSessionByPatientId = new Map();
@@ -72,9 +80,13 @@ async function searchPatients(filters) {
         .eq('therapist_id', filters.therapistId);
 
     if (filters.search) {
-        query = query.or(
-            `first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`
-        );
+        const sanitizedSearch = sanitizeSearchTerm(filters.search);
+
+        if (sanitizedSearch) {
+            query = query.or(
+                `first_name.ilike.%${sanitizedSearch}%,last_name.ilike.%${sanitizedSearch}%,email.ilike.%${sanitizedSearch}%`
+            );
+        }
     }
 
     if (filters.sport) {
@@ -240,13 +252,21 @@ async function getDashboardSummary(therapistId) {
  * Get high priority alerts
  */
 async function getHighPriorityAlerts(therapistId) {
-    const { data: patients } = await supabase
+    const { data: patients, error: patientsError } = await supabase
         .from('patients')
         .select('id, first_name, last_name')
         .eq('therapist_id', therapistId);
 
-    const patientIds = patients.map((patient) => patient.id);
-    const patientMap = new Map(patients.map((patient) => [patient.id, patient]));
+    if (patientsError) {
+        throw new Error(`Failed to fetch therapist patients: ${patientsError.message}`);
+    }
+
+    const patientIds = (patients || []).map((patient) => patient.id);
+    const patientMap = new Map((patients || []).map((patient) => [patient.id, patient]));
+
+    if (!patientIds.length) {
+        return [];
+    }
 
     const { data: flags, error } = await supabase
         .from('patient_flags')
@@ -279,4 +299,5 @@ export {
     getDashboardSummary,
     getHighPriorityAlerts,
     buildPatientMetrics,
+    sanitizeSearchTerm,
 };
