@@ -2,8 +2,8 @@ import Foundation
 
 // MARK: - Workout Recommendation Models
 
-/// Workout modification based on fasting state
-struct WorkoutModification: Codable, Identifiable {
+/// Workout modification based on fasting state (distinct from adaptive training WorkoutModification)
+struct FastingWorkoutModification: Codable, Identifiable {
     var id: String { "\(type)_\(rationale.prefix(20))" }
     let type: String
     let originalValue: String
@@ -58,7 +58,7 @@ struct FastingWorkoutRecommendation: Codable, Identifiable {
     let fastingState: FastingStateResponse
     let workoutAllowed: Bool
     let workoutRecommended: Bool
-    let modifications: [WorkoutModification]
+    let modifications: [FastingWorkoutModification]
     let nutritionTiming: NutritionTiming
     let safetyWarnings: [String]
     let performanceNotes: [String]
@@ -708,7 +708,7 @@ final class FastingService: ObservableObject {
         let hours = fastingState.fastingHours
 
         var warnings: [String] = []
-        var modifications: [WorkoutModification] = []
+        var modifications: [FastingWorkoutModification] = []
         var performanceNotes: [String] = []
         var electrolyteRecs: [String] = []
         var workoutAllowed = true
@@ -719,7 +719,7 @@ final class FastingService: ObservableObject {
         if hours >= 12 && hours < 16 {
             warnings = ["Stay hydrated with electrolytes"]
             modifications = [
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "intensity",
                     originalValue: "100%",
                     modifiedValue: "95%",
@@ -741,13 +741,13 @@ final class FastingService: ObservableObject {
                 "Break fast within 1-2 hours post-workout for optimal muscle protein synthesis"
             ]
             modifications = [
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "volume",
                     originalValue: "100%",
                     modifiedValue: "70-80%",
                     rationale: "Extended fast reduces muscle protein synthesis response. Reduce sets by 20-30%."
                 ),
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "intensity",
                     originalValue: "100%",
                     modifiedValue: "85%",
@@ -772,13 +772,13 @@ final class FastingService: ObservableObject {
                 "Walking, stretching, and mobility work are ideal"
             ]
             modifications = [
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "exercise_swap",
                     originalValue: "Intense workout",
                     modifiedValue: "Light activity",
                     rationale: "Extended fasting significantly impairs high-intensity performance. Recommend mobility, yoga, or walking only."
                 ),
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "duration",
                     originalValue: "As planned",
                     modifiedValue: "30 min max light activity",
@@ -802,7 +802,7 @@ final class FastingService: ObservableObject {
                 "Break fast with protein and carbs 2-3 hours before any planned intense workout"
             ]
             modifications = [
-                WorkoutModification(
+                FastingWorkoutModification(
                     type: "timing",
                     originalValue: "Train now",
                     modifiedValue: "Break fast first",

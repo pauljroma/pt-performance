@@ -540,7 +540,7 @@ struct FastingWorkoutRecommendationCompactView: View {
                 workoutAllowed: true,
                 workoutRecommended: true,
                 modifications: [
-                    WorkoutModification(
+                    FastingWorkoutModification(
                         type: "volume",
                         originalValue: "100%",
                         modifiedValue: "70-80%",

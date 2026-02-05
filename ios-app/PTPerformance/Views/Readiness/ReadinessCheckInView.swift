@@ -39,7 +39,6 @@ struct ReadinessCheckInView: View {
     // MARK: - Dependencies
 
     @StateObject private var viewModel: ReadinessCheckInViewModel
-    @StateObject private var healthKitService = HealthKitService.shared
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - UI State
@@ -51,6 +50,9 @@ struct ReadinessCheckInView: View {
     @State private var showHealthKitPrompt = false
     @State private var hrvBaseline: Double?
     @State private var isInitialLoading = true
+    @State private var healthKitIsAuthorized = false
+    @State private var todayHRV: Double?
+    @State private var todaySleep: SleepData?
 
     // MARK: - Initialization
 
@@ -153,11 +155,28 @@ struct ReadinessCheckInView: View {
 
                     // Show form regardless of timeout
                     isInitialLoading = false
+                }
+                .task {
+                    // Load HealthKit data in separate task (truly non-blocking)
+                    // This runs independently after view appears
+                    guard HealthKitService.isHealthKitAvailable else { return }
 
-                    // Load HRV baseline for trend indicator and sync today's data (non-blocking)
-                    if healthKitService.isAuthorized {
-                        hrvBaseline = try? await healthKitService.getHRVBaseline()
-                        _ = try? await healthKitService.syncTodayData()
+                    let service = HealthKitService.shared
+                    healthKitIsAuthorized = service.isAuthorized
+
+                    if service.isAuthorized {
+                        // Sync HealthKit data with timeout
+                        do {
+                            async let baselineTask = service.getHRVBaseline()
+                            async let syncTask = service.syncTodayData()
+
+                            hrvBaseline = try? await baselineTask
+                            let data = try? await syncTask
+
+                            // Update local state from service
+                            todayHRV = service.todayHRV
+                            todaySleep = service.todaySleep
+                        }
                     }
                 }
                 .sheet(isPresented: $showHealthKitPrompt) {
@@ -178,7 +197,7 @@ struct ReadinessCheckInView: View {
     private var quickFillSection: some View {
         Section {
             if HealthKitService.isHealthKitAvailable {
-                if healthKitService.isAuthorized {
+                if healthKitIsAuthorized {
                     // Authorized: Show auto-fill button and health data
                     VStack(alignment: .leading, spacing: 12) {
                         // Auto-fill button
@@ -208,7 +227,7 @@ struct ReadinessCheckInView: View {
                         .accessibilityHint("Imports sleep and HRV data from your Apple Watch")
 
                         // Show today's HRV with trend indicator
-                        if let hrv = healthKitService.todayHRV {
+                        if let hrv = todayHRV {
                             HStack {
                                 Text("Today's HRV")
                                 Spacer()
@@ -220,7 +239,7 @@ struct ReadinessCheckInView: View {
                         }
 
                         // Show sleep from Apple Watch
-                        if let sleep = healthKitService.todaySleep {
+                        if let sleep = todaySleep {
                             HStack {
                                 Text("Last Night's Sleep")
                                 Spacer()
@@ -245,7 +264,7 @@ struct ReadinessCheckInView: View {
                 Text("Quick Fill")
             }
         } footer: {
-            if HealthKitService.isHealthKitAvailable && healthKitService.isAuthorized {
+            if HealthKitService.isHealthKitAvailable && healthKitIsAuthorized {
                 Text("Pull sleep hours and HRV from your Apple Watch to auto-fill the form")
             }
         }
@@ -714,16 +733,22 @@ struct ReadinessCheckInView: View {
         isAutoFilling = true
         defer { isAutoFilling = false }
 
+        let service = HealthKitService.shared
+
         do {
             // Fetch today's data and baseline in parallel
-            async let dataTask = healthKitService.syncTodayData()
-            async let baselineTask = healthKitService.getHRVBaseline()
+            async let dataTask = service.syncTodayData()
+            async let baselineTask = service.getHRVBaseline()
 
             let data = try await dataTask
             let baseline = try? await baselineTask
 
             // Update cached baseline for HRV trend indicator
             hrvBaseline = baseline
+
+            // Update local state
+            todayHRV = service.todayHRV
+            todaySleep = service.todaySleep
 
             // Map sleep hours to sleep input (clamped to 0-12 range)
             if let sleepMinutes = data.sleepDurationMinutes {
@@ -740,7 +765,7 @@ struct ReadinessCheckInView: View {
             isAutoFilled = true
             wasAutoFilled = true
         } catch {
-            // Error is already handled by healthKitService
+            // Error is already handled by service
             print("Failed to auto-fill from HealthKit: \(error.localizedDescription)")
         }
     }
@@ -793,7 +818,8 @@ struct ReadinessCheckInView: View {
     /// Request HealthKit authorization
     private func requestHealthKitAccess() async {
         do {
-            _ = try await healthKitService.requestAuthorization()
+            let authorized = try await HealthKitService.shared.requestAuthorization()
+            healthKitIsAuthorized = authorized
         } catch {
             DebugLogger.shared.warning("ReadinessCheckInView", "HealthKit authorization failed: \(error.localizedDescription)")
         }

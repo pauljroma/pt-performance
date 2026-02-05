@@ -490,6 +490,16 @@ class HealthKitService: ObservableObject {
         return try await activityService.fetchOxygenSaturation(for: date)
     }
 
+    /// Fetch step count for a specific date
+    /// - Parameter date: The date to fetch steps for
+    /// - Returns: Step count as Double, or 0 if not available
+    func fetchSteps(for date: Date) async throws -> Double {
+        guard let activityService = activityService else {
+            return 0
+        }
+        return try await activityService.fetchStepCount(for: date) ?? 0
+    }
+
     // MARK: - Readiness Auto-Fill
 
     /// Get auto-fill data for readiness check-in

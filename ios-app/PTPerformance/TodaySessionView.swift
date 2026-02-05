@@ -26,6 +26,10 @@ struct TodaySessionView: View {
     @State private var showRecoveryProtocol = false
     @State private var showReadinessInsights = false
 
+    // Adaptive Training: Workout Modifications
+    @StateObject private var adaptiveWorkoutVM = AdaptiveWorkoutViewModel()
+    @State private var showModificationSheet = false
+
     // Prescribed workouts state
     @State private var pendingPrescriptions: [WorkoutPrescription] = []
     @State private var isLoadingPrescriptions = false
@@ -83,6 +87,11 @@ struct TodaySessionView: View {
             // Reload readiness data after check-in submission
             Task {
                 await loadTodayReadiness()
+                // Adaptive Training: Check if modification should be generated
+                await adaptiveWorkoutVM.checkForModificationAfterReadiness()
+                if adaptiveWorkoutVM.todayModification != nil {
+                    showModificationSheet = true
+                }
             }
         }) {
             if let patientId = appState.userId {
@@ -104,6 +113,38 @@ struct TodaySessionView: View {
         }) {
             if let patientId = appState.userId {
                 ArmCareAssessmentView(patientId: UUID(uuidString: patientId) ?? UUID())
+            }
+        }
+        // Adaptive Training: Modification suggestion sheet
+        .sheet(isPresented: $showModificationSheet) {
+            if let modification = adaptiveWorkoutVM.todayModification {
+                NavigationStack {
+                    ScrollView {
+                        WorkoutModificationCard(
+                            modification: modification,
+                            onAccept: {
+                                Task {
+                                    await adaptiveWorkoutVM.acceptModification(modification)
+                                }
+                            },
+                            onDecline: {
+                                Task {
+                                    await adaptiveWorkoutVM.declineModification(modification)
+                                }
+                            }
+                        )
+                        .padding()
+                    }
+                    .navigationTitle("Workout Adjustment")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Dismiss") {
+                                showModificationSheet = false
+                            }
+                        }
+                    }
+                }
             }
         }
         // Recovery Intelligence sheets
@@ -213,6 +254,12 @@ struct TodaySessionView: View {
             }
         }
         .task {
+            // Configure adaptive workout VM with patient ID
+            if let userId = appState.userId,
+               let patientId = UUID(uuidString: userId) {
+                adaptiveWorkoutVM.configure(patientId: patientId)
+            }
+
             // Only fetch on initial load; onComplete callbacks handle refresh after workouts
             if viewModel.session == nil && !viewModel.isLoading {
                 await viewModel.fetchTodaySession()
@@ -225,11 +272,37 @@ struct TodaySessionView: View {
             await loadPendingPrescriptions()
             // Recovery Intelligence: Load workout adaptation based on readiness
             await loadWorkoutAdaptation()
+            // Adaptive Training: Load any pending workout modifications
+            await adaptiveWorkoutVM.loadPendingModifications()
+
+            // If readiness exists but no pending modification, check if one should be generated
+            if todayReadiness != nil && !adaptiveWorkoutVM.hasTodayModification {
+                await adaptiveWorkoutVM.checkForModificationAfterReadiness()
+            }
         }
         .onDisappear {
             // Stop timer when view disappears
             timer?.invalidate()
             timer = nil
+        }
+        // Adaptive Training: Sync VM's showModificationSheet with local state
+        .onChange(of: adaptiveWorkoutVM.showModificationSheet) { _, newValue in
+            if newValue {
+                showModificationSheet = true
+                adaptiveWorkoutVM.showModificationSheet = false
+            }
+        }
+        // Also sync success toast and dismiss sheet on accept/decline
+        .onChange(of: adaptiveWorkoutVM.showSuccessToast) { _, newValue in
+            if newValue {
+                showModificationSheet = false
+            }
+        }
+        // Adaptive Training: Success alert for modification acceptance
+        .alert("Workout Updated", isPresented: $adaptiveWorkoutVM.showSuccessToast) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(adaptiveWorkoutVM.successMessage)
         }
     }
 
@@ -377,6 +450,29 @@ struct TodaySessionView: View {
                     onCheckIn: { showArmCareAssessment = true },
                     onShowDetails: { showArmCareAssessment = true }
                 )
+
+                // Adaptive Training: Workout Modification Suggestion
+                if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
+                    WorkoutModificationCardCompact(
+                        modification: modification,
+                        onTap: {
+                            HapticFeedback.light()
+                            showModificationSheet = true
+                        }
+                    )
+                } else if adaptiveWorkoutVM.isLoading {
+                    // Loading placeholder for modification check
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Checking for workout adjustments...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
 
                 // Recovery Intelligence: Readiness-Based Workout Recommendation
                 if let adaptation = workoutAdaptation {
