@@ -12,6 +12,9 @@ import {
 import { getStrengthTargets } from './services/strength.js';
 import { generatePatientSummary } from './services/assistant.js';
 import therapistRoutes from './routes/therapist.js';
+import { setupPCRRoutes } from './routes/pcr.js';
+import { loggingMiddleware, errorLoggingMiddleware } from './middleware/logging.js';
+import { validateRecommendation, getProtocolSummary } from './services/protocol-validator.js';
 
 // Try to import flags service if Agent 2 has created it
 let computeFlags, getTopFlags, getFlagSummary, createPlanChangeRequest;
@@ -33,6 +36,7 @@ try {
 
 const app = express();
 app.use(express.json());
+app.use(loggingMiddleware);
 
 // Register therapist routes (ACP-68, ACP-96-99)
 app.use('/therapist', therapistRoutes);
@@ -338,6 +342,49 @@ app.get("/strength-targets/:patientId", async (req, res) => {
 });
 
 // ============================================================================
+// PROTOCOL VALIDATION ENDPOINTS (ACP-81)
+// Validate recommendation safety and summarize risk profile
+// ============================================================================
+app.post('/protocol/validate', async (req, res) => {
+  const { patientId, recommendation } = req.body;
+
+  try {
+    if (!patientId || !recommendation) {
+      return res.status(400).json({
+        error: 'patient_id_and_recommendation_required'
+      });
+    }
+
+    const validation = await validateRecommendation(patientId, recommendation);
+    res.json({ success: true, validation });
+  } catch (err) {
+    console.error('Error in /protocol/validate:', err);
+    res.status(500).json({
+      error: 'validation_failed',
+      message: err.message
+    });
+  }
+});
+
+app.get('/protocol/summary/:patientId', async (req, res) => {
+  const { patientId } = req.params;
+
+  try {
+    const summary = await getProtocolSummary(patientId);
+    res.json({ success: true, summary });
+  } catch (err) {
+    console.error('Error in /protocol/summary:', err);
+    res.status(500).json({
+      error: 'failed_to_fetch_protocol_summary',
+      message: err.message
+    });
+  }
+});
+
+// Additional PCR route(s) for PT assistant workflow (ACP-90)
+setupPCRRoutes(app);
+
+// ============================================================================
 // PLAN CHANGE REQUEST ENDPOINT (kept for compatibility)
 // Will be enhanced by Agent 2
 // ============================================================================
@@ -442,6 +489,16 @@ async function createLinearPlanChangeIssue({ patientId, summary, reason, impact 
   return json.data.issueCreate.issue;
 }
 
+app.use(errorLoggingMiddleware);
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.statusCode || 500).json({
+    error: 'internal_server_error',
+    message: err.message
+  });
+});
+
 // ============================================================================
 // START SERVER
 // ============================================================================
@@ -460,7 +517,10 @@ app.listen(port, () => {
   console.log(`  GET  /pt-assistant/summary/:patientId`);
   console.log(`  GET  /flags/:patientId`);
   console.log(`  GET  /strength-targets/:patientId`);
+  console.log(`  POST /protocol/validate`);
+  console.log(`  GET  /protocol/summary/:patientId`);
   console.log(`  POST /plan-change-request`);
+  console.log(`  POST /pt-assistant/plan-change-proposal/:patientId`);
   console.log('');
   console.log('Therapist Endpoints:');
   console.log(`  GET  /therapist/:therapistId/patients`);
