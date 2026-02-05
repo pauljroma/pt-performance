@@ -7,6 +7,7 @@
  */
 
 import fetch from "node-fetch";
+import { createAppError, sendApiError } from "../errors/api-error.js";
 
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY;
 const LINEAR_TEAM_ID = process.env.LINEAR_TEAM_ID || "5296cff8-9c53-4cb3-9df3-ccb83601805e";
@@ -217,17 +218,11 @@ export function setupPCRRoutes(app) {
     try {
       // Validate inputs
       if (!patientId) {
-        return res.status(400).json({
-          success: false,
-          error: "patient_id_required"
-        });
+        return sendApiError(res, createAppError("patient_id_required", 400, "patientId is required"));
       }
 
       if (!reason && !suggested_changes) {
-        return res.status(400).json({
-          success: false,
-          error: "reason_or_suggested_changes_required"
-        });
+        return sendApiError(res, createAppError("reason_or_suggested_changes_required", 400, "reason or suggested_changes is required"));
       }
 
       // Create Linear issue
@@ -256,12 +251,7 @@ export function setupPCRRoutes(app) {
 
       console.error("Error creating PCR:", error);
 
-      res.status(500).json({
-        success: false,
-        error: "failed_to_create_pcr",
-        message: error.message,
-        response_time_ms: responseTime
-      });
+      return sendApiError(res, createAppError("failed_to_create_pcr", 500, error.message, { response_time_ms: responseTime }));
     }
   });
 }

@@ -7,6 +7,7 @@
  */
 
 import fetch from "node-fetch";
+import { PAYLOAD_REDACTION_POLICY } from "../config/redaction-policy.js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -74,24 +75,16 @@ function sanitizeBody(body) {
 
   const sanitized = { ...body };
 
-  // Remove sensitive fields
-  const sensitiveFields = [
-    "password",
-    "token",
-    "apiKey",
-    "api_key",
-    "secret",
-    "authorization"
-  ];
+  // Remove sensitive fields using shared policy
+  const { sensitiveFields, maxFieldLength, replacement } = PAYLOAD_REDACTION_POLICY;
 
   for (const field of sensitiveFields) {
     if (sanitized[field]) {
-      sanitized[field] = "[REDACTED]";
+      sanitized[field] = replacement;
     }
   }
 
   // Truncate large fields
-  const maxFieldLength = 1000;
   for (const [key, value] of Object.entries(sanitized)) {
     if (typeof value === "string" && value.length > maxFieldLength) {
       sanitized[key] = value.substring(0, maxFieldLength) + "... [TRUNCATED]";
@@ -109,6 +102,7 @@ function sanitizeBody(body) {
  */
 export function loggingMiddleware(req, res, next) {
   const startTime = Date.now();
+  req._startTime = startTime;
 
   // Store original res.json and res.status
   const originalJson = res.json.bind(res);
