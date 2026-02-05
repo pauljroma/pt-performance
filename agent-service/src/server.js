@@ -12,6 +12,10 @@ import {
 import { getStrengthTargets } from './services/strength.js';
 import { generatePatientSummary } from './services/assistant.js';
 import therapistRoutes from './routes/therapist.js';
+import { setupPCRRoutes } from './routes/pcr.js';
+import { loggingMiddleware, errorLoggingMiddleware } from './middleware/logging.js';
+import { validateRecommendation, getProtocolSummary } from './services/protocol-validator.js';
+import { createAppError, sendApiError, globalErrorMiddleware } from './errors/api-error.js';
 
 // Try to import flags service if Agent 2 has created it
 let computeFlags, getTopFlags, getFlagSummary, createPlanChangeRequest;
@@ -33,6 +37,7 @@ try {
 
 const app = express();
 app.use(express.json());
+app.use(loggingMiddleware);
 
 // Register therapist routes (ACP-68, ACP-96-99)
 app.use('/therapist', therapistRoutes);
@@ -164,10 +169,7 @@ app.get("/patient-summary/:patientId", async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error('Error in /patient-summary:', err);
-    res.status(500).json({
-      error: "failed_to_fetch_patient_summary",
-      message: err.message,
-    });
+    return sendApiError(res, createAppError('failed_to_fetch_patient_summary', 500, err.message));
   }
 });
 
@@ -219,10 +221,7 @@ app.get("/today-session/:patientId", async (req, res) => {
     });
   } catch (err) {
     console.error('Error in /today-session:', err);
-    res.status(500).json({
-      error: "failed_to_fetch_today_session",
-      message: err.message,
-    });
+    return sendApiError(res, createAppError('failed_to_fetch_today_session', 500, err.message));
   }
 });
 
@@ -279,10 +278,7 @@ app.get("/pt-assistant/summary/:patientId", async (req, res) => {
     res.json(summary);
   } catch (err) {
     console.error('Error in /pt-assistant/summary:', err);
-    res.status(500).json({
-      error: "failed_to_generate_summary",
-      message: err.message,
-    });
+    return sendApiError(res, createAppError('failed_to_generate_summary', 500, err.message));
   }
 });
 
@@ -295,10 +291,7 @@ app.get("/flags/:patientId", async (req, res) => {
 
   try {
     if (!computeFlags) {
-      return res.status(501).json({
-        error: "Flag service not available yet",
-        message: "Agent 2 flag computation service not yet deployed"
-      });
+      return sendApiError(res, createAppError('flag_service_unavailable', 501, 'Flag service not available yet', { note: 'Agent 2 flag computation service not yet deployed' }));
     }
 
     const flags = await computeFlags(patientId);
@@ -311,10 +304,7 @@ app.get("/flags/:patientId", async (req, res) => {
     });
   } catch (err) {
     console.error('Error in /flags:', err);
-    res.status(500).json({
-      error: "failed_to_compute_flags",
-      message: err.message,
-    });
+    return sendApiError(res, createAppError('failed_to_compute_flags', 500, err.message));
   }
 });
 
@@ -330,12 +320,44 @@ app.get("/strength-targets/:patientId", async (req, res) => {
     res.json(targets);
   } catch (err) {
     console.error('Error in /strength-targets:', err);
-    res.status(500).json({
-      error: "failed_to_calculate_strength_targets",
-      message: err.message,
-    });
+    return sendApiError(res, createAppError('failed_to_calculate_strength_targets', 500, err.message));
   }
 });
+
+// ============================================================================
+// PROTOCOL VALIDATION ENDPOINTS (ACP-81)
+// Validate recommendation safety and summarize risk profile
+// ============================================================================
+app.post('/protocol/validate', async (req, res) => {
+  const { patientId, recommendation } = req.body;
+
+  try {
+    if (!patientId || !recommendation) {
+      return sendApiError(res, createAppError('patient_id_and_recommendation_required', 400, 'patientId and recommendation are required'));
+    }
+
+    const validation = await validateRecommendation(patientId, recommendation);
+    res.json({ success: true, validation });
+  } catch (err) {
+    console.error('Error in /protocol/validate:', err);
+    return sendApiError(res, createAppError('validation_failed', 500, err.message));
+  }
+});
+
+app.get('/protocol/summary/:patientId', async (req, res) => {
+  const { patientId } = req.params;
+
+  try {
+    const summary = await getProtocolSummary(patientId);
+    res.json({ success: true, summary });
+  } catch (err) {
+    console.error('Error in /protocol/summary:', err);
+    return sendApiError(res, createAppError('failed_to_fetch_protocol_summary', 500, err.message));
+  }
+});
+
+// Additional PCR route(s) for PT assistant workflow (ACP-90)
+setupPCRRoutes(app);
 
 // ============================================================================
 // PLAN CHANGE REQUEST ENDPOINT (kept for compatibility)
@@ -349,7 +371,7 @@ app.post("/plan-change-request", async (req, res) => {
     res.json({ issue });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "failed_to_create_issue" });
+    return sendApiError(res, createAppError('failed_to_create_issue', 500, err.message));
   }
 });
 
@@ -442,6 +464,10 @@ async function createLinearPlanChangeIssue({ patientId, summary, reason, impact 
   return json.data.issueCreate.issue;
 }
 
+app.use(errorLoggingMiddleware);
+
+app.use(globalErrorMiddleware);
+
 // ============================================================================
 // START SERVER
 // ============================================================================
@@ -460,7 +486,10 @@ app.listen(port, () => {
   console.log(`  GET  /pt-assistant/summary/:patientId`);
   console.log(`  GET  /flags/:patientId`);
   console.log(`  GET  /strength-targets/:patientId`);
+  console.log(`  POST /protocol/validate`);
+  console.log(`  GET  /protocol/summary/:patientId`);
   console.log(`  POST /plan-change-request`);
+  console.log(`  POST /pt-assistant/plan-change-proposal/:patientId`);
   console.log('');
   console.log('Therapist Endpoints:');
   console.log(`  GET  /therapist/:therapistId/patients`);

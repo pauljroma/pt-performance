@@ -1,106 +1,127 @@
 import express from 'express';
 import * as therapistService from '../services/therapist.js';
+import { requireAuthenticatedUser, requireTherapistOwnership } from '../middleware/auth.js';
+import { createAppError } from '../errors/api-error.js';
 
 const router = express.Router();
 
-/**
- * GET /therapist/:therapistId/patients
- * Search and filter patients for a therapist
- *
- * Query params:
- * - search: string (search by name or email)
- * - sport: string (filter by sport)
- * - position: string (filter by position)
- * - flagSeverity: 'HIGH' | 'MEDIUM' | 'LOW' (filter by flag severity)
- * - hasFlags: boolean (filter patients with/without flags)
- * - minAdherence: number (minimum adherence percentage)
- * - maxAdherence: number (maximum adherence percentage)
- */
-router.get('/:therapistId/patients', async (req, res) => {
+router.use(requireAuthenticatedUser);
+router.use('/:therapistId', requireTherapistOwnership);
+
+function parseOptionalNumber(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+
+    const parsed = Number(value);
+
+    if (Number.isNaN(parsed)) {
+        throw createAppError('invalid_query_parameter', 400, `${fieldName} must be a valid number`);
+    }
+
+    return parsed;
+}
+
+function parsePositiveInteger(value, fieldName, defaultValue, maxValue) {
+    if (value === undefined || value === null || value === '') {
+        return defaultValue;
+    }
+
+    const parsed = Number.parseInt(String(value), 10);
+
+    if (!Number.isInteger(parsed) || parsed < 0) {
+        throw createAppError('invalid_query_parameter', 400, `${fieldName} must be a non-negative integer`);
+    }
+
+    if (maxValue !== undefined && parsed > maxValue) {
+        throw createAppError('invalid_query_parameter', 400, `${fieldName} cannot exceed ${maxValue}`);
+    }
+
+    return parsed;
+}
+
+function parseFilters(query, therapistId) {
+    const allowedSeverities = new Set(['HIGH', 'MEDIUM', 'LOW']);
+
+    if (query.flagSeverity && !allowedSeverities.has(query.flagSeverity)) {
+        throw createAppError('invalid_query_parameter', 400, 'flagSeverity must be one of HIGH, MEDIUM, LOW');
+    }
+
+    if (query.hasFlags && query.hasFlags !== 'true' && query.hasFlags !== 'false') {
+        throw createAppError('invalid_query_parameter', 400, 'hasFlags must be true or false');
+    }
+
+    const minAdherence = parseOptionalNumber(query.minAdherence, 'minAdherence');
+    const maxAdherence = parseOptionalNumber(query.maxAdherence, 'maxAdherence');
+    const offset = parsePositiveInteger(query.offset, 'offset', 0);
+    const limit = parsePositiveInteger(query.limit, 'limit', 50, 200);
+
+    if (minAdherence !== null && (minAdherence < 0 || minAdherence > 100)) {
+        throw createAppError('invalid_query_parameter', 400, 'minAdherence must be between 0 and 100');
+    }
+
+    if (maxAdherence !== null && (maxAdherence < 0 || maxAdherence > 100)) {
+        throw createAppError('invalid_query_parameter', 400, 'maxAdherence must be between 0 and 100');
+    }
+
+    if (minAdherence !== null && maxAdherence !== null && minAdherence > maxAdherence) {
+        throw createAppError('invalid_query_parameter', 400, 'minAdherence cannot be greater than maxAdherence');
+    }
+
+    return {
+        therapistId,
+        search: query.search || null,
+        sport: query.sport || null,
+        position: query.position || null,
+        flagSeverity: query.flagSeverity || null,
+        hasFlags: query.hasFlags === 'true' ? true : query.hasFlags === 'false' ? false : null,
+        minAdherence,
+        maxAdherence,
+        offset,
+        limit,
+    };
+}
+
+router.get('/:therapistId/patients', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
-        const {
-            search,
-            sport,
-            position,
-            flagSeverity,
-            hasFlags,
-            minAdherence,
-            maxAdherence
-        } = req.query;
-
-        const filters = {
-            therapistId,
-            search: search || null,
-            sport: sport || null,
-            position: position || null,
-            flagSeverity: flagSeverity || null,
-            hasFlags: hasFlags === 'true' ? true : hasFlags === 'false' ? false : null,
-            minAdherence: minAdherence ? parseFloat(minAdherence) : null,
-            maxAdherence: maxAdherence ? parseFloat(maxAdherence) : null
-        };
-
-        const patients = await therapistService.searchPatients(filters);
+        const filters = parseFilters(req.query, therapistId);
+        const result = await therapistService.searchPatients(filters);
 
         res.json({
             success: true,
-            count: patients.length,
-            patients
+            count: result.patients.length,
+            total_count: result.totalCount,
+            offset: result.offset,
+            limit: result.limit,
+            patients: result.patients,
         });
     } catch (error) {
-        console.error('Error searching patients:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
-/**
- * GET /therapist/:therapistId/dashboard
- * Get therapist dashboard summary
- */
-router.get('/:therapistId/dashboard', async (req, res) => {
+router.get('/:therapistId/dashboard', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
-
         const dashboard = await therapistService.getDashboardSummary(therapistId);
 
-        res.json({
-            success: true,
-            dashboard
-        });
+        res.json({ success: true, dashboard });
     } catch (error) {
-        console.error('Error fetching dashboard:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
-/**
- * GET /therapist/:therapistId/alerts
- * Get high priority patient alerts
- */
-router.get('/:therapistId/alerts', async (req, res) => {
+router.get('/:therapistId/alerts', async (req, res, next) => {
     try {
         const { therapistId } = req.params;
-
         const alerts = await therapistService.getHighPriorityAlerts(therapistId);
 
-        res.json({
-            success: true,
-            count: alerts.length,
-            alerts
-        });
+        res.json({ success: true, count: alerts.length, alerts });
     } catch (error) {
-        console.error('Error fetching alerts:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        next(error);
     }
 });
 
 export default router;
+export { parseFilters, parseOptionalNumber, parsePositiveInteger };
