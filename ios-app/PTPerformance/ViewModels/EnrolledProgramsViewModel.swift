@@ -45,26 +45,45 @@ class EnrolledProgramsViewModel: ObservableObject {
     // MARK: - Data Fetching
 
     /// Load enrolled programs for the current user (active status only)
+    /// Build 448: Enhanced logging to debug enrollment visibility issue
     func loadEnrolledPrograms() async {
         guard let patientId = supabase.userId else {
-            DebugLogger.shared.log("No patient ID available for enrolled programs", level: .warning)
+            DebugLogger.shared.log("❌ [EnrolledPrograms] No patient ID available", level: .warning)
+            #if DEBUG
+            print("❌ [EnrolledPrograms] supabase.userId is nil!")
+            #endif
             return
         }
+
+        #if DEBUG
+        print("📱 [EnrolledPrograms] Loading for patientId: \(patientId)")
+        #endif
+        DebugLogger.shared.log("📱 [EnrolledPrograms] Loading for patientId: \(patientId)", level: .diagnostic)
 
         isLoading = true
         errorMessage = nil
 
         do {
             // Fetch active enrollments with program details
+            // Build 447+: Uses RPC get_my_enrolled_programs() internally
             enrolledPrograms = try await service.getEnrolledProgramsWithDetails(
                 patientId: patientId,
                 status: "active"
             )
 
-            DebugLogger.shared.log("Loaded \(enrolledPrograms.count) enrolled programs", level: .success)
+            #if DEBUG
+            print("✅ [EnrolledPrograms] Loaded \(enrolledPrograms.count) programs")
+            for program in enrolledPrograms {
+                print("   - \(program.program.title) (\(program.enrollment.status))")
+            }
+            #endif
+            DebugLogger.shared.log("✅ [EnrolledPrograms] Loaded \(enrolledPrograms.count) programs", level: .success)
             isLoading = false
         } catch {
-            DebugLogger.shared.log("Failed to load enrolled programs: \(error.localizedDescription)", level: .error)
+            #if DEBUG
+            print("❌ [EnrolledPrograms] Error: \(error)")
+            #endif
+            DebugLogger.shared.log("❌ [EnrolledPrograms] Failed: \(error.localizedDescription)", level: .error)
             errorMessage = "Unable to load your programs"
             isLoading = false
         }

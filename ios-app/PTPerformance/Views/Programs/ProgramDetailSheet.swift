@@ -124,6 +124,35 @@ struct ProgramDetailSheet: View {
                         .padding(.horizontal)
                     }
 
+                    // MARK: - Program Template Notice (for catalog-only programs)
+                    if program.programId == nil {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "doc.text.magnifyingglass")
+                                    .font(.title3)
+                                    .foregroundColor(.blue)
+                                Text("Program Template")
+                                    .font(.headline)
+                            }
+
+                            Text("This is a program template. Workouts can be customized by your therapist to match your specific needs and goals.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            HStack(spacing: 4) {
+                                Image(systemName: "info.circle")
+                                    .font(.caption)
+                                Text("Enroll to save this program, then work with your therapist to personalize the workouts.")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
+
                     // MARK: - Program Phases Preview
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Program Phases")
@@ -149,13 +178,23 @@ struct ProgramDetailSheet: View {
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(12)
                         } else if phases.isEmpty {
-                            Text("Phase information will be available once you start the program.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                            if program.programId == nil {
+                                Text("Workouts will appear here once your therapist customizes this program for you.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(12)
+                            } else {
+                                Text("Phase information will be available once you start the program.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color(.secondarySystemGroupedBackground))
+                                    .cornerRadius(12)
+                            }
                         } else {
                             VStack(spacing: 10) {
                                 ForEach(phases) { phase in
@@ -214,9 +253,9 @@ struct ProgramDetailSheet: View {
                                     .tint(.white)
                                     .accessibilityHidden(true)
                             } else {
-                                Image(systemName: "play.circle.fill")
+                                Image(systemName: program.programId == nil ? "bookmark.fill" : "play.circle.fill")
                                     .accessibilityHidden(true)
-                                Text("Start This Program")
+                                Text(program.programId == nil ? "Save This Template" : "Start This Program")
                                     .fontWeight(.semibold)
                             }
                         }
@@ -224,7 +263,7 @@ struct ProgramDetailSheet: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [.blue, .purple],
+                                colors: program.programId == nil ? [.blue, .cyan] : [.blue, .purple],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -233,18 +272,22 @@ struct ProgramDetailSheet: View {
                         .cornerRadius(14)
                     }
                     .disabled(isEnrolling)
-                    .accessibilityLabel(isEnrolling ? "Enrolling in program" : "Start \(program.title)")
-                    .accessibilityHint(isEnrolling ? "Please wait" : "Enrolls you in this program and adds workouts to your schedule")
+                    .accessibilityLabel(isEnrolling ? "Enrolling in program" : (program.programId == nil ? "Save \(program.title) template" : "Start \(program.title)"))
+                    .accessibilityHint(isEnrolling ? "Please wait" : (program.programId == nil ? "Saves this template to your programs for customization" : "Enrolls you in this program and adds workouts to your schedule"))
                     .padding()
                     .background(.ultraThinMaterial)
                 }
             }
-            .alert("Enrolled!", isPresented: $showEnrollSuccess) {
+            .alert(program.programId == nil ? "Template Saved!" : "Enrolled!", isPresented: $showEnrollSuccess) {
                 Button("OK") {
                     dismiss()
                 }
             } message: {
-                Text("You have successfully enrolled in \(program.title). Check your Today tab to get started!")
+                if program.programId == nil {
+                    Text("You've saved \(program.title) to your programs. Ask your therapist to customize the workouts for you.")
+                } else {
+                    Text("You have successfully enrolled in \(program.title). Check your Today tab to get started!")
+                }
             }
             .alert("Enrollment Error", isPresented: Binding(
                 get: { enrollmentError != nil },

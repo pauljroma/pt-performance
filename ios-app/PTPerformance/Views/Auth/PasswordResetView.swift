@@ -2,7 +2,7 @@
 //  PasswordResetView.swift
 //  PTPerformance
 //
-//  Auth redesign: Magic link login form (simpler than password reset)
+//  Auth redesign: Password recovery options - Magic link OR password reset
 //
 
 import SwiftUI
@@ -13,16 +13,22 @@ struct PasswordResetView: View {
     @State private var email = ""
     @State private var isLoading = false
     @State private var showConfirmation = false
+    @State private var confirmationType: ConfirmationType = .magicLink
     @State private var errorMessage: String?
 
     // Validation
     @State private var emailValidation: ValidationResult?
 
+    enum ConfirmationType {
+        case magicLink
+        case passwordReset
+    }
+
     var body: some View {
         Form {
             // MARK: - Instructions
             Section {
-                Text("Enter your email address and we'll send you a magic link to sign back in. No password needed!")
+                Text("Enter your email address to sign back into your account.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -59,29 +65,67 @@ struct PasswordResetView: View {
                 }
             }
 
-            // MARK: - Send Magic Link Button
-            Section {
-                Button(action: {
-                    Task {
-                        await sendMagicLink()
-                    }
-                }) {
-                    HStack {
-                        Spacer()
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .padding(.trailing, 8)
-                                .accessibilityHidden(true)
+            // MARK: - Action Buttons
+            if !showConfirmation {
+                // MARK: - Send Magic Link Button (Primary)
+                Section {
+                    Button(action: {
+                        Task {
+                            await sendMagicLink()
                         }
-                        Text("Send Magic Link")
-                            .font(.body.weight(.semibold))
-                        Spacer()
+                    }) {
+                        HStack {
+                            Spacer()
+                            if isLoading && confirmationType == .magicLink {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .padding(.trailing, 8)
+                                    .accessibilityHidden(true)
+                            }
+                            VStack(spacing: 2) {
+                                Text("Send Sign-In Link")
+                                    .font(.body.weight(.semibold))
+                                Text("(Recommended)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                        }
                     }
+                    .disabled(!isEmailValid || isLoading)
+                    .accessibilityLabel(isLoading ? "Sending sign-in link" : "Send Sign-In Link")
+                    .accessibilityHint(isEmailValid ? "Send a link to sign in without a password" : "Enter a valid email address first")
+                } footer: {
+                    Text("We'll email you a link that signs you in instantly - no password needed.")
                 }
-                .disabled(!isEmailValid || isLoading || showConfirmation)
-                .accessibilityLabel(isLoading ? "Sending magic link" : "Send Magic Link")
-                .accessibilityHint(isEmailValid ? "Send a sign-in link to your email" : "Enter a valid email address first")
+
+                // MARK: - Reset Password Button (Secondary)
+                Section {
+                    Button(action: {
+                        Task {
+                            await sendPasswordReset()
+                        }
+                    }) {
+                        HStack {
+                            Spacer()
+                            if isLoading && confirmationType == .passwordReset {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .padding(.trailing, 8)
+                                    .accessibilityHidden(true)
+                            }
+                            Text("Reset My Password")
+                                .font(.body)
+                                .foregroundColor(.blue)
+                            Spacer()
+                        }
+                    }
+                    .disabled(!isEmailValid || isLoading)
+                    .accessibilityLabel(isLoading ? "Sending password reset" : "Reset My Password")
+                    .accessibilityHint(isEmailValid ? "Send a link to set a new password" : "Enter a valid email address first")
+                } footer: {
+                    Text("Forgot your password? We'll send a link to create a new one.")
+                }
             }
 
             // MARK: - Confirmation
@@ -93,10 +137,10 @@ struct PasswordResetView: View {
                             .foregroundColor(.green)
                             .accessibilityHidden(true)
 
-                        Text("Magic link sent!")
+                        Text(confirmationType == .magicLink ? "Sign-in link sent!" : "Password reset link sent!")
                             .font(.headline)
 
-                        Text("Check your email at \(email) for a link to sign in. Just tap the link and you'll be logged in automatically.")
+                        Text(confirmationMessage)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -104,7 +148,14 @@ struct PasswordResetView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Magic link sent. Check your email at \(email) for a link to sign in.")
+                    .accessibilityLabel(confirmationMessage)
+                }
+
+                Section {
+                    Button("Send Another Link") {
+                        showConfirmation = false
+                    }
+                    .foregroundColor(.blue)
                 }
             }
 
@@ -123,22 +174,32 @@ struct PasswordResetView: View {
                 }
             }
         }
-        .navigationTitle("Sign In with Email")
+        .navigationTitle("Account Recovery")
         .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - Validation
+    // MARK: - Computed Properties
 
     private var isEmailValid: Bool {
         guard !email.isEmpty else { return false }
         return emailValidation?.isValid ?? false
     }
 
-    // MARK: - Send Magic Link
+    private var confirmationMessage: String {
+        switch confirmationType {
+        case .magicLink:
+            return "Check your email at \(email) for a link to sign in. Just tap the link and you'll be logged in automatically."
+        case .passwordReset:
+            return "Check your email at \(email) for a link to reset your password. The link will open the app where you can set a new password."
+        }
+    }
+
+    // MARK: - Actions
 
     private func sendMagicLink() async {
         isLoading = true
         errorMessage = nil
+        confirmationType = .magicLink
 
         do {
             try await PTSupabaseClient.shared.sendMagicLink(
@@ -151,8 +212,54 @@ struct PasswordResetView: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to send magic link: \(error.localizedDescription)"
+                // Provide user-friendly error message
+                let errorString = String(describing: error)
+                if errorString.contains("rate") || errorString.contains("limit") {
+                    errorMessage = "Too many requests. Please wait a few minutes and try again."
+                } else if errorString.contains("invalid") || errorString.contains("not found") {
+                    errorMessage = "We couldn't find an account with that email. Please check and try again."
+                } else {
+                    errorMessage = "Unable to send sign-in link. Please check your internet connection and try again."
+                }
                 isLoading = false
+
+                #if DEBUG
+                print("❌ Magic link error: \(error)")
+                #endif
+            }
+        }
+    }
+
+    private func sendPasswordReset() async {
+        isLoading = true
+        errorMessage = nil
+        confirmationType = .passwordReset
+
+        do {
+            try await PTSupabaseClient.shared.resetPassword(
+                email: email.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+
+            await MainActor.run {
+                showConfirmation = true
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                // Provide user-friendly error message
+                let errorString = String(describing: error)
+                if errorString.contains("rate") || errorString.contains("limit") {
+                    errorMessage = "Too many requests. Please wait a few minutes and try again."
+                } else if errorString.contains("invalid") || errorString.contains("not found") {
+                    errorMessage = "We couldn't find an account with that email. Please check and try again."
+                } else {
+                    errorMessage = "Unable to send password reset email. Please check your internet connection and try again."
+                }
+                isLoading = false
+
+                #if DEBUG
+                print("❌ Password reset error: \(error)")
+                #endif
             }
         }
     }

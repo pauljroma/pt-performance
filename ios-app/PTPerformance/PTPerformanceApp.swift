@@ -315,6 +315,13 @@ struct PTPerformanceApp: App {
                     SetNewPasswordView()
                         .environmentObject(appState)
                 }
+                .alert("Link Expired", isPresented: $appState.showAuthLinkError) {
+                    Button("OK", role: .cancel) {
+                        appState.authLinkError = nil
+                    }
+                } message: {
+                    Text(appState.authLinkError ?? "The link has expired or is invalid. Please request a new one.")
+                }
         }
     }
 
@@ -374,6 +381,12 @@ struct PTPerformanceApp: App {
                     DebugLogger.shared.success("PTPerformanceApp", "Magic link login successful for user: \(session.user.id)")
                 } catch {
                     DebugLogger.shared.error("PTPerformanceApp", "Magic link login failed: \(error.localizedDescription)")
+
+                    // Show user-visible error
+                    await MainActor.run {
+                        appState.authLinkError = "The sign-in link has expired or is invalid. Please request a new one."
+                        appState.showAuthLinkError = true
+                    }
                 }
             }
             return
@@ -444,6 +457,12 @@ final class AppState: ObservableObject {
 
     /// The password reset URL to process (contains access token)
     @Published var pendingPasswordResetURL: URL?
+
+    /// Error message to show when magic link or auth link fails
+    @Published var authLinkError: String?
+
+    /// Flag to show auth link error alert
+    @Published var showAuthLinkError = false
 
     /// Update Sentry user context when authentication state changes
     private func updateUserContext() {

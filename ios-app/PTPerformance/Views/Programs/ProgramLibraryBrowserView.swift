@@ -37,44 +37,40 @@ struct ProgramLibraryBrowserView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Search bar
-                searchBar
+        VStack(spacing: 0) {
+            // Search bar
+            searchBar
 
-                // Category filter chips
-                categoryFilters
+            // Category filter chips
+            categoryFilters
 
-                // Difficulty filter chips
-                difficultyFilters
+            // Difficulty filter chips
+            difficultyFilters
 
-                // Content
-                contentView
+            // Content
+            contentView
+        }
+        .sheet(item: $selectedProgram) { program in
+            ProgramDetailSheet(program: program)
+        }
+        .sheet(isPresented: $showBaseballLocked) {
+            NavigationStack {
+                BaseballPackLockedView()
+                    .environmentObject(storeKit)
             }
-            .navigationTitle("Programs")
-            .navigationBarTitleDisplayMode(.large)
-            .sheet(item: $selectedProgram) { program in
-                ProgramDetailSheet(program: program)
+        }
+        .alert("Error", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
             }
-            .sheet(isPresented: $showBaseballLocked) {
-                NavigationStack {
-                    BaseballPackLockedView()
-                        .environmentObject(storeKit)
-                }
-            }
-            .alert("Error", isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )) {
-                Button("OK") { viewModel.errorMessage = nil }
-            } message: {
-                if let error = viewModel.errorMessage {
-                    Text(error)
-                }
-            }
-            .task {
-                await viewModel.loadAllData()
-            }
+        }
+        .task {
+            await viewModel.loadAllData()
         }
     }
 

@@ -304,7 +304,7 @@ class TodaySessionViewModel: ObservableObject {
         do {
             let scheduledResponse = try await supabase.client
                 .from("scheduled_sessions")
-                .select("session_id, status")
+                .select("session_id, status, enrollment_id, workout_template_id, workout_name")
                 .eq("patient_id", value: patientId)
                 .eq("scheduled_date", value: String(today))
                 .eq("status", value: "scheduled")
@@ -315,21 +315,45 @@ class TodaySessionViewModel: ObservableObject {
                 logger.log("📱 Scheduled sessions response: \(jsonString)")
             }
 
-            // Decode the scheduled session to get session_id
+            // Decode the scheduled session - session_id may be null for enrollment-based workouts
             struct ScheduledSessionRow: Codable {
-                let session_id: String
+                let session_id: String?  // Nullable for enrollment-based workouts
                 let status: String
+                let enrollment_id: String?
+                let workout_template_id: String?
+                let workout_name: String?
             }
 
             let decoder = JSONDecoder()
             let scheduledSessions = try decoder.decode([ScheduledSessionRow].self, from: scheduledResponse.data)
 
             if let scheduled = scheduledSessions.first {
-                sessionId = scheduled.session_id
-                logger.log("✅ Found scheduled session for today: \(sessionId!)", level: .success)
-                #if DEBUG
-                print("✅ [TodaySession] Found scheduled session for today: \(sessionId!)")
-                #endif
+                if let id = scheduled.session_id {
+                    sessionId = id
+                    logger.log("✅ Found scheduled session for today: \(id)", level: .success)
+                    #if DEBUG
+                    print("✅ [TodaySession] Found scheduled session for today: \(id)")
+                    #endif
+                } else if scheduled.enrollment_id != nil, let templateId = scheduled.workout_template_id {
+                    // Build 451: Handle enrollment-based workouts (workout_template_id based)
+                    logger.log("📱 Found enrollment-based workout: \(scheduled.workout_name ?? "Unknown")")
+                    logger.log("📱 Template ID: \(templateId)")
+                    #if DEBUG
+                    print("📱 [TodaySession] Found enrollment workout with template: \(templateId)")
+                    #endif
+
+                    // Fetch the template-based workout
+                    if let workoutSession = try await fetchTemplateBasedWorkout(
+                        templateId: templateId,
+                        workoutName: scheduled.workout_name,
+                        enrollmentId: scheduled.enrollment_id
+                    ) {
+                        self.session = workoutSession.session
+                        self.exercises = workoutSession.exercises
+                        logger.log("✅ Loaded template-based workout: \(workoutSession.session.name)", level: .success)
+                        return
+                    }
+                }
             }
         } catch {
             logger.log("⚠️ Failed to fetch scheduled sessions: \(error.localizedDescription)", level: .warning)
@@ -419,18 +443,27 @@ class TodaySessionViewModel: ObservableObject {
             print("📱 [TodaySession] Supabase returned \(sessionsResponse.count) sessions")
             #endif
 
+        // If no direct program found, try enrolled programs via RPC
         guard let session = sessionsResponse.first else {
+            logger.log("📱 No direct program found, trying enrolled programs via RPC...", level: .warning)
+            #if DEBUG
+            print("📱 [TodaySession] No direct program, trying RPC get_today_enrolled_session...")
+            #endif
+
+            // Build 444: Call RPC to get session via enrollment
+            if let enrolledSession = try await fetchEnrolledProgramSession(patientId: patientId) {
+                logger.log("✅ Found session via enrollment: \(enrolledSession.name)", level: .success)
+                self.session = enrolledSession
+                try await fetchExercisesForSession(enrolledSession)
+                return
+            }
+
             logger.log("⚠️ No sessions found - possible causes:", level: .warning)
             logger.log("   1. Patient has no active program", level: .warning)
-            logger.log("   2. Active program has no phases", level: .warning)
-            logger.log("   3. Phases have no sessions", level: .warning)
-            logger.log("   4. Database relationship joins failing", level: .warning)
+            logger.log("   2. Patient has no active enrollments", level: .warning)
+            logger.log("   3. Enrolled programs have no sessions", level: .warning)
             #if DEBUG
-            print("⚠️ [TodaySession] No sessions found - possible causes:")
-            print("   1. Patient has no active program (check programs table)")
-            print("   2. Active program has no phases (check phases table)")
-            print("   3. Phases have no sessions (check sessions table)")
-            print("   4. Database relationship joins failing (check foreign keys)")
+            print("⚠️ [TodaySession] No sessions found via direct program or enrollment")
             #endif
             // No active sessions found
             self.session = nil
@@ -471,6 +504,179 @@ class TodaySessionViewModel: ObservableObject {
             }
             throw decodingError
         }
+    }
+
+    /// Build 444: Fetch session via enrolled programs RPC
+    /// Bypasses patient_id filter by using enrollment relationship
+    private func fetchEnrolledProgramSession(patientId: String) async throws -> Session? {
+        let logger = DebugLogger.shared
+        logger.log("📱 Calling RPC get_today_enrolled_session...")
+
+        // Response struct matching RPC return type
+        struct EnrolledSessionRow: Codable {
+            let session_id: String
+            let session_name: String
+            let phase_name: String
+            let program_name: String
+            let program_library_title: String?
+            let enrollment_id: String
+        }
+
+        let response = try await supabase.client
+            .rpc("get_today_enrolled_session", params: ["p_patient_id": patientId])
+            .execute()
+
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            logger.log("📱 RPC response: \(jsonString)")
+        }
+
+        let decoder = JSONDecoder()
+        let rows = try decoder.decode([EnrolledSessionRow].self, from: response.data)
+
+        guard let row = rows.first else {
+            logger.log("⚠️ RPC returned no enrolled sessions", level: .warning)
+            return nil
+        }
+
+        logger.log("✅ RPC found session: \(row.session_name) (ID: \(row.session_id))", level: .success)
+
+        // Now fetch the full session object by ID
+        let sessionResponse = try await supabase.client
+            .from("sessions")
+            .select("*")
+            .eq("id", value: row.session_id)
+            .limit(1)
+            .execute()
+
+        let sessionDecoder = JSONDecoder()
+        sessionDecoder.dateDecodingStrategy = .iso8601
+        let sessions = try sessionDecoder.decode([Session].self, from: sessionResponse.data)
+
+        return sessions.first
+    }
+
+    /// Build 451: Fetch workout from system_workout_templates (for enrollment-based workouts)
+    /// Returns a synthetic Session and parsed exercises from the template
+    private func fetchTemplateBasedWorkout(
+        templateId: String,
+        workoutName: String?,
+        enrollmentId: String?
+    ) async throws -> (session: Session, exercises: [Exercise])? {
+        let logger = DebugLogger.shared
+        logger.log("📱 Fetching template-based workout: \(templateId)")
+
+        // Codable struct for system_workout_templates
+        struct WorkoutTemplate: Codable {
+            let id: UUID
+            let name: String
+            let description: String?
+            let category: String?
+            let difficulty: String?
+            let duration_minutes: Int?
+            let exercises: [TemplateExercise]?
+
+            struct TemplateExercise: Codable {
+                let exercise_name: String
+                let block_name: String?
+                let sequence: Int?
+                let target_sets: Int?
+                let target_reps: String?
+                let rest_period_seconds: Int?
+                let notes: String?
+            }
+        }
+
+        let response = try await supabase.client
+            .from("system_workout_templates")
+            .select("*")
+            .eq("id", value: templateId)
+            .limit(1)
+            .execute()
+
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            logger.log("📱 Template response: \(jsonString.prefix(500))")
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let templates = try decoder.decode([WorkoutTemplate].self, from: response.data)
+
+        guard let template = templates.first else {
+            logger.log("⚠️ No template found with ID: \(templateId)", level: .warning)
+            return nil
+        }
+
+        // Create a synthetic Session object for display
+        // Use a well-known "template" phase UUID for template-based workouts
+        let templatePhaseId = UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID()
+
+        let syntheticSession = Session(
+            id: template.id,  // Use template ID as session ID
+            phase_id: templatePhaseId,  // Synthetic phase for template workouts
+            name: workoutName ?? template.name,
+            sequence: 1,
+            weekday: nil,
+            notes: template.description ?? template.category,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: template.duration_minutes
+        )
+
+        // Convert template exercises to Exercise model
+        var exercises: [Exercise] = []
+        if let templateExercises = template.exercises {
+            for (index, ex) in templateExercises.enumerated() {
+                // Create a synthetic ExerciseTemplate for display
+                let exerciseTemplate = Exercise.ExerciseTemplate(
+                    id: UUID(),
+                    name: ex.exercise_name,
+                    category: ex.block_name,
+                    body_region: nil,
+                    videoUrl: nil,
+                    videoThumbnailUrl: nil,
+                    videoDuration: nil,
+                    formCues: nil,
+                    techniqueCues: nil,
+                    commonMistakes: nil,
+                    safetyNotes: ex.notes
+                )
+
+                let exercise = Exercise(
+                    id: UUID(),  // Generate temporary ID
+                    session_id: template.id,
+                    exercise_template_id: exerciseTemplate.id,
+                    sequence: ex.sequence ?? (index + 1),
+                    prescribed_sets: ex.target_sets ?? 3,
+                    prescribed_reps: ex.target_reps,
+                    prescribed_load: nil,
+                    load_unit: nil,
+                    rest_period_seconds: ex.rest_period_seconds ?? 60,
+                    notes: ex.notes,
+                    exercise_templates: exerciseTemplate
+                )
+                exercises.append(exercise)
+            }
+        }
+
+        logger.log("✅ Loaded template workout: \(template.name) with \(exercises.count) exercises", level: .success)
+        return (session: syntheticSession, exercises: exercises)
+    }
+
+    /// Helper to parse reps string like "10-12" or "30-45 sec" to Int
+    private func parseRepsValue(_ repsString: String?) -> Int {
+        guard let reps = repsString else { return 10 }
+
+        // Try to extract first number
+        let numbers = reps.components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .compactMap { Int($0) }
+            .filter { $0 > 0 }
+
+        return numbers.first ?? 10
     }
 
     /// Helper to fetch exercises for a session

@@ -432,22 +432,92 @@ class ProgramLibraryService: ObservableObject {
     // MARK: - Combined Queries
 
     /// Fetch enrollments with their associated program details
+    /// Build 447: Now uses RPC to handle patient ID lookup internally
     func getEnrolledProgramsWithDetails(patientId: String, status: String? = nil) async throws -> [EnrollmentWithProgram] {
         let logger = DebugLogger.shared
-        logger.log("Fetching enrolled programs with details for patient: \(patientId)", level: .diagnostic)
+        logger.log("Fetching enrolled programs via RPC get_my_enrolled_programs()", level: .diagnostic)
 
-        // First get enrollments
-        let enrollments = try await getEnrolledPrograms(patientId: patientId, status: status)
+        // Build 447: Use RPC that handles auth.uid() to patients.id lookup internally
+        // This fixes the issue where patientId might be auth.uid() instead of patients.id
 
-        if enrollments.isEmpty {
-            return []
+        struct EnrollmentRow: Codable {
+            let enrollment_id: UUID
+            let program_library_id: UUID
+            let program_title: String
+            let program_category: String?
+            let program_description: String?
+            let program_duration_weeks: Int
+            let program_difficulty_level: String?
+            let program_cover_image_url: String?
+            let enrollment_status: String
+            let progress_percentage: Int
+            let enrolled_at: Date?
+            let started_at: Date?
         }
 
-        // Get unique program IDs
-        let programIds = enrollments.map { $0.programLibraryId.uuidString }
-
-        // Fetch associated programs
         do {
+            let response = try await supabase.client
+                .rpc("get_my_enrolled_programs")
+                .execute()
+
+            if let jsonString = String(data: response.data, encoding: .utf8) {
+                logger.log("RPC response: \(jsonString.prefix(500))", level: .diagnostic)
+            }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let rows = try decoder.decode([EnrollmentRow].self, from: response.data)
+
+            logger.log("RPC returned \(rows.count) enrolled programs", level: .success)
+
+            if rows.isEmpty {
+                return []
+            }
+
+            // Fetch full program details from program_library
+            let programIds = rows.map { $0.program_library_id.uuidString }
+            let programResponse = try await supabase.client
+                .from("program_library")
+                .select()
+                .in("id", values: programIds)
+                .execute()
+
+            let programs = try decoder.decode([ProgramLibrary].self, from: programResponse.data)
+            let programLookup = Dictionary(uniqueKeysWithValues: programs.map { ($0.id, $0) })
+
+            // Convert to EnrollmentWithProgram
+            let combined = rows.compactMap { row -> EnrollmentWithProgram? in
+                guard let program = programLookup[row.program_library_id] else { return nil }
+
+                let enrollment = ProgramEnrollment(
+                    id: row.enrollment_id,
+                    patientId: UUID(uuidString: patientId) ?? UUID(),
+                    programLibraryId: row.program_library_id,
+                    enrolledAt: row.enrolled_at ?? Date(),
+                    startedAt: row.started_at,
+                    completedAt: nil,
+                    status: row.enrollment_status,
+                    progressPercentage: row.progress_percentage,
+                    notes: nil
+                )
+
+                return EnrollmentWithProgram(enrollment: enrollment, program: program)
+            }
+
+            logger.log("Fetched \(combined.count) enrolled programs with full details", level: .success)
+            return combined
+        } catch {
+            logger.log("RPC failed: \(error.localizedDescription), falling back to direct query", level: .warning)
+
+            // Fallback to old method
+            let enrollments = try await getEnrolledPrograms(patientId: patientId, status: status)
+
+            if enrollments.isEmpty {
+                return []
+            }
+
+            let programIds = enrollments.map { $0.programLibraryId.uuidString }
+
             let response = try await supabase.client
                 .from("program_library")
                 .select()
@@ -458,20 +528,15 @@ class ProgramLibraryService: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             let programs = try decoder.decode([ProgramLibrary].self, from: response.data)
 
-            // Create a lookup dictionary
             let programLookup = Dictionary(uniqueKeysWithValues: programs.map { ($0.id, $0) })
 
-            // Combine enrollments with programs
             let combined = enrollments.compactMap { enrollment -> EnrollmentWithProgram? in
                 guard let program = programLookup[enrollment.programLibraryId] else { return nil }
                 return EnrollmentWithProgram(enrollment: enrollment, program: program)
             }
 
-            logger.log("Fetched \(combined.count) enrolled programs with details", level: .success)
+            logger.log("Fallback fetched \(combined.count) enrolled programs with details", level: .success)
             return combined
-        } catch {
-            logger.log("Failed to fetch program details: \(error.localizedDescription)", level: .error)
-            throw error
         }
     }
 

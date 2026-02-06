@@ -100,14 +100,15 @@ class PTSupabaseClient: ObservableObject {
 
         // Use flexible decoder for all database queries
         // Handles ISO8601 (with/without fractional seconds), DATE (yyyy-MM-dd), and TIME (HH:mm:ss)
-        // Auth configuration ensures JWT is included in all requests
+        // Auth configuration: PKCE flow (recommended for mobile) with URL scheme redirect
         client = Supabase.SupabaseClient(
             supabaseURL: url,
             supabaseKey: supabaseAnonKey,
             options: SupabaseClientOptions(
                 db: SupabaseClientOptions.DatabaseOptions(decoder: PTSupabaseClient.flexibleDecoder),
                 auth: SupabaseClientOptions.AuthOptions(
-                    flowType: .implicit,
+                    redirectToURL: URL(string: "modus://auth"),
+                    flowType: .pkce,
                     autoRefreshToken: true
                 )
             )
@@ -401,19 +402,33 @@ class PTSupabaseClient: ObservableObject {
     ///
     /// - Note: The magic link redirects to `modus://auth` and logs user in directly
     func sendMagicLink(email: String) async throws {
-        try await client.auth.signInWithOTP(
-            email: email,
-            redirectTo: URL(string: "modus://auth")
-        )
+        do {
+            try await client.auth.signInWithOTP(
+                email: email,
+                redirectTo: URL(string: "modus://auth")
+            )
+            DebugLogger.shared.success("SupabaseClient", "Magic link sent to \(email)")
+        } catch {
+            DebugLogger.shared.error("SupabaseClient", "Failed to send magic link: \(error)")
+            DebugLogger.shared.error("SupabaseClient", "Error details: \(String(describing: error))")
+            throw error
+        }
     }
 
     /// Legacy password reset - sends a password reset email
     /// Use sendMagicLink() instead for simpler login flow
     func resetPassword(email: String) async throws {
-        try await client.auth.resetPasswordForEmail(
-            email,
-            redirectTo: URL(string: "modus://reset-password")
-        )
+        do {
+            try await client.auth.resetPasswordForEmail(
+                email,
+                redirectTo: URL(string: "modus://reset-password")
+            )
+            DebugLogger.shared.success("SupabaseClient", "Password reset email sent to \(email)")
+        } catch {
+            DebugLogger.shared.error("SupabaseClient", "Failed to send password reset: \(error)")
+            DebugLogger.shared.error("SupabaseClient", "Error details: \(String(describing: error))")
+            throw error
+        }
     }
 
     /// Updates the current user's password

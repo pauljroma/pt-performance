@@ -37,15 +37,20 @@ struct ProgramsHubView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Segmented control for sub-sections
-            segmentedPicker
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .padding(.bottom, 8)
+        // Single NavigationStack wrapping everything to prevent overlapping bars
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Segmented control for sub-sections (inside NavigationStack)
+                segmentedPicker
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
 
-            // Content based on selection
-            contentView
+                // Content based on selection (no more nested NavigationStacks)
+                contentView
+            }
+            .navigationTitle(selectedSection.title)
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 
@@ -67,34 +72,22 @@ struct ProgramsHubView: View {
     private var contentView: some View {
         switch selectedSection {
         case .programs:
-            // Use the existing ProgramLibraryBrowserView which has its own NavigationStack
+            // Programs browser (no nested NavigationStack - parent provides it)
             ProgramLibraryBrowserView()
                 .environmentObject(storeKit)
 
         case .packs:
             // Premium Packs browser
-            NavigationStack {
-                PremiumPacksBrowserView()
-                    .environmentObject(storeKit)
-                    .navigationTitle("Premium Packs")
-                    .navigationBarTitleDisplayMode(.large)
-            }
+            PremiumPacksBrowserView()
+                .environmentObject(storeKit)
 
         case .baseball:
             // Baseball Pack section with premium gating
-            NavigationStack {
-                baseballContent
-                    .navigationTitle("Baseball Pack")
-                    .navigationBarTitleDisplayMode(.large)
-            }
+            baseballContent
 
         case .history:
-            // History needs NavigationStack wrapper since it doesn't have one
-            NavigationStack {
-                historyContent
-                    .navigationTitle("History")
-                    .navigationBarTitleDisplayMode(.large)
-            }
+            // History content
+            historyContent
         }
     }
 

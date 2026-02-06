@@ -253,17 +253,22 @@ class QuickStartService: ObservableObject {
     private func fetchScheduledSessions(patientId: String, date: String) async throws -> [ScheduledSession] {
         logger.log("📱 [QuickStart] Checking scheduled_sessions for: \(date)", level: .diagnostic)
 
+        // Updated struct to handle nullable fields from enrollment-based workouts
         struct ScheduledSessionRow: Codable {
             let id: String
-            let session_id: String
+            let session_id: String?  // Nullable for enrollment-based workouts
             let status: String
             let scheduled_date: String
-            let scheduled_time: String
+            let scheduled_time: String?  // Nullable for enrollment-based workouts
             let patient_id: String
-            let reminder_sent: Bool
+            let reminder_sent: Bool?
             let notes: String?
             let created_at: String
             let updated_at: String
+            // New fields for enrollment-based workouts
+            let enrollment_id: String?
+            let workout_template_id: String?
+            let workout_name: String?
         }
 
         let response = try await supabase.client
@@ -271,7 +276,7 @@ class QuickStartService: ObservableObject {
             .select("*")
             .eq("patient_id", value: patientId)
             .eq("scheduled_date", value: date)
-            .order("scheduled_time", ascending: true)
+            .order("created_at", ascending: true)  // Changed from scheduled_time which may be null
             .execute()
 
         let decoder = JSONDecoder()
@@ -279,11 +284,25 @@ class QuickStartService: ObservableObject {
 
         logger.log("📱 [QuickStart] Found \(rows.count) scheduled sessions", level: .diagnostic)
 
-        // Convert to ScheduledSession model
+        // Convert to ScheduledSession model - only include rows with session_id (old-style)
+        // Enrollment-based workouts are handled differently via enrollment flow
         let sessions = rows.compactMap { row -> ScheduledSession? in
             guard let id = UUID(uuidString: row.id),
-                  let sessionId = UUID(uuidString: row.session_id),
-                  let patientId = UUID(uuidString: row.patient_id) else {
+                  let patientIdUUID = UUID(uuidString: row.patient_id) else {
+                return nil
+            }
+
+            // For enrollment-based workouts (no session_id), we still want to know they exist
+            // but we'll handle them through a different flow
+            let sessionId: UUID
+            if let sessionIdString = row.session_id, let uuid = UUID(uuidString: sessionIdString) {
+                sessionId = uuid
+            } else if row.enrollment_id != nil {
+                // Enrollment-based workout - log it but skip for now
+                logger.log("📱 [QuickStart] Found enrollment workout: \(row.workout_name ?? "Unknown")", level: .diagnostic)
+                // TODO: Handle enrollment-based workouts in a future update
+                return nil
+            } else {
                 return nil
             }
 
@@ -302,19 +321,25 @@ class QuickStartService: ObservableObject {
             timeFormatter.dateFormat = "HH:mm:ss"
 
             let scheduledDate = isoFormatter.date(from: row.scheduled_date + "T00:00:00Z") ?? Date()
-            let scheduledTime = timeFormatter.date(from: row.scheduled_time) ?? Date()
+            let scheduledTime: Date
+            if let timeString = row.scheduled_time {
+                scheduledTime = timeFormatter.date(from: timeString) ?? Date()
+            } else {
+                // Default to 9:00 AM for enrollment-based workouts without time
+                scheduledTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+            }
             let createdAt = isoFormatter.date(from: row.created_at) ?? Date()
             let updatedAt = isoFormatter.date(from: row.updated_at) ?? Date()
 
             return ScheduledSession.__createDirectly(
                 id: id,
-                patientId: patientId,
+                patientId: patientIdUUID,
                 sessionId: sessionId,
                 scheduledDate: scheduledDate,
                 scheduledTime: scheduledTime,
                 status: status,
                 completedAt: nil,
-                reminderSent: row.reminder_sent,
+                reminderSent: row.reminder_sent ?? false,
                 notes: row.notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt
@@ -379,9 +404,58 @@ class QuickStartService: ObservableObject {
 
         if let session = sessions.first {
             logger.log("✅ [QuickStart] Found program session: \(session.name)", level: .success)
-        } else {
-            logger.log("⚠️ [QuickStart] No program sessions found", level: .warning)
+            return session
         }
+
+        // Build 444: Try enrolled programs via RPC if direct program lookup fails
+        logger.log("📱 [QuickStart] No direct program, trying enrolled programs via RPC...", level: .diagnostic)
+        return try await fetchEnrolledProgramSession(patientId: patientId)
+    }
+
+    /// Build 444: Fetch session via enrolled programs RPC
+    /// Bypasses patient_id filter by using enrollment relationship
+    private func fetchEnrolledProgramSession(patientId: String) async throws -> Session? {
+        logger.log("📱 [QuickStart] Calling RPC get_today_enrolled_session...", level: .diagnostic)
+
+        // Response struct matching RPC return type
+        struct EnrolledSessionRow: Codable {
+            let session_id: String
+            let session_name: String
+            let phase_name: String
+            let program_name: String
+            let program_library_title: String?
+            let enrollment_id: String
+        }
+
+        let response = try await supabase.client
+            .rpc("get_today_enrolled_session", params: ["p_patient_id": patientId])
+            .execute()
+
+        if let jsonString = String(data: response.data, encoding: .utf8) {
+            logger.log("📱 [QuickStart] RPC response: \(jsonString)", level: .diagnostic)
+        }
+
+        let decoder = JSONDecoder()
+        let rows = try decoder.decode([EnrolledSessionRow].self, from: response.data)
+
+        guard let row = rows.first else {
+            logger.log("⚠️ [QuickStart] RPC returned no enrolled sessions", level: .warning)
+            return nil
+        }
+
+        logger.log("✅ [QuickStart] RPC found session: \(row.session_name) (ID: \(row.session_id))", level: .success)
+
+        // Now fetch the full session object by ID
+        let sessionResponse = try await supabase.client
+            .from("sessions")
+            .select("*")
+            .eq("id", value: row.session_id)
+            .limit(1)
+            .execute()
+
+        let sessionDecoder = JSONDecoder()
+        sessionDecoder.dateDecodingStrategy = .iso8601
+        let sessions = try sessionDecoder.decode([Session].self, from: sessionResponse.data)
 
         return sessions.first
     }

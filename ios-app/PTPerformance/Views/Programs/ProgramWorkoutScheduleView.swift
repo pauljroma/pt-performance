@@ -149,21 +149,35 @@ struct ProgramWorkoutScheduleView: View {
     // MARK: - Empty View
 
     private var emptyView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "calendar.badge.exclamationmark")
-                .font(.largeTitle)
-                .foregroundColor(.secondary)
+        VStack(spacing: 16) {
+            Image(systemName: "doc.text.magnifyingglass")
+                .font(.system(size: 48))
+                .foregroundColor(.blue.opacity(0.7))
 
-            Text("No Workouts Scheduled")
+            Text("Program Template")
                 .font(.headline)
 
-            Text("This program doesn't have any workouts assigned yet.")
+            Text("This is a program template. To start this program with personalized workouts, ask your therapist to customize it for you.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 20)
+
+            // Helpful suggestion
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Share this program with your therapist", systemImage: "person.2")
+                Label("They can add customized workouts", systemImage: "plus.circle")
+                Label("Check back once workouts are assigned", systemImage: "clock")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
+        .padding(.horizontal)
     }
 
     // MARK: - Phase-Based Content (for baseball programs)
