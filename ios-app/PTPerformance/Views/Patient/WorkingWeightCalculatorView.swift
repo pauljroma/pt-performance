@@ -83,6 +83,11 @@ struct WorkingWeightCalculatorView: View {
     @State private var liftRepsText: String = ""
     @State private var selectedGoal: TrainingGoal = .hypertrophy
     @State private var customPercentage: Double = 75.0
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case oneRM, liftWeight, liftReps
+    }
 
     // MARK: - Computed Properties
 
@@ -152,6 +157,18 @@ struct WorkingWeightCalculatorView: View {
         }
         .navigationTitle("Working Weight")
         .navigationBarTitleDisplayMode(.large)
+        .onDisappear {
+            // Dismiss keyboard when navigating away to prevent focus conflicts
+            focusedField = nil
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
+        }
     }
 
     // MARK: - Input Section
@@ -170,6 +187,7 @@ struct WorkingWeightCalculatorView: View {
                         .frame(width: 24)
                     TextField("Weight lifted (lbs)", text: $liftWeightText)
                         .keyboardType(.decimalPad)
+                        .focused($focusedField, equals: .liftWeight)
                         .accessibilityLabel("Weight lifted in pounds")
                 }
 
@@ -179,6 +197,7 @@ struct WorkingWeightCalculatorView: View {
                         .frame(width: 24)
                     TextField("Reps performed (1-30)", text: $liftRepsText)
                         .keyboardType(.numberPad)
+                        .focused($focusedField, equals: .liftReps)
                         .accessibilityLabel("Repetitions performed")
                 }
 
@@ -201,6 +220,7 @@ struct WorkingWeightCalculatorView: View {
                         .frame(width: 24)
                     TextField("Known 1RM (lbs)", text: $oneRMText)
                         .keyboardType(.decimalPad)
+                        .focused($focusedField, equals: .oneRM)
                         .accessibilityLabel("One rep max in pounds")
                 }
             }

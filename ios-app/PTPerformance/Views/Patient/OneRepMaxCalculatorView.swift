@@ -10,6 +10,11 @@ struct OneRepMaxCalculatorView: View {
     @State private var weightText: String = ""
     @State private var repsText: String = ""
     @State private var formulaExpanded: Bool = false
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case weight, reps
+    }
 
     // MARK: - Computed Properties
 
@@ -66,6 +71,18 @@ struct OneRepMaxCalculatorView: View {
         }
         .navigationTitle("1RM Calculator")
         .navigationBarTitleDisplayMode(.large)
+        .onDisappear {
+            // Dismiss keyboard when navigating away to prevent focus conflicts
+            focusedField = nil
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
+        }
     }
 
     // MARK: - Input Section
@@ -78,6 +95,7 @@ struct OneRepMaxCalculatorView: View {
                     .frame(width: 24)
                 TextField("Weight lifted (lbs)", text: $weightText)
                     .keyboardType(.decimalPad)
+                    .focused($focusedField, equals: .weight)
                     .accessibilityLabel("Weight lifted in pounds")
             }
 
@@ -87,6 +105,7 @@ struct OneRepMaxCalculatorView: View {
                     .frame(width: 24)
                 TextField("Reps performed (1-30)", text: $repsText)
                     .keyboardType(.numberPad)
+                    .focused($focusedField, equals: .reps)
                     .accessibilityLabel("Repetitions performed, 1 through 30")
             }
         } header: {
