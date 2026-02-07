@@ -163,6 +163,12 @@ final class TabBarBadgeManager: ObservableObject {
         intelligenceBadge = count
     }
 
+    /// Sets badge for coaching alerts (combines with intelligence badge)
+    func setCoachingAlertsBadge(_ count: Int) {
+        // Coaching alerts are shown on the Intelligence tab
+        intelligenceBadge = count
+    }
+
     // MARK: - Private Methods
 
     private func setupNotificationObservers() {

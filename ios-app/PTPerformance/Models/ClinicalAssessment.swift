@@ -363,7 +363,7 @@ struct ClinicalAssessmentInput: Codable {
 
 // MARK: - Errors
 
-enum ClinicalAssessmentError: LocalizedError {
+enum ClinicalAssessmentError: LocalizedError, Equatable {
     case invalidPainScore(String)
     case assessmentNotFound
     case saveFailed

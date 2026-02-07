@@ -77,15 +77,15 @@ enum RTSTrafficLight: String, Codable, CaseIterable, Identifiable, Hashable {
     }
 
     /// Determine traffic light from readiness score
-    /// - Parameter score: Readiness score (0-100)
+    /// - Parameter score: Readiness score (0-100), scores outside range are clamped
     /// - Returns: Appropriate traffic light status
     static func from(score: Double) -> RTSTrafficLight {
-        switch score {
-        case 80...100:
+        // Handle extreme scores - scores >= 80 are always green, scores < 60 are always red
+        if score >= 80 {
             return .green
-        case 60..<80:
+        } else if score >= 60 {
             return .yellow
-        default:
+        } else {
             return .red
         }
     }
