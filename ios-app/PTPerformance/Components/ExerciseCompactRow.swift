@@ -35,8 +35,8 @@ struct ExerciseCompactRow: View {
         self._isExpanded = isExpanded
 
         // Initialize with prescribed values
-        self._actualSets = State(initialValue: exercise.prescribed_sets)
-        self._actualReps = State(initialValue: Array(repeating: exercise.prescribed_reps_int, count: exercise.prescribed_sets))
+        self._actualSets = State(initialValue: exercise.sets)
+        self._actualReps = State(initialValue: Array(repeating: exercise.prescribed_reps_int, count: exercise.sets))
         self._actualLoad = State(initialValue: exercise.prescribed_load ?? 0.0)
     }
 
@@ -123,7 +123,7 @@ struct ExerciseCompactRow: View {
                 HStack(spacing: 12) {
                     prescribedMetric(
                         icon: "repeat",
-                        value: "\(exercise.prescribed_sets) sets",
+                        value: "\(exercise.sets) sets",
                         field: .sets
                     )
 
@@ -245,7 +245,7 @@ struct ExerciseCompactRow: View {
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    Text("\(exercise.prescribed_sets) sets × \(exercise.repsDisplay) @ \(exercise.loadDisplay)")
+                    Text("\(exercise.sets) sets × \(exercise.repsDisplay) @ \(exercise.loadDisplay)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -458,8 +458,8 @@ struct ExerciseCompactRow: View {
         Task {
             await viewModel.quickCompleteExercise(
                 exercise,
-                sets: exercise.prescribed_sets,
-                reps: Array(repeating: exercise.prescribed_reps_int, count: exercise.prescribed_sets),
+                sets: exercise.sets,
+                reps: Array(repeating: exercise.prescribed_reps_int, count: exercise.sets),
                 load: exercise.prescribed_load ?? 0.0,
                 loadUnit: exercise.prescribed_load_unit ?? "lbs",
                 rpe: 5,

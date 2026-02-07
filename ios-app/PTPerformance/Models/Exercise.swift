@@ -6,8 +6,10 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
     let session_id: UUID
     let exercise_template_id: UUID
     let sequence: Int?
-    let prescribed_sets: Int
-    let prescribed_reps: String?  // Database has this as string (e.g., "15" or "8-10")
+    let target_sets: Int?        // Database uses target_sets
+    let target_reps: Int?        // Database uses target_reps
+    let prescribed_sets: Int?    // Legacy field, may be null
+    let prescribed_reps: String? // Database has this as string (e.g., "15" or "8-10")
     let prescribed_load: Double?
     let load_unit: String?  // Database field name
     let rest_period_seconds: Int?  // Database field name
@@ -103,8 +105,16 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
         return exercise_templates?.body_region
     }
 
+    // Computed property for sets (prefer target_sets, fallback to prescribed_sets)
+    var sets: Int {
+        return target_sets ?? prescribed_sets ?? 0
+    }
+
     // Computed properties
     var repsDisplay: String {
+        if let reps = target_reps {
+            return "\(reps)"
+        }
         return prescribed_reps ?? "0"
     }
 
@@ -116,7 +126,12 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
     }
 
     var setsDisplay: String {
-        return "\(prescribed_sets) sets"
+        return "\(sets) sets"
+    }
+
+    // For backwards compatibility when prescribed_sets is expected
+    var prescribedSetsCompat: Int {
+        return sets
     }
 
     var rest_seconds: Int? {
@@ -133,7 +148,9 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
             exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000030")!,
             sequence: 1,
-            prescribed_sets: 3,
+            target_sets: 3,
+            target_reps: 10,
+            prescribed_sets: nil,
             prescribed_reps: "8-10",
             prescribed_load: 135,
             load_unit: "lbs",
@@ -158,7 +175,9 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000020")!,
             exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000031")!,
             sequence: 2,
-            prescribed_sets: 3,
+            target_sets: 3,
+            target_reps: 12,
+            prescribed_sets: nil,
             prescribed_reps: "10-12",
             prescribed_load: 185,
             load_unit: "lbs",

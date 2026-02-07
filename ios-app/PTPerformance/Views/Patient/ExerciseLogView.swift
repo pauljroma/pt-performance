@@ -41,7 +41,7 @@ struct ExerciseLogView: View {
                             .font(.headline)
 
                         HStack {
-                            Label("\(exercise.prescribed_sets) sets", systemImage: "number")
+                            Label("\(exercise.sets) sets", systemImage: "number")
                             Spacer()
                             Label("\(exercise.repsDisplay)", systemImage: "repeat")
                             Spacer()
@@ -485,7 +485,9 @@ struct ExerciseLogView_Previews: PreviewProvider {
                 session_id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
                 exercise_template_id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
                 sequence: 1,
-                prescribed_sets: 3,
+                target_sets: 3,
+                target_reps: 10,
+                prescribed_sets: nil,
                 prescribed_reps: "10",
                 prescribed_load: 185,
                 load_unit: "lbs",

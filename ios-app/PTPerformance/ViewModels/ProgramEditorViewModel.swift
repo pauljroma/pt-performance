@@ -606,7 +606,9 @@ class ProgramEditorViewModel: ObservableObject {
                     session_id: UUID(),  // Placeholder UUID for templates (not linked to session)
                     exercise_template_id: templateUUID,
                     sequence: nil,
-                    prescribed_sets: Defaults.sets,
+                    target_sets: Defaults.sets,
+                    target_reps: 10,
+                    prescribed_sets: nil,
                     prescribed_reps: Defaults.repsString,
                     prescribed_load: nil,
                     load_unit: Defaults.loadUnit,

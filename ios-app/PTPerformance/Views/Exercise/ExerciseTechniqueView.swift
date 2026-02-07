@@ -225,7 +225,7 @@ struct PrescriptionInfoCard: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(exercise.prescribed_sets)")
+                        Text("\(exercise.sets)")
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
@@ -299,7 +299,9 @@ struct TechniqueGroupBoxStyle: GroupBoxStyle {
             session_id: UUID(),
             exercise_template_id: UUID(),
             sequence: 1,
-            prescribed_sets: 3,
+            target_sets: 3,
+            target_reps: 10,
+            prescribed_sets: nil,
             prescribed_reps: "8-10",
             prescribed_load: 185,
             load_unit: "lbs",

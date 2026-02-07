@@ -176,7 +176,7 @@ struct OptimisticWorkoutExecutionView: View {
 
             // Prescribed values
             HStack(spacing: 16) {
-                Label("\(exercise.prescribed_sets) sets", systemImage: "number")
+                Label("\(exercise.sets) sets", systemImage: "number")
                 Label("\(exercise.prescribed_reps ?? "-") reps", systemImage: "arrow.counterclockwise")
                 if let load = exercise.prescribed_load {
                     Label("\(Int(load)) \(exercise.load_unit ?? "lbs")", systemImage: "scalemass")

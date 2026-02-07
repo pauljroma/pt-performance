@@ -424,7 +424,7 @@ class WorkoutGridViewModel: ObservableObject {
             sessionId: sessionExercise.session_id,
             exerciseTemplateId: sessionExercise.exercise_template_id,
             exerciseName: sessionExercise.exercise_templates?.name ?? "Unknown",
-            prescribedSets: sessionExercise.prescribed_sets,
+            prescribedSets: sessionExercise.sets,
             prescribedReps: sessionExercise.prescribed_reps ?? "0",
             prescribedLoad: sessionExercise.prescribed_load,
             loadUnit: sessionExercise.load_unit ?? "lbs",
@@ -455,7 +455,9 @@ struct SessionExerciseWithTemplate: Codable {
     let id: String
     let session_id: String
     let exercise_template_id: String
-    let prescribed_sets: Int
+    let target_sets: Int?
+    let target_reps: Int?
+    let prescribed_sets: Int?
     let prescribed_reps: String?
     let prescribed_load: Double?
     let load_unit: String?
@@ -463,6 +465,11 @@ struct SessionExerciseWithTemplate: Codable {
     let notes: String?
     let sequence: Int?
     let exercise_templates: ExerciseTemplateBasic?
+
+    /// Computed sets property (prefer target_sets, fallback to prescribed_sets)
+    var sets: Int {
+        target_sets ?? prescribed_sets ?? 0
+    }
 
     struct ExerciseTemplateBasic: Codable {
         let id: String

@@ -28,7 +28,7 @@ struct ExerciseEditorView: View {
         self.viewModel = viewModel
         self.exercise = exercise
         self.sessionId = sessionId
-        _prescribedSets = State(initialValue: exercise.prescribed_sets)
+        _prescribedSets = State(initialValue: exercise.sets)
         _prescribedReps = State(initialValue: exercise.prescribed_reps ?? "10")
         _prescribedLoad = State(initialValue: exercise.prescribed_load)
         _loadUnit = State(initialValue: exercise.load_unit ?? "lbs")

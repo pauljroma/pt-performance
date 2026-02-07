@@ -98,7 +98,7 @@ struct ExerciseRowView: View {
             HStack(spacing: 12) {
                 // Sets
                 Label(
-                    "\(exercise.prescribed_sets) sets",
+                    "\(exercise.sets) sets",
                     systemImage: "repeat"
                 )
                 .font(.caption)

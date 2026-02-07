@@ -329,7 +329,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
                 exerciseName: exercise.exercise_name ?? "Exercise",
                 blockName: exercise.movement_pattern,
                 sequence: exercise.sequence ?? index,
-                targetSets: exercise.prescribed_sets,
+                targetSets: exercise.sets,
                 targetReps: exercise.prescribed_reps,
                 targetLoad: exercise.prescribed_load,
                 loadUnit: exercise.load_unit,

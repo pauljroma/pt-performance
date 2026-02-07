@@ -102,7 +102,7 @@ struct TodayWorkoutCard: View {
 
                     Spacer()
 
-                    Text("\(exercise.prescribed_sets) x \(exercise.repsDisplay)")
+                    Text("\(exercise.sets) x \(exercise.repsDisplay)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

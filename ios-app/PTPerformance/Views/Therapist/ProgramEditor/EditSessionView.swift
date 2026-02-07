@@ -236,7 +236,9 @@ struct EditSessionView: View {
                     session_id: UUID(),  // Placeholder for templates
                     exercise_template_id: template.id,
                     sequence: nil,
-                    prescribed_sets: 3,
+                    target_sets: 3,
+                    target_reps: 10,
+                    prescribed_sets: nil,
                     prescribed_reps: "10",
                     prescribed_load: nil,
                     load_unit: "lbs",
@@ -343,7 +345,7 @@ struct ExerciseRowDetailView: View {
             }
 
             HStack(spacing: 12) {
-                Label("\(exercise.prescribed_sets) sets", systemImage: "repeat")
+                Label("\(exercise.sets) sets", systemImage: "repeat")
                     .font(.caption)
                     .foregroundColor(.secondary)
 

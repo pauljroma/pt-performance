@@ -215,7 +215,7 @@ class OptimisticWorkoutViewModel: ObservableObject {
             let targetReps = parseTargetReps(exercise.prescribed_reps)
             let state = ExerciseUIState(
                 exerciseId: exercise.id,
-                totalSets: exercise.prescribed_sets,
+                totalSets: exercise.sets,
                 targetReps: targetReps,
                 targetLoad: exercise.prescribed_load ?? 0
             )

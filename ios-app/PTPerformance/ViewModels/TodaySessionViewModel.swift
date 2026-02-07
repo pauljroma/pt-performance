@@ -651,7 +651,9 @@ class TodaySessionViewModel: ObservableObject {
                     session_id: template.id,
                     exercise_template_id: exerciseTemplate.id,
                     sequence: ex.sequence ?? (index + 1),
-                    prescribed_sets: ex.target_sets ?? 3,
+                    target_sets: ex.target_sets ?? 3,
+                    target_reps: nil,  // Will use prescribed_reps string
+                    prescribed_sets: nil,
                     prescribed_reps: ex.target_reps,
                     prescribed_load: nil,
                     load_unit: nil,

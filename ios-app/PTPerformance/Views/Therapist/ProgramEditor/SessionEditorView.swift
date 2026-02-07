@@ -163,7 +163,7 @@ struct SessionExerciseRow: View {
             // Sets and Reps
             HStack(spacing: 12) {
                 Label(
-                    "\(exercise.prescribed_sets) sets",
+                    "\(exercise.sets) sets",
                     systemImage: "repeat"
                 )
                 .font(.caption)

@@ -318,7 +318,7 @@ class ProgramBuilderViewModel: ObservableObject {
                             sessionId: sessionResponse.id.uuidString,
                             exerciseTemplateId: exercise.exercise_template_id.uuidString,
                             sequence: exerciseIndex + 1,
-                            targetSets: exercise.prescribed_sets,
+                            targetSets: exercise.sets,
                             targetReps: exercise.prescribed_reps ?? "10",
                             targetLoad: exercise.prescribed_load,
                             loadUnit: exercise.load_unit,

@@ -248,8 +248,8 @@ class OptimisticUpdateManager: ObservableObject {
     func initializeExerciseStates(for exercises: [Exercise]) {
         for exercise in exercises {
             let state = state(for: exercise.id)
-            state.repsPerSet = parseReps(exercise.prescribed_reps, sets: exercise.prescribed_sets)
-            state.weightPerSet = Array(repeating: exercise.prescribed_load ?? 0, count: exercise.prescribed_sets)
+            state.repsPerSet = parseReps(exercise.prescribed_reps, sets: exercise.sets)
+            state.weightPerSet = Array(repeating: exercise.prescribed_load ?? 0, count: exercise.sets)
         }
     }
 

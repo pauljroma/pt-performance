@@ -296,7 +296,7 @@ class ProgramCreationTests: XCTestCase {
 
         let exercises = try decoder.decode([Exercise].self, from: exercisesResponse.data)
         XCTAssertEqual(exercises.count, 1)
-        XCTAssertEqual(exercises[0].prescribed_sets, 3)
+        XCTAssertEqual(exercises[0].sets, 3)
         XCTAssertEqual(exercises[0].prescribed_reps, "8-10")
     }
 

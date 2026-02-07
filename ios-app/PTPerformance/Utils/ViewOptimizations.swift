@@ -17,7 +17,7 @@ extension Exercise: Equatable {
     static func == (lhs: Exercise, rhs: Exercise) -> Bool {
         lhs.id == rhs.id &&
         lhs.exercise_template_id == rhs.exercise_template_id &&
-        lhs.prescribed_sets == rhs.prescribed_sets &&
+        lhs.sets == rhs.sets &&
         lhs.prescribed_reps == rhs.prescribed_reps
     }
 }

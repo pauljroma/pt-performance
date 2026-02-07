@@ -43,7 +43,7 @@ struct WorkoutExerciseItem: Identifiable {
         self.name = exercise.exercise_name ?? "Exercise"
         self.blockType = exercise.movement_pattern
         self.sequence = exercise.sequence ?? 0
-        self.targetSets = exercise.prescribed_sets
+        self.targetSets = exercise.sets
         self.targetReps = exercise.prescribed_reps ?? "10"
         self.targetLoad = exercise.prescribed_load
         self.loadUnit = exercise.load_unit ?? "lbs"
