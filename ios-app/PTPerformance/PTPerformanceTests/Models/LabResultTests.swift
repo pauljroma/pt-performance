@@ -29,14 +29,17 @@ final class LabResultTests: XCTestCase {
             pdfUrl: "https://example.com/results.pdf",
             aiAnalysis: "All markers within normal range",
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
         )
 
         XCTAssertEqual(labResult.id, id)
         XCTAssertEqual(labResult.patientId, patientId)
         XCTAssertEqual(labResult.testDate, testDate)
-        XCTAssertEqual(labResult.testType, .bloodPanel)
-        XCTAssertEqual(labResult.results.count, 1)
+        XCTAssertEqual(labResult.testTypeValue, .bloodPanel)
+        XCTAssertEqual(labResult.resultsList.count, 1)
         XCTAssertEqual(labResult.pdfUrl, "https://example.com/results.pdf")
         XCTAssertEqual(labResult.aiAnalysis, "All markers within normal range")
         XCTAssertEqual(labResult.createdAt, createdAt)
@@ -53,12 +56,15 @@ final class LabResultTests: XCTestCase {
             pdfUrl: nil,
             aiAnalysis: nil,
             createdAt: Date(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
         )
 
         XCTAssertNil(labResult.pdfUrl)
         XCTAssertNil(labResult.aiAnalysis)
-        XCTAssertTrue(labResult.results.isEmpty)
+        XCTAssertTrue(labResult.resultsList.isEmpty)
     }
 
     // MARK: - LabResult Codable Tests
@@ -77,7 +83,7 @@ final class LabResultTests: XCTestCase {
         XCTAssertEqual(original.id, decoded.id)
         XCTAssertEqual(original.patientId, decoded.patientId)
         XCTAssertEqual(original.testType, decoded.testType)
-        XCTAssertEqual(original.results.count, decoded.results.count)
+        XCTAssertEqual(original.resultsList.count, decoded.resultsList.count)
         XCTAssertEqual(original.pdfUrl, decoded.pdfUrl)
         XCTAssertEqual(original.aiAnalysis, decoded.aiAnalysis)
     }
@@ -329,7 +335,10 @@ final class LabResultTests: XCTestCase {
             pdfUrl: "https://example.com/results.pdf",
             aiAnalysis: "All markers within normal range",
             createdAt: Date(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
         )
     }
 }

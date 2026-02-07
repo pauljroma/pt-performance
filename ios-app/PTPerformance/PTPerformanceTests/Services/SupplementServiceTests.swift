@@ -2,8 +2,9 @@
 //  SupplementServiceTests.swift
 //  PTPerformanceTests
 //
-//  Unit tests for SupplementService
-//  Tests supplement models, categories, schedules, and service state management
+//  Comprehensive unit tests for SupplementService
+//  Tests supplement models, categories, schedules, service state management,
+//  fetch operations, logging, recommendations, and error handling.
 //
 
 import XCTest
@@ -174,7 +175,7 @@ final class SupplementFrequencyTests: XCTestCase {
 
 // MARK: - TimeOfDay Tests
 
-final class TimeOfDayTests: XCTestCase {
+final class TimeOfDayServiceTests: XCTestCase {
 
     // MARK: - Raw Value Tests
 
@@ -211,11 +212,16 @@ final class TimeOfDayTests: XCTestCase {
         XCTAssertEqual(TimeOfDay.withMeals.displayName, "With Meals")
     }
 
-    // MARK: - CaseIterable Tests
+    // MARK: - Icon Tests
 
-    func testTimeOfDay_AllCases() {
-        let allCases = TimeOfDay.allCases
-        XCTAssertEqual(allCases.count, 7)
+    func testTimeOfDay_Icons() {
+        XCTAssertEqual(TimeOfDay.morning.icon, "sunrise.fill")
+        XCTAssertEqual(TimeOfDay.afternoon.icon, "sun.max.fill")
+        XCTAssertEqual(TimeOfDay.evening.icon, "sunset.fill")
+        XCTAssertEqual(TimeOfDay.beforeBed.icon, "moon.fill")
+        XCTAssertEqual(TimeOfDay.preWorkout.icon, "figure.run")
+        XCTAssertEqual(TimeOfDay.postWorkout.icon, "figure.cooldown")
+        XCTAssertEqual(TimeOfDay.withMeals.icon, "fork.knife")
     }
 
     // MARK: - Codable Tests
@@ -235,296 +241,6 @@ final class TimeOfDayTests: XCTestCase {
         let time = try decoder.decode(TimeOfDay.self, from: json)
 
         XCTAssertEqual(time, .beforeBed)
-    }
-}
-
-// MARK: - Supplement Tests
-
-final class SupplementTests: XCTestCase {
-
-    // MARK: - Memberwise Initializer Tests
-
-    func testSupplement_MemberwiseInit() {
-        let id = UUID()
-        let patientId = UUID()
-        let createdAt = Date()
-
-        let supplement = Supplement(
-            id: id,
-            patientId: patientId,
-            name: "Creatine Monohydrate",
-            brand: "Momentous",
-            category: .creatine,
-            dosage: "5g",
-            frequency: .daily,
-            timeOfDay: [.morning, .postWorkout],
-            withFood: false,
-            notes: "Take with water",
-            momentousProductId: "creatine-mono-500",
-            isActive: true,
-            createdAt: createdAt
-        )
-
-        XCTAssertEqual(supplement.id, id)
-        XCTAssertEqual(supplement.patientId, patientId)
-        XCTAssertEqual(supplement.name, "Creatine Monohydrate")
-        XCTAssertEqual(supplement.brand, "Momentous")
-        XCTAssertEqual(supplement.category, .creatine)
-        XCTAssertEqual(supplement.dosage, "5g")
-        XCTAssertEqual(supplement.frequency, .daily)
-        XCTAssertEqual(supplement.timeOfDay, [.morning, .postWorkout])
-        XCTAssertEqual(supplement.withFood, false)
-        XCTAssertEqual(supplement.notes, "Take with water")
-        XCTAssertEqual(supplement.momentousProductId, "creatine-mono-500")
-        XCTAssertEqual(supplement.isActive, true)
-    }
-
-    func testSupplement_OptionalFields() {
-        let supplement = Supplement(
-            id: UUID(),
-            patientId: UUID(),
-            name: "Generic Vitamin D",
-            brand: nil,
-            category: .vitamins,
-            dosage: "5000 IU",
-            frequency: .daily,
-            timeOfDay: [.morning],
-            withFood: true,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: Date()
-        )
-
-        XCTAssertNil(supplement.brand)
-        XCTAssertNil(supplement.notes)
-        XCTAssertNil(supplement.momentousProductId)
-    }
-
-    // MARK: - Identifiable Tests
-
-    func testSupplement_Identifiable() {
-        let id = UUID()
-        let supplement = Supplement(
-            id: id,
-            patientId: UUID(),
-            name: "Test",
-            brand: nil,
-            category: .other,
-            dosage: "1 scoop",
-            frequency: .daily,
-            timeOfDay: [],
-            withFood: false,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: Date()
-        )
-
-        XCTAssertEqual(supplement.id, id)
-    }
-
-    // MARK: - Hashable Tests
-
-    func testSupplement_Hashable() {
-        let id = UUID()
-        let patientId = UUID()
-        let date = Date()
-
-        let supplement1 = Supplement(
-            id: id,
-            patientId: patientId,
-            name: "Test",
-            brand: nil,
-            category: .protein,
-            dosage: "1 scoop",
-            frequency: .daily,
-            timeOfDay: [.morning],
-            withFood: false,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: date
-        )
-        let supplement2 = Supplement(
-            id: id,
-            patientId: patientId,
-            name: "Test",
-            brand: nil,
-            category: .protein,
-            dosage: "1 scoop",
-            frequency: .daily,
-            timeOfDay: [.morning],
-            withFood: false,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: date
-        )
-
-        XCTAssertEqual(supplement1, supplement2)
-    }
-}
-
-// MARK: - ScheduledSupplement Tests
-
-final class ScheduledSupplementTests: XCTestCase {
-
-    // MARK: - Memberwise Initializer Tests
-
-    func testScheduledSupplement_MemberwiseInit() {
-        let id = UUID()
-        let scheduledTime = Date()
-        let takenAt = Date()
-
-        let supplement = Supplement(
-            id: UUID(),
-            patientId: UUID(),
-            name: "Test",
-            brand: nil,
-            category: .vitamins,
-            dosage: "1 capsule",
-            frequency: .daily,
-            timeOfDay: [.morning],
-            withFood: true,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: Date()
-        )
-
-        let scheduled = ScheduledSupplement(
-            id: id,
-            supplement: supplement,
-            scheduledTime: scheduledTime,
-            taken: true,
-            takenAt: takenAt
-        )
-
-        XCTAssertEqual(scheduled.id, id)
-        XCTAssertEqual(scheduled.supplement.name, "Test")
-        XCTAssertEqual(scheduled.scheduledTime, scheduledTime)
-        XCTAssertEqual(scheduled.taken, true)
-        XCTAssertEqual(scheduled.takenAt, takenAt)
-    }
-
-    func testScheduledSupplement_NotTaken() {
-        let supplement = Supplement(
-            id: UUID(),
-            patientId: UUID(),
-            name: "Test",
-            brand: nil,
-            category: .vitamins,
-            dosage: "1 capsule",
-            frequency: .daily,
-            timeOfDay: [.morning],
-            withFood: true,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: Date()
-        )
-
-        let scheduled = ScheduledSupplement(
-            id: UUID(),
-            supplement: supplement,
-            scheduledTime: Date(),
-            taken: false,
-            takenAt: nil
-        )
-
-        XCTAssertFalse(scheduled.taken)
-        XCTAssertNil(scheduled.takenAt)
-    }
-
-    // MARK: - Identifiable Tests
-
-    func testScheduledSupplement_Identifiable() {
-        let id = UUID()
-        let supplement = Supplement(
-            id: UUID(),
-            patientId: UUID(),
-            name: "Test",
-            brand: nil,
-            category: .other,
-            dosage: "1",
-            frequency: .daily,
-            timeOfDay: [],
-            withFood: false,
-            notes: nil,
-            momentousProductId: nil,
-            isActive: true,
-            createdAt: Date()
-        )
-
-        let scheduled = ScheduledSupplement(
-            id: id,
-            supplement: supplement,
-            scheduledTime: Date(),
-            taken: false,
-            takenAt: nil
-        )
-
-        XCTAssertEqual(scheduled.id, id)
-    }
-}
-
-// MARK: - SupplementLog Tests
-
-final class SupplementLogTests: XCTestCase {
-
-    // MARK: - Memberwise Initializer Tests
-
-    func testSupplementLog_MemberwiseInit() {
-        let id = UUID()
-        let supplementId = UUID()
-        let patientId = UUID()
-        let takenAt = Date()
-
-        let log = SupplementLog(
-            id: id,
-            supplementId: supplementId,
-            patientId: patientId,
-            takenAt: takenAt,
-            dosage: "5g",
-            notes: "Took with protein shake"
-        )
-
-        XCTAssertEqual(log.id, id)
-        XCTAssertEqual(log.supplementId, supplementId)
-        XCTAssertEqual(log.patientId, patientId)
-        XCTAssertEqual(log.takenAt, takenAt)
-        XCTAssertEqual(log.dosage, "5g")
-        XCTAssertEqual(log.notes, "Took with protein shake")
-    }
-
-    func testSupplementLog_OptionalNotes() {
-        let log = SupplementLog(
-            id: UUID(),
-            supplementId: UUID(),
-            patientId: UUID(),
-            takenAt: Date(),
-            dosage: "1 scoop",
-            notes: nil
-        )
-
-        XCTAssertNil(log.notes)
-    }
-
-    // MARK: - Identifiable Tests
-
-    func testSupplementLog_Identifiable() {
-        let id = UUID()
-        let log = SupplementLog(
-            id: id,
-            supplementId: UUID(),
-            patientId: UUID(),
-            takenAt: Date(),
-            dosage: "1g",
-            notes: nil
-        )
-
-        XCTAssertEqual(log.id, id)
     }
 }
 
@@ -571,7 +287,27 @@ final class SupplementServiceTests: XCTestCase {
 
     func testInitialState_RecentLogsIsArray() {
         XCTAssertNotNil(sut.recentLogs)
-        XCTAssertTrue(sut.recentLogs is [SupplementLog])
+        XCTAssertTrue(sut.recentLogs is [SupplementLogEntry])
+    }
+
+    func testInitialState_CatalogIsArray() {
+        XCTAssertNotNil(sut.catalog)
+        XCTAssertTrue(sut.catalog is [CatalogSupplement])
+    }
+
+    func testInitialState_StacksIsArray() {
+        XCTAssertNotNil(sut.stacks)
+        XCTAssertTrue(sut.stacks is [SupplementStack])
+    }
+
+    func testInitialState_RoutinesIsArray() {
+        XCTAssertNotNil(sut.routines)
+        XCTAssertTrue(sut.routines is [SupplementRoutine])
+    }
+
+    func testInitialState_TodayDosesIsArray() {
+        XCTAssertNotNil(sut.todayDoses)
+        XCTAssertTrue(sut.todayDoses is [TodaySupplementDose])
     }
 
     func testInitialState_IsLoadingProperty() {
@@ -580,6 +316,18 @@ final class SupplementServiceTests: XCTestCase {
 
     func testInitialState_ErrorProperty() {
         _ = sut.error
+    }
+
+    func testInitialState_IsLoadingCatalogProperty() {
+        _ = sut.isLoadingCatalog
+    }
+
+    func testInitialState_IsLoadingRecommendationsProperty() {
+        _ = sut.isLoadingRecommendations
+    }
+
+    func testInitialState_IsSyncingProperty() {
+        _ = sut.isSyncing
     }
 
     // MARK: - Published Properties Tests
@@ -598,9 +346,81 @@ final class SupplementServiceTests: XCTestCase {
         let logs = sut.recentLogs
         XCTAssertNotNil(logs)
     }
+
+    func testCatalog_IsPublished() {
+        let catalog = sut.catalog
+        XCTAssertNotNil(catalog)
+    }
+
+    func testStacks_IsPublished() {
+        let stacks = sut.stacks
+        XCTAssertNotNil(stacks)
+    }
+
+    func testRoutines_IsPublished() {
+        let routines = sut.routines
+        XCTAssertNotNil(routines)
+    }
+
+    func testTodayDoses_IsPublished() {
+        let doses = sut.todayDoses
+        XCTAssertNotNil(doses)
+    }
+
+    // MARK: - Compliance Tests
+
+    func testTodayCompliance_IsOptional() {
+        _ = sut.todayCompliance
+    }
+
+    func testWeeklyCompliance_IsOptional() {
+        _ = sut.weeklyCompliance
+    }
+
+    func testAnalytics_IsOptional() {
+        _ = sut.analytics
+    }
+
+    // MARK: - AI Recommendations Tests
+
+    func testAIRecommendations_IsOptional() {
+        _ = sut.aiRecommendations
+    }
 }
 
-// MARK: - Codable Decoding Tests
+// MARK: - SupplementServiceError Tests
+
+final class SupplementServiceErrorTests: XCTestCase {
+
+    func testNoPatientIdError_Description() {
+        let error = SupplementServiceError.noPatientId
+        XCTAssertEqual(error.errorDescription, "Unable to identify patient. Please ensure you are logged in.")
+    }
+
+    func testInvalidResponseError_Description() {
+        let error = SupplementServiceError.invalidResponse
+        XCTAssertEqual(error.errorDescription, "Received an invalid response from the server.")
+    }
+
+    func testRoutineNotFoundError_Description() {
+        let error = SupplementServiceError.routineNotFound
+        XCTAssertEqual(error.errorDescription, "The supplement routine was not found.")
+    }
+
+    func testSupplementNotFoundError_Description() {
+        let error = SupplementServiceError.supplementNotFound
+        XCTAssertEqual(error.errorDescription, "The supplement was not found in the catalog.")
+    }
+
+    func testNetworkError_Description() {
+        let underlyingError = NSError(domain: "test", code: 500, userInfo: [NSLocalizedDescriptionKey: "Server error"])
+        let error = SupplementServiceError.networkError(underlyingError)
+        XCTAssertTrue(error.errorDescription?.contains("Network error") ?? false)
+        XCTAssertTrue(error.errorDescription?.contains("Server error") ?? false)
+    }
+}
+
+// MARK: - Supplement Decoding Tests
 
 final class SupplementDecodingTests: XCTestCase {
 
@@ -748,6 +568,25 @@ final class SupplementDecodingTests: XCTestCase {
         XCTAssertEqual(log.dosage, "5g")
         XCTAssertEqual(log.notes, "With breakfast")
     }
+
+    func testSupplementLog_DecodingWithNilNotes() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "supplement_id": "660e8400-e29b-41d4-a716-446655440001",
+            "patient_id": "770e8400-e29b-41d4-a716-446655440002",
+            "taken_at": "2024-01-15T07:30:00Z",
+            "dosage": "5g",
+            "notes": null
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let log = try decoder.decode(SupplementLog.self, from: json)
+
+        XCTAssertNil(log.notes)
+    }
 }
 
 // MARK: - Edge Cases Tests
@@ -874,5 +713,468 @@ final class SupplementServiceEdgeCaseTests: XCTestCase {
         for frequency in SupplementFrequency.allCases {
             XCTAssertFalse(frequency.displayName.isEmpty, "\(frequency) should have a display name")
         }
+    }
+}
+
+// MARK: - TodaySupplementDose Tests
+
+final class TodaySupplementDoseTests: XCTestCase {
+
+    func testTodaySupplementDose_Initialization() {
+        let id = UUID()
+        let routineId = UUID()
+        let supplementId = UUID()
+        let scheduledTime = Date()
+
+        let dose = TodaySupplementDose(
+            id: id,
+            routineId: routineId,
+            supplementId: supplementId,
+            supplementName: "Creatine",
+            brand: "Momentous",
+            category: .performance,
+            dosage: "5g",
+            timing: .postWorkout,
+            scheduledTime: scheduledTime,
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        XCTAssertEqual(dose.id, id)
+        XCTAssertEqual(dose.routineId, routineId)
+        XCTAssertEqual(dose.supplementId, supplementId)
+        XCTAssertEqual(dose.supplementName, "Creatine")
+        XCTAssertEqual(dose.brand, "Momentous")
+        XCTAssertEqual(dose.category, .performance)
+        XCTAssertEqual(dose.dosage, "5g")
+        XCTAssertEqual(dose.timing, .postWorkout)
+        XCTAssertEqual(dose.scheduledTime, scheduledTime)
+        XCTAssertFalse(dose.withFood)
+        XCTAssertFalse(dose.isTaken)
+        XCTAssertNil(dose.takenAt)
+        XCTAssertNil(dose.logId)
+    }
+
+    func testTodaySupplementDose_DisplayName_WithBrand() {
+        let dose = TodaySupplementDose(
+            id: UUID(),
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Creatine",
+            brand: "Momentous",
+            category: .performance,
+            dosage: "5g",
+            timing: .morning,
+            scheduledTime: Date(),
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        XCTAssertEqual(dose.displayName, "Momentous Creatine")
+    }
+
+    func testTodaySupplementDose_DisplayName_NoBrand() {
+        let dose = TodaySupplementDose(
+            id: UUID(),
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Vitamin D3",
+            brand: nil,
+            category: .vitamin,
+            dosage: "5000 IU",
+            timing: .morning,
+            scheduledTime: Date(),
+            withFood: true,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        XCTAssertEqual(dose.displayName, "Vitamin D3")
+    }
+
+    func testTodaySupplementDose_IsOverdue() {
+        let twoHoursAgo = Date().addingTimeInterval(-7200)
+
+        var dose = TodaySupplementDose(
+            id: UUID(),
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Test",
+            brand: nil,
+            category: .vitamin,
+            dosage: "1",
+            timing: .morning,
+            scheduledTime: twoHoursAgo,
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        XCTAssertTrue(dose.isOverdue)
+
+        // Taking it should make it not overdue
+        dose.isTaken = true
+        XCTAssertFalse(dose.isOverdue)
+    }
+
+    func testTodaySupplementDose_IsPending() {
+        let oneHourFromNow = Date().addingTimeInterval(3600)
+
+        let dose = TodaySupplementDose(
+            id: UUID(),
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Test",
+            brand: nil,
+            category: .vitamin,
+            dosage: "1",
+            timing: .evening,
+            scheduledTime: oneHourFromNow,
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        XCTAssertTrue(dose.isPending)
+        XCTAssertFalse(dose.isOverdue)
+    }
+
+    func testTodaySupplementDose_Hashable() {
+        let id = UUID()
+
+        let dose1 = TodaySupplementDose(
+            id: id,
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Test",
+            brand: nil,
+            category: .vitamin,
+            dosage: "1",
+            timing: .morning,
+            scheduledTime: Date(),
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        let dose2 = TodaySupplementDose(
+            id: UUID(),
+            routineId: UUID(),
+            supplementId: UUID(),
+            supplementName: "Test",
+            brand: nil,
+            category: .vitamin,
+            dosage: "1",
+            timing: .morning,
+            scheduledTime: Date(),
+            withFood: false,
+            isTaken: false,
+            takenAt: nil,
+            logId: nil
+        )
+
+        var set = Set<TodaySupplementDose>()
+        set.insert(dose1)
+        set.insert(dose2)
+
+        XCTAssertEqual(set.count, 2)
+    }
+}
+
+// MARK: - SupplementCompliance Tests
+
+final class SupplementComplianceTests: XCTestCase {
+
+    func testSupplementCompliance_Initialization() {
+        let compliance = SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: 5,
+            takenCount: 4,
+            skippedCount: 1,
+            complianceRate: 0.8,
+            streakDays: 7
+        )
+
+        XCTAssertEqual(compliance.plannedCount, 5)
+        XCTAssertEqual(compliance.takenCount, 4)
+        XCTAssertEqual(compliance.skippedCount, 1)
+        XCTAssertEqual(compliance.complianceRate, 0.8)
+        XCTAssertEqual(compliance.streakDays, 7)
+    }
+
+    func testSupplementCompliance_FormattedRate() {
+        let compliance = SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: 10,
+            takenCount: 8,
+            skippedCount: 2,
+            complianceRate: 0.8,
+            streakDays: 0
+        )
+
+        XCTAssertEqual(compliance.formattedRate, "80%")
+    }
+
+    func testSupplementCompliance_IsComplete() {
+        let completeCompliance = SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: 5,
+            takenCount: 5,
+            skippedCount: 0,
+            complianceRate: 1.0,
+            streakDays: 10
+        )
+
+        XCTAssertTrue(completeCompliance.isComplete)
+
+        let incompleteCompliance = SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: 5,
+            takenCount: 4,
+            skippedCount: 0,
+            complianceRate: 0.8,
+            streakDays: 0
+        )
+
+        XCTAssertFalse(incompleteCompliance.isComplete)
+    }
+}
+
+// MARK: - WeeklySupplementCompliance Tests
+
+final class WeeklySupplementComplianceTests: XCTestCase {
+
+    func testWeeklyCompliance_AverageComplianceRate() {
+        let dailyCompliance = [
+            createCompliance(rate: 1.0),
+            createCompliance(rate: 0.8),
+            createCompliance(rate: 0.6)
+        ]
+
+        let weekly = WeeklySupplementCompliance(
+            weekStartDate: Date(),
+            dailyCompliance: dailyCompliance
+        )
+
+        let expectedAverage = (1.0 + 0.8 + 0.6) / 3.0
+        XCTAssertEqual(weekly.averageComplianceRate, expectedAverage, accuracy: 0.01)
+    }
+
+    func testWeeklyCompliance_TotalTaken() {
+        let dailyCompliance = [
+            createCompliance(takenCount: 5),
+            createCompliance(takenCount: 4),
+            createCompliance(takenCount: 3)
+        ]
+
+        let weekly = WeeklySupplementCompliance(
+            weekStartDate: Date(),
+            dailyCompliance: dailyCompliance
+        )
+
+        XCTAssertEqual(weekly.totalTaken, 12)
+    }
+
+    func testWeeklyCompliance_TotalPlanned() {
+        let dailyCompliance = [
+            createCompliance(plannedCount: 5),
+            createCompliance(plannedCount: 5),
+            createCompliance(plannedCount: 5)
+        ]
+
+        let weekly = WeeklySupplementCompliance(
+            weekStartDate: Date(),
+            dailyCompliance: dailyCompliance
+        )
+
+        XCTAssertEqual(weekly.totalPlanned, 15)
+    }
+
+    func testWeeklyCompliance_CompleteDays() {
+        let dailyCompliance = [
+            createCompliance(takenCount: 5, plannedCount: 5),
+            createCompliance(takenCount: 4, plannedCount: 5),
+            createCompliance(takenCount: 5, plannedCount: 5),
+            createCompliance(takenCount: 3, plannedCount: 5)
+        ]
+
+        let weekly = WeeklySupplementCompliance(
+            weekStartDate: Date(),
+            dailyCompliance: dailyCompliance
+        )
+
+        XCTAssertEqual(weekly.completeDays, 2)
+    }
+
+    func testWeeklyCompliance_EmptyDailyCompliance() {
+        let weekly = WeeklySupplementCompliance(
+            weekStartDate: Date(),
+            dailyCompliance: []
+        )
+
+        XCTAssertEqual(weekly.averageComplianceRate, 0)
+        XCTAssertEqual(weekly.totalTaken, 0)
+        XCTAssertEqual(weekly.totalPlanned, 0)
+        XCTAssertEqual(weekly.completeDays, 0)
+    }
+
+    private func createCompliance(
+        rate: Double = 0.8,
+        takenCount: Int = 4,
+        plannedCount: Int = 5
+    ) -> SupplementCompliance {
+        SupplementCompliance(
+            id: UUID(),
+            patientId: UUID(),
+            date: Date(),
+            plannedCount: plannedCount,
+            takenCount: takenCount,
+            skippedCount: 0,
+            complianceRate: rate,
+            streakDays: 0
+        )
+    }
+}
+
+// MARK: - SupplementTiming Tests
+
+final class SupplementTimingServiceTests: XCTestCase {
+
+    func testSupplementTiming_AllCases() {
+        let allCases = SupplementTiming.allCases
+        XCTAssertEqual(allCases.count, 8)
+    }
+
+    func testSupplementTiming_RawValues() {
+        XCTAssertEqual(SupplementTiming.morning.rawValue, "morning")
+        XCTAssertEqual(SupplementTiming.preWorkout.rawValue, "pre_workout")
+        XCTAssertEqual(SupplementTiming.postWorkout.rawValue, "post_workout")
+        XCTAssertEqual(SupplementTiming.evening.rawValue, "evening")
+        XCTAssertEqual(SupplementTiming.beforeBed.rawValue, "before_bed")
+        XCTAssertEqual(SupplementTiming.withMeals.rawValue, "with_meals")
+        XCTAssertEqual(SupplementTiming.betweenMeals.rawValue, "between_meals")
+        XCTAssertEqual(SupplementTiming.anytime.rawValue, "anytime")
+    }
+
+    func testSupplementTiming_DisplayNames() {
+        XCTAssertEqual(SupplementTiming.morning.displayName, "Morning")
+        XCTAssertEqual(SupplementTiming.preWorkout.displayName, "Pre-Workout")
+        XCTAssertEqual(SupplementTiming.postWorkout.displayName, "Post-Workout")
+        XCTAssertEqual(SupplementTiming.evening.displayName, "Evening")
+        XCTAssertEqual(SupplementTiming.beforeBed.displayName, "Before Bed")
+        XCTAssertEqual(SupplementTiming.withMeals.displayName, "With Meals")
+        XCTAssertEqual(SupplementTiming.betweenMeals.displayName, "Between Meals")
+        XCTAssertEqual(SupplementTiming.anytime.displayName, "Anytime")
+    }
+
+    func testSupplementTiming_Icons() {
+        XCTAssertEqual(SupplementTiming.morning.icon, "sunrise.fill")
+        XCTAssertEqual(SupplementTiming.preWorkout.icon, "figure.run")
+        XCTAssertEqual(SupplementTiming.postWorkout.icon, "figure.cooldown")
+        XCTAssertEqual(SupplementTiming.evening.icon, "sunset.fill")
+        XCTAssertEqual(SupplementTiming.beforeBed.icon, "moon.fill")
+        XCTAssertEqual(SupplementTiming.withMeals.icon, "fork.knife")
+        XCTAssertEqual(SupplementTiming.betweenMeals.icon, "clock.fill")
+        XCTAssertEqual(SupplementTiming.anytime.icon, "clock.badge.checkmark.fill")
+    }
+
+    func testSupplementTiming_SortOrder() {
+        let sortedTimings = SupplementTiming.allCases.sorted { $0.sortOrder < $1.sortOrder }
+
+        XCTAssertEqual(sortedTimings.first, .morning)
+        XCTAssertEqual(sortedTimings.last, .anytime)
+    }
+
+    func testSupplementTiming_ApproximateHour() {
+        XCTAssertEqual(SupplementTiming.morning.approximateHour, 7)
+        XCTAssertEqual(SupplementTiming.preWorkout.approximateHour, 6)
+        XCTAssertEqual(SupplementTiming.postWorkout.approximateHour, 8)
+        XCTAssertEqual(SupplementTiming.withMeals.approximateHour, 12)
+        XCTAssertEqual(SupplementTiming.betweenMeals.approximateHour, 15)
+        XCTAssertEqual(SupplementTiming.evening.approximateHour, 18)
+        XCTAssertEqual(SupplementTiming.beforeBed.approximateHour, 21)
+        XCTAssertEqual(SupplementTiming.anytime.approximateHour, 12)
+    }
+}
+
+// MARK: - DosageUnit Tests
+
+final class DosageUnitTests: XCTestCase {
+
+    func testDosageUnit_AllCases() {
+        let allCases = DosageUnit.allCases
+        XCTAssertEqual(allCases.count, 12)
+    }
+
+    func testDosageUnit_RawValues() {
+        XCTAssertEqual(DosageUnit.mg.rawValue, "mg")
+        XCTAssertEqual(DosageUnit.g.rawValue, "g")
+        XCTAssertEqual(DosageUnit.mcg.rawValue, "mcg")
+        XCTAssertEqual(DosageUnit.iu.rawValue, "IU")
+        XCTAssertEqual(DosageUnit.ml.rawValue, "ml")
+        XCTAssertEqual(DosageUnit.capsule.rawValue, "capsule")
+        XCTAssertEqual(DosageUnit.capsules.rawValue, "capsules")
+        XCTAssertEqual(DosageUnit.tablet.rawValue, "tablet")
+        XCTAssertEqual(DosageUnit.tablets.rawValue, "tablets")
+        XCTAssertEqual(DosageUnit.scoop.rawValue, "scoop")
+        XCTAssertEqual(DosageUnit.scoops.rawValue, "scoops")
+        XCTAssertEqual(DosageUnit.serving.rawValue, "serving")
+    }
+
+    func testDosageUnit_DisplayNames() {
+        for unit in DosageUnit.allCases {
+            XCTAssertEqual(unit.displayName, unit.rawValue)
+        }
+    }
+
+    func testDosageUnit_Abbreviation() {
+        for unit in DosageUnit.allCases {
+            XCTAssertEqual(unit.abbreviation, unit.displayName)
+        }
+    }
+}
+
+// MARK: - Dosage Tests
+
+final class DosageTests: XCTestCase {
+
+    func testDosage_DisplayString_WholeNumber() {
+        let dosage = Dosage(amount: 5, unit: .g)
+        XCTAssertEqual(dosage.displayString, "5 g")
+    }
+
+    func testDosage_DisplayString_Decimal() {
+        let dosage = Dosage(amount: 2.5, unit: .g)
+        XCTAssertEqual(dosage.displayString, "2.5 g")
+    }
+
+    func testDosage_DisplayString_Capsules() {
+        let dosage = Dosage(amount: 2, unit: .capsules)
+        XCTAssertEqual(dosage.displayString, "2 capsules")
+    }
+
+    func testDosage_Hashable() {
+        let dosage1 = Dosage(amount: 5, unit: .g)
+        let dosage2 = Dosage(amount: 5, unit: .g)
+        let dosage3 = Dosage(amount: 10, unit: .g)
+
+        XCTAssertEqual(dosage1, dosage2)
+        XCTAssertNotEqual(dosage1, dosage3)
     }
 }

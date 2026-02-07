@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import UIKit
 
 /// Advanced E2E testing utilities for reliable test execution
 enum E2ETestUtilities {
@@ -468,5 +469,249 @@ extension XCTestCase {
     ///   - description: Step description
     func testStep(_ step: Int, _ description: String) {
         XCTContext.runActivity(named: "Step \(step): \(description)") { _ in }
+    }
+}
+
+// MARK: - TestHelpers Compatibility Layer
+
+/// Common test utilities for PTPerformance UI tests
+/// Provides compatibility with page objects that reference TestHelpers
+enum TestHelpers {
+
+    // MARK: - Wait Helpers
+
+    /// Standard timeout for UI elements (in seconds)
+    static let standardTimeout: TimeInterval = 5.0
+
+    /// Extended timeout for network operations (in seconds)
+    static let networkTimeout: TimeInterval = 15.0
+
+    /// Quick timeout for instant checks (in seconds)
+    static let quickTimeout: TimeInterval = 2.0
+
+    /// Wait for element to exist with custom timeout
+    @discardableResult
+    static func waitForElement(
+        _ element: XCUIElement,
+        timeout: TimeInterval = standardTimeout,
+        message: String? = nil
+    ) -> Bool {
+        let exists = element.waitForExistence(timeout: timeout)
+        if !exists, let message = message {
+            XCTFail(message)
+        }
+        return exists
+    }
+
+    /// Wait for element to disappear
+    @discardableResult
+    static func waitForElementToDisappear(
+        _ element: XCUIElement,
+        timeout: TimeInterval = standardTimeout
+    ) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
+        return result == .completed
+    }
+
+    /// Wait for loading indicators to disappear
+    @discardableResult
+    static func waitForLoadingToComplete(
+        in app: XCUIApplication,
+        timeout: TimeInterval = networkTimeout
+    ) -> Bool {
+        let loadingIndicator = app.activityIndicators.firstMatch
+        if loadingIndicator.exists {
+            return waitForElementToDisappear(loadingIndicator, timeout: timeout)
+        }
+        return true
+    }
+
+    // MARK: - Assertion Helpers
+
+    /// Assert element exists with descriptive failure message
+    static func assertExists(
+        _ element: XCUIElement,
+        named elementName: String,
+        timeout: TimeInterval = standardTimeout
+    ) {
+        XCTAssertTrue(
+            element.waitForExistence(timeout: timeout),
+            "❌ '\(elementName)' should exist but was not found"
+        )
+    }
+
+    /// Assert element does not exist
+    static func assertDoesNotExist(
+        _ element: XCUIElement,
+        named elementName: String
+    ) {
+        XCTAssertFalse(
+            element.exists,
+            "❌ '\(elementName)' should not exist but was found"
+        )
+    }
+
+    // MARK: - Interaction Helpers
+
+    /// Safely tap an element with existence check
+    static func safeTap(
+        _ element: XCUIElement,
+        named elementName: String,
+        timeout: TimeInterval = standardTimeout
+    ) {
+        assertExists(element, named: elementName, timeout: timeout)
+        element.tap()
+    }
+
+    /// Type text into a field with existence check
+    static func safeTypeText(
+        into element: XCUIElement,
+        text: String,
+        named elementName: String,
+        clearFirst: Bool = false,
+        timeout: TimeInterval = standardTimeout
+    ) {
+        assertExists(element, named: elementName, timeout: timeout)
+        element.tap()
+
+        if clearFirst, let currentValue = element.value as? String, !currentValue.isEmpty {
+            let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count)
+            element.typeText(deleteString)
+        }
+
+        element.typeText(text)
+    }
+
+    // MARK: - Screenshot Helpers
+
+    /// Take a screenshot with a descriptive name
+    static func takeScreenshot(
+        named name: String,
+        in testCase: XCTestCase
+    ) {
+        let screenshot = XCUIScreen.main.screenshot()
+        let attachment = XCTAttachment(screenshot: screenshot)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        testCase.add(attachment)
+    }
+
+    // MARK: - Login Helpers
+
+    /// Perform demo login flow
+    static func performLogin(
+        in app: XCUIApplication,
+        userType: String = "Patient"
+    ) {
+        let buttonLabel = userType == "Patient" ? "Demo Patient" : "Demo Therapist"
+        let loginButton = app.buttons[buttonLabel]
+        safeTap(loginButton, named: "\(buttonLabel) Button")
+        waitForLoadingToComplete(in: app)
+    }
+
+    // MARK: - Hittable Assertions
+
+    /// Assert element is hittable (visible and interactive)
+    static func assertIsHittable(
+        _ element: XCUIElement,
+        named elementName: String
+    ) {
+        XCTAssertTrue(
+            element.isHittable,
+            "❌ '\(elementName)' exists but is not hittable (visible and interactive)"
+        )
+    }
+
+    // MARK: - Error Detection Helpers
+
+    /// Check for error messages in the UI
+    static func hasErrorMessage(
+        in app: XCUIApplication,
+        containing keywords: [String] = ["error", "failed", "could not"]
+    ) -> Bool {
+        for keyword in keywords {
+            let predicate = NSPredicate(format: "label CONTAINS[c] %@", keyword)
+            let errorText = app.staticTexts.containing(predicate).firstMatch
+            if errorText.exists {
+                return true
+            }
+        }
+        return app.alerts.firstMatch.exists
+    }
+
+    /// Get error message text if present
+    static func getErrorMessage(in app: XCUIApplication) -> String? {
+        let alert = app.alerts.firstMatch
+        if alert.exists {
+            return alert.label
+        }
+
+        let keywords = ["error", "failed", "could not"]
+        for keyword in keywords {
+            let predicate = NSPredicate(format: "label CONTAINS[c] %@", keyword)
+            let errorText = app.staticTexts.containing(predicate).firstMatch
+            if errorText.exists {
+                return errorText.label
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Device Helpers
+
+    /// Check if running on iPad
+    static var isIPad: Bool {
+        return UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    /// Check if running on iPhone
+    static var isIPhone: Bool {
+        return UIDevice.current.userInterfaceIdiom == .phone
+    }
+
+    // MARK: - Performance Helpers
+
+    /// Measure time for an action to complete
+    @discardableResult
+    static func measureTime(
+        for name: String,
+        action: () -> Void
+    ) -> TimeInterval {
+        let start = Date()
+        action()
+        let elapsed = Date().timeIntervalSince(start)
+        print("⏱️ \(name) took \(String(format: "%.2f", elapsed))s")
+        return elapsed
+    }
+
+    // MARK: - Debug Helpers
+
+    /// Print element hierarchy for debugging
+    static func printElementHierarchy(_ element: XCUIElement) {
+        print("=== Element Hierarchy ===")
+        print(element.debugDescription)
+        print("========================")
+    }
+
+    /// Print all buttons in the app
+    static func printAllButtons(in app: XCUIApplication) {
+        print("=== All Buttons ===")
+        let buttons = app.buttons.allElementsBoundByIndex
+        for (index, button) in buttons.enumerated() {
+            print("\(index): \(button.label)")
+        }
+        print("==================")
+    }
+
+    /// Print all text fields in the app
+    static func printAllTextFields(in app: XCUIApplication) {
+        print("=== All Text Fields ===")
+        let fields = app.textFields.allElementsBoundByIndex
+        for (index, field) in fields.enumerated() {
+            print("\(index): \(field.label)")
+        }
+        print("======================")
     }
 }

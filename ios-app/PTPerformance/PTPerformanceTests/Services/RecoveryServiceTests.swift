@@ -11,7 +11,7 @@ import XCTest
 
 // MARK: - RecoveryProtocolType Tests
 
-final class RecoveryProtocolTypeTests: XCTestCase {
+final class RecoveryServiceProtocolTypeTests: XCTestCase {
 
     // MARK: - Raw Value Tests
 
@@ -96,7 +96,7 @@ final class RecoveryProtocolTypeTests: XCTestCase {
 
 // MARK: - RecoveryPriority Tests
 
-final class RecoveryPriorityTests: XCTestCase {
+final class RecoveryServicePriorityTests: XCTestCase {
 
     // MARK: - Raw Value Tests
 
@@ -135,7 +135,7 @@ final class RecoveryPriorityTests: XCTestCase {
 
 // MARK: - RecoverySession Tests
 
-final class RecoverySessionTests: XCTestCase {
+final class RecoveryServiceSessionTests: XCTestCase {
 
     // MARK: - Memberwise Initializer Tests
 
@@ -262,7 +262,7 @@ final class RecoverySessionTests: XCTestCase {
 
 // MARK: - RecoveryRecommendation Tests
 
-final class RecoveryRecommendationTests: XCTestCase {
+final class RecoveryServiceRecommendationTests: XCTestCase {
 
     // MARK: - Memberwise Initializer Tests
 
@@ -270,14 +270,14 @@ final class RecoveryRecommendationTests: XCTestCase {
         let id = UUID()
         let recommendation = RecoveryRecommendation(
             id: id,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             reason: "High training volume this week",
             priority: .high,
             suggestedDuration: 20
         )
 
         XCTAssertEqual(recommendation.id, id)
-        XCTAssertEqual(recommendation.protocolType, .sauna)
+        XCTAssertEqual(recommendation.protocolType, .saunaTraditional)
         XCTAssertEqual(recommendation.reason, "High training volume this week")
         XCTAssertEqual(recommendation.priority, .high)
         XCTAssertEqual(recommendation.suggestedDuration, 20)
@@ -427,10 +427,10 @@ final class RecoverySessionDecodingTests: XCTestCase {
         {
             "id": "550e8400-e29b-41d4-a716-446655440000",
             "patient_id": "660e8400-e29b-41d4-a716-446655440001",
-            "protocol_type": "sauna_traditional",
+            "session_type": "sauna_traditional",
             "logged_at": "2024-01-15T10:30:00Z",
             "duration_minutes": 20,
-            "temperature": 180.0,
+            "temperature_f": 180.0,
             "heart_rate_avg": 110,
             "heart_rate_max": 140,
             "perceived_effort": 7,
@@ -460,10 +460,10 @@ final class RecoverySessionDecodingTests: XCTestCase {
         {
             "id": "550e8400-e29b-41d4-a716-446655440000",
             "patient_id": "660e8400-e29b-41d4-a716-446655440001",
-            "protocol_type": "contrast",
+            "session_type": "contrast",
             "logged_at": "2024-01-15T10:30:00Z",
             "duration_minutes": 10,
-            "temperature": null,
+            "temperature_f": null,
             "heart_rate_avg": null,
             "heart_rate_max": null,
             "perceived_effort": null,
@@ -494,10 +494,10 @@ final class RecoverySessionDecodingTests: XCTestCase {
             {
                 "id": "550e8400-e29b-41d4-a716-446655440000",
                 "patient_id": "660e8400-e29b-41d4-a716-446655440001",
-                "protocol_type": "\(protocolType)",
+                "session_type": "\(protocolType)",
                 "logged_at": "2024-01-15T10:30:00Z",
                 "duration_minutes": 10,
-                "temperature": null,
+                "temperature_f": null,
                 "heart_rate_avg": null,
                 "heart_rate_max": null,
                 "perceived_effort": null,
@@ -673,5 +673,491 @@ final class RecoveryServiceEdgeCaseTests: XCTestCase {
 
             XCTAssertEqual(recommendation.priority, priority)
         }
+    }
+}
+
+// MARK: - Impact Analysis Model Tests
+
+final class RecoveryImpactAnalysisModelTests: XCTestCase {
+
+    func testRecoveryImpactAnalysis_HasSufficientData_True() {
+        let analysis = RecoveryImpactAnalysis(
+            insights: [],
+            correlations: [],
+            personalizedRecommendations: [],
+            analysisDate: Date(),
+            dataPointsAnalyzed: 10
+        )
+
+        XCTAssertTrue(analysis.hasSufficientData)
+    }
+
+    func testRecoveryImpactAnalysis_HasSufficientData_False() {
+        let analysis = RecoveryImpactAnalysis(
+            insights: [],
+            correlations: [],
+            personalizedRecommendations: [],
+            analysisDate: Date(),
+            dataPointsAnalyzed: 3
+        )
+
+        XCTAssertFalse(analysis.hasSufficientData)
+    }
+
+    func testRecoveryImpactAnalysis_TopInsight() {
+        let highConfidenceInsight = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.9,
+            description: "HRV improved",
+            dataPoints: 10
+        )
+
+        let lowConfidenceInsight = RecoveryInsight(
+            type: .sleepImprovement,
+            metric: .sleepDuration,
+            protocolType: .coldPlunge,
+            impactPercentage: 20.0,
+            confidence: 0.5,
+            description: "Sleep improved",
+            dataPoints: 5
+        )
+
+        let analysis = RecoveryImpactAnalysis(
+            insights: [lowConfidenceInsight, highConfidenceInsight],
+            correlations: [],
+            personalizedRecommendations: [],
+            analysisDate: Date(),
+            dataPointsAnalyzed: 15
+        )
+
+        XCTAssertEqual(analysis.topInsight?.id, highConfidenceInsight.id)
+    }
+
+    func testRecoveryImpactAnalysis_PositiveInsights() {
+        let positiveInsight = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.9,
+            description: "HRV improved",
+            dataPoints: 10
+        )
+
+        let negativeInsight = RecoveryInsight(
+            type: .hrvDecline,
+            metric: .hrv,
+            protocolType: .coldPlunge,
+            impactPercentage: -5.0,
+            confidence: 0.7,
+            description: "HRV declined",
+            dataPoints: 8
+        )
+
+        let analysis = RecoveryImpactAnalysis(
+            insights: [positiveInsight, negativeInsight],
+            correlations: [],
+            personalizedRecommendations: [],
+            analysisDate: Date(),
+            dataPointsAnalyzed: 18
+        )
+
+        XCTAssertEqual(analysis.positiveInsights.count, 1)
+        XCTAssertEqual(analysis.negativeInsights.count, 1)
+    }
+}
+
+// MARK: - Recovery Insight Tests
+
+final class RecoveryServiceInsightTests: XCTestCase {
+
+    func testRecoveryInsight_FormattedImpact_Positive() {
+        let insight = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.5,
+            confidence: 0.9,
+            description: "Test",
+            dataPoints: 10
+        )
+
+        XCTAssertEqual(insight.formattedImpact, "+15%")
+    }
+
+    func testRecoveryInsight_FormattedImpact_Negative() {
+        let insight = RecoveryInsight(
+            type: .hrvDecline,
+            metric: .hrv,
+            protocolType: .coldPlunge,
+            impactPercentage: -8.5,
+            confidence: 0.7,
+            description: "Test",
+            dataPoints: 8
+        )
+
+        XCTAssertEqual(insight.formattedImpact, "-8%")
+    }
+
+    func testRecoveryInsight_ImpactCategory_StrongPositive() {
+        let insight = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.9,
+            description: "Test",
+            dataPoints: 10
+        )
+
+        XCTAssertEqual(insight.impactCategory, .strongPositive)
+    }
+
+    func testRecoveryInsight_ImpactCategory_Positive() {
+        let insight = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 5.0,
+            confidence: 0.9,
+            description: "Test",
+            dataPoints: 10
+        )
+
+        XCTAssertEqual(insight.impactCategory, .positive)
+    }
+
+    func testRecoveryInsight_ImpactCategory_Neutral() {
+        let insight = RecoveryInsight(
+            type: .recoveryEffectiveness,
+            metric: .hrv,
+            protocolType: .contrast,
+            impactPercentage: 1.0,
+            confidence: 0.5,
+            description: "Test",
+            dataPoints: 5
+        )
+
+        XCTAssertEqual(insight.impactCategory, .neutral)
+    }
+
+    func testRecoveryInsight_ImpactCategory_Negative() {
+        let insight = RecoveryInsight(
+            type: .hrvDecline,
+            metric: .hrv,
+            protocolType: .coldPlunge,
+            impactPercentage: -5.0,
+            confidence: 0.7,
+            description: "Test",
+            dataPoints: 8
+        )
+
+        XCTAssertEqual(insight.impactCategory, .negative)
+    }
+
+    func testRecoveryInsight_ImpactCategory_StrongNegative() {
+        let insight = RecoveryInsight(
+            type: .hrvDecline,
+            metric: .hrv,
+            protocolType: .coldPlunge,
+            impactPercentage: -15.0,
+            confidence: 0.8,
+            description: "Test",
+            dataPoints: 12
+        )
+
+        XCTAssertEqual(insight.impactCategory, .strongNegative)
+    }
+
+    func testRecoveryInsight_ConfidenceLevel() {
+        let highConfidence = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.85,
+            description: "Test",
+            dataPoints: 10
+        )
+        XCTAssertEqual(highConfidence.confidenceLevel, "High")
+
+        let moderateConfidence = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.65,
+            description: "Test",
+            dataPoints: 10
+        )
+        XCTAssertEqual(moderateConfidence.confidenceLevel, "Moderate")
+
+        let lowConfidence = RecoveryInsight(
+            type: .hrvImprovement,
+            metric: .hrv,
+            protocolType: .saunaTraditional,
+            impactPercentage: 15.0,
+            confidence: 0.35,
+            description: "Test",
+            dataPoints: 10
+        )
+        XCTAssertEqual(lowConfidence.confidenceLevel, "Low")
+    }
+}
+
+// MARK: - Recovery Correlation Tests
+
+final class RecoveryServiceCorrelationTests: XCTestCase {
+
+    func testRecoveryCorrelation_Strength_Strong() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .saunaTraditional,
+            metric: .hrv,
+            correlationCoefficient: 0.75,
+            pValue: 0.02,
+            sampleSize: 20,
+            averageImpact: 15.0
+        )
+
+        XCTAssertEqual(correlation.strength, "Strong")
+    }
+
+    func testRecoveryCorrelation_Strength_Moderate() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .coldPlunge,
+            metric: .sleepDuration,
+            correlationCoefficient: 0.55,
+            pValue: 0.03,
+            sampleSize: 15,
+            averageImpact: 10.0
+        )
+
+        XCTAssertEqual(correlation.strength, "Moderate")
+    }
+
+    func testRecoveryCorrelation_Strength_Weak() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .contrast,
+            metric: .deepSleep,
+            correlationCoefficient: 0.3,
+            pValue: 0.04,
+            sampleSize: 10,
+            averageImpact: 5.0
+        )
+
+        XCTAssertEqual(correlation.strength, "Weak")
+    }
+
+    func testRecoveryCorrelation_Strength_Negligible() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .iceBath,
+            metric: .restingHeartRate,
+            correlationCoefficient: 0.1,
+            pValue: 0.1,
+            sampleSize: 8,
+            averageImpact: 2.0
+        )
+
+        XCTAssertEqual(correlation.strength, "Negligible")
+    }
+
+    func testRecoveryCorrelation_IsSignificant_True() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .saunaTraditional,
+            metric: .hrv,
+            correlationCoefficient: 0.7,
+            pValue: 0.02,
+            sampleSize: 10,
+            averageImpact: 15.0
+        )
+
+        XCTAssertTrue(correlation.isSignificant)
+    }
+
+    func testRecoveryCorrelation_IsSignificant_False_HighPValue() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .saunaTraditional,
+            metric: .hrv,
+            correlationCoefficient: 0.7,
+            pValue: 0.1,
+            sampleSize: 10,
+            averageImpact: 15.0
+        )
+
+        XCTAssertFalse(correlation.isSignificant)
+    }
+
+    func testRecoveryCorrelation_IsSignificant_False_SmallSample() {
+        let correlation = RecoveryCorrelation(
+            protocolType: .saunaTraditional,
+            metric: .hrv,
+            correlationCoefficient: 0.7,
+            pValue: 0.02,
+            sampleSize: 3,
+            averageImpact: 15.0
+        )
+
+        XCTAssertFalse(correlation.isSignificant)
+    }
+}
+
+// MARK: - Health Metric Type Tests
+
+final class RecoveryHealthMetricTypeTests: XCTestCase {
+
+    func testHealthMetricType_AllCasesHaveDisplayName() {
+        for metric in HealthMetricType.allCases {
+            XCTAssertFalse(metric.displayName.isEmpty)
+        }
+    }
+
+    func testHealthMetricType_AllCasesHaveUnit() {
+        for metric in HealthMetricType.allCases {
+            XCTAssertFalse(metric.unit.isEmpty)
+        }
+    }
+
+    func testHealthMetricType_Units() {
+        XCTAssertEqual(HealthMetricType.hrv.unit, "ms")
+        XCTAssertEqual(HealthMetricType.sleepDuration.unit, "hours")
+        XCTAssertEqual(HealthMetricType.sleepQuality.unit, "%")
+        XCTAssertEqual(HealthMetricType.deepSleep.unit, "min")
+        XCTAssertEqual(HealthMetricType.remSleep.unit, "min")
+        XCTAssertEqual(HealthMetricType.restingHeartRate.unit, "bpm")
+    }
+}
+
+// MARK: - Recovery Insight Type Tests
+
+final class RecoveryServiceInsightTypeTests: XCTestCase {
+
+    func testRecoveryInsightType_AllCasesHaveDisplayName() {
+        for type in RecoveryInsightType.allCases {
+            XCTAssertFalse(type.displayName.isEmpty)
+        }
+    }
+
+    func testRecoveryInsightType_AllCasesHaveIcon() {
+        for type in RecoveryInsightType.allCases {
+            XCTAssertFalse(type.icon.isEmpty)
+        }
+    }
+}
+
+// MARK: - Concurrent Sessions Tests
+
+final class RecoveryConcurrentSessionTests: XCTestCase {
+
+    func testMultipleSessions_SamePatient_SameDay() {
+        let patientId = UUID()
+        let today = Date()
+
+        let saunaSession = RecoverySession(
+            id: UUID(),
+            patientId: patientId,
+            protocolType: .saunaTraditional,
+            loggedAt: today,
+            durationSeconds: 1200,
+            temperature: 180.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: today
+        )
+
+        let coldSession = RecoverySession(
+            id: UUID(),
+            patientId: patientId,
+            protocolType: .coldPlunge,
+            loggedAt: today.addingTimeInterval(1500), // 25 min later
+            durationSeconds: 180,
+            temperature: 4.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: today.addingTimeInterval(1500)
+        )
+
+        XCTAssertEqual(saunaSession.patientId, coldSession.patientId)
+        XCTAssertNotEqual(saunaSession.id, coldSession.id)
+        XCTAssertNotEqual(saunaSession.protocolType, coldSession.protocolType)
+    }
+
+    func testContrastTherapy_AlternatingHotCold() {
+        // Contrast therapy involves alternating hot and cold
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .contrast,
+            loggedAt: Date(),
+            durationSeconds: 900, // 15 minutes total
+            temperature: nil, // Temperature varies
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: 7,
+            rating: nil,
+            notes: "3 rounds: 3 min hot, 1 min cold",
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.protocolType, .contrast)
+        XCTAssertFalse(session.protocolType.isHeatTherapy)
+        XCTAssertFalse(session.protocolType.isColdTherapy)
+    }
+}
+
+// MARK: - Timezone Handling Tests
+
+final class RecoveryTimezoneTests: XCTestCase {
+
+    func testRecoverySession_CrossTimezoneDecoding() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "session_type": "sauna_traditional",
+            "logged_at": "2024-06-15T18:30:00+09:00",
+            "duration_minutes": 20,
+            "temperature_f": 180.0,
+            "notes": null,
+            "created_at": "2024-06-15T18:30:00+09:00"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let session = try decoder.decode(RecoverySession.self, from: json)
+        XCTAssertNotNil(session.loggedAt)
+        XCTAssertEqual(session.temperature, 180.0)
+    }
+
+    func testRecoverySession_UTCDecoding() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "session_type": "cold_plunge",
+            "logged_at": "2024-06-15T10:00:00Z",
+            "duration_minutes": 3,
+            "temperature_f": 4.0,
+            "notes": null,
+            "created_at": "2024-06-15T10:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let session = try decoder.decode(RecoverySession.self, from: json)
+        XCTAssertNotNil(session.loggedAt)
+        XCTAssertEqual(session.protocolType, .coldPlunge)
     }
 }

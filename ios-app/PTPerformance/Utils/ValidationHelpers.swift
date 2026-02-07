@@ -275,4 +275,239 @@ struct ValidationHelpers {
         }
         return .valid
     }
+
+    // MARK: - Pain Score Validation
+
+    /// Validates a pain score (0-10 scale)
+    /// - Parameter painScore: The pain score value to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validatePainScore(_ painScore: Int) -> ValidationResult {
+        if painScore < 0 || painScore > 10 {
+            return .invalid("Pain score must be between 0 and 10")
+        }
+        return .valid
+    }
+
+    /// Validates a pain score from string input
+    /// - Parameter painScore: The pain score string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validatePainScore(_ painScore: String) -> ValidationResult {
+        let trimmed = painScore.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("Pain score cannot be empty")
+        }
+
+        guard let value = Int(trimmed) else {
+            return .invalid("Pain score must be an integer")
+        }
+
+        return validatePainScore(value)
+    }
+
+    // MARK: - Sets Validation
+
+    /// Validates exercise sets (positive integers)
+    /// - Parameter sets: The sets value to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateSets(_ sets: Int) -> ValidationResult {
+        if sets < 1 {
+            return .invalid("Sets must be at least 1")
+        }
+
+        if sets > 99 {
+            return .invalid("Sets must be 99 or less")
+        }
+
+        return .valid
+    }
+
+    /// Validates exercise sets from string input
+    /// - Parameter sets: The sets string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateSets(_ sets: String) -> ValidationResult {
+        let trimmed = sets.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("Sets cannot be empty")
+        }
+
+        guard let value = Int(trimmed) else {
+            return .invalid("Sets must be an integer")
+        }
+
+        return validateSets(value)
+    }
+
+    // MARK: - Load Validation
+
+    /// Validates exercise load (positive doubles)
+    /// - Parameter load: The load value to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateLoad(_ load: Double) -> ValidationResult {
+        if load < 0 {
+            return .invalid("Load cannot be negative")
+        }
+
+        if load > 9999 {
+            return .invalid("Load must be 9999 or less")
+        }
+
+        return .valid
+    }
+
+    /// Validates exercise load from string input
+    /// - Parameter load: The load string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateLoad(_ load: String) -> ValidationResult {
+        let trimmed = load.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("Load cannot be empty")
+        }
+
+        guard let value = Double(trimmed) else {
+            return .invalid("Load must be a valid number")
+        }
+
+        return validateLoad(value)
+    }
+
+    // MARK: - Body Composition Weight Validation
+
+    /// Validates body composition weight
+    /// - Parameter weight: The weight value in kg or lbs to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateBodyWeight(_ weight: Double) -> ValidationResult {
+        if weight <= 0 {
+            return .invalid("Weight must be greater than 0")
+        }
+
+        if weight > 1000 {
+            return .invalid("Weight must be 1000 or less")
+        }
+
+        return .valid
+    }
+
+    /// Validates body composition weight from string input
+    /// - Parameter weight: The weight string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateBodyWeight(_ weight: String) -> ValidationResult {
+        let trimmed = weight.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("Weight cannot be empty")
+        }
+
+        guard let value = Double(trimmed) else {
+            return .invalid("Weight must be a valid number")
+        }
+
+        return validateBodyWeight(value)
+    }
+
+    // MARK: - Phone Number Validation
+
+    /// Validates a phone number
+    /// - Parameter phone: The phone number string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validatePhoneNumber(_ phone: String) -> ValidationResult {
+        let trimmed = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("Phone number cannot be empty")
+        }
+
+        // Remove common formatting characters for validation
+        let digitsOnly = trimmed.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+
+        // Phone number must have between 10 and 15 digits (E.164 standard)
+        if digitsOnly.count < 10 {
+            return .invalid("Phone number must have at least 10 digits")
+        }
+
+        if digitsOnly.count > 15 {
+            return .invalid("Phone number must have at most 15 digits")
+        }
+
+        // Check that original string only contains valid characters
+        let validCharacters = CharacterSet(charactersIn: "0123456789()-+. ")
+        if trimmed.rangeOfCharacter(from: validCharacters.inverted) != nil {
+            return .invalid("Phone number contains invalid characters")
+        }
+
+        return .valid
+    }
+
+    // MARK: - Date Range Validation
+
+    /// Validates a date range
+    /// - Parameters:
+    ///   - startDate: The start date
+    ///   - endDate: The end date
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateDateRange(startDate: Date, endDate: Date) -> ValidationResult {
+        if startDate > endDate {
+            return .invalid("Start date must be before or equal to end date")
+        }
+        return .valid
+    }
+
+    /// Validates a date range with optional maximum span
+    /// - Parameters:
+    ///   - startDate: The start date
+    ///   - endDate: The end date
+    ///   - maxDays: Maximum number of days allowed in the range
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateDateRange(startDate: Date, endDate: Date, maxDays: Int) -> ValidationResult {
+        let basicResult = validateDateRange(startDate: startDate, endDate: endDate)
+        guard basicResult.isValid else {
+            return basicResult
+        }
+
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.day], from: startDate, to: endDate)
+        if let days = components.day, days > maxDays {
+            return .invalid("Date range cannot exceed \(maxDays) days")
+        }
+
+        return .valid
+    }
+
+    // MARK: - UUID Validation
+
+    /// Validates a UUID string
+    /// - Parameter uuidString: The UUID string to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateUUID(_ uuidString: String) -> ValidationResult {
+        let trimmed = uuidString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.isEmpty {
+            return .invalid("UUID cannot be empty")
+        }
+
+        if UUID(uuidString: trimmed) == nil {
+            return .invalid("Invalid UUID format")
+        }
+
+        return .valid
+    }
+
+    // MARK: - Reps Validation (Integer)
+
+    /// Validates exercise reps (positive integers)
+    /// - Parameter reps: The reps value to validate
+    /// - Returns: ValidationResult indicating if valid or error message
+    static func validateReps(_ reps: Int) -> ValidationResult {
+        if reps < 1 {
+            return .invalid("Reps must be at least 1")
+        }
+
+        if reps > 999 {
+            return .invalid("Reps must be 999 or less")
+        }
+
+        return .valid
+    }
 }

@@ -453,3 +453,160 @@ enum TestConstants {
     /// Long timeout for slower operations
     static let longTimeout: TimeInterval = 10.0
 }
+
+// MARK: - Exercise Test Helpers
+
+extension TestDataFactory {
+
+    // MARK: - Exercise Data
+
+    /// Create a mock Exercise with customizable properties
+    static func exercise(
+        id: UUID = UUID(),
+        sessionId: UUID = UUID(),
+        exerciseTemplateId: UUID = UUID(),
+        sequence: Int? = 1,
+        targetSets: Int? = 3,
+        targetReps: Int? = 10,
+        prescribedSets: Int? = nil,
+        prescribedReps: String? = "10",
+        prescribedLoad: Double? = nil,
+        loadUnit: String? = "lbs",
+        restPeriodSeconds: Int? = 90,
+        notes: String? = nil,
+        templateName: String = "Test Exercise",
+        category: String? = "test",
+        bodyRegion: String? = "upper"
+    ) -> Exercise {
+        let template = Exercise.ExerciseTemplate(
+            id: exerciseTemplateId,
+            name: templateName,
+            category: category,
+            body_region: bodyRegion,
+            videoUrl: nil,
+            videoThumbnailUrl: nil,
+            videoDuration: nil,
+            formCues: nil,
+            techniqueCues: nil,
+            commonMistakes: nil,
+            safetyNotes: nil
+        )
+
+        return Exercise(
+            id: id,
+            session_id: sessionId,
+            exercise_template_id: exerciseTemplateId,
+            sequence: sequence,
+            target_sets: targetSets,
+            target_reps: targetReps,
+            prescribed_sets: prescribedSets,
+            prescribed_reps: prescribedReps,
+            prescribed_load: prescribedLoad,
+            load_unit: loadUnit,
+            rest_period_seconds: restPeriodSeconds,
+            notes: notes,
+            exercise_templates: template
+        )
+    }
+
+    /// Create a mock Exercise using only target_sets (new schema)
+    static func exerciseWithTargetSets(
+        sets: Int = 3,
+        reps: Int = 10,
+        load: Double? = nil,
+        name: String = "Test Exercise"
+    ) -> Exercise {
+        return exercise(
+            targetSets: sets,
+            targetReps: reps,
+            prescribedSets: nil,
+            prescribedReps: nil,
+            prescribedLoad: load,
+            templateName: name
+        )
+    }
+
+    /// Create a mock Exercise using only prescribed_sets (legacy schema)
+    static func exerciseWithPrescribedSets(
+        sets: Int = 3,
+        reps: String = "10",
+        load: Double? = nil,
+        name: String = "Test Exercise"
+    ) -> Exercise {
+        return exercise(
+            targetSets: nil,
+            targetReps: nil,
+            prescribedSets: sets,
+            prescribedReps: reps,
+            prescribedLoad: load,
+            templateName: name
+        )
+    }
+
+    /// Create a mock Session with customizable properties
+    static func session(
+        id: UUID = UUID(),
+        phaseId: UUID = UUID(),
+        name: String = "Test Session",
+        sequence: Int = 1,
+        weekday: Int? = nil,
+        notes: String? = nil,
+        completed: Bool? = nil,
+        startedAt: Date? = nil,
+        completedAt: Date? = nil,
+        totalVolume: Double? = nil,
+        avgRpe: Double? = nil,
+        avgPain: Double? = nil,
+        durationMinutes: Int? = nil
+    ) -> Session {
+        return Session(
+            id: id,
+            phase_id: phaseId,
+            name: name,
+            sequence: sequence,
+            weekday: weekday,
+            notes: notes,
+            created_at: Date(),
+            completed: completed,
+            started_at: startedAt,
+            completed_at: completedAt,
+            total_volume: totalVolume,
+            avg_rpe: avgRpe,
+            avg_pain: avgPain,
+            duration_minutes: durationMinutes
+        )
+    }
+
+    /// Create a completed session with metrics
+    static func completedSession(
+        name: String = "Completed Session",
+        totalVolume: Double = 10000.0,
+        avgRpe: Double = 7.0,
+        avgPain: Double = 2.0,
+        durationMinutes: Int = 45
+    ) -> Session {
+        return session(
+            name: name,
+            completed: true,
+            startedAt: Date().addingTimeInterval(-Double(durationMinutes * 60)),
+            completedAt: Date(),
+            totalVolume: totalVolume,
+            avgRpe: avgRpe,
+            avgPain: avgPain,
+            durationMinutes: durationMinutes
+        )
+    }
+
+    /// Create multiple mock exercises with sequential order
+    static func exercises(count: Int, baseLoad: Double = 100.0) -> [Exercise] {
+        return (0..<count).map { index in
+            exercise(
+                sequence: index + 1,
+                targetSets: 3,
+                targetReps: 10,
+                prescribedLoad: baseLoad + Double(index * 10),
+                templateName: "Exercise \(index + 1)"
+            )
+        }
+    }
+}

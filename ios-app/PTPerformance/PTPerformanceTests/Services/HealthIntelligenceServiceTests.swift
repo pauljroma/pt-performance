@@ -415,3 +415,500 @@ final class AICoachMessageRoleTests: XCTestCase {
         }
     }
 }
+
+// MARK: - API Response Parsing Tests
+
+final class HealthIntelligenceAPIResponseTests: XCTestCase {
+
+    // MARK: - Lab Analysis Response Parsing
+
+    func testLabAnalysis_CompleteResponseParsing() throws {
+        let json = """
+        {
+            "analysis_id": "test-analysis-001",
+            "analysis_text": "Your lab results show overall good health with some areas for improvement.",
+            "recommendations": [
+                "Increase Vitamin D supplementation to 5000 IU daily",
+                "Consider adding Omega-3 fatty acids",
+                "Monitor iron levels in 3 months"
+            ],
+            "biomarker_analyses": [
+                {
+                    "biomarker_type": "vitamin_d",
+                    "name": "Vitamin D, 25-OH",
+                    "value": 32.0,
+                    "unit": "ng/mL",
+                    "status": "normal",
+                    "interpretation": "Just above the minimum range. Optimal is 40-60 ng/mL."
+                },
+                {
+                    "biomarker_type": "ferritin",
+                    "name": "Ferritin",
+                    "value": 28.0,
+                    "unit": "ng/mL",
+                    "status": "low",
+                    "interpretation": "Below optimal for athletic performance."
+                }
+            ],
+            "training_correlations": [
+                {
+                    "factor": "High volume training",
+                    "relationship": "May deplete iron stores faster",
+                    "recommendation": "Consider iron supplementation with vitamin C"
+                }
+            ],
+            "sleep_correlations": [
+                {
+                    "factor": "Vitamin D levels",
+                    "relationship": "Suboptimal D may affect sleep quality",
+                    "recommendation": "Take D3 in the morning"
+                }
+            ],
+            "overall_health_score": 78,
+            "priority_actions": [
+                "Address iron deficiency",
+                "Optimize Vitamin D"
+            ],
+            "medical_disclaimer": "This analysis is for informational purposes only.",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.analysisId, "test-analysis-001")
+        XCTAssertEqual(analysis.recommendations.count, 3)
+        XCTAssertEqual(analysis.biomarkerAnalyses.count, 2)
+        XCTAssertEqual(analysis.trainingCorrelations.count, 1)
+        XCTAssertEqual(analysis.sleepCorrelations.count, 1)
+        XCTAssertEqual(analysis.overallHealthScore, 78)
+        XCTAssertEqual(analysis.priorityActions.count, 2)
+        XCTAssertFalse(analysis.cached)
+    }
+
+    func testLabAnalysis_MinimalValidResponse() throws {
+        let json = """
+        {
+            "analysis_id": "minimal",
+            "analysis_text": "Minimal analysis",
+            "recommendations": [],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 50,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": true
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.analysisId, "minimal")
+        XCTAssertTrue(analysis.recommendations.isEmpty)
+        XCTAssertTrue(analysis.biomarkerAnalyses.isEmpty)
+        XCTAssertTrue(analysis.cached)
+    }
+
+    func testLabAnalysis_CachedResponse() throws {
+        let json = """
+        {
+            "analysis_id": "cached-001",
+            "analysis_text": "Cached analysis",
+            "recommendations": ["Recommendation 1"],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 85,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": true
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.cached)
+    }
+
+    // MARK: - Error Response Parsing
+
+    func testLabAnalysisError_StandardError() throws {
+        let json = """
+        {
+            "error": "Unable to analyze lab results. Please try again later.",
+            "medical_disclaimer": "This is not medical advice."
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let errorResponse = try decoder.decode(LabAnalysisErrorResponse.self, from: json)
+
+        XCTAssertEqual(errorResponse.error, "Unable to analyze lab results. Please try again later.")
+        XCTAssertEqual(errorResponse.medicalDisclaimer, "This is not medical advice.")
+    }
+
+    func testLabAnalysisError_NoDisclaimerProvided() throws {
+        let json = """
+        {
+            "error": "Network timeout"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let errorResponse = try decoder.decode(LabAnalysisErrorResponse.self, from: json)
+
+        XCTAssertEqual(errorResponse.error, "Network timeout")
+        XCTAssertNil(errorResponse.medicalDisclaimer)
+    }
+
+    func testLabAnalysisError_EmptyErrorString() throws {
+        let json = """
+        {
+            "error": ""
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let errorResponse = try decoder.decode(LabAnalysisErrorResponse.self, from: json)
+
+        XCTAssertEqual(errorResponse.error, "")
+    }
+
+    // MARK: - Unified Coach Response Parsing
+
+    func testUnifiedCoachResponse_CompleteResponse() throws {
+        let json = """
+        {
+            "coaching_id": "coach-abc-123",
+            "greeting": "Good morning! Ready for another great day.",
+            "primary_message": "Your recovery metrics look excellent today.",
+            "insights": [
+                {
+                    "category": "recovery",
+                    "priority": "high",
+                    "insight": "HRV improved 15% overnight",
+                    "action": "You're ready for high intensity training",
+                    "rationale": "Strong parasympathetic recovery"
+                },
+                {
+                    "category": "sleep",
+                    "priority": "medium",
+                    "insight": "Sleep duration was slightly below target",
+                    "action": "Aim for 8 hours tonight",
+                    "rationale": "7.2 hours vs 8 hour target"
+                }
+            ],
+            "today_focus": "Push day - you're primed for heavy compound lifts",
+            "weekly_priorities": [
+                "Maintain sleep consistency",
+                "Increase protein intake",
+                "Add one more recovery session"
+            ],
+            "data_summary": {
+                "readiness": "High (87/100)",
+                "training": "4 sessions this week",
+                "recovery": "2 sauna, 1 cold plunge",
+                "labs": "Last test: 2 weeks ago"
+            },
+            "proactive_alerts": [
+                "Your training volume is approaching the high end"
+            ],
+            "follow_up_questions": [
+                "How did you sleep last night?",
+                "Any soreness from yesterday's session?"
+            ],
+            "disclaimer": "This is AI-generated coaching advice."
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(UnifiedCoachResponse.self, from: json)
+
+        XCTAssertEqual(response.coachingId, "coach-abc-123")
+        XCTAssertEqual(response.greeting, "Good morning! Ready for another great day.")
+        XCTAssertEqual(response.insights.count, 2)
+        XCTAssertEqual(response.weeklyPriorities.count, 3)
+        XCTAssertEqual(response.proactiveAlerts.count, 1)
+        XCTAssertEqual(response.followUpQuestions.count, 2)
+    }
+
+    func testUnifiedCoachResponse_EmptyInsights() throws {
+        let json = """
+        {
+            "coaching_id": "coach-empty",
+            "greeting": "Hello",
+            "primary_message": "No new insights today",
+            "insights": [],
+            "today_focus": "Rest day",
+            "weekly_priorities": [],
+            "data_summary": {
+                "readiness": "N/A",
+                "training": "N/A",
+                "recovery": "N/A",
+                "labs": "N/A"
+            },
+            "proactive_alerts": [],
+            "follow_up_questions": [],
+            "disclaimer": "Disclaimer"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let response = try decoder.decode(UnifiedCoachResponse.self, from: json)
+
+        XCTAssertTrue(response.insights.isEmpty)
+        XCTAssertTrue(response.weeklyPriorities.isEmpty)
+        XCTAssertTrue(response.proactiveAlerts.isEmpty)
+    }
+}
+
+// MARK: - Error Handling Tests
+
+final class HealthIntelligenceErrorHandlingTests: XCTestCase {
+
+    // MARK: - Lab Analysis Error Cases
+
+    func testLabAnalysisError_NoPatientId() {
+        let error = LabAnalysisError.noPatientId
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.lowercased().contains("patient") ?? false)
+    }
+
+    func testLabAnalysisError_AnalysisError() {
+        let error = LabAnalysisError.analysisError("Custom error message")
+        XCTAssertEqual(error.errorDescription, "Custom error message")
+    }
+
+    func testLabAnalysisError_HttpError() {
+        let error = LabAnalysisError.httpError(statusCode: 500)
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("500") ?? false)
+    }
+
+    func testLabAnalysisError_NetworkError() {
+        let error = LabAnalysisError.networkError
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.lowercased().contains("network") ?? false)
+    }
+
+    func testLabAnalysisError_DecodingError() {
+        let error = LabAnalysisError.decodingError("Missing required field: analysis_id")
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("analysis_id") ?? false)
+    }
+
+    // MARK: - Lab Result Error Cases
+
+    func testLabResultError_ParsingFailed() {
+        let error = LabResultError.parsingFailed("Could not extract biomarkers")
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("biomarkers") ?? false)
+    }
+
+    func testLabResultError_UploadFailed() {
+        let error = LabResultError.uploadFailed("Server unavailable")
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.contains("Server") ?? false)
+    }
+
+    func testLabResultError_NoPatientFound() {
+        let error = LabResultError.noPatientFound
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.lowercased().contains("patient") ?? false)
+    }
+
+    func testLabResultError_NoBiomarkersSelected() {
+        let error = LabResultError.noBiomarkersSelected
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.lowercased().contains("biomarker") ?? false)
+    }
+
+    func testLabResultError_InvalidPDFData() {
+        let error = LabResultError.invalidPDFData
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription?.lowercased().contains("pdf") ?? false)
+    }
+
+    // MARK: - AI Coach Error Cases
+
+    func testAICoachError_NoPatientId() {
+        let error = AICoachError.noPatientId
+        XCTAssertNotNil(error.errorDescription)
+    }
+
+    func testAICoachError_InvalidResponse() {
+        let error = AICoachError.invalidResponse
+        XCTAssertNotNil(error.errorDescription)
+    }
+
+    func testAICoachError_NetworkError() {
+        let underlyingError = NSError(domain: "TestDomain", code: -1, userInfo: nil)
+        let error = AICoachError.networkError(underlyingError)
+        XCTAssertNotNil(error.errorDescription)
+    }
+}
+
+// MARK: - Caching Behavior Tests
+
+final class HealthIntelligenceCachingTests: XCTestCase {
+
+    func testLabAnalysis_IdentifiesCachedResponse() throws {
+        let json = """
+        {
+            "analysis_id": "cached-test",
+            "analysis_text": "Cached analysis",
+            "recommendations": [],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 80,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": true
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.cached)
+    }
+
+    func testLabAnalysis_IdentifiesFreshResponse() throws {
+        let json = """
+        {
+            "analysis_id": "fresh-test",
+            "analysis_text": "Fresh analysis",
+            "recommendations": [],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 80,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertFalse(analysis.cached)
+    }
+}
+
+// MARK: - Edge Case Response Tests
+
+final class HealthIntelligenceEdgeCaseResponseTests: XCTestCase {
+
+    func testLabAnalysis_VeryLongAnalysisText() throws {
+        let longText = String(repeating: "This is a long analysis. ", count: 100)
+        let json = """
+        {
+            "analysis_id": "long-text",
+            "analysis_text": "\(longText)",
+            "recommendations": [],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 75,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.analysisText, longText)
+    }
+
+    func testLabAnalysis_ManyBiomarkers() throws {
+        var biomarkersJson = "["
+        for i in 0..<50 {
+            if i > 0 { biomarkersJson += "," }
+            biomarkersJson += """
+            {
+                "biomarker_type": "marker_\(i)",
+                "name": "Marker \(i)",
+                "value": \(Double(i) * 10),
+                "unit": "units",
+                "status": "normal",
+                "interpretation": "Normal"
+            }
+            """
+        }
+        biomarkersJson += "]"
+
+        let json = """
+        {
+            "analysis_id": "many-biomarkers",
+            "analysis_text": "Analysis",
+            "recommendations": [],
+            "biomarker_analyses": \(biomarkersJson),
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 85,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.biomarkerAnalyses.count, 50)
+    }
+
+    func testLabAnalysis_SpecialCharactersInStrings() throws {
+        let json = """
+        {
+            "analysis_id": "special-chars",
+            "analysis_text": "Your vitamin D level is <30 ng/mL. Consider 5000 IU/day. Monitor A1c < 5.7%.",
+            "recommendations": ["Increase D3 to >=5000 IU", "Keep A1c < 5.7%"],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 70,
+            "priority_actions": [],
+            "medical_disclaimer": "Consult your doctor & follow up in 3-6 months.",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.analysisText.contains("<"))
+        XCTAssertTrue(analysis.recommendations.first?.contains(">=") ?? false)
+        XCTAssertTrue(analysis.medicalDisclaimer.contains("&"))
+    }
+
+    func testLabAnalysis_UnicodeCharacters() throws {
+        let json = """
+        {
+            "analysis_id": "unicode-test",
+            "analysis_text": "Great progress on your health journey!",
+            "recommendations": ["Keep it up!"],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 90,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.analysisText.contains("!"))
+    }
+}

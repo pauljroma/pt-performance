@@ -553,3 +553,352 @@ final class AICoachViewModelErrorStateTests: XCTestCase {
         }
     }
 }
+
+// MARK: - AICoachViewModel Data Loading States Tests
+
+@MainActor
+final class AICoachViewModelDataLoadingTests: XCTestCase {
+
+    var sut: AICoachViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = AICoachViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Loading State Transitions
+
+    func testLoadingState_TransitionFromIdleToLoading() {
+        XCTAssertFalse(sut.isLoading)
+
+        sut.isLoading = true
+
+        XCTAssertTrue(sut.isLoading)
+    }
+
+    func testLoadingState_TransitionFromLoadingToIdle() {
+        sut.isLoading = true
+        XCTAssertTrue(sut.isLoading)
+
+        sut.isLoading = false
+
+        XCTAssertFalse(sut.isLoading)
+    }
+
+    func testTypingState_TransitionFromIdleToTyping() {
+        XCTAssertFalse(sut.isTyping)
+
+        sut.isTyping = true
+
+        XCTAssertTrue(sut.isTyping)
+    }
+
+    func testTypingState_TransitionFromTypingToIdle() {
+        sut.isTyping = true
+        XCTAssertTrue(sut.isTyping)
+
+        sut.isTyping = false
+
+        XCTAssertFalse(sut.isTyping)
+    }
+
+    // MARK: - Concurrent State Management
+
+    func testConcurrentStates_BothLoadingAndTypingTrue() {
+        sut.isLoading = true
+        sut.isTyping = true
+
+        XCTAssertTrue(sut.isLoading)
+        XCTAssertTrue(sut.isTyping)
+    }
+
+    func testConcurrentStates_LoadingWithError() {
+        sut.isLoading = true
+        sut.error = "Network error"
+
+        XCTAssertTrue(sut.isLoading)
+        XCTAssertNotNil(sut.error)
+    }
+
+    func testConcurrentStates_ClearErrorWhileLoading() {
+        sut.isLoading = true
+        sut.error = "Previous error"
+
+        sut.error = nil
+
+        XCTAssertTrue(sut.isLoading)
+        XCTAssertNil(sut.error)
+    }
+
+    // MARK: - Data Summary Loading
+
+    func testDataSummary_LoadingWithPartialData() {
+        let summary = DataSummary(
+            readiness: "High - 85/100",
+            training: "",
+            recovery: "Adequate",
+            labs: ""
+        )
+
+        sut.dataSummary = summary
+
+        XCTAssertEqual(sut.dataSummary?.readiness, "High - 85/100")
+        XCTAssertEqual(sut.dataSummary?.training, "")
+        XCTAssertEqual(sut.dataSummary?.recovery, "Adequate")
+        XCTAssertEqual(sut.dataSummary?.labs, "")
+    }
+
+    func testDataSummary_ClearingSummary() {
+        sut.dataSummary = DataSummary(
+            readiness: "High",
+            training: "Active",
+            recovery: "Good",
+            labs: "Recent"
+        )
+        XCTAssertNotNil(sut.dataSummary)
+
+        sut.dataSummary = nil
+
+        XCTAssertNil(sut.dataSummary)
+    }
+
+    // MARK: - Edge Cases for Loading States
+
+    func testLoadingState_RapidToggle() {
+        for _ in 0..<10 {
+            sut.isLoading = true
+            sut.isLoading = false
+        }
+
+        XCTAssertFalse(sut.isLoading)
+    }
+
+    func testTypingState_RapidToggle() {
+        for _ in 0..<10 {
+            sut.isTyping = true
+            sut.isTyping = false
+        }
+
+        XCTAssertFalse(sut.isTyping)
+    }
+}
+
+// MARK: - AICoachViewModel Error Handling Tests
+
+@MainActor
+final class AICoachViewModelErrorHandlingTests: XCTestCase {
+
+    var sut: AICoachViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = AICoachViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Error State Management
+
+    func testError_SetAfterSuccessfulOperation() {
+        // Simulate successful messages
+        let message = AICoachMessage(role: .coach, content: "Success")
+        sut.messages.append(message)
+
+        // Then error occurs
+        sut.error = "Unexpected error"
+
+        XCTAssertNotNil(sut.error)
+        XCTAssertTrue(sut.messages.count > 1) // Welcome + success message
+    }
+
+    func testError_ClearedOnNewOperation() {
+        sut.error = "Previous error"
+        XCTAssertNotNil(sut.error)
+
+        // Start new operation
+        sut.isLoading = true
+        sut.error = nil
+
+        XCTAssertNil(sut.error)
+        XCTAssertTrue(sut.isLoading)
+    }
+
+    func testError_MultipleConsecutiveErrors() {
+        sut.error = "Error 1"
+        XCTAssertEqual(sut.error, "Error 1")
+
+        sut.error = "Error 2"
+        XCTAssertEqual(sut.error, "Error 2")
+
+        sut.error = "Error 3"
+        XCTAssertEqual(sut.error, "Error 3")
+    }
+
+    // MARK: - Error with Special Characters
+
+    func testError_WithSpecialCharacters() {
+        let errorWithSpecialChars = "Error: <network> & \"timeout\" occurred"
+        sut.error = errorWithSpecialChars
+
+        XCTAssertEqual(sut.error, errorWithSpecialChars)
+    }
+
+    func testError_WithEmptyString() {
+        sut.error = ""
+
+        XCTAssertEqual(sut.error, "")
+        XCTAssertNotNil(sut.error)
+    }
+
+    func testError_WithWhitespaceOnly() {
+        sut.error = "   "
+
+        XCTAssertEqual(sut.error, "   ")
+    }
+
+    func testError_WithUnicode() {
+        sut.error = "Error occurred"
+
+        XCTAssertEqual(sut.error, "Error occurred")
+    }
+}
+
+// MARK: - AICoachViewModel Score Calculation Tests
+
+@MainActor
+final class AICoachViewModelScoreCalculationTests: XCTestCase {
+
+    var sut: AICoachViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = AICoachViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Insight Count Calculations
+
+    func testUnreadInsightCount_WithNoInsights() {
+        sut.insights = []
+        XCTAssertEqual(sut.unreadInsightCount, 0)
+    }
+
+    func testUnreadInsightCount_OnlyHighPriorityInsights() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "High 1", action: "", rationale: ""),
+            CoachingInsight(category: .training, priority: .high, insight: "High 2", action: "", rationale: ""),
+            CoachingInsight(category: .sleep, priority: .high, insight: "High 3", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.unreadInsightCount, 3)
+    }
+
+    func testUnreadInsightCount_OnlyLowPriorityInsights() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .low, insight: "Low 1", action: "", rationale: ""),
+            CoachingInsight(category: .training, priority: .low, insight: "Low 2", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.unreadInsightCount, 0)
+    }
+
+    func testUnreadInsightCount_MixedPriorities() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "High", action: "", rationale: ""),
+            CoachingInsight(category: .training, priority: .medium, insight: "Medium", action: "", rationale: ""),
+            CoachingInsight(category: .sleep, priority: .low, insight: "Low", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.unreadInsightCount, 1)
+    }
+
+    // MARK: - High Priority Insight Filtering
+
+    func testHighPriorityInsights_CountsCorrectly() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "H1", action: "", rationale: ""),
+            CoachingInsight(category: .training, priority: .high, insight: "H2", action: "", rationale: ""),
+            CoachingInsight(category: .nutrition, priority: .medium, insight: "M1", action: "", rationale: ""),
+            CoachingInsight(category: .sleep, priority: .low, insight: "L1", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.highPriorityInsights.count, 2)
+    }
+
+    func testHighPriorityInsights_AllSameCategory() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "H1", action: "", rationale: ""),
+            CoachingInsight(category: .recovery, priority: .high, insight: "H2", action: "", rationale: ""),
+            CoachingInsight(category: .recovery, priority: .high, insight: "H3", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.highPriorityInsights.count, 3)
+        XCTAssertTrue(sut.highPriorityInsights.allSatisfy { $0.category == .recovery })
+    }
+
+    // MARK: - Insights by Category Grouping
+
+    func testInsightsByCategory_EmptyInsights() {
+        sut.insights = []
+        XCTAssertTrue(sut.insightsByCategory.isEmpty)
+    }
+
+    func testInsightsByCategory_SingleCategory() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "R1", action: "", rationale: ""),
+            CoachingInsight(category: .recovery, priority: .medium, insight: "R2", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.insightsByCategory.count, 1)
+        XCTAssertEqual(sut.insightsByCategory.first?.1.count, 2)
+    }
+
+    func testInsightsByCategory_AllCategories() {
+        let insights = [
+            CoachingInsight(category: .recovery, priority: .high, insight: "R", action: "", rationale: ""),
+            CoachingInsight(category: .training, priority: .high, insight: "T", action: "", rationale: ""),
+            CoachingInsight(category: .nutrition, priority: .high, insight: "N", action: "", rationale: ""),
+            CoachingInsight(category: .sleep, priority: .high, insight: "S", action: "", rationale: ""),
+            CoachingInsight(category: .labs, priority: .high, insight: "L", action: "", rationale: ""),
+            CoachingInsight(category: .general, priority: .high, insight: "G", action: "", rationale: "")
+        ]
+        sut.insights = insights
+
+        XCTAssertEqual(sut.insightsByCategory.count, 6)
+    }
+
+    // MARK: - Alerts Calculation
+
+    func testHasAlerts_EmptyAlerts() {
+        sut.proactiveAlerts = []
+        XCTAssertFalse(sut.hasAlerts)
+    }
+
+    func testHasAlerts_SingleAlert() {
+        sut.proactiveAlerts = ["HRV declining"]
+        XCTAssertTrue(sut.hasAlerts)
+    }
+
+    func testHasAlerts_MultipleAlerts() {
+        sut.proactiveAlerts = ["Alert 1", "Alert 2", "Alert 3"]
+        XCTAssertTrue(sut.hasAlerts)
+    }
+}

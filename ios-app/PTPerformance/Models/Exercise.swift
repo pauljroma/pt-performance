@@ -45,6 +45,48 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             case safetyNotes = "safety_notes"
         }
 
+        // Custom decoder to handle null/malformed values gracefully
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(UUID.self, forKey: .id)
+            name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? "Unknown Exercise"
+            category = try? container.decodeIfPresent(String.self, forKey: .category)
+            body_region = try? container.decodeIfPresent(String.self, forKey: .body_region)
+            videoUrl = try? container.decodeIfPresent(String.self, forKey: .videoUrl)
+            videoThumbnailUrl = try? container.decodeIfPresent(String.self, forKey: .videoThumbnailUrl)
+            videoDuration = try? container.decodeIfPresent(Int.self, forKey: .videoDuration)
+            formCues = try? container.decodeIfPresent([FormCue].self, forKey: .formCues)
+            techniqueCues = try? container.decodeIfPresent(TechniqueCues.self, forKey: .techniqueCues)
+            commonMistakes = try? container.decodeIfPresent(String.self, forKey: .commonMistakes)
+            safetyNotes = try? container.decodeIfPresent(String.self, forKey: .safetyNotes)
+        }
+
+        init(
+            id: UUID,
+            name: String,
+            category: String? = nil,
+            body_region: String? = nil,
+            videoUrl: String? = nil,
+            videoThumbnailUrl: String? = nil,
+            videoDuration: Int? = nil,
+            formCues: [FormCue]? = nil,
+            techniqueCues: TechniqueCues? = nil,
+            commonMistakes: String? = nil,
+            safetyNotes: String? = nil
+        ) {
+            self.id = id
+            self.name = name
+            self.category = category
+            self.body_region = body_region
+            self.videoUrl = videoUrl
+            self.videoThumbnailUrl = videoThumbnailUrl
+            self.videoDuration = videoDuration
+            self.formCues = formCues
+            self.techniqueCues = techniqueCues
+            self.commonMistakes = commonMistakes
+            self.safetyNotes = safetyNotes
+        }
+
         struct FormCue: Codable, Hashable, Sendable {
             let cue: String
             let timestamp: Int? // Seconds into video
@@ -54,6 +96,22 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
                 let minutes = ts / 60
                 let seconds = ts % 60
                 return String(format: "%d:%02d", minutes, seconds)
+            }
+
+            // Custom decoder to handle malformed data from database
+            init(from decoder: Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                cue = (try? container.decodeIfPresent(String.self, forKey: .cue)) ?? ""
+                timestamp = try? container.decodeIfPresent(Int.self, forKey: .timestamp)
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case cue, timestamp
+            }
+
+            init(cue: String, timestamp: Int? = nil) {
+                self.cue = cue
+                self.timestamp = timestamp
             }
         }
 
@@ -74,6 +132,7 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
     }
 
     // Build 61: Technique cues structure
+    // Build 441: Made arrays optional to handle null values from database
     struct TechniqueCues: Codable, Hashable, Sendable {
         let setup: [String]
         let execution: [String]
@@ -83,6 +142,18 @@ struct Exercise: Codable, Identifiable, Hashable, Sendable {
             self.setup = setup
             self.execution = execution
             self.breathing = breathing
+        }
+
+        // Custom decoder to handle null arrays from database
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            setup = (try? container.decodeIfPresent([String].self, forKey: .setup)) ?? []
+            execution = (try? container.decodeIfPresent([String].self, forKey: .execution)) ?? []
+            breathing = (try? container.decodeIfPresent([String].self, forKey: .breathing)) ?? []
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case setup, execution, breathing
         }
     }
     let exercise_templates: ExerciseTemplate?

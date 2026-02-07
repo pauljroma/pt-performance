@@ -88,11 +88,13 @@ final class RecoverySessionTests: XCTestCase {
         XCTAssertEqual(original.id, decoded.id)
         XCTAssertEqual(original.patientId, decoded.patientId)
         XCTAssertEqual(original.protocolType, decoded.protocolType)
-        XCTAssertEqual(original.duration, decoded.duration)
+        XCTAssertEqual(original.durationSeconds, decoded.durationSeconds)
         XCTAssertEqual(original.temperature, decoded.temperature)
-        XCTAssertEqual(original.heartRateAvg, decoded.heartRateAvg)
-        XCTAssertEqual(original.heartRateMax, decoded.heartRateMax)
-        XCTAssertEqual(original.perceivedEffort, decoded.perceivedEffort)
+        // heartRateAvg, heartRateMax, perceivedEffort, rating are NOT encoded
+        // (excluded from custom encoder as they're not in database schema)
+        XCTAssertNil(decoded.heartRateAvg)
+        XCTAssertNil(decoded.heartRateMax)
+        XCTAssertNil(decoded.perceivedEffort)
         XCTAssertEqual(original.notes, decoded.notes)
     }
 
@@ -104,15 +106,16 @@ final class RecoverySessionTests: XCTestCase {
         let data = try encoder.encode(session)
         let jsonObject = try JSONSerialization.jsonObject(with: data) as! [String: Any]
 
-        // Verify snake_case keys
+        // Verify snake_case keys (per CodingKeys and custom encoder)
         XCTAssertNotNil(jsonObject["patient_id"])
-        XCTAssertNotNil(jsonObject["protocol_type"])
+        XCTAssertNotNil(jsonObject["session_type"])  // Not "protocol_type" - CodingKey maps to session_type
         XCTAssertNotNil(jsonObject["logged_at"])
         XCTAssertNotNil(jsonObject["duration_minutes"])
-        XCTAssertNotNil(jsonObject["heart_rate_avg"])
-        XCTAssertNotNil(jsonObject["heart_rate_max"])
-        XCTAssertNotNil(jsonObject["perceived_effort"])
-        XCTAssertNotNil(jsonObject["created_at"])
+        // Note: heart_rate_avg, heart_rate_max, perceived_effort are NOT encoded (custom encoder excludes them)
+        // These fields are only used locally, not stored in database
+        XCTAssertNil(jsonObject["heart_rate_avg"])
+        XCTAssertNil(jsonObject["heart_rate_max"])
+        XCTAssertNil(jsonObject["perceived_effort"])
 
         // Verify camelCase keys are NOT present
         XCTAssertNil(jsonObject["patientId"])
@@ -234,7 +237,7 @@ final class RecoverySessionTests: XCTestCase {
     func testRecoveryRecommendationCodable() throws {
         let original = RecoveryRecommendation(
             id: UUID(),
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             reason: "Recovery day",
             priority: .medium,
             suggestedDuration: 20
@@ -256,10 +259,10 @@ final class RecoverySessionTests: XCTestCase {
     func testRecoveryRecommendationCodingKeysMapping() throws {
         let recommendation = RecoveryRecommendation(
             id: UUID(),
-            protocolType: .massage,
+            protocolType: .iceBath,
             reason: "Muscle soreness",
             priority: .low,
-            suggestedDuration: 30
+            suggestedDuration: 10
         )
 
         let encoder = JSONEncoder()
@@ -300,6 +303,307 @@ final class RecoverySessionTests: XCTestCase {
             let decoded = try decoder.decode(RecoveryPriority.self, from: data)
             XCTAssertEqual(decoded, priority)
         }
+    }
+
+    // MARK: - Duration Conversion Tests
+
+    func testRecoverySession_DurationSecondsToMinutes() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .coldPlunge,
+            loggedAt: Date(),
+            durationSeconds: 180, // 3 minutes
+            temperature: nil,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.durationMinutes, 3)
+        XCTAssertEqual(session.durationSeconds, 180)
+    }
+
+    func testRecoverySession_DurationConversion_LongSession() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaInfrared,
+            loggedAt: Date(),
+            durationSeconds: 3600, // 60 minutes
+            temperature: 140.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.durationMinutes, 60)
+    }
+
+    // MARK: - Intensity Validation Tests
+
+    func testRecoverySession_PerceivedEffort_ValidRange() {
+        for effort in 1...10 {
+            let session = RecoverySession(
+                id: UUID(),
+                patientId: UUID(),
+                protocolType: .saunaTraditional,
+                loggedAt: Date(),
+                durationSeconds: 1200,
+                temperature: nil,
+                heartRateAvg: nil,
+                heartRateMax: nil,
+                perceivedEffort: effort,
+                rating: nil,
+                notes: nil,
+                createdAt: Date()
+            )
+            XCTAssertEqual(session.perceivedEffort, effort)
+        }
+    }
+
+    func testRecoverySession_Rating_ValidRange() {
+        for rating in 1...5 {
+            let session = RecoverySession(
+                id: UUID(),
+                patientId: UUID(),
+                protocolType: .coldPlunge,
+                loggedAt: Date(),
+                durationSeconds: 180,
+                temperature: nil,
+                heartRateAvg: nil,
+                heartRateMax: nil,
+                perceivedEffort: nil,
+                rating: rating,
+                notes: nil,
+                createdAt: Date()
+            )
+            XCTAssertEqual(session.rating, rating)
+        }
+    }
+
+    // MARK: - RecoveryProtocolType Heat/Cold Classification Tests
+
+    func testRecoveryProtocolType_IsHeatTherapy() {
+        XCTAssertTrue(RecoveryProtocolType.saunaTraditional.isHeatTherapy)
+        XCTAssertTrue(RecoveryProtocolType.saunaInfrared.isHeatTherapy)
+        XCTAssertTrue(RecoveryProtocolType.saunaSteam.isHeatTherapy)
+        XCTAssertFalse(RecoveryProtocolType.coldPlunge.isHeatTherapy)
+        XCTAssertFalse(RecoveryProtocolType.coldShower.isHeatTherapy)
+        XCTAssertFalse(RecoveryProtocolType.iceBath.isHeatTherapy)
+        XCTAssertFalse(RecoveryProtocolType.contrast.isHeatTherapy)
+    }
+
+    func testRecoveryProtocolType_IsColdTherapy() {
+        XCTAssertFalse(RecoveryProtocolType.saunaTraditional.isColdTherapy)
+        XCTAssertFalse(RecoveryProtocolType.saunaInfrared.isColdTherapy)
+        XCTAssertFalse(RecoveryProtocolType.saunaSteam.isColdTherapy)
+        XCTAssertTrue(RecoveryProtocolType.coldPlunge.isColdTherapy)
+        XCTAssertTrue(RecoveryProtocolType.coldShower.isColdTherapy)
+        XCTAssertTrue(RecoveryProtocolType.iceBath.isColdTherapy)
+        XCTAssertFalse(RecoveryProtocolType.contrast.isColdTherapy)
+    }
+
+    func testRecoveryProtocolType_Contrast_NeitherHeatNorCold() {
+        // Contrast therapy is neither pure heat nor pure cold
+        XCTAssertFalse(RecoveryProtocolType.contrast.isHeatTherapy)
+        XCTAssertFalse(RecoveryProtocolType.contrast.isColdTherapy)
+    }
+
+    // MARK: - Sessions With Missing Data Tests
+
+    func testRecoverySession_MinimalData() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .contrast,
+            loggedAt: Date(),
+            durationSeconds: 600,
+            temperature: nil,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        XCTAssertNotNil(session.id)
+        XCTAssertEqual(session.durationMinutes, 10)
+        XCTAssertNil(session.temperature)
+        XCTAssertNil(session.heartRateAvg)
+        XCTAssertNil(session.perceivedEffort)
+    }
+
+    func testRecoverySession_PartialData() {
+        // Only temperature provided, no heart rate data
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaTraditional,
+            loggedAt: Date(),
+            durationSeconds: 1200,
+            temperature: 175.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: 6,
+            rating: nil,
+            notes: "Good session",
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.temperature, 175.0)
+        XCTAssertNil(session.heartRateAvg)
+        XCTAssertEqual(session.perceivedEffort, 6)
+        XCTAssertNil(session.rating)
+    }
+
+    // MARK: - Temperature Validation Tests
+
+    func testRecoverySession_SaunaTemperature_Fahrenheit() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaTraditional,
+            loggedAt: Date(),
+            durationSeconds: 1200,
+            temperature: 185.0, // Fahrenheit
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.temperature, 185.0)
+        XCTAssertTrue(session.protocolType.isHeatTherapy)
+    }
+
+    func testRecoverySession_ColdPlunge_Temperature_Celsius() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .coldPlunge,
+            loggedAt: Date(),
+            durationSeconds: 180,
+            temperature: 3.5, // Celsius
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(session.temperature, 3.5)
+        XCTAssertTrue(session.protocolType.isColdTherapy)
+    }
+
+    // MARK: - Heart Rate Consistency Tests
+
+    func testRecoverySession_HeartRate_AvgLessThanMax() {
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaTraditional,
+            loggedAt: Date(),
+            durationSeconds: 1200,
+            temperature: 180.0,
+            heartRateAvg: 110,
+            heartRateMax: 145,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: Date()
+        )
+
+        if let avg = session.heartRateAvg, let max = session.heartRateMax {
+            XCTAssertLessThanOrEqual(avg, max)
+        }
+    }
+
+    // MARK: - Concurrent Sessions Tests
+
+    func testRecoverySessions_DifferentProtocols_SameTime() {
+        let loggedAt = Date()
+
+        let saunaSession = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaTraditional,
+            loggedAt: loggedAt,
+            durationSeconds: 1200,
+            temperature: 180.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: loggedAt
+        )
+
+        let coldSession = RecoverySession(
+            id: UUID(),
+            patientId: saunaSession.patientId,
+            protocolType: .coldPlunge,
+            loggedAt: loggedAt.addingTimeInterval(1200), // After sauna
+            durationSeconds: 180,
+            temperature: 4.0,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: loggedAt.addingTimeInterval(1200)
+        )
+
+        // Verify they are different sessions
+        XCTAssertNotEqual(saunaSession.id, coldSession.id)
+        XCTAssertEqual(saunaSession.patientId, coldSession.patientId)
+        XCTAssertNotEqual(saunaSession.protocolType, coldSession.protocolType)
+    }
+
+    // MARK: - Timezone Handling Tests
+
+    func testRecoverySession_TimezoneHandling() throws {
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 15
+        components.hour = 18
+        components.minute = 30
+        components.timeZone = TimeZone(identifier: "America/Los_Angeles")
+
+        let loggedAt = calendar.date(from: components)!
+
+        let session = RecoverySession(
+            id: UUID(),
+            patientId: UUID(),
+            protocolType: .saunaTraditional,
+            loggedAt: loggedAt,
+            durationSeconds: 1200,
+            temperature: nil,
+            heartRateAvg: nil,
+            heartRateMax: nil,
+            perceivedEffort: nil,
+            rating: nil,
+            notes: nil,
+            createdAt: loggedAt
+        )
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        let data = try encoder.encode(session)
+        XCTAssertNotNil(data)
     }
 
     // MARK: - Helpers

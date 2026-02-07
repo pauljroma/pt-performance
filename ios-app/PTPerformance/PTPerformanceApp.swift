@@ -366,7 +366,11 @@ struct PTPerformanceApp: App {
                 do {
                     let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
 
+                    // Set session and user on PTSupabaseClient BEFORE fetchUserRole
+                    // fetchUserRole needs currentUser.email to lookup role
                     await MainActor.run {
+                        PTSupabaseClient.shared.currentSession = session
+                        PTSupabaseClient.shared.currentUser = session.user
                         appState.userId = session.user.id.uuidString
                         appState.isAuthenticated = true
                     }
@@ -397,7 +401,11 @@ struct PTPerformanceApp: App {
             do {
                 let session = try await PTSupabaseClient.shared.client.auth.session(from: url)
 
+                // Set session and user on PTSupabaseClient BEFORE fetchUserRole
+                // fetchUserRole needs currentUser.email to lookup role
                 await MainActor.run {
+                    PTSupabaseClient.shared.currentSession = session
+                    PTSupabaseClient.shared.currentUser = session.user
                     appState.userId = session.user.id.uuidString
                     appState.isAuthenticated = true
                 }

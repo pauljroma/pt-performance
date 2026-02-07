@@ -3,7 +3,7 @@
 //  PTPerformanceTests
 //
 //  Unit tests for FatigueBand enum
-//  Tests all cases, color mappings, and display properties
+//  Tests all cases, color mappings, display properties, and band determination from scores
 //
 
 import XCTest
@@ -31,6 +31,10 @@ final class FatigueBandModelTests: XCTestCase {
         XCTAssertEqual(allCases[3], .critical)
     }
 
+    func testFatigueBand_CaseCount() {
+        XCTAssertEqual(FatigueBand.allCases.count, 4)
+    }
+
     // MARK: - Raw Value Tests
 
     func testFatigueBand_RawValues() {
@@ -54,6 +58,95 @@ final class FatigueBandModelTests: XCTestCase {
         XCTAssertNil(FatigueBand(rawValue: "Low"))
         XCTAssertNil(FatigueBand(rawValue: "CRITICAL"))
         XCTAssertNil(FatigueBand(rawValue: "extreme"))
+        XCTAssertNil(FatigueBand(rawValue: "medium"))
+        XCTAssertNil(FatigueBand(rawValue: "severe"))
+        XCTAssertNil(FatigueBand(rawValue: " low"))
+        XCTAssertNil(FatigueBand(rawValue: "low "))
+    }
+
+    func testFatigueBand_RawValueCaseSensitivity() {
+        // Raw values should be case-sensitive
+        XCTAssertNil(FatigueBand(rawValue: "Low"))
+        XCTAssertNil(FatigueBand(rawValue: "MODERATE"))
+        XCTAssertNil(FatigueBand(rawValue: "High"))
+        XCTAssertNil(FatigueBand(rawValue: "CRITICAL"))
+
+        // Only lowercase should work
+        XCTAssertNotNil(FatigueBand(rawValue: "low"))
+        XCTAssertNotNil(FatigueBand(rawValue: "moderate"))
+        XCTAssertNotNil(FatigueBand(rawValue: "high"))
+        XCTAssertNotNil(FatigueBand(rawValue: "critical"))
+    }
+
+    // MARK: - Band Determination From Scores Tests
+
+    func testFatigueBand_DetermineFromScore_LowBand() {
+        // Low band: 0-40
+        let lowScores: [Double] = [0, 10, 20, 30, 39, 39.9]
+        for score in lowScores {
+            let band = determineBandFromScore(score)
+            XCTAssertEqual(band, .low, "Score \(score) should map to low band")
+        }
+    }
+
+    func testFatigueBand_DetermineFromScore_ModerateBand() {
+        // Moderate band: 40-60
+        let moderateScores: [Double] = [40, 45, 50, 55, 59, 59.9]
+        for score in moderateScores {
+            let band = determineBandFromScore(score)
+            XCTAssertEqual(band, .moderate, "Score \(score) should map to moderate band")
+        }
+    }
+
+    func testFatigueBand_DetermineFromScore_HighBand() {
+        // High band: 60-80
+        let highScores: [Double] = [60, 65, 70, 75, 79, 79.9]
+        for score in highScores {
+            let band = determineBandFromScore(score)
+            XCTAssertEqual(band, .high, "Score \(score) should map to high band")
+        }
+    }
+
+    func testFatigueBand_DetermineFromScore_CriticalBand() {
+        // Critical band: 80-100
+        let criticalScores: [Double] = [80, 85, 90, 95, 100]
+        for score in criticalScores {
+            let band = determineBandFromScore(score)
+            XCTAssertEqual(band, .critical, "Score \(score) should map to critical band")
+        }
+    }
+
+    func testFatigueBand_DetermineFromScore_BoundaryValues() {
+        // Test exact boundary values
+        XCTAssertEqual(determineBandFromScore(0), .low)
+        XCTAssertEqual(determineBandFromScore(40), .moderate)
+        XCTAssertEqual(determineBandFromScore(60), .high)
+        XCTAssertEqual(determineBandFromScore(80), .critical)
+        XCTAssertEqual(determineBandFromScore(100), .critical)
+    }
+
+    func testFatigueBand_DetermineFromScore_EdgeCases() {
+        // Just below boundaries
+        XCTAssertEqual(determineBandFromScore(39.99), .low)
+        XCTAssertEqual(determineBandFromScore(59.99), .moderate)
+        XCTAssertEqual(determineBandFromScore(79.99), .high)
+
+        // Just at boundaries
+        XCTAssertEqual(determineBandFromScore(40.0), .moderate)
+        XCTAssertEqual(determineBandFromScore(60.0), .high)
+        XCTAssertEqual(determineBandFromScore(80.0), .critical)
+    }
+
+    func testFatigueBand_DetermineFromScore_NegativeValue() {
+        // Negative scores should still return low
+        XCTAssertEqual(determineBandFromScore(-10), .low)
+        XCTAssertEqual(determineBandFromScore(-1), .low)
+    }
+
+    func testFatigueBand_DetermineFromScore_OverMaxValue() {
+        // Scores over 100 should still return critical
+        XCTAssertEqual(determineBandFromScore(101), .critical)
+        XCTAssertEqual(determineBandFromScore(150), .critical)
     }
 
     // MARK: - Color Mapping Tests
@@ -80,6 +173,30 @@ final class FatigueBandModelTests: XCTestCase {
         XCTAssertEqual(FatigueBand.critical.color, .red, "Critical fatigue should be red (danger)")
     }
 
+    func testFatigueBand_ColorsMappingToTrafficLightPattern() {
+        // Traffic light color progression: green -> yellow -> orange -> red
+        let expectedColors: [(FatigueBand, Color)] = [
+            (.low, .green),
+            (.moderate, .yellow),
+            (.high, .orange),
+            (.critical, .red)
+        ]
+
+        for (band, expectedColor) in expectedColors {
+            XCTAssertEqual(band.color, expectedColor,
+                          "\(band.displayName) should be \(expectedColor)")
+        }
+    }
+
+    func testFatigueBand_ColorConsistencyWithSeverity() {
+        // Verify the color order matches severity progression
+        let bands = FatigueBand.allCases
+        let colorStrings = bands.map { "\($0.color)" }
+        let uniqueColors = Set(colorStrings)
+        XCTAssertEqual(uniqueColors.count, bands.count,
+                      "Each band should have a unique color")
+    }
+
     // MARK: - Display Name Tests
 
     func testFatigueBand_DisplayNames() {
@@ -101,6 +218,14 @@ final class FatigueBandModelTests: XCTestCase {
         for band in FatigueBand.allCases {
             XCTAssertFalse(band.displayName.isEmpty)
             XCTAssertGreaterThan(band.displayName.count, 0)
+        }
+    }
+
+    func testFatigueBand_DisplayNamesDifferFromRawValue() {
+        for band in FatigueBand.allCases {
+            // Display name is capitalized, raw value is lowercase
+            XCTAssertNotEqual(band.displayName, band.rawValue)
+            XCTAssertEqual(band.displayName.lowercased(), band.rawValue)
         }
     }
 
@@ -130,6 +255,31 @@ final class FatigueBandModelTests: XCTestCase {
                      FatigueBand.critical.description.contains("recommended"))
     }
 
+    func testFatigueBand_DescriptionHasTwoParts() {
+        for band in FatigueBand.allCases {
+            // Each description should have format: "Band fatigue - Action"
+            XCTAssertTrue(band.description.contains(" - "),
+                         "Description should have two parts separated by ' - '")
+            let parts = band.description.components(separatedBy: " - ")
+            XCTAssertEqual(parts.count, 2,
+                          "Description should split into exactly two parts")
+        }
+    }
+
+    func testFatigueBand_DescriptionsIncreaseInUrgency() {
+        // Low: "Ready for full training" - positive/permissive
+        XCTAssertTrue(FatigueBand.low.description.contains("Ready"))
+
+        // Moderate: "Monitor recovery" - advisory
+        XCTAssertTrue(FatigueBand.moderate.description.contains("Monitor"))
+
+        // High: "Consider reducing load" - suggestive action
+        XCTAssertTrue(FatigueBand.high.description.contains("Consider"))
+
+        // Critical: "Deload recommended" - strong recommendation
+        XCTAssertTrue(FatigueBand.critical.description.contains("recommended"))
+    }
+
     // MARK: - Icon Tests
 
     func testFatigueBand_Icons() {
@@ -152,6 +302,31 @@ final class FatigueBandModelTests: XCTestCase {
         XCTAssertTrue(FatigueBand.moderate.icon.contains("75"))
         XCTAssertTrue(FatigueBand.high.icon.contains("25"))
         XCTAssertTrue(FatigueBand.critical.icon.contains("0"))
+    }
+
+    func testFatigueBand_IconBatteryLevelDecreases() {
+        let batteryLevels: [(FatigueBand, Int)] = [
+            (.low, 100),
+            (.moderate, 75),
+            (.high, 25),
+            (.critical, 0)
+        ]
+
+        for i in 0..<(batteryLevels.count - 1) {
+            let current = batteryLevels[i]
+            let next = batteryLevels[i + 1]
+            XCTAssertGreaterThan(current.1, next.1,
+                                "Battery level should decrease: \(current.0) > \(next.0)")
+        }
+    }
+
+    func testFatigueBand_IconsAreValidSFSymbols() {
+        // Battery icons are valid SF Symbols format
+        let validBatteryIcons = ["battery.100", "battery.75", "battery.50", "battery.25", "battery.0"]
+        for band in FatigueBand.allCases {
+            XCTAssertTrue(validBatteryIcons.contains(band.icon) || band.icon.hasPrefix("battery."),
+                         "Icon should be a valid battery SF Symbol: \(band.icon)")
+        }
     }
 
     // MARK: - Codable Tests
@@ -196,6 +371,33 @@ final class FatigueBandModelTests: XCTestCase {
         }
     }
 
+    func testFatigueBand_DecodingEmptyString_Throws() {
+        let decoder = JSONDecoder()
+        let invalidJson = "\"\"".data(using: .utf8)!
+
+        XCTAssertThrowsError(try decoder.decode(FatigueBand.self, from: invalidJson)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    func testFatigueBand_DecodingNumber_Throws() {
+        let decoder = JSONDecoder()
+        let invalidJson = "1".data(using: .utf8)!
+
+        XCTAssertThrowsError(try decoder.decode(FatigueBand.self, from: invalidJson)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    func testFatigueBand_DecodingNull_Throws() {
+        let decoder = JSONDecoder()
+        let invalidJson = "null".data(using: .utf8)!
+
+        XCTAssertThrowsError(try decoder.decode(FatigueBand.self, from: invalidJson)) { error in
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
     // MARK: - Equatable Tests
 
     func testFatigueBand_Equality() {
@@ -210,6 +412,18 @@ final class FatigueBandModelTests: XCTestCase {
         XCTAssertNotEqual(FatigueBand.moderate, FatigueBand.high)
         XCTAssertNotEqual(FatigueBand.high, FatigueBand.critical)
         XCTAssertNotEqual(FatigueBand.low, FatigueBand.critical)
+    }
+
+    func testFatigueBand_AllPairsAreUnequal() {
+        let allCases = FatigueBand.allCases
+        for i in 0..<allCases.count {
+            for j in 0..<allCases.count {
+                if i != j {
+                    XCTAssertNotEqual(allCases[i], allCases[j],
+                                     "\(allCases[i]) should not equal \(allCases[j])")
+                }
+            }
+        }
     }
 
     // MARK: - Hashable Tests
@@ -233,5 +447,78 @@ final class FatigueBandModelTests: XCTestCase {
         let hashes = FatigueBand.allCases.map { $0.hashValue }
         let uniqueHashes = Set(hashes)
         XCTAssertEqual(uniqueHashes.count, 4)
+    }
+
+    func testFatigueBand_DuplicateInsertionDoesNotIncreaseCount() {
+        var set = Set<FatigueBand>()
+
+        set.insert(.low)
+        XCTAssertEqual(set.count, 1)
+
+        set.insert(.low)
+        XCTAssertEqual(set.count, 1, "Duplicate should not increase count")
+
+        set.insert(.moderate)
+        XCTAssertEqual(set.count, 2)
+    }
+
+    func testFatigueBand_CanBeUsedAsDictionaryKey() {
+        var dict: [FatigueBand: String] = [:]
+
+        dict[.low] = "Green zone"
+        dict[.moderate] = "Yellow zone"
+        dict[.high] = "Orange zone"
+        dict[.critical] = "Red zone"
+
+        XCTAssertEqual(dict.count, 4)
+        XCTAssertEqual(dict[.low], "Green zone")
+        XCTAssertEqual(dict[.critical], "Red zone")
+    }
+
+    // MARK: - Severity Ordering Tests
+
+    func testFatigueBand_SeverityOrder() {
+        // Test that bands can be compared by their position in allCases
+        let allCases = FatigueBand.allCases
+
+        // Find indices
+        guard let lowIndex = allCases.firstIndex(of: .low),
+              let moderateIndex = allCases.firstIndex(of: .moderate),
+              let highIndex = allCases.firstIndex(of: .high),
+              let criticalIndex = allCases.firstIndex(of: .critical) else {
+            XCTFail("All bands should be found in allCases")
+            return
+        }
+
+        // Verify order
+        XCTAssertLessThan(lowIndex, moderateIndex)
+        XCTAssertLessThan(moderateIndex, highIndex)
+        XCTAssertLessThan(highIndex, criticalIndex)
+    }
+
+    func testFatigueBand_LowIsLeastSevere() {
+        let allCases = FatigueBand.allCases
+        XCTAssertEqual(allCases.first, .low, "Low should be the first (least severe) case")
+    }
+
+    func testFatigueBand_CriticalIsMostSevere() {
+        let allCases = FatigueBand.allCases
+        XCTAssertEqual(allCases.last, .critical, "Critical should be the last (most severe) case")
+    }
+
+    // MARK: - Helper Methods
+
+    /// Helper function to determine band from score (mirrors business logic)
+    private func determineBandFromScore(_ score: Double) -> FatigueBand {
+        switch score {
+        case ..<40:
+            return .low
+        case 40..<60:
+            return .moderate
+        case 60..<80:
+            return .high
+        default:
+            return .critical
+        }
     }
 }

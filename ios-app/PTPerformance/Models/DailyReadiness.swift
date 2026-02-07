@@ -338,7 +338,25 @@ struct ReadinessTrend: Codable, Sendable {
 }
 
 /// Readiness-related errors
-enum ReadinessError: LocalizedError {
+enum ReadinessError: LocalizedError, Equatable {
+    static func == (lhs: ReadinessError, rhs: ReadinessError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidSleepHours, .invalidSleepHours),
+             (.invalidSorenessLevel, .invalidSorenessLevel),
+             (.invalidEnergyLevel, .invalidEnergyLevel),
+             (.invalidStressLevel, .invalidStressLevel),
+             (.noMetricsProvided, .noMetricsProvided),
+             (.scoreCalculationFailed, .scoreCalculationFailed),
+             (.noDataFound, .noDataFound),
+             (.trendCalculationFailed, .trendCalculationFailed):
+            return true
+        case (.fetchFailed(let lhsError), .fetchFailed(let rhsError)):
+            return lhsError.localizedDescription == rhsError.localizedDescription
+        default:
+            return false
+        }
+    }
+
     case invalidSleepHours
     case invalidSorenessLevel
     case invalidEnergyLevel

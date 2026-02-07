@@ -2,12 +2,14 @@
 //  SupplementTests.swift
 //  PTPerformanceTests
 //
-//  Unit tests for Supplement, SupplementCategory, SupplementFrequency, TimeOfDay,
-//  ScheduledSupplement, and SupplementLog models
+//  Comprehensive unit tests for Supplement, SupplementCategory, SupplementFrequency, TimeOfDay,
+//  ScheduledSupplement, SupplementLog, and related models including validation and edge cases.
 //
 
 import XCTest
 @testable import PTPerformance
+
+// MARK: - Supplement Model Tests
 
 final class SupplementTests: XCTestCase {
 
@@ -73,6 +75,14 @@ final class SupplementTests: XCTestCase {
         XCTAssertNil(supplement.momentousProductId)
     }
 
+    func testSupplementComputedProperties() {
+        let supplement = createSupplement()
+
+        XCTAssertEqual(supplement.recommendedDosage, supplement.dosage)
+        XCTAssertEqual(supplement.shouldTakeWithFood, supplement.withFood)
+        XCTAssertEqual(supplement.evidenceLevel, .moderate)
+    }
+
     // MARK: - Supplement Codable Tests
 
     func testSupplementEncodeDecode() throws {
@@ -122,6 +132,69 @@ final class SupplementTests: XCTestCase {
         XCTAssertNil(jsonObject["isActive"])
     }
 
+    func testSupplementDecodingFromJSON() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "name": "Creatine Monohydrate",
+            "brand": "Momentous",
+            "category": "creatine",
+            "dosage": "5g",
+            "frequency": "daily",
+            "time_of_day": ["morning", "post_workout"],
+            "with_food": false,
+            "notes": "Mix with water",
+            "momentous_product_id": "creatine-500",
+            "is_active": true,
+            "created_at": "2024-01-15T10:30:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let supplement = try decoder.decode(Supplement.self, from: json)
+
+        XCTAssertEqual(supplement.name, "Creatine Monohydrate")
+        XCTAssertEqual(supplement.brand, "Momentous")
+        XCTAssertEqual(supplement.category, .creatine)
+        XCTAssertEqual(supplement.dosage, "5g")
+        XCTAssertEqual(supplement.frequency, .daily)
+        XCTAssertEqual(supplement.timeOfDay, [.morning, .postWorkout])
+        XCTAssertEqual(supplement.withFood, false)
+        XCTAssertEqual(supplement.notes, "Mix with water")
+        XCTAssertEqual(supplement.momentousProductId, "creatine-500")
+        XCTAssertEqual(supplement.isActive, true)
+    }
+
+    func testSupplementDecodingWithNullOptionals() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "name": "Vitamin D3",
+            "brand": null,
+            "category": "vitamins",
+            "dosage": "5000 IU",
+            "frequency": "daily",
+            "time_of_day": ["morning"],
+            "with_food": true,
+            "notes": null,
+            "momentous_product_id": null,
+            "is_active": true,
+            "created_at": "2024-01-15T10:30:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let supplement = try decoder.decode(Supplement.self, from: json)
+
+        XCTAssertNil(supplement.brand)
+        XCTAssertNil(supplement.notes)
+        XCTAssertNil(supplement.momentousProductId)
+    }
+
     func testSupplementHashable() {
         let supplement1 = createSupplement()
         let supplement2 = createSupplement()
@@ -131,6 +204,45 @@ final class SupplementTests: XCTestCase {
         set.insert(supplement2)
 
         XCTAssertEqual(set.count, 2)
+    }
+
+    func testSupplementEquatable() {
+        let id = UUID()
+        let patientId = UUID()
+        let date = Date()
+
+        let supplement1 = Supplement(
+            id: id,
+            patientId: patientId,
+            name: "Test",
+            brand: nil,
+            category: .protein,
+            dosage: "1 scoop",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: date
+        )
+        let supplement2 = Supplement(
+            id: id,
+            patientId: patientId,
+            name: "Test",
+            brand: nil,
+            category: .protein,
+            dosage: "1 scoop",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: date
+        )
+
+        XCTAssertEqual(supplement1, supplement2)
     }
 
     // MARK: - SupplementCategory Tests
@@ -221,6 +333,12 @@ final class SupplementTests: XCTestCase {
         }
     }
 
+    func testSupplementCategoryUniqueDisplayNames() {
+        let names = SupplementCategory.allCases.map { $0.displayName }
+        let uniqueNames = Set(names)
+        XCTAssertEqual(names.count, uniqueNames.count, "Each category should have a unique display name")
+    }
+
     // MARK: - SupplementFrequency Tests
 
     func testSupplementFrequencyAllCases() {
@@ -282,10 +400,11 @@ final class SupplementTests: XCTestCase {
 
     func testTimeOfDayAllCases() {
         let allCases = TimeOfDay.allCases
-        XCTAssertEqual(allCases.count, 7)
+        XCTAssertEqual(allCases.count, 8) // morning, afternoon, evening, night, beforeBed, preWorkout, postWorkout, withMeals
         XCTAssertTrue(allCases.contains(.morning))
         XCTAssertTrue(allCases.contains(.afternoon))
         XCTAssertTrue(allCases.contains(.evening))
+        XCTAssertTrue(allCases.contains(.night))
         XCTAssertTrue(allCases.contains(.beforeBed))
         XCTAssertTrue(allCases.contains(.preWorkout))
         XCTAssertTrue(allCases.contains(.postWorkout))
@@ -296,6 +415,7 @@ final class SupplementTests: XCTestCase {
         XCTAssertEqual(TimeOfDay.morning.rawValue, "morning")
         XCTAssertEqual(TimeOfDay.afternoon.rawValue, "afternoon")
         XCTAssertEqual(TimeOfDay.evening.rawValue, "evening")
+        XCTAssertEqual(TimeOfDay.night.rawValue, "night")
         XCTAssertEqual(TimeOfDay.beforeBed.rawValue, "before_bed")
         XCTAssertEqual(TimeOfDay.preWorkout.rawValue, "pre_workout")
         XCTAssertEqual(TimeOfDay.postWorkout.rawValue, "post_workout")
@@ -306,6 +426,7 @@ final class SupplementTests: XCTestCase {
         XCTAssertEqual(TimeOfDay.morning.displayName, "Morning")
         XCTAssertEqual(TimeOfDay.afternoon.displayName, "Afternoon")
         XCTAssertEqual(TimeOfDay.evening.displayName, "Evening")
+        XCTAssertEqual(TimeOfDay.night.displayName, "Night")
         XCTAssertEqual(TimeOfDay.beforeBed.displayName, "Before Bed")
         XCTAssertEqual(TimeOfDay.preWorkout.displayName, "Pre-Workout")
         XCTAssertEqual(TimeOfDay.postWorkout.displayName, "Post-Workout")
@@ -317,6 +438,23 @@ final class SupplementTests: XCTestCase {
             XCTAssertFalse(timeOfDay.displayName.isEmpty)
             XCTAssertTrue(timeOfDay.displayName.first?.isUppercase == true,
                           "Display name should start with uppercase: \(timeOfDay.displayName)")
+        }
+    }
+
+    func testTimeOfDayIcons() {
+        XCTAssertEqual(TimeOfDay.morning.icon, "sunrise.fill")
+        XCTAssertEqual(TimeOfDay.afternoon.icon, "sun.max.fill")
+        XCTAssertEqual(TimeOfDay.evening.icon, "sunset.fill")
+        XCTAssertEqual(TimeOfDay.night.icon, "moon.stars.fill")
+        XCTAssertEqual(TimeOfDay.beforeBed.icon, "moon.fill")
+        XCTAssertEqual(TimeOfDay.preWorkout.icon, "figure.run")
+        XCTAssertEqual(TimeOfDay.postWorkout.icon, "figure.cooldown")
+        XCTAssertEqual(TimeOfDay.withMeals.icon, "fork.knife")
+    }
+
+    func testTimeOfDayIconsNotEmpty() {
+        for timeOfDay in TimeOfDay.allCases {
+            XCTAssertFalse(timeOfDay.icon.isEmpty)
         }
     }
 
@@ -336,6 +474,12 @@ final class SupplementTests: XCTestCase {
             let decoded = try decoder.decode(TimeOfDay.self, from: data)
             XCTAssertEqual(decoded, timeOfDay)
         }
+    }
+
+    func testTimeOfDayUniqueDisplayNames() {
+        let names = TimeOfDay.allCases.map { $0.displayName }
+        let uniqueNames = Set(names)
+        XCTAssertEqual(names.count, uniqueNames.count, "Each time of day should have a unique display name")
     }
 
     // MARK: - ScheduledSupplement Tests
@@ -507,6 +651,280 @@ final class SupplementTests: XCTestCase {
         XCTAssertNil(jsonObject["takenAt"])
     }
 
+    func testSupplementLogDecoding() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "supplement_id": "660e8400-e29b-41d4-a716-446655440001",
+            "patient_id": "770e8400-e29b-41d4-a716-446655440002",
+            "taken_at": "2024-01-15T07:30:00Z",
+            "dosage": "5g",
+            "notes": "With breakfast"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let log = try decoder.decode(SupplementLog.self, from: json)
+
+        XCTAssertEqual(log.dosage, "5g")
+        XCTAssertEqual(log.notes, "With breakfast")
+    }
+
+    // MARK: - Dosage Validation Tests
+
+    func testValidDosageFormats() {
+        // Test various valid dosage formats
+        let validDosages = [
+            "5g",
+            "500mg",
+            "1000 IU",
+            "2 capsules",
+            "1 scoop",
+            "5000 mcg",
+            "2.5g",
+            "100-200mg"
+        ]
+
+        for dosage in validDosages {
+            let supplement = Supplement(
+                id: UUID(),
+                patientId: UUID(),
+                name: "Test",
+                brand: nil,
+                category: .vitamins,
+                dosage: dosage,
+                frequency: .daily,
+                timeOfDay: [.morning],
+                withFood: false,
+                notes: nil,
+                momentousProductId: nil,
+                isActive: true,
+                createdAt: Date()
+            )
+            XCTAssertEqual(supplement.dosage, dosage, "Dosage format '\(dosage)' should be valid")
+        }
+    }
+
+    func testEmptyDosage() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "Test",
+            brand: nil,
+            category: .vitamins,
+            dosage: "",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+        XCTAssertTrue(supplement.dosage.isEmpty)
+    }
+
+    // MARK: - Timing Validation Tests
+
+    func testMultipleTimesOfDay() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "Multi-dose Supplement",
+            brand: nil,
+            category: .vitamins,
+            dosage: "1 capsule",
+            frequency: .threeTimesDaily,
+            timeOfDay: [.morning, .afternoon, .evening],
+            withFood: true,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(supplement.timeOfDay.count, 3)
+        XCTAssertTrue(supplement.timeOfDay.contains(.morning))
+        XCTAssertTrue(supplement.timeOfDay.contains(.afternoon))
+        XCTAssertTrue(supplement.timeOfDay.contains(.evening))
+    }
+
+    func testEmptyTimeOfDay() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "As Needed Supplement",
+            brand: nil,
+            category: .adaptogens,
+            dosage: "500mg",
+            frequency: .asNeeded,
+            timeOfDay: [],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertTrue(supplement.timeOfDay.isEmpty)
+    }
+
+    func testAllTimesOfDay() {
+        let allTimes = TimeOfDay.allCases
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "All Day Supplement",
+            brand: nil,
+            category: .adaptogens,
+            dosage: "100mg",
+            frequency: .asNeeded,
+            timeOfDay: allTimes,
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(supplement.timeOfDay.count, allTimes.count)
+    }
+
+    // MARK: - Edge Cases Tests
+
+    func testInactiveSupplement() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "Old Supplement",
+            brand: nil,
+            category: .other,
+            dosage: "1g",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: false,
+            createdAt: Date()
+        )
+
+        XCTAssertFalse(supplement.isActive)
+    }
+
+    func testSupplementWithLongName() {
+        let longName = String(repeating: "A", count: 500)
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: longName,
+            brand: nil,
+            category: .other,
+            dosage: "1g",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(supplement.name.count, 500)
+    }
+
+    func testSupplementWithSpecialCharactersInName() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "Vitamin D3 (5000 IU) - High Potency",
+            brand: "Nature's Bounty",
+            category: .vitamins,
+            dosage: "5000 IU",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: true,
+            notes: "Take with fatty meal for better absorption",
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertEqual(supplement.name, "Vitamin D3 (5000 IU) - High Potency")
+        XCTAssertEqual(supplement.brand, "Nature's Bounty")
+    }
+
+    func testSupplementWithUnicodeCharacters() {
+        let supplement = Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: "Ashwagandha (アシュワガンダ)",
+            brand: nil,
+            category: .adaptogens,
+            dosage: "300mg",
+            frequency: .daily,
+            timeOfDay: [.evening],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: Date()
+        )
+
+        XCTAssertTrue(supplement.name.contains("アシュワガンダ"))
+    }
+
+    // MARK: - EvidenceLevel Tests
+
+    func testEvidenceLevelAllCases() {
+        let allCases = EvidenceLevel.allCases
+        XCTAssertEqual(allCases.count, 4)
+        XCTAssertTrue(allCases.contains(.high))
+        XCTAssertTrue(allCases.contains(.moderate))
+        XCTAssertTrue(allCases.contains(.low))
+        XCTAssertTrue(allCases.contains(.emerging))
+    }
+
+    func testEvidenceLevelRawValues() {
+        XCTAssertEqual(EvidenceLevel.high.rawValue, "high")
+        XCTAssertEqual(EvidenceLevel.moderate.rawValue, "moderate")
+        XCTAssertEqual(EvidenceLevel.low.rawValue, "low")
+        XCTAssertEqual(EvidenceLevel.emerging.rawValue, "emerging")
+    }
+
+    func testEvidenceLevelDisplayNames() {
+        XCTAssertEqual(EvidenceLevel.high.displayName, "Strong Evidence")
+        XCTAssertEqual(EvidenceLevel.moderate.displayName, "Moderate Evidence")
+        XCTAssertEqual(EvidenceLevel.low.displayName, "Limited Evidence")
+        XCTAssertEqual(EvidenceLevel.emerging.displayName, "Emerging Research")
+    }
+
+    func testEvidenceLevelShortNames() {
+        XCTAssertEqual(EvidenceLevel.high.shortName, "Strong")
+        XCTAssertEqual(EvidenceLevel.moderate.shortName, "Moderate")
+        XCTAssertEqual(EvidenceLevel.low.shortName, "Limited")
+        XCTAssertEqual(EvidenceLevel.emerging.shortName, "Emerging")
+    }
+
+    func testEvidenceLevelIcons() {
+        XCTAssertEqual(EvidenceLevel.high.icon, "checkmark.seal.fill")
+        XCTAssertEqual(EvidenceLevel.moderate.icon, "checkmark.seal")
+        XCTAssertEqual(EvidenceLevel.low.icon, "questionmark.circle")
+        XCTAssertEqual(EvidenceLevel.emerging.icon, "sparkle")
+    }
+
+    func testEvidenceLevelCodable() throws {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
+        for level in EvidenceLevel.allCases {
+            let data = try encoder.encode(level)
+            let decoded = try decoder.decode(EvidenceLevel.self, from: data)
+            XCTAssertEqual(decoded, level)
+        }
+    }
+
     // MARK: - Helpers
 
     private func createSupplement() -> Supplement {
@@ -522,6 +940,103 @@ final class SupplementTests: XCTestCase {
             withFood: false,
             notes: "Take with water",
             momentousProductId: "creatine-001",
+            isActive: true,
+            createdAt: Date()
+        )
+    }
+}
+
+// MARK: - Duplicate Supplement Tests
+
+final class DuplicateSupplementTests: XCTestCase {
+
+    func testDuplicateSupplementsInSet() {
+        let supplement1 = createSupplement(name: "Vitamin D3")
+        let supplement2 = createSupplement(name: "Vitamin D3")
+        let supplement3 = createSupplement(name: "Omega-3")
+
+        var set = Set<Supplement>()
+        set.insert(supplement1)
+        set.insert(supplement2)
+        set.insert(supplement3)
+
+        // All should be inserted since they have different IDs
+        XCTAssertEqual(set.count, 3)
+    }
+
+    func testDuplicateSupplementsWithSameId() {
+        let id = UUID()
+        let patientId = UUID()
+        let date = Date()
+
+        let supplement1 = Supplement(
+            id: id,
+            patientId: patientId,
+            name: "Vitamin D3",
+            brand: nil,
+            category: .vitamins,
+            dosage: "5000 IU",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: true,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: date
+        )
+
+        let supplement2 = Supplement(
+            id: id,
+            patientId: patientId,
+            name: "Vitamin D3",
+            brand: nil,
+            category: .vitamins,
+            dosage: "5000 IU",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: true,
+            notes: nil,
+            momentousProductId: nil,
+            isActive: true,
+            createdAt: date
+        )
+
+        var set = Set<Supplement>()
+        set.insert(supplement1)
+        set.insert(supplement2)
+
+        // Should only have one since they're identical
+        XCTAssertEqual(set.count, 1)
+    }
+
+    func testFilterDuplicateSupplementsByName() {
+        let supplements = [
+            createSupplement(name: "Vitamin D3"),
+            createSupplement(name: "Vitamin D3"),
+            createSupplement(name: "Omega-3"),
+            createSupplement(name: "Creatine"),
+            createSupplement(name: "Creatine")
+        ]
+
+        let uniqueByName = Dictionary(grouping: supplements, by: { $0.name })
+            .compactMap { $0.value.first }
+
+        XCTAssertEqual(uniqueByName.count, 3)
+    }
+
+    private func createSupplement(name: String) -> Supplement {
+        Supplement(
+            id: UUID(),
+            patientId: UUID(),
+            name: name,
+            brand: nil,
+            category: .vitamins,
+            dosage: "500mg",
+            frequency: .daily,
+            timeOfDay: [.morning],
+            withFood: false,
+            notes: nil,
+            momentousProductId: nil,
             isActive: true,
             createdAt: Date()
         )

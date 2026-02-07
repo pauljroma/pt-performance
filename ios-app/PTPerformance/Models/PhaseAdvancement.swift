@@ -170,17 +170,19 @@ struct PhaseGateChecker {
             return .advance
         }
 
-        // ≥75% gates passed and not past planned duration - extend
-        if passRate >= 0.75 && currentPhaseWeeks <= plannedPhaseWeeks {
-            return .extend
-        }
-
-        // Failed critical gates (adherence or pain) - deload and retry
+        // Critical gates (adherence or pain) failed - deload and retry
+        // These are checked BEFORE the 75% rule because they indicate
+        // fundamental issues that require a deload regardless of pass rate
         if let adherenceGate = gateResults["adherence"], !adherenceGate.passed {
             return .deloadRetry
         }
         if let painGate = gateResults["pain_management"], !painGate.passed {
             return .deloadRetry
+        }
+
+        // ≥75% gates passed and not past planned duration - extend
+        if passRate >= 0.75 && currentPhaseWeeks <= plannedPhaseWeeks {
+            return .extend
         }
 
         // Default: extend current phase

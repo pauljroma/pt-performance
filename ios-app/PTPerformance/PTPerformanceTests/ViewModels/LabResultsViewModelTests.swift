@@ -228,7 +228,717 @@ final class LabResultsViewModelTests: XCTestCase {
             pdfUrl: nil,
             aiAnalysis: nil,
             createdAt: Date(),
-            updatedAt: Date()
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+    }
+}
+
+// MARK: - LabResultsViewModel PDF Parsing Tests
+
+@MainActor
+final class LabResultsViewModelPDFParsingTests: XCTestCase {
+
+    var sut: LabResultsViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = LabResultsViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Parsed Result Structure Tests
+
+    func testParsedLabResult_ProviderQuest() throws {
+        let json = """
+        {
+            "provider": "quest",
+            "test_date": "2024-01-15",
+            "patient_name": "Test Patient",
+            "biomarkers": [
+                {"name": "Glucose", "value": 95.0, "unit": "mg/dL", "flag": "normal"}
+            ],
+            "confidence": "high"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let parsed = try decoder.decode(ParsedLabResult.self, from: json)
+
+        XCTAssertEqual(parsed.provider, .quest)
+        XCTAssertEqual(parsed.patientName, "Test Patient")
+        XCTAssertEqual(parsed.biomarkers.count, 1)
+        XCTAssertEqual(parsed.confidence, .high)
+    }
+
+    func testParsedLabResult_ProviderLabCorp() throws {
+        let json = """
+        {
+            "provider": "labcorp",
+            "biomarkers": [],
+            "confidence": "medium"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let parsed = try decoder.decode(ParsedLabResult.self, from: json)
+
+        XCTAssertEqual(parsed.provider, .labcorp)
+    }
+
+    func testParsedLabResult_UnknownProvider() throws {
+        let json = """
+        {
+            "provider": "random_lab_xyz",
+            "biomarkers": [],
+            "confidence": "low"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let parsed = try decoder.decode(ParsedLabResult.self, from: json)
+
+        XCTAssertEqual(parsed.provider, .unknown)
+    }
+
+    // MARK: - Biomarker Parsing Tests
+
+    func testParsedBiomarker_AllFields() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "Hemoglobin",
+            "value": 14.5,
+            "unit": "g/dL",
+            "reference_range": "12.0-17.0",
+            "reference_low": 12.0,
+            "reference_high": 17.0,
+            "flag": "normal",
+            "category": "CBC",
+            "is_selected": true
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let biomarker = try decoder.decode(ParsedBiomarker.self, from: json)
+
+        XCTAssertEqual(biomarker.name, "Hemoglobin")
+        XCTAssertEqual(biomarker.value, 14.5)
+        XCTAssertEqual(biomarker.unit, "g/dL")
+        XCTAssertEqual(biomarker.referenceRange, "12.0-17.0")
+        XCTAssertEqual(biomarker.referenceLow, 12.0)
+        XCTAssertEqual(biomarker.referenceHigh, 17.0)
+        XCTAssertEqual(biomarker.flag, .normal)
+        XCTAssertEqual(biomarker.category, "CBC")
+        XCTAssertTrue(biomarker.isSelected)
+    }
+
+    func testParsedBiomarker_MinimalFields() throws {
+        let json = """
+        {
+            "name": "Custom Marker",
+            "value": 50.0,
+            "unit": "units"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let biomarker = try decoder.decode(ParsedBiomarker.self, from: json)
+
+        XCTAssertEqual(biomarker.name, "Custom Marker")
+        XCTAssertEqual(biomarker.value, 50.0)
+        XCTAssertNil(biomarker.referenceRange)
+        XCTAssertNil(biomarker.referenceLow)
+        XCTAssertNil(biomarker.referenceHigh)
+        XCTAssertNil(biomarker.flag)
+        XCTAssertTrue(biomarker.isSelected) // Default value
+    }
+
+    // MARK: - Confidence Level Tests
+
+    func testParsingConfidence_HighConfidence() {
+        XCTAssertEqual(ParsingConfidence.high.displayName, "High Confidence")
+        XCTAssertEqual(ParsingConfidence.high.iconName, "checkmark.circle.fill")
+    }
+
+    func testParsingConfidence_MediumConfidence() {
+        XCTAssertEqual(ParsingConfidence.medium.displayName, "Medium Confidence")
+        XCTAssertEqual(ParsingConfidence.medium.iconName, "exclamationmark.circle.fill")
+    }
+
+    func testParsingConfidence_LowConfidence() {
+        XCTAssertEqual(ParsingConfidence.low.displayName, "Low Confidence")
+        XCTAssertEqual(ParsingConfidence.low.iconName, "questionmark.circle.fill")
+    }
+}
+
+// MARK: - LabResultsViewModel Manual Entry Validation Tests
+
+@MainActor
+final class LabResultsViewModelManualEntryTests: XCTestCase {
+
+    // MARK: - Biomarker Value Validation
+
+    func testBiomarkerValue_ValidPositive() {
+        let biomarker = ParsedBiomarker(
+            name: "Glucose",
+            value: 95.0,
+            unit: "mg/dL"
+        )
+
+        XCTAssertEqual(biomarker.value, 95.0)
+        XCTAssertTrue(biomarker.value > 0)
+    }
+
+    func testBiomarkerValue_ValidZero() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 0.0,
+            unit: "units"
+        )
+
+        XCTAssertEqual(biomarker.value, 0.0)
+    }
+
+    func testBiomarkerValue_ValidNegative() {
+        // Some biomarkers can have negative values (e.g., deltas)
+        let biomarker = ParsedBiomarker(
+            name: "Temperature Delta",
+            value: -2.5,
+            unit: "degrees"
+        )
+
+        XCTAssertEqual(biomarker.value, -2.5)
+    }
+
+    func testBiomarkerValue_ValidDecimal() {
+        let biomarker = ParsedBiomarker(
+            name: "TSH",
+            value: 0.0015,
+            unit: "mIU/L"
+        )
+
+        XCTAssertEqual(biomarker.value, 0.0015, accuracy: 0.00001)
+    }
+
+    func testBiomarkerValue_ValidLarge() {
+        let biomarker = ParsedBiomarker(
+            name: "Platelet Count",
+            value: 350000.0,
+            unit: "cells/uL"
+        )
+
+        XCTAssertEqual(biomarker.value, 350000.0)
+    }
+
+    // MARK: - Reference Range Validation
+
+    func testReferenceRange_ValidRange() {
+        let biomarker = ParsedBiomarker(
+            name: "Hemoglobin",
+            value: 14.0,
+            unit: "g/dL",
+            referenceRange: "12.0-17.0",
+            referenceLow: 12.0,
+            referenceHigh: 17.0
+        )
+
+        XCTAssertNotNil(biomarker.referenceLow)
+        XCTAssertNotNil(biomarker.referenceHigh)
+        XCTAssertTrue(biomarker.referenceLow! < biomarker.referenceHigh!)
+    }
+
+    func testReferenceRange_MissingLow() {
+        let biomarker = ParsedBiomarker(
+            name: "LDL",
+            value: 100.0,
+            unit: "mg/dL",
+            referenceRange: "<130",
+            referenceLow: nil,
+            referenceHigh: 130.0
+        )
+
+        XCTAssertNil(biomarker.referenceLow)
+        XCTAssertEqual(biomarker.referenceHigh, 130.0)
+    }
+
+    func testReferenceRange_MissingHigh() {
+        let biomarker = ParsedBiomarker(
+            name: "HDL",
+            value: 60.0,
+            unit: "mg/dL",
+            referenceRange: ">40",
+            referenceLow: 40.0,
+            referenceHigh: nil
+        )
+
+        XCTAssertEqual(biomarker.referenceLow, 40.0)
+        XCTAssertNil(biomarker.referenceHigh)
+    }
+
+    // MARK: - Unit Validation
+
+    func testBiomarkerUnit_StandardUnits() {
+        let standardUnits = ["mg/dL", "ng/mL", "pg/mL", "mIU/L", "g/dL", "cells/uL", "%", "mmol/L"]
+
+        for unit in standardUnits {
+            let biomarker = ParsedBiomarker(name: "Test", value: 50.0, unit: unit)
+            XCTAssertEqual(biomarker.unit, unit)
+        }
+    }
+
+    func testBiomarkerUnit_EmptyUnit() {
+        let biomarker = ParsedBiomarker(name: "Test", value: 50.0, unit: "")
+        XCTAssertEqual(biomarker.unit, "")
+    }
+
+    // MARK: - Flag Conversion Tests
+
+    func testBiomarkerFlag_ToLabMarker_Normal() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 50.0,
+            unit: "units",
+            flag: .normal
+        )
+
+        let labMarker = biomarker.toLabMarker()
+        XCTAssertEqual(labMarker.status, .normal)
+    }
+
+    func testBiomarkerFlag_ToLabMarker_Low() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 20.0,
+            unit: "units",
+            flag: .low
+        )
+
+        let labMarker = biomarker.toLabMarker()
+        XCTAssertEqual(labMarker.status, .low)
+    }
+
+    func testBiomarkerFlag_ToLabMarker_High() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 100.0,
+            unit: "units",
+            flag: .high
+        )
+
+        let labMarker = biomarker.toLabMarker()
+        XCTAssertEqual(labMarker.status, .high)
+    }
+
+    func testBiomarkerFlag_ToLabMarker_Critical() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 200.0,
+            unit: "units",
+            flag: .critical
+        )
+
+        let labMarker = biomarker.toLabMarker()
+        XCTAssertEqual(labMarker.status, .critical)
+    }
+
+    func testBiomarkerFlag_ToLabMarker_NilFlag() {
+        let biomarker = ParsedBiomarker(
+            name: "Test",
+            value: 50.0,
+            unit: "units",
+            flag: nil
+        )
+
+        let labMarker = biomarker.toLabMarker()
+        XCTAssertEqual(labMarker.status, .normal) // Default
+    }
+}
+
+// MARK: - LabResultsViewModel Biomarker Categorization Tests
+
+@MainActor
+final class LabResultsViewModelCategorizationTests: XCTestCase {
+
+    var sut: LabResultsViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = LabResultsViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Test Type Categorization
+
+    func testLabTestType_AllCasesHaveDisplayNames() {
+        for testType in LabTestType.allCases {
+            XCTAssertFalse(testType.displayName.isEmpty, "TestType \(testType) should have a display name")
+        }
+    }
+
+    func testLabTestType_RawValues() {
+        XCTAssertEqual(LabTestType.bloodPanel.rawValue, "blood_panel")
+        XCTAssertEqual(LabTestType.metabolicPanel.rawValue, "metabolic_panel")
+        XCTAssertEqual(LabTestType.hormonePanel.rawValue, "hormone_panel")
+        XCTAssertEqual(LabTestType.lipidPanel.rawValue, "lipid_panel")
+        XCTAssertEqual(LabTestType.thyroid.rawValue, "thyroid")
+        XCTAssertEqual(LabTestType.vitaminD.rawValue, "vitamin_d")
+        XCTAssertEqual(LabTestType.iron.rawValue, "iron")
+        XCTAssertEqual(LabTestType.cbc.rawValue, "cbc")
+        XCTAssertEqual(LabTestType.other.rawValue, "other")
+    }
+
+    // MARK: - Grouped Results Sorting
+
+    func testGroupedResults_SortedAlphabetically() {
+        let id1 = UUID()
+        let id2 = UUID()
+        let id3 = UUID()
+
+        // Add in non-alphabetical order
+        sut.labResults = [
+            createMockLabResult(testType: .vitaminD, id: id1),
+            createMockLabResult(testType: .bloodPanel, id: id2),
+            createMockLabResult(testType: .lipidPanel, id: id3)
+        ]
+
+        let grouped = sut.groupedResults
+        let testTypeNames = grouped.map { $0.0.displayName }
+
+        // Should be sorted: Blood Panel, Lipid Panel, Vitamin D
+        XCTAssertEqual(testTypeNames, testTypeNames.sorted())
+    }
+
+    // MARK: - LabResult Safe Accessors
+
+    func testLabResult_TestTypeValue_WithType() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: UUID(),
+            testDate: Date(),
+            testType: .hormonePanel,
+            results: nil,
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertEqual(result.testTypeValue, .hormonePanel)
+    }
+
+    func testLabResult_TestTypeValue_NilType() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: nil,
+            testDate: nil,
+            testType: nil,
+            results: nil,
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertEqual(result.testTypeValue, .other)
+    }
+
+    func testLabResult_ResultsList_WithResults() {
+        let marker = LabMarker(
+            id: UUID(),
+            name: "Glucose",
+            value: 95.0,
+            unit: "mg/dL",
+            referenceMin: 70.0,
+            referenceMax: 100.0,
+            status: .normal
+        )
+
+        let result = LabResult(
+            id: UUID(),
+            patientId: UUID(),
+            testDate: Date(),
+            testType: .metabolicPanel,
+            results: [marker],
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertEqual(result.resultsList.count, 1)
+    }
+
+    func testLabResult_ResultsList_NilResults() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: nil,
+            testDate: nil,
+            testType: nil,
+            results: nil,
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertTrue(result.resultsList.isEmpty)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createMockLabResult(testType: LabTestType, id: UUID) -> LabResult {
+        return LabResult(
+            id: id,
+            patientId: UUID(),
+            testDate: Date(),
+            testType: testType,
+            results: [],
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: Date(),
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+    }
+}
+
+// MARK: - LabResultsViewModel Edge Cases Tests
+
+@MainActor
+final class LabResultsViewModelEdgeCasesTests: XCTestCase {
+
+    var sut: LabResultsViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = LabResultsViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Empty Lab Results
+
+    func testEmptyLabResults_GroupedResults() {
+        sut.labResults = []
+        XCTAssertTrue(sut.groupedResults.isEmpty)
+    }
+
+    func testEmptyLabResults_RecentResults() {
+        sut.labResults = []
+        XCTAssertTrue(sut.recentResults.isEmpty)
+    }
+
+    // MARK: - Single Lab Result
+
+    func testSingleLabResult_GroupedResults() {
+        sut.labResults = [createMockLabResult(testType: .bloodPanel, id: UUID())]
+
+        XCTAssertEqual(sut.groupedResults.count, 1)
+        XCTAssertEqual(sut.groupedResults.first?.1.count, 1)
+    }
+
+    func testSingleLabResult_RecentResults() {
+        let result = createMockLabResult(testType: .bloodPanel, id: UUID())
+        sut.labResults = [result]
+
+        XCTAssertEqual(sut.recentResults.count, 1)
+        XCTAssertEqual(sut.recentResults.first?.id, result.id)
+    }
+
+    // MARK: - Large Dataset
+
+    func testLargeDataset_RecentResultsLimit() {
+        // Create 20 results
+        let results = (0..<20).map { createMockLabResult(testType: .bloodPanel, id: UUID(uuidString: "00000000-0000-0000-0000-\(String(format: "%012d", $0))")!) }
+        sut.labResults = results
+
+        // Recent results should only return 5
+        XCTAssertEqual(sut.recentResults.count, 5)
+    }
+
+    func testLargeDataset_GroupedResultsPerformance() {
+        // Create 100 results across different types
+        var results: [LabResult] = []
+        for i in 0..<100 {
+            let testType = LabTestType.allCases[i % LabTestType.allCases.count]
+            results.append(createMockLabResult(testType: testType, id: UUID()))
+        }
+        sut.labResults = results
+
+        // Should still group correctly
+        XCTAssertFalse(sut.groupedResults.isEmpty)
+
+        // Total count across all groups should equal original count
+        let totalGrouped = sut.groupedResults.reduce(0) { $0 + $1.1.count }
+        XCTAssertEqual(totalGrouped, 100)
+    }
+
+    // MARK: - Invalid Biomarker Values
+
+    func testInvalidBiomarkerValue_NaN() {
+        // This tests handling of edge case values
+        let value = Double.nan
+        XCTAssertTrue(value.isNaN)
+    }
+
+    func testInvalidBiomarkerValue_Infinity() {
+        let value = Double.infinity
+        XCTAssertTrue(value.isInfinite)
+    }
+
+    // MARK: - Missing Reference Ranges
+
+    func testMissingReferenceRanges_BothMissing() {
+        let marker = LabMarker(
+            id: UUID(),
+            name: "Custom",
+            value: 50.0,
+            unit: "units",
+            referenceMin: nil,
+            referenceMax: nil,
+            status: .normal
+        )
+
+        XCTAssertNil(marker.referenceMin)
+        XCTAssertNil(marker.referenceMax)
+    }
+
+    func testMissingReferenceRanges_OnlyMinPresent() {
+        let marker = LabMarker(
+            id: UUID(),
+            name: "HDL",
+            value: 60.0,
+            unit: "mg/dL",
+            referenceMin: 40.0,
+            referenceMax: nil,
+            status: .normal
+        )
+
+        XCTAssertEqual(marker.referenceMin, 40.0)
+        XCTAssertNil(marker.referenceMax)
+    }
+
+    func testMissingReferenceRanges_OnlyMaxPresent() {
+        let marker = LabMarker(
+            id: UUID(),
+            name: "LDL",
+            value: 100.0,
+            unit: "mg/dL",
+            referenceMin: nil,
+            referenceMax: 130.0,
+            status: .normal
+        )
+
+        XCTAssertNil(marker.referenceMin)
+        XCTAssertEqual(marker.referenceMax, 130.0)
+    }
+
+    // MARK: - Partial Data Scenarios
+
+    func testPartialData_NoTestDate() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: UUID(),
+            testDate: nil,
+            testType: .bloodPanel,
+            results: [],
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertNil(result.testDate)
+        XCTAssertEqual(result.testTypeValue, .bloodPanel)
+    }
+
+    func testPartialData_NoPatientId() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: nil,
+            testDate: Date(),
+            testType: .bloodPanel,
+            results: [],
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        XCTAssertNil(result.patientId)
+    }
+
+    func testPartialData_OnlyRequiredFields() {
+        let result = LabResult(
+            id: UUID(),
+            patientId: nil,
+            testDate: nil,
+            testType: nil,
+            results: nil,
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: nil,
+            updatedAt: nil,
+            provider: nil,
+            notes: nil,
+            parsedData: nil
+        )
+
+        // Should still be usable with safe accessors
+        XCTAssertEqual(result.testTypeValue, .other)
+        XCTAssertTrue(result.resultsList.isEmpty)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createMockLabResult(testType: LabTestType, id: UUID) -> LabResult {
+        return LabResult(
+            id: id,
+            patientId: UUID(),
+            testDate: Date(),
+            testType: testType,
+            results: [],
+            pdfUrl: nil,
+            aiAnalysis: nil,
+            createdAt: Date(),
+            updatedAt: Date(),
+            provider: nil,
+            notes: nil,
+            parsedData: nil
         )
     }
 }

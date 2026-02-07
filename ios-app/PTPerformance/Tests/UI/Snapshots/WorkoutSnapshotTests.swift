@@ -483,6 +483,445 @@ final class WorkoutSnapshotTests: SnapshotTestCase {
 
         verifyViewRenders(view, named: "SetRowList_MultipleStates")
     }
+
+    // MARK: - TodayWorkoutCard Tests
+
+    func testTodayWorkoutCard_WithExercises_LightMode() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Upper Body Strength",
+            sequence: 1,
+            weekday: 1,
+            notes: nil,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: nil
+        )
+
+        let view = TodayWorkoutCard(
+            session: session,
+            exercises: Exercise.sampleExercises,
+            onStartWorkout: {},
+            onRefresh: {},
+            onExerciseSelected: { _ in }
+        )
+        .frame(width: 350)
+        .lightModeTest()
+        .padding()
+
+        verifyViewRenders(view, named: "TodayWorkoutCard_WithExercises_Light")
+    }
+
+    func testTodayWorkoutCard_WithExercises_DarkMode() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Lower Body Power",
+            sequence: 2,
+            weekday: 3,
+            notes: nil,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: nil
+        )
+
+        let view = TodayWorkoutCard(
+            session: session,
+            exercises: Exercise.sampleExercises,
+            onStartWorkout: {},
+            onRefresh: {},
+            onExerciseSelected: { _ in }
+        )
+        .frame(width: 350)
+        .darkModeTest()
+        .padding()
+
+        verifyViewRenders(view, named: "TodayWorkoutCard_WithExercises_Dark")
+    }
+
+    func testTodayWorkoutCard_EmptyExercises() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Recovery Day",
+            sequence: 3,
+            weekday: 5,
+            notes: nil,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: nil
+        )
+
+        let view = TodayWorkoutCard(
+            session: session,
+            exercises: [],
+            onStartWorkout: {},
+            onRefresh: {},
+            onExerciseSelected: { _ in }
+        )
+        .frame(width: 350)
+        .padding()
+
+        verifyViewRenders(view, named: "TodayWorkoutCard_EmptyExercises")
+    }
+
+    func testTodayWorkoutCard_BothColorSchemes() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Full Body Workout",
+            sequence: 1,
+            weekday: 1,
+            notes: nil,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: nil
+        )
+
+        let view = TodayWorkoutCard(
+            session: session,
+            exercises: Exercise.sampleExercises,
+            onStartWorkout: {},
+            onRefresh: {},
+            onExerciseSelected: { _ in }
+        )
+        .frame(width: 350)
+        .padding()
+
+        verifyViewInBothColorSchemes(view, named: "TodayWorkoutCard")
+    }
+
+    func testTodayWorkoutCard_iPhoneAndIPad() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Upper Body Strength",
+            sequence: 1,
+            weekday: 1,
+            notes: nil,
+            created_at: Date(),
+            completed: false,
+            started_at: nil,
+            completed_at: nil,
+            total_volume: nil,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: nil
+        )
+
+        let view = TodayWorkoutCard(
+            session: session,
+            exercises: Exercise.sampleExercises,
+            onStartWorkout: {},
+            onRefresh: {},
+            onExerciseSelected: { _ in }
+        )
+        .padding()
+
+        verifyViewAcrossDevices(
+            view,
+            named: "TodayWorkoutCard",
+            devices: [.iPhone15Pro, .iPadPro]
+        )
+    }
+
+    // MARK: - SessionSummaryView Tests
+
+    func testSessionSummaryView_Complete_LightMode() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Upper Body Strength",
+            sequence: 1,
+            weekday: 1,
+            notes: nil,
+            created_at: Date(),
+            completed: true,
+            started_at: Date().addingTimeInterval(-2700),
+            completed_at: Date(),
+            total_volume: 12500.50,
+            avg_rpe: 7.5,
+            avg_pain: 3.2,
+            duration_minutes: 45
+        )
+
+        let view = SessionSummaryView(session: session)
+            .lightModeTest()
+
+        verifyViewRenders(view, named: "SessionSummaryView_Complete_Light")
+    }
+
+    func testSessionSummaryView_Complete_DarkMode() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Lower Body Power",
+            sequence: 2,
+            weekday: 3,
+            notes: nil,
+            created_at: Date(),
+            completed: true,
+            started_at: Date().addingTimeInterval(-3600),
+            completed_at: Date(),
+            total_volume: 18750.0,
+            avg_rpe: 8.5,
+            avg_pain: 2.0,
+            duration_minutes: 60
+        )
+
+        let view = SessionSummaryView(session: session)
+            .darkModeTest()
+
+        verifyViewRenders(view, named: "SessionSummaryView_Complete_Dark")
+    }
+
+    func testSessionSummaryView_HighVolume() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Heavy Deadlift Day",
+            sequence: 1,
+            weekday: 2,
+            notes: nil,
+            created_at: Date(),
+            completed: true,
+            started_at: Date().addingTimeInterval(-5400),
+            completed_at: Date(),
+            total_volume: 35000.0,
+            avg_rpe: 9.0,
+            avg_pain: 4.5,
+            duration_minutes: 90
+        )
+
+        let view = SessionSummaryView(session: session)
+
+        verifyViewRenders(view, named: "SessionSummaryView_HighVolume")
+    }
+
+    func testSessionSummaryView_MinimalMetrics() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Quick Session",
+            sequence: 1,
+            weekday: 4,
+            notes: nil,
+            created_at: Date(),
+            completed: true,
+            started_at: Date().addingTimeInterval(-900),
+            completed_at: Date(),
+            total_volume: 2500.0,
+            avg_rpe: nil,
+            avg_pain: nil,
+            duration_minutes: 15
+        )
+
+        let view = SessionSummaryView(session: session)
+
+        verifyViewRenders(view, named: "SessionSummaryView_MinimalMetrics")
+    }
+
+    func testSessionSummaryView_BothColorSchemes() {
+        let session = Session(
+            id: UUID(),
+            phase_id: UUID(),
+            name: "Full Body Workout",
+            sequence: 1,
+            weekday: 1,
+            notes: nil,
+            created_at: Date(),
+            completed: true,
+            started_at: Date().addingTimeInterval(-2700),
+            completed_at: Date(),
+            total_volume: 15000.0,
+            avg_rpe: 7.0,
+            avg_pain: 2.5,
+            duration_minutes: 45
+        )
+
+        let view = SessionSummaryView(session: session)
+
+        verifyViewInBothColorSchemes(view, named: "SessionSummaryView")
+    }
+
+    // MARK: - WorkoutGridView Component Tests
+
+    func testWorkoutGridHeader_LightMode() {
+        // Test the grid header portion which can be tested in isolation
+        let view = HStack(spacing: 0) {
+            Text("Exercise")
+                .frame(width: 200, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Sets")
+                .frame(width: 60, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Reps")
+                .frame(width: 80, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Weight")
+                .frame(width: 80, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Notes")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+        .lightModeTest()
+
+        verifyViewRenders(view, named: "WorkoutGridHeader_Light")
+    }
+
+    func testWorkoutGridHeader_DarkMode() {
+        let view = HStack(spacing: 0) {
+            Text("Exercise")
+                .frame(width: 200, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Sets")
+                .frame(width: 60, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Reps")
+                .frame(width: 80, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Weight")
+                .frame(width: 80, alignment: .center)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Text("Notes")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+        .darkModeTest()
+
+        verifyViewRenders(view, named: "WorkoutGridHeader_Dark")
+    }
+
+    // MARK: - Workout Components Gallery
+
+    func testWorkoutComponentsGallery_LightMode() {
+        let view = ScrollView {
+            VStack(spacing: 16) {
+                // Set rows in various states
+                OptimisticSetRow(
+                    setNumber: 1,
+                    reps: .constant(10),
+                    weight: .constant(135),
+                    isCompleted: .constant(true),
+                    loadUnit: "lbs",
+                    targetReps: 10,
+                    targetWeight: 135,
+                    onComplete: {}
+                )
+
+                OptimisticSetRow(
+                    setNumber: 2,
+                    reps: .constant(10),
+                    weight: .constant(135),
+                    isCompleted: .constant(false),
+                    loadUnit: "lbs",
+                    targetReps: 10,
+                    targetWeight: 135,
+                    onComplete: {}
+                )
+            }
+            .frame(width: 350)
+            .padding()
+        }
+        .lightModeTest()
+
+        verifyViewRenders(view, named: "WorkoutComponentsGallery_Light")
+    }
+
+    func testWorkoutComponentsGallery_DarkMode() {
+        let view = ScrollView {
+            VStack(spacing: 16) {
+                OptimisticSetRow(
+                    setNumber: 1,
+                    reps: .constant(10),
+                    weight: .constant(135),
+                    isCompleted: .constant(true),
+                    loadUnit: "lbs",
+                    targetReps: 10,
+                    targetWeight: 135,
+                    onComplete: {}
+                )
+
+                OptimisticSetRow(
+                    setNumber: 2,
+                    reps: .constant(10),
+                    weight: .constant(135),
+                    isCompleted: .constant(false),
+                    loadUnit: "lbs",
+                    targetReps: 10,
+                    targetWeight: 135,
+                    onComplete: {}
+                )
+            }
+            .frame(width: 350)
+            .padding()
+        }
+        .darkModeTest()
+
+        verifyViewRenders(view, named: "WorkoutComponentsGallery_Dark")
+    }
 }
 
 // MARK: - Mock ViewModels for Testing

@@ -2,8 +2,9 @@
 //  SchedulingServiceTests.swift
 //  PTPerformanceTests
 //
-//  Build 346 - Unit tests for SchedulingService
-//  Tests scheduling logic, error handling, and date calculations
+//  Build 346 - Comprehensive unit tests for SchedulingService
+//  Tests session scheduling, calendar integration, reminder creation,
+//  reschedule handling, and conflict detection
 //
 
 import XCTest
@@ -226,9 +227,9 @@ final class SchedulingErrorTests: XCTestCase {
     }
 }
 
-// MARK: - ScheduledSession Model Tests
+// MARK: - ScheduledSession Model Tests (Scheduling Service)
 
-final class ScheduledSessionModelTests: XCTestCase {
+final class SchedulingServiceSessionModelTests: XCTestCase {
 
     // MARK: - Sample Data Tests
 
@@ -477,9 +478,9 @@ final class ScheduledSessionModelTests: XCTestCase {
     }
 }
 
-// MARK: - ScheduleStatus Tests
+// MARK: - ScheduleStatus Tests (Scheduling Service)
 
-final class ScheduleStatusTests: XCTestCase {
+final class SchedulingServiceStatusTests: XCTestCase {
 
     func testAllStatuses() {
         let scheduled = ScheduledSession.ScheduleStatus.scheduled
@@ -591,5 +592,702 @@ final class ReschedulePayloadTests: XCTestCase {
         let reminderSent = false
 
         XCTAssertFalse(reminderSent)
+    }
+}
+
+// MARK: - Calendar Integration Tests
+
+final class CalendarIntegrationTests: XCTestCase {
+
+    func testCalendarIntegration_WeekdayNames() {
+        // Given
+        let calendar = Calendar.current
+        let weekdays = calendar.weekdaySymbols
+
+        // Then
+        XCTAssertEqual(weekdays.count, 7)
+        XCTAssertEqual(weekdays[0], "Sunday")
+        XCTAssertEqual(weekdays[1], "Monday")
+        XCTAssertEqual(weekdays[6], "Saturday")
+    }
+
+    func testCalendarIntegration_ShortWeekdayNames() {
+        // Given
+        let calendar = Calendar.current
+        let shortWeekdays = calendar.shortWeekdaySymbols
+
+        // Then
+        XCTAssertEqual(shortWeekdays.count, 7)
+        XCTAssertEqual(shortWeekdays[0], "Sun")
+        XCTAssertEqual(shortWeekdays[1], "Mon")
+    }
+
+    func testCalendarIntegration_NextOccurrenceOfDay() {
+        // Given - Looking for next Monday
+        let calendar = Calendar.current
+        let today = Date()
+
+        // When
+        var nextMonday = today
+        while calendar.component(.weekday, from: nextMonday) != 2 { // 2 = Monday
+            nextMonday = calendar.date(byAdding: .day, value: 1, to: nextMonday)!
+        }
+
+        // Then
+        XCTAssertEqual(calendar.component(.weekday, from: nextMonday), 2)
+    }
+
+    func testCalendarIntegration_WeekOfYear() {
+        // Given
+        let calendar = Calendar.current
+
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 1
+        components.day = 15
+        let date = calendar.date(from: components)!
+
+        // When
+        let weekOfYear = calendar.component(.weekOfYear, from: date)
+
+        // Then - Should be week 3 of 2024
+        XCTAssertEqual(weekOfYear, 3)
+    }
+
+    func testCalendarIntegration_DaysInMonth() {
+        // Given
+        let calendar = Calendar.current
+
+        // February 2024 (leap year)
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 2
+        components.day = 1
+        let february = calendar.date(from: components)!
+
+        // When
+        let range = calendar.range(of: .day, in: .month, for: february)!
+
+        // Then - February 2024 should have 29 days
+        XCTAssertEqual(range.count, 29)
+    }
+
+    func testCalendarIntegration_NonLeapYear() {
+        // Given
+        let calendar = Calendar.current
+
+        // February 2023 (non-leap year)
+        var components = DateComponents()
+        components.year = 2023
+        components.month = 2
+        components.day = 1
+        let february = calendar.date(from: components)!
+
+        // When
+        let range = calendar.range(of: .day, in: .month, for: february)!
+
+        // Then - February 2023 should have 28 days
+        XCTAssertEqual(range.count, 28)
+    }
+}
+
+// MARK: - Reminder Creation Tests
+
+final class ReminderCreationTests: XCTestCase {
+
+    func testReminderCreation_CalculatesCorrectTime() {
+        // Given - Session at 9:00 AM with 30 minute reminder
+        let calendar = Calendar.current
+        var sessionComponents = DateComponents()
+        sessionComponents.year = 2024
+        sessionComponents.month = 6
+        sessionComponents.day = 15
+        sessionComponents.hour = 9
+        sessionComponents.minute = 0
+        let sessionTime = calendar.date(from: sessionComponents)!
+
+        let reminderMinutesBefore = 30
+
+        // When
+        let reminderTime = calendar.date(
+            byAdding: .minute,
+            value: -reminderMinutesBefore,
+            to: sessionTime
+        )!
+
+        // Then - Reminder at 8:30 AM
+        let hour = calendar.component(.hour, from: reminderTime)
+        let minute = calendar.component(.minute, from: reminderTime)
+        XCTAssertEqual(hour, 8)
+        XCTAssertEqual(minute, 30)
+    }
+
+    func testReminderCreation_CrossesDayBoundary() {
+        // Given - Session at 12:15 AM with 30 minute reminder
+        let calendar = Calendar.current
+        var sessionComponents = DateComponents()
+        sessionComponents.year = 2024
+        sessionComponents.month = 6
+        sessionComponents.day = 15
+        sessionComponents.hour = 0
+        sessionComponents.minute = 15
+        let sessionTime = calendar.date(from: sessionComponents)!
+
+        let reminderMinutesBefore = 30
+
+        // When
+        let reminderTime = calendar.date(
+            byAdding: .minute,
+            value: -reminderMinutesBefore,
+            to: sessionTime
+        )!
+
+        // Then - Reminder at 11:45 PM on June 14
+        let day = calendar.component(.day, from: reminderTime)
+        let hour = calendar.component(.hour, from: reminderTime)
+        let minute = calendar.component(.minute, from: reminderTime)
+        XCTAssertEqual(day, 14)
+        XCTAssertEqual(hour, 23)
+        XCTAssertEqual(minute, 45)
+    }
+
+    func testReminderCreation_LongLeadTime() {
+        // Given - Session at 2:00 PM with 24-hour reminder
+        let calendar = Calendar.current
+        var sessionComponents = DateComponents()
+        sessionComponents.year = 2024
+        sessionComponents.month = 6
+        sessionComponents.day = 15
+        sessionComponents.hour = 14
+        sessionComponents.minute = 0
+        let sessionTime = calendar.date(from: sessionComponents)!
+
+        let reminderMinutesBefore = 24 * 60 // 24 hours
+
+        // When
+        let reminderTime = calendar.date(
+            byAdding: .minute,
+            value: -reminderMinutesBefore,
+            to: sessionTime
+        )!
+
+        // Then - Reminder at 2:00 PM on June 14
+        let day = calendar.component(.day, from: reminderTime)
+        let hour = calendar.component(.hour, from: reminderTime)
+        XCTAssertEqual(day, 14)
+        XCTAssertEqual(hour, 14)
+    }
+
+    func testReminderCreation_ZeroMinutes() {
+        // Given - Session at exact time (no lead time)
+        let calendar = Calendar.current
+        var sessionComponents = DateComponents()
+        sessionComponents.year = 2024
+        sessionComponents.month = 6
+        sessionComponents.day = 15
+        sessionComponents.hour = 10
+        sessionComponents.minute = 0
+        let sessionTime = calendar.date(from: sessionComponents)!
+
+        let reminderMinutesBefore = 0
+
+        // When
+        let reminderTime = calendar.date(
+            byAdding: .minute,
+            value: -reminderMinutesBefore,
+            to: sessionTime
+        )!
+
+        // Then - Reminder at session time
+        XCTAssertEqual(sessionTime, reminderTime)
+    }
+}
+
+// MARK: - Reschedule Handling Tests
+
+final class RescheduleHandlingTests: XCTestCase {
+
+    func testReschedule_SameDay_DifferentTime() {
+        // Given - Original at 9 AM, rescheduled to 2 PM same day
+        let calendar = Calendar.current
+        var originalComponents = DateComponents()
+        originalComponents.year = 2024
+        originalComponents.month = 6
+        originalComponents.day = 15
+        originalComponents.hour = 9
+        originalComponents.minute = 0
+
+        var newComponents = originalComponents
+        newComponents.hour = 14
+
+        let originalTime = calendar.date(from: originalComponents)!
+        let newTime = calendar.date(from: newComponents)!
+
+        // Then
+        let originalDay = calendar.component(.day, from: originalTime)
+        let newDay = calendar.component(.day, from: newTime)
+        XCTAssertEqual(originalDay, newDay, "Should be same day")
+
+        let originalHour = calendar.component(.hour, from: originalTime)
+        let newHour = calendar.component(.hour, from: newTime)
+        XCTAssertNotEqual(originalHour, newHour, "Should be different time")
+    }
+
+    func testReschedule_DifferentDay() {
+        // Given - Rescheduled from Monday to Wednesday
+        let calendar = Calendar.current
+        var originalComponents = DateComponents()
+        originalComponents.year = 2024
+        originalComponents.month = 6
+        originalComponents.day = 10 // Monday
+        originalComponents.hour = 9
+
+        var newComponents = originalComponents
+        newComponents.day = 12 // Wednesday
+
+        let originalDate = calendar.date(from: originalComponents)!
+        let newDate = calendar.date(from: newComponents)!
+
+        // Then
+        let daysDiff = calendar.dateComponents([.day], from: originalDate, to: newDate).day!
+        XCTAssertEqual(daysDiff, 2)
+    }
+
+    func testReschedule_DifferentWeek() {
+        // Given
+        let calendar = Calendar.current
+        var originalComponents = DateComponents()
+        originalComponents.year = 2024
+        originalComponents.month = 6
+        originalComponents.day = 10
+
+        var newComponents = originalComponents
+        newComponents.day = 17 // Next week
+
+        let originalDate = calendar.date(from: originalComponents)!
+        let newDate = calendar.date(from: newComponents)!
+
+        // Then
+        let weeksDiff = calendar.dateComponents([.weekOfYear], from: originalDate, to: newDate).weekOfYear!
+        XCTAssertEqual(weeksDiff, 1)
+    }
+
+    func testReschedule_StatusTransition() {
+        // Given
+        let originalStatus = ScheduledSession.ScheduleStatus.scheduled
+        let newStatus = ScheduledSession.ScheduleStatus.rescheduled
+
+        // Then
+        XCTAssertEqual(originalStatus.rawValue, "scheduled")
+        XCTAssertEqual(newStatus.rawValue, "rescheduled")
+        XCTAssertNotEqual(originalStatus, newStatus)
+    }
+
+    func testReschedule_ReminderReset() {
+        // When a session is rescheduled, the reminder should be reset
+        let originalReminderSent = true
+        let afterRescheduleReminderSent = false
+
+        XCTAssertTrue(originalReminderSent)
+        XCTAssertFalse(afterRescheduleReminderSent, "Reminder should be reset after reschedule")
+    }
+}
+
+// MARK: - Conflict Detection Tests (Scheduling Service)
+
+final class SchedulingConflictTests: XCTestCase {
+
+    func testConflict_ExactSameTime() {
+        // Given - Two sessions at exactly the same time
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 15
+        components.hour = 10
+        components.minute = 0
+        let time = calendar.date(from: components)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: time, duration: 60),
+            session2: (date: time, duration: 60)
+        )
+        XCTAssertTrue(hasConflict)
+    }
+
+    func testConflict_OverlappingTimes() {
+        // Given - Session 1: 10:00-11:00, Session 2: 10:30-11:30
+        let calendar = Calendar.current
+
+        var comp1 = DateComponents()
+        comp1.year = 2024
+        comp1.month = 6
+        comp1.day = 15
+        comp1.hour = 10
+        let time1 = calendar.date(from: comp1)!
+
+        var comp2 = comp1
+        comp2.minute = 30
+        let time2 = calendar.date(from: comp2)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: time1, duration: 60),
+            session2: (date: time2, duration: 60)
+        )
+        XCTAssertTrue(hasConflict)
+    }
+
+    func testConflict_BackToBack_NoConflict() {
+        // Given - Session 1: 10:00-11:00, Session 2: 11:00-12:00
+        let calendar = Calendar.current
+
+        var comp1 = DateComponents()
+        comp1.year = 2024
+        comp1.month = 6
+        comp1.day = 15
+        comp1.hour = 10
+        let time1 = calendar.date(from: comp1)!
+
+        var comp2 = comp1
+        comp2.hour = 11
+        let time2 = calendar.date(from: comp2)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: time1, duration: 60),
+            session2: (date: time2, duration: 60)
+        )
+        XCTAssertFalse(hasConflict, "Back-to-back sessions should not conflict")
+    }
+
+    func testConflict_SeparatedInTime_NoConflict() {
+        // Given - Session 1: 9:00-10:00, Session 2: 2:00-3:00 PM
+        let calendar = Calendar.current
+
+        var comp1 = DateComponents()
+        comp1.year = 2024
+        comp1.month = 6
+        comp1.day = 15
+        comp1.hour = 9
+        let time1 = calendar.date(from: comp1)!
+
+        var comp2 = comp1
+        comp2.hour = 14
+        let time2 = calendar.date(from: comp2)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: time1, duration: 60),
+            session2: (date: time2, duration: 60)
+        )
+        XCTAssertFalse(hasConflict)
+    }
+
+    func testConflict_DifferentDays_NoConflict() {
+        // Given - Same time but different days
+        let calendar = Calendar.current
+
+        var comp1 = DateComponents()
+        comp1.year = 2024
+        comp1.month = 6
+        comp1.day = 15
+        comp1.hour = 10
+        let time1 = calendar.date(from: comp1)!
+
+        var comp2 = comp1
+        comp2.day = 16
+        let time2 = calendar.date(from: comp2)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: time1, duration: 60),
+            session2: (date: time2, duration: 60)
+        )
+        XCTAssertFalse(hasConflict, "Sessions on different days should not conflict")
+    }
+
+    func testConflict_LongSessionOverlapsMultiple() {
+        // Given - 3-hour session that would overlap with two 1-hour sessions
+        let calendar = Calendar.current
+
+        var comp1 = DateComponents()
+        comp1.year = 2024
+        comp1.month = 6
+        comp1.day = 15
+        comp1.hour = 9
+        let longSession = calendar.date(from: comp1)!
+
+        var comp2 = comp1
+        comp2.hour = 10
+        let midSession = calendar.date(from: comp2)!
+
+        // When/Then
+        let hasConflict = doSessionsConflict(
+            session1: (date: longSession, duration: 180), // 3 hours
+            session2: (date: midSession, duration: 60)
+        )
+        XCTAssertTrue(hasConflict)
+    }
+
+    // MARK: - Helpers
+
+    private func doSessionsConflict(
+        session1: (date: Date, duration: Int),
+        session2: (date: Date, duration: Int)
+    ) -> Bool {
+        let end1 = Calendar.current.date(
+            byAdding: .minute,
+            value: session1.duration,
+            to: session1.date
+        )!
+        let end2 = Calendar.current.date(
+            byAdding: .minute,
+            value: session2.duration,
+            to: session2.date
+        )!
+
+        return session1.date < end2 && session2.date < end1
+    }
+}
+
+// MARK: - Error Recovery Suggestion Tests
+
+final class SchedulingErrorRecoverySuggestionTests: XCTestCase {
+
+    func testFetchFailed_RecoverySuggestion() {
+        let error = SchedulingError.fetchFailed(NSError(domain: "test", code: 1))
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "We couldn't load your scheduled sessions. Please check your connection and try again."
+        )
+    }
+
+    func testScheduleFailed_RecoverySuggestion() {
+        let error = SchedulingError.scheduleFailed(NSError(domain: "test", code: 1))
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "We couldn't schedule this session right now. Please try again in a moment."
+        )
+    }
+
+    func testRescheduleFailed_RecoverySuggestion() {
+        let error = SchedulingError.rescheduleFailed(NSError(domain: "test", code: 1))
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "We couldn't move this session to the new time. Please try again."
+        )
+    }
+
+    func testCancelFailed_RecoverySuggestion() {
+        let error = SchedulingError.cancelFailed(NSError(domain: "test", code: 1))
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "We couldn't cancel this session right now. Please try again."
+        )
+    }
+
+    func testCompleteFailed_RecoverySuggestion() {
+        let error = SchedulingError.completeFailed(NSError(domain: "test", code: 1))
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "We couldn't mark this session as complete. Don't worry - your progress is saved."
+        )
+    }
+
+    func testSessionNotFound_RecoverySuggestion() {
+        let error = SchedulingError.sessionNotFound
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "This session may have been removed or rescheduled. Please refresh your schedule."
+        )
+    }
+
+    func testInvalidSession_RecoverySuggestion() {
+        let error = SchedulingError.invalidSession
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "This session isn't part of your current program. Please contact your therapist if you think this is a mistake."
+        )
+    }
+
+    func testDuplicateSchedule_RecoverySuggestion() {
+        let error = SchedulingError.duplicateSchedule
+        XCTAssertEqual(
+            error.recoverySuggestion,
+            "You already have this session scheduled for this date. Choose a different date to continue."
+        )
+    }
+}
+
+// MARK: - Retry Logic Tests
+
+final class SchedulingErrorRetryTests: XCTestCase {
+
+    func testShouldRetry_NetworkErrors() {
+        // Network-related errors should be retryable
+        let fetchError = SchedulingError.fetchFailed(NSError(domain: "test", code: 1))
+        let scheduleError = SchedulingError.scheduleFailed(NSError(domain: "test", code: 1))
+        let rescheduleError = SchedulingError.rescheduleFailed(NSError(domain: "test", code: 1))
+        let cancelError = SchedulingError.cancelFailed(NSError(domain: "test", code: 1))
+        let completeError = SchedulingError.completeFailed(NSError(domain: "test", code: 1))
+        let updateError = SchedulingError.updateFailed(NSError(domain: "test", code: 1))
+        let deleteError = SchedulingError.deleteFailed(NSError(domain: "test", code: 1))
+
+        XCTAssertTrue(fetchError.shouldRetry)
+        XCTAssertTrue(scheduleError.shouldRetry)
+        XCTAssertTrue(rescheduleError.shouldRetry)
+        XCTAssertTrue(cancelError.shouldRetry)
+        XCTAssertTrue(completeError.shouldRetry)
+        XCTAssertTrue(updateError.shouldRetry)
+        XCTAssertTrue(deleteError.shouldRetry)
+    }
+
+    func testShouldNotRetry_LogicalErrors() {
+        // Logical errors should not be retried
+        let sessionNotFound = SchedulingError.sessionNotFound
+        let invalidSession = SchedulingError.invalidSession
+        let duplicateSchedule = SchedulingError.duplicateSchedule
+
+        XCTAssertFalse(sessionNotFound.shouldRetry)
+        XCTAssertFalse(invalidSession.shouldRetry)
+        XCTAssertFalse(duplicateSchedule.shouldRetry)
+    }
+}
+
+// MARK: - Time Formatting Tests
+
+final class SchedulingTimeFormattingTests: XCTestCase {
+
+    func testTimeFormatting_Morning() {
+        // Given
+        var components = DateComponents()
+        components.hour = 9
+        components.minute = 30
+        let time = Calendar.current.date(from: components)!
+
+        // When
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let formatted = formatter.string(from: time)
+
+        // Then
+        XCTAssertTrue(formatted.contains("9"))
+        XCTAssertTrue(formatted.contains("30"))
+    }
+
+    func testTimeFormatting_Afternoon() {
+        // Given
+        var components = DateComponents()
+        components.hour = 14
+        components.minute = 0
+        let time = Calendar.current.date(from: components)!
+
+        // When
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let formatted = formatter.string(from: time)
+
+        // Then - Should show 2:00 PM
+        XCTAssertTrue(formatted.contains("2") && formatted.contains("00"))
+    }
+
+    func testTimeFormatting_Midnight() {
+        // Given
+        var components = DateComponents()
+        components.hour = 0
+        components.minute = 0
+        let time = Calendar.current.date(from: components)!
+
+        // When
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let formatted = formatter.string(from: time)
+
+        // Then - Should show 12:00 AM
+        XCTAssertTrue(formatted.contains("12"))
+    }
+
+    func testDateFormatting_MediumStyle() {
+        // Given
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 15
+        let date = Calendar.current.date(from: components)!
+
+        // When
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        let formatted = formatter.string(from: date)
+
+        // Then
+        XCTAssertTrue(formatted.contains("Jun") || formatted.contains("June"))
+        XCTAssertTrue(formatted.contains("15"))
+        XCTAssertTrue(formatted.contains("2024"))
+    }
+}
+
+// MARK: - Weekday Session Tests
+
+final class WeekdaySessionTests: XCTestCase {
+
+    func testWeekday_MondayWednessFriday_Pattern() {
+        // Given - MWF schedule
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 3 // June 3, 2024 is Monday
+
+        let monday = calendar.date(from: components)!
+        components.day = 5
+        let wednesday = calendar.date(from: components)!
+        components.day = 7
+        let friday = calendar.date(from: components)!
+
+        // Then
+        XCTAssertEqual(calendar.component(.weekday, from: monday), 2) // Monday
+        XCTAssertEqual(calendar.component(.weekday, from: wednesday), 4) // Wednesday
+        XCTAssertEqual(calendar.component(.weekday, from: friday), 6) // Friday
+    }
+
+    func testWeekday_TuesdayThursday_Pattern() {
+        // Given - TuTh schedule
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 4 // June 4, 2024 is Tuesday
+
+        let tuesday = calendar.date(from: components)!
+        components.day = 6
+        let thursday = calendar.date(from: components)!
+
+        // Then
+        XCTAssertEqual(calendar.component(.weekday, from: tuesday), 3) // Tuesday
+        XCTAssertEqual(calendar.component(.weekday, from: thursday), 5) // Thursday
+    }
+
+    func testWeekday_WeekendOnly_Pattern() {
+        // Given - Weekend schedule
+        let calendar = Calendar.current
+        var components = DateComponents()
+        components.year = 2024
+        components.month = 6
+        components.day = 1 // June 1, 2024 is Saturday
+
+        let saturday = calendar.date(from: components)!
+        components.day = 2
+        let sunday = calendar.date(from: components)!
+
+        // Then
+        XCTAssertEqual(calendar.component(.weekday, from: saturday), 7) // Saturday
+        XCTAssertEqual(calendar.component(.weekday, from: sunday), 1) // Sunday
     }
 }

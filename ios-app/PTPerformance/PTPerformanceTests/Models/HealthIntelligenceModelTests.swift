@@ -4,6 +4,7 @@
 //
 //  Comprehensive unit tests for Health Intelligence model types
 //  Tests LabAnalysis, ParsedLabResult, RecoveryImpactAnalysis, and SupplementRecommendation
+//  Includes edge cases for empty results, invalid values, and missing reference ranges
 //
 
 import XCTest
@@ -546,5 +547,449 @@ final class LabAnalysisErrorResponseTests: XCTestCase {
 
         XCTAssertEqual(response.error, "Network error")
         XCTAssertNil(response.medicalDisclaimer)
+    }
+}
+
+// MARK: - HealthScore Threshold Tests
+
+final class HealthScoreThresholdTests: XCTestCase {
+
+    // MARK: - Score Boundary Tests
+
+    func testHealthScoreColor_ExactBoundary80() {
+        let analysis = createAnalysisWithScore(80)
+        XCTAssertEqual(analysis.healthScoreColor, "green")
+    }
+
+    func testHealthScoreColor_JustBelow80() {
+        let analysis = createAnalysisWithScore(79)
+        XCTAssertEqual(analysis.healthScoreColor, "yellow")
+    }
+
+    func testHealthScoreColor_ExactBoundary60() {
+        let analysis = createAnalysisWithScore(60)
+        XCTAssertEqual(analysis.healthScoreColor, "yellow")
+    }
+
+    func testHealthScoreColor_JustBelow60() {
+        let analysis = createAnalysisWithScore(59)
+        XCTAssertEqual(analysis.healthScoreColor, "red")
+    }
+
+    func testHealthScoreColor_MinimumValue() {
+        let analysis = createAnalysisWithScore(0)
+        XCTAssertEqual(analysis.healthScoreColor, "red")
+    }
+
+    func testHealthScoreColor_MaximumValue() {
+        let analysis = createAnalysisWithScore(100)
+        XCTAssertEqual(analysis.healthScoreColor, "green")
+    }
+
+    func testHealthScoreColor_NegativeValue() {
+        // Edge case: negative scores should be handled
+        let analysis = createAnalysisWithScore(-10)
+        XCTAssertEqual(analysis.healthScoreColor, "red")
+    }
+
+    // MARK: - Score Text Boundary Tests
+
+    func testHealthScoreText_ExactBoundary90() {
+        XCTAssertEqual(createAnalysisWithScore(90).healthScoreText, "Excellent")
+    }
+
+    func testHealthScoreText_ExactBoundary89() {
+        XCTAssertEqual(createAnalysisWithScore(89).healthScoreText, "Very Good")
+    }
+
+    func testHealthScoreText_ExactBoundary80() {
+        XCTAssertEqual(createAnalysisWithScore(80).healthScoreText, "Very Good")
+    }
+
+    func testHealthScoreText_ExactBoundary79() {
+        XCTAssertEqual(createAnalysisWithScore(79).healthScoreText, "Good")
+    }
+
+    func testHealthScoreText_ExactBoundary70() {
+        XCTAssertEqual(createAnalysisWithScore(70).healthScoreText, "Good")
+    }
+
+    func testHealthScoreText_ExactBoundary69() {
+        XCTAssertEqual(createAnalysisWithScore(69).healthScoreText, "Fair")
+    }
+
+    func testHealthScoreText_ExactBoundary60() {
+        XCTAssertEqual(createAnalysisWithScore(60).healthScoreText, "Fair")
+    }
+
+    func testHealthScoreText_ExactBoundary59() {
+        XCTAssertEqual(createAnalysisWithScore(59).healthScoreText, "Needs Attention")
+    }
+
+    // MARK: - Helper Methods
+
+    private func createAnalysisWithScore(_ score: Int) -> LabAnalysis {
+        LabAnalysis(
+            analysisId: "test",
+            analysisText: "Test",
+            recommendations: [],
+            biomarkerAnalyses: [],
+            trainingCorrelations: [],
+            sleepCorrelations: [],
+            overallHealthScore: score,
+            priorityActions: [],
+            medicalDisclaimer: "Disclaimer",
+            cached: false
+        )
+    }
+}
+
+// MARK: - LabResult Parsing Edge Cases
+
+final class LabResultParsingEdgeCasesTests: XCTestCase {
+
+    // MARK: - Empty Results Tests
+
+    func testLabAnalysis_EmptyBiomarkerAnalyses() {
+        let analysis = LabAnalysis(
+            analysisId: "empty-test",
+            analysisText: "No biomarkers available",
+            recommendations: [],
+            biomarkerAnalyses: [],
+            trainingCorrelations: [],
+            sleepCorrelations: [],
+            overallHealthScore: 50,
+            priorityActions: [],
+            medicalDisclaimer: "Disclaimer",
+            cached: false
+        )
+
+        XCTAssertTrue(analysis.biomarkerAnalyses.isEmpty)
+        XCTAssertTrue(analysis.concerningBiomarkers.isEmpty)
+        XCTAssertTrue(analysis.optimalBiomarkers.isEmpty)
+    }
+
+    func testLabAnalysis_OnlyOptimalBiomarkers() {
+        let biomarkers = [
+            BiomarkerAnalysis(
+                biomarkerType: "vitamin_d",
+                name: "Vitamin D",
+                value: 50.0,
+                unit: "ng/mL",
+                status: .optimal,
+                interpretation: "Perfect"
+            ),
+            BiomarkerAnalysis(
+                biomarkerType: "b12",
+                name: "Vitamin B12",
+                value: 500.0,
+                unit: "pg/mL",
+                status: .optimal,
+                interpretation: "Perfect"
+            )
+        ]
+
+        let analysis = LabAnalysis(
+            analysisId: "optimal-test",
+            analysisText: "All optimal",
+            recommendations: [],
+            biomarkerAnalyses: biomarkers,
+            trainingCorrelations: [],
+            sleepCorrelations: [],
+            overallHealthScore: 100,
+            priorityActions: [],
+            medicalDisclaimer: "Disclaimer",
+            cached: false
+        )
+
+        XCTAssertEqual(analysis.optimalBiomarkers.count, 2)
+        XCTAssertTrue(analysis.concerningBiomarkers.isEmpty)
+    }
+
+    func testLabAnalysis_OnlyConcerningBiomarkers() {
+        let biomarkers = [
+            BiomarkerAnalysis(
+                biomarkerType: "iron",
+                name: "Iron",
+                value: 20.0,
+                unit: "ug/dL",
+                status: .low,
+                interpretation: "Below optimal"
+            ),
+            BiomarkerAnalysis(
+                biomarkerType: "glucose",
+                name: "Glucose",
+                value: 150.0,
+                unit: "mg/dL",
+                status: .high,
+                interpretation: "Above optimal"
+            ),
+            BiomarkerAnalysis(
+                biomarkerType: "crp",
+                name: "C-Reactive Protein",
+                value: 10.0,
+                unit: "mg/L",
+                status: .critical,
+                interpretation: "Needs immediate attention"
+            )
+        ]
+
+        let analysis = LabAnalysis(
+            analysisId: "concerning-test",
+            analysisText: "Multiple concerns",
+            recommendations: [],
+            biomarkerAnalyses: biomarkers,
+            trainingCorrelations: [],
+            sleepCorrelations: [],
+            overallHealthScore: 30,
+            priorityActions: [],
+            medicalDisclaimer: "Disclaimer",
+            cached: false
+        )
+
+        XCTAssertEqual(analysis.concerningBiomarkers.count, 3)
+        XCTAssertTrue(analysis.optimalBiomarkers.isEmpty)
+    }
+
+    // MARK: - Invalid Value Tests
+
+    func testBiomarkerAnalysis_ZeroValue() throws {
+        let json = """
+        {
+            "biomarker_type": "test",
+            "name": "Test Marker",
+            "value": 0.0,
+            "unit": "units",
+            "status": "low",
+            "interpretation": "No value detected"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(BiomarkerAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.value, 0.0)
+        XCTAssertEqual(analysis.status, .low)
+    }
+
+    func testBiomarkerAnalysis_NegativeValue() throws {
+        let json = """
+        {
+            "biomarker_type": "temperature_delta",
+            "name": "Temperature Change",
+            "value": -2.5,
+            "unit": "degrees",
+            "status": "normal",
+            "interpretation": "Normal variation"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(BiomarkerAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.value, -2.5)
+    }
+
+    func testBiomarkerAnalysis_VeryLargeValue() throws {
+        let json = """
+        {
+            "biomarker_type": "platelets",
+            "name": "Platelet Count",
+            "value": 450000.0,
+            "unit": "cells/uL",
+            "status": "normal",
+            "interpretation": "Within range"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(BiomarkerAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.value, 450000.0)
+    }
+
+    func testBiomarkerAnalysis_VerySmallDecimalValue() throws {
+        let json = """
+        {
+            "biomarker_type": "tsh",
+            "name": "TSH",
+            "value": 0.0001,
+            "unit": "mIU/L",
+            "status": "low",
+            "interpretation": "Below range"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(BiomarkerAnalysis.self, from: json)
+
+        XCTAssertEqual(analysis.value, 0.0001, accuracy: 0.00001)
+    }
+
+    // MARK: - Missing Reference Ranges Tests
+
+    func testBiomarkerTrendPoint_NoRanges_DefaultsToNormal() {
+        let point = BiomarkerTrendPoint(
+            date: Date(),
+            value: 100.0,
+            biomarkerType: "custom_marker",
+            unit: "units",
+            optimalLow: nil,
+            optimalHigh: nil,
+            normalLow: nil,
+            normalHigh: nil
+        )
+
+        XCTAssertEqual(point.status, .normal)
+    }
+
+    func testBiomarkerTrendPoint_OnlyOptimalRange() {
+        let point = BiomarkerTrendPoint(
+            date: Date(),
+            value: 50.0,
+            biomarkerType: "test",
+            unit: "units",
+            optimalLow: 40.0,
+            optimalHigh: 60.0,
+            normalLow: nil,
+            normalHigh: nil
+        )
+
+        XCTAssertEqual(point.status, .optimal)
+    }
+
+    func testBiomarkerTrendPoint_OnlyNormalRange() {
+        let point = BiomarkerTrendPoint(
+            date: Date(),
+            value: 50.0,
+            biomarkerType: "test",
+            unit: "units",
+            optimalLow: nil,
+            optimalHigh: nil,
+            normalLow: 30.0,
+            normalHigh: 100.0
+        )
+
+        // Value is within normal but no optimal defined
+        XCTAssertEqual(point.status, .normal)
+    }
+
+    func testBiomarkerTrendPoint_PartialOptimalRange_LowOnly() {
+        let point = BiomarkerTrendPoint(
+            date: Date(),
+            value: 50.0,
+            biomarkerType: "test",
+            unit: "units",
+            optimalLow: 40.0,
+            optimalHigh: nil,
+            normalLow: 30.0,
+            normalHigh: 100.0
+        )
+
+        // With partial optimal range, should fallback to normal check
+        XCTAssertEqual(point.status, .normal)
+    }
+
+    // MARK: - Partial Data Tests
+
+    func testLabAnalysis_MissingOptionalCorrelations() throws {
+        let json = """
+        {
+            "analysis_id": "partial-test",
+            "analysis_text": "Partial data",
+            "recommendations": ["Recommendation 1"],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 75,
+            "priority_actions": [],
+            "medical_disclaimer": "Disclaimer",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.trainingCorrelations.isEmpty)
+        XCTAssertTrue(analysis.sleepCorrelations.isEmpty)
+        XCTAssertEqual(analysis.recommendations.count, 1)
+    }
+
+    // MARK: - Special Characters in Text
+
+    func testLabAnalysis_SpecialCharactersInText() throws {
+        let json = """
+        {
+            "analysis_id": "special-chars",
+            "analysis_text": "Patient's vitamin D level is <30 ng/mL & needs attention. Consider 5000 IU/day.",
+            "recommendations": ["Take vitamin D3 >= 2000 IU/day", "Retest in 3-6 months"],
+            "biomarker_analyses": [],
+            "training_correlations": [],
+            "sleep_correlations": [],
+            "overall_health_score": 65,
+            "priority_actions": ["Schedule follow-up"],
+            "medical_disclaimer": "This is not medical advice. Consult your doctor.",
+            "cached": false
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        let analysis = try decoder.decode(LabAnalysis.self, from: json)
+
+        XCTAssertTrue(analysis.analysisText.contains("<"))
+        XCTAssertTrue(analysis.analysisText.contains("&"))
+        XCTAssertTrue(analysis.recommendations.first?.contains(">=") ?? false)
+    }
+
+    func testTrainingCorrelation_UnicodeCharacters() {
+        let correlation = TrainingCorrelation(
+            factor: "High-intensity training 🏋️",
+            relationship: "May affect cortisol levels",
+            recommendation: "Monitor recovery metrics"
+        )
+
+        XCTAssertTrue(correlation.factor.contains("🏋️"))
+    }
+}
+
+// MARK: - LabResult Categorization Tests
+
+final class LabResultCategorizationTests: XCTestCase {
+
+    func testBiomarkerStatus_AllStatusTypes() {
+        let statuses: [BiomarkerStatus] = [.optimal, .normal, .low, .high, .critical]
+
+        for status in statuses {
+            XCTAssertFalse(status.displayText.isEmpty)
+            XCTAssertFalse(status.color.isEmpty)
+            XCTAssertFalse(status.iconName.isEmpty)
+        }
+    }
+
+    func testLabAnalysis_MixedStatusBiomarkers() {
+        let biomarkers = [
+            BiomarkerAnalysis(biomarkerType: "a", name: "A", value: 1, unit: "u", status: .optimal, interpretation: ""),
+            BiomarkerAnalysis(biomarkerType: "b", name: "B", value: 2, unit: "u", status: .normal, interpretation: ""),
+            BiomarkerAnalysis(biomarkerType: "c", name: "C", value: 3, unit: "u", status: .low, interpretation: ""),
+            BiomarkerAnalysis(biomarkerType: "d", name: "D", value: 4, unit: "u", status: .high, interpretation: ""),
+            BiomarkerAnalysis(biomarkerType: "e", name: "E", value: 5, unit: "u", status: .critical, interpretation: "")
+        ]
+
+        let analysis = LabAnalysis(
+            analysisId: "mixed",
+            analysisText: "Mixed",
+            recommendations: [],
+            biomarkerAnalyses: biomarkers,
+            trainingCorrelations: [],
+            sleepCorrelations: [],
+            overallHealthScore: 60,
+            priorityActions: [],
+            medicalDisclaimer: "",
+            cached: false
+        )
+
+        XCTAssertEqual(analysis.optimalBiomarkers.count, 1)
+        XCTAssertEqual(analysis.concerningBiomarkers.count, 3) // low, high, critical
     }
 }

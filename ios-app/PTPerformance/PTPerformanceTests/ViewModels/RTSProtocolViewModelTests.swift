@@ -1554,3 +1554,934 @@ final class RTSComparisonOperatorViewModelTests: XCTestCase {
         XCTAssertEqual(RTSComparisonOperator.between.symbol, "between")
     }
 }
+
+// MARK: - Protocol Creation and Management Tests
+
+@MainActor
+final class RTSProtocolViewModelProtocolManagementTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Protocol List Management
+
+    func testAddingProtocolToList() {
+        let protocol1 = createProtocol(status: .active)
+        let protocol2 = createProtocol(status: .draft)
+
+        sut.protocols = [protocol1, protocol2]
+
+        XCTAssertEqual(sut.protocols.count, 2)
+    }
+
+    func testSettingCurrentProtocol() {
+        let protocol_ = createProtocol(status: .active)
+
+        sut.currentProtocol = protocol_
+
+        XCTAssertNotNil(sut.currentProtocol)
+        XCTAssertEqual(sut.currentProtocol?.id, protocol_.id)
+    }
+
+    func testProtocolFilteringByStatus() {
+        let active1 = createProtocol(status: .active)
+        let active2 = createProtocol(status: .active)
+        let draft = createProtocol(status: .draft)
+        let completed = createProtocol(status: .completed)
+        let discontinued = createProtocol(status: .discontinued)
+
+        sut.protocols = [active1, active2, draft, completed, discontinued]
+
+        XCTAssertEqual(sut.activeProtocols.count, 2)
+        XCTAssertEqual(sut.draftProtocols.count, 1)
+        XCTAssertEqual(sut.completedProtocols.count, 1)
+    }
+
+    // MARK: - Form State Management
+
+    func testFormStateUpdates() {
+        let sport = createSampleSport()
+
+        sut.selectedSport = sport
+        sut.injuryType = "ACL Reconstruction"
+        sut.injuryDate = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
+        sut.targetReturnDate = Calendar.current.date(byAdding: .month, value: 6, to: Date())!
+        sut.notes = "Test notes"
+
+        XCTAssertNotNil(sut.selectedSport)
+        XCTAssertEqual(sut.injuryType, "ACL Reconstruction")
+        XCTAssertFalse(sut.notes.isEmpty)
+    }
+
+    func testSurgeryDateIsOptional() {
+        sut.selectedSport = createSampleSport()
+        sut.injuryType = "ACL Tear"
+        sut.injuryDate = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
+        sut.targetReturnDate = Calendar.current.date(byAdding: .month, value: 6, to: Date())!
+        sut.surgeryDate = nil
+
+        XCTAssertNil(sut.surgeryDate)
+        XCTAssertTrue(sut.isFormValid)
+    }
+
+    func testSurgeryDateCanBeSet() {
+        sut.surgeryDate = Calendar.current.date(byAdding: .month, value: -2, to: Date())!
+
+        XCTAssertNotNil(sut.surgeryDate)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createProtocol(status: RTSProtocolStatus) -> RTSProtocol {
+        RTSProtocol(
+            patientId: UUID(),
+            therapistId: UUID(),
+            sportId: UUID(),
+            injuryType: "Test Injury",
+            injuryDate: Calendar.current.date(byAdding: .month, value: -3, to: Date())!,
+            targetReturnDate: Calendar.current.date(byAdding: .month, value: 6, to: Date())!,
+            status: status
+        )
+    }
+
+    private func createSampleSport() -> RTSSport {
+        RTSSport(
+            name: "Baseball",
+            category: .throwing,
+            defaultPhases: []
+        )
+    }
+}
+
+// MARK: - Phase Progression Logic Tests
+
+@MainActor
+final class RTSProtocolViewModelPhaseProgressionTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Phase State Transitions
+
+    func testPhaseProgression_PendingToActive() {
+        let protocolId = UUID()
+        let pendingPhase = createPhase(protocolId: protocolId, phaseNumber: 1, startedAt: nil, completedAt: nil)
+
+        sut.phases = [pendingPhase]
+        XCTAssertTrue(sut.pendingPhases.contains { $0.id == pendingPhase.id })
+
+        // Simulate starting the phase
+        var startedPhase = pendingPhase
+        startedPhase.startedAt = Date()
+        sut.phases = [startedPhase]
+
+        XCTAssertTrue(sut.activePhases.contains { $0.id == startedPhase.id })
+        XCTAssertTrue(sut.pendingPhases.isEmpty)
+    }
+
+    func testPhaseProgression_ActiveToCompleted() {
+        let protocolId = UUID()
+        let activePhase = createPhase(protocolId: protocolId, phaseNumber: 1, startedAt: Date(), completedAt: nil)
+
+        sut.phases = [activePhase]
+        XCTAssertTrue(sut.activePhases.contains { $0.id == activePhase.id })
+
+        // Simulate completing the phase
+        var completedPhase = activePhase
+        completedPhase.completedAt = Date()
+        sut.phases = [completedPhase]
+
+        XCTAssertTrue(sut.completedPhases.contains { $0.id == completedPhase.id })
+        XCTAssertTrue(sut.activePhases.isEmpty)
+    }
+
+    func testPhaseProgression_MultiPhaseSequence() {
+        let protocolId = UUID()
+
+        let phase1 = createPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            startedAt: Calendar.current.date(byAdding: .day, value: -28, to: Date()),
+            completedAt: Calendar.current.date(byAdding: .day, value: -14, to: Date())
+        )
+        let phase2 = createPhase(
+            protocolId: protocolId,
+            phaseNumber: 2,
+            startedAt: Calendar.current.date(byAdding: .day, value: -14, to: Date()),
+            completedAt: nil
+        )
+        let phase3 = createPhase(protocolId: protocolId, phaseNumber: 3, startedAt: nil, completedAt: nil)
+        let phase4 = createPhase(protocolId: protocolId, phaseNumber: 4, startedAt: nil, completedAt: nil)
+
+        sut.phases = [phase1, phase2, phase3, phase4]
+
+        XCTAssertEqual(sut.completedPhases.count, 1)
+        XCTAssertEqual(sut.activePhases.count, 1)
+        XCTAssertEqual(sut.pendingPhases.count, 2)
+    }
+
+    // MARK: - Progress Calculation
+
+    func testOverallProgress_NoPhases() {
+        sut.phases = []
+        XCTAssertEqual(sut.overallProgress, 0)
+    }
+
+    func testOverallProgress_OneOfFourCompleted() {
+        let protocolId = UUID()
+        let completed = createPhase(protocolId: protocolId, phaseNumber: 1, startedAt: Date(), completedAt: Date())
+        let active = createPhase(protocolId: protocolId, phaseNumber: 2, startedAt: Date(), completedAt: nil)
+        let pending1 = createPhase(protocolId: protocolId, phaseNumber: 3, startedAt: nil, completedAt: nil)
+        let pending2 = createPhase(protocolId: protocolId, phaseNumber: 4, startedAt: nil, completedAt: nil)
+
+        sut.phases = [completed, active, pending1, pending2]
+
+        XCTAssertEqual(sut.overallProgress, 0.25, accuracy: 0.001)
+    }
+
+    func testOverallProgress_ThreeOfFourCompleted() {
+        let protocolId = UUID()
+        let completed1 = createPhase(protocolId: protocolId, phaseNumber: 1, startedAt: Date(), completedAt: Date())
+        let completed2 = createPhase(protocolId: protocolId, phaseNumber: 2, startedAt: Date(), completedAt: Date())
+        let completed3 = createPhase(protocolId: protocolId, phaseNumber: 3, startedAt: Date(), completedAt: Date())
+        let active = createPhase(protocolId: protocolId, phaseNumber: 4, startedAt: Date(), completedAt: nil)
+
+        sut.phases = [completed1, completed2, completed3, active]
+
+        XCTAssertEqual(sut.overallProgress, 0.75, accuracy: 0.001)
+    }
+
+    func testOverallProgress_AllCompleted() {
+        let protocolId = UUID()
+        let phases = (1...4).map {
+            createPhase(protocolId: protocolId, phaseNumber: $0, startedAt: Date(), completedAt: Date())
+        }
+
+        sut.phases = phases
+
+        XCTAssertEqual(sut.overallProgress, 1.0, accuracy: 0.001)
+    }
+
+    // MARK: - Current Phase Tracking
+
+    func testCurrentPhaseTracking() {
+        let protocolId = UUID()
+        let phase1 = createPhase(protocolId: protocolId, phaseNumber: 1, startedAt: Date(), completedAt: Date())
+        let phase2 = createPhase(protocolId: protocolId, phaseNumber: 2, startedAt: Date(), completedAt: nil)
+
+        sut.phases = [phase1, phase2]
+        sut.currentPhase = phase2
+
+        XCTAssertNotNil(sut.currentPhase)
+        XCTAssertEqual(sut.currentPhase?.phaseNumber, 2)
+        XCTAssertTrue(sut.currentPhase?.isActive ?? false)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createPhase(
+        protocolId: UUID,
+        phaseNumber: Int,
+        startedAt: Date?,
+        completedAt: Date?
+    ) -> RTSPhase {
+        var phase = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: phaseNumber,
+            phaseName: "Phase \(phaseNumber)",
+            activityLevel: phaseNumber == 1 ? .red : (phaseNumber < 4 ? .yellow : .green),
+            description: "Test phase",
+            startedAt: startedAt,
+            completedAt: completedAt,
+            targetDurationDays: 14
+        )
+        return phase
+    }
+}
+
+// MARK: - Gate-Based Advancement Decision Tests
+
+@MainActor
+final class RTSProtocolViewModelAdvancementDecisionTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Advancement Gate Requirements
+
+    func testCanAdvancePhase_RequiresActivePhase() {
+        // No current phase
+        sut.currentPhase = nil
+        sut.latestReadiness = createReadinessScore(overall: 90)
+
+        XCTAssertFalse(sut.canAdvancePhase)
+    }
+
+    func testCanAdvancePhase_RequiresPhaseToBeActive() {
+        let protocolId = UUID()
+
+        // Pending phase (not started)
+        let pendingPhase = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Pending",
+            activityLevel: .red,
+            description: "",
+            startedAt: nil,
+            completedAt: nil
+        )
+
+        sut.currentPhase = pendingPhase
+        sut.latestReadiness = createReadinessScore(overall: 90)
+
+        XCTAssertFalse(sut.canAdvancePhase)
+    }
+
+    func testCanAdvancePhase_RequiresGreenZoneReadiness() {
+        let protocolId = UUID()
+        let activePhase = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Active",
+            activityLevel: .yellow,
+            description: "",
+            startedAt: Date(),
+            completedAt: nil
+        )
+
+        sut.currentPhase = activePhase
+
+        // Test with yellow zone (70)
+        sut.latestReadiness = createReadinessScore(overall: 70)
+        XCTAssertFalse(sut.canAdvancePhase)
+
+        // Test with red zone (50)
+        sut.latestReadiness = createReadinessScore(overall: 50)
+        XCTAssertFalse(sut.canAdvancePhase)
+
+        // Test with green zone (85)
+        sut.latestReadiness = createReadinessScore(overall: 85)
+        XCTAssertTrue(sut.canAdvancePhase)
+    }
+
+    func testCanAdvancePhase_BoundaryAt80() {
+        let protocolId = UUID()
+        let activePhase = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Active",
+            activityLevel: .yellow,
+            description: "",
+            startedAt: Date(),
+            completedAt: nil
+        )
+
+        sut.currentPhase = activePhase
+
+        // Exactly 80 should pass
+        sut.latestReadiness = createReadinessScore(overall: 80)
+        XCTAssertTrue(sut.canAdvancePhase)
+
+        // Just below 80 should fail
+        sut.latestReadiness = createReadinessScore(overall: 79.9)
+        XCTAssertFalse(sut.canAdvancePhase)
+    }
+
+    func testCanAdvancePhase_NoReadinessScore() {
+        let protocolId = UUID()
+        let activePhase = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Active",
+            activityLevel: .yellow,
+            description: "",
+            startedAt: Date(),
+            completedAt: nil
+        )
+
+        sut.currentPhase = activePhase
+        sut.latestReadiness = nil
+
+        XCTAssertFalse(sut.canAdvancePhase)
+    }
+
+    // MARK: - Traffic Light Readiness
+
+    func testCurrentTrafficLight_WithNoReadiness() {
+        sut.latestReadiness = nil
+        XCTAssertEqual(sut.currentTrafficLight, .red)
+    }
+
+    func testCurrentTrafficLight_ReflectsReadinessScore() {
+        // Green
+        sut.latestReadiness = createReadinessScore(overall: 85)
+        XCTAssertEqual(sut.currentTrafficLight, .green)
+
+        // Yellow
+        sut.latestReadiness = createReadinessScore(overall: 70)
+        XCTAssertEqual(sut.currentTrafficLight, .yellow)
+
+        // Red
+        sut.latestReadiness = createReadinessScore(overall: 45)
+        XCTAssertEqual(sut.currentTrafficLight, .red)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createReadinessScore(overall: Double) -> RTSReadinessScore {
+        // Reverse calculate component scores to achieve desired overall
+        // overall = physical * 0.4 + functional * 0.4 + psychological * 0.2
+        // If we set all equal: overall = score * (0.4 + 0.4 + 0.2) = score
+        return RTSReadinessScore(
+            protocolId: UUID(),
+            phaseId: UUID(),
+            recordedBy: UUID(),
+            physicalScore: overall,
+            functionalScore: overall,
+            psychologicalScore: overall
+        )
+    }
+}
+
+// MARK: - Clearance Workflow State Tests
+
+@MainActor
+final class RTSProtocolViewModelClearanceWorkflowTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    // MARK: - Clearance List Management
+
+    func testClearanceListManagement() {
+        let protocolId = UUID()
+
+        let draftClearance = createClearance(protocolId: protocolId, status: .draft)
+        let completeClearance = createClearance(protocolId: protocolId, status: .complete)
+        let signedClearance = createClearance(protocolId: protocolId, status: .signed)
+
+        sut.clearances = [draftClearance, completeClearance, signedClearance]
+
+        XCTAssertEqual(sut.clearances.count, 3)
+    }
+
+    func testClearanceFiltering_ByStatus() {
+        let protocolId = UUID()
+
+        let draft = createClearance(protocolId: protocolId, status: .draft)
+        let complete = createClearance(protocolId: protocolId, status: .complete)
+        let signed = createClearance(protocolId: protocolId, status: .signed)
+        let coSigned = createClearance(protocolId: protocolId, status: .coSigned)
+
+        sut.clearances = [draft, complete, signed, coSigned]
+
+        let draftClearances = sut.clearances.filter { $0.status == .draft }
+        let signedClearances = sut.clearances.filter { $0.status == .signed || $0.status == .coSigned }
+
+        XCTAssertEqual(draftClearances.count, 1)
+        XCTAssertEqual(signedClearances.count, 2)
+    }
+
+    // MARK: - Clearance Workflow Validation
+
+    func testPhaseClearanceCreation_RequiresCurrentProtocol() async {
+        sut.currentProtocol = nil
+        sut.currentPhase = RTSPhase(
+            protocolId: UUID(),
+            phaseNumber: 1,
+            phaseName: "Test",
+            activityLevel: .yellow,
+            description: ""
+        )
+
+        let result = await sut.createPhaseClearance()
+
+        XCTAssertNil(result)
+        XCTAssertNotNil(sut.errorMessage)
+    }
+
+    func testPhaseClearanceCreation_RequiresCurrentPhase() async {
+        sut.currentProtocol = RTSProtocol(
+            patientId: UUID(),
+            therapistId: UUID(),
+            sportId: UUID(),
+            injuryType: "Test",
+            injuryDate: Date(),
+            targetReturnDate: Date(),
+            status: .active
+        )
+        sut.currentPhase = nil
+
+        let result = await sut.createPhaseClearance()
+
+        XCTAssertNil(result)
+        XCTAssertNotNil(sut.errorMessage)
+    }
+
+    func testFinalClearanceCreation_RequiresGreenZone() async {
+        sut.currentProtocol = RTSProtocol(
+            patientId: UUID(),
+            therapistId: UUID(),
+            sportId: UUID(),
+            injuryType: "Test",
+            injuryDate: Date(),
+            targetReturnDate: Date(),
+            status: .active
+        )
+
+        // Set yellow readiness (not green)
+        sut.latestReadiness = RTSReadinessScore(
+            protocolId: UUID(),
+            phaseId: UUID(),
+            recordedBy: UUID(),
+            physicalScore: 70,
+            functionalScore: 70,
+            psychologicalScore: 70
+        )
+
+        let result = await sut.createFinalClearance()
+
+        XCTAssertNil(result)
+        XCTAssertNotNil(sut.errorMessage)
+        XCTAssertTrue(sut.errorMessage?.contains("green zone") ?? false)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createClearance(
+        protocolId: UUID,
+        status: RTSClearanceStatus
+    ) -> RTSClearance {
+        RTSClearance(
+            protocolId: protocolId,
+            clearanceType: .phaseClearance,
+            clearanceLevel: .yellow,
+            status: status,
+            assessmentSummary: "Test summary",
+            recommendations: "Test recommendations"
+        )
+    }
+}
+
+// MARK: - Sports Management Tests
+
+@MainActor
+final class RTSProtocolViewModelSportsTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    func testSportsList_InitiallyEmpty() {
+        XCTAssertTrue(sut.sports.isEmpty)
+    }
+
+    func testSportsList_CanBePopulated() {
+        let baseball = RTSSport(name: "Baseball", category: .throwing)
+        let running = RTSSport(name: "Running", category: .running)
+        let soccer = RTSSport(name: "Soccer", category: .cutting)
+        let basketball = RTSSport(name: "Basketball", category: .cutting)
+
+        sut.sports = [baseball, running, soccer, basketball]
+
+        XCTAssertEqual(sut.sports.count, 4)
+    }
+
+    func testSportSelection() {
+        let baseball = RTSSport(name: "Baseball", category: .throwing)
+
+        sut.selectedSport = baseball
+
+        XCTAssertNotNil(sut.selectedSport)
+        XCTAssertEqual(sut.selectedSport?.name, "Baseball")
+        XCTAssertEqual(sut.selectedSport?.category, .throwing)
+    }
+
+    func testSportWithPhaseTemplates() {
+        let baseball = RTSSport(
+            name: "Baseball",
+            category: .throwing,
+            defaultPhases: [
+                RTSPhaseTemplate(
+                    phaseNumber: 1,
+                    phaseName: "Protected Motion",
+                    activityLevel: .red,
+                    description: "Pain-free ROM",
+                    targetDurationWeeks: 2
+                ),
+                RTSPhaseTemplate(
+                    phaseNumber: 2,
+                    phaseName: "Light Tossing",
+                    activityLevel: .yellow,
+                    description: "Light catch",
+                    targetDurationWeeks: 2
+                )
+            ]
+        )
+
+        sut.selectedSport = baseball
+
+        XCTAssertEqual(sut.selectedSport?.defaultPhases.count, 2)
+        XCTAssertEqual(sut.selectedSport?.defaultPhases.first?.activityLevel, .red)
+        XCTAssertEqual(sut.selectedSport?.defaultPhases.last?.activityLevel, .yellow)
+    }
+}
+
+// MARK: - Readiness Score History Tests
+
+@MainActor
+final class RTSProtocolViewModelReadinessHistoryTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    func testReadinessScoresHistory_InitiallyEmpty() {
+        XCTAssertTrue(sut.readinessScores.isEmpty)
+    }
+
+    func testReadinessScoresHistory_CanTrackMultipleAssessments() {
+        let protocolId = UUID()
+        let phaseId = UUID()
+
+        let score1 = createReadinessScore(protocolId: protocolId, phaseId: phaseId, physical: 60, functional: 60, psychological: 60)
+        let score2 = createReadinessScore(protocolId: protocolId, phaseId: phaseId, physical: 70, functional: 70, psychological: 70)
+        let score3 = createReadinessScore(protocolId: protocolId, phaseId: phaseId, physical: 80, functional: 80, psychological: 80)
+
+        sut.readinessScores = [score3, score2, score1] // Most recent first
+        sut.latestReadiness = score3
+
+        XCTAssertEqual(sut.readinessScores.count, 3)
+        XCTAssertEqual(sut.latestReadiness?.overallScore ?? 0, 80, accuracy: 0.1)
+    }
+
+    func testLatestReadinessScore_Alias() {
+        let score = createReadinessScore(protocolId: UUID(), phaseId: UUID(), physical: 85, functional: 85, psychological: 85)
+        sut.latestReadiness = score
+
+        XCTAssertEqual(sut.latestReadinessScore?.id, sut.latestReadiness?.id)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createReadinessScore(
+        protocolId: UUID,
+        phaseId: UUID,
+        physical: Double,
+        functional: Double,
+        psychological: Double
+    ) -> RTSReadinessScore {
+        RTSReadinessScore(
+            protocolId: protocolId,
+            phaseId: phaseId,
+            recordedBy: UUID(),
+            physicalScore: physical,
+            functionalScore: functional,
+            psychologicalScore: psychological
+        )
+    }
+}
+
+// MARK: - Error and Loading State Tests
+
+@MainActor
+final class RTSProtocolViewModelStateTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    func testLoadingState_Toggle() {
+        XCTAssertFalse(sut.isLoading)
+
+        sut.isLoading = true
+        XCTAssertTrue(sut.isLoading)
+
+        sut.isLoading = false
+        XCTAssertFalse(sut.isLoading)
+    }
+
+    func testSavingState_Toggle() {
+        XCTAssertFalse(sut.isSaving)
+
+        sut.isSaving = true
+        XCTAssertTrue(sut.isSaving)
+
+        sut.isSaving = false
+        XCTAssertFalse(sut.isSaving)
+    }
+
+    func testErrorMessage_SetAndClear() {
+        XCTAssertNil(sut.errorMessage)
+
+        sut.errorMessage = "Test error"
+        XCTAssertEqual(sut.errorMessage, "Test error")
+
+        sut.clearMessages()
+        XCTAssertNil(sut.errorMessage)
+    }
+
+    func testSuccessMessage_SetAndClear() {
+        XCTAssertNil(sut.successMessage)
+
+        sut.successMessage = "Operation successful"
+        XCTAssertEqual(sut.successMessage, "Operation successful")
+
+        sut.clearMessages()
+        XCTAssertNil(sut.successMessage)
+    }
+
+    func testClearMessages_ClearsBothMessages() {
+        sut.errorMessage = "Error"
+        sut.successMessage = "Success"
+
+        sut.clearMessages()
+
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertNil(sut.successMessage)
+    }
+}
+
+// MARK: - Recent Activity Tests
+
+@MainActor
+final class RTSProtocolViewModelActivityTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    func testRecentActivity_InitiallyEmpty() {
+        XCTAssertTrue(sut.recentActivity.isEmpty)
+    }
+
+    func testRecentActivity_CanBePopulated() {
+        let activity1 = RTSActivityItem(
+            id: UUID(),
+            title: "Test Passed",
+            subtitle: "Quad LSI 87%",
+            icon: "checkmark.circle.fill",
+            color: .green,
+            date: Date()
+        )
+
+        let activity2 = RTSActivityItem(
+            id: UUID(),
+            title: "Phase Completed",
+            subtitle: "Protected Motion",
+            icon: "flag.fill",
+            color: .green,
+            date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        )
+
+        sut.recentActivity = [activity1, activity2]
+
+        XCTAssertEqual(sut.recentActivity.count, 2)
+    }
+}
+
+// MARK: - Integration Scenario Tests
+
+@MainActor
+final class RTSProtocolViewModelIntegrationTests: XCTestCase {
+
+    var sut: RTSProtocolViewModel!
+
+    override func setUp() {
+        super.setUp()
+        sut = RTSProtocolViewModel()
+    }
+
+    override func tearDown() {
+        sut = nil
+        super.tearDown()
+    }
+
+    func testCompleteProtocolJourney_StateTransitions() {
+        let protocolId = UUID()
+
+        // 1. Create draft protocol
+        var protocol_ = RTSProtocol(
+            id: protocolId,
+            patientId: UUID(),
+            therapistId: UUID(),
+            sportId: UUID(),
+            injuryType: "ACL Reconstruction",
+            injuryDate: Calendar.current.date(byAdding: .month, value: -3, to: Date())!,
+            targetReturnDate: Calendar.current.date(byAdding: .month, value: 6, to: Date())!,
+            status: .draft
+        )
+
+        sut.protocols = [protocol_]
+        sut.currentProtocol = protocol_
+
+        XCTAssertEqual(sut.currentProtocol?.status, .draft)
+        XCTAssertTrue(sut.draftProtocols.count == 1)
+
+        // 2. Activate protocol
+        protocol_.status = .active
+        sut.protocols = [protocol_]
+        sut.currentProtocol = protocol_
+
+        XCTAssertEqual(sut.currentProtocol?.status, .active)
+        XCTAssertTrue(sut.activeProtocols.count == 1)
+        XCTAssertTrue(sut.draftProtocols.isEmpty)
+
+        // 3. Add phases
+        let phase1 = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Protected Motion",
+            activityLevel: .red,
+            description: "Initial phase",
+            startedAt: Date(),
+            completedAt: nil
+        )
+        sut.phases = [phase1]
+        sut.currentPhase = phase1
+
+        XCTAssertEqual(sut.activePhases.count, 1)
+        XCTAssertTrue(sut.currentPhase?.isActive ?? false)
+
+        // 4. Complete protocol
+        protocol_.status = .completed
+        sut.protocols = [protocol_]
+        sut.currentProtocol = protocol_
+
+        XCTAssertEqual(sut.currentProtocol?.status, .completed)
+        XCTAssertTrue(sut.completedProtocols.count == 1)
+        XCTAssertTrue(sut.activeProtocols.isEmpty)
+    }
+
+    func testPhaseProgressionWithReadiness_Scenario() {
+        let protocolId = UUID()
+
+        // Setup phases
+        var phase1 = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 1,
+            phaseName: "Phase 1",
+            activityLevel: .red,
+            description: "",
+            startedAt: Date(),
+            completedAt: nil
+        )
+        let phase2 = RTSPhase(
+            protocolId: protocolId,
+            phaseNumber: 2,
+            phaseName: "Phase 2",
+            activityLevel: .yellow,
+            description: "",
+            startedAt: nil,
+            completedAt: nil
+        )
+
+        sut.phases = [phase1, phase2]
+        sut.currentPhase = phase1
+
+        // Initially cannot advance (no readiness)
+        XCTAssertFalse(sut.canAdvancePhase)
+
+        // Add yellow readiness - still cannot advance
+        sut.latestReadiness = RTSReadinessScore(
+            protocolId: protocolId,
+            phaseId: phase1.id,
+            recordedBy: UUID(),
+            physicalScore: 70,
+            functionalScore: 70,
+            psychologicalScore: 70
+        )
+        XCTAssertFalse(sut.canAdvancePhase)
+
+        // Add green readiness - now can advance
+        sut.latestReadiness = RTSReadinessScore(
+            protocolId: protocolId,
+            phaseId: phase1.id,
+            recordedBy: UUID(),
+            physicalScore: 85,
+            functionalScore: 85,
+            psychologicalScore: 85
+        )
+        XCTAssertTrue(sut.canAdvancePhase)
+
+        // Complete phase 1, start phase 2
+        phase1.completedAt = Date()
+        var phase2Updated = phase2
+        phase2Updated.startedAt = Date()
+
+        sut.phases = [phase1, phase2Updated]
+        sut.currentPhase = phase2Updated
+
+        XCTAssertEqual(sut.completedPhases.count, 1)
+        XCTAssertEqual(sut.activePhases.count, 1)
+        XCTAssertEqual(sut.overallProgress, 0.5, accuracy: 0.001)
+    }
+}

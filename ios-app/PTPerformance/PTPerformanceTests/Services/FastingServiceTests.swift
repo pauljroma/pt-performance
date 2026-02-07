@@ -513,24 +513,29 @@ final class FastingServiceTests: XCTestCase {
 
     // MARK: - Initial State Tests
 
-    func testInitialState_FastingHistoryIsArray() {
-        XCTAssertNotNil(sut.fastingHistory)
-        XCTAssertTrue(sut.fastingHistory is [FastingLog])
+    func testInitialState_RecentFastsIsArray() {
+        XCTAssertNotNil(sut.recentFasts)
+        XCTAssertTrue(sut.recentFasts is [FastingLog])
     }
 
-    func testInitialState_CurrentFastProperty() {
-        // Current fast can be nil or a FastingLog
-        _ = sut.currentFast
+    func testInitialState_ActiveFastProperty() {
+        // Active fast can be nil or a FastingLog
+        _ = sut.activeFast
     }
 
-    func testInitialState_StatsProperty() {
-        // Stats can be nil initially
-        _ = sut.stats
+    func testInitialState_WeeklyStatsProperty() {
+        // Weekly stats can be nil initially
+        _ = sut.weeklyStats
     }
 
     func testInitialState_EatingWindowRecommendationProperty() {
         // Recommendation can be nil initially
         _ = sut.eatingWindowRecommendation
+    }
+
+    func testInitialState_WorkoutRecommendationProperty() {
+        // Workout recommendation can be nil initially
+        _ = sut.workoutRecommendation
     }
 
     func testInitialState_IsLoadingProperty() {
@@ -541,21 +546,33 @@ final class FastingServiceTests: XCTestCase {
         _ = sut.error
     }
 
+    func testInitialState_ProtocolsProperty() {
+        XCTAssertNotNil(sut.protocols)
+    }
+
+    func testInitialState_CurrentStreakProperty() {
+        _ = sut.currentStreak
+    }
+
+    func testInitialState_CurrentGoalProperty() {
+        _ = sut.currentGoal
+    }
+
     // MARK: - Published Properties Tests
 
-    func testFastingHistory_IsPublished() {
-        let history = sut.fastingHistory
-        XCTAssertNotNil(history)
+    func testRecentFasts_IsPublished() {
+        let fasts = sut.recentFasts
+        XCTAssertNotNil(fasts)
     }
 
-    func testCurrentFast_IsPublished() {
+    func testActiveFast_IsPublished() {
         // Can be nil or have value
-        _ = sut.currentFast
+        _ = sut.activeFast
     }
 
-    func testStats_IsPublished() {
+    func testWeeklyStats_IsPublished() {
         // Can be nil or have value
-        _ = sut.stats
+        _ = sut.weeklyStats
     }
 
     // MARK: - Generate Eating Window Recommendation Tests
@@ -842,5 +859,348 @@ final class FastingServiceEdgeCaseTests: XCTestCase {
 
         // All display names should be unique
         XCTAssertEqual(names.count, uniqueNames.count, "Each fasting type should have a unique display name")
+    }
+}
+
+// MARK: - FastingError Tests
+
+final class FastingErrorTests: XCTestCase {
+
+    func testFastingError_NoPatientId_HasDescription() {
+        let error = FastingError.noPatientId
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.contains("patient"))
+    }
+
+    func testFastingError_FastAlreadyActive_HasDescription() {
+        let error = FastingError.fastAlreadyActive
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.contains("active"))
+    }
+
+    func testFastingError_NoActiveFast_HasDescription() {
+        let error = FastingError.noActiveFast
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.contains("active"))
+    }
+
+    func testFastingError_InvalidFastingType_HasDescription() {
+        let error = FastingError.invalidFastingType
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.contains("type"))
+    }
+
+    func testFastingError_NetworkError_HasDescription() {
+        let error = FastingError.networkError
+        XCTAssertNotNil(error.errorDescription)
+        XCTAssertTrue(error.errorDescription!.lowercased().contains("network"))
+    }
+
+    func testFastingError_Unknown_WrapsOriginalError() {
+        let originalError = NSError(domain: "TestDomain", code: 123, userInfo: [NSLocalizedDescriptionKey: "Test error message"])
+        let error = FastingError.unknown(originalError)
+        XCTAssertEqual(error.errorDescription, "Test error message")
+    }
+}
+
+// MARK: - Fasting Workout Recommendation Tests
+
+final class FastingServiceWorkoutRecommendationTests: XCTestCase {
+
+    func testIntensityModifier_UnderTwelveHours() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 8,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityModifier, 1.0)
+    }
+
+    func testIntensityModifier_TwelveToSixteenHours() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 14,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityModifier, 0.95)
+    }
+
+    func testIntensityModifier_SixteenToTwentyHours() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 18,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityModifier, 0.85)
+    }
+
+    func testIntensityModifier_TwentyToTwentyFourHours() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 22,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityModifier, 0.75)
+    }
+
+    func testIntensityModifier_OverTwentyFourHours() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 30,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityModifier, 0.65)
+    }
+
+    func testIsExtendedFast_True() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 20,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertTrue(recommendation.isExtendedFast)
+    }
+
+    func testIsExtendedFast_False() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 12,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertFalse(recommendation.isExtendedFast)
+    }
+
+    func testIntensityPercentage() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 18,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertEqual(recommendation.intensityPercentage, 85)
+    }
+
+    func testRecommendedWorkoutTypes_EarlyFast() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 8,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertTrue(recommendation.recommendedWorkoutTypes.contains("Strength Training"))
+        XCTAssertTrue(recommendation.recommendedWorkoutTypes.contains("HIIT"))
+    }
+
+    func testRecommendedWorkoutTypes_ExtendedFast() {
+        let fastingState = FastingStateResponse(
+            isFasting: true,
+            startedAt: nil,
+            fastingHours: 22,
+            protocolType: nil,
+            plannedHours: nil
+        )
+
+        let recommendation = createRecommendation(with: fastingState)
+        XCTAssertTrue(recommendation.recommendedWorkoutTypes.contains("Walking"))
+        XCTAssertTrue(recommendation.recommendedWorkoutTypes.contains("Yoga"))
+    }
+
+    private func createRecommendation(with fastingState: FastingStateResponse) -> FastingWorkoutRecommendation {
+        return FastingWorkoutRecommendation(
+            optimizationId: UUID().uuidString,
+            fastingState: fastingState,
+            workoutAllowed: true,
+            workoutRecommended: true,
+            modifications: [],
+            nutritionTiming: NutritionTiming(
+                recommendation: "Test",
+                preWorkout: nil,
+                intraWorkout: nil,
+                postWorkout: "Test",
+                timingNotes: "Test"
+            ),
+            safetyWarnings: [],
+            performanceNotes: [],
+            electrolyteRecommendations: [],
+            alternativeWorkoutSuggestion: nil,
+            disclaimer: "Test"
+        )
+    }
+}
+
+// MARK: - Data Validation Tests
+
+final class FastingDataValidationTests: XCTestCase {
+
+    func testFastingLog_MoodRangeValidation() {
+        // Mood values should typically be 1-10
+        for mood in 1...10 {
+            let log = FastingLog(
+                id: UUID(),
+                patientId: UUID(),
+                fastingType: .intermittent,
+                startedAt: Date(),
+                endedAt: nil,
+                plannedEndAt: nil,
+                targetHours: 16,
+                actualHours: nil,
+                wasBrokenEarly: nil,
+                breakReason: nil,
+                moodStart: mood,
+                moodEnd: mood,
+                hungerLevel: mood,
+                energyLevel: mood,
+                notes: nil,
+                createdAt: Date()
+            )
+
+            XCTAssertEqual(log.moodStart, mood)
+            XCTAssertEqual(log.moodEnd, mood)
+            XCTAssertEqual(log.hungerLevel, mood)
+            XCTAssertEqual(log.energyLevel, mood)
+        }
+    }
+
+    func testFastingLog_TargetHoursPositive() {
+        for hours in [1, 12, 16, 18, 24, 36, 48] {
+            let log = FastingLog(
+                id: UUID(),
+                patientId: UUID(),
+                fastingType: .custom,
+                startedAt: Date(),
+                endedAt: nil,
+                plannedEndAt: nil,
+                targetHours: hours,
+                actualHours: nil,
+                wasBrokenEarly: nil,
+                breakReason: nil,
+                moodStart: nil,
+                moodEnd: nil,
+                hungerLevel: nil,
+                energyLevel: nil,
+                notes: nil,
+                createdAt: Date()
+            )
+
+            XCTAssertGreaterThan(log.targetHours, 0)
+        }
+    }
+
+    func testFastingGoal_WeeklyTargetPositive() {
+        let goal = FastingGoal(
+            id: UUID(),
+            patientId: UUID(),
+            weeklyFastTarget: 5,
+            targetHoursPerFast: 16,
+            preferredProtocol: .intermittent,
+            targetStreak: 7,
+            notes: nil,
+            isActive: true,
+            createdAt: Date(),
+            updatedAt: nil
+        )
+
+        XCTAssertGreaterThan(goal.weeklyFastTarget, 0)
+        XCTAssertGreaterThan(goal.targetHoursPerFast, 0)
+    }
+}
+
+// MARK: - Timezone Handling Tests
+
+final class FastingTimezoneTests: XCTestCase {
+
+    func testFastingLog_CrossTimezoneDecoding() throws {
+        // Test decoding dates with explicit timezone offsets
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "fasting_type": "intermittent",
+            "started_at": "2024-06-15T20:00:00+05:30",
+            "ended_at": "2024-06-16T12:00:00+05:30",
+            "planned_end_at": null,
+            "target_hours": 16,
+            "actual_hours": 16.0,
+            "was_broken_early": false,
+            "break_reason": null,
+            "mood_start": null,
+            "mood_end": null,
+            "hunger_level": null,
+            "energy_level": null,
+            "notes": null,
+            "created_at": "2024-06-15T20:00:00+05:30"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let log = try decoder.decode(FastingLog.self, from: json)
+        XCTAssertNotNil(log.startedAt)
+        XCTAssertNotNil(log.endedAt)
+    }
+
+    func testFastingLog_UTCDecoding() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "660e8400-e29b-41d4-a716-446655440001",
+            "fasting_type": "extended",
+            "started_at": "2024-06-15T00:00:00Z",
+            "ended_at": null,
+            "planned_end_at": "2024-06-16T00:00:00Z",
+            "target_hours": 24,
+            "actual_hours": null,
+            "was_broken_early": null,
+            "break_reason": null,
+            "mood_start": null,
+            "mood_end": null,
+            "hunger_level": null,
+            "energy_level": null,
+            "notes": null,
+            "created_at": "2024-06-15T00:00:00Z"
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let log = try decoder.decode(FastingLog.self, from: json)
+        XCTAssertNotNil(log.startedAt)
+        XCTAssertNotNil(log.plannedEndAt)
     }
 }

@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import SwiftUI
 @testable import PTPerformance
 
 // MARK: - Mock Services
@@ -751,5 +752,544 @@ final class DeloadRecommendationViewModelTests: XCTestCase {
                 updatedAt: date
             )
         }
+    }
+
+    private func createMockRecommendationWithUrgency(_ urgency: DeloadUrgency) -> DeloadRecommendation {
+        return DeloadRecommendation(
+            id: UUID(),
+            patientId: testPatientId,
+            deloadRecommended: urgency != .none,
+            urgency: urgency,
+            reasoning: "Test recommendation for \(urgency.rawValue) urgency",
+            fatigueSummary: createMockFatigueSummary(fatigueScore: urgencyToScore(urgency), fatigueBand: urgencyToBand(urgency)),
+            deloadPrescription: urgency != .none ? createMockPrescription() : nil,
+            createdAt: Date(),
+            status: nil,
+            activatedAt: nil,
+            dismissedAt: nil,
+            dismissalReason: nil
+        )
+    }
+
+    private func urgencyToScore(_ urgency: DeloadUrgency) -> Double {
+        switch urgency {
+        case .none: return 30.0
+        case .suggested: return 50.0
+        case .recommended: return 70.0
+        case .required: return 90.0
+        }
+    }
+
+    private func urgencyToBand(_ urgency: DeloadUrgency) -> String {
+        switch urgency {
+        case .none: return "low"
+        case .suggested: return "moderate"
+        case .recommended: return "high"
+        case .required: return "critical"
+        }
+    }
+}
+
+// MARK: - Recommendation Generation Tests
+
+@MainActor
+final class DeloadRecommendationGenerationTests: XCTestCase {
+
+    var viewModel: DeloadRecommendationViewModel!
+    var mockFatigueService: MockFatigueTrackingService!
+    var mockDeloadService: MockDeloadRecommendationService!
+    let testPatientId = UUID()
+
+    override func setUp() async throws {
+        try await super.setUp()
+        mockFatigueService = MockFatigueTrackingService()
+        mockDeloadService = MockDeloadRecommendationService()
+        viewModel = DeloadRecommendationViewModel(
+            patientId: testPatientId,
+            fatigueTrackingService: mockFatigueService,
+            deloadRecommendationService: mockDeloadService
+        )
+    }
+
+    override func tearDown() async throws {
+        viewModel = nil
+        mockFatigueService = nil
+        mockDeloadService = nil
+        try await super.tearDown()
+    }
+
+    // MARK: - Recommendation Generation Tests
+
+    func testRecommendationGeneration_WithHighFatigue() async {
+        mockDeloadService.mockRecommendation = createMockRecommendation(urgency: .recommended)
+
+        await viewModel.loadData()
+
+        XCTAssertNotNil(viewModel.fatigueSummary)
+        XCTAssertEqual(viewModel.urgency, .recommended)
+        XCTAssertNotNil(viewModel.prescription)
+        XCTAssertTrue(viewModel.deloadRecommended)
+    }
+
+    func testRecommendationGeneration_WithLowFatigue() async {
+        mockDeloadService.mockRecommendation = createMockRecommendation(urgency: .none)
+
+        await viewModel.loadData()
+
+        XCTAssertNotNil(viewModel.fatigueSummary)
+        XCTAssertEqual(viewModel.urgency, .none)
+        XCTAssertNil(viewModel.prescription)
+        XCTAssertFalse(viewModel.deloadRecommended)
+    }
+
+    func testRecommendationGeneration_AllUrgencyLevels() async {
+        for urgency in DeloadUrgency.allCases {
+            mockDeloadService.mockRecommendation = createMockRecommendation(urgency: urgency)
+
+            await viewModel.loadData()
+
+            XCTAssertEqual(viewModel.urgency, urgency,
+                          "Urgency should be set to \(urgency)")
+
+            if urgency == .none {
+                XCTAssertFalse(viewModel.deloadRecommended)
+            } else {
+                XCTAssertTrue(viewModel.deloadRecommended || viewModel.prescription == nil)
+            }
+        }
+    }
+
+    func testRecommendationGeneration_ContributingFactorsPopulated() async {
+        let mockRec = createMockRecommendation(urgency: .recommended)
+        mockDeloadService.mockRecommendation = mockRec
+
+        await viewModel.loadData()
+
+        XCTAssertFalse(viewModel.contributingFactors.isEmpty)
+        XCTAssertEqual(viewModel.contributingFactors.count,
+                      mockRec.fatigueSummary.contributingFactors.count)
+    }
+
+    func testRecommendationGeneration_WithManyContributingFactors() async {
+        let factors = [
+            "High acute:chronic ratio",
+            "Consecutive low readiness days",
+            "Elevated RPE in recent sessions",
+            "Poor sleep quality reported",
+            "Missed workout targets"
+        ]
+
+        let summary = FatigueSummary(
+            fatigueScore: 75.0,
+            fatigueBand: "high",
+            avgReadiness7d: 52.0,
+            acuteChronicRatio: 1.5,
+            consecutiveLowDays: 4,
+            contributingFactors: factors
+        )
+
+        let recommendation = DeloadRecommendation(
+            id: UUID(),
+            patientId: testPatientId,
+            deloadRecommended: true,
+            urgency: .recommended,
+            reasoning: "Multiple factors contributing to high fatigue",
+            fatigueSummary: summary,
+            deloadPrescription: DeloadPrescription.sample,
+            createdAt: Date(),
+            status: nil,
+            activatedAt: nil,
+            dismissedAt: nil,
+            dismissalReason: nil
+        )
+
+        mockDeloadService.mockRecommendation = recommendation
+
+        await viewModel.loadData()
+
+        XCTAssertEqual(viewModel.contributingFactors.count, 5)
+        XCTAssertTrue(viewModel.contributingFactors.contains("High acute:chronic ratio"))
+    }
+
+    // MARK: - Helper Methods
+
+    private func createMockRecommendation(urgency: DeloadUrgency) -> DeloadRecommendation {
+        let fatigueScore: Double
+        let fatigueBand: String
+
+        switch urgency {
+        case .none:
+            fatigueScore = 30.0
+            fatigueBand = "low"
+        case .suggested:
+            fatigueScore = 50.0
+            fatigueBand = "moderate"
+        case .recommended:
+            fatigueScore = 70.0
+            fatigueBand = "high"
+        case .required:
+            fatigueScore = 90.0
+            fatigueBand = "critical"
+        }
+
+        return DeloadRecommendation(
+            id: UUID(),
+            patientId: testPatientId,
+            deloadRecommended: urgency != .none,
+            urgency: urgency,
+            reasoning: "Test recommendation for \(urgency.rawValue)",
+            fatigueSummary: FatigueSummary(
+                fatigueScore: fatigueScore,
+                fatigueBand: fatigueBand,
+                avgReadiness7d: 100 - fatigueScore,
+                acuteChronicRatio: 1.0 + (fatigueScore / 100),
+                consecutiveLowDays: Int(fatigueScore / 20),
+                contributingFactors: urgency != .none ? ["Test factor 1", "Test factor 2"] : []
+            ),
+            deloadPrescription: urgency != .none ? DeloadPrescription.sample : nil,
+            createdAt: Date(),
+            status: nil,
+            activatedAt: nil,
+            dismissedAt: nil,
+            dismissalReason: nil
+        )
+    }
+}
+
+// MARK: - User Acceptance/Rejection Tests
+
+@MainActor
+final class DeloadUserResponseTests: XCTestCase {
+
+    var viewModel: DeloadRecommendationViewModel!
+    var mockFatigueService: MockFatigueTrackingService!
+    var mockDeloadService: MockDeloadRecommendationService!
+    let testPatientId = UUID()
+
+    override func setUp() async throws {
+        try await super.setUp()
+        mockFatigueService = MockFatigueTrackingService()
+        mockDeloadService = MockDeloadRecommendationService()
+        viewModel = DeloadRecommendationViewModel(
+            patientId: testPatientId,
+            fatigueTrackingService: mockFatigueService,
+            deloadRecommendationService: mockDeloadService
+        )
+    }
+
+    override func tearDown() async throws {
+        viewModel = nil
+        mockFatigueService = nil
+        mockDeloadService = nil
+        try await super.tearDown()
+    }
+
+    // MARK: - Acceptance Tests
+
+    func testUserAcceptance_ActivatesDeload() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .recommended
+
+        await viewModel.activateDeload()
+
+        XCTAssertTrue(viewModel.showActivationSuccess)
+        XCTAssertEqual(viewModel.urgency, .none)
+        XCTAssertNotNil(mockDeloadService.activatedPrescription)
+    }
+
+    func testUserAcceptance_PrescriptionPassedToService() async {
+        let prescription = DeloadPrescription(
+            durationDays: 5,
+            loadReductionPct: 0.25,
+            volumeReductionPct: 0.35,
+            focus: "Custom focus",
+            suggestedStartDate: Date()
+        )
+        viewModel.prescription = prescription
+        viewModel.urgency = .suggested
+
+        await viewModel.activateDeload()
+
+        XCTAssertNotNil(mockDeloadService.activatedPrescription)
+        XCTAssertEqual(mockDeloadService.activatedPrescription?.durationDays, 5)
+        XCTAssertEqual(mockDeloadService.activatedPrescription?.loadReductionPct, 0.25)
+    }
+
+    func testUserAcceptance_ClearsRecommendation() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .required
+
+        await viewModel.activateDeload()
+
+        XCTAssertEqual(viewModel.urgency, .none)
+        // Prescription is retained after activation for reference
+    }
+
+    func testUserAcceptance_ShowsSuccessState() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .recommended
+
+        XCTAssertFalse(viewModel.showActivationSuccess)
+
+        await viewModel.activateDeload()
+
+        XCTAssertTrue(viewModel.showActivationSuccess)
+    }
+
+    // MARK: - Rejection Tests
+
+    func testUserRejection_DismissesRecommendation() async {
+        viewModel.urgency = .recommended
+        viewModel.prescription = DeloadPrescription.sample
+
+        await viewModel.dismissRecommendation()
+
+        XCTAssertTrue(viewModel.showDismissalSuccess)
+        XCTAssertEqual(viewModel.urgency, .none)
+        XCTAssertNil(viewModel.prescription)
+    }
+
+    func testUserRejection_WithReason() async {
+        let dismissalReason = "Athlete has competition next week"
+        viewModel.urgency = .suggested
+
+        await viewModel.dismissRecommendation(reason: dismissalReason)
+
+        XCTAssertEqual(mockDeloadService.dismissedReason, dismissalReason)
+    }
+
+    func testUserRejection_WithoutReason() async {
+        viewModel.urgency = .recommended
+
+        await viewModel.dismissRecommendation(reason: nil)
+
+        XCTAssertNil(mockDeloadService.dismissedReason)
+        XCTAssertTrue(viewModel.showDismissalSuccess)
+    }
+
+    func testUserRejection_ClearsPrescription() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .recommended
+
+        await viewModel.dismissRecommendation()
+
+        XCTAssertNil(viewModel.prescription)
+    }
+
+    func testUserRejection_ShowsSuccessState() async {
+        viewModel.urgency = .suggested
+
+        XCTAssertFalse(viewModel.showDismissalSuccess)
+
+        await viewModel.dismissRecommendation()
+
+        XCTAssertTrue(viewModel.showDismissalSuccess)
+    }
+
+    // MARK: - Error Handling Tests
+
+    func testUserAcceptance_HandlesServiceFailure() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .recommended
+        mockDeloadService.shouldFailActivate = true
+
+        await viewModel.activateDeload()
+
+        XCTAssertFalse(viewModel.showActivationSuccess)
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertFalse(viewModel.errorMessage.isEmpty)
+    }
+
+    func testUserRejection_HandlesServiceFailure() async {
+        viewModel.urgency = .recommended
+        mockDeloadService.shouldFailDismiss = true
+
+        await viewModel.dismissRecommendation()
+
+        XCTAssertFalse(viewModel.showDismissalSuccess)
+        XCTAssertTrue(viewModel.showError)
+        XCTAssertFalse(viewModel.errorMessage.isEmpty)
+    }
+
+    func testUserAcceptance_WithoutPrescription_DoesNothing() async {
+        viewModel.prescription = nil
+        viewModel.urgency = .recommended
+
+        await viewModel.activateDeload()
+
+        XCTAssertFalse(viewModel.showActivationSuccess)
+        XCTAssertNil(mockDeloadService.activatedPrescription)
+    }
+}
+
+// MARK: - Adjustment Application Tests
+
+@MainActor
+final class DeloadAdjustmentApplicationTests: XCTestCase {
+
+    var viewModel: DeloadRecommendationViewModel!
+    var mockFatigueService: MockFatigueTrackingService!
+    var mockDeloadService: MockDeloadRecommendationService!
+    let testPatientId = UUID()
+
+    override func setUp() async throws {
+        try await super.setUp()
+        mockFatigueService = MockFatigueTrackingService()
+        mockDeloadService = MockDeloadRecommendationService()
+        viewModel = DeloadRecommendationViewModel(
+            patientId: testPatientId,
+            fatigueTrackingService: mockFatigueService,
+            deloadRecommendationService: mockDeloadService
+        )
+    }
+
+    override func tearDown() async throws {
+        viewModel = nil
+        mockFatigueService = nil
+        mockDeloadService = nil
+        try await super.tearDown()
+    }
+
+    // MARK: - Prescription Adjustment Tests
+
+    func testPrescription_LoadReductionPercentages() {
+        let prescription = DeloadPrescription(
+            durationDays: 7,
+            loadReductionPct: 0.30,
+            volumeReductionPct: 0.40,
+            focus: "Recovery",
+            suggestedStartDate: Date()
+        )
+
+        XCTAssertEqual(prescription.formattedLoadReduction, "30%")
+        XCTAssertEqual(prescription.formattedVolumeReduction, "40%")
+    }
+
+    func testPrescription_DateRange() {
+        let startDate = Date()
+        let prescription = DeloadPrescription(
+            durationDays: 7,
+            loadReductionPct: 0.30,
+            volumeReductionPct: 0.40,
+            focus: "Recovery",
+            suggestedStartDate: startDate
+        )
+
+        let dateRangeText = prescription.dateRangeText
+        XCTAssertTrue(dateRangeText.contains("-"))
+        XCTAssertFalse(dateRangeText.isEmpty)
+    }
+
+    func testPrescription_DifferentDurations() {
+        let durations = [3, 5, 7, 10, 14]
+
+        for duration in durations {
+            let prescription = DeloadPrescription(
+                durationDays: duration,
+                loadReductionPct: 0.30,
+                volumeReductionPct: 0.40,
+                focus: "Recovery",
+                suggestedStartDate: Date()
+            )
+
+            XCTAssertEqual(prescription.durationDays, duration)
+        }
+    }
+
+    func testPrescription_VaryingReductionLevels() {
+        let testCases: [(load: Double, volume: Double)] = [
+            (0.10, 0.10),
+            (0.20, 0.25),
+            (0.30, 0.40),
+            (0.50, 0.50)
+        ]
+
+        for (load, volume) in testCases {
+            let prescription = DeloadPrescription(
+                durationDays: 7,
+                loadReductionPct: load,
+                volumeReductionPct: volume,
+                focus: "Recovery",
+                suggestedStartDate: Date()
+            )
+
+            XCTAssertEqual(prescription.loadReductionPct, load, accuracy: 0.001)
+            XCTAssertEqual(prescription.volumeReductionPct, volume, accuracy: 0.001)
+        }
+    }
+
+    // MARK: - Fatigue Summary to Adjustment Tests
+
+    func testFatigueSummary_MapsToCorrectBand() {
+        viewModel.fatigueSummary = FatigueSummary(
+            fatigueScore: 72.0,
+            fatigueBand: "high",
+            avgReadiness7d: 55.0,
+            acuteChronicRatio: 1.4,
+            consecutiveLowDays: 3,
+            contributingFactors: []
+        )
+
+        XCTAssertEqual(viewModel.fatigueBand, .high)
+        XCTAssertEqual(viewModel.fatigueColor, .orange)
+    }
+
+    func testFatigueSummary_AllBands() {
+        let testCases: [(score: Double, band: String, expectedBand: FatigueBand, expectedColor: Color)] = [
+            (30, "low", .low, .green),
+            (50, "moderate", .moderate, .yellow),
+            (70, "high", .high, .orange),
+            (90, "critical", .critical, .red)
+        ]
+
+        for (score, band, expectedBand, expectedColor) in testCases {
+            viewModel.fatigueSummary = FatigueSummary(
+                fatigueScore: score,
+                fatigueBand: band,
+                avgReadiness7d: 100 - score,
+                acuteChronicRatio: 1.0,
+                consecutiveLowDays: 0,
+                contributingFactors: []
+            )
+
+            XCTAssertEqual(viewModel.fatigueBand, expectedBand,
+                          "Score \(score) should map to \(expectedBand)")
+            XCTAssertEqual(viewModel.fatigueColor, expectedColor,
+                          "Band \(expectedBand) should have color \(expectedColor)")
+        }
+    }
+
+    // MARK: - Applied Adjustment Integration Tests
+
+    func testAppliedAdjustment_WithActivePrescription() async {
+        let prescription = DeloadPrescription(
+            durationDays: 7,
+            loadReductionPct: 0.30,
+            volumeReductionPct: 0.40,
+            focus: "Recovery and mobility",
+            suggestedStartDate: Date()
+        )
+
+        viewModel.prescription = prescription
+        viewModel.urgency = .recommended
+
+        // Verify prescription is set correctly
+        XCTAssertEqual(viewModel.prescription?.loadReductionPct, 0.30)
+        XCTAssertEqual(viewModel.prescription?.volumeReductionPct, 0.40)
+
+        // Test that formatted values are correct
+        XCTAssertEqual(prescription.formattedLoadReduction, "30%")
+        XCTAssertEqual(prescription.formattedVolumeReduction, "40%")
+    }
+
+    func testAppliedAdjustment_AfterActivation() async {
+        viewModel.prescription = DeloadPrescription.sample
+        viewModel.urgency = .recommended
+
+        await viewModel.activateDeload()
+
+        // Urgency should be cleared after activation
+        XCTAssertEqual(viewModel.urgency, .none)
+        XCTAssertTrue(viewModel.showActivationSuccess)
     }
 }

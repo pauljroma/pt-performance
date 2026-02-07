@@ -100,7 +100,7 @@ final class RecoveryImpactAnalysisTests: XCTestCase {
             RecoveryInsight(
                 type: .hrvImprovement,
                 metric: .hrv,
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 impactPercentage: 15.0,
                 confidence: 0.85,
                 description: "HRV improved after sauna",
@@ -128,7 +128,7 @@ final class RecoveryImpactAnalysisTests: XCTestCase {
 
         let correlations = [
             RecoveryCorrelation(
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 metric: .hrv,
                 correlationCoefficient: 0.68,
                 pValue: 0.02,
@@ -147,7 +147,7 @@ final class RecoveryImpactAnalysisTests: XCTestCase {
 
         let recommendations = [
             PersonalizedRecoveryRecommendation(
-                protocolType: .sauna,
+                protocolType: .saunaTraditional,
                 title: "Continue Sauna Sessions",
                 reason: "Consistent HRV improvement",
                 expectedBenefit: "+12-15% HRV",
@@ -185,7 +185,7 @@ final class RecoveryInsightTests: XCTestCase {
         let insight = RecoveryInsight(
             type: .hrvImprovement,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: 15.0,
             confidence: 0.85,
             description: "HRV improved 15% after sauna sessions",
@@ -197,7 +197,7 @@ final class RecoveryInsightTests: XCTestCase {
         XCTAssertNotNil(insight.id)
         XCTAssertEqual(insight.type, .hrvImprovement)
         XCTAssertEqual(insight.metric, .hrv)
-        XCTAssertEqual(insight.protocolType, .sauna)
+        XCTAssertEqual(insight.protocolType, .saunaTraditional)
         XCTAssertEqual(insight.impactPercentage, 15.0)
         XCTAssertEqual(insight.confidence, 0.85)
         XCTAssertEqual(insight.dataPoints, 12)
@@ -211,7 +211,7 @@ final class RecoveryInsightTests: XCTestCase {
         let insight = RecoveryInsight(
             type: .hrvImprovement,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: 15.7,
             confidence: 0.85,
             description: "Test",
@@ -225,7 +225,7 @@ final class RecoveryInsightTests: XCTestCase {
         let insight = RecoveryInsight(
             type: .hrvDecline,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: -8.3,
             confidence: 0.70,
             description: "Test",
@@ -239,7 +239,7 @@ final class RecoveryInsightTests: XCTestCase {
         let insight = RecoveryInsight(
             type: .recoveryEffectiveness,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: 0.4,
             confidence: 0.50,
             description: "Test",
@@ -291,7 +291,7 @@ final class RecoveryInsightTests: XCTestCase {
         let original = RecoveryInsight(
             type: .sleepImprovement,
             metric: .sleepDuration,
-            protocolType: .meditation,
+            protocolType: .contrast,
             impactPercentage: 10.0,
             confidence: 0.75,
             description: "Sleep improved",
@@ -316,7 +316,7 @@ final class RecoveryInsightTests: XCTestCase {
         RecoveryInsight(
             type: .recoveryEffectiveness,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: impact,
             confidence: 0.75,
             description: "Test",
@@ -328,7 +328,7 @@ final class RecoveryInsightTests: XCTestCase {
         RecoveryInsight(
             type: .recoveryEffectiveness,
             metric: .hrv,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             impactPercentage: 10.0,
             confidence: confidence,
             description: "Test",
@@ -409,7 +409,7 @@ final class RecoveryCorrelationTests: XCTestCase {
 
     func testRecoveryCorrelation_Initialization() {
         let correlation = RecoveryCorrelation(
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             metric: .hrv,
             correlationCoefficient: 0.68,
             pValue: 0.02,
@@ -418,7 +418,7 @@ final class RecoveryCorrelationTests: XCTestCase {
         )
 
         XCTAssertNotNil(correlation.id)
-        XCTAssertEqual(correlation.protocolType, .sauna)
+        XCTAssertEqual(correlation.protocolType, .saunaTraditional)
         XCTAssertEqual(correlation.metric, .hrv)
         XCTAssertEqual(correlation.correlationCoefficient, 0.68)
         XCTAssertEqual(correlation.pValue, 0.02)
@@ -453,7 +453,7 @@ final class RecoveryCorrelationTests: XCTestCase {
 
     func testRecoveryCorrelation_IsSignificant_True() {
         let correlation = RecoveryCorrelation(
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             metric: .hrv,
             correlationCoefficient: 0.68,
             pValue: 0.02, // < 0.05
@@ -466,7 +466,7 @@ final class RecoveryCorrelationTests: XCTestCase {
 
     func testRecoveryCorrelation_IsSignificant_False_HighPValue() {
         let correlation = RecoveryCorrelation(
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             metric: .hrv,
             correlationCoefficient: 0.68,
             pValue: 0.10, // >= 0.05
@@ -479,7 +479,7 @@ final class RecoveryCorrelationTests: XCTestCase {
 
     func testRecoveryCorrelation_IsSignificant_False_SmallSample() {
         let correlation = RecoveryCorrelation(
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             metric: .hrv,
             correlationCoefficient: 0.68,
             pValue: 0.02,
@@ -494,7 +494,7 @@ final class RecoveryCorrelationTests: XCTestCase {
 
     private func createCorrelationWithCoefficient(_ coefficient: Double) -> RecoveryCorrelation {
         RecoveryCorrelation(
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             metric: .hrv,
             correlationCoefficient: coefficient,
             pValue: 0.02,
@@ -512,7 +512,7 @@ final class PersonalizedRecoveryRecommendationTests: XCTestCase {
         let id = UUID()
         let recommendation = PersonalizedRecoveryRecommendation(
             id: id,
-            protocolType: .sauna,
+            protocolType: .saunaTraditional,
             title: "Continue Sauna Sessions",
             reason: "Your data shows consistent HRV improvement",
             expectedBenefit: "+12-15% HRV improvement",
@@ -524,7 +524,7 @@ final class PersonalizedRecoveryRecommendationTests: XCTestCase {
         )
 
         XCTAssertEqual(recommendation.id, id)
-        XCTAssertEqual(recommendation.protocolType, .sauna)
+        XCTAssertEqual(recommendation.protocolType, .saunaTraditional)
         XCTAssertEqual(recommendation.title, "Continue Sauna Sessions")
         XCTAssertEqual(recommendation.reason, "Your data shows consistent HRV improvement")
         XCTAssertEqual(recommendation.expectedBenefit, "+12-15% HRV improvement")
@@ -552,7 +552,7 @@ final class PersonalizedRecoveryRecommendationTests: XCTestCase {
 
     func testPersonalizedRecoveryRecommendation_Codable() throws {
         let original = PersonalizedRecoveryRecommendation(
-            protocolType: .meditation,
+            protocolType: .contrast,
             title: "Add Meditation",
             reason: "Stress reduction",
             expectedBenefit: "Better HRV",

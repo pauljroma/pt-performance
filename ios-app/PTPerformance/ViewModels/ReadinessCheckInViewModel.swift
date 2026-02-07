@@ -176,11 +176,13 @@ class ReadinessCheckInViewModel: ObservableObject {
             } else {
                 errorMessage = "Couldn't load your previous check-in. Please try again."
             }
-            showError = true
 
             // Still allow user to submit a new check-in
             hasSubmittedToday = false
             resetForm()
+
+            // Set showError AFTER resetForm() because resetForm() clears it
+            showError = true
         }
 
         isLoading = false

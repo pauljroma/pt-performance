@@ -136,8 +136,9 @@ final class FastingWorkoutRecommendationTests: XCTestCase {
     }
 
     func testFastingWorkoutRecommendation_IntensityPercentage() {
+        // 16 hours = 16-20 hour range = 85% intensity
         let recommendation = createRecommendation(fastingHours: 16.0)
-        XCTAssertEqual(recommendation.intensityPercentage, 95)
+        XCTAssertEqual(recommendation.intensityPercentage, 85)
     }
 
     func testFastingWorkoutRecommendation_Identifiable() {
@@ -229,42 +230,112 @@ final class FastingStateResponseTests: XCTestCase {
 
 // MARK: - WorkoutModification Tests
 
-final class WorkoutModificationTests: XCTestCase {
+final class FastingWorkoutModificationTests: XCTestCase {
 
     func testWorkoutModification_Decoding() throws {
         let json = """
         {
-            "type": "intensity",
-            "original_value": "100%",
-            "modified_value": "85%",
-            "rationale": "Reduce intensity for fasted state"
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "550e8400-e29b-41d4-a716-446655440001",
+            "scheduled_session_id": null,
+            "session_name": "Upper Body Strength",
+            "scheduled_date": "2024-01-15T10:00:00Z",
+            "modification_type": "load_adjustment",
+            "trigger": "low_readiness",
+            "status": "pending",
+            "readiness_score": 55.0,
+            "fatigue_score": null,
+            "load_adjustment_percentage": -20.0,
+            "volume_reduction_sets": null,
+            "delay_days": null,
+            "deload_duration_days": null,
+            "exercise_modifications": null,
+            "reason": "Reduce intensity for fasted state",
+            "detailed_explanation": "Your readiness score indicates reduced capacity today.",
+            "created_at": "2024-01-15T08:00:00Z",
+            "resolved_at": null,
+            "athlete_feedback": null
         }
         """.data(using: .utf8)!
 
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let modification = try decoder.decode(WorkoutModification.self, from: json)
 
-        XCTAssertEqual(modification.type, "intensity")
-        XCTAssertEqual(modification.originalValue, "100%")
-        XCTAssertEqual(modification.modifiedValue, "85%")
-        XCTAssertTrue(modification.rationale.contains("fasted"))
+        XCTAssertEqual(modification.modificationType, .loadAdjustment)
+        XCTAssertEqual(modification.trigger, .lowReadiness)
+        XCTAssertEqual(modification.status, .pending)
+        XCTAssertEqual(modification.loadAdjustmentPercentage, -20.0)
+        XCTAssertTrue(modification.reason.contains("fasted"))
     }
 
     func testWorkoutModification_Identifiable() throws {
         let json = """
         {
-            "type": "volume",
-            "original_value": "4 sets",
-            "modified_value": "3 sets",
-            "rationale": "Reduce volume"
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "550e8400-e29b-41d4-a716-446655440001",
+            "scheduled_session_id": null,
+            "session_name": "Leg Day",
+            "scheduled_date": "2024-01-15T10:00:00Z",
+            "modification_type": "volume_reduction",
+            "trigger": "high_fatigue",
+            "status": "pending",
+            "readiness_score": 45.0,
+            "fatigue_score": 75.0,
+            "load_adjustment_percentage": null,
+            "volume_reduction_sets": 2,
+            "delay_days": null,
+            "deload_duration_days": null,
+            "exercise_modifications": null,
+            "reason": "Reduce volume due to accumulated fatigue",
+            "detailed_explanation": null,
+            "created_at": "2024-01-15T08:00:00Z",
+            "resolved_at": null,
+            "athlete_feedback": null
         }
         """.data(using: .utf8)!
 
         let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         let modification = try decoder.decode(WorkoutModification.self, from: json)
 
-        // ID should be combination of type and rationale prefix
-        XCTAssertTrue(modification.id.contains("volume"))
+        // ID should be a UUID
+        XCTAssertEqual(modification.id, UUID(uuidString: "550e8400-e29b-41d4-a716-446655440000"))
+        XCTAssertEqual(modification.modificationType, .volumeReduction)
+        XCTAssertEqual(modification.volumeReductionSets, 2)
+    }
+
+    func testWorkoutModification_PrimaryDisplayText() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "patient_id": "550e8400-e29b-41d4-a716-446655440001",
+            "scheduled_session_id": null,
+            "session_name": "Session",
+            "scheduled_date": "2024-01-15T10:00:00Z",
+            "modification_type": "load_adjustment",
+            "trigger": "low_readiness",
+            "status": "pending",
+            "readiness_score": 55.0,
+            "fatigue_score": null,
+            "load_adjustment_percentage": -25.0,
+            "volume_reduction_sets": null,
+            "delay_days": null,
+            "deload_duration_days": null,
+            "exercise_modifications": null,
+            "reason": "Adjust for readiness",
+            "detailed_explanation": null,
+            "created_at": "2024-01-15T08:00:00Z",
+            "resolved_at": null,
+            "athlete_feedback": null
+        }
+        """.data(using: .utf8)!
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let modification = try decoder.decode(WorkoutModification.self, from: json)
+
+        XCTAssertEqual(modification.primaryDisplayText, "-25% load adjustment")
     }
 }
 
