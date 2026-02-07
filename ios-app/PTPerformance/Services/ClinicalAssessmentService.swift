@@ -33,6 +33,10 @@ private struct GetClinicalAssessmentParams: Encodable {
 /// Provides CRUD operations for comprehensive clinical evaluations including ROM measurements and functional tests
 @MainActor
 class ClinicalAssessmentService: ObservableObject {
+    // MARK: - Singleton
+
+    static let shared = ClinicalAssessmentService()
+
     // MARK: - Properties
 
     nonisolated(unsafe) private let client: PTSupabaseClient
