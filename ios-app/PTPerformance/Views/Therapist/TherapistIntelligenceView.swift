@@ -20,6 +20,8 @@ struct TherapistIntelligenceView: View {
     @State private var showProgramEffectiveness = false
     @State private var showReportBuilder = false
     @State private var showEmailHistory = false
+    @State private var showClinicalDocumentation = false
+    @State private var showRTSTracking = false
     @State private var selectedPatient: Patient?
     @State private var showAllAtRiskPatients = false
     @State private var showAllActivity = false
@@ -97,6 +99,18 @@ struct TherapistIntelligenceView: View {
             .sheet(isPresented: $showEmailHistory) {
                 PracticeEmailHistoryView()
                     .environmentObject(appState)
+            }
+            .sheet(isPresented: $showClinicalDocumentation) {
+                NavigationView {
+                    DocumentationDashboardView()
+                }
+                .environmentObject(appState)
+            }
+            .sheet(isPresented: $showRTSTracking) {
+                NavigationStack {
+                    RTSPatientListView()
+                        .environmentObject(appState)
+                }
             }
             .sheet(isPresented: $showAllAtRiskPatients) {
                 AllAtRiskPatientsView(
@@ -204,6 +218,26 @@ struct TherapistIntelligenceView: View {
                 ) {
                     HapticFeedback.light()
                     showEmailHistory = true
+                }
+
+                QuickActionCard(
+                    title: "Clinical Documentation",
+                    subtitle: "SOAP notes & assessments",
+                    icon: "list.clipboard.fill",
+                    color: .teal
+                ) {
+                    HapticFeedback.light()
+                    showClinicalDocumentation = true
+                }
+
+                QuickActionCard(
+                    title: "RTS Tracking",
+                    subtitle: "Return-to-sport protocols",
+                    icon: "figure.run",
+                    color: .indigo
+                ) {
+                    HapticFeedback.light()
+                    showRTSTracking = true
                 }
             }
         }

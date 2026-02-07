@@ -10,6 +10,9 @@ struct PatientDetailView: View {
     @State private var showProgressReport = false
     @State private var showPrescribeWorkout = false
     @State private var showReportBuilder = false
+    @State private var showIntakeAssessment = false
+    @State private var showSOAPNote = false
+    @State private var showAssessmentHistory = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -75,6 +78,9 @@ struct PatientDetailView: View {
                         }
                     }
 
+                    // RTS Protocol Card (if patient has active RTS protocol)
+                    RTSProtocolSummaryCard(patientId: patient.id)
+
                     // Adherence
                     if let adherence = viewModel.adherence {
                         AdherenceCompactCard(adherence: adherence)
@@ -98,7 +104,9 @@ struct PatientDetailView: View {
                         onViewProgram: { showProgramViewer = true },
                         onAddNote: { showAddNote = true },
                         onPrescribeWorkout: { showPrescribeWorkout = true },
-                        onGenerateReport: { showReportBuilder = true }
+                        onGenerateReport: { showReportBuilder = true },
+                        onNewAssessment: { showIntakeAssessment = true },
+                        onNewSOAPNote: { showSOAPNote = true }
                     )
                 }
             }
@@ -119,6 +127,27 @@ struct PatientDetailView: View {
                         showProgressReport = true
                     } label: {
                         Label("View Progress Summary", systemImage: "chart.line.uptrend.xyaxis")
+                    }
+
+                    Divider()
+
+                    // Clinical Documentation
+                    Button {
+                        showIntakeAssessment = true
+                    } label: {
+                        Label("New Clinical Assessment", systemImage: "list.clipboard")
+                    }
+
+                    Button {
+                        showSOAPNote = true
+                    } label: {
+                        Label("New SOAP Note", systemImage: "doc.text")
+                    }
+
+                    Button {
+                        showAssessmentHistory = true
+                    } label: {
+                        Label("Assessment History", systemImage: "chart.xyaxis.line")
                     }
 
                     Divider()
@@ -168,6 +197,24 @@ struct PatientDetailView: View {
         }
         .sheet(isPresented: $showReportBuilder) {
             ReportBuilderView(patient: patient)
+        }
+        .sheet(isPresented: $showIntakeAssessment) {
+            NavigationView {
+                IntakeAssessmentView(
+                    patientId: patient.id,
+                    therapistId: UUID(uuidString: PTSupabaseClient.shared.userId ?? "") ?? UUID()
+                )
+            }
+        }
+        .sheet(isPresented: $showSOAPNote) {
+            NavigationView {
+                SOAPNoteEditorView(patientId: patient.id.uuidString, sessionId: nil)
+            }
+        }
+        .sheet(isPresented: $showAssessmentHistory) {
+            NavigationView {
+                AssessmentHistoryView(patientId: patient.id, patientName: patient.fullName)
+            }
         }
     }
 
@@ -380,6 +427,8 @@ struct QuickActionsCard: View {
     let onAddNote: () -> Void
     let onPrescribeWorkout: () -> Void
     var onGenerateReport: (() -> Void)? = nil
+    var onNewAssessment: (() -> Void)? = nil
+    var onNewSOAPNote: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 12) {
@@ -418,6 +467,24 @@ struct QuickActionsCard: View {
                         icon: "doc.richtext",
                         color: .purple,
                         action: onGenerateReport
+                    )
+                }
+
+                if let onNewAssessment = onNewAssessment {
+                    ActionButton(
+                        title: "New Assessment",
+                        icon: "list.clipboard",
+                        color: .teal,
+                        action: onNewAssessment
+                    )
+                }
+
+                if let onNewSOAPNote = onNewSOAPNote {
+                    ActionButton(
+                        title: "SOAP Note",
+                        icon: "doc.text",
+                        color: .indigo,
+                        action: onNewSOAPNote
                     )
                 }
             }
