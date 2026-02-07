@@ -5,15 +5,19 @@ build/
 DerivedData/
 *.xcworkspace
 !default.xcworkspace
+*.xcresult
+*.pbxproj.backup
 
 # Swift
 *.swiftmodule
+
+# Node
+node_modules/
 
 # Environment files with secrets
 .env
 .env.local
 .env.*.local
-*.env
 
 # But template is OK to commit
 !.env.template
@@ -22,6 +26,16 @@ DerivedData/
 # OS
 .DS_Store
 
+# Logs
+*.log
+
 # Cache
 .cache/
+
+# Docker (not used for iOS app)
 docker-compose.yml
+docker-compose.yaml
+
+# Temp files
+*.backup
+*.tmp
