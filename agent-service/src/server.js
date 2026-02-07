@@ -1,5 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
+import rateLimit from 'express-rate-limit';
 import { config } from './config.js';
 import {
   getPatient,
@@ -35,9 +36,43 @@ try {
   console.log('⚠️  Linear PCR service not available yet (will be added by Agent 2)');
 }
 
+// Default rate limiter: 100 requests per 15 minutes per IP
+const defaultLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strict limiter for expensive LLM operations: 10 per minute
+const llmLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Rate limit exceeded for AI operations' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Very strict for issue creation: 5 per minute
+const pcrLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: { error: 'Rate limit exceeded for plan change requests' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const app = express();
 app.use(express.json());
 app.use(loggingMiddleware);
+
+// Apply rate limiters to specific endpoints
+app.use('/pt-assistant', llmLimiter);
+app.use('/plan-change-request', pcrLimiter);
+app.use('/flags', defaultLimiter);
+app.use('/patient-summary', defaultLimiter);
+app.use('/protocol', defaultLimiter);
 
 // Register therapist routes (ACP-68, ACP-96-99)
 app.use('/therapist', therapistRoutes);

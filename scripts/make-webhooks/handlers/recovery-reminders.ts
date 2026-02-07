@@ -305,8 +305,12 @@ async function getRecoveryRecommendation(
 
   // Fallback recommendation
   const activities = patient.preferred_recovery_activities || ['stretching', 'foam rolling'];
+  // Use cryptographically secure random selection
+  const randomBytes = new Uint8Array(1);
+  crypto.getRandomValues(randomBytes);
+  const randomIndex = randomBytes[0] % activities.length;
   return {
-    recommended_activity: activities[Math.floor(Math.random() * activities.length)],
+    recommended_activity: activities[randomIndex],
     recommended_duration: '15-20 minutes',
     benefits: ['Improved flexibility', 'Reduced muscle tension', 'Better recovery'],
     intensity: 'light',

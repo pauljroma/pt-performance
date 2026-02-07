@@ -4,6 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { requireAuth, createAuthenticatedClient, verifyPatientOwnership, isTherapistForPatient, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,10 +47,13 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client with service role (bypasses RLS)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Validate JWT authentication
+    const authResult = await requireAuth(req)
+    if (authResult instanceof Response) return authResult
+    const authUser = authResult as AuthUser
+
+    // Initialize Supabase client with user's JWT (respects RLS)
+    const supabase = createAuthenticatedClient(req)
 
     // Parse request
     const requestData: GenerateSessionsRequest = await req.json()
@@ -85,6 +89,17 @@ serve(async (req) => {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
+      )
+    }
+
+    // Verify ownership: user owns the patient OR is a therapist for the patient
+    const isOwner = await verifyPatientOwnership(supabase, program.patient_id, authUser.user_id)
+    const isTherapist = await isTherapistForPatient(supabase, program.patient_id, authUser.user_id)
+
+    if (!isOwner && !isTherapist) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden', message: 'You do not have access to this program' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

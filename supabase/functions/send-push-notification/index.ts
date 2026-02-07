@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+import { requireAuth, createAuthenticatedClient, isTherapistForPatient, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,6 +36,11 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Authenticate user
+  const authResult = await requireAuth(req)
+  if (authResult instanceof Response) return authResult
+  const authUser = authResult as AuthUser
+
   try {
     // Get environment variables
     const APNS_KEY_ID = Deno.env.get('APNS_KEY_ID')
@@ -50,10 +56,39 @@ serve(async (req) => {
     // Parse request body
     const payload: PushNotificationPayload = await req.json()
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    // Initialize Supabase client with user's JWT for RLS
+    const supabase = createAuthenticatedClient(req)
+
+    // Verify authorization for user_id target
+    if (payload.user_id) {
+      // Can only send to self OR to patients you're therapist for
+      if (payload.user_id !== authUser.user_id) {
+        const isTherapist = await isTherapistForPatient(supabase, payload.user_id, authUser.user_id)
+        if (!isTherapist) {
+          return new Response(
+            JSON.stringify({ error: 'Forbidden', message: 'Cannot send notifications to this user' }),
+            { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+    }
+
+    // Verify authorization for device_token target
+    if (payload.device_token) {
+      // Verify this token belongs to the authenticated user
+      const { data: tokenRecord } = await supabase
+        .from('push_notification_tokens')
+        .select('user_id')
+        .eq('device_token', payload.device_token)
+        .maybeSingle()
+
+      if (!tokenRecord || tokenRecord.user_id !== authUser.user_id) {
+        return new Response(
+          JSON.stringify({ error: 'Forbidden', message: 'Invalid device token' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
 
     // Get device tokens
     let deviceTokens: string[] = []

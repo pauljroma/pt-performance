@@ -6,7 +6,63 @@
  */
 
 import fetch from 'node-fetch';
+import { z } from 'zod';
 import { getRecentSessions } from './flags.js';
+
+// Schema for Linear GraphQL response
+const LinearIssueCreateResponseSchema = z.object({
+  data: z.object({
+    issueCreate: z.object({
+      success: z.boolean(),
+      issue: z.object({
+        id: z.string(),
+        identifier: z.string(),
+        title: z.string().optional(),
+        url: z.string().optional(),
+      }).optional(),
+    }),
+  }).optional(),
+  errors: z.array(z.object({
+    message: z.string(),
+    path: z.array(z.string()).optional(),
+  })).optional(),
+});
+
+const LinearLabelResponseSchema = z.object({
+  data: z.object({
+    team: z.object({
+      labels: z.object({
+        nodes: z.array(z.object({
+          id: z.string(),
+          name: z.string(),
+        })),
+      }).optional(),
+    }).optional(),
+    issueLabelCreate: z.object({
+      success: z.boolean(),
+      issueLabel: z.object({
+        id: z.string(),
+        name: z.string(),
+      }).optional(),
+    }).optional(),
+  }).optional(),
+  errors: z.array(z.object({ message: z.string() })).optional(),
+});
+
+const LinearWorkflowStateResponseSchema = z.object({
+  data: z.object({
+    team: z.object({
+      states: z.object({
+        nodes: z.array(z.object({
+          id: z.string(),
+          name: z.string(),
+          type: z.string().optional(),
+        })),
+      }).optional(),
+    }).optional(),
+  }).optional(),
+  errors: z.array(z.object({ message: z.string() })).optional(),
+});
 
 const LINEAR_API_URL = 'https://api.linear.app/graphql';
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY;
@@ -196,7 +252,13 @@ async function createLinearIssue({ title, description, teamId, labelIds, stateId
     })
   });
 
-  const result = await response.json();
+  const rawResult = await response.json();
+  const parseResult = LinearIssueCreateResponseSchema.safeParse(rawResult);
+  if (!parseResult.success) {
+    console.error('Invalid Linear API response:', parseResult.error);
+    throw new Error('Invalid Linear API response format');
+  }
+  const result = parseResult.data;
 
   if (result.errors) {
     throw new Error(`Linear API errors: ${JSON.stringify(result.errors)}`);
@@ -240,7 +302,13 @@ async function getOrCreateLabel(labelName) {
       })
     });
 
-    const result = await response.json();
+    const rawResult = await response.json();
+    const parseResult = LinearLabelResponseSchema.safeParse(rawResult);
+    if (!parseResult.success) {
+      console.error('Invalid Linear API response for labels:', parseResult.error);
+      return null;
+    }
+    const result = parseResult.data;
 
     if (result.errors) {
       console.error('Error fetching labels:', result.errors);
@@ -285,7 +353,13 @@ async function getOrCreateLabel(labelName) {
       })
     });
 
-    const createResult = await createResponse.json();
+    const rawCreateResult = await createResponse.json();
+    const createParseResult = LinearLabelResponseSchema.safeParse(rawCreateResult);
+    if (!createParseResult.success) {
+      console.error('Invalid Linear API response for label creation:', createParseResult.error);
+      return null;
+    }
+    const createResult = createParseResult.data;
 
     if (createResult.errors) {
       console.error('Error creating label:', createResult.errors);
@@ -330,7 +404,13 @@ async function getWorkflowState(stateName) {
       })
     });
 
-    const result = await response.json();
+    const rawResult = await response.json();
+    const parseResult = LinearWorkflowStateResponseSchema.safeParse(rawResult);
+    if (!parseResult.success) {
+      console.error('Invalid Linear API response for workflow states:', parseResult.error);
+      return null;
+    }
+    const result = parseResult.data;
 
     if (result.errors) {
       console.error('Error fetching workflow states:', result.errors);

@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { requireAuth, createAuthenticatedClient, verifyPatientOwnership, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,13 @@ serve(async (req) => {
   }
 
   try {
+    // Require authentication
+    const authResult = await requireAuth(req)
+    if (authResult instanceof Response) {
+      return authResult  // Return 401 if not authenticated
+    }
+    const authUser = authResult as AuthUser
+
     const { patient_id } = await req.json() as SyncWhoopRequest
 
     if (!patient_id) {
@@ -60,11 +68,17 @@ serve(async (req) => {
       )
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    )
+    // Use authenticated client (enforces RLS)
+    const supabaseClient = createAuthenticatedClient(req)
+
+    // Verify user owns this patient record
+    const isOwner = await verifyPatientOwnership(supabaseClient, patient_id, authUser.user_id)
+    if (!isOwner) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden', message: 'You do not have access to this patient' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // ============================================================================
     // 1. Check cache - don't sync more than once per hour
@@ -333,11 +347,18 @@ async function syncMockRecoveryData(
   patientId: string,
   today: string
 ): Promise<Response> {
-  // Generate realistic mock data
-  const mockRecoveryScore = 70 + Math.random() * 25 // 70-95 range
-  const mockSleepPerformance = 75 + Math.random() * 20 // 75-95 range
-  const mockHRV = 45 + Math.random() * 30 // 45-75ms range
-  const mockStrain = 8 + Math.random() * 6 // 8-14 range (moderate)
+  // Generate realistic mock data using cryptographically secure random
+  const randomBytes = new Uint8Array(4)
+  crypto.getRandomValues(randomBytes)
+  const rand1 = randomBytes[0] / 255  // 0-1
+  const rand2 = randomBytes[1] / 255
+  const rand3 = randomBytes[2] / 255
+  const rand4 = randomBytes[3] / 255
+
+  const mockRecoveryScore = 70 + rand1 * 25 // 70-95 range
+  const mockSleepPerformance = 75 + rand2 * 20 // 75-95 range
+  const mockHRV = 45 + rand3 * 30 // 45-75ms range
+  const mockStrain = 8 + rand4 * 6 // 8-14 range (moderate)
 
   const { data: updatedReadiness, error: updateError } = await supabaseClient
     .from('daily_readiness')

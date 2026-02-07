@@ -4,6 +4,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { requireAuth, createAuthenticatedClient, verifyPatientOwnership, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,20 +28,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    // Initialize Supabase client with service role key
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  // Authenticate user with JWT validation
+  const authResult = await requireAuth(req)
+  if (authResult instanceof Response) return authResult
+  const authUser = authResult as AuthUser
 
-    // Authenticate request
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Missing authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+  try {
+    // Initialize Supabase client with user's JWT for RLS
+    const supabase = createAuthenticatedClient(req)
 
     // Parse request body
     const body: ApplySubstitutionRequest = await req.json();
@@ -70,6 +65,28 @@ serve(async (req) => {
     if (recError || !recommendation) {
       console.error("BUILD 187: Recommendation not found:", recError);
       throw new Error("Recommendation not found");
+    }
+
+    // Verify user owns this recommendation (via session → patient)
+    const { data: session } = await supabase
+      .from('sessions')
+      .select('patient_id')
+      .eq('id', recommendation.session_id)
+      .maybeSingle()
+
+    if (!session) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Session not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const isOwner = await verifyPatientOwnership(supabase, session.patient_id, authUser.user_id)
+    if (!isOwner) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'You do not have access to this recommendation' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log("BUILD 187: Found recommendation, session_id:", recommendation.session_id);

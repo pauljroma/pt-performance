@@ -282,6 +282,7 @@ enum WHOOPError: LocalizedError {
     case noDataAvailable
     case authenticationFailed
     case apiError(String)
+    case invalidData(String)
 
     var errorDescription: String? {
         switch self {
@@ -291,6 +292,8 @@ enum WHOOPError: LocalizedError {
             return "WHOOP Authentication Failed"
         case .apiError(let message):
             return "WHOOP API Error: \(message)"
+        case .invalidData(let message):
+            return "Invalid WHOOP Data: \(message)"
         }
     }
 
@@ -302,6 +305,8 @@ enum WHOOPError: LocalizedError {
             return "Please reconnect your WHOOP account in Settings to continue syncing your recovery data."
         case .apiError:
             return "There was a problem communicating with WHOOP. Please try again later."
+        case .invalidData:
+            return "The data received from WHOOP appears to be invalid. Please try syncing again."
         }
     }
 }
@@ -346,8 +351,12 @@ extension WHOOPService {
         // Map sleep performance to quality (1-5 scale)
         let sleepQuality = calculateSleepQuality(from: sleepData.score.sleepPerformancePercentage)
 
-        // Calculate sleep hours from quality duration
-        let sleepHours = Double(sleepData.score.qualityDuration) / (1000 * 60 * 60)
+        // Calculate sleep hours from quality duration (with validation)
+        let qualityDurationMs = sleepData.score.qualityDuration
+        guard qualityDurationMs > 0, qualityDurationMs < 24 * 60 * 60 * 1000 else {
+            throw WHOOPError.invalidData("Invalid sleep duration: \(qualityDurationMs)ms")
+        }
+        let sleepHours = Double(qualityDurationMs) / (1000 * 60 * 60)
 
         return WHOOPReadinessInput(
             sleepHours: sleepHours,

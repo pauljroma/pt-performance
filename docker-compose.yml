@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: temppass123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: expo
       POSTGRES_SHARED_BUFFERS: 8GB
       POSTGRES_EFFECTIVE_CACHE_SIZE: 24GB
@@ -38,7 +38,7 @@ services:
     container_name: sand-expo-pgvector
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: temp
+      POSTGRES_PASSWORD: ${PGVECTOR_PASSWORD}
     ports:
       - "5435:5432"
     volumes:
@@ -55,7 +55,7 @@ services:
     container_name: sand-expo-neo4j
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: neo4j/testpassword123
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
       NEO4J_server_memory_heap_initial__size: 2G
       NEO4J_server_memory_heap_max__size: 4G
@@ -68,7 +68,7 @@ services:
       - expo_expo_neo4j_logs:/logs
       - expo_expo_neo4j_import:/var/lib/neo4j/import
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p testpassword123 'RETURN 1' || exit 1"]
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD} 'RETURN 1' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -78,7 +78,7 @@ services:
     container_name: sand-expo-omop-twin-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_PASSWORD: temp
+      POSTGRES_PASSWORD: ${PGVECTOR_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5434:5432"
@@ -90,7 +90,7 @@ services:
     container_name: sand-expo-omop-twin-neo4j
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: neo4j/testpassword123
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
       NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     ports:
       - "7476:7474"
@@ -193,7 +193,7 @@ services:
       GENERIC_TIMEZONE: America/Los_Angeles
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
-      N8N_BASIC_AUTH_PASSWORD: "jGvI0ZWcQZ*BVvl]4s>hy{dm"
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
       N8N_SECURE_COOKIE: "false"
       N8N_PAYLOAD_SIZE_MAX: 128
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
@@ -302,7 +302,7 @@ services:
     container_name: sand-expo-postgres-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:temppass123@db:5432/expo?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/expo?sslmode=disable"
     ports:
       - "9187:9187"
     depends_on:
@@ -313,7 +313,7 @@ services:
     container_name: sand-expo-pgvector-exporter
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:temp@pgvector:5432/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:${PGVECTOR_PASSWORD}@pgvector:5432/postgres?sslmode=disable"
     ports:
       - "9188:9187"
     depends_on:

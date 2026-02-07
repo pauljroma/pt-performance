@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAuth, createAuthenticatedClient, verifyPatientOwnership, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,12 +7,13 @@ const corsHeaders = {
 };
 
 function generateCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No I, O, 0, 1 to avoid confusion
-  let code = "";
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 32 chars (no I, O, 0, 1)
+  const randomBytes = new Uint8Array(8);
+  crypto.getRandomValues(randomBytes);  // Cryptographically secure
+
+  return Array.from(randomBytes)
+    .map(byte => chars[byte % chars.length])
+    .join('');
 }
 
 serve(async (req) => {
@@ -21,9 +22,12 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    // Require authentication for all actions
+    const authResult = await requireAuth(req)
+    if (authResult instanceof Response) return authResult
+    const authUser = authResult as AuthUser
+
+    const supabase = createAuthenticatedClient(req)
 
     const { action, patientId, therapistId, code } = await req.json();
 
@@ -33,6 +37,15 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "patientId required" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify user owns the patient record
+      const isOwner = await verifyPatientOwnership(supabase, patientId, authUser.user_id);
+      if (!isOwner) {
+        return new Response(
+          JSON.stringify({ error: "You do not own this patient record" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -77,44 +90,58 @@ serve(async (req) => {
         );
       }
 
-      // Find valid, unused code
-      const { data: linkingCode, error: findError } = await supabase
-        .from("linking_codes")
-        .select("*")
-        .eq("code", code.toUpperCase())
-        .is("used_by", null)
-        .gt("expires_at", new Date().toISOString())
-        .maybeSingle();
-
-      if (findError || !linkingCode) {
+      // Verify therapist_id matches authenticated user (therapists link themselves)
+      if (therapistId !== authUser.user_id) {
         return new Response(
-          JSON.stringify({ error: "Invalid or expired linking code" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Cannot link as another therapist" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Update patient's therapist_id
+      // ATOMIC: Claim the code in a single operation
+      // This prevents race conditions - only one request can succeed
+      const { data: linkingCode, error: claimError } = await supabase
+        .from("linking_codes")
+        .update({
+          used_by: therapistId,
+          used_at: new Date().toISOString()
+        })
+        .eq("code", code.toUpperCase())
+        .is("used_by", null)  // Only if not already used
+        .gt("expires_at", new Date().toISOString())  // Only if not expired
+        .select("id, patient_id, code")
+        .single();
+
+      if (claimError || !linkingCode) {
+        return new Response(
+          JSON.stringify({ error: "Invalid, expired, or already used linking code" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Now safe to update patient - we have exclusive claim on the code
       const { error: updateError } = await supabase
         .from("patients")
         .update({ therapist_id: therapistId })
         .eq("id", linkingCode.patient_id);
 
       if (updateError) {
+        // Rollback: release the code
+        await supabase
+          .from("linking_codes")
+          .update({ used_by: null, used_at: null })
+          .eq("id", linkingCode.id);
+
         console.error("Error linking therapist:", updateError);
         return new Response(
-          JSON.stringify({ error: "Failed to link therapist" }),
+          JSON.stringify({ error: "Failed to link therapist", details: updateError.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Mark code as used
-      await supabase
-        .from("linking_codes")
-        .update({ used_by: therapistId })
-        .eq("id", linkingCode.id);
-
       return new Response(
         JSON.stringify({
+          success: true,
           message: "Therapist linked successfully",
           patientId: linkingCode.patient_id,
         }),
@@ -128,6 +155,15 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "patientId required" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Verify user owns the patient record
+      const isOwner = await verifyPatientOwnership(supabase, patientId, authUser.user_id);
+      if (!isOwner) {
+        return new Response(
+          JSON.stringify({ error: "You do not own this patient record" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 

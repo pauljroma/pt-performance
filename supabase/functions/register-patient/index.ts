@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAuth, AuthUser } from '../_shared/auth.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -270,6 +271,15 @@ serve(async (req) => {
   }
 
   try {
+    // Validate JWT authentication
+    const authResult = await requireAuth(req)
+    if (authResult instanceof Response) return authResult
+    const authUser = authResult as AuthUser
+
+    // Service role key is acceptable here because:
+    // 1. We verify userId matches JWT user_id below
+    // 2. This is a registration endpoint that creates the patient record
+    // 3. RLS policies don't exist for this user yet
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -281,6 +291,15 @@ serve(async (req) => {
         JSON.stringify({ error: "Missing required fields: userId, email, fullName" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Critical: userId must match authenticated user
+    // This prevents users from registering patients under someone else's account
+    if (userId !== authUser.user_id) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden', message: 'Cannot register patient for another user' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Parse name

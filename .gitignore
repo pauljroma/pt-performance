@@ -9,9 +9,15 @@ DerivedData/
 # Swift
 *.swiftmodule
 
-# Environment
+# Environment files with secrets
 .env
 .env.local
+.env.*.local
+*.env
+
+# But template is OK to commit
+!.env.template
+!.env.example
 
 # OS
 .DS_Store
