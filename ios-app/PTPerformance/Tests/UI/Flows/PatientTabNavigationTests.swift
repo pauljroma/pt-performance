@@ -428,14 +428,3 @@ final class PatientTabNavigationTests: XCTestCase {
         add(attachment)
     }
 }
-
-// MARK: - XCUIElement Extension
-
-extension XCUIElement {
-    func waitForNonExistence(timeout: TimeInterval) -> Bool {
-        let predicate = NSPredicate(format: "exists == false")
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
-        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
-        return result == .completed
-    }
-}

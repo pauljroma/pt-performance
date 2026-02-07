@@ -176,18 +176,17 @@ final class ProgramEnrollmentFlowTests: XCTestCase {
         loginAsPatient()
         navigateToProgramsTab()
 
+        let programList = app.tables.firstMatch
+        guard programList.waitForExistence(timeout: 10) else {
+            throw XCTSkip("No program list available")
+        }
+
+        let firstProgram = programList.cells.firstMatch
+        guard firstProgram.exists else {
+            throw XCTSkip("No programs in list")
+        }
+
         XCTContext.runActivity(named: "Tap on program to view details") { _ in
-            let programList = app.tables.firstMatch
-
-            guard programList.waitForExistence(timeout: 10) else {
-                throw XCTSkip("No program list available")
-            }
-
-            let firstProgram = programList.cells.firstMatch
-            guard firstProgram.exists else {
-                throw XCTSkip("No programs in list")
-            }
-
             firstProgram.tap()
             Thread.sleep(forTimeInterval: 1)
             E2ETestUtilities.waitForLoadingComplete(in: app)

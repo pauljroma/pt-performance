@@ -560,6 +560,7 @@
 		CE31C92FB50A14848F2CAC90 /* Color+Modus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A9DC29CAC898699BC9C196 /* Color+Modus.swift */; };
 		CE405D56998AA054C69AC60B /* OnboardingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA257D9FB6E905FECF6B2AAF /* OnboardingPage.swift */; };
 		CF0FB268997116041E71442D /* Supplement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F542A35ED00408F29EF878B4 /* Supplement.swift */; };
+		CF11CA918204BC2B0BB4777A /* CriticalErrorHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DE8D94B53E041C29361564 /* CriticalErrorHandlingTests.swift */; };
 		CF26401BDC8AD5D99A2EB3D3 /* MealPlanDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A23D71FB0FB252B40444CF /* MealPlanDetailView.swift */; };
 		CF7691F8349EBF43FB0A86AD /* PremiumPacksBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC5D13E10B4C6CF7F226CC2E /* PremiumPacksBrowserView.swift */; };
 		CF9F20F92A7D684CD5FD3B34 /* ReportGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123CFA8431BA5F19D320CFF1 /* ReportGenerationService.swift */; };
@@ -1219,6 +1220,7 @@
 		C5C1AC4F421D26EBBD7004B5 /* EmailSignInView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EmailSignInView.swift; path = Views/Auth/EmailSignInView.swift; sourceTree = "<group>"; };
 		C6720EA3A04F4513838F2088 /* ExerciseTechniqueView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseTechniqueView.swift; path = Views/Exercise/ExerciseTechniqueView.swift; sourceTree = "<group>"; };
 		C685015C9EC0822F32DA4CD0 /* TodayWorkoutCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodayWorkoutCard.swift; path = Views/Today/TodayWorkoutCard.swift; sourceTree = "<group>"; };
+		C6DE8D94B53E041C29361564 /* CriticalErrorHandlingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CriticalErrorHandlingTests.swift; path = Tests/UI/Flows/CriticalErrorHandlingTests.swift; sourceTree = "<group>"; };
 		C6FE5B309390AB7CB48C931F /* UCLHealthView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UCLHealthView.swift; path = Views/Patient/UCLHealthView.swift; sourceTree = "<group>"; };
 		C723C46F2FBEAFD17CAD4BDE /* RTSClearance.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RTSClearance.swift; path = Models/RTS/RTSClearance.swift; sourceTree = "<group>"; };
 		C797AB1DE9AB63A59214A6F4 /* AssessmentProgressViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AssessmentProgressViewModelTests.swift; path = PTPerformanceTests/ViewModels/AssessmentProgressViewModelTests.swift; sourceTree = "<group>"; };
@@ -2730,6 +2732,7 @@
 				0DF8AB49341924B671324870 /* SessionManagementTests.swift */,
 				72442DD4B2004B5FB32F223C /* WorkoutExecutionFlowTests.swift */,
 				19D0E99E3E54CDEE74D26253 /* ProgramEnrollmentFlowTests.swift */,
+				C6DE8D94B53E041C29361564 /* CriticalErrorHandlingTests.swift */,
 			);
 			name = Flows;
 			sourceTree = "<group>";
@@ -3053,6 +3056,7 @@
 				B84CE4CAEDFF31F30B272E7A /* E2ETestUtilities.swift in Sources */,
 				CBCA34B5B375569FD46017AB /* WorkoutExecutionFlowTests.swift in Sources */,
 				773C1FC7AA9DBC1BD3D4CCAF /* ProgramEnrollmentFlowTests.swift in Sources */,
+				CF11CA918204BC2B0BB4777A /* CriticalErrorHandlingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

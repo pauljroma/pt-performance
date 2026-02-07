@@ -439,7 +439,7 @@ extension XCTestCase {
     /// - Parameters:
     ///   - retries: Number of retries
     ///   - testBlock: Test code to run
-    func runWithRetry(retries: Int = 2, _ testBlock: () throws -> Void) rethrows {
+    func runWithRetry(retries: Int = 2, _ testBlock: () throws -> Void) throws {
         var lastError: Error?
 
         for attempt in 1...(retries + 1) {

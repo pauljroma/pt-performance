@@ -376,13 +376,12 @@ final class WorkoutExecutionFlowTests: XCTestCase {
     func testReadinessCheckInFlow() throws {
         loginAsPatient()
 
+        let quickActionsButton = app.buttons["Quick Actions"]
+        guard quickActionsButton.waitForExistence(timeout: 5) else {
+            throw XCTSkip("Quick Actions not available")
+        }
+
         XCTContext.runActivity(named: "Access Readiness Check-In") { _ in
-            let quickActionsButton = app.buttons["Quick Actions"]
-
-            guard quickActionsButton.waitForExistence(timeout: 5) else {
-                throw XCTSkip("Quick Actions not available")
-            }
-
             quickActionsButton.tap()
             Thread.sleep(forTimeInterval: 0.5)
 
@@ -394,7 +393,7 @@ final class WorkoutExecutionFlowTests: XCTestCase {
                 takeScreenshot(named: "readiness_check_in")
 
                 // Verify readiness UI
-                let readinessLoaded = app.staticTexts.containing(
+                _ = app.staticTexts.containing(
                     NSPredicate(format: "label CONTAINS[c] 'readiness' OR label CONTAINS[c] 'how' OR label CONTAINS[c] 'feel'")
                 ).firstMatch.waitForExistence(timeout: 10)
 
@@ -409,14 +408,13 @@ final class WorkoutExecutionFlowTests: XCTestCase {
     func testNavigationDuringWorkoutPreservesState() throws {
         loginAsPatient()
 
+        let exerciseList = app.tables.firstMatch
+        guard exerciseList.waitForExistence(timeout: 10),
+              exerciseList.cells.firstMatch.exists else {
+            throw XCTSkip("No exercises available")
+        }
+
         XCTContext.runActivity(named: "Start workout activity") { _ in
-            let exerciseList = app.tables.firstMatch
-
-            guard exerciseList.waitForExistence(timeout: 10),
-                  exerciseList.cells.firstMatch.exists else {
-                throw XCTSkip("No exercises available")
-            }
-
             // Tap on exercise
             exerciseList.cells.firstMatch.tap()
             Thread.sleep(forTimeInterval: 1)
