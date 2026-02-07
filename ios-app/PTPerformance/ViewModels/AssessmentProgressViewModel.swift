@@ -266,6 +266,7 @@ class AssessmentProgressViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(
         assessmentService: ClinicalAssessmentService = ClinicalAssessmentService(),
         outcomeService: OutcomeMeasureService = .shared

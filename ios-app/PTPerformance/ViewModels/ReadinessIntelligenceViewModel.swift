@@ -65,6 +65,7 @@ class ReadinessIntelligenceViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(
         patientId: UUID,
         readinessService: ReadinessService = ReadinessService(),

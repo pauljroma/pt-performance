@@ -37,6 +37,7 @@ class PatientProfileViewModel: ObservableObject {
     // Gender options for picker
     let genderOptions = ["", "Male", "Female", "Other", "Prefer not to say"]
 
+    @MainActor
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }

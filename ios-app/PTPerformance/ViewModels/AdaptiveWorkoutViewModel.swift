@@ -36,6 +36,7 @@ class AdaptiveWorkoutViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(adaptiveService: AdaptiveTrainingService = .shared) {
         self.adaptiveService = adaptiveService
     }

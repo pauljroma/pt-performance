@@ -89,6 +89,7 @@ class ProgramEditorViewModel: ObservableObject {
     private let logger = DebugLogger.shared
     private var isSubmitting = false // Prevent double-submission
 
+    @MainActor
     init(patientId: UUID, exerciseId: UUID?, supabase: PTSupabaseClient = .shared) {
         self.patientId = patientId
         self.exerciseId = exerciseId

@@ -25,6 +25,7 @@ class EnrolledProgramsViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(service: ProgramLibraryService = ProgramLibraryService(), supabase: PTSupabaseClient = .shared) {
         self.service = service
         self.supabase = supabase

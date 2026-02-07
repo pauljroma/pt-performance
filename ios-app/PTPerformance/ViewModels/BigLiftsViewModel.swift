@@ -54,6 +54,7 @@ class BigLiftsViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(service: BigLiftsService = .shared) {
         self.service = service
     }

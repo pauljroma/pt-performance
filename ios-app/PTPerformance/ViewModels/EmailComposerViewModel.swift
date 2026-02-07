@@ -96,6 +96,7 @@ final class EmailComposerViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(
         report: GeneratedReport,
         patient: Patient,

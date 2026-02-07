@@ -29,6 +29,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(
         recoveryService: RecoveryService = .shared,
         streakService: StreakTrackingService = .shared

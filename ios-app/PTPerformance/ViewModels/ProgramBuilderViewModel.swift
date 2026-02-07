@@ -48,6 +48,7 @@ class ProgramBuilderViewModel: ObservableObject {
     private let supabase: PTSupabaseClient
     private var isSubmitting = false // Prevent double-submission
 
+    @MainActor
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }

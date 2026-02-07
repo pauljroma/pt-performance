@@ -21,6 +21,7 @@ class PatientDetailViewModel: ObservableObject {
     private let supabase: PTSupabaseClient
     private let analyticsService: AnalyticsService
 
+    @MainActor
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
         self.analyticsService = AnalyticsService(supabase: supabase)

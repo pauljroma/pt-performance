@@ -144,6 +144,7 @@ class OutcomeMeasureViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    @MainActor
     init(outcomeService: OutcomeMeasureService = .shared) {
         self.outcomeService = outcomeService
         setupObservers()

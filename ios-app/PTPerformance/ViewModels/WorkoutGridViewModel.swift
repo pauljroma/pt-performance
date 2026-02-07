@@ -39,6 +39,7 @@ class WorkoutGridViewModel: ObservableObject {
 
     let sessionId: String
 
+    @MainActor
     init(sessionId: String, supabase: PTSupabaseClient = .shared) {
         self.sessionId = sessionId
         self.supabase = supabase
