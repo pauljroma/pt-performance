@@ -576,6 +576,7 @@ struct ROMInputCardCompact: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("ROM Input Card") {
     ScrollView {
         VStack(spacing: 20) {
@@ -635,3 +636,4 @@ struct ROMInputCardCompact: View {
     .background(Color(.systemGroupedBackground))
     .preferredColorScheme(.dark)
 }
+#endif

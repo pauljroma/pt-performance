@@ -515,6 +515,7 @@ struct OutcomeScoreBadge: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("Full Card") {
     ScrollView {
         VStack(spacing: 20) {
@@ -570,3 +571,4 @@ struct OutcomeScoreBadge: View {
     .background(Color(.systemGroupedBackground))
     .preferredColorScheme(.dark)
 }
+#endif
