@@ -15,13 +15,11 @@ CREATE INDEX IF NOT EXISTS idx_supplement_stacks_created_by
 
 -- patient_alerts: therapist dashboard queries filter by severity
 CREATE INDEX IF NOT EXISTS idx_patient_alerts_therapist_severity
-    ON patient_alerts(therapist_id, severity)
-    WHERE dismissed_at IS NULL;
+    ON patient_alerts(therapist_id, severity);
 
 -- patient_alerts: therapist status queries
 CREATE INDEX IF NOT EXISTS idx_patient_alerts_therapist_status
-    ON patient_alerts(therapist_id, status)
-    WHERE dismissed_at IS NULL;
+    ON patient_alerts(therapist_id, status);
 
 -- soap_notes: therapist patient history lookup
 CREATE INDEX IF NOT EXISTS idx_soap_notes_therapist_patient_date
@@ -38,11 +36,10 @@ CREATE INDEX IF NOT EXISTS idx_workout_prescriptions_patient_active
 
 -- daily_readiness: patient daily lookup (common query pattern)
 CREATE INDEX IF NOT EXISTS idx_daily_readiness_patient_date
-    ON daily_readiness(patient_id, recorded_at DESC);
+    ON daily_readiness(patient_id, created_at DESC);
 
--- sessions: patient session history
-CREATE INDEX IF NOT EXISTS idx_sessions_patient_started
-    ON sessions(patient_id, started_at DESC);
+-- sessions: patient session history (sessions table uses different schema)
+-- Skip this index as sessions table structure differs
 
 -- ============================================================
 -- PARTIAL INDEXES FOR FILTERED QUERIES
