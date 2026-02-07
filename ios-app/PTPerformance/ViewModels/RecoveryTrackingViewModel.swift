@@ -29,13 +29,20 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    @MainActor
     init(
-        recoveryService: RecoveryService = .shared,
-        streakService: StreakTrackingService = .shared
+        recoveryService: RecoveryService,
+        streakService: StreakTrackingService
     ) {
         self.recoveryService = recoveryService
         self.streakService = streakService
+    }
+
+    /// Convenience initializer using shared instances
+    convenience init() {
+        self.init(
+            recoveryService: RecoveryService.shared,
+            streakService: StreakTrackingService.shared
+        )
     }
 
     // MARK: - Computed Properties

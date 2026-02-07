@@ -36,9 +36,13 @@ class AdaptiveWorkoutViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    @MainActor
-    init(adaptiveService: AdaptiveTrainingService = .shared) {
+    init(adaptiveService: AdaptiveTrainingService) {
         self.adaptiveService = adaptiveService
+    }
+
+    /// Convenience initializer using shared AdaptiveTrainingService
+    convenience init() {
+        self.init(adaptiveService: AdaptiveTrainingService.shared)
     }
 
     // MARK: - Configuration

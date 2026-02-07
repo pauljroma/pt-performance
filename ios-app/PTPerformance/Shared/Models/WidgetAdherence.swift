@@ -38,10 +38,12 @@ public struct WidgetAdherence: Codable {
     public static var placeholder: WidgetAdherence {
         let calendar = Calendar.current
         let today = Date()
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
 
-        let days: [DayStatus] = (0..<7).map { offset in
-            let date = calendar.date(byAdding: .day, value: offset, to: startOfWeek)!
+        let days: [DayStatus] = (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: startOfWeek) else {
+                return nil
+            }
             let status: DayStatus.Status
             if offset < 3 {
                 status = .completed

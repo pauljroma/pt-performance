@@ -82,6 +82,7 @@ struct CelebrationOverlayModifier: ViewModifier {
 
 extension View {
     /// Adds celebration overlays for achievements, streaks, and PRs
+    @MainActor
     func celebrationOverlay(achievementService: AchievementService = .shared) -> some View {
         modifier(CelebrationOverlayModifier(achievementService: achievementService))
     }

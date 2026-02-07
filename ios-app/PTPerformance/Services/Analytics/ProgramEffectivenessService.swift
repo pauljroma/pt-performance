@@ -296,9 +296,11 @@ final class ProgramEffectivenessService {
                 .compactMap { $0.completedAt }
 
             let avgDays: Double
-            if completionDates.count >= 2 {
-                let sortedDates = completionDates.sorted()
-                let daysDiff = Calendar.current.dateComponents([.day], from: sortedDates.first!, to: sortedDates.last!).day ?? 0
+            if completionDates.count >= 2,
+               let sortedDates = completionDates.sorted() as [Date]?,
+               let firstDate = sortedDates.first,
+               let lastDate = sortedDates.last {
+                let daysDiff = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 0
                 avgDays = Double(daysDiff) / Double(completionDates.count)
             } else {
                 avgDays = 7.0 * Double(phase.phaseNumber) // Estimate

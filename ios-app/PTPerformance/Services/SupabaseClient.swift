@@ -95,7 +95,11 @@ class PTSupabaseClient: ObservableObject {
         } else {
             isConfigurationValid = false
             // Use a placeholder URL to allow initialization; all operations will fail gracefully
-            url = URL(string: "https://invalid.supabase.co")!
+            // This URL is guaranteed to be valid (only contains ASCII alphanumeric and standard URL characters)
+            var components = URLComponents()
+            components.scheme = "https"
+            components.host = "invalid.supabase.co"
+            url = components.url ?? URL(fileURLWithPath: "/")
         }
 
         // Use flexible decoder for all database queries

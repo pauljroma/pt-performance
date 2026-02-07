@@ -49,17 +49,18 @@ struct NotesView: View {
     private var notesContent: some View {
         Group {
             if viewModel.notes.isEmpty {
-                EmptyStateView(
-                    title: "No Notes Yet",
-                    message: "Add clinical notes, progress updates, or assessment records to track this patient's journey. Tap the + button to create your first note.",
-                    icon: "note.text",
-                    iconColor: .blue,
-                    action: EmptyStateView.EmptyStateAction(
-                        title: "Add Note",
-                        icon: "plus.circle.fill",
-                        action: { viewModel.showAddNoteSheet = true }
-                    )
-                )
+                ContentUnavailableView {
+                    Label("No Notes Yet", systemImage: "note.text")
+                } description: {
+                    Text("Add clinical notes, progress updates, or assessment records to track this patient's journey.")
+                } actions: {
+                    Button {
+                        viewModel.showAddNoteSheet = true
+                    } label: {
+                        Label("Add Note", systemImage: "plus.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             } else {
                 List {
                     ForEach(viewModel.notes) { note in

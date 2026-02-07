@@ -38,7 +38,9 @@ class SleepService {
         // For sleep, look at the previous night (sleep ending on the given date)
         let calendar = Calendar.current
         let endOfDay = calendar.startOfDay(for: date).addingTimeInterval(12 * 60 * 60) // Noon
-        let startTime = calendar.date(byAdding: .hour, value: -18, to: endOfDay)! // 6 PM previous day
+        guard let startTime = calendar.date(byAdding: .hour, value: -18, to: endOfDay) else {
+            return nil
+        }
 
         let predicate = HKQuery.predicateForSamples(withStart: startTime, end: endOfDay, options: .strictEndDate)
 

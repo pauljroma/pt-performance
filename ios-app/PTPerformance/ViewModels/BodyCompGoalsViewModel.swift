@@ -447,10 +447,9 @@ class BodyCompGoalsViewModel: ObservableObject {
 
         // Need at least 2 entries to calculate rate
         let sortedEntries = recentEntries.sorted { $0.recordedAt < $1.recordedAt }
-        guard sortedEntries.count >= 2 else { return nil }
-
-        let firstEntry = sortedEntries.first!
-        let lastEntry = sortedEntries.last!
+        guard sortedEntries.count >= 2,
+              let firstEntry = sortedEntries.first,
+              let lastEntry = sortedEntries.last else { return nil }
 
         let daysBetween = Calendar.current.dateComponents(
             [.day],

@@ -98,19 +98,52 @@ public final class SharedDataStore {
         get([WidgetReadiness].self, forKey: Keys.weekTrend)
     }
 
-    // MARK: - User ID
-    // TODO: SECURITY - Migrate userId to SecureStore (Keychain)
-    // User IDs are sensitive PII that could identify a person and should not be stored in UserDefaults.
-    // Use SecureStore.shared.set(userId, forKey: SecureStore.Keys.userIdentifier) instead.
-    // This requires coordinating with widget extension which may have limited Keychain access.
-    // See: Services/Security/SecureStore.swift
+    // MARK: - User ID (Secure Storage)
+    // User IDs are stored securely in Keychain via SecureStore.
+    // Backward compatibility: reads from UserDefaults if Keychain is empty, then migrates.
 
     public func saveUserId(_ userId: String) {
-        userDefaults?.set(userId, forKey: Keys.userId)
+        // Store in Keychain (secure storage)
+        do {
+            try SecureStore.shared.set(userId, forKey: SecureStore.Keys.userIdentifier)
+            // Remove from UserDefaults if it exists (migration cleanup)
+            userDefaults?.removeObject(forKey: Keys.userId)
+        } catch {
+            DebugLogger.shared.error("SharedDataStore", "Failed to save userId to Keychain: \(error.localizedDescription)")
+            // Fallback to UserDefaults for widget extension compatibility
+            userDefaults?.set(userId, forKey: Keys.userId)
+        }
     }
 
     public func getUserId() -> String? {
-        userDefaults?.string(forKey: Keys.userId)
+        // Try Keychain first (secure storage)
+        do {
+            if let userId = try SecureStore.shared.getString(forKey: SecureStore.Keys.userIdentifier) {
+                return userId
+            }
+        } catch {
+            DebugLogger.shared.error("SharedDataStore", "Failed to read userId from Keychain: \(error.localizedDescription)")
+        }
+
+        // Fallback: check UserDefaults for backward compatibility
+        if let legacyUserId = userDefaults?.string(forKey: Keys.userId) {
+            // Migrate to Keychain
+            DebugLogger.shared.info("SharedDataStore", "Migrating userId from UserDefaults to Keychain")
+            saveUserId(legacyUserId)
+            return legacyUserId
+        }
+
+        return nil
+    }
+
+    /// Clears userId from both Keychain and UserDefaults
+    private func clearUserId() {
+        do {
+            try SecureStore.shared.delete(forKey: SecureStore.Keys.userIdentifier)
+        } catch {
+            DebugLogger.shared.error("SharedDataStore", "Failed to delete userId from Keychain: \(error.localizedDescription)")
+        }
+        userDefaults?.removeObject(forKey: Keys.userId)
     }
 
     // MARK: - Last Refresh
@@ -179,7 +212,7 @@ public final class SharedDataStore {
         userDefaults?.removeObject(forKey: Keys.streak)
         userDefaults?.removeObject(forKey: Keys.weekTrend)
         userDefaults?.removeObject(forKey: Keys.lastRefresh)
-        userDefaults?.removeObject(forKey: Keys.userId)
+        clearUserId()
         reloadWidgets()
     }
 

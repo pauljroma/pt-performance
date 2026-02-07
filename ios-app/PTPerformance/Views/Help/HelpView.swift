@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Main help interface with search and category filtering
+//  Updated: Added error fallback and improved loading states
 //
 
 import SwiftUI
@@ -13,6 +14,7 @@ struct HelpView: View {
     @State private var searchText = ""
     @State private var selectedCategory: HelpCategory?
     @State private var showCategoryBrowser = false
+    @State private var isSearching = false
 
     var filteredArticles: [HelpArticle] {
         var articles = contentLoader.articles
@@ -38,14 +40,14 @@ struct HelpView: View {
         NavigationStack {
             ZStack {
                 if contentLoader.isLoading && contentLoader.articles.isEmpty {
-                    // Show loading state while initially loading articles
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                        Text("Loading help articles...")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+                    // Show skeleton loading state while initially loading articles
+                    helpLoadingState
+                } else if let error = contentLoader.error, contentLoader.articles.isEmpty {
+                    // Show error state when loading failed and no cached articles
+                    helpErrorState(error)
+                } else if isSearching {
+                    // Show loading state while searching
+                    searchLoadingState
                 } else if filteredArticles.isEmpty {
                     emptyState
                 } else if searchText.isEmpty && selectedCategory == nil {
@@ -81,6 +83,82 @@ struct HelpView: View {
             .sheet(isPresented: $showCategoryBrowser) {
                 HelpCategoryView()
             }
+        }
+    }
+
+    // MARK: - Loading State
+
+    private var helpLoadingState: some View {
+        List {
+            // Skeleton for quick access section
+            Section {
+                ForEach(0..<2, id: \.self) { _ in
+                    HelpArticleSkeletonRow()
+                }
+            } header: {
+                Text("Quick Access")
+            }
+
+            // Skeleton for category filter
+            Section {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 80, height: 32)
+                        }
+                    }
+                    .padding(.horizontal, 4)
+                }
+                .listRowInsets(EdgeInsets())
+            }
+
+            // Skeleton for article sections
+            ForEach(0..<3, id: \.self) { sectionIndex in
+                Section {
+                    ForEach(0..<3, id: \.self) { _ in
+                        HelpArticleSkeletonRow()
+                    }
+                } header: {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 100, height: 12)
+                }
+            }
+        }
+    }
+
+    // MARK: - Search Loading State
+
+    private var searchLoadingState: some View {
+        List {
+            Section {
+                ForEach(0..<5, id: \.self) { _ in
+                    HelpSearchResultSkeletonRow()
+                }
+            } header: {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 12)
+            }
+        }
+    }
+
+    // MARK: - Error State
+
+    private func helpErrorState(_ error: String) -> some View {
+        ContentUnavailableView {
+            Label("Unable to Load Help", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("We couldn't load help articles. Please check your connection and try again.")
+        } actions: {
+            Button {
+                contentLoader.reload()
+            } label: {
+                Label("Try Again", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -218,20 +296,41 @@ struct HelpView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        EmptyStateView(
-            title: "No Articles Found",
-            message: "No help articles match your search. Try adjusting your search terms or browse by category to find what you're looking for.",
-            icon: "magnifyingglass",
-            iconColor: .secondary,
-            action: EmptyStateView.EmptyStateAction(
-                title: "Clear Search",
-                icon: "xmark.circle",
-                action: {
-                    searchText = ""
-                    selectedCategory = nil
+        Group {
+            if !searchText.isEmpty {
+                // Search has no matches - show query in message
+                ContentUnavailableView {
+                    Label("No Results for '\(searchText)'", systemImage: "magnifyingglass")
+                } description: {
+                    Text("No help articles match your search. Try different keywords or browse by category.")
+                } actions: {
+                    Button("Clear Search") {
+                        searchText = ""
+                        selectedCategory = nil
+                    }
+                    .buttonStyle(.bordered)
                 }
-            )
-        )
+            } else if selectedCategory != nil {
+                // Category filter has no results
+                ContentUnavailableView {
+                    Label("No Articles in Category", systemImage: "folder")
+                } description: {
+                    Text("No help articles are available in this category yet. Try browsing other categories.")
+                } actions: {
+                    Button("Clear Filter") {
+                        selectedCategory = nil
+                    }
+                    .buttonStyle(.bordered)
+                }
+            } else {
+                // No articles loaded at all
+                ContentUnavailableView {
+                    Label("No Help Articles", systemImage: "questionmark.circle")
+                } description: {
+                    Text("Help articles are not available at the moment. Please try again later or contact support directly.")
+                }
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -282,6 +381,91 @@ struct ArticleRowView: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+// MARK: - Skeleton Views
+
+struct HelpArticleSkeletonRow: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 24, height: 24)
+                .shimmer(isAnimating: isAnimating)
+
+            VStack(alignment: .leading, spacing: 6) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 180, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 120, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+        }
+        .padding(.vertical, 4)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+}
+
+struct HelpSearchResultSkeletonRow: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Category badge skeleton
+            HStack(spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 14, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 60, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            // Title skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 200, height: 16)
+                .shimmer(isAnimating: isAnimating)
+
+            // Content preview skeleton
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 10)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 180, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+        }
+        .padding(.vertical, 4)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
     }
 }
 

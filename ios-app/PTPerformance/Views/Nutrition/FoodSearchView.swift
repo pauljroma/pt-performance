@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  BUILD 222: Nutrition Module - Food search view
+//  Updated: Added error handling UI and loading skeleton states
 //
 
 import SwiftUI
@@ -15,6 +16,7 @@ struct FoodSearchView: View {
     @State private var isSearching = false
     @State private var selectedCategory: FoodCategory?
     @State private var showAddCustomFood = false
+    @State private var searchError: String?
 
     private let foodService = FoodDatabaseService.shared
     let onFoodSelected: (FoodSearchResult) -> Void
@@ -29,9 +31,9 @@ struct FoodSearchView: View {
 
             // Results
             if isSearching {
-                Spacer()
-                ProgressView("Searching...")
-                Spacer()
+                searchLoadingState
+            } else if let error = searchError {
+                searchErrorState(error)
             } else if searchResults.isEmpty && !searchText.isEmpty {
                 emptyState
             } else {
@@ -149,6 +151,52 @@ struct FoodSearchView: View {
         }
     }
 
+    // MARK: - Loading State
+
+    private var searchLoadingState: some View {
+        List {
+            ForEach(0..<6, id: \.self) { _ in
+                FoodSearchSkeletonRow()
+            }
+        }
+        .listStyle(.plain)
+    }
+
+    // MARK: - Error State
+
+    private func searchErrorState(_ error: String) -> some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.orange)
+
+            Text("Search Failed")
+                .font(.headline)
+
+            Text(error)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            Button {
+                searchError = nil
+                if !searchText.isEmpty {
+                    performSearch()
+                } else if let category = selectedCategory {
+                    performCategorySearch(category)
+                }
+            } label: {
+                Label("Try Again", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
+
+            Spacer()
+        }
+    }
+
     // MARK: - Empty State
 
     private var emptyState: some View {
@@ -185,10 +233,12 @@ struct FoodSearchView: View {
     private func performSearch() {
         guard !searchText.isEmpty else {
             searchResults = []
+            searchError = nil
             return
         }
 
         isSearching = true
+        searchError = nil
 
         Task {
             do {
@@ -197,12 +247,14 @@ struct FoodSearchView: View {
                 isSearching = false
             } catch {
                 isSearching = false
+                searchError = "Unable to search foods. Please check your connection and try again."
             }
         }
     }
 
     private func performCategorySearch(_ category: FoodCategory) {
         isSearching = true
+        searchError = nil
 
         Task {
             do {
@@ -210,6 +262,65 @@ struct FoodSearchView: View {
                 isSearching = false
             } catch {
                 isSearching = false
+                searchError = "Unable to load \(category.displayName) foods. Please try again."
+            }
+        }
+    }
+}
+
+// MARK: - Food Search Skeleton Row
+
+struct FoodSearchSkeletonRow: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                // Food name skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 150, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                // Brand skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+
+                // Serving/calories skeleton
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 60, height: 10)
+                        .shimmer(isAnimating: isAnimating)
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 50, height: 10)
+                        .shimmer(isAnimating: isAnimating)
+                }
+            }
+
+            Spacer()
+
+            // Macro badges skeleton
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 28, height: 28)
+                        .shimmer(isAnimating: isAnimating)
+                }
+            }
+        }
+        .padding(.vertical, 8)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
             }
         }
     }

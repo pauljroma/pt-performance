@@ -361,7 +361,6 @@ final class CohortAnalyticsService {
         }
 
         let totalPatients = enrollments.count
-        let now = Date()
 
         // Build weekly retention data (12 weeks)
         var weeklyData: [RetentionDataPoint] = []

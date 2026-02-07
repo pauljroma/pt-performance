@@ -119,7 +119,9 @@ class NutritionService {
     func fetchTodaysLogs(patientId: String) async throws -> [NutritionLog] {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return []
+        }
 
         return try await fetchNutritionLogs(
             patientId: patientId,

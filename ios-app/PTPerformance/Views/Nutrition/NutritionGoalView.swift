@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  BUILD 222: Nutrition Module - Goal settings view
+//  Updated: Enhanced error handling with retry functionality
 //
 
 import SwiftUI
@@ -13,6 +14,63 @@ struct NutritionGoalView: View {
     @StateObject private var viewModel = NutritionGoalViewModel()
 
     var body: some View {
+        Group {
+            if viewModel.isLoading {
+                loadingState
+            } else {
+                goalFormContent
+            }
+        }
+        .navigationTitle("Nutrition Goals")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    Task {
+                        if await viewModel.saveGoal() {
+                            dismiss()
+                        }
+                    }
+                }
+                .disabled(viewModel.isSaving || viewModel.isLoading)
+            }
+        }
+        .task {
+            await viewModel.loadGoals()
+        }
+        .errorAlert(
+            message: $viewModel.error,
+            title: "Unable to Save Goal",
+            onRetry: {
+                await viewModel.saveGoal()
+            },
+            showRetry: true
+        )
+    }
+
+    // MARK: - Loading State
+
+    private var loadingState: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+
+            Text("Loading your nutrition goals...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Goal Form Content
+
+    private var goalFormContent: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Goal Type
@@ -35,37 +93,30 @@ struct NutritionGoalView: View {
 
                 // Notes
                 notesSection
+
+                // Saving indicator
+                if viewModel.isSaving {
+                    savingIndicator
+                }
             }
             .padding()
         }
-        .navigationTitle("Nutrition Goals")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
+    }
 
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    Task {
-                        if await viewModel.saveGoal() {
-                            dismiss()
-                        }
-                    }
-                }
-                .disabled(viewModel.isSaving)
-            }
+    // MARK: - Saving Indicator
+
+    private var savingIndicator: some View {
+        HStack(spacing: 12) {
+            ProgressView()
+                .scaleEffect(0.8)
+
+            Text("Saving your goal...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
-        .task {
-            await viewModel.loadGoals()
-        }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(viewModel.error ?? "An error occurred")
-        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
     }
 
     // MARK: - Goal Type

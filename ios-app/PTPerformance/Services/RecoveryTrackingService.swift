@@ -23,12 +23,9 @@ final class RecoveryTrackingService: ObservableObject {
 
     // MARK: - Initialization
 
-    private init(
-        recoveryService: RecoveryService = .shared,
-        supabase: PTSupabaseClient = .shared
-    ) {
-        self.recoveryService = recoveryService
-        self.supabase = supabase
+    private init() {
+        self.recoveryService = RecoveryService.shared
+        self.supabase = PTSupabaseClient.shared
         loadProtocolTemplates()
     }
 
@@ -175,7 +172,13 @@ final class RecoveryTrackingService: ObservableObject {
         // Get streak start date
         var streakStartDate: Date?
         if currentStreak > 0 {
-            streakStartDate = calendar.date(byAdding: .day, value: -(currentStreak - 1), to: hasRecoveredToday ? today : calendar.date(byAdding: .day, value: -1, to: today)!)
+            let referenceDate: Date
+            if hasRecoveredToday {
+                referenceDate = today
+            } else {
+                referenceDate = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+            }
+            streakStartDate = calendar.date(byAdding: .day, value: -(currentStreak - 1), to: referenceDate)
         }
 
         let info = RecoveryStreakInfo(

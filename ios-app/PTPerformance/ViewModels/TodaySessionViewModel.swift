@@ -779,7 +779,10 @@ class TodaySessionViewModel: ObservableObject {
             // Get today's date range
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
+            guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else {
+                logger.error("📊 Failed to calculate tomorrow's date")
+                return
+            }
 
             let formatter = ISO8601DateFormatter()
             let todayStr = formatter.string(from: today)

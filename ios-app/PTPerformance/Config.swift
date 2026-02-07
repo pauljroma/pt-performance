@@ -28,9 +28,38 @@ enum Config {
     // MARK: - WHOOP Integration (Build 40)
 
     enum WHOOP {
-        // WHOOP API credentials - registered app at https://developer.whoop.com
-        static let clientId = ProcessInfo.processInfo.environment["WHOOP_CLIENT_ID"] ?? "1c0e3e35-1892-4efb-97f8-878be04c3095"
-        static let clientSecret = ProcessInfo.processInfo.environment["WHOOP_CLIENT_SECRET"] ?? "deb077841909f55c5ccaf0be8625d2dc3497e16533909bf5f9030abe17f6c1d5"
+        /// Error thrown when required WHOOP credentials are not configured
+        enum ConfigurationError: Error, LocalizedError {
+            case missingClientId
+            case missingClientSecret
+
+            var errorDescription: String? {
+                switch self {
+                case .missingClientId:
+                    return "WHOOP_CLIENT_ID environment variable is not set"
+                case .missingClientSecret:
+                    return "WHOOP_CLIENT_SECRET environment variable is not set"
+                }
+            }
+        }
+
+        /// WHOOP client ID - must be set via WHOOP_CLIENT_ID environment variable
+        /// Throws ConfigurationError.missingClientId if not set
+        static func getClientId() throws -> String {
+            guard let clientId = ProcessInfo.processInfo.environment["WHOOP_CLIENT_ID"], !clientId.isEmpty else {
+                throw ConfigurationError.missingClientId
+            }
+            return clientId
+        }
+
+        /// WHOOP client secret - must be set via WHOOP_CLIENT_SECRET environment variable
+        /// Throws ConfigurationError.missingClientSecret if not set
+        static func getClientSecret() throws -> String {
+            guard let clientSecret = ProcessInfo.processInfo.environment["WHOOP_CLIENT_SECRET"], !clientSecret.isEmpty else {
+                throw ConfigurationError.missingClientSecret
+            }
+            return clientSecret
+        }
     }
 
     // MARK: - AI Services Configuration (Build 79)

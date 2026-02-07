@@ -52,11 +52,15 @@ struct SupplementCatalogView: View {
                 // Category Filter
                 categoryFilterSection
 
-                // Supplements List
-                ForEach(filteredCatalog) { supplement in
-                    CatalogSupplementCard(supplement: supplement) {
-                        Task {
-                            await viewModel.addToRoutine(supplement)
+                // Supplements List - show filtered empty state if no matches
+                if filteredCatalog.isEmpty && (!searchText.isEmpty || selectedCategory != nil) {
+                    filteredEmptyView
+                } else {
+                    ForEach(filteredCatalog) { supplement in
+                        CatalogSupplementCard(supplement: supplement) {
+                            Task {
+                                await viewModel.addToRoutine(supplement)
+                            }
                         }
                     }
                 }
@@ -64,6 +68,25 @@ struct SupplementCatalogView: View {
             .padding()
         }
         .background(Color(.systemGroupedBackground))
+    }
+
+    private var filteredEmptyView: some View {
+        ContentUnavailableView {
+            Label("No Supplements Found", systemImage: "magnifyingglass")
+        } description: {
+            if !searchText.isEmpty {
+                Text("No supplements match '\(searchText)'. Try different keywords or clear your search.")
+            } else if let category = selectedCategory {
+                Text("No supplements in the \(category.displayName) category yet.")
+            }
+        } actions: {
+            Button("Clear Filters") {
+                searchText = ""
+                selectedCategory = nil
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(.top, Spacing.xl)
     }
 
     private var categoryFilterSection: some View {
@@ -92,16 +115,20 @@ struct SupplementCatalogView: View {
     }
 
     private var emptyView: some View {
-        VStack(spacing: Spacing.lg) {
-            Image(systemName: "pills")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
-
-            Text("No supplements found")
-                .font(.headline)
-                .foregroundColor(.secondary)
+        ContentUnavailableView {
+            Label("No Supplements Available", systemImage: "pills")
+        } description: {
+            Text("The supplement catalog is currently empty. Check back later for evidence-based supplement recommendations.")
+        } actions: {
+            Button {
+                Task {
+                    await viewModel.loadCatalog()
+                }
+            } label: {
+                Label("Refresh", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.bordered)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

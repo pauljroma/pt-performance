@@ -422,35 +422,41 @@ class AssessmentProgressViewModel: ObservableObject {
             if !restPainData.isEmpty {
                 let sorted = restPainData.sorted { $0.date < $1.date }
                 let trendPoints = sorted.map { TrendDataPoint(date: $0.date, value: Double($0.score), label: nil) }
-                progressItems.append(PainProgressItem(
-                    painType: "rest",
-                    initialScore: sorted.first!.score,
-                    currentScore: sorted.last!.score,
-                    measurements: trendPoints
-                ))
-                painTrend = trendPoints // Use rest pain as primary trend
+                if let first = sorted.first, let last = sorted.last {
+                    progressItems.append(PainProgressItem(
+                        painType: "rest",
+                        initialScore: first.score,
+                        currentScore: last.score,
+                        measurements: trendPoints
+                    ))
+                    painTrend = trendPoints // Use rest pain as primary trend
+                }
             }
 
             if !activityPainData.isEmpty {
                 let sorted = activityPainData.sorted { $0.date < $1.date }
                 let trendPoints = sorted.map { TrendDataPoint(date: $0.date, value: Double($0.score), label: nil) }
-                progressItems.append(PainProgressItem(
-                    painType: "activity",
-                    initialScore: sorted.first!.score,
-                    currentScore: sorted.last!.score,
-                    measurements: trendPoints
-                ))
+                if let first = sorted.first, let last = sorted.last {
+                    progressItems.append(PainProgressItem(
+                        painType: "activity",
+                        initialScore: first.score,
+                        currentScore: last.score,
+                        measurements: trendPoints
+                    ))
+                }
             }
 
             if !worstPainData.isEmpty {
                 let sorted = worstPainData.sorted { $0.date < $1.date }
                 let trendPoints = sorted.map { TrendDataPoint(date: $0.date, value: Double($0.score), label: nil) }
-                progressItems.append(PainProgressItem(
-                    painType: "worst",
-                    initialScore: sorted.first!.score,
-                    currentScore: sorted.last!.score,
-                    measurements: trendPoints
-                ))
+                if let first = sorted.first, let last = sorted.last {
+                    progressItems.append(PainProgressItem(
+                        painType: "worst",
+                        initialScore: first.score,
+                        currentScore: last.score,
+                        measurements: trendPoints
+                    ))
+                }
             }
 
             painProgress = progressItems

@@ -65,17 +65,26 @@ class ReadinessIntelligenceViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    @MainActor
     init(
         patientId: UUID,
         readinessService: ReadinessService = ReadinessService(),
-        adaptationService: WorkoutAdaptationService = .shared,
-        healthKitService: HealthKitService = .shared
+        adaptationService: WorkoutAdaptationService,
+        healthKitService: HealthKitService
     ) {
         self.patientId = patientId
         self.readinessService = readinessService
         self.adaptationService = adaptationService
         self.healthKitService = healthKitService
+    }
+
+    /// Convenience initializer using shared services
+    convenience init(patientId: UUID) {
+        self.init(
+            patientId: patientId,
+            readinessService: ReadinessService(),
+            adaptationService: WorkoutAdaptationService.shared,
+            healthKitService: HealthKitService.shared
+        )
     }
 
     // MARK: - Computed Properties

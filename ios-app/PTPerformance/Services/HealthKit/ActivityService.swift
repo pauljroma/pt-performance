@@ -54,8 +54,8 @@ class ActivityService {
         return ActivityData(
             date: date,
             activeEnergyBurned: activeEnergy,
-            exerciseMinutes: exerciseTime != nil ? Int(exerciseTime!) : nil,
-            stepCount: stepCount != nil ? Int(stepCount!) : nil
+            exerciseMinutes: exerciseTime.map { Int($0) },
+            stepCount: stepCount.map { Int($0) }
         )
     }
 

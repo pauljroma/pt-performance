@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Main learning interface with search and category filtering
+//  Updated: Added error state and improved loading skeleton
 //
 
 import SwiftUI
@@ -37,8 +38,12 @@ struct LearningView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                if contentLoader.isLoading {
-                    loadingState
+                if contentLoader.isLoading && contentLoader.articles.isEmpty {
+                    // Show skeleton loading state
+                    learningLoadingState
+                } else if let error = contentLoader.error, contentLoader.articles.isEmpty {
+                    // Show error state when loading failed and no cached articles
+                    learningErrorState(error)
                 } else if filteredArticles.isEmpty {
                     emptyState
                 } else if searchText.isEmpty && selectedCategory == nil {
@@ -74,16 +79,89 @@ struct LearningView: View {
         }
     }
 
-    // MARK: - Loading State
+    // MARK: - Loading State (Skeleton)
 
-    private var loadingState: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.5)
+    private var learningLoadingState: some View {
+        List {
+            // Header section skeleton
+            Section {
+                HStack {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 40, height: 40)
 
-            Text("Loading articles...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 100, height: 18)
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 160, height: 12)
+                    }
+
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            }
+
+            // Quick access skeleton
+            Section {
+                LearningArticleSkeletonRow()
+            } header: {
+                Text("Quick Access")
+            }
+
+            // Category chips skeleton
+            Section {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(0..<6, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 90, height: 32)
+                        }
+                    }
+                    .padding(.horizontal, 4)
+                }
+                .listRowInsets(EdgeInsets())
+            }
+
+            // Article sections skeleton
+            ForEach(0..<3, id: \.self) { _ in
+                Section {
+                    ForEach(0..<3, id: \.self) { _ in
+                        LearningArticleSkeletonRow()
+                    }
+                } header: {
+                    HStack {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 16, height: 16)
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 80, height: 12)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Error State
+
+    private func learningErrorState(_ error: String) -> some View {
+        ContentUnavailableView {
+            Label("Unable to Load Articles", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("We couldn't load learning articles. Please check your connection and try again.")
+        } actions: {
+            Button {
+                contentLoader.reload()
+            } label: {
+                Label("Try Again", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -259,40 +337,46 @@ struct LearningView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: Spacing.lg) {
-            if !searchText.isEmpty || selectedCategory != nil {
-                // Search/filter empty state
-                EmptyStateView(
-                    title: "No Articles Found",
-                    message: searchText.isEmpty
-                        ? "No articles in the \(selectedCategory?.rawValue ?? "") category yet. Try browsing other categories."
-                        : "No articles match '\(searchText)'. Try different keywords or browse by category.",
-                    icon: "magnifyingglass",
-                    iconColor: .secondary,
-                    action: EmptyStateView.EmptyStateAction(
-                        title: "Clear Filters",
-                        icon: "xmark.circle",
-                        action: {
-                            searchText = ""
-                            selectedCategory = nil
-                        }
-                    )
-                )
+        Group {
+            if !searchText.isEmpty {
+                // Search has no matches - show query in message
+                ContentUnavailableView {
+                    Label("No Results for '\(searchText)'", systemImage: "magnifyingglass")
+                } description: {
+                    Text("No articles match your search. Try different keywords or browse by category.")
+                } actions: {
+                    Button("Clear Search") {
+                        searchText = ""
+                        selectedCategory = nil
+                    }
+                    .buttonStyle(.bordered)
+                }
+            } else if let category = selectedCategory {
+                // Category filter has no results
+                ContentUnavailableView {
+                    Label("No Articles in \(category.rawValue)", systemImage: "folder")
+                } description: {
+                    Text("No articles are available in this category yet. Try browsing other categories.")
+                } actions: {
+                    Button("Clear Filter") {
+                        selectedCategory = nil
+                    }
+                    .buttonStyle(.bordered)
+                }
             } else {
-                // No articles at all empty state
-                EmptyStateView(
-                    title: "Learning Center",
-                    message: "Educational articles about baseball training, performance, recovery, and injury prevention will appear here. Check back soon for new content.",
-                    icon: "book.closed.fill",
-                    iconColor: .blue,
-                    action: EmptyStateView.EmptyStateAction(
-                        title: "Browse Categories",
-                        icon: "square.grid.2x2",
-                        action: {
-                            showCategoryBrowser = true
-                        }
-                    )
-                )
+                // No articles loaded at all
+                ContentUnavailableView {
+                    Label("Learning Center", systemImage: "book.closed.fill")
+                } description: {
+                    Text("Educational articles about baseball training, performance, recovery, and injury prevention will appear here. Check back soon for new content.")
+                } actions: {
+                    Button {
+                        showCategoryBrowser = true
+                    } label: {
+                        Label("Browse Categories", systemImage: "square.grid.2x2")
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
         }
     }
@@ -390,5 +474,52 @@ struct LearningFilterChip: View {
             .cornerRadius(20)
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Skeleton View
+
+struct LearningArticleSkeletonRow: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                // Title skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 180, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                Spacer()
+
+                // Reading time skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 30, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            // Subcategory skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 80, height: 10)
+                .shimmer(isAnimating: isAnimating)
+
+            // Keywords skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 140, height: 10)
+                .shimmer(isAnimating: isAnimating)
+        }
+        .padding(.vertical, 2)
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
     }
 }

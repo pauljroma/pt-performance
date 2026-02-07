@@ -413,20 +413,18 @@ struct WeeklySummaryView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "figure.run")
-                .font(.system(size: 48))
-                .foregroundColor(.blue)
-
-            Text(LocalizedStrings.EmptyStates.noDataYet)
-                .font(.headline)
-
+        ContentUnavailableView {
+            Label(LocalizedStrings.EmptyStates.noDataYet, systemImage: "figure.run")
+        } description: {
             Text(LocalizedStrings.EmptyStates.completeWorkoutsToSee)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+        } actions: {
+            Button {
+                dismiss()
+            } label: {
+                Label("Start Training", systemImage: "play.fill")
+            }
+            .buttonStyle(.borderedProminent)
         }
-        .padding()
     }
 }
 

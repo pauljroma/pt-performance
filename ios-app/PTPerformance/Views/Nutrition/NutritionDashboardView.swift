@@ -558,17 +558,18 @@ struct NutritionEmptyMealsView: View {
     let onLogMeal: () -> Void
 
     var body: some View {
-        EmptyStateView(
-            title: "No Meals Logged Today",
-            message: "Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.",
-            icon: "fork.knife.circle",
-            iconColor: .orange,
-            action: EmptyStateView.EmptyStateAction(
-                title: "Log Your First Meal",
-                icon: "plus.circle.fill",
-                action: onLogMeal
-            )
-        )
+        ContentUnavailableView {
+            Label("No Meals Logged Today", systemImage: "fork.knife.circle")
+        } description: {
+            Text("Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.")
+        } actions: {
+            Button {
+                onLogMeal()
+            } label: {
+                Label("Log Your First Meal", systemImage: "plus.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+        }
         .padding(.vertical, Spacing.lg)
     }
 }

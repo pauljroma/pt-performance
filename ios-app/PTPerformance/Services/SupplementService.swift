@@ -414,7 +414,9 @@ final class SupplementService: ObservableObject {
 
             let calendar = Calendar.current
             let startOfDay = calendar.startOfDay(for: Date())
-            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+                return
+            }
 
             let dateFormatter = ISO8601DateFormatter()
             dateFormatter.formatOptions = [.withInternetDateTime]

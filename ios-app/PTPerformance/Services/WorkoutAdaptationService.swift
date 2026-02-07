@@ -332,12 +332,20 @@ class WorkoutAdaptationService: ObservableObject {
 
     // MARK: - Initialization
 
-    nonisolated init(
+    init(
         readinessService: ReadinessService = ReadinessService(),
-        healthKitService: HealthKitService = .shared
+        healthKitService: HealthKitService
     ) {
         self.readinessService = readinessService
         self.healthKitService = healthKitService
+    }
+
+    /// Convenience initializer using shared HealthKitService
+    convenience init() {
+        self.init(
+            readinessService: ReadinessService(),
+            healthKitService: HealthKitService.shared
+        )
     }
 
     // MARK: - Public Methods

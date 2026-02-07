@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Nutrition Module - Goals ViewModel
+//  Updated: Simplified error handling to work with errorAlert modifier
 //
 
 import SwiftUI
@@ -15,7 +16,6 @@ class NutritionGoalViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isSaving = false
     @Published var error: String?
-    @Published var showError = false
 
     // Current Goal
     @Published var currentGoal: NutritionGoal?
@@ -104,7 +104,6 @@ class NutritionGoalViewModel: ObservableObject {
             isLoading = false
         } catch {
             self.error = "Unable to load your nutrition goals. Please check your connection and try again."
-            self.showError = true
             isLoading = false
         }
     }
@@ -149,12 +148,12 @@ class NutritionGoalViewModel: ObservableObject {
 
     func saveGoal() async -> Bool {
         guard let patientId = patientId else {
-            error = "Not logged in"
-            showError = true
+            error = "Not logged in. Please sign in and try again."
             return false
         }
 
         isSaving = true
+        error = nil
 
         do {
             let dto = CreateNutritionGoalDTO(
@@ -179,7 +178,6 @@ class NutritionGoalViewModel: ObservableObject {
             return true
         } catch {
             self.error = "Unable to save your nutrition goal. Please try again."
-            self.showError = true
             isSaving = false
             return false
         }
@@ -215,7 +213,6 @@ class NutritionGoalViewModel: ObservableObject {
             return true
         } catch {
             self.error = "Unable to update your goal. Please try again."
-            self.showError = true
             isSaving = false
             return false
         }
@@ -244,7 +241,6 @@ class NutritionGoalViewModel: ObservableObject {
             return true
         } catch {
             self.error = "Unable to deactivate this goal. Please try again."
-            self.showError = true
             return false
         }
     }
