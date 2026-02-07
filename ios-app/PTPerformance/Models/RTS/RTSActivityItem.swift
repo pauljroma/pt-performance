@@ -9,7 +9,8 @@ import Foundation
 import SwiftUI
 
 /// Model for activity feed items in the RTS dashboard
-struct RTSActivityItem: Identifiable {
+/// Note: Not Codable due to SwiftUI Color property - used for UI display only
+struct RTSActivityItem: Identifiable, Hashable {
     let id: UUID
     let title: String
     let subtitle: String

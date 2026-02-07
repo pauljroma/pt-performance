@@ -5,7 +5,7 @@ import SwiftUI
 // Readiness scoring with multi-component assessment for Return-to-Sport
 
 /// Represents a comprehensive readiness assessment for RTS progression
-struct RTSReadinessScore: Identifiable, Codable {
+struct RTSReadinessScore: Identifiable, Codable, Hashable {
     let id: UUID
     let protocolId: UUID
     let phaseId: UUID
@@ -183,7 +183,7 @@ struct RTSRiskFactor: Codable, Hashable, Identifiable {
 // MARK: - Risk Severity
 
 /// Severity levels for RTS risk factors
-enum RTSRiskSeverity: String, Codable, CaseIterable, Identifiable {
+enum RTSRiskSeverity: String, Codable, CaseIterable, Identifiable, Hashable {
     case low
     case moderate
     case high

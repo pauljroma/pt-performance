@@ -340,19 +340,19 @@ struct RTSTestRecordingView: View {
         HapticFeedback.medium()
 
         Task {
-            do {
-                // Get current user ID (would come from auth in real app)
-                let recordedBy = UUID() // Placeholder
+            // Get current user ID (would come from auth in real app)
+            let recordedBy = UUID() // Placeholder
 
-                let _ = try await viewModel.recordTest(
-                    criterionId: criterion.id,
-                    protocolId: protocolId,
-                    value: value,
-                    unit: criterion.targetUnit ?? "",
-                    recordedBy: recordedBy,
-                    notes: notes.isEmpty ? nil : notes
-                )
+            let success = await viewModel.recordTest(
+                criterionId: criterion.id,
+                protocolId: protocolId,
+                value: value,
+                unit: criterion.targetUnit ?? "",
+                recordedBy: recordedBy,
+                notes: notes.isEmpty ? nil : notes
+            )
 
+            if success {
                 // Show success animation
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showSuccessAnimation = true
@@ -364,8 +364,7 @@ struct RTSTestRecordingView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                     dismiss()
                 }
-
-            } catch {
+            } else {
                 HapticFeedback.error()
                 // Handle error - would show alert in real app
             }

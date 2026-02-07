@@ -525,7 +525,7 @@ class ClinicalAssessmentService: ObservableObject {
     /// - Parameter assessmentId: Assessment UUID
     /// - Returns: Updated ClinicalAssessment
     func signAssessment(_ assessmentId: UUID) async throws -> ClinicalAssessment {
-        guard var assessment = try await fetchAssessment(id: assessmentId) else {
+        guard let assessment = try await fetchAssessment(id: assessmentId) else {
             throw ClinicalAssessmentError.assessmentNotFound
         }
 

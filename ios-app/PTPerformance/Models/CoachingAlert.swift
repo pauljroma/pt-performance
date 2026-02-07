@@ -115,10 +115,10 @@ extension CoachingAlert {
 
 extension CoachingAlert {
     enum AlertSeverity: String, Codable, CaseIterable, Comparable, Sendable {
-        case low = "LOW"
-        case medium = "MEDIUM"
-        case high = "HIGH"
-        case critical = "CRITICAL"
+        case low = "low"
+        case medium = "medium"
+        case high = "high"
+        case critical = "critical"
 
         var displayName: String {
             switch self {

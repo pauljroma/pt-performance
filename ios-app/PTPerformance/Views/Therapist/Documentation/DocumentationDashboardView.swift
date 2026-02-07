@@ -100,7 +100,7 @@ struct DocumentationDashboardView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Filter indicator
-                if let patientId = selectedPatientId, let patient = viewModel.selectedPatient {
+                if selectedPatientId != nil, let patient = viewModel.selectedPatient {
                     filterIndicator(patient: patient)
                 }
 

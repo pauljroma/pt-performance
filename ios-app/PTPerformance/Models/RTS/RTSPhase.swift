@@ -5,7 +5,7 @@ import SwiftUI
 // Phase within a Return-to-Sport protocol
 
 /// Represents a phase within an RTS protocol
-struct RTSPhase: Identifiable, Codable {
+struct RTSPhase: Identifiable, Codable, Hashable {
     let id: UUID
     let protocolId: UUID
     let phaseNumber: Int

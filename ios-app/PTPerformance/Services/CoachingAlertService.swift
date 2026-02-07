@@ -557,7 +557,7 @@ actor CoachingAlertService {
                 .execute()
                 .value
 
-            if let prefs = preferences.first {
+            if preferences.first != nil {
                 debugLogger.log("[CoachingAlertService] Preferences loaded successfully", level: .success)
             } else {
                 debugLogger.log("[CoachingAlertService] No preferences found, using defaults", level: .info)

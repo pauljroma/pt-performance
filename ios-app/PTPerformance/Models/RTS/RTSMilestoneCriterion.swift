@@ -5,7 +5,7 @@ import SwiftUI
 // Criteria definitions and test results for Return-to-Sport milestones
 
 /// Represents a criterion that must be met to progress through RTS phases
-struct RTSMilestoneCriterion: Identifiable, Codable {
+struct RTSMilestoneCriterion: Identifiable, Codable, Hashable {
     let id: UUID
     let phaseId: UUID
     let category: RTSCriterionCategory
@@ -115,7 +115,7 @@ struct RTSMilestoneCriterion: Identifiable, Codable {
 // MARK: - Criterion Category
 
 /// Categories of RTS milestone criteria
-enum RTSCriterionCategory: String, Codable, CaseIterable, Identifiable {
+enum RTSCriterionCategory: String, Codable, CaseIterable, Identifiable, Hashable {
     case functional
     case strength
     case rom
@@ -161,7 +161,7 @@ enum RTSCriterionCategory: String, Codable, CaseIterable, Identifiable {
 // MARK: - Comparison Operator
 
 /// Comparison operators for evaluating criterion values
-enum RTSComparisonOperator: String, Codable, CaseIterable {
+enum RTSComparisonOperator: String, Codable, CaseIterable, Hashable {
     case greaterThanOrEqual = ">="
     case lessThanOrEqual = "<="
     case equal = "=="
@@ -211,7 +211,7 @@ enum RTSComparisonOperator: String, Codable, CaseIterable {
 // MARK: - Test Result
 
 /// Represents a single test result for a milestone criterion
-struct RTSTestResult: Identifiable, Codable {
+struct RTSTestResult: Identifiable, Codable, Hashable {
     let id: UUID
     let criterionId: UUID
     let protocolId: UUID

@@ -5,7 +5,7 @@ import SwiftUI
 // Main Return-to-Sport journey for a patient
 
 /// Represents a patient's Return-to-Sport protocol journey
-struct RTSProtocol: Identifiable, Codable {
+struct RTSProtocol: Identifiable, Codable, Hashable {
     let id: UUID
     let patientId: UUID
     let therapistId: UUID
@@ -121,7 +121,7 @@ struct RTSProtocol: Identifiable, Codable {
 // MARK: - Protocol Status
 
 /// Status of an RTS protocol
-enum RTSProtocolStatus: String, Codable, CaseIterable, Identifiable {
+enum RTSProtocolStatus: String, Codable, CaseIterable, Identifiable, Hashable {
     case draft
     case active
     case completed

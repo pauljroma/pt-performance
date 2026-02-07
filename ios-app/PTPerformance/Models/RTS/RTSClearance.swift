@@ -5,7 +5,7 @@ import SwiftUI
 // Formal clearance documents with signing workflow for Return-to-Sport
 
 /// Represents a formal clearance document for RTS progression
-struct RTSClearance: Identifiable, Codable {
+struct RTSClearance: Identifiable, Codable, Hashable {
     let id: UUID
     let protocolId: UUID
     let clearanceType: RTSClearanceType
@@ -149,7 +149,7 @@ struct RTSClearance: Identifiable, Codable {
 // MARK: - Clearance Type
 
 /// Types of RTS clearance documents
-enum RTSClearanceType: String, Codable, CaseIterable, Identifiable {
+enum RTSClearanceType: String, Codable, CaseIterable, Identifiable, Hashable {
     case phaseClearance = "phase_clearance"
     case finalClearance = "final_clearance"
     case conditionalClearance = "conditional_clearance"
@@ -199,7 +199,7 @@ enum RTSClearanceType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Clearance Status
 
 /// Status of an RTS clearance document
-enum RTSClearanceStatus: String, Codable, CaseIterable, Identifiable {
+enum RTSClearanceStatus: String, Codable, CaseIterable, Identifiable, Hashable {
     case draft
     case complete
     case signed

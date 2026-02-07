@@ -240,7 +240,7 @@ struct SOAPNote: Codable, Identifiable {
     /// Completeness percentage for draft notes
     var completenessPercentage: Double {
         var filled = 0
-        var total = 4
+        let total = 4
 
         if subjective != nil && !subjective!.isEmpty { filled += 1 }
         if objective != nil && !objective!.isEmpty { filled += 1 }
