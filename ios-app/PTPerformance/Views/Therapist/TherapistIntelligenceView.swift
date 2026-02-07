@@ -22,14 +22,27 @@ struct TherapistIntelligenceView: View {
     @State private var showEmailHistory = false
     @State private var showClinicalDocumentation = false
     @State private var showRTSTracking = false
+    @State private var showCoachingDashboard = false
     @State private var selectedPatient: Patient?
     @State private var showAllAtRiskPatients = false
     @State private var showAllActivity = false
+
+    // Coaching alerts state
+    @State private var activeAlertCount: Int = 0
+    @State private var criticalAlertCount: Int = 0
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.lg) {
+                    // Critical Alert Banner (if any exist)
+                    if criticalAlertCount > 0 {
+                        CriticalAlertBanner(count: criticalAlertCount) {
+                            HapticFeedback.warning()
+                            showCoachingDashboard = true
+                        }
+                    }
+
                     // Practice KPIs
                     kpiSection
 
@@ -76,6 +89,7 @@ struct TherapistIntelligenceView: View {
             .task {
                 if let therapistId = appState.userId {
                     await viewModel.loadData(therapistId: therapistId)
+                    await loadCoachingAlerts(therapistId: therapistId)
                 } else {
                     viewModel.errorMessage = "Unable to identify therapist. Please sign in again."
                 }
@@ -111,6 +125,10 @@ struct TherapistIntelligenceView: View {
                     RTSPatientListView()
                         .environmentObject(appState)
                 }
+            }
+            .sheet(isPresented: $showCoachingDashboard) {
+                CoachingDashboardView()
+                    .environmentObject(appState)
             }
             .sheet(isPresented: $showAllAtRiskPatients) {
                 AllAtRiskPatientsView(
@@ -180,6 +198,14 @@ struct TherapistIntelligenceView: View {
                 GridItem(.flexible(), spacing: Spacing.md),
                 GridItem(.flexible(), spacing: Spacing.md)
             ], spacing: Spacing.md) {
+                CoachingAlertsCard(
+                    alertCount: activeAlertCount,
+                    criticalCount: criticalAlertCount
+                ) {
+                    HapticFeedback.light()
+                    showCoachingDashboard = true
+                }
+
                 QuickActionCard(
                     title: "Cohort Analytics",
                     subtitle: "Analyze patient groups",
@@ -265,6 +291,20 @@ struct TherapistIntelligenceView: View {
     private func navigateToPatient(_ patientId: UUID) {
         if let patient = viewModel.patients.first(where: { $0.id == patientId }) {
             selectedPatient = patient
+        }
+    }
+
+    private func loadCoachingAlerts(therapistId: String) async {
+        do {
+            let summary = try await CoachingAlertService.shared.fetchExceptionSummary(therapistId: therapistId)
+            await MainActor.run {
+                activeAlertCount = summary.totalActiveAlerts
+                criticalAlertCount = summary.criticalCount
+                // Update badge manager with alert count
+                TabBarBadgeManager.shared.setIntelligenceBadge(activeAlertCount)
+            }
+        } catch {
+            DebugLogger.shared.log("Failed to load coaching alert summary: \(error.localizedDescription)", level: .error)
         }
     }
 }
@@ -609,6 +649,100 @@ struct AllActivityView: View {
                     Button("Done") { dismiss() }
                 }
             }
+        }
+    }
+}
+
+// MARK: - Coaching Alerts Card
+
+/// Quick action card specifically for coaching alerts with badge support
+struct CoachingAlertsCard: View {
+    let alertCount: Int
+    let criticalCount: Int
+    let action: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var badgeColor: Color {
+        criticalCount > 0 ? .red : .orange
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Icon with badge
+                ZStack(alignment: .topTrailing) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.orange.opacity(0.8), Color.orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 44, height: 44)
+
+                        Image(systemName: "bell.badge.fill")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                    }
+
+                    // Alert count badge
+                    if alertCount > 0 {
+                        Text("\(alertCount)")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(badgeColor)
+                            .clipShape(Capsule())
+                            .offset(x: 8, y: -4)
+                    }
+                }
+
+                Spacer()
+
+                // Title
+                Text("Coaching Alerts")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+
+                // Subtitle
+                Text(subtitleText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+
+                // Arrow indicator
+                HStack {
+                    Spacer()
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.orange.opacity(0.6))
+                }
+            }
+            .frame(minHeight: 140)
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(CornerRadius.lg)
+            .adaptiveShadow(Shadow.medium)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Coaching Alerts: \(subtitleText)")
+        .accessibilityHint("Double tap to view all alerts")
+    }
+
+    private var subtitleText: String {
+        if alertCount == 0 {
+            return "No active alerts"
+        } else if criticalCount > 0 {
+            return "\(criticalCount) critical"
+        } else {
+            return "\(alertCount) active"
         }
     }
 }

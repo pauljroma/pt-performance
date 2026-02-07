@@ -9,6 +9,11 @@ struct PatientListView: View {
     @State private var showBulkAssignmentSheet = false
     @State private var showExportShareSheet = false
     @State private var exportedSummary: String = ""
+    @State private var showNeedsAttentionOnly = false
+
+    // Coaching alerts state
+    @State private var activeAlerts: [CoachingAlert] = []
+    @State private var patientIdsWithAlerts: Set<UUID> = []
 
     var body: some View {
         ZStack {
@@ -77,6 +82,21 @@ struct PatientListView: View {
             // Trailing toolbar items
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !viewModel.isSelectionModeActive {
+                    // Needs Attention filter toggle
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showNeedsAttentionOnly.toggle()
+                        }
+                        HapticFeedback.selectionChanged()
+                    }) {
+                        Label(
+                            "Needs Attention",
+                            systemImage: showNeedsAttentionOnly ? "bell.badge.fill" : "bell.badge"
+                        )
+                        .foregroundColor(showNeedsAttentionOnly ? .orange : .primary)
+                    }
+                    .accessibilityLabel(showNeedsAttentionOnly ? "Showing patients needing attention" : "Show patients needing attention")
+
                     Button(action: { showFilterSheet = true }) {
                         Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
                     }
@@ -111,23 +131,55 @@ struct PatientListView: View {
         }
         .refreshable {
             await viewModel.refresh(therapistId: therapistId)
+            await loadCoachingAlerts()
         }
         .task {
             await viewModel.fetchPatients(for: therapistId)
+            await loadCoachingAlerts()
         }
+    }
+
+    /// Load coaching alerts from the service
+    private func loadCoachingAlerts() async {
+        do {
+            let alerts = try await CoachingAlertService.shared.fetchActiveAlerts(therapistId: therapistId)
+            await MainActor.run {
+                activeAlerts = alerts
+                patientIdsWithAlerts = Set(alerts.map { $0.patientId })
+            }
+        } catch {
+            DebugLogger.shared.log("Failed to load coaching alerts: \(error.localizedDescription)", level: .error)
+        }
+    }
+
+    /// Filter patients that need attention based on alerts
+    private func patientsNeedingAttention(_ patients: [Patient]) -> [Patient] {
+        guard showNeedsAttentionOnly else { return patients }
+        return patients.filter { patientIdsWithAlerts.contains($0.id) || $0.hasHighSeverityFlags }
+    }
+
+    /// Get alert count for a specific patient
+    private func alertCountForPatient(_ patientId: UUID) -> Int {
+        activeAlerts.filter { $0.patientId == patientId }.count
+    }
+
+    private var displayedPatients: [Patient] {
+        patientsNeedingAttention(viewModel.filteredPatients)
     }
 
     private var patientList: some View {
         List {
-            if viewModel.filteredPatients.isEmpty {
-                let hasFilters = !viewModel.searchText.isEmpty || viewModel.selectedFlagFilter != .all || viewModel.selectedSport != nil
+            if displayedPatients.isEmpty {
+                let hasFilters = !viewModel.searchText.isEmpty || viewModel.selectedFlagFilter != .all || viewModel.selectedSport != nil || showNeedsAttentionOnly
                 EmptyStateView(
-                    title: "No Patients Found",
-                    message: hasFilters
-                        ? "No patients match your current filters. Try adjusting your search criteria or clearing the filters to see all patients."
-                        : "Your patient caseload is empty. Patients will appear here once they are assigned to you.",
-                    icon: "person.2.slash",
-                    iconColor: .secondary,
+                    title: showNeedsAttentionOnly ? "No Patients Need Attention" : "No Patients Found",
+                    message: showNeedsAttentionOnly
+                        ? "Great news! None of your patients currently have active coaching alerts."
+                        : (hasFilters
+                            ? "No patients match your current filters. Try adjusting your search criteria or clearing the filters to see all patients."
+                            : "Your patient caseload is empty. Patients will appear here once they are assigned to you."),
+                    icon: showNeedsAttentionOnly ? "checkmark.seal" : "person.2.slash",
+                    iconColor: showNeedsAttentionOnly ? .green : .secondary,
                     action: hasFilters ? EmptyStateView.EmptyStateAction(
                         title: "Clear Filters",
                         icon: "xmark.circle",
@@ -135,12 +187,13 @@ struct PatientListView: View {
                             viewModel.searchText = ""
                             viewModel.selectedFlagFilter = .all
                             viewModel.selectedSport = nil
+                            showNeedsAttentionOnly = false
                             viewModel.applyFilters()
                         }
                     ) : nil
                 )
             } else {
-                ForEach(viewModel.filteredPatients) { patient in
+                ForEach(displayedPatients) { patient in
                     if viewModel.isSelectionModeActive {
                         SelectablePatientRow(
                             patient: patient,
@@ -155,7 +208,10 @@ struct PatientListView: View {
                         .id(patient.id)
                     } else {
                         NavigationLink(destination: PatientDetailView(patient: patient)) {
-                            PatientRowCard(patient: patient)
+                            PatientRowCard(
+                                patient: patient,
+                                coachingAlertCount: alertCountForPatient(patient.id)
+                            )
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button {
@@ -327,16 +383,32 @@ struct BulkActionBar: View {
 
 struct PatientRowCard: View {
     let patient: Patient
+    var coachingAlertCount: Int = 0
 
     var body: some View {
         HStack(spacing: 16) {
             // Avatar - uses cached image if profile image exists
-            ProfileAvatarImage(
-                profileImageUrl: patient.profileImageUrl,
-                firstName: patient.firstName,
-                lastName: patient.lastName,
-                size: 50
-            )
+            ZStack(alignment: .topTrailing) {
+                ProfileAvatarImage(
+                    profileImageUrl: patient.profileImageUrl,
+                    firstName: patient.firstName,
+                    lastName: patient.lastName,
+                    size: 50
+                )
+
+                // Coaching alert badge
+                if coachingAlertCount > 0 {
+                    Text("\(coachingAlertCount)")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.orange)
+                        .clipShape(Capsule())
+                        .offset(x: 6, y: -4)
+                }
+            }
 
             // Patient info
             VStack(alignment: .leading, spacing: 4) {

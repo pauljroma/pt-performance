@@ -45,6 +45,9 @@ struct PatientDetailView: View {
                         HighSeverityAlert()
                     }
 
+                    // Active coaching alerts for this patient
+                    PatientAlertsSection(patientId: patient.id)
+
                     // Section warning banners for partial loading failures
                     if let flagsError = viewModel.flagsError {
                         SectionErrorBanner(message: flagsError)
