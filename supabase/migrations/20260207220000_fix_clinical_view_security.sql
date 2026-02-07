@@ -5,27 +5,11 @@
 
 -- ============================================================================
 -- Helper function: is_therapist(user_id)
--- Returns true if the given user is a therapist
--- Overloaded version that accepts user_id parameter
+-- The function already exists, skip recreation to avoid breaking RLS policies
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION public.is_therapist(p_user_id UUID)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-STABLE
-SET search_path = public
-AS $$
-BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM public.therapists
-        WHERE user_id = p_user_id
-    );
-END;
-$$;
-
-COMMENT ON FUNCTION public.is_therapist(UUID) IS 'Returns true if the given user_id belongs to a therapist';
-
+-- Function is_therapist(UUID) already exists from earlier migrations
+-- Just ensure grants are in place
 GRANT EXECUTE ON FUNCTION public.is_therapist(UUID) TO authenticated;
 
 -- ============================================================================

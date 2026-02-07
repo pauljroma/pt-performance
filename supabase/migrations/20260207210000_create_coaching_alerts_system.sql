@@ -161,8 +161,9 @@ WITH patient_pain AS (
 ),
 patient_adherence AS (
     -- Get adherence stats from existing view
+    -- Cast patient_id to UUID for join compatibility
     SELECT
-        patient_id,
+        patient_id::uuid AS patient_id,
         adherence_pct,
         total_sessions,
         completed_sessions
