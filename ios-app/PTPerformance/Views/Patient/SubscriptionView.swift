@@ -228,9 +228,9 @@ struct SubscriptionView: View {
     // MARK: - Computed Properties
 
     private var currentPlanDescription: String {
-        if storeKit.purchasedProductIDs.contains("com.getmodus.app.annual") {
+        if storeKit.purchasedProductIDs.contains(Config.Subscription.annualProductID) {
             return "Annual Premium - $59.99/year"
-        } else if storeKit.purchasedProductIDs.contains("com.getmodus.app.monthly") {
+        } else if storeKit.purchasedProductIDs.contains(Config.Subscription.monthlyProductID) {
             return "Monthly Premium - $9.99/month"
         } else {
             return "Premium Subscription"
@@ -240,7 +240,7 @@ struct SubscriptionView: View {
     // MARK: - Purchase Logic
 
     private func purchaseButtonTitle(for product: Product) -> String {
-        if product.id == "com.getmodus.app.annual" {
+        if product.id == Config.Subscription.annualProductID {
             return "Start Free Trial"
         } else {
             return "Subscribe — \(product.displayPrice)/month"

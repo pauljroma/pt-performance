@@ -19,10 +19,27 @@ enum Config {
     static let buildNumber = "88"
 
     // MARK: - Subscription Products
+    /// Centralized product IDs for security - prevents hardcoding throughout the app
+    /// These must match the product IDs configured in App Store Connect
     enum Subscription {
+        /// Monthly subscription product ID
         static let monthlyProductID = "com.getmodus.app.monthly"
+        /// Annual subscription product ID
         static let annualProductID = "com.getmodus.app.annual"
+        /// Baseball Pack one-time purchase product ID
+        static let baseballPackProductID = "com.getmodus.app.baseballpack"
+        /// Subscription group identifier
         static let groupID = "PTPerformance Premium"
+
+        /// All valid subscription/purchase product IDs
+        static var allProductIDs: Set<String> {
+            [monthlyProductID, annualProductID, baseballPackProductID]
+        }
+
+        /// Validates if a product ID is known and valid
+        static func isValidProductID(_ productID: String) -> Bool {
+            allProductIDs.contains(productID)
+        }
     }
 
     // MARK: - WHOOP Integration (Build 40)

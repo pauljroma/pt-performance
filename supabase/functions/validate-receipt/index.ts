@@ -59,13 +59,15 @@ const APPLE_STATUS = {
 } as const
 
 // Expected bundle ID for the app
-const EXPECTED_BUNDLE_ID = 'com.ptperformance.app'
+// Note: This should match the bundle ID in the iOS app's Info.plist
+const EXPECTED_BUNDLE_ID = 'com.getmodus.app'
 
-// Valid product IDs
+// Valid product IDs - must match Config.Subscription in iOS app
+// These are the only product IDs that will be accepted for validation
 const VALID_PRODUCT_IDS = [
-  'com.ptperformance.monthly',
-  'com.ptperformance.yearly',
-  'com.ptperformance.lifetime',
+  'com.getmodus.app.monthly',      // Monthly subscription
+  'com.getmodus.app.annual',        // Annual subscription
+  'com.getmodus.app.baseballpack',  // Baseball Pack one-time purchase
 ]
 
 async function validateWithApple(

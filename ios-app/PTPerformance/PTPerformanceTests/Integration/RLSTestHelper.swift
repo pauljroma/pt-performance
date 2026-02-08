@@ -157,8 +157,12 @@ struct RLSTestConfiguration {
     }
 
     /// Demo patient password for authentication
+    /// SECURITY: Must be set via TEST_DEMO_PATIENT_PASSWORD environment variable
     static var demoPatientPassword: String {
-        ProcessInfo.processInfo.environment["TEST_DEMO_PATIENT_PASSWORD"] ?? "demo123456"
+        guard let password = ProcessInfo.processInfo.environment["TEST_DEMO_PATIENT_PASSWORD"], !password.isEmpty else {
+            fatalError("TEST_DEMO_PATIENT_PASSWORD environment variable must be set for integration tests")
+        }
+        return password
     }
 
     /// Demo therapist email for authentication
@@ -167,8 +171,12 @@ struct RLSTestConfiguration {
     }
 
     /// Demo therapist password for authentication
+    /// SECURITY: Must be set via TEST_DEMO_THERAPIST_PASSWORD environment variable
     static var demoTherapistPassword: String {
-        ProcessInfo.processInfo.environment["TEST_DEMO_THERAPIST_PASSWORD"] ?? "demo123456"
+        guard let password = ProcessInfo.processInfo.environment["TEST_DEMO_THERAPIST_PASSWORD"], !password.isEmpty else {
+            fatalError("TEST_DEMO_THERAPIST_PASSWORD environment variable must be set for integration tests")
+        }
+        return password
     }
 
     /// Timeout for async operations

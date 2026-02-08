@@ -107,7 +107,7 @@ All secrets are configured:
 - **Matchfile**: `/ios-app/PTPerformance/fastlane/Matchfile` - Match configuration
 - **GitHub Workflow**: `/.github/workflows/ios-testflight.yml` - CI/CD pipeline
 - **Match Repository**: https://github.com/pauljroma/apple-certificates (private)
-- **Match Passphrase**: `paul-and-shelle-married-novi-2020`
+- **Match Passphrase**: Set via MATCH_PASSWORD environment variable (do not commit)
 
 ## Testing Locally
 
@@ -117,11 +117,11 @@ cd /Users/expo/Code/expo/clients/linear-bootstrap/ios-app/PTPerformance
 
 # Set up environment
 eval "$(rbenv init - zsh)"
-export APP_STORE_CONNECT_API_KEY_ID="415c860b88184388b6e889bfd87bb440"
-export APP_STORE_CONNECT_API_ISSUER_ID="eebecd15-2a07-4dc3-a74c-aed17ca3887a"
-export APP_STORE_CONNECT_API_KEY_CONTENT="LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t..."  # Full base64 key
+export APP_STORE_CONNECT_API_KEY_ID="$APP_STORE_CONNECT_API_KEY_ID"
+export APP_STORE_CONNECT_API_ISSUER_ID="$APP_STORE_CONNECT_API_ISSUER_ID"
+export APP_STORE_CONNECT_API_KEY_CONTENT="$APP_STORE_CONNECT_API_KEY_CONTENT"  # Base64-encoded key
 export FASTLANE_TEAM_ID="5NNLBL74XR"
-export MATCH_PASSWORD="paul-and-shelle-married-novi-2020"  # Only needed for Match
+export MATCH_PASSWORD="$MATCH_PASSWORD"  # Set this environment variable securely
 
 # Run lane
 bundle exec fastlane <lane_name>
