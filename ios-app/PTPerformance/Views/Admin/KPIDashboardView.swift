@@ -1,0 +1,757 @@
+//
+//  KPIDashboardView.swift
+//  PTPerformance
+//
+//  KPI Dashboard View for X2Index
+//  M10: KPI dashboard tracks PT prep time, WAU, adherence, citation coverage, latency, safety events
+//
+//  North Star Guardrails:
+//  - PT weekly active usage >= 65%
+//  - Athlete weekly active usage >= 60%
+//  - Citation coverage for AI claims >= 95%
+//  - p95 summary latency <= 5s
+//  - Unresolved high-severity safety incidents = 0
+//
+
+import SwiftUI
+import Charts
+
+// MARK: - KPI Dashboard View
+
+struct KPIDashboardView: View {
+    @StateObject private var viewModel = KPIDashboardViewModel()
+    @State private var selectedPeriod: DateRangePeriod = .lastWeek
+    @State private var showingExport = false
+    @State private var selectedIncident: SafetyIncident?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    // Period Selector
+                    periodSelector
+
+                    if viewModel.isLoading && viewModel.dashboard == nil {
+                        ProgressView("Loading KPI Dashboard...")
+                            .frame(maxWidth: .infinity, minHeight: 200)
+                    } else if let dashboard = viewModel.dashboard {
+                        // Overview Status
+                        overviewStatusCard(dashboard: dashboard)
+
+                        // PT Metrics Section
+                        ptMetricsSection(dashboard: dashboard)
+
+                        // Athlete Metrics Section
+                        athleteMetricsSection(dashboard: dashboard)
+
+                        // AI Metrics Section
+                        aiMetricsSection(dashboard: dashboard)
+
+                        // Safety Section
+                        safetySection(dashboard: dashboard)
+
+                        // Safety Incidents List
+                        if !viewModel.openIncidents.isEmpty {
+                            safetyIncidentsSection
+                        }
+                    } else if let error = viewModel.lastError {
+                        errorView(error: error)
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("KPI Dashboard")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingExport = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        Task {
+                            await viewModel.refresh()
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(viewModel.isLoading)
+                }
+            }
+            .refreshable {
+                await viewModel.refresh()
+            }
+            .task {
+                await viewModel.loadDashboard(period: selectedPeriod)
+            }
+            .onChange(of: selectedPeriod) { _, newPeriod in
+                Task {
+                    await viewModel.loadDashboard(period: newPeriod)
+                }
+            }
+            .sheet(item: $selectedIncident) { incident in
+                SafetyIncidentDetailSheet(incident: incident) {
+                    Task {
+                        await viewModel.refresh()
+                    }
+                }
+            }
+            .sheet(isPresented: $showingExport) {
+                KPIExportSheet(dashboard: viewModel.dashboard)
+            }
+        }
+    }
+
+    // MARK: - Period Selector
+
+    private var periodSelector: some View {
+        Picker("Period", selection: $selectedPeriod) {
+            ForEach(DateRangePeriod.allCases, id: \.self) { period in
+                Text(period.displayName).tag(period)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+
+    // MARK: - Overview Status Card
+
+    private func overviewStatusCard(dashboard: KPIDashboard) -> some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("System Health")
+                    .font(.headline)
+                Spacer()
+                overallStatusBadge(dashboard: dashboard)
+            }
+
+            HStack(spacing: 16) {
+                statusIndicator(
+                    title: "PT WAU",
+                    status: dashboard.ptMetrics.status,
+                    value: "\(Int(dashboard.ptMetrics.wauPercentage * 100))%",
+                    target: "\(Int(KPITargets.ptWauTarget * 100))%"
+                )
+
+                statusIndicator(
+                    title: "Athlete WAU",
+                    status: dashboard.athleteMetrics.status,
+                    value: "\(Int(dashboard.athleteMetrics.wauPercentage * 100))%",
+                    target: "\(Int(KPITargets.athleteWauTarget * 100))%"
+                )
+
+                statusIndicator(
+                    title: "Citations",
+                    status: dashboard.aiMetrics.citationStatus,
+                    value: "\(Int(dashboard.aiMetrics.citationCoverage * 100))%",
+                    target: "\(Int(KPITargets.citationCoverageTarget * 100))%"
+                )
+
+                statusIndicator(
+                    title: "Safety",
+                    status: dashboard.safetyMetrics.status,
+                    value: "\(dashboard.safetyMetrics.unresolvedHighSeverity)",
+                    target: "0"
+                )
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    private func overallStatusBadge(dashboard: KPIDashboard) -> some View {
+        let allOnTarget = dashboard.ptMetrics.meetsTarget &&
+                          dashboard.athleteMetrics.meetsTarget &&
+                          dashboard.aiMetrics.citationMeetsTarget &&
+                          dashboard.aiMetrics.latencyMeetsTarget &&
+                          dashboard.safetyMetrics.meetsTarget
+
+        let hasCritical = !dashboard.safetyMetrics.meetsTarget ||
+                          dashboard.ptMetrics.status == .critical ||
+                          dashboard.athleteMetrics.status == .critical
+
+        let status: KPIStatus = allOnTarget ? .onTarget : (hasCritical ? .critical : .warning)
+
+        return HStack(spacing: 4) {
+            Image(systemName: status.iconName)
+            Text(status.displayName)
+                .font(.caption)
+                .fontWeight(.semibold)
+        }
+        .foregroundColor(statusColor(status))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(statusColor(status).opacity(0.15))
+        .cornerRadius(8)
+    }
+
+    private func statusIndicator(title: String, status: KPIStatus, value: String, target: String) -> some View {
+        VStack(spacing: 4) {
+            Circle()
+                .fill(statusColor(status))
+                .frame(width: 12, height: 12)
+
+            Text(value)
+                .font(.headline)
+
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            Text("(\(target))")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - PT Metrics Section
+
+    private func ptMetricsSection(dashboard: KPIDashboard) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "PT Engagement", icon: "person.2.fill", status: dashboard.ptMetrics.status)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                metricCard(
+                    title: "Weekly Active",
+                    value: "\(dashboard.ptMetrics.weeklyActivePTs)/\(dashboard.ptMetrics.totalPTs)",
+                    subtitle: "\(Int(dashboard.ptMetrics.wauPercentage * 100))% WAU",
+                    status: dashboard.ptMetrics.status,
+                    trend: viewModel.ptWauTrend
+                )
+
+                metricCard(
+                    title: "Avg Prep Time",
+                    value: formatDuration(seconds: dashboard.ptMetrics.avgPrepTimeSeconds),
+                    subtitle: "per athlete",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Briefs Opened",
+                    value: "\(dashboard.ptMetrics.briefsOpened)",
+                    subtitle: "this period",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Plans Assigned",
+                    value: "\(dashboard.ptMetrics.plansAssigned)",
+                    subtitle: "this period",
+                    status: .onTarget,
+                    trend: nil
+                )
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Athlete Metrics Section
+
+    private func athleteMetricsSection(dashboard: KPIDashboard) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "Athlete Engagement", icon: "figure.run", status: dashboard.athleteMetrics.status)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                metricCard(
+                    title: "Weekly Active",
+                    value: "\(dashboard.athleteMetrics.weeklyActiveAthletes)/\(dashboard.athleteMetrics.totalAthletes)",
+                    subtitle: "\(Int(dashboard.athleteMetrics.wauPercentage * 100))% WAU",
+                    status: dashboard.athleteMetrics.status,
+                    trend: viewModel.athleteWauTrend
+                )
+
+                metricCard(
+                    title: "Check-ins",
+                    value: "\(dashboard.athleteMetrics.checkInsCompleted)",
+                    subtitle: "completed",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Task Completion",
+                    value: "\(Int(dashboard.athleteMetrics.taskCompletionRate * 100))%",
+                    subtitle: "adherence rate",
+                    status: dashboard.athleteMetrics.taskCompletionRate >= 0.7 ? .onTarget : .warning,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Avg Streak",
+                    value: String(format: "%.1f", dashboard.athleteMetrics.avgStreakDays),
+                    subtitle: "days",
+                    status: .onTarget,
+                    trend: nil
+                )
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - AI Metrics Section
+
+    private func aiMetricsSection(dashboard: KPIDashboard) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            let aiStatus = dashboard.aiMetrics.citationStatus == .critical || dashboard.aiMetrics.latencyStatus == .critical
+                ? KPIStatus.critical
+                : (dashboard.aiMetrics.citationStatus == .warning || dashboard.aiMetrics.latencyStatus == .warning ? .warning : .onTarget)
+
+            sectionHeader(title: "AI Performance", icon: "cpu", status: aiStatus)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                metricCard(
+                    title: "Citation Coverage",
+                    value: "\(Int(dashboard.aiMetrics.citationCoverage * 100))%",
+                    subtitle: "target: \(Int(KPITargets.citationCoverageTarget * 100))%",
+                    status: dashboard.aiMetrics.citationStatus,
+                    trend: viewModel.citationTrend
+                )
+
+                metricCard(
+                    title: "p95 Latency",
+                    value: formatLatency(ms: dashboard.aiMetrics.p95LatencyMs),
+                    subtitle: "target: \(KPITargets.p95LatencyTargetMs / 1000)s",
+                    status: dashboard.aiMetrics.latencyStatus,
+                    trend: viewModel.latencyTrend
+                )
+
+                metricCard(
+                    title: "Claims Generated",
+                    value: "\(dashboard.aiMetrics.claimsGenerated)",
+                    subtitle: "this period",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Avg Confidence",
+                    value: "\(Int(dashboard.aiMetrics.avgConfidence * 100))%",
+                    subtitle: "\(dashboard.aiMetrics.abstentions) abstentions",
+                    status: dashboard.aiMetrics.avgConfidence >= 0.7 ? .onTarget : .warning,
+                    trend: nil
+                )
+            }
+
+            // Abstention and uncertainty info
+            if dashboard.aiMetrics.abstentions > 0 || dashboard.aiMetrics.uncertaintyFlags > 0 {
+                HStack(spacing: 16) {
+                    Label("\(dashboard.aiMetrics.abstentions) abstentions", systemImage: "hand.raised.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+
+                    Label("\(dashboard.aiMetrics.uncertaintyFlags) uncertainty flags", systemImage: "questionmark.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.yellow)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Safety Section
+
+    private func safetySection(dashboard: KPIDashboard) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader(title: "Safety", icon: "shield.fill", status: dashboard.safetyMetrics.status)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                metricCard(
+                    title: "Unresolved High",
+                    value: "\(dashboard.safetyMetrics.unresolvedHighSeverity)",
+                    subtitle: "target: 0",
+                    status: dashboard.safetyMetrics.status,
+                    trend: nil,
+                    highlight: dashboard.safetyMetrics.unresolvedHighSeverity > 0
+                )
+
+                metricCard(
+                    title: "Total Incidents",
+                    value: "\(dashboard.safetyMetrics.totalIncidents)",
+                    subtitle: "this period",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Escalations",
+                    value: "\(dashboard.safetyMetrics.escalationsTriggered)",
+                    subtitle: "triggered",
+                    status: .onTarget,
+                    trend: nil
+                )
+
+                metricCard(
+                    title: "Threshold Breaches",
+                    value: "\(dashboard.safetyMetrics.thresholdBreaches)",
+                    subtitle: "detected",
+                    status: dashboard.safetyMetrics.thresholdBreaches > 20 ? .warning : .onTarget,
+                    trend: nil
+                )
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Safety Incidents Section
+
+    private var safetyIncidentsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Open Incidents", systemImage: "exclamationmark.triangle.fill")
+                    .font(.headline)
+                    .foregroundColor(.red)
+
+                Spacer()
+
+                Text("\(viewModel.openIncidents.count)")
+                    .font(.headline)
+                    .foregroundColor(.red)
+            }
+
+            ForEach(viewModel.openIncidents) { incident in
+                SafetyIncidentRow(incident: incident) {
+                    selectedIncident = incident
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Helper Views
+
+    private func sectionHeader(title: String, icon: String, status: KPIStatus) -> some View {
+        HStack {
+            Label(title, systemImage: icon)
+                .font(.headline)
+
+            Spacer()
+
+            Image(systemName: status.iconName)
+                .foregroundColor(statusColor(status))
+        }
+    }
+
+    private func metricCard(
+        title: String,
+        value: String,
+        subtitle: String,
+        status: KPIStatus,
+        trend: KPITrend?,
+        highlight: Bool = false
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                if let trend = trend {
+                    Image(systemName: trend.iconName)
+                        .font(.caption2)
+                        .foregroundColor(trend == .up ? .green : (trend == .down ? .red : .gray))
+                }
+            }
+
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(highlight ? .red : .primary)
+
+            Text(subtitle)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(statusColor(status).opacity(0.1))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(statusColor(status).opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func errorView(error: Error) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundColor(.red)
+
+            Text("Error Loading Dashboard")
+                .font(.headline)
+
+            Text(error.localizedDescription)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button("Retry") {
+                Task {
+                    await viewModel.refresh()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    // MARK: - Helpers
+
+    private func statusColor(_ status: KPIStatus) -> Color {
+        switch status {
+        case .onTarget: return .green
+        case .warning: return .yellow
+        case .critical: return .red
+        }
+    }
+
+    private func formatDuration(seconds: Double) -> String {
+        if seconds < 60 {
+            return "\(Int(seconds))s"
+        } else {
+            let minutes = Int(seconds / 60)
+            let secs = Int(seconds.truncatingRemainder(dividingBy: 60))
+            return "\(minutes)m \(secs)s"
+        }
+    }
+
+    private func formatLatency(ms: Int) -> String {
+        if ms < 1000 {
+            return "\(ms)ms"
+        } else {
+            return String(format: "%.1fs", Double(ms) / 1000)
+        }
+    }
+}
+
+// MARK: - Date Range Period
+
+enum DateRangePeriod: String, CaseIterable {
+    case today = "today"
+    case lastWeek = "last_week"
+    case lastMonth = "last_month"
+    case lastQuarter = "last_quarter"
+
+    var displayName: String {
+        switch self {
+        case .today: return "Today"
+        case .lastWeek: return "Week"
+        case .lastMonth: return "Month"
+        case .lastQuarter: return "Quarter"
+        }
+    }
+
+    var days: Int {
+        switch self {
+        case .today: return 1
+        case .lastWeek: return 7
+        case .lastMonth: return 30
+        case .lastQuarter: return 90
+        }
+    }
+}
+
+// MARK: - Safety Incident Detail Sheet
+
+struct SafetyIncidentDetailSheet: View {
+    let incident: SafetyIncident
+    let onDismiss: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var resolutionNotes = ""
+    @State private var isResolving = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Incident Details") {
+                    LabeledContent("Type", value: incident.incidentType.displayName)
+                    LabeledContent("Severity", value: incident.severity.displayName)
+                    LabeledContent("Status", value: incident.status.displayName)
+                    LabeledContent("Created", value: incident.ageString)
+                }
+
+                Section("Description") {
+                    Text(incident.description)
+                }
+
+                if incident.triggerData != nil {
+                    Section("Trigger Data") {
+                        Text("Data available")
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                if incident.status == .open || incident.status == .investigating {
+                    Section("Resolution") {
+                        TextField("Resolution notes", text: $resolutionNotes, axis: .vertical)
+                            .lineLimit(3...6)
+
+                        Button("Resolve Incident") {
+                            Task {
+                                await resolveIncident(dismissed: false)
+                            }
+                        }
+                        .disabled(resolutionNotes.isEmpty || isResolving)
+
+                        Button("Dismiss Incident") {
+                            Task {
+                                await resolveIncident(dismissed: true)
+                            }
+                        }
+                        .foregroundColor(.secondary)
+                        .disabled(resolutionNotes.isEmpty || isResolving)
+                    }
+                }
+
+                if incident.isResolved {
+                    Section("Resolution Info") {
+                        if let notes = incident.resolutionNotes {
+                            Text(notes)
+                        }
+                        if let resolvedAt = incident.resolvedAt {
+                            LabeledContent("Resolved", value: resolvedAt.formatted())
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Incident Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func resolveIncident(dismissed: Bool) async {
+        isResolving = true
+        defer { isResolving = false }
+
+        guard let userId = UUID(uuidString: PTSupabaseClient.shared.userId ?? "") else { return }
+
+        let resolution = IncidentResolution(
+            incidentId: incident.id,
+            resolvedBy: userId,
+            notes: resolutionNotes,
+            dismissed: dismissed
+        )
+
+        do {
+            try await SafetyService.shared.resolveIncident(incidentId: incident.id, resolution: resolution)
+            onDismiss()
+            dismiss()
+        } catch {
+            ErrorLogger.shared.logError(error, context: "SafetyIncidentDetailSheet.resolveIncident")
+        }
+    }
+}
+
+// MARK: - KPI Export Sheet
+
+struct KPIExportSheet: View {
+    let dashboard: KPIDashboard?
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 60))
+                    .foregroundColor(.blue)
+
+                Text("Export KPI Report")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Generate a shareable KPI report for the current period.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Button {
+                    exportReport()
+                } label: {
+                    Label("Export as PDF", systemImage: "arrow.down.doc")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(dashboard == nil)
+
+                Button {
+                    shareReport()
+                } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .disabled(dashboard == nil)
+            }
+            .padding()
+            .navigationTitle("Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func exportReport() {
+        // Export logic would go here
+        dismiss()
+    }
+
+    private func shareReport() {
+        // Share logic would go here
+        dismiss()
+    }
+}
+
+// MARK: - Preview
+
+#if DEBUG
+struct KPIDashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        KPIDashboardView()
+    }
+}
+#endif

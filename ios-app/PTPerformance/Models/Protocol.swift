@@ -913,3 +913,749 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         lifestyleStressRelief
     ]
 }
+
+// MARK: - Protocol Template (X2Index PT Workflow)
+
+struct ProtocolTemplate: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let category: ProtocolCategory
+    let description: String
+    let defaultDurationDays: Int
+    let tasks: [ProtocolTask]
+    let isActive: Bool
+
+    enum ProtocolCategory: String, Codable, CaseIterable {
+        case recovery
+        case returnToPlay
+        case performance
+        case injury
+        case maintenance
+
+        var displayName: String {
+            switch self {
+            case .recovery: return "Recovery"
+            case .returnToPlay: return "Return to Play"
+            case .performance: return "Performance"
+            case .injury: return "Injury"
+            case .maintenance: return "Maintenance"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .recovery: return "arrow.counterclockwise.circle"
+            case .returnToPlay: return "figure.run"
+            case .performance: return "bolt.fill"
+            case .injury: return "cross.circle"
+            case .maintenance: return "wrench.and.screwdriver"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .recovery: return "blue"
+            case .returnToPlay: return "green"
+            case .performance: return "orange"
+            case .injury: return "red"
+            case .maintenance: return "purple"
+            }
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, category, description, tasks
+        case defaultDurationDays = "default_duration_days"
+        case isActive = "is_active"
+    }
+
+    var estimatedDuration: String {
+        if defaultDurationDays == 1 {
+            return "1 day"
+        } else if defaultDurationDays < 7 {
+            return "\(defaultDurationDays) days"
+        } else {
+            let weeks = defaultDurationDays / 7
+            return weeks == 1 ? "1 week" : "\(weeks) weeks"
+        }
+    }
+
+    var taskCount: Int {
+        tasks.count
+    }
+}
+
+// MARK: - Protocol Task
+
+struct ProtocolTask: Codable, Identifiable, Hashable {
+    let id: UUID
+    let title: String
+    let description: String?
+    let taskType: TaskType
+    let frequency: TaskFrequency
+    let defaultTime: String? // "08:00"
+    let durationMinutes: Int?
+    let instructions: String?
+
+    enum TaskType: String, Codable, CaseIterable {
+        case exercise
+        case stretch
+        case ice
+        case heat
+        case rest
+        case medication
+        case checkIn
+        case appointment
+
+        var displayName: String {
+            switch self {
+            case .exercise: return "Exercise"
+            case .stretch: return "Stretch"
+            case .ice: return "Ice"
+            case .heat: return "Heat"
+            case .rest: return "Rest"
+            case .medication: return "Medication"
+            case .checkIn: return "Check-In"
+            case .appointment: return "Appointment"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .exercise: return "figure.strengthtraining.traditional"
+            case .stretch: return "figure.flexibility"
+            case .ice: return "snowflake"
+            case .heat: return "flame"
+            case .rest: return "bed.double"
+            case .medication: return "pills"
+            case .checkIn: return "checkmark.message"
+            case .appointment: return "calendar.badge.clock"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .exercise: return "green"
+            case .stretch: return "purple"
+            case .ice: return "cyan"
+            case .heat: return "orange"
+            case .rest: return "blue"
+            case .medication: return "pink"
+            case .checkIn: return "teal"
+            case .appointment: return "indigo"
+            }
+        }
+    }
+
+    enum TaskFrequency: String, Codable, CaseIterable {
+        case daily
+        case twiceDaily
+        case everyOtherDay
+        case weekly
+        case asNeeded
+
+        var displayName: String {
+            switch self {
+            case .daily: return "Daily"
+            case .twiceDaily: return "Twice Daily"
+            case .everyOtherDay: return "Every Other Day"
+            case .weekly: return "Weekly"
+            case .asNeeded: return "As Needed"
+            }
+        }
+
+        var occurrencesPerWeek: Double {
+            switch self {
+            case .daily: return 7.0
+            case .twiceDaily: return 14.0
+            case .everyOtherDay: return 3.5
+            case .weekly: return 1.0
+            case .asNeeded: return 0.0
+            }
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, description, frequency, instructions
+        case taskType = "task_type"
+        case defaultTime = "default_time"
+        case durationMinutes = "duration_minutes"
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: ProtocolTask, rhs: ProtocolTask) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+// MARK: - Athlete Plan
+
+struct AthletePlan: Codable, Identifiable {
+    let id: UUID
+    let athleteId: UUID
+    let protocolId: UUID
+    let startDate: Date
+    let endDate: Date
+    let assignedBy: UUID
+    var tasks: [AssignedTask]
+    var status: PlanStatus
+    var notes: String?
+    let createdAt: Date
+
+    enum PlanStatus: String, Codable, CaseIterable {
+        case active
+        case completed
+        case paused
+        case cancelled
+
+        var displayName: String {
+            switch self {
+            case .active: return "Active"
+            case .completed: return "Completed"
+            case .paused: return "Paused"
+            case .cancelled: return "Cancelled"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .active: return "green"
+            case .completed: return "blue"
+            case .paused: return "yellow"
+            case .cancelled: return "gray"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .active: return "play.circle.fill"
+            case .completed: return "checkmark.circle.fill"
+            case .paused: return "pause.circle.fill"
+            case .cancelled: return "xmark.circle.fill"
+            }
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, status, notes, tasks
+        case athleteId = "athlete_id"
+        case protocolId = "protocol_id"
+        case startDate = "start_date"
+        case endDate = "end_date"
+        case assignedBy = "assigned_by"
+        case createdAt = "created_at"
+    }
+
+    var progress: Double {
+        guard !tasks.isEmpty else { return 0 }
+        let completedCount = tasks.filter { $0.status == .completed }.count
+        return Double(completedCount) / Double(tasks.count)
+    }
+
+    var progressPercentage: Int {
+        Int(progress * 100)
+    }
+
+    var daysRemaining: Int {
+        max(0, Calendar.current.dateComponents([.day], from: Date(), to: endDate).day ?? 0)
+    }
+
+    var totalDays: Int {
+        Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+    }
+
+    var daysElapsed: Int {
+        max(0, Calendar.current.dateComponents([.day], from: startDate, to: Date()).day ?? 0)
+    }
+
+    var completedTasks: Int {
+        tasks.filter { $0.status == .completed }.count
+    }
+
+    var pendingTasks: Int {
+        tasks.filter { $0.status == .pending }.count
+    }
+
+    var overdueTasks: Int {
+        tasks.filter { $0.status == .overdue }.count
+    }
+
+    var todaysTasks: [AssignedTask] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return tasks.filter { calendar.startOfDay(for: $0.dueDate) == today }
+    }
+}
+
+// MARK: - Assigned Task
+
+struct AssignedTask: Codable, Identifiable {
+    let id: UUID
+    let planId: UUID
+    let title: String
+    let taskType: ProtocolTask.TaskType
+    let dueDate: Date
+    let dueTime: String?
+    var status: TaskStatus
+    var completedAt: Date?
+    var notes: String?
+
+    enum TaskStatus: String, Codable, CaseIterable {
+        case pending
+        case completed
+        case skipped
+        case overdue
+
+        var displayName: String {
+            switch self {
+            case .pending: return "Pending"
+            case .completed: return "Completed"
+            case .skipped: return "Skipped"
+            case .overdue: return "Overdue"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .pending: return "circle"
+            case .completed: return "checkmark.circle.fill"
+            case .skipped: return "arrow.right.circle"
+            case .overdue: return "exclamationmark.circle"
+            }
+        }
+
+        var color: String {
+            switch self {
+            case .pending: return "gray"
+            case .completed: return "green"
+            case .skipped: return "orange"
+            case .overdue: return "red"
+            }
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, status, notes
+        case planId = "plan_id"
+        case taskType = "task_type"
+        case dueDate = "due_date"
+        case dueTime = "due_time"
+        case completedAt = "completed_at"
+    }
+
+    var isToday: Bool {
+        Calendar.current.isDateInToday(dueDate)
+    }
+
+    var isPast: Bool {
+        dueDate < Date() && !isToday
+    }
+
+    var formattedDueTime: String? {
+        guard let dueTime = dueTime else { return nil }
+        let components = dueTime.split(separator: ":")
+        guard components.count >= 2,
+              let hour = Int(components[0]),
+              let minute = Int(components[1]) else {
+            return dueTime
+        }
+
+        var calendar = Calendar.current
+        calendar.timeZone = TimeZone.current
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+
+        guard let date = calendar.date(from: dateComponents) else {
+            return dueTime
+        }
+
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Plan Customization
+
+struct PlanCustomization {
+    var startDate: Date
+    var endDate: Date
+    var taskCustomizations: [UUID: TaskCustomization]
+    var notes: String?
+
+    struct TaskCustomization {
+        var isIncluded: Bool
+        var customTime: String?
+        var reminderEnabled: Bool
+        var customInstructions: String?
+
+        init(
+            isIncluded: Bool = true,
+            customTime: String? = nil,
+            reminderEnabled: Bool = true,
+            customInstructions: String? = nil
+        ) {
+            self.isIncluded = isIncluded
+            self.customTime = customTime
+            self.reminderEnabled = reminderEnabled
+            self.customInstructions = customInstructions
+        }
+    }
+
+    init(template: ProtocolTemplate) {
+        self.startDate = Date()
+        self.endDate = Calendar.current.date(byAdding: .day, value: template.defaultDurationDays, to: Date()) ?? Date()
+        self.taskCustomizations = Dictionary(uniqueKeysWithValues: template.tasks.map { task in
+            (task.id, TaskCustomization(
+                isIncluded: true,
+                customTime: task.defaultTime,
+                reminderEnabled: true,
+                customInstructions: nil
+            ))
+        })
+        self.notes = nil
+    }
+
+    var includedTaskCount: Int {
+        taskCustomizations.values.filter { $0.isIncluded }.count
+    }
+
+    mutating func toggleTask(_ taskId: UUID) {
+        if var customization = taskCustomizations[taskId] {
+            customization.isIncluded.toggle()
+            taskCustomizations[taskId] = customization
+        }
+    }
+
+    mutating func setTaskTime(_ taskId: UUID, time: String?) {
+        if var customization = taskCustomizations[taskId] {
+            customization.customTime = time
+            taskCustomizations[taskId] = customization
+        }
+    }
+
+    mutating func setTaskReminder(_ taskId: UUID, enabled: Bool) {
+        if var customization = taskCustomizations[taskId] {
+            customization.reminderEnabled = enabled
+            taskCustomizations[taskId] = customization
+        }
+    }
+
+    mutating func setTaskInstructions(_ taskId: UUID, instructions: String?) {
+        if var customization = taskCustomizations[taskId] {
+            customization.customInstructions = instructions
+            taskCustomizations[taskId] = customization
+        }
+    }
+}
+
+// MARK: - Sample Protocol Templates
+
+extension ProtocolTemplate {
+    static let postWorkoutRecovery = ProtocolTemplate(
+        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+        name: "Post-Workout Recovery",
+        category: .recovery,
+        description: "Comprehensive recovery routine for post-workout muscle recovery and soreness prevention",
+        defaultDurationDays: 3,
+        tasks: [
+            ProtocolTask(
+                id: UUID(),
+                title: "Static Stretching Routine",
+                description: "Full body static stretch sequence",
+                taskType: .stretch,
+                frequency: .daily,
+                defaultTime: "18:00",
+                durationMinutes: 15,
+                instructions: "Hold each stretch for 30 seconds. Focus on major muscle groups worked during training."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Foam Rolling Session",
+                description: "Self-myofascial release",
+                taskType: .exercise,
+                frequency: .daily,
+                defaultTime: "19:00",
+                durationMinutes: 10,
+                instructions: "Roll slowly over each muscle group. Pause on tender spots for 30 seconds."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Ice Bath / Cold Therapy",
+                description: "Cold water immersion for recovery",
+                taskType: .ice,
+                frequency: .daily,
+                defaultTime: "19:30",
+                durationMinutes: 10,
+                instructions: "10 minutes in cold water (50-59F). Focus on lower body immersion."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Recovery Check-In",
+                description: "Rate soreness and recovery status",
+                taskType: .checkIn,
+                frequency: .daily,
+                defaultTime: "08:00",
+                durationMinutes: 2,
+                instructions: "Rate muscle soreness 1-10 and note any areas of concern."
+            )
+        ],
+        isActive: true
+    )
+
+    static let returnToTraining = ProtocolTemplate(
+        id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+        name: "Return to Training (Mild Strain)",
+        category: .returnToPlay,
+        description: "Progressive return protocol following mild muscle strain with gradual load increase",
+        defaultDurationDays: 14,
+        tasks: [
+            ProtocolTask(
+                id: UUID(),
+                title: "Gentle Mobility Work",
+                description: "Pain-free range of motion exercises",
+                taskType: .stretch,
+                frequency: .twiceDaily,
+                defaultTime: "07:00",
+                durationMinutes: 10,
+                instructions: "Move through pain-free range only. Stop if pain exceeds 3/10."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Ice Application",
+                description: "Apply ice to affected area",
+                taskType: .ice,
+                frequency: .daily,
+                defaultTime: "20:00",
+                durationMinutes: 15,
+                instructions: "Apply ice pack wrapped in cloth for 15 minutes. Do not apply directly to skin."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Progressive Loading Exercise",
+                description: "Gradual strength rebuilding",
+                taskType: .exercise,
+                frequency: .everyOtherDay,
+                defaultTime: "10:00",
+                durationMinutes: 20,
+                instructions: "Start with bodyweight, progress to light resistance as tolerated."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Pain & Function Check-In",
+                description: "Daily symptom monitoring",
+                taskType: .checkIn,
+                frequency: .daily,
+                defaultTime: "21:00",
+                durationMinutes: 3,
+                instructions: "Rate pain at rest and with movement. Note any improvements or setbacks."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "PT Follow-Up Appointment",
+                description: "Progress evaluation with PT",
+                taskType: .appointment,
+                frequency: .weekly,
+                defaultTime: "14:00",
+                durationMinutes: 45,
+                instructions: "Bring completed check-in logs. Be prepared to demonstrate movement quality."
+            )
+        ],
+        isActive: true
+    )
+
+    static let performanceOptimization = ProtocolTemplate(
+        id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+        name: "Performance Optimization",
+        category: .performance,
+        description: "Peak performance protocol combining activation, recovery, and readiness optimization",
+        defaultDurationDays: 7,
+        tasks: [
+            ProtocolTask(
+                id: UUID(),
+                title: "Morning Activation Routine",
+                description: "Dynamic warm-up and neural activation",
+                taskType: .exercise,
+                frequency: .daily,
+                defaultTime: "06:30",
+                durationMinutes: 15,
+                instructions: "Dynamic stretches, activation drills, light plyometrics."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Pre-Training Prep",
+                description: "Sport-specific warm-up",
+                taskType: .exercise,
+                frequency: .daily,
+                defaultTime: "15:00",
+                durationMinutes: 20,
+                instructions: "Movement preparation specific to training focus."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Post-Training Flush",
+                description: "Active recovery work",
+                taskType: .stretch,
+                frequency: .daily,
+                defaultTime: "18:00",
+                durationMinutes: 10,
+                instructions: "Light cardio followed by stretching and mobility."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Readiness Assessment",
+                description: "Daily performance readiness check",
+                taskType: .checkIn,
+                frequency: .daily,
+                defaultTime: "07:00",
+                durationMinutes: 5,
+                instructions: "Rate sleep quality, energy, motivation, and physical readiness."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Contrast Therapy",
+                description: "Hot/cold alternating therapy",
+                taskType: .heat,
+                frequency: .everyOtherDay,
+                defaultTime: "19:00",
+                durationMinutes: 20,
+                instructions: "3 min hot, 1 min cold. Repeat 4 times. End on cold."
+            )
+        ],
+        isActive: true
+    )
+
+    static let sleepImprovement = ProtocolTemplate(
+        id: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+        name: "Sleep Improvement Protocol",
+        category: .maintenance,
+        description: "Evidence-based sleep hygiene and recovery optimization program",
+        defaultDurationDays: 21,
+        tasks: [
+            ProtocolTask(
+                id: UUID(),
+                title: "Evening Wind-Down Routine",
+                description: "Relaxation and sleep preparation",
+                taskType: .rest,
+                frequency: .daily,
+                defaultTime: "21:00",
+                durationMinutes: 30,
+                instructions: "Dim lights, no screens, gentle stretching or breathing exercises."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Sleep Environment Check",
+                description: "Optimize bedroom conditions",
+                taskType: .checkIn,
+                frequency: .weekly,
+                defaultTime: "20:00",
+                durationMinutes: 10,
+                instructions: "Check room temp (65-68F), darkness, noise levels. Make adjustments as needed."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Morning Light Exposure",
+                description: "Natural light for circadian rhythm",
+                taskType: .exercise,
+                frequency: .daily,
+                defaultTime: "07:00",
+                durationMinutes: 15,
+                instructions: "Get outside within 30 min of waking. 10-15 min of natural light exposure."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Sleep Quality Log",
+                description: "Track sleep metrics",
+                taskType: .checkIn,
+                frequency: .daily,
+                defaultTime: "08:00",
+                durationMinutes: 2,
+                instructions: "Record: bedtime, wake time, perceived quality (1-10), interruptions."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Gentle Evening Stretch",
+                description: "Relaxation stretching routine",
+                taskType: .stretch,
+                frequency: .daily,
+                defaultTime: "21:30",
+                durationMinutes: 10,
+                instructions: "Slow, relaxing stretches. Focus on breathing. Avoid stimulating movements."
+            )
+        ],
+        isActive: true
+    )
+
+    static let stressManagement = ProtocolTemplate(
+        id: UUID(uuidString: "55555555-5555-5555-5555-555555555555")!,
+        name: "Stress Management",
+        category: .maintenance,
+        description: "Holistic stress reduction protocol combining movement, breathing, and mindfulness",
+        defaultDurationDays: 14,
+        tasks: [
+            ProtocolTask(
+                id: UUID(),
+                title: "Morning Breathwork",
+                description: "Box breathing or 4-7-8 technique",
+                taskType: .rest,
+                frequency: .daily,
+                defaultTime: "06:30",
+                durationMinutes: 10,
+                instructions: "Box breathing: 4 sec inhale, 4 sec hold, 4 sec exhale, 4 sec hold. Repeat 10 cycles."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Midday Movement Break",
+                description: "Active stress relief",
+                taskType: .exercise,
+                frequency: .daily,
+                defaultTime: "12:00",
+                durationMinutes: 15,
+                instructions: "Walk, stretch, or light movement. Get away from desk/work area."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Evening Decompression",
+                description: "End-of-day stress release",
+                taskType: .stretch,
+                frequency: .daily,
+                defaultTime: "18:00",
+                durationMinutes: 20,
+                instructions: "Yoga-inspired flow or gentle stretching. Focus on hip openers and shoulder release."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Stress Level Check-In",
+                description: "Monitor stress patterns",
+                taskType: .checkIn,
+                frequency: .twiceDaily,
+                defaultTime: "09:00",
+                durationMinutes: 2,
+                instructions: "Rate stress 1-10. Note triggers. Identify one positive moment."
+            ),
+            ProtocolTask(
+                id: UUID(),
+                title: "Progressive Muscle Relaxation",
+                description: "Tension release technique",
+                taskType: .rest,
+                frequency: .daily,
+                defaultTime: "21:00",
+                durationMinutes: 15,
+                instructions: "Systematically tense and release each muscle group. Start from feet, work to head."
+            )
+        ],
+        isActive: true
+    )
+
+    static let sampleTemplates: [ProtocolTemplate] = [
+        .postWorkoutRecovery,
+        .returnToTraining,
+        .performanceOptimization,
+        .sleepImprovement,
+        .stressManagement
+    ]
+}
