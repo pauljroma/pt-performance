@@ -42,6 +42,77 @@ struct NutritionLog: Codable, Identifiable, Hashable, Equatable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+
+    init(
+        id: UUID,
+        patientId: String,
+        loggedAt: Date,
+        mealType: MealType? = nil,
+        foodItems: [LoggedFoodItem] = [],
+        totalCalories: Int? = nil,
+        totalProteinG: Double? = nil,
+        totalCarbsG: Double? = nil,
+        totalFatG: Double? = nil,
+        totalFiberG: Double? = nil,
+        notes: String? = nil,
+        description: String? = nil,
+        photoUrl: String? = nil,
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.loggedAt = loggedAt
+        self.mealType = mealType
+        self.foodItems = foodItems
+        self.totalCalories = totalCalories
+        self.totalProteinG = totalProteinG
+        self.totalCarbsG = totalCarbsG
+        self.totalFatG = totalFatG
+        self.totalFiberG = totalFiberG
+        self.notes = notes
+        self.description = description
+        self.photoUrl = photoUrl
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUID with fallback
+        id = container.safeUUID(forKey: .id)
+
+        // Required string with fallback
+        patientId = container.safeString(forKey: .patientId, default: "")
+
+        // Date with fallback
+        loggedAt = container.safeDate(forKey: .loggedAt)
+
+        // Optional enum
+        mealType = container.safeOptionalEnum(MealType.self, forKey: .mealType)
+
+        // Array with fallback to empty
+        foodItems = container.safeArray(of: LoggedFoodItem.self, forKey: .foodItems)
+
+        // Optional ints (handles PostgreSQL numeric as string)
+        totalCalories = container.safeOptionalInt(forKey: .totalCalories)
+
+        // Optional doubles (handles PostgreSQL numeric as string)
+        totalProteinG = container.safeOptionalDouble(forKey: .totalProteinG)
+        totalCarbsG = container.safeOptionalDouble(forKey: .totalCarbsG)
+        totalFatG = container.safeOptionalDouble(forKey: .totalFatG)
+        totalFiberG = container.safeOptionalDouble(forKey: .totalFiberG)
+
+        // Optional strings
+        notes = container.safeOptionalString(forKey: .notes)
+        description = container.safeOptionalString(forKey: .description)
+        photoUrl = container.safeOptionalString(forKey: .photoUrl)
+
+        // Optional dates
+        createdAt = container.safeOptionalDate(forKey: .createdAt)
+        updatedAt = container.safeOptionalDate(forKey: .updatedAt)
+    }
 }
 
 /// Types of meals that can be logged
@@ -113,6 +184,36 @@ struct LoggedFoodItem: Codable, Identifiable, Hashable, Equatable {
         self.carbsG = carbsG
         self.fatG = fatG
         self.fiberG = fiberG
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUID with fallback
+        id = container.safeUUID(forKey: .id)
+
+        // Optional UUID
+        foodItemId = container.safeOptionalUUID(forKey: .foodItemId)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Unknown Food")
+
+        // Required double with fallback (handles PostgreSQL numeric as string)
+        servings = container.safeDouble(forKey: .servings, default: 1.0)
+
+        // Optional string
+        servingSize = container.safeOptionalString(forKey: .servingSize)
+
+        // Required int with fallback
+        calories = container.safeInt(forKey: .calories, default: 0)
+
+        // Required doubles with fallback (handles PostgreSQL numeric as string)
+        proteinG = container.safeDouble(forKey: .proteinG, default: 0.0)
+        carbsG = container.safeDouble(forKey: .carbsG, default: 0.0)
+        fatG = container.safeDouble(forKey: .fatG, default: 0.0)
+
+        // Optional double
+        fiberG = container.safeOptionalDouble(forKey: .fiberG)
     }
 
     /// Calculated total calories based on servings

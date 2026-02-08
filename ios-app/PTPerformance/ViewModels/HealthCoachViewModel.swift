@@ -31,22 +31,30 @@ final class HealthCoachViewModel: ObservableObject {
     func loadData() async {
         isLoading = true
         error = nil
+        defer { isLoading = false }
+
         await service.fetchHealthScore()
         healthScore = service.currentScore
         scoreHistory = service.scoreHistory
         insights = service.insights
         if let serviceError = service.error {
-            error = serviceError.localizedDescription
+            ErrorLogger.shared.logError(serviceError, context: "HealthCoachViewModel.loadData")
+            error = "Unable to load your health data. Please try again."
         }
-        isLoading = false
     }
 
     func calculateScore() async {
         isLoading = true
+        error = nil
+        defer { isLoading = false }
+
         await service.calculateTodayScore()
         healthScore = service.currentScore
         insights = service.insights
-        isLoading = false
+        if let serviceError = service.error {
+            ErrorLogger.shared.logError(serviceError, context: "HealthCoachViewModel.calculateScore")
+            error = "Unable to calculate your health score. Please try again."
+        }
     }
 
     func sendMessage() async {
@@ -64,10 +72,10 @@ final class HealthCoachViewModel: ObservableObject {
         let query = inputMessage
         inputMessage = ""
         isTyping = true
+        defer { isTyping = false }
 
         let response = await service.sendMessage(query)
         messages.append(response)
-        isTyping = false
     }
 
     func askQuickQuestion(_ question: String) async {

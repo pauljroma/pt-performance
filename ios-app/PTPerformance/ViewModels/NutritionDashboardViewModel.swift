@@ -152,9 +152,7 @@ class NutritionDashboardViewModel: ObservableObject {
     func loadDashboard() async {
         // Prevent duplicate fetches when switching tabs
         guard !hasLoadedInitialData else {
-            #if DEBUG
-            print("🍎 [NUTRITION VM] Skipping reload - data already loaded")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Skipping reload - data already loaded")
             return
         }
 
@@ -166,81 +164,62 @@ class NutritionDashboardViewModel: ObservableObject {
 
         isLoading = true
         hasLoadedInitialData = true  // Mark as loaded to prevent future duplicate calls
+        defer { isLoading = false }
 
-        #if DEBUG
-        print("🍎 [NUTRITION VM] Loading dashboard for patient: \(patientId)")
-        #endif
+        DebugLogger.shared.info("NutritionDashboardViewModel", "Loading dashboard for patient: \(patientId)")
 
         // Load each component individually to prevent one failure from stopping others
         do {
             todaySummary = try await nutritionService.fetchDailySummary(patientId: patientId, date: Date())
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Daily summary loaded")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Daily summary loaded")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Daily summary error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchDailySummary")
         }
 
         do {
             goalProgress = try await nutritionService.fetchGoalProgress(patientId: patientId)
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Goal progress loaded")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Goal progress loaded")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Goal progress error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchGoalProgress")
         }
 
         do {
             weeklyTrends = try await nutritionService.fetchWeeklyTrends(patientId: patientId, weeks: 4)
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Weekly trends loaded: \(weeklyTrends.count) weeks")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Weekly trends loaded: \(weeklyTrends.count) weeks")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Weekly trends error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchWeeklyTrends")
         }
 
         do {
             todaysLogs = try await nutritionService.fetchTodaysLogs(patientId: patientId)
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Today's logs loaded: \(todaysLogs.count) logs")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Today's logs loaded: \(todaysLogs.count) logs")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Today's logs error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchTodaysLogs")
         }
 
         do {
             macroDistribution = try await nutritionService.fetchMacroDistribution(patientId: patientId, date: Date())
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Macro distribution loaded")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Macro distribution loaded")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Macro distribution error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchMacroDistribution")
         }
 
         do {
             activeGoal = try await nutritionService.fetchActiveGoal(patientId: patientId)
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Active goal loaded")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Active goal loaded")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Active goal error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchActiveGoal")
         }
 
         // Fetch today's planned meals from active meal plan
         do {
             todaysPlannedMeals = try await mealPlanService.fetchTodaysMeals(patientId: patientId)
-            #if DEBUG
-            print("🍎 [NUTRITION VM] ✓ Today's planned meals loaded: \(todaysPlannedMeals.count) meals")
-            #endif
+            DebugLogger.shared.info("NutritionDashboardViewModel", "Today's planned meals loaded: \(todaysPlannedMeals.count) meals")
         } catch {
-            DebugLogger.shared.warning("NutritionDashboardViewModel", "Today's planned meals error: \(error.localizedDescription)")
+            ErrorLogger.shared.logError(error, context: "NutritionDashboardViewModel.fetchTodaysMeals")
         }
 
-        #if DEBUG
-        print("🍎 [NUTRITION VM] Dashboard load complete")
-        #endif
-
-        isLoading = false
+        DebugLogger.shared.info("NutritionDashboardViewModel", "Dashboard load complete")
     }
 
     // MARK: - Quick Log Actions
@@ -260,6 +239,7 @@ class NutritionDashboardViewModel: ObservableObject {
                 macroDistribution = try await nutritionService.fetchMacroDistribution(patientId: patientId, date: Date())
             }
         } catch let catchError {
+            ErrorLogger.shared.logError(catchError, context: "NutritionDashboardViewModel.deleteLog")
             self.error = AppError.from(catchError)
             self.showError = true
         }

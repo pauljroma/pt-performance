@@ -156,6 +156,23 @@ struct UnlockedAchievement: Codable, Identifiable, Hashable {
         self.unlockedAt = unlockedAt
         self.currentValue = currentValue
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUID with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+
+        // Required string with fallback
+        achievementId = container.safeString(forKey: .achievementId, default: "unknown")
+
+        // Date with fallback
+        unlockedAt = container.safeDate(forKey: .unlockedAt)
+
+        // Optional int
+        currentValue = container.safeOptionalInt(forKey: .currentValue)
+    }
 }
 
 // MARK: - Achievement Progress

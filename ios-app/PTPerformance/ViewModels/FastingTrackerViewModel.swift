@@ -92,16 +92,19 @@ final class FastingTrackerViewModel: ObservableObject {
     }
 
     func startFast() async {
+        error = nil
         do {
             service.setProtocol(selectedProtocol, customHours: customFastingHours)
             try await service.startFast()
             updateTimerState()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.startFast")
+            self.error = "Unable to start your fast. Please try again."
         }
     }
 
     func endFast(energyLevel: Int, notes: String?, moodEnd: Int? = nil, hungerLevel: Int? = nil) async {
+        error = nil
         do {
             try await service.endFast(
                 energyLevel: energyLevel,
@@ -110,15 +113,18 @@ final class FastingTrackerViewModel: ObservableObject {
                 hungerLevel: hungerLevel
             )
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.endFast")
+            self.error = "Unable to end your fast. Please try again."
         }
     }
 
     func cancelFast() async {
+        error = nil
         do {
             try await service.cancelFast()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.cancelFast")
+            self.error = "Unable to cancel your fast. Please try again."
         }
     }
 

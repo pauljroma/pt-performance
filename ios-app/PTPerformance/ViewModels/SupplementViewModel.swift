@@ -86,6 +86,7 @@ final class SupplementViewModel: ObservableObject {
     func loadData() async {
         isLoading = true
         error = nil
+        defer { isLoading = false }
 
         // Load routines (primary data)
         await service.fetchRoutines()
@@ -97,7 +98,10 @@ final class SupplementViewModel: ObservableObject {
         await service.calculateTodayCompliance()
         todayCompliance = service.todayCompliance
 
-        isLoading = false
+        if let serviceError = service.error {
+            ErrorLogger.shared.logError(serviceError, context: "SupplementViewModel.loadData")
+            error = "Unable to load your supplement data. Please try again."
+        }
     }
 
     /// Loads the supplement catalog
@@ -270,12 +274,14 @@ final class SupplementViewModel: ObservableObject {
 
     /// Marks a dose as taken
     func logSupplement(_ dose: TodaySupplementDose) async {
+        error = nil
         do {
             try await service.logSupplement(dose: dose)
             syncFromService()
             todayCompliance = service.todayCompliance
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.logSupplement")
+            self.error = "Unable to log your supplement. Please try again."
         }
     }
 
@@ -286,6 +292,7 @@ final class SupplementViewModel: ObservableObject {
         sideEffects: [String]?,
         notes: String?
     ) async {
+        error = nil
         do {
             try await service.logSupplement(
                 dose: dose,
@@ -296,39 +303,46 @@ final class SupplementViewModel: ObservableObject {
             syncFromService()
             todayCompliance = service.todayCompliance
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.logSupplement(withDetails)")
+            self.error = "Unable to log your supplement. Please try again."
         }
     }
 
     /// Skips a dose
     func skipSupplement(_ dose: TodaySupplementDose, reason: String? = nil) async {
+        error = nil
         do {
             try await service.skipSupplement(dose: dose, reason: reason)
             syncFromService()
             todayCompliance = service.todayCompliance
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.skipSupplement")
+            self.error = "Unable to skip this supplement. Please try again."
         }
     }
 
     /// Undoes a log entry
     func undoLog(_ logId: UUID) async {
+        error = nil
         do {
             try await service.undoLog(logId)
             syncFromService()
             todayCompliance = service.todayCompliance
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.undoLog")
+            self.error = "Unable to undo the log. Please try again."
         }
     }
 
     /// Marks a legacy scheduled supplement as taken
     func markTaken(_ scheduled: ScheduledSupplement) async {
+        error = nil
         do {
             try await service.logSupplementTaken(scheduled.supplement)
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.markTaken")
+            self.error = "Unable to mark this supplement as taken. Please try again."
         }
     }
 
@@ -336,6 +350,7 @@ final class SupplementViewModel: ObservableObject {
 
     /// Adds a supplement from catalog to routine
     func addToRoutine(_ supplement: CatalogSupplement) async {
+        error = nil
         do {
             try await service.addToRoutine(
                 supplementId: supplement.id,
@@ -352,28 +367,33 @@ final class SupplementViewModel: ObservableObject {
             showingCatalogSheet = false
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.addToRoutine")
+            self.error = "Unable to add supplement to routine. Please try again."
         }
     }
 
     /// Adds a stack to routine
     func addStackToRoutine(_ stack: SupplementStack) async {
+        error = nil
         do {
             try await service.addStackToRoutine(stack)
             showingStackSheet = false
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.addStackToRoutine")
+            self.error = "Unable to add supplement stack. Please try again."
         }
     }
 
     /// Removes a routine item
     func removeFromRoutine(_ routineId: UUID) async {
+        error = nil
         do {
             try await service.removeFromRoutine(routineId)
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.removeFromRoutine")
+            self.error = "Unable to remove supplement from routine. Please try again."
         }
     }
 
@@ -386,6 +406,7 @@ final class SupplementViewModel: ObservableObject {
         withFood: Bool? = nil,
         notes: String? = nil
     ) async {
+        error = nil
         do {
             try await service.updateRoutine(
                 routineId,
@@ -397,7 +418,8 @@ final class SupplementViewModel: ObservableObject {
             )
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.updateRoutine")
+            self.error = "Unable to update supplement routine. Please try again."
         }
     }
 
@@ -437,17 +459,20 @@ final class SupplementViewModel: ObservableObject {
             showingAddSheet = false
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.addSupplement")
+            self.error = "Unable to add supplement. Please try again."
         }
     }
 
     /// Deletes a legacy supplement
     func deleteSupplement(_ supplement: Supplement) async {
+        error = nil
         do {
             try await service.deleteSupplement(supplement.id)
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "SupplementViewModel.deleteSupplement")
+            self.error = "Unable to delete supplement. Please try again."
         }
     }
 

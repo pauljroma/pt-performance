@@ -24,14 +24,16 @@ final class RecoveryViewModel: ObservableObject {
     func loadData() async {
         isLoading = true
         error = nil
+        defer { isLoading = false }
+
         await service.fetchSessions()
         await service.generateRecommendations()
         sessions = service.sessions
         recommendations = service.recommendations
         if let serviceError = service.error {
-            error = serviceError.localizedDescription
+            ErrorLogger.shared.logError(serviceError, context: "RecoveryViewModel.loadData")
+            error = "Unable to load recovery data. Please try again."
         }
-        isLoading = false
 
         // Fetch impact analysis in background
         await loadImpactAnalysis()
@@ -39,19 +41,20 @@ final class RecoveryViewModel: ObservableObject {
 
     func loadImpactAnalysis() async {
         isAnalyzing = true
+        defer { isAnalyzing = service.isAnalyzing }
         await service.analyzeRecoveryImpact(days: 30)
         impactAnalysis = service.impactAnalysis
-        isAnalyzing = service.isAnalyzing
     }
 
     func refreshAnalysis() async {
         isAnalyzing = true
+        defer { isAnalyzing = false }
         await service.analyzeRecoveryImpact(days: 30)
         impactAnalysis = service.impactAnalysis
-        isAnalyzing = false
     }
 
     func logSession() async {
+        error = nil
         do {
             try await service.logSession(
                 protocolType: selectedProtocol,
@@ -65,7 +68,8 @@ final class RecoveryViewModel: ObservableObject {
             showingLogSheet = false
             await loadData()
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "RecoveryViewModel.logSession")
+            self.error = "Unable to save your recovery session. Please try again."
         }
     }
 

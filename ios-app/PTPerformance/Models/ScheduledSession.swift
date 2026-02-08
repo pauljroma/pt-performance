@@ -65,22 +65,33 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        patientId = try container.decode(UUID.self, forKey: .patientId)
-        sessionId = try container.decode(UUID.self, forKey: .sessionId)
-        scheduledDate = try container.decode(Date.self, forKey: .scheduledDate)
-        status = try container.decode(ScheduleStatus.self, forKey: .status)
-        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
-        reminderSent = try container.decode(Bool.self, forKey: .reminderSent)
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
 
-        // Parse TIME type from "HH:MM:SS" string
-        let timeString = try container.decode(String.self, forKey: .scheduledTime)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        scheduledTime = formatter.date(from: timeString) ?? Date()
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        sessionId = container.safeUUID(forKey: .sessionId)
+
+        // Date fields with fallback
+        scheduledDate = container.safeDate(forKey: .scheduledDate)
+
+        // Enum with fallback
+        status = container.safeEnum(ScheduleStatus.self, forKey: .status, default: .scheduled)
+
+        // Optional date
+        completedAt = container.safeOptionalDate(forKey: .completedAt)
+
+        // Bool with fallback
+        reminderSent = container.safeBool(forKey: .reminderSent, default: false)
+
+        // Optional string
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Date fields with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+        updatedAt = container.safeDate(forKey: .updatedAt)
+
+        // Parse TIME type from "HH:MM:SS" string with fallback
+        scheduledTime = container.safeTime(forKey: .scheduledTime)
     }
 
     enum ScheduleStatus: String, Codable {

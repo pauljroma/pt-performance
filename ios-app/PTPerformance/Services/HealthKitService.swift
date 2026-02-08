@@ -171,6 +171,8 @@ class HealthKitService: ObservableObject {
     // Using nonisolated(unsafe) to allow initialization in nonisolated init
     // This is safe because supabaseClient is only read after initialization
     private nonisolated(unsafe) let supabaseClient: PTSupabaseClient
+    private let logger = DebugLogger.shared
+    private let errorLogger = ErrorLogger.shared
 
     // MARK: - Focused Services (lazy initialization)
 
@@ -299,10 +301,13 @@ class HealthKitService: ObservableObject {
 
     // MARK: - Authorization
 
-    /// Request HealthKit permissions for all required data types
+    /// Request HealthKit permissions for all required data types.
+    ///
     /// - Returns: True if authorization was granted
     /// - Throws: HealthKitError if HealthKit is not available
     func requestAuthorization() async throws -> Bool {
+        logger.log("[HealthKitService] Requesting HealthKit authorization", level: .diagnostic)
+
         guard let healthStore = healthStore else {
             throw HealthKitError.notAvailable
         }
@@ -319,9 +324,11 @@ class HealthKitService: ObservableObject {
             let authorized = checkAuthorizationStatus()
             isAuthorized = authorized
 
+            logger.log("[HealthKitService] Authorization \(authorized ? "granted" : "denied")", level: authorized ? .success : .warning)
             return authorized
         } catch let authError {
             self.error = authError.localizedDescription
+            errorLogger.logError(authError, context: "HealthKitService.requestAuthorization")
             throw authError
         }
     }
@@ -379,10 +386,13 @@ class HealthKitService: ObservableObject {
 
     // MARK: - Data Fetching
 
-    /// Sync all today's health data
+    /// Sync all today's health data.
+    ///
     /// - Returns: HealthKitDayData with all available metrics
     /// - Throws: HealthKitError if HealthKit is not available or not authorized
     func syncTodayData() async throws -> HealthKitDayData {
+        logger.log("[HealthKitService] Syncing today's health data", level: .diagnostic)
+
         guard healthStore != nil else {
             throw HealthKitError.notAvailable
         }
@@ -396,6 +406,7 @@ class HealthKitService: ObservableObject {
         error = nil
         defer { isLoading = false }
 
+        let startTime = Date()
         let today = Date()
 
         // Fetch all data in parallel using focused services
@@ -419,6 +430,9 @@ class HealthKitService: ObservableObject {
         todaySleep = sleep
         todayRestingHR = rhr
         lastSyncDate = Date()
+
+        let duration = Date().timeIntervalSince(startTime)
+        logger.log("[HealthKitService] Health data synced in \(String(format: "%.0f", duration * 1000))ms", level: .success)
 
         return HealthKitDayData(
             date: today,
@@ -606,23 +620,29 @@ class HealthKitService: ObservableObject {
 
     // MARK: - Database Sync
 
-    /// Upload HealthKit data to Supabase health_kit_data table
+    /// Upload HealthKit data to Supabase health_kit_data table.
+    ///
     /// - Parameter data: HealthKitDayData to upload
     /// - Throws: HealthKitError if no authenticated user or save fails
     func uploadToSupabase(data: HealthKitDayData) async throws {
         guard let patientIdString = supabaseClient.userId,
               let patientId = UUID(uuidString: patientIdString) else {
+            errorLogger.logError(HealthKitError.noAuthenticatedUser, context: "HealthKitService.uploadToSupabase")
             throw HealthKitError.noAuthenticatedUser
         }
 
         try await syncToSupabase(patientId: patientId, data: data)
     }
 
-    /// Sync HealthKit data to Supabase health_kit_data table
+    /// Sync HealthKit data to Supabase health_kit_data table.
+    ///
     /// - Parameters:
     ///   - patientId: Patient UUID to associate the data with
     ///   - data: HealthKitDayData to save
+    /// - Throws: HealthKitError.saveFailed if database operation fails
     func syncToSupabase(patientId: UUID, data: HealthKitDayData) async throws {
+        logger.log("[HealthKitService] Syncing health data to Supabase for patient: \(patientId)", level: .diagnostic)
+
         isLoading = true
         error = nil
         defer { isLoading = false }
@@ -657,8 +677,13 @@ class HealthKitService: ObservableObject {
                 .execute()
 
             lastSyncDate = Date()
+            logger.log("[HealthKitService] Health data synced to Supabase successfully", level: .success)
         } catch let saveError {
             self.error = saveError.localizedDescription
+            errorLogger.logError(saveError, context: "HealthKitService.syncToSupabase", metadata: [
+                "patient_id": patientId.uuidString,
+                "date": dateString
+            ])
             throw HealthKitError.saveFailed(saveError.localizedDescription)
         }
     }

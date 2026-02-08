@@ -299,8 +299,11 @@ class QuickStartService: ObservableObject {
                 sessionId = uuid
             } else if row.enrollment_id != nil {
                 // Enrollment-based workout - log it but skip for now
-                logger.log("📱 [QuickStart] Found enrollment workout: \(row.workout_name ?? "Unknown")", level: .diagnostic)
-                // TODO: Handle enrollment-based workouts in a future update
+                // These workouts use workout_template_id instead of session_id and require
+                // fetching the template, generating a session dynamically, then executing.
+                // See: WorkoutTemplateLibraryView for the enrollment-based execution flow.
+                // Ticket: ACP-612 - Support enrollment workouts in QuickStart
+                logger.log("📱 [QuickStart] Found enrollment workout: \(row.workout_name ?? "Unknown") - enrollment flow required", level: .diagnostic)
                 return nil
             } else {
                 return nil

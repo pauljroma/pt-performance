@@ -1,7 +1,18 @@
 import Foundation
 import HealthKit
 
-/// Service for recovery protocol tracking and impact analysis
+/// Service for recovery protocol tracking and impact analysis.
+///
+/// Manages recovery session logging (sauna, cold plunge, etc.) and correlates
+/// with HealthKit data to provide personalized recovery insights.
+///
+/// ## Features
+/// - Log recovery sessions with metrics (duration, temperature, heart rate)
+/// - Analyze correlation between recovery protocols and health outcomes
+/// - Generate AI-powered personalized recommendations
+///
+/// ## Thread Safety
+/// Marked `@MainActor` for safe UI updates.
 @MainActor
 final class RecoveryService: ObservableObject {
     static let shared = RecoveryService()
@@ -15,17 +26,27 @@ final class RecoveryService: ObservableObject {
 
     private let supabase = PTSupabaseClient.shared
     private let healthKitService = HealthKitService.shared
+    private let logger = DebugLogger.shared
+    private let errorLogger = ErrorLogger.shared
 
     private init() {}
 
     // MARK: - Fetch Sessions
 
+    /// Fetch recovery sessions for the current patient.
+    ///
+    /// - Parameter days: Number of days to look back (default: 30)
     func fetchSessions(days: Int = 30) async {
+        logger.log("[RecoveryService] Fetching sessions for past \(days) days", level: .diagnostic)
         isLoading = true
         error = nil
 
         do {
-            guard let patientId = try await getPatientId() else { return }
+            guard let patientId = try await getPatientId() else {
+                logger.log("[RecoveryService] No patient ID available", level: .warning)
+                isLoading = false
+                return
+            }
 
             let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
 
@@ -39,9 +60,12 @@ final class RecoveryService: ObservableObject {
                 .value
 
             self.sessions = results
+            logger.log("[RecoveryService] Fetched \(results.count) recovery sessions", level: .success)
         } catch {
             self.error = error
-            DebugLogger.shared.error("RecoveryService", "Failed to fetch sessions: \(error)")
+            errorLogger.logError(error, context: "RecoveryService.fetchSessions", metadata: [
+                "days": String(days)
+            ])
         }
 
         isLoading = false
@@ -49,6 +73,18 @@ final class RecoveryService: ObservableObject {
 
     // MARK: - Log Session
 
+    /// Log a recovery session.
+    ///
+    /// - Parameters:
+    ///   - protocolType: Type of recovery protocol (sauna, cold plunge, etc.)
+    ///   - durationSeconds: Duration in seconds
+    ///   - temperature: Optional temperature (varies by protocol)
+    ///   - heartRateAvg: Optional average heart rate during session
+    ///   - heartRateMax: Optional maximum heart rate during session
+    ///   - perceivedEffort: Optional effort rating (1-10)
+    ///   - rating: Optional overall session rating (1-5)
+    ///   - notes: Optional notes about the session
+    /// - Throws: Error if patient ID not found or database insert fails
     func logSession(
         protocolType: RecoveryProtocolType,
         durationSeconds: Int,
@@ -59,8 +95,12 @@ final class RecoveryService: ObservableObject {
         rating: Int? = nil,
         notes: String? = nil
     ) async throws {
+        logger.log("[RecoveryService] Logging \(protocolType.displayName) session", level: .diagnostic)
+
         guard let patientId = try await getPatientId() else {
-            throw NSError(domain: "RecoveryService", code: 1, userInfo: [NSLocalizedDescriptionKey: "No patient ID found"])
+            let error = NSError(domain: "RecoveryService", code: 1, userInfo: [NSLocalizedDescriptionKey: "No patient ID found"])
+            errorLogger.logError(error, context: "RecoveryService.logSession")
+            throw error
         }
 
         let session = RecoverySession(
@@ -78,12 +118,21 @@ final class RecoveryService: ObservableObject {
             createdAt: Date()
         )
 
-        try await supabase.client
-            .from("recovery_sessions")
-            .insert(session)
-            .execute()
+        do {
+            try await supabase.client
+                .from("recovery_sessions")
+                .insert(session)
+                .execute()
 
-        await fetchSessions()
+            logger.log("[RecoveryService] Recovery session logged successfully", level: .success)
+            await fetchSessions()
+        } catch {
+            errorLogger.logError(error, context: "RecoveryService.logSession", metadata: [
+                "protocol_type": protocolType.rawValue,
+                "duration_seconds": String(durationSeconds)
+            ])
+            throw error
+        }
     }
 
     // MARK: - Recommendations
@@ -170,7 +219,10 @@ final class RecoveryService: ObservableObject {
             )
         } catch {
             self.error = error
-            DebugLogger.shared.error("RecoveryService", "Failed to analyze recovery impact: \(error)")
+            errorLogger.logError(error, context: "RecoveryService.analyzeRecoveryImpact", metadata: [
+                "days": String(days),
+                "session_count": String(sessions.count)
+            ])
         }
 
         isAnalyzing = false
@@ -567,7 +619,7 @@ final class RecoveryService: ObservableObject {
         }
 
         // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("RecoveryService", "No authenticated user, using demo patient")
+        DebugLogger.shared.log("[RecoveryService] No authenticated user, using demo patient", level: .warning)
         return demoPatientId
     }
 }

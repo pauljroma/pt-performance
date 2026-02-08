@@ -164,6 +164,7 @@ class ReadinessDashboardViewModel: ObservableObject {
         isLoading = true
         showError = false
         errorMessage = ""
+        defer { isLoading = false }
 
         do {
             // Fetch recent readiness entries
@@ -180,11 +181,10 @@ class ReadinessDashboardViewModel: ObservableObject {
             currentScore = trendData.first?.readinessScore
 
         } catch {
+            ErrorLogger.shared.logError(error, context: "ReadinessDashboardViewModel.loadTrendData")
             errorMessage = "We couldn't load your readiness history. Please check your connection and try again."
             showError = true
         }
-
-        isLoading = false
     }
 
     // MARK: - Calculate Statistics

@@ -197,10 +197,10 @@ class DailyReadinessViewModel: ObservableObject {
     ) async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         guard let patientId = PTSupabaseClient.shared.userId else {
             errorMessage = "Please sign in to submit your readiness check-in."
-            isLoading = false
             return
         }
 
@@ -217,8 +217,7 @@ class DailyReadinessViewModel: ObservableObject {
         )
 
         guard let patientUUID = UUID(uuidString: patientId) else {
-            isLoading = false
-            errorMessage = "Invalid patient ID"
+            errorMessage = "Unable to verify your account. Please sign in again."
             return
         }
 
@@ -239,11 +238,9 @@ class DailyReadinessViewModel: ObservableObject {
                 stressLevel: stressLevel,
                 notes: input.jointPainNotes
             )
-
-            isLoading = false
         } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "DailyReadinessViewModel.submitReadiness")
+            errorMessage = "Unable to save your readiness check-in. Please try again."
         }
     }
 
@@ -257,6 +254,7 @@ class DailyReadinessViewModel: ObservableObject {
 
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
             if let readiness = try await readinessService.getTodayReadiness(for: patientId) {
@@ -268,6 +266,7 @@ class DailyReadinessViewModel: ObservableObject {
             }
             // nil result means no check-in yet today - this is expected, not an error
         } catch {
+            ErrorLogger.shared.logError(error, context: "DailyReadinessViewModel.fetchTodayReadiness")
             // Actual error occurred (network failure, etc.)
             if error.localizedDescription.contains("network") || error.localizedDescription.contains("connection") {
                 errorMessage = "Couldn't load your readiness data. Please check your connection."
@@ -275,7 +274,5 @@ class DailyReadinessViewModel: ObservableObject {
                 errorMessage = "Couldn't load your readiness data. Please try again."
             }
         }
-
-        isLoading = false
     }
 }

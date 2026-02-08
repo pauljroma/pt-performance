@@ -58,6 +58,7 @@ final class AccountDeletionViewModel: ObservableObject {
             await signOut()
 
         } catch {
+            ErrorLogger.shared.logError(error, context: "AccountDeletionViewModel.deleteAccount")
             isDeleting = false
             errorMessage = handleError(error)
         }

@@ -18,16 +18,16 @@ class SessionDetailViewModel: ObservableObject {
     func fetchPrescribedDetail(sessionId: String, patientId: String) async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
             exerciseLogs = try await analyticsService.fetchSessionExerciseLogs(
                 sessionId: sessionId,
                 patientId: patientId
             )
-            isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            ErrorLogger.shared.logError(error, context: "SessionDetailViewModel.fetchPrescribedDetail")
+            errorMessage = "Unable to load session details. Please try again."
         }
     }
 
@@ -35,15 +35,15 @@ class SessionDetailViewModel: ObservableObject {
     func fetchManualDetail(workoutId: UUID) async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
             exerciseLogs = try await analyticsService.fetchManualWorkoutExercises(
                 workoutId: workoutId
             )
-            isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            ErrorLogger.shared.logError(error, context: "SessionDetailViewModel.fetchManualDetail")
+            errorMessage = "Unable to load workout details. Please try again."
         }
     }
 }

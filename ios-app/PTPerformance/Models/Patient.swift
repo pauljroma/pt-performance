@@ -42,6 +42,77 @@ struct Patient: Codable, Identifiable, Hashable {
         lhs.id == rhs.id
     }
 
+    // MARK: - Memberwise Initializer
+
+    init(
+        id: UUID,
+        therapistId: UUID,
+        firstName: String,
+        lastName: String,
+        email: String,
+        sport: String? = nil,
+        position: String? = nil,
+        injuryType: String? = nil,
+        targetLevel: String? = nil,
+        profileImageUrl: String? = nil,
+        createdAt: Date = Date(),
+        flagCount: Int? = nil,
+        highSeverityFlagCount: Int? = nil,
+        adherencePercentage: Double? = nil,
+        lastSessionDate: Date? = nil
+    ) {
+        self.id = id
+        self.therapistId = therapistId
+        self.firstName = firstName
+        self.lastName = lastName
+        self.email = email
+        self.sport = sport
+        self.position = position
+        self.injuryType = injuryType
+        self.targetLevel = targetLevel
+        self.profileImageUrl = profileImageUrl
+        self.createdAt = createdAt
+        self.flagCount = flagCount
+        self.highSeverityFlagCount = highSeverityFlagCount
+        self.adherencePercentage = adherencePercentage
+        self.lastSessionDate = lastSessionDate
+    }
+
+    // MARK: - Defensive Decoder
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        therapistId = container.safeUUID(forKey: .therapistId)
+
+        // Required strings with fallback
+        firstName = container.safeString(forKey: .firstName, default: "Unknown")
+        lastName = container.safeString(forKey: .lastName, default: "Patient")
+        email = container.safeString(forKey: .email, default: "")
+
+        // Optional strings
+        sport = container.safeOptionalString(forKey: .sport)
+        position = container.safeOptionalString(forKey: .position)
+        injuryType = container.safeOptionalString(forKey: .injuryType)
+        targetLevel = container.safeOptionalString(forKey: .targetLevel)
+        profileImageUrl = container.safeOptionalString(forKey: .profileImageUrl)
+
+        // Date with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+
+        // Optional ints (handles PostgreSQL numeric as string)
+        flagCount = container.safeOptionalInt(forKey: .flagCount)
+        highSeverityFlagCount = container.safeOptionalInt(forKey: .highSeverityFlagCount)
+
+        // Optional double (handles PostgreSQL numeric as string)
+        adherencePercentage = container.safeOptionalDouble(forKey: .adherencePercentage)
+
+        // Optional date
+        lastSessionDate = container.safeOptionalDate(forKey: .lastSessionDate)
+    }
+
     static let samplePatients: [Patient] = [
         Patient(
             id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,

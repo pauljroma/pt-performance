@@ -481,8 +481,10 @@ struct TodaySessionView: View {
                         onViewRecoveryProtocol: { showRecoveryProtocol = true },
                         onViewInsights: { showReadinessInsights = true },
                         onStartAlternative: { alternative in
-                            // TODO: Start alternative workout from template
-                            DebugLogger.shared.log("Starting alternative workout: \(alternative.name)")
+                            guard let patientId = appState.userId else { return }
+                            Task {
+                                await startAlternativeWorkout(alternative, patientId: patientId)
+                            }
                         }
                     )
                 } else if isLoadingAdaptation {
@@ -966,6 +968,69 @@ struct TodaySessionView: View {
                 }
             }
             logger.log("Added \(sequence) exercises from patient template", level: .success)
+        }
+    }
+
+    // MARK: - Alternative Workout from Readiness Recommendation
+
+    /// Start an alternative workout recommended based on readiness state
+    /// These are dynamically generated recovery workouts (mobility, yoga, walking, etc.)
+    private func startAlternativeWorkout(_ alternative: AlternativeWorkout, patientId: String) async {
+        guard let patientUUID = UUID(uuidString: patientId) else {
+            DebugLogger.shared.log("Invalid patient ID for alternative workout", level: .error)
+            return
+        }
+
+        isCreatingManualSession = true
+        defer { isCreatingManualSession = false }
+
+        let service = ManualWorkoutService()
+
+        do {
+            DebugLogger.shared.log("Creating alternative workout session: \(alternative.name)", level: .diagnostic)
+
+            // Create a manual session for this alternative workout
+            // Uses .chosen source since user selected this from readiness recommendations
+            let session = try await service.createManualSession(
+                name: alternative.name,
+                patientId: patientUUID,
+                sourceTemplateId: nil,  // Alternative workouts are dynamically generated
+                sourceTemplateType: nil,
+                sessionSource: .chosen
+            )
+
+            DebugLogger.shared.log("Alternative workout session created: \(session.id)", level: .success)
+
+            // Add a single exercise entry for the alternative workout
+            // These are typically single-activity sessions (yoga, walking, mobility flow)
+            let input = AddManualSessionExerciseInput(
+                manualSessionId: session.id,
+                exerciseTemplateId: nil,
+                exerciseName: alternative.name,
+                blockName: alternative.type.displayName,
+                sequence: 0,
+                targetSets: 1,
+                targetReps: nil,
+                targetLoad: nil,
+                loadUnit: nil,
+                restPeriodSeconds: nil,
+                notes: "\(alternative.description)\n\nDuration: \(alternative.duration) minutes\nIntensity: \(alternative.intensity.displayName)"
+            )
+            _ = try await service.addExercise(to: session.id, exercise: input)
+
+            // Start the workout
+            let startedSession = try await service.startWorkout(session.id)
+
+            DebugLogger.shared.log("Starting alternative workout execution: \(startedSession.id)", level: .success)
+            await MainActor.run {
+                createdManualSession = startedSession
+            }
+
+        } catch {
+            DebugLogger.shared.log("Failed to create alternative workout: \(error)", level: .error)
+            await MainActor.run {
+                createdManualSession = nil
+            }
         }
     }
 

@@ -169,7 +169,7 @@ class ReadinessCheckInViewModel: ObservableObject {
             }
         } catch {
             // This is an actual error (network failure, etc.), not just "no data"
-            print("❌ Failed to load today's readiness: \(error)")
+            DebugLogger.shared.error("ReadinessCheckIn", "Failed to load today's readiness: \(error)")
 
             if error.localizedDescription.contains("network") || error.localizedDescription.contains("connection") {
                 errorMessage = "Couldn't load your previous check-in. Please check your connection."
@@ -219,8 +219,8 @@ class ReadinessCheckInViewModel: ObservableObject {
 
         } catch {
             // Log the actual error for debugging
-            print("❌ ReadinessCheckIn Error: \(error)")
-            print("❌ Error details: \(error.localizedDescription)")
+            DebugLogger.shared.error("ReadinessCheckIn", "Error: \(error)")
+            DebugLogger.shared.error("ReadinessCheckIn", "Error details: \(error.localizedDescription)")
 
             // Show user-friendly message with more detail
             let nsError = error as NSError

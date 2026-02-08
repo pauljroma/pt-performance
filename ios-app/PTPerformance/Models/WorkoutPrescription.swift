@@ -80,6 +80,104 @@ struct WorkoutPrescription: Codable, Identifiable {
         case createdAt = "created_at"
     }
 
+    // Memberwise initializer for creating instances programmatically
+    init(
+        id: UUID,
+        patientId: UUID,
+        therapistId: UUID,
+        templateId: UUID?,
+        templateType: String?,
+        name: String,
+        instructions: String?,
+        dueDate: Date?,
+        priority: PrescriptionPriority,
+        status: PrescriptionStatus,
+        manualSessionId: UUID?,
+        prescribedAt: Date,
+        viewedAt: Date?,
+        startedAt: Date?,
+        completedAt: Date?,
+        createdAt: Date
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.therapistId = therapistId
+        self.templateId = templateId
+        self.templateType = templateType
+        self.name = name
+        self.instructions = instructions
+        self.dueDate = dueDate
+        self.priority = priority
+        self.status = status
+        self.manualSessionId = manualSessionId
+        self.prescribedAt = prescribedAt
+        self.viewedAt = viewedAt
+        self.startedAt = startedAt
+        self.completedAt = completedAt
+        self.createdAt = createdAt
+    }
+
+    // Custom decoder to handle database nulls and format variations
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required fields with robust decoding
+        id = try container.decode(UUID.self, forKey: .id)
+        patientId = try container.decode(UUID.self, forKey: .patientId)
+        therapistId = try container.decode(UUID.self, forKey: .therapistId)
+
+        // Optional UUIDs
+        templateId = try? container.decodeIfPresent(UUID.self, forKey: .templateId)
+        templateType = try? container.decodeIfPresent(String.self, forKey: .templateType)
+        manualSessionId = try? container.decodeIfPresent(UUID.self, forKey: .manualSessionId)
+
+        // Strings with defaults
+        name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? "Unnamed Prescription"
+        instructions = try? container.decodeIfPresent(String.self, forKey: .instructions)
+
+        // Priority with fallback
+        if let priorityString = try? container.decodeIfPresent(String.self, forKey: .priority),
+           let decodedPriority = PrescriptionPriority(rawValue: priorityString) {
+            priority = decodedPriority
+        } else {
+            priority = .medium
+        }
+
+        // Status with fallback
+        if let statusString = try? container.decodeIfPresent(String.self, forKey: .status),
+           let decodedStatus = PrescriptionStatus(rawValue: statusString) {
+            status = decodedStatus
+        } else {
+            status = .pending
+        }
+
+        // Date fields - handle both ISO8601 and other formats
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let altDateFormatter = ISO8601DateFormatter()
+        altDateFormatter.formatOptions = [.withInternetDateTime]
+
+        func parseDate(_ key: CodingKeys) -> Date? {
+            if let date = try? container.decodeIfPresent(Date.self, forKey: key) {
+                return date
+            }
+            if let dateString = try? container.decodeIfPresent(String.self, forKey: key) {
+                return dateFormatter.date(from: dateString) ?? altDateFormatter.date(from: dateString)
+            }
+            return nil
+        }
+
+        dueDate = parseDate(.dueDate)
+        viewedAt = parseDate(.viewedAt)
+        startedAt = parseDate(.startedAt)
+        completedAt = parseDate(.completedAt)
+
+        // Required dates with fallback to current date
+        prescribedAt = parseDate(.prescribedAt) ?? Date()
+        createdAt = parseDate(.createdAt) ?? Date()
+    }
+
     /// Check if prescription is overdue
     var isOverdue: Bool {
         guard let due = dueDate else { return false }

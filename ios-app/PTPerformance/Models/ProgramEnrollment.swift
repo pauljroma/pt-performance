@@ -31,6 +31,53 @@ struct ProgramEnrollment: Codable, Identifiable, Hashable, Equatable {
         case notes
     }
 
+    init(
+        id: UUID,
+        patientId: UUID,
+        programLibraryId: UUID,
+        enrolledAt: Date = Date(),
+        startedAt: Date? = nil,
+        completedAt: Date? = nil,
+        status: String = "active",
+        progressPercentage: Int = 0,
+        notes: String? = nil
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.programLibraryId = programLibraryId
+        self.enrolledAt = enrolledAt
+        self.startedAt = startedAt
+        self.completedAt = completedAt
+        self.status = status
+        self.progressPercentage = progressPercentage
+        self.notes = notes
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        programLibraryId = container.safeUUID(forKey: .programLibraryId)
+
+        // Date with fallback
+        enrolledAt = container.safeDate(forKey: .enrolledAt)
+
+        // Optional dates
+        startedAt = container.safeOptionalDate(forKey: .startedAt)
+        completedAt = container.safeOptionalDate(forKey: .completedAt)
+
+        // Required string with fallback
+        status = container.safeString(forKey: .status, default: "active")
+
+        // Required int with fallback (handles PostgreSQL numeric as string)
+        progressPercentage = container.safeInt(forKey: .progressPercentage, default: 0)
+
+        // Optional string
+        notes = container.safeOptionalString(forKey: .notes)
+    }
+
     // MARK: - Computed Properties
 
     /// Parsed enrollment status
@@ -197,6 +244,41 @@ struct ProgramWorkoutAssignmentWithTemplate: Codable {
         case notes
         case template = "system_workout_templates"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        programId = container.safeUUID(forKey: .programId)
+        templateId = container.safeUUID(forKey: .templateId)
+
+        // Optional UUID
+        phaseId = container.safeOptionalUUID(forKey: .phaseId)
+
+        // Required ints with fallback
+        weekNumber = container.safeInt(forKey: .weekNumber, default: 1)
+        dayOfWeek = container.safeInt(forKey: .dayOfWeek, default: 1)
+        sequence = container.safeInt(forKey: .sequence, default: 0)
+
+        // Optional string
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Nested object with fallback
+        if let templateInfo = try? container.decode(ScheduleTemplateInfo.self, forKey: .template) {
+            template = templateInfo
+        } else {
+            // Create a default template if decoding fails
+            template = ScheduleTemplateInfo(
+                id: templateId,
+                name: "Unknown Workout",
+                description: nil,
+                durationMinutes: nil,
+                category: nil,
+                difficulty: nil
+            )
+        }
+    }
 }
 
 /// Template info nested in assignment response
@@ -215,5 +297,39 @@ struct ScheduleTemplateInfo: Codable {
         case durationMinutes = "duration_minutes"
         case category
         case difficulty
+    }
+
+    init(
+        id: UUID,
+        name: String,
+        description: String? = nil,
+        durationMinutes: Int? = nil,
+        category: String? = nil,
+        difficulty: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.durationMinutes = durationMinutes
+        self.category = category
+        self.difficulty = difficulty
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUID with fallback
+        id = container.safeUUID(forKey: .id)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Unknown Workout")
+
+        // Optional strings
+        description = container.safeOptionalString(forKey: .description)
+        category = container.safeOptionalString(forKey: .category)
+        difficulty = container.safeOptionalString(forKey: .difficulty)
+
+        // Optional int
+        durationMinutes = container.safeOptionalInt(forKey: .durationMinutes)
     }
 }

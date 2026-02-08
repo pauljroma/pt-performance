@@ -136,23 +136,45 @@ struct ManualSession: Codable, Identifiable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        patientId = try container.decode(UUID.self, forKey: .patientId)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        sourceTemplateId = try container.decodeIfPresent(UUID.self, forKey: .sourceTemplateId)
-        sourceTemplateType = try container.decodeIfPresent(String.self, forKey: .sourceTemplateType)
-        startedAt = try container.decodeIfPresent(Date.self, forKey: .startedAt)
-        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
-        completed = try container.decodeIfPresent(Bool.self, forKey: .completed) ?? false
-        totalVolume = try container.decodeIfPresent(Double.self, forKey: .totalVolume)
-        avgRpe = try container.decodeIfPresent(Double.self, forKey: .avgRpe)
-        avgPain = try container.decodeIfPresent(Double.self, forKey: .avgPain)
-        durationMinutes = try container.decodeIfPresent(Int.self, forKey: .durationMinutes)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
-        assignedByUserId = try container.decodeIfPresent(UUID.self, forKey: .assignedByUserId)
-        sessionSource = try container.decodeIfPresent(SessionSource.self, forKey: .sessionSource)
-        exercises = try container.decodeIfPresent([ManualSessionExercise].self, forKey: .exercises) ?? []
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+
+        // Optional strings
+        name = container.safeOptionalString(forKey: .name)
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Optional UUIDs
+        sourceTemplateId = container.safeOptionalUUID(forKey: .sourceTemplateId)
+        assignedByUserId = container.safeOptionalUUID(forKey: .assignedByUserId)
+
+        // Optional string
+        sourceTemplateType = container.safeOptionalString(forKey: .sourceTemplateType)
+
+        // Optional dates with safe parsing
+        startedAt = container.safeOptionalDate(forKey: .startedAt)
+        completedAt = container.safeOptionalDate(forKey: .completedAt)
+
+        // Bool with fallback
+        completed = container.safeBool(forKey: .completed, default: false)
+
+        // Optional doubles with safe parsing (handles PostgreSQL numeric as string)
+        totalVolume = container.safeOptionalDouble(forKey: .totalVolume)
+        avgRpe = container.safeOptionalDouble(forKey: .avgRpe)
+        avgPain = container.safeOptionalDouble(forKey: .avgPain)
+
+        // Optional int
+        durationMinutes = container.safeOptionalInt(forKey: .durationMinutes)
+
+        // Date with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+
+        // Optional enum
+        sessionSource = container.safeOptionalEnum(SessionSource.self, forKey: .sessionSource)
+
+        // Array with fallback to empty
+        exercises = container.safeArray(of: ManualSessionExercise.self, forKey: .exercises)
     }
 
     // MARK: - Computed Properties

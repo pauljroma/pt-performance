@@ -26,6 +26,50 @@ struct Program: Codable, Identifiable, Hashable, Equatable {
         case status
         case programType = "program_type"
     }
+
+    init(
+        id: UUID,
+        patientId: UUID,
+        name: String,
+        targetLevel: String,
+        durationWeeks: Int,
+        createdAt: Date = Date(),
+        status: String? = nil,
+        programType: ProgramType? = nil
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.name = name
+        self.targetLevel = targetLevel
+        self.durationWeeks = durationWeeks
+        self.createdAt = createdAt
+        self.status = status
+        self.programType = programType
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+
+        // Required strings with fallback
+        name = container.safeString(forKey: .name, default: "Unknown Program")
+        targetLevel = container.safeString(forKey: .targetLevel, default: "General")
+
+        // Required int with fallback
+        durationWeeks = container.safeInt(forKey: .durationWeeks, default: 1)
+
+        // Date with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+
+        // Optional string
+        status = container.safeOptionalString(forKey: .status)
+
+        // Optional enum
+        programType = container.safeOptionalEnum(ProgramType.self, forKey: .programType)
+    }
 }
 
 /// Phase model
@@ -45,6 +89,42 @@ struct Phase: Codable, Identifiable, Hashable, Equatable {
         case durationWeeks = "duration_weeks"
         case goals
     }
+
+    init(
+        id: UUID,
+        programId: UUID,
+        phaseNumber: Int,
+        name: String,
+        durationWeeks: Int? = nil,
+        goals: String? = nil
+    ) {
+        self.id = id
+        self.programId = programId
+        self.phaseNumber = phaseNumber
+        self.name = name
+        self.durationWeeks = durationWeeks
+        self.goals = goals
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        programId = container.safeUUID(forKey: .programId)
+
+        // Required int with fallback
+        phaseNumber = container.safeInt(forKey: .phaseNumber, default: 1)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Phase")
+
+        // Optional int
+        durationWeeks = container.safeOptionalInt(forKey: .durationWeeks)
+
+        // Optional string
+        goals = container.safeOptionalString(forKey: .goals)
+    }
 }
 
 /// Session model (simplified for program viewer)
@@ -63,6 +143,44 @@ struct ProgramSession: Codable, Identifiable, Hashable, Equatable {
         case sessionDate = "session_date"
         case completed
         case exerciseCount = "exercise_count"
+    }
+
+    init(
+        id: UUID,
+        phaseId: UUID,
+        sessionNumber: Int? = nil,
+        sessionDate: Date? = nil,
+        completed: Bool? = nil,
+        exerciseCount: Int? = nil
+    ) {
+        self.id = id
+        self.phaseId = phaseId
+        self.sessionNumber = sessionNumber
+        self.sessionDate = sessionDate
+        self.completed = completed
+        self.exerciseCount = exerciseCount
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        phaseId = container.safeUUID(forKey: .phaseId)
+
+        // Optional int
+        sessionNumber = container.safeOptionalInt(forKey: .sessionNumber)
+        exerciseCount = container.safeOptionalInt(forKey: .exerciseCount)
+
+        // Optional date
+        sessionDate = container.safeOptionalDate(forKey: .sessionDate)
+
+        // Optional bool - use nil-preserving approach
+        if container.contains(.completed) {
+            completed = container.safeBool(forKey: .completed, default: false)
+        } else {
+            completed = nil
+        }
     }
 }
 
@@ -99,21 +217,35 @@ struct ProgramExercise: Decodable, Identifiable, Hashable, Equatable {
         }
     }
 
-    // Custom decoder to extract exercise_name from nested object
+    // Custom decoder to extract exercise_name from nested object with defensive patterns
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(UUID.self, forKey: .id)
-        sessionId = try container.decode(UUID.self, forKey: .sessionId)
-        sets = try container.decode(Int.self, forKey: .sets)
-        reps = try container.decode(String.self, forKey: .reps)
-        load = try container.decodeIfPresent(Double.self, forKey: .load)
-        loadUnit = try container.decodeIfPresent(String.self, forKey: .loadUnit)
-        restPeriod = try container.decodeIfPresent(Int.self, forKey: .restPeriod)
-        orderIndex = try container.decode(Int.self, forKey: .orderIndex)
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        sessionId = container.safeUUID(forKey: .sessionId)
 
-        // Extract exercise_name from nested exercise_templates object
-        let template = try container.decode(ExerciseTemplate.self, forKey: .exerciseTemplates)
-        exerciseName = template.exerciseName
+        // Required ints with fallback
+        sets = container.safeInt(forKey: .sets, default: 1)
+        orderIndex = container.safeInt(forKey: .orderIndex, default: 0)
+
+        // Required string with fallback
+        reps = container.safeString(forKey: .reps, default: "0")
+
+        // Optional double (handles PostgreSQL numeric as string)
+        load = container.safeOptionalDouble(forKey: .load)
+
+        // Optional string
+        loadUnit = container.safeOptionalString(forKey: .loadUnit)
+
+        // Optional int
+        restPeriod = container.safeOptionalInt(forKey: .restPeriod)
+
+        // Extract exercise_name from nested exercise_templates object with fallback
+        if let template = try? container.decode(ExerciseTemplate.self, forKey: .exerciseTemplates) {
+            exerciseName = template.exerciseName
+        } else {
+            exerciseName = "Unknown Exercise"
+        }
     }
 }

@@ -58,6 +58,37 @@ struct ExerciseLog: Codable, Identifiable, Sendable {
         self.notes = notes
         self.completed = completed
     }
+
+    /// Defensive decoder for database values
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        sessionExerciseId = container.safeUUID(forKey: .sessionExerciseId)
+        patientId = container.safeUUID(forKey: .patientId)
+
+        // Date with fallback
+        loggedAt = container.safeDate(forKey: .loggedAt)
+
+        // Required ints with fallback
+        actualSets = container.safeInt(forKey: .actualSets, default: 0)
+        rpe = container.safeInt(forKey: .rpe, default: 5)
+        painScore = container.safeInt(forKey: .painScore, default: 0)
+
+        // Array with fallback to empty
+        actualReps = container.safeArray(of: Int.self, forKey: .actualReps)
+
+        // Optional double (handles PostgreSQL numeric as string)
+        actualLoad = container.safeOptionalDouble(forKey: .actualLoad)
+
+        // Optional string
+        loadUnit = container.safeOptionalString(forKey: .loadUnit)
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Bool with fallback
+        completed = container.safeBool(forKey: .completed, default: false)
+    }
 }
 
 /// Input model for creating a new exercise log

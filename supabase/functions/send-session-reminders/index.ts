@@ -286,18 +286,18 @@ function formatDateOnly(date: Date): string {
    ============================================================================
 
    1. Deploy this Edge Function:
-      ```bash
+      ---bash
       cd /Users/expo/Code/expo/supabase
       supabase functions deploy send-session-reminders
-      ```
+      ---
 
    2. Set the CRON_SECRET environment variable:
-      ```bash
+      ---bash
       supabase secrets set CRON_SECRET=your-secure-random-secret
-      ```
+      ---
 
    3. Set up cron job using pg_cron extension:
-      ```sql
+      ---sql
       -- Enable pg_cron extension
       CREATE EXTENSION IF NOT EXISTS pg_cron;
 
@@ -318,11 +318,11 @@ function formatDateOnly(date: Date): string {
       );
 
       -- Alternative: Run every 6 hours for more frequent checks
-      -- SELECT cron.schedule('send-session-reminders', '0 */6 * * *', ...);
-      ```
+      -- SELECT cron.schedule('send-session-reminders', '0 *\/6 * * *', ...);
+      ---
 
    4. Create notifications table (if not exists):
-      ```sql
+      ---sql
       CREATE TABLE IF NOT EXISTS notifications (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -353,54 +353,54 @@ function formatDateOnly(date: Date): string {
         ON notifications FOR UPDATE
         USING (user_id = auth.uid())
         WITH CHECK (user_id = auth.uid());
-      ```
+      ---
 
    ============================================================================
    TESTING
    ============================================================================
 
    Test the function locally:
-   ```bash
+   ---bash
    supabase functions serve send-session-reminders
-   ```
+   ---
 
    Send test request:
-   ```bash
+   ---bash
    curl -X POST http://localhost:54321/functions/v1/send-session-reminders \
      -H "Content-Type: application/json" \
      -H "x-cron-secret: your-secure-random-secret" \
      -d '{}'
-   ```
+   ---
 
    Test with production:
-   ```bash
+   ---bash
    curl -X POST https://your-project.supabase.co/functions/v1/send-session-reminders \
      -H "Content-Type: application/json" \
      -H "x-cron-secret: your-secure-random-secret" \
      -d '{}'
-   ```
+   ---
 
    ============================================================================
    MONITORING
    ============================================================================
 
    View cron job status:
-   ```sql
+   ---sql
    SELECT * FROM cron.job WHERE jobname = 'send-session-reminders';
-   ```
+   ---
 
    View cron job run history:
-   ```sql
+   ---sql
    SELECT * FROM cron.job_run_details
    WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'send-session-reminders')
    ORDER BY start_time DESC
    LIMIT 10;
-   ```
+   ---
 
    Delete cron job (if needed):
-   ```sql
+   ---sql
    SELECT cron.unschedule('send-session-reminders');
-   ```
+   ---
 
    ============================================================================
 */

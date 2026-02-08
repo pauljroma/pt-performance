@@ -158,51 +158,34 @@ struct DailyReadiness: Codable, Identifiable, Hashable, Equatable, Sendable {
         self.updatedAt = updatedAt
     }
 
-    // Custom decoder to handle PostgreSQL numeric as string AND date format
+    // Custom decoder to handle PostgreSQL numeric as string AND date format with defensive patterns
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(UUID.self, forKey: .id)
-        patientId = try container.decode(UUID.self, forKey: .patientId)
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
 
-        // Handle DATE column format "YYYY-MM-DD" from PostgreSQL
-        // Database returns DATE as "2026-01-04" (not ISO8601 with time component)
-        if let dateString = try? container.decode(String.self, forKey: .date) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-            if let parsedDate = dateFormatter.date(from: dateString) {
-                date = parsedDate
-            } else {
-                // Fallback: try ISO8601 decoder in case database schema changes
-                date = try container.decode(Date.self, forKey: .date)
-            }
-        } else {
-            // Fallback: try standard date decoding (ISO8601)
-            date = try container.decode(Date.self, forKey: .date)
-        }
+        // Handle DATE column format "YYYY-MM-DD" from PostgreSQL using SafeDateParser
+        date = container.safeDate(forKey: .date)
 
         // Handle numeric fields that might come as strings from PostgreSQL
-        if let sleepString = try? container.decode(String.self, forKey: .sleepHours) {
-            sleepHours = Double(sleepString)
-        } else {
-            sleepHours = try container.decodeIfPresent(Double.self, forKey: .sleepHours)
-        }
+        sleepHours = container.safeOptionalDouble(forKey: .sleepHours)
 
-        sorenessLevel = try container.decodeIfPresent(Int.self, forKey: .sorenessLevel)
-        energyLevel = try container.decodeIfPresent(Int.self, forKey: .energyLevel)
-        stressLevel = try container.decodeIfPresent(Int.self, forKey: .stressLevel)
+        // Optional ints
+        sorenessLevel = container.safeOptionalInt(forKey: .sorenessLevel)
+        energyLevel = container.safeOptionalInt(forKey: .energyLevel)
+        stressLevel = container.safeOptionalInt(forKey: .stressLevel)
 
         // Readiness score might come as string from PostgreSQL numeric type
-        if let scoreString = try? container.decode(String.self, forKey: .readinessScore) {
-            readinessScore = Double(scoreString)
-        } else {
-            readinessScore = try container.decodeIfPresent(Double.self, forKey: .readinessScore)
-        }
+        readinessScore = container.safeOptionalDouble(forKey: .readinessScore)
 
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decode(Date.self, forKey: .createdAt)
-        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        // Optional string
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Dates with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+        updatedAt = container.safeDate(forKey: .updatedAt)
     }
 
     // MARK: - Computed Readiness Band

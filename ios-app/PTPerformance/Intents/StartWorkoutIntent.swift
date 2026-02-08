@@ -26,19 +26,13 @@ struct StartWorkoutIntent: AppIntent {
         // Log the Siri intent action
         print("[StartWorkoutIntent] Starting workout via Siri")
 
-        // Check if user is authenticated by looking for stored session
-        // TODO: SECURITY - The hasActiveSession flag itself is not sensitive (just a boolean),
-        // but consider using SecureStore to check for auth token presence instead.
-        // This would be more reliable than a separate flag that could get out of sync.
-        // Example: let hasSession = (try? SecureStore.shared.getString(forKey: .authToken)) != nil
+        // Check if user has an active session flag
+        // Note: We use UserDefaults here because SecureStore is not available in App Intents context
+        // The hasActiveSession flag is set by the main app when authentication succeeds
         let hasSession = UserDefaults.standard.bool(forKey: "hasActiveSession")
 
         guard hasSession else {
-            return .result(
-                dialog: "Please open Modus and sign in first to start your workout."
-            ) {
-                // Open app for login
-            }
+            return .result(dialog: "Please open Modus and sign in first to start your workout.")
         }
 
         // Check if there's a scheduled workout for today
@@ -49,17 +43,9 @@ struct StartWorkoutIntent: AppIntent {
         let dayName = calendar.weekdaySymbols[dayOfWeek - 1]
 
         if let workoutName = workoutName {
-            return .result(
-                dialog: "Starting your \(workoutName) workout. Let's go!"
-            ) {
-                // Deep link will be handled by the app
-            }
+            return .result(dialog: "Starting your \(workoutName) workout. Let's go!")
         } else {
-            return .result(
-                dialog: "Opening your \(dayName) workout. Let's crush it!"
-            ) {
-                // Deep link will be handled by the app
-            }
+            return .result(dialog: "Opening your \(dayName) workout. Let's crush it!")
         }
     }
 }

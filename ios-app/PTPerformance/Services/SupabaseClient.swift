@@ -1,8 +1,25 @@
 import Foundation
 import Supabase
 
-/// Supabase client singleton for Modus app
-/// Manages authentication and database access to Supabase backend
+/// Supabase client singleton for Modus app.
+///
+/// Manages authentication and database access to Supabase backend.
+/// Provides a centralized point of access for all Supabase operations.
+///
+/// ## Features
+/// - Session management and persistence
+/// - User authentication (email/password, Apple Sign In)
+/// - Role-based access (patient vs therapist)
+/// - Flexible date decoding for multiple PostgreSQL date formats
+///
+/// ## Usage
+/// ```swift
+/// let client = PTSupabaseClient.shared
+/// try await client.signIn(email: "user@example.com", password: "password")
+/// ```
+///
+/// ## Thread Safety
+/// Published properties are updated on MainActor. Database operations are async.
 class PTSupabaseClient: ObservableObject {
     static let shared = PTSupabaseClient()
 

@@ -54,7 +54,7 @@ class ArmCareAssessmentViewModel: ObservableObject {
             }
         } catch {
             // Silently fail - no assessment for today is fine
-            print("No assessment found for today: \(error.localizedDescription)")
+            DebugLogger.shared.info("ArmCareAssessment", "No assessment found for today: \(error.localizedDescription)")
         }
     }
 

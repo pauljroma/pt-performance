@@ -111,6 +111,7 @@ class PatientListViewModel: ObservableObject {
             logger.log("Successfully decoded \(patients.count) patients", level: .success)
             logger.log("✅ Loaded \(patients.count) patients for therapist \(therapistId) (HIPAA compliant)", level: .success)
         } catch let decodingError as DecodingError {
+            ErrorLogger.shared.logError(decodingError, context: "PatientListViewModel.loadPatients - decoding")
             logger.log("DECODING ERROR:", level: .error)
             switch decodingError {
             case .typeMismatch(let type, let context):
@@ -134,15 +135,16 @@ class PatientListViewModel: ObservableObject {
             }
             errorMessage = "We couldn't load your patient list. Please check your internet connection and try again."
             patients = []  // SECURITY: Never fall back to sample data - show empty list on error
-            logger.log("⚠️ Set patients to empty array due to decoding error (security)", level: .error)
+            logger.log("Set patients to empty array due to decoding error (security)", level: .error)
         } catch {
+            ErrorLogger.shared.logError(error, context: "PatientListViewModel.loadPatients")
             logger.log("OTHER ERROR:", level: .error)
             logger.log("Error type: \(type(of: error))", level: .error)
             logger.log("Error description: \(error.localizedDescription)", level: .error)
             logger.log("Error: \(error)", level: .error)
             errorMessage = "We couldn't load your patient list. Please check your connection and try again."
             patients = []  // SECURITY: Never fall back to sample data - show empty list on error
-            logger.log("⚠️ Set patients to empty array due to error (security)", level: .error)
+            logger.log("Set patients to empty array due to error (security)", level: .error)
         }
     }
 
@@ -194,7 +196,8 @@ class PatientListViewModel: ObservableObject {
                 logger.log("✅ Loaded \(activeFlags.count) active flags", level: .success)
             }
         } catch {
-            logger.log("❌ Error loading flags: \(error.localizedDescription)", level: .error)
+            ErrorLogger.shared.logError(error, context: "PatientListViewModel.loadActiveFlags")
+            logger.log("Error loading flags: \(error.localizedDescription)", level: .error)
             // Fallback to empty array if query fails
             activeFlags = []
         }
@@ -295,6 +298,7 @@ class PatientListViewModel: ObservableObject {
                 logger.log("No program templates found", level: .diagnostic)
             }
         } catch {
+            ErrorLogger.shared.logError(error, context: "PatientListViewModel.loadAvailablePrograms")
             logger.log("Failed to load program templates: \(error.localizedDescription)", level: .error)
             availablePrograms = []
         }

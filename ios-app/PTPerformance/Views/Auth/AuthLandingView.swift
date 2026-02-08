@@ -268,7 +268,7 @@ struct AuthLandingView: View {
         // Start session monitoring
         SessionManager.shared.startMonitoring()
 
-        print("[Demo] Logged in as demo patient: John Brebbia (\(demoPatientId))")
+        DebugLogger.shared.info("Demo", "Logged in as demo patient: John Brebbia (\(demoPatientId))")
     }
 
     /// Login as demo therapist (Sarah Thompson) - bypasses auth for testing
@@ -287,7 +287,7 @@ struct AuthLandingView: View {
         // Start session monitoring
         SessionManager.shared.startMonitoring()
 
-        print("[Demo] Logged in as demo therapist: Sarah Thompson (\(demoTherapistId))")
+        DebugLogger.shared.info("Demo", "Logged in as demo therapist: Sarah Thompson (\(demoTherapistId))")
     }
 }
 

@@ -434,16 +434,43 @@ final class HealthScoreService: ObservableObject {
 
     // MARK: - AI Chat
 
+    /// Send a message to the AI health coach and receive a response
+    ///
+    /// Note: AI backend integration pending. Currently returns contextual placeholder
+    /// responses based on the current health score. Full AI integration will connect
+    /// to the coaching API endpoint for personalized, dynamic responses.
+    /// Ticket: ACP-701 - AI Health Coach Backend Integration
     func sendMessage(_ message: String) async -> HealthCoachMessage {
-        // TODO: Integrate with AI backend
-        let response = HealthCoachMessage(
+        // Generate a contextual response based on current health data
+        let content: String
+        let category: InsightCategory
+
+        if let score = currentScore {
+            if score.overallScore >= 80 {
+                content = "Your health metrics are excellent! Keep up the great work with your recovery and training balance."
+                category = .general
+            } else if score.recoveryScore < 60 {
+                content = "Based on your health data, I recommend focusing on recovery. Your recent training load has been high."
+                category = .recovery
+            } else if score.sleepScore < 60 {
+                content = "Your sleep score suggests room for improvement. Try to maintain a consistent sleep schedule for better recovery."
+                category = .sleep
+            } else {
+                content = "Your health metrics look good overall. Keep monitoring your recovery and adjust training as needed."
+                category = .general
+            }
+        } else {
+            content = "I'm here to help with your health and recovery. Complete a readiness check-in to get personalized recommendations."
+            category = .general
+        }
+
+        return HealthCoachMessage(
             id: UUID(),
             role: .assistant,
-            content: "Based on your health data, I recommend focusing on recovery. Your recent training load has been high.",
+            content: content,
             timestamp: Date(),
-            category: .recovery
+            category: category
         )
-        return response
     }
 
     // MARK: - Helpers

@@ -48,6 +48,7 @@ final class AICoachViewModel: ObservableObject {
     func loadInitialInsights() async {
         isLoading = true
         error = nil
+        defer { isLoading = false }
 
         await service.getProactiveInsights()
 
@@ -72,10 +73,9 @@ final class AICoachViewModel: ObservableObject {
         }
 
         if let serviceError = service.error {
-            error = serviceError.localizedDescription
+            ErrorLogger.shared.logError(serviceError, context: "AICoachViewModel.loadInitialInsights")
+            error = "Unable to load AI Coach insights. Please try again."
         }
-
-        isLoading = false
     }
 
     /// Sends a message to the AI coach
@@ -94,6 +94,7 @@ final class AICoachViewModel: ObservableObject {
         inputMessage = ""
         isTyping = true
         error = nil
+        defer { isTyping = false }
 
         // Get response from AI
         if let response = await service.askCoach(question: trimmedMessage) {
@@ -122,11 +123,10 @@ final class AICoachViewModel: ObservableObject {
             messages.append(errorMessage)
 
             if let serviceError = service.error {
-                error = serviceError.localizedDescription
+                ErrorLogger.shared.logError(serviceError, context: "AICoachViewModel.sendMessage")
+                error = "Unable to get a response from AI Coach. Please try again."
             }
         }
-
-        isTyping = false
     }
 
     /// Sends a suggested question

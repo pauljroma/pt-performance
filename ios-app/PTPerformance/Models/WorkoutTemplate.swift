@@ -40,6 +40,68 @@ struct WorkoutTemplate: Codable, Identifiable, Hashable {
         case updatedAt = "updated_at"
     }
 
+    init(
+        id: UUID,
+        name: String,
+        description: String? = nil,
+        category: TemplateCategory,
+        difficultyLevel: DifficultyLevel? = nil,
+        durationWeeks: Int? = nil,
+        createdBy: UUID,
+        isPublic: Bool = false,
+        tags: [String] = [],
+        usageCount: Int = 0,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.category = category
+        self.difficultyLevel = difficultyLevel
+        self.durationWeeks = durationWeeks
+        self.createdBy = createdBy
+        self.isPublic = isPublic
+        self.tags = tags
+        self.usageCount = usageCount
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        createdBy = container.safeUUID(forKey: .createdBy)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Unknown Template")
+
+        // Optional string
+        description = container.safeOptionalString(forKey: .description)
+
+        // Enum with fallback
+        category = container.safeEnum(TemplateCategory.self, forKey: .category, default: .other)
+        difficultyLevel = container.safeOptionalEnum(DifficultyLevel.self, forKey: .difficultyLevel)
+
+        // Optional int
+        durationWeeks = container.safeOptionalInt(forKey: .durationWeeks)
+
+        // Bool with fallback
+        isPublic = container.safeBool(forKey: .isPublic, default: false)
+
+        // Array with fallback
+        tags = container.safeArray(of: String.self, forKey: .tags)
+
+        // Int with fallback
+        usageCount = container.safeInt(forKey: .usageCount, default: 0)
+
+        // Dates with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+        updatedAt = container.safeDate(forKey: .updatedAt)
+    }
+
     enum TemplateCategory: String, Codable, CaseIterable {
         case strength
         case mobility
@@ -144,6 +206,50 @@ struct TemplatePhase: Codable, Identifiable, Hashable {
         case updatedAt = "updated_at"
     }
 
+    init(
+        id: UUID,
+        templateId: UUID,
+        name: String,
+        description: String? = nil,
+        sequence: Int,
+        durationWeeks: Int? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.templateId = templateId
+        self.name = name
+        self.description = description
+        self.sequence = sequence
+        self.durationWeeks = durationWeeks
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        templateId = container.safeUUID(forKey: .templateId)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Phase")
+
+        // Optional string
+        description = container.safeOptionalString(forKey: .description)
+
+        // Required int with fallback
+        sequence = container.safeInt(forKey: .sequence, default: 0)
+
+        // Optional int
+        durationWeeks = container.safeOptionalInt(forKey: .durationWeeks)
+
+        // Dates with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+        updatedAt = container.safeDate(forKey: .updatedAt)
+    }
+
     // Computed properties
     var durationDescription: String {
         guard let weeks = durationWeeks else { return "Ongoing" }
@@ -176,6 +282,53 @@ struct TemplateSession: Codable, Identifiable, Hashable {
         case notes
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+    }
+
+    init(
+        id: UUID,
+        phaseId: UUID,
+        name: String,
+        description: String? = nil,
+        sequence: Int,
+        exercises: [TemplateExercise] = [],
+        notes: String? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.phaseId = phaseId
+        self.name = name
+        self.description = description
+        self.sequence = sequence
+        self.exercises = exercises
+        self.notes = notes
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        phaseId = container.safeUUID(forKey: .phaseId)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Session")
+
+        // Optional strings
+        description = container.safeOptionalString(forKey: .description)
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Required int with fallback
+        sequence = container.safeInt(forKey: .sequence, default: 0)
+
+        // Array with fallback
+        exercises = container.safeArray(of: TemplateExercise.self, forKey: .exercises)
+
+        // Dates with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+        updatedAt = container.safeDate(forKey: .updatedAt)
     }
 
     // Computed properties

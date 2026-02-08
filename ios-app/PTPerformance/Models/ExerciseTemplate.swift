@@ -30,5 +30,60 @@ struct ExerciseTemplateData: Codable, Identifiable, Hashable, Equatable, Sendabl
     struct FormCueData: Codable, Hashable, Equatable, Sendable {
         let cue: String
         let timestamp: Int?
+
+        init(cue: String, timestamp: Int? = nil) {
+            self.cue = cue
+            self.timestamp = timestamp
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            cue = container.safeString(forKey: .cue, default: "")
+            timestamp = container.safeOptionalInt(forKey: .timestamp)
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case cue, timestamp
+        }
+    }
+
+    init(
+        id: UUID,
+        name: String,
+        category: String? = nil,
+        bodyRegion: String? = nil,
+        videoUrl: String? = nil,
+        videoThumbnailUrl: String? = nil,
+        videoDuration: Int? = nil,
+        formCues: [FormCueData]? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.category = category
+        self.bodyRegion = bodyRegion
+        self.videoUrl = videoUrl
+        self.videoThumbnailUrl = videoThumbnailUrl
+        self.videoDuration = videoDuration
+        self.formCues = formCues
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required field with fallback to new UUID
+        id = container.safeUUID(forKey: .id)
+
+        // Required string with fallback
+        name = container.safeString(forKey: .name, default: "Unknown Exercise")
+
+        // Optional fields
+        category = container.safeOptionalString(forKey: .category)
+        bodyRegion = container.safeOptionalString(forKey: .bodyRegion)
+        videoUrl = container.safeOptionalString(forKey: .videoUrl)
+        videoThumbnailUrl = container.safeOptionalString(forKey: .videoThumbnailUrl)
+        videoDuration = container.safeOptionalInt(forKey: .videoDuration)
+
+        // Array with fallback to nil (not empty array, to preserve original optional behavior)
+        formCues = try? container.decodeIfPresent([FormCueData].self, forKey: .formCues)
     }
 }

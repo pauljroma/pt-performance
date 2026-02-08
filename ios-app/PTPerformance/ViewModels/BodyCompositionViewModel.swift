@@ -93,6 +93,7 @@ class BodyCompositionViewModel: ObservableObject {
     func loadEntries(patientId: String) async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
 
         do {
             let results: [BodyComposition] = try await supabase.client
@@ -105,11 +106,9 @@ class BodyCompositionViewModel: ObservableObject {
                 .value
 
             entries = results
-            isLoading = false
         } catch {
+            ErrorLogger.shared.logError(error, context: "BodyCompositionViewModel.loadEntries")
             errorMessage = "We couldn't load your measurements. Please check your connection and try again."
-            isLoading = false
-            ErrorLogger.shared.logError(error, context: "Load Body Composition Entries")
         }
     }
 
@@ -199,8 +198,8 @@ class BodyCompositionViewModel: ObservableObject {
             await loadEntries(patientId: patientId)
         } catch {
             isSaving = false
+            ErrorLogger.shared.logError(error, context: "BodyCompositionViewModel.saveEntry")
             errorMessage = "We couldn't save your measurements. Please check your connection and try again."
-            ErrorLogger.shared.logError(error, context: "Save Body Composition Entry")
         }
     }
 
@@ -208,6 +207,7 @@ class BodyCompositionViewModel: ObservableObject {
 
     /// Delete a body composition entry by ID
     func deleteEntry(id: UUID) async {
+        errorMessage = nil
         do {
             try await supabase.client
                 .from("body_compositions")
@@ -218,8 +218,8 @@ class BodyCompositionViewModel: ObservableObject {
             // Remove from local array
             entries.removeAll { $0.id == id }
         } catch {
+            ErrorLogger.shared.logError(error, context: "BodyCompositionViewModel.deleteEntry")
             errorMessage = "We couldn't delete this entry. Please try again."
-            ErrorLogger.shared.logError(error, context: "Delete Body Composition Entry")
         }
     }
 

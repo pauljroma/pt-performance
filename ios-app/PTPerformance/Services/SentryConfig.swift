@@ -106,7 +106,7 @@ enum SentryConfig {
     static func initialize() {
         #if canImport(Sentry)
         guard !dsn.isEmpty else {
-            print("[Sentry] No DSN configured, skipping initialization")
+            DebugLogger.shared.info("Sentry", "No DSN configured, skipping initialization")
             return
         }
 
@@ -131,10 +131,10 @@ enum SentryConfig {
             #endif
         }
 
-        print("[Sentry] Initialized: env=\(environment), release=\(releaseName)")
+        DebugLogger.shared.success("Sentry", "Initialized: env=\(environment), release=\(releaseName)")
         #else
-        print("[Sentry] SDK not installed. Add sentry-cocoa SPM package to enable.")
-        print("  Environment: \(environment), Release: \(releaseName)")
+        DebugLogger.shared.warning("Sentry", "SDK not installed. Add sentry-cocoa SPM package to enable.")
+        DebugLogger.shared.info("Sentry", "Environment: \(environment), Release: \(releaseName)")
         #endif
     }
 

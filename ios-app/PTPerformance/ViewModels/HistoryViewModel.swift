@@ -149,6 +149,7 @@ class HistoryViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         cachedPatientId = patientId
+        defer { isLoading = false }
 
         // Reset pagination state
         currentSessionsPage = 0
@@ -176,11 +177,9 @@ class HistoryViewModel: ObservableObject {
 
             // Check if there might be more data
             hasMoreWorkouts = sessions.count >= pageSize || manual.count >= pageSize
-
-            isLoading = false
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            ErrorLogger.shared.logError(error, context: "HistoryViewModel.fetchData")
+            errorMessage = "Unable to load your workout history. Please try again."
         }
     }
 
@@ -190,6 +189,7 @@ class HistoryViewModel: ObservableObject {
         guard let patientId = cachedPatientId else { return }
 
         isLoadingMore = true
+        defer { isLoadingMore = false }
 
         do {
             // Increment pages and fetch next batch
@@ -217,11 +217,9 @@ class HistoryViewModel: ObservableObject {
 
             // Check if we've reached the end
             hasMoreWorkouts = newSessions.count >= pageSize || newManual.count >= pageSize
-
-            isLoadingMore = false
         } catch {
-            // Don't show error for pagination failures, just stop loading
-            isLoadingMore = false
+            // Log error but don't show to user for pagination failures
+            ErrorLogger.shared.logError(error, context: "HistoryViewModel.loadMoreWorkouts")
             hasMoreWorkouts = false
         }
     }

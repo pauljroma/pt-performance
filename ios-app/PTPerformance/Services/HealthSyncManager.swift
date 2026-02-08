@@ -76,7 +76,7 @@ class HealthSyncManager: ObservableObject {
             }
         }
 
-        print("[HealthSyncManager] Background tasks registered")
+        DebugLogger.shared.info("HealthSyncManager", "Background tasks registered")
     }
 
     /// Schedule the next background sync based on user preferences
@@ -84,12 +84,12 @@ class HealthSyncManager: ObservableObject {
         let config = healthKitService.syncConfig
 
         guard config.backgroundSyncEnabled else {
-            print("[HealthSyncManager] Background sync disabled, not scheduling")
+            DebugLogger.shared.info("HealthSyncManager", "Background sync disabled, not scheduling")
             return
         }
 
         guard let interval = config.syncFrequency.backgroundInterval else {
-            print("[HealthSyncManager] Sync frequency doesn't use background tasks")
+            DebugLogger.shared.info("HealthSyncManager", "Sync frequency doesn't use background tasks")
             return
         }
 
@@ -124,7 +124,7 @@ class HealthSyncManager: ObservableObject {
 
     /// Handle background app refresh task
     private func handleBackgroundSync(task: BGAppRefreshTask) async {
-        print("[HealthSyncManager] Starting background sync")
+        DebugLogger.shared.info("HealthSyncManager", "Starting background sync")
 
         // Schedule next sync first
         scheduleBackgroundSync()
@@ -133,7 +133,7 @@ class HealthSyncManager: ObservableObject {
         task.expirationHandler = { [weak self] in
             Task { @MainActor [weak self] in
                 self?.isSyncing = false
-                print("[HealthSyncManager] Background sync expired")
+                DebugLogger.shared.warning("HealthSyncManager", "Background sync expired")
             }
         }
 
@@ -151,24 +151,24 @@ class HealthSyncManager: ObservableObject {
 
             isSyncing = false
             task.setTaskCompleted(success: true)
-            print("[HealthSyncManager] Background sync completed successfully")
+            DebugLogger.shared.success("HealthSyncManager", "Background sync completed successfully")
 
         } catch {
             isSyncing = false
             syncError = error.localizedDescription
             task.setTaskCompleted(success: false)
-            print("[HealthSyncManager] Background sync failed: \(error)")
+            DebugLogger.shared.error("HealthSyncManager", "Background sync failed: \(error)")
         }
     }
 
     /// Handle background processing task
     private func handleBackgroundProcessing(task: BGProcessingTask) async {
-        print("[HealthSyncManager] Starting background processing")
+        DebugLogger.shared.info("HealthSyncManager", "Starting background processing")
 
         task.expirationHandler = { [weak self] in
             Task { @MainActor [weak self] in
                 self?.isSyncing = false
-                print("[HealthSyncManager] Background processing expired")
+                DebugLogger.shared.warning("HealthSyncManager", "Background processing expired")
             }
         }
 
@@ -186,13 +186,13 @@ class HealthSyncManager: ObservableObject {
 
             isSyncing = false
             task.setTaskCompleted(success: true)
-            print("[HealthSyncManager] Background processing completed")
+            DebugLogger.shared.success("HealthSyncManager", "Background processing completed")
 
         } catch {
             isSyncing = false
             syncError = error.localizedDescription
             task.setTaskCompleted(success: false)
-            print("[HealthSyncManager] Background processing failed: \(error)")
+            DebugLogger.shared.error("HealthSyncManager", "Background processing failed: \(error)")
         }
     }
 
@@ -203,23 +203,23 @@ class HealthSyncManager: ObservableObject {
         let config = healthKitService.syncConfig
 
         guard config.syncOnLaunch else {
-            print("[HealthSyncManager] Sync on launch disabled")
+            DebugLogger.shared.info("HealthSyncManager", "Sync on launch disabled")
             return
         }
 
         guard healthKitService.isAuthorized else {
-            print("[HealthSyncManager] HealthKit not authorized, skipping launch sync")
+            DebugLogger.shared.info("HealthSyncManager", "HealthKit not authorized, skipping launch sync")
             return
         }
 
-        print("[HealthSyncManager] Performing sync on app launch")
+        DebugLogger.shared.info("HealthSyncManager", "Performing sync on app launch")
         await performSync()
     }
 
     /// Perform a manual sync
     func performSync() async {
         guard !isSyncing else {
-            print("[HealthSyncManager] Sync already in progress")
+            DebugLogger.shared.info("HealthSyncManager", "Sync already in progress")
             return
         }
 
@@ -234,12 +234,12 @@ class HealthSyncManager: ObservableObject {
             await exportPendingWorkouts()
 
             isSyncing = false
-            print("[HealthSyncManager] Manual sync completed")
+            DebugLogger.shared.success("HealthSyncManager", "Manual sync completed")
 
         } catch {
             isSyncing = false
             syncError = error.localizedDescription
-            print("[HealthSyncManager] Manual sync failed: \(error)")
+            DebugLogger.shared.error("HealthSyncManager", "Manual sync failed: \(error)")
         }
     }
 
@@ -250,7 +250,7 @@ class HealthSyncManager: ObservableObject {
         guard !pendingExports.contains(sessionId) else { return }
         pendingExports.append(sessionId)
         savePendingExports()
-        print("[HealthSyncManager] Queued workout export: \(sessionId)")
+        DebugLogger.shared.info("HealthSyncManager", "Queued workout export: \(sessionId)")
     }
 
     /// Export a completed session to Apple Health
@@ -259,7 +259,7 @@ class HealthSyncManager: ObservableObject {
         let config = healthKitService.syncConfig
 
         guard config.exportWorkouts else {
-            print("[HealthSyncManager] Workout export disabled")
+            DebugLogger.shared.info("HealthSyncManager", "Workout export disabled")
             return
         }
 
@@ -273,18 +273,18 @@ class HealthSyncManager: ObservableObject {
             // Check if already exported
             let alreadyExported = try await healthKitService.isWorkoutExported(sessionId: session.id)
             if alreadyExported {
-                print("[HealthSyncManager] Session already exported: \(session.id)")
+                DebugLogger.shared.info("HealthSyncManager", "Session already exported: \(session.id)")
                 return
             }
 
             // Export the workout
             try await healthKitService.exportWorkout(session: session)
-            print("[HealthSyncManager] Exported session to Apple Health: \(session.id)")
+            DebugLogger.shared.success("HealthSyncManager", "Exported session to Apple Health: \(session.id)")
 
         } catch {
             // Queue for retry
             queueWorkoutExport(sessionId: session.id)
-            print("[HealthSyncManager] Failed to export session, queued for retry: \(error)")
+            DebugLogger.shared.warning("HealthSyncManager", "Failed to export session, queued for retry: \(error)")
         }
     }
 
@@ -293,7 +293,7 @@ class HealthSyncManager: ObservableObject {
         let config = healthKitService.syncConfig
 
         guard config.exportWorkouts else {
-            print("[HealthSyncManager] Workout export disabled")
+            DebugLogger.shared.info("HealthSyncManager", "Workout export disabled")
             return
         }
 
@@ -305,16 +305,16 @@ class HealthSyncManager: ObservableObject {
         do {
             let alreadyExported = try await healthKitService.isWorkoutExported(sessionId: session.id)
             if alreadyExported {
-                print("[HealthSyncManager] Manual session already exported: \(session.id)")
+                DebugLogger.shared.info("HealthSyncManager", "Manual session already exported: \(session.id)")
                 return
             }
 
             try await healthKitService.exportManualWorkout(session: session)
-            print("[HealthSyncManager] Exported manual session to Apple Health: \(session.id)")
+            DebugLogger.shared.success("HealthSyncManager", "Exported manual session to Apple Health: \(session.id)")
 
         } catch {
             queueWorkoutExport(sessionId: session.id)
-            print("[HealthSyncManager] Failed to export manual session, queued for retry: \(error)")
+            DebugLogger.shared.warning("HealthSyncManager", "Failed to export manual session, queued for retry: \(error)")
         }
     }
 
@@ -336,7 +336,7 @@ class HealthSyncManager: ObservableObject {
                 // In a real implementation, we'd fetch the session from the database
                 // For now, we just mark as successful to clear the queue
                 successfulExports.append(sessionId)
-                print("[HealthSyncManager] Pending export would require session fetch: \(sessionId)")
+                DebugLogger.shared.info("HealthSyncManager", "Pending export would require session fetch: \(sessionId)")
 
             } catch {
                 DebugLogger.shared.warning("HealthSyncManager", "Failed to check export status: \(error.localizedDescription)")

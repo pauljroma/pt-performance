@@ -53,6 +53,99 @@ struct ProgramLibrary: Codable, Identifiable, Hashable, Equatable {
         case requiresEquipment = "requires_equipment"
     }
 
+    init(
+        id: UUID,
+        title: String,
+        description: String? = nil,
+        category: String,
+        durationWeeks: Int,
+        difficultyLevel: String,
+        equipmentRequired: [String]? = nil,
+        coverImageUrl: String? = nil,
+        programId: UUID? = nil,
+        isFeatured: Bool? = nil,
+        tags: [String]? = nil,
+        author: String? = nil,
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil,
+        packId: UUID? = nil,
+        accessLevel: String? = nil,
+        sortOrder: Int? = nil,
+        previewVideoUrl: String? = nil,
+        requiresEquipment: Bool? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.category = category
+        self.durationWeeks = durationWeeks
+        self.difficultyLevel = difficultyLevel
+        self.equipmentRequired = equipmentRequired
+        self.coverImageUrl = coverImageUrl
+        self.programId = programId
+        self.isFeatured = isFeatured
+        self.tags = tags
+        self.author = author
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.packId = packId
+        self.accessLevel = accessLevel
+        self.sortOrder = sortOrder
+        self.previewVideoUrl = previewVideoUrl
+        self.requiresEquipment = requiresEquipment
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUID with fallback
+        id = container.safeUUID(forKey: .id)
+
+        // Required strings with fallback
+        title = container.safeString(forKey: .title, default: "Unknown Program")
+        category = container.safeString(forKey: .category, default: "general")
+        difficultyLevel = container.safeString(forKey: .difficultyLevel, default: "beginner")
+
+        // Required int with fallback
+        durationWeeks = container.safeInt(forKey: .durationWeeks, default: 1)
+
+        // Optional strings
+        description = container.safeOptionalString(forKey: .description)
+        coverImageUrl = container.safeOptionalString(forKey: .coverImageUrl)
+        author = container.safeOptionalString(forKey: .author)
+        accessLevel = container.safeOptionalString(forKey: .accessLevel)
+        previewVideoUrl = container.safeOptionalString(forKey: .previewVideoUrl)
+
+        // Optional UUIDs
+        programId = container.safeOptionalUUID(forKey: .programId)
+        packId = container.safeOptionalUUID(forKey: .packId)
+
+        // Optional arrays
+        equipmentRequired = container.safeArray(of: String.self, forKey: .equipmentRequired)
+        let tagsArray = container.safeArray(of: String.self, forKey: .tags)
+        tags = tagsArray.isEmpty ? nil : tagsArray
+
+        // Optional bool - preserve nil
+        if container.contains(.isFeatured) {
+            isFeatured = container.safeBool(forKey: .isFeatured, default: false)
+        } else {
+            isFeatured = nil
+        }
+
+        if container.contains(.requiresEquipment) {
+            requiresEquipment = container.safeBool(forKey: .requiresEquipment, default: false)
+        } else {
+            requiresEquipment = nil
+        }
+
+        // Optional int
+        sortOrder = container.safeOptionalInt(forKey: .sortOrder)
+
+        // Optional dates
+        createdAt = container.safeOptionalDate(forKey: .createdAt)
+        updatedAt = container.safeOptionalDate(forKey: .updatedAt)
+    }
+
     // MARK: - Safe Accessors (handle nil from database)
 
     /// Equipment list with empty array fallback

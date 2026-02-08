@@ -91,6 +91,50 @@ struct ManualSessionExercise: Codable, Identifiable, Hashable {
         self.painScore = painScore
     }
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        manualSessionId = container.safeUUID(forKey: .manualSessionId)
+
+        // Optional UUID
+        exerciseTemplateId = container.safeOptionalUUID(forKey: .exerciseTemplateId)
+
+        // Required string with fallback
+        exerciseName = container.safeString(forKey: .exerciseName, default: "Unknown Exercise")
+
+        // Optional strings
+        blockName = container.safeOptionalString(forKey: .blockName)
+        notes = container.safeOptionalString(forKey: .notes)
+
+        // Required int with fallback
+        sequence = container.safeInt(forKey: .sequence, default: 0)
+
+        // Optional ints
+        targetSets = container.safeOptionalInt(forKey: .targetSets)
+        restPeriodSeconds = container.safeOptionalInt(forKey: .restPeriodSeconds)
+
+        // Optional string (reps can be "8-12" format)
+        targetReps = container.safeOptionalString(forKey: .targetReps)
+
+        // Optional doubles
+        targetLoad = container.safeOptionalDouble(forKey: .targetLoad)
+
+        // Optional string
+        loadUnit = container.safeOptionalString(forKey: .loadUnit)
+
+        // Date with fallback
+        createdAt = container.safeDate(forKey: .createdAt)
+
+        // Transient properties - not in database, set to nil
+        actualSets = nil
+        actualReps = nil
+        actualLoad = nil
+        rpe = nil
+        painScore = nil
+    }
+
     // MARK: - Computed Properties
 
     var name: String {

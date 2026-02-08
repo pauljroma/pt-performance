@@ -18,7 +18,11 @@ import Supabase
 /// within a 7-day window.
 class ProgressionService: ObservableObject {
     private let supabase: PTSupabaseClient
+    private let logger = DebugLogger.shared
+    private let errorLogger = ErrorLogger.shared
 
+    /// Initialize with a Supabase client.
+    /// - Parameter supabase: The Supabase client to use (defaults to shared instance)
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
@@ -137,19 +141,23 @@ class ProgressionService: ObservableObject {
         )
 
         do {
-            logger.log("📊 Inserting into load_progression_history table...", level: .diagnostic)
+            logger.log("[ProgressionService] Inserting into load_progression_history table...", level: .diagnostic)
 
             try await supabase.client
                 .from("load_progression_history")
                 .insert(record)
                 .execute()
 
-            logger.log("✅ Progression record created successfully", level: .success)
+            logger.log("[ProgressionService] Progression record created successfully", level: .success)
 
             // Check if deload should be triggered
             try await evaluateDeloadTriggers(patientId: patientId)
         } catch {
-            logger.log("❌ PROGRESSION RECORDING ERROR: \(error.localizedDescription)", level: .error)
+            errorLogger.logError(error, context: "ProgressionService.recordProgression", metadata: [
+                "patient_id": patientId,
+                "exercise_template_id": exerciseTemplateId,
+                "current_load": String(currentLoad)
+            ])
             throw error
         }
     }
@@ -204,7 +212,7 @@ class ProgressionService: ObservableObject {
 
             // Trigger deload if ≥2 different trigger types
             if uniqueTriggerTypes.count >= 2 {
-                logger.log("⚠️ Deload threshold met (\(uniqueTriggerTypes.count) trigger types)", level: .diagnostic)
+                logger.log("[ProgressionService] Deload threshold met (\(uniqueTriggerTypes.count) trigger types)", level: .warning)
                 try await scheduleDeload(
                     patientId: patientId,
                     triggers: triggers,
@@ -212,10 +220,12 @@ class ProgressionService: ObservableObject {
                     windowEnd: Date()
                 )
             } else {
-                logger.log("✓ Deload threshold not met", level: .diagnostic)
+                logger.log("[ProgressionService] Deload threshold not met", level: .diagnostic)
             }
         } catch {
-            logger.log("❌ DELOAD EVALUATION ERROR: \(error.localizedDescription)", level: .error)
+            errorLogger.logError(error, context: "ProgressionService.evaluateDeloadTriggers", metadata: [
+                "patient_id": patientId
+            ])
             throw error
         }
     }
@@ -322,9 +332,12 @@ class ProgressionService: ObservableObject {
                     .execute()
             }
 
-            logger.log("✅ All triggers marked as resolved (\(triggers.count) triggers)", level: .success)
+            logger.log("[ProgressionService] All triggers marked as resolved (\(triggers.count) triggers)", level: .success)
         } catch {
-            logger.log("❌ DELOAD SCHEDULING ERROR: \(error.localizedDescription)", level: .error)
+            errorLogger.logError(error, context: "ProgressionService.scheduleDeload", metadata: [
+                "patient_id": patientId,
+                "trigger_count": String(triggers.count)
+            ])
             throw error
         }
     }
@@ -345,20 +358,40 @@ class ProgressionService: ObservableObject {
         patientId: String,
         exerciseTemplateId: String
     ) async throws -> LoadProgressionHistory? {
-        let response = try await supabase.client
-            .from("load_progression_history")
-            .select()
-            .eq("patient_id", value: patientId)
-            .eq("exercise_template_id", value: exerciseTemplateId)
-            .order("logged_at", ascending: false)
-            .limit(1)
-            .execute()
+        logger.log("[ProgressionService] Fetching last progression for exercise: \(exerciseTemplateId)", level: .diagnostic)
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let records = try decoder.decode([LoadProgressionHistory].self, from: response.data)
+        guard !patientId.isEmpty, !exerciseTemplateId.isEmpty else {
+            logger.log("[ProgressionService] Empty patient or exercise ID provided", level: .warning)
+            return nil
+        }
 
-        return records.first
+        do {
+            let response = try await supabase.client
+                .from("load_progression_history")
+                .select()
+                .eq("patient_id", value: patientId)
+                .eq("exercise_template_id", value: exerciseTemplateId)
+                .order("logged_at", ascending: false)
+                .limit(1)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let records = try decoder.decode([LoadProgressionHistory].self, from: response.data)
+
+            if let record = records.first {
+                logger.log("[ProgressionService] Found last progression: \(record.currentLoad) lbs", level: .success)
+            } else {
+                logger.log("[ProgressionService] No progression history found", level: .info)
+            }
+            return records.first
+        } catch {
+            errorLogger.logError(error, context: "ProgressionService.fetchLastProgression", metadata: [
+                "patient_id": patientId,
+                "exercise_template_id": exerciseTemplateId
+            ])
+            throw error
+        }
     }
 
     /// Fetch progression history for an exercise over time.
@@ -377,18 +410,37 @@ class ProgressionService: ObservableObject {
         exerciseTemplateId: String,
         limit: Int = 20
     ) async throws -> [LoadProgressionHistory] {
-        let response = try await supabase.client
-            .from("load_progression_history")
-            .select()
-            .eq("patient_id", value: patientId)
-            .eq("exercise_template_id", value: exerciseTemplateId)
-            .order("logged_at", ascending: false)
-            .limit(limit)
-            .execute()
+        logger.log("[ProgressionService] Fetching progression history for exercise: \(exerciseTemplateId)", level: .diagnostic)
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode([LoadProgressionHistory].self, from: response.data)
+        guard !patientId.isEmpty, !exerciseTemplateId.isEmpty else {
+            logger.log("[ProgressionService] Empty patient or exercise ID provided", level: .warning)
+            return []
+        }
+
+        do {
+            let response = try await supabase.client
+                .from("load_progression_history")
+                .select()
+                .eq("patient_id", value: patientId)
+                .eq("exercise_template_id", value: exerciseTemplateId)
+                .order("logged_at", ascending: false)
+                .limit(limit)
+                .execute()
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let records = try decoder.decode([LoadProgressionHistory].self, from: response.data)
+
+            logger.log("[ProgressionService] Fetched \(records.count) progression records", level: .success)
+            return records
+        } catch {
+            errorLogger.logError(error, context: "ProgressionService.fetchProgressionHistory", metadata: [
+                "patient_id": patientId,
+                "exercise_template_id": exerciseTemplateId,
+                "limit": String(limit)
+            ])
+            throw error
+        }
     }
 }
 

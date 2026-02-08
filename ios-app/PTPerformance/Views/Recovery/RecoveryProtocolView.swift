@@ -740,6 +740,7 @@ struct AlternativeWorkoutCard: View {
 
 struct AlternativeWorkoutDetailSheet: View {
     let workout: AlternativeWorkout
+    var onStartWorkout: ((AlternativeWorkout) -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -801,8 +802,15 @@ struct AlternativeWorkoutDetailSheet: View {
 
                     // Start button
                     Button {
-                        // TODO: Integrate with workout execution
-                        dismiss()
+                        if let onStart = onStartWorkout {
+                            // Call the handler and dismiss - parent will handle navigation
+                            onStart(workout)
+                            dismiss()
+                        } else {
+                            // No handler provided - just dismiss with info message
+                            DebugLogger.shared.log("Alternative workout selected: \(workout.name) - navigate from Today tab to start", level: .info)
+                            dismiss()
+                        }
                     } label: {
                         Label("Start Workout", systemImage: "play.fill")
                             .font(.headline)

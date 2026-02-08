@@ -54,6 +54,9 @@ class StreakTrackingService: ObservableObject {
     // MARK: - Properties
 
     nonisolated(unsafe) private let client: PTSupabaseClient
+    private let logger = DebugLogger.shared
+    private let errorLogger = ErrorLogger.shared
+
     @Published var isLoading: Bool = false
     @Published var error: Error?
     @Published var currentStreaks: [StreakRecord] = []
@@ -61,16 +64,21 @@ class StreakTrackingService: ObservableObject {
 
     // MARK: - Initialization
 
+    /// Initialize with a Supabase client.
+    /// - Parameter client: The Supabase client to use (defaults to shared instance)
     nonisolated init(client: PTSupabaseClient = .shared) {
         self.client = client
     }
 
     // MARK: - Fetch Current Streaks
 
-    /// Fetch all current streak records for a patient
+    /// Fetch all current streak records for a patient.
+    ///
     /// - Parameter patientId: Patient UUID
     /// - Returns: Array of StreakRecord for each streak type
+    /// - Throws: Database errors if the query fails
     func fetchCurrentStreaks(for patientId: UUID) async throws -> [StreakRecord] {
+        logger.log("[StreakTrackingService] Fetching streaks for patient: \(patientId)", level: .diagnostic)
         isLoading = true
         defer { isLoading = false }
 
@@ -86,25 +94,28 @@ class StreakTrackingService: ObservableObject {
 
             // Update published property
             self.currentStreaks = records
-
-            #if DEBUG
-            print("[StreakService] Fetched \(records.count) streak records for patient: \(patientId)")
-            #endif
+            logger.log("[StreakTrackingService] Fetched \(records.count) streak records", level: .success)
 
             return records
         } catch {
-            DebugLogger.shared.error("StreakTrackingService", "Error fetching streaks: \(error.localizedDescription)")
+            errorLogger.logError(error, context: "StreakTrackingService.fetchCurrentStreaks", metadata: [
+                "patient_id": patientId.uuidString
+            ])
             self.error = error
             throw error
         }
     }
 
-    /// Fetch streak for a specific type
+    /// Fetch streak for a specific type.
+    ///
     /// - Parameters:
     ///   - patientId: Patient UUID
     ///   - type: Type of streak to fetch
     /// - Returns: StreakRecord or nil if not found
+    /// - Throws: Database errors if the query fails
     func fetchStreak(for patientId: UUID, type: StreakType) async throws -> StreakRecord? {
+        logger.log("[StreakTrackingService] Fetching \(type.rawValue) streak for patient: \(patientId)", level: .diagnostic)
+
         do {
             let response = try await client.client
                 .from("streak_records")
@@ -114,12 +125,20 @@ class StreakTrackingService: ObservableObject {
                 .limit(1)
                 .execute()
 
-            guard !response.data.isEmpty else { return nil }
+            guard !response.data.isEmpty else {
+                logger.log("[StreakTrackingService] No \(type.rawValue) streak found", level: .info)
+                return nil
+            }
 
             let decoder = createStreakDecoder()
             let records = try decoder.decode([StreakRecord].self, from: response.data)
+            logger.log("[StreakTrackingService] Fetched \(type.rawValue) streak", level: .success)
             return records.first
         } catch {
+            errorLogger.logError(error, context: "StreakTrackingService.fetchStreak", metadata: [
+                "patient_id": patientId.uuidString,
+                "streak_type": type.rawValue
+            ])
             self.error = error
             throw error
         }
@@ -174,9 +193,7 @@ class StreakTrackingService: ObservableObject {
             let decoder = createStreakDecoder()
             let history = try decoder.decode(StreakHistory.self, from: response.data)
 
-            #if DEBUG
-            print("[StreakService] Recorded activity for \(dateString): workout=\(workoutCompleted), arm_care=\(armCareCompleted)")
-            #endif
+            logger.log("[StreakTrackingService] Recorded activity for \(dateString): workout=\(workoutCompleted), arm_care=\(armCareCompleted)", level: .success)
 
             // Refresh streaks after recording activity
             _ = try? await fetchCurrentStreaks(for: patientId)
@@ -188,7 +205,11 @@ class StreakTrackingService: ObservableObject {
 
             return history
         } catch {
-            DebugLogger.shared.error("StreakTrackingService", "Error recording activity: \(error.localizedDescription)")
+            errorLogger.logError(error, context: "StreakTrackingService.recordActivity", metadata: [
+                "patient_id": patientId.uuidString,
+                "workout_completed": String(workoutCompleted),
+                "arm_care_completed": String(armCareCompleted)
+            ])
             self.error = error
             throw error
         }
@@ -231,14 +252,14 @@ class StreakTrackingService: ObservableObject {
 
             // Update published property
             self.streakHistory = history
-
-            #if DEBUG
-            print("[StreakService] Fetched \(history.count) history entries for last \(days) days")
-            #endif
+            logger.log("[StreakTrackingService] Fetched \(history.count) history entries for last \(days) days", level: .success)
 
             return history
         } catch {
-            DebugLogger.shared.error("StreakTrackingService", "Error fetching history: \(error.localizedDescription)")
+            errorLogger.logError(error, context: "StreakTrackingService.getStreakHistory", metadata: [
+                "patient_id": patientId.uuidString,
+                "days": String(days)
+            ])
             self.error = error
             throw error
         }
@@ -246,10 +267,14 @@ class StreakTrackingService: ObservableObject {
 
     // MARK: - Get Streak Statistics
 
-    /// Fetch comprehensive streak statistics
+    /// Fetch comprehensive streak statistics.
+    ///
     /// - Parameter patientId: Patient UUID
     /// - Returns: Array of StreakStatistics for each streak type
+    /// - Throws: Database errors if the query fails
     func getStreakStatistics(for patientId: UUID) async throws -> [StreakStatistics] {
+        logger.log("[StreakTrackingService] Fetching streak statistics for patient: \(patientId)", level: .diagnostic)
+
         do {
             let params = GetStreakStatisticsParams(pPatientId: patientId.uuidString)
             let response = try await client.client
@@ -257,9 +282,13 @@ class StreakTrackingService: ObservableObject {
                 .execute()
 
             let decoder = createStreakDecoder()
-            return try decoder.decode([StreakStatistics].self, from: response.data)
+            let stats = try decoder.decode([StreakStatistics].self, from: response.data)
+            logger.log("[StreakTrackingService] Fetched \(stats.count) streak statistics", level: .success)
+            return stats
         } catch {
-            DebugLogger.shared.error("StreakTrackingService", "Error fetching statistics: \(error.localizedDescription)")
+            errorLogger.logError(error, context: "StreakTrackingService.getStreakStatistics", metadata: [
+                "patient_id": patientId.uuidString
+            ])
             self.error = error
             throw error
         }

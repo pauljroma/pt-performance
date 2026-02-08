@@ -94,7 +94,7 @@ final class SecurityMonitor: ObservableObject {
     func unlockAccount(email: String) {
         accountLockouts.removeValue(forKey: email)
         failedAttempts.removeValue(forKey: email)
-        print("[SecurityMonitor] Account unlocked: \(email)")
+        DebugLogger.shared.info("SecurityMonitor", "Account unlocked: \(email)")
     }
 
     // MARK: - Private Methods
@@ -105,8 +105,8 @@ final class SecurityMonitor: ObservableObject {
 
         let remainingMinutes = Int(lockoutDuration / 60)
 
-        print("[SecurityMonitor] ⚠️ Account locked: \(email) - Reason: \(reason)")
-        print("[SecurityMonitor] Lockout expires in \(remainingMinutes) minutes")
+        DebugLogger.shared.warning("SecurityMonitor", "Account locked: \(email) - Reason: \(reason)")
+        DebugLogger.shared.warning("SecurityMonitor", "Lockout expires in \(remainingMinutes) minutes")
 
         // Send alert to Sentry
         await sendSecurityAlert(
@@ -164,9 +164,9 @@ final class SecurityMonitor: ObservableObject {
     }
 
     private func sendSecurityAlert(email: String, event: String, details: [String: Any]) async {
-        print("[SecurityMonitor] SECURITY ALERT: \(event)")
-        print("[SecurityMonitor] Email: \(email)")
-        print("[SecurityMonitor] Details: \(details)")
+        DebugLogger.shared.warning("SecurityMonitor", "SECURITY ALERT: \(event)")
+        DebugLogger.shared.warning("SecurityMonitor", "Email: \(email)")
+        DebugLogger.shared.warning("SecurityMonitor", "Details: \(details)")
 
         #if canImport(Sentry)
         SentrySDK.capture(message: "Security Alert: \(event)") { scope in

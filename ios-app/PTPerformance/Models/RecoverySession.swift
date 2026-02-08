@@ -44,24 +44,33 @@ struct RecoverySession: Identifiable, Codable, Hashable {
         // They are only used locally in the app
     }
 
-    /// Custom decoder to handle fields not in database schema
+    /// Custom decoder to handle fields not in database schema with defensive patterns
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(UUID.self, forKey: .id)
-        patientId = try container.decode(UUID.self, forKey: .patientId)
-        protocolType = try container.decode(RecoveryProtocolType.self, forKey: .protocolType)
-        loggedAt = try container.decode(Date.self, forKey: .loggedAt)
-        durationMinutes = try container.decode(Int.self, forKey: .durationMinutes)
-        temperature = try container.decodeIfPresent(Double.self, forKey: .temperature)
-        notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        // Required UUIDs with fallback
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+
+        // Enum with fallback to default type
+        protocolType = container.safeEnum(RecoveryProtocolType.self, forKey: .protocolType, default: .saunaTraditional)
+
+        // Date fields with fallback
+        loggedAt = container.safeDate(forKey: .loggedAt)
+
+        // Required Int with fallback
+        durationMinutes = container.safeInt(forKey: .durationMinutes, default: 0)
+
+        // Optional fields with safe decoding
+        temperature = container.safeOptionalDouble(forKey: .temperature)
+        notes = container.safeOptionalString(forKey: .notes)
+        createdAt = container.safeDate(forKey: .createdAt)
 
         // These fields are NOT in database - set to nil when decoding from Supabase
-        heartRateAvg = try container.decodeIfPresent(Int.self, forKey: .heartRateAvg)
-        heartRateMax = try container.decodeIfPresent(Int.self, forKey: .heartRateMax)
-        perceivedEffort = try container.decodeIfPresent(Int.self, forKey: .perceivedEffort)
-        rating = try container.decodeIfPresent(Int.self, forKey: .rating)
+        heartRateAvg = container.safeOptionalInt(forKey: .heartRateAvg)
+        heartRateMax = container.safeOptionalInt(forKey: .heartRateMax)
+        perceivedEffort = container.safeOptionalInt(forKey: .perceivedEffort)
+        rating = container.safeOptionalInt(forKey: .rating)
     }
 
     /// Duration in seconds (for backward compatibility with UI code)
@@ -166,6 +175,30 @@ struct RecoveryRecommendation: Identifiable, Codable {
         case protocolType = "protocol_type"
         case reason, priority
         case suggestedDuration = "suggested_duration"
+    }
+
+    init(
+        id: UUID = UUID(),
+        protocolType: RecoveryProtocolType,
+        reason: String,
+        priority: RecoveryPriority,
+        suggestedDuration: Int
+    ) {
+        self.id = id
+        self.protocolType = protocolType
+        self.reason = reason
+        self.priority = priority
+        self.suggestedDuration = suggestedDuration
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        protocolType = container.safeEnum(RecoveryProtocolType.self, forKey: .protocolType, default: .saunaTraditional)
+        reason = container.safeString(forKey: .reason, default: "Recovery recommended")
+        priority = container.safeEnum(RecoveryPriority.self, forKey: .priority, default: .medium)
+        suggestedDuration = container.safeInt(forKey: .suggestedDuration, default: 15)
     }
 }
 

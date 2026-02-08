@@ -752,7 +752,7 @@ struct ReadinessCheckInView: View {
             wasAutoFilled = true
         } catch {
             // Error is already handled by service
-            print("Failed to auto-fill from HealthKit: \(error.localizedDescription)")
+            DebugLogger.shared.warning("ReadinessCheckIn", "Failed to auto-fill from HealthKit: \(error.localizedDescription)")
         }
     }
 

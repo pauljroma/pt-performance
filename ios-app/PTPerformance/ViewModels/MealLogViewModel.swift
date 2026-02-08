@@ -85,6 +85,8 @@ class MealLogViewModel: ObservableObject {
         guard let patientId = patientId else { return }
 
         isLoading = true
+        error = nil
+        defer { isLoading = false }
 
         do {
             async let recentTask = foodService.fetchRecentlyLoggedFoods(patientId: patientId)
@@ -94,11 +96,9 @@ class MealLogViewModel: ObservableObject {
 
             recentFoods = recent
             popularFoods = popular
-
-            isLoading = false
         } catch {
+            ErrorLogger.shared.logError(error, context: "MealLogViewModel.loadInitialData")
             self.error = "Unable to load food options. Pull down to refresh."
-            isLoading = false
         }
     }
 
@@ -136,13 +136,14 @@ class MealLogViewModel: ObservableObject {
 
     func searchByCategory(_ category: FoodCategory) async {
         isSearching = true
+        error = nil
+        defer { isSearching = false }
 
         do {
             searchResults = try await foodService.searchByCategory(category)
-            isSearching = false
         } catch {
+            ErrorLogger.shared.logError(error, context: "MealLogViewModel.searchByCategory")
             self.error = "Unable to search foods. Please try again."
-            isSearching = false
         }
     }
 
@@ -195,6 +196,7 @@ class MealLogViewModel: ObservableObject {
             addFood(newFood)
             return true
         } catch {
+            ErrorLogger.shared.logError(error, context: "MealLogViewModel.addCustomFood")
             self.error = "Unable to add custom food. Please try again."
             self.showError = true
             return false
@@ -211,6 +213,8 @@ class MealLogViewModel: ObservableObject {
         }
 
         isSaving = true
+        error = nil
+        defer { isSaving = false }
 
         do {
             let dto = CreateNutritionLogDTO(
@@ -228,13 +232,11 @@ class MealLogViewModel: ObservableObject {
             )
 
             _ = try await nutritionService.createNutritionLog(dto)
-
-            isSaving = false
             return true
         } catch {
+            ErrorLogger.shared.logError(error, context: "MealLogViewModel.saveMealLog")
             self.error = "Unable to save your meal. Please try again."
             self.showError = true
-            isSaving = false
             return false
         }
     }
