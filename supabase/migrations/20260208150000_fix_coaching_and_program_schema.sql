@@ -409,7 +409,6 @@ SELECT
     pr.id AS program_pk,
     pr.name AS program_name,
     pr.description AS program_description,
-    pr.therapist_id AS program_therapist_id,
     -- Additional program_library details
     pl.title AS library_title,
     pl.category AS library_category,

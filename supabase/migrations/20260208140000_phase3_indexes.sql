@@ -82,35 +82,13 @@ ON public.timeline_conflicts(resolution_status, created_at DESC)
 WHERE resolution_status = 'pending';
 
 -- ============================================================================
--- WEEKLY REPORTS TABLE AND INDEXES
+-- WEEKLY REPORTS INDEXES
 -- ============================================================================
+-- Note: weekly_reports table is created by 20260208130002_weekly_reports.sql
 
--- Create weekly_reports table if not exists
-CREATE TABLE IF NOT EXISTS public.weekly_reports (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    therapist_id UUID NOT NULL REFERENCES auth.users(id),
-    title TEXT NOT NULL,
-    date_range_start DATE NOT NULL,
-    date_range_end DATE NOT NULL,
-    patient_ids UUID[] NOT NULL,
-    patient_count INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'generating' CHECK (status IN ('generating', 'ready', 'failed')),
-    highlights TEXT,
-    pdf_url TEXT,
-    html_content TEXT,
-    metrics JSONB,
-    generated_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Index for fetching reports by therapist
-CREATE INDEX IF NOT EXISTS idx_weekly_reports_therapist
+-- Index for fetching reports by therapist (if not already created)
+CREATE INDEX IF NOT EXISTS idx_weekly_reports_therapist_created
 ON public.weekly_reports(therapist_id, created_at DESC);
-
--- Index for ready reports
-CREATE INDEX IF NOT EXISTS idx_weekly_reports_ready
-ON public.weekly_reports(therapist_id, status, created_at DESC)
-WHERE status = 'ready';
 
 -- ============================================================================
 -- HISTORICAL TRENDS MATERIALIZED VIEW
@@ -120,13 +98,13 @@ WHERE status = 'ready';
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_readiness_trends AS
 SELECT
     patient_id,
-    DATE(check_in_date) as trend_date,
-    AVG(overall_score) as avg_readiness,
-    MIN(overall_score) as min_readiness,
-    MAX(overall_score) as max_readiness,
+    DATE(date) as trend_date,
+    AVG(readiness_score) as avg_readiness,
+    MIN(readiness_score) as min_readiness,
+    MAX(readiness_score) as max_readiness,
     COUNT(*) as data_points
 FROM public.daily_readiness
-GROUP BY patient_id, DATE(check_in_date);
+GROUP BY patient_id, DATE(date);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_readiness_trends_pk
 ON public.mv_readiness_trends(patient_id, trend_date);
@@ -135,13 +113,13 @@ ON public.mv_readiness_trends(patient_id, trend_date);
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_pain_trends AS
 SELECT
     el.patient_id,
-    DATE(el.created_at) as trend_date,
+    DATE(el.logged_at) as trend_date,
     AVG(el.pain_score) as avg_pain,
     MAX(el.pain_score) as max_pain,
     COUNT(*) as data_points
 FROM public.exercise_logs el
 WHERE el.pain_score IS NOT NULL
-GROUP BY el.patient_id, DATE(el.created_at);
+GROUP BY el.patient_id, DATE(el.logged_at);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_pain_trends_pk
 ON public.mv_pain_trends(patient_id, trend_date);
@@ -150,14 +128,13 @@ ON public.mv_pain_trends(patient_id, trend_date);
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_adherence_trends AS
 SELECT
     s.patient_id,
-    DATE(s.completed_at) as trend_date,
+    s.scheduled_date as trend_date,
     COUNT(CASE WHEN s.status = 'completed' THEN 1 END)::DECIMAL /
         NULLIF(COUNT(*), 0) * 100 as adherence_rate,
     COUNT(*) as total_sessions,
     COUNT(CASE WHEN s.status = 'completed' THEN 1 END) as completed_sessions
-FROM public.sessions s
-WHERE s.completed_at IS NOT NULL
-GROUP BY s.patient_id, DATE(s.completed_at);
+FROM public.scheduled_sessions s
+GROUP BY s.patient_id, s.scheduled_date;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_adherence_trends_pk
 ON public.mv_adherence_trends(patient_id, trend_date);
@@ -166,13 +143,11 @@ ON public.mv_adherence_trends(patient_id, trend_date);
 CREATE MATERIALIZED VIEW IF NOT EXISTS public.mv_volume_trends AS
 SELECT
     el.patient_id,
-    DATE(el.created_at) as trend_date,
-    SUM(el.weight * el.reps) as total_volume,
-    SUM(el.reps) as total_reps,
-    COUNT(DISTINCT el.exercise_id) as exercises_performed
+    DATE(el.logged_at) as trend_date,
+    COUNT(*) as total_exercises,
+    AVG(el.rpe) as avg_rpe
 FROM public.exercise_logs el
-WHERE el.weight IS NOT NULL AND el.reps IS NOT NULL
-GROUP BY el.patient_id, DATE(el.created_at);
+GROUP BY el.patient_id, DATE(el.logged_at);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_volume_trends_pk
 ON public.mv_volume_trends(patient_id, trend_date);
@@ -267,22 +242,19 @@ USING (therapist_id = auth.uid());
 -- ADDITIONAL PERFORMANCE INDEXES
 -- ============================================================================
 
--- Index for patient timeline queries
-CREATE INDEX IF NOT EXISTS idx_timeline_events_patient_date
-ON public.timeline_events(patient_id, timestamp DESC)
-WHERE patient_id IS NOT NULL;
+-- Note: timeline_events table does not exist yet, skipping index
 
 -- Index for session completion tracking
-CREATE INDEX IF NOT EXISTS idx_sessions_patient_status
-ON public.sessions(patient_id, status, completed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scheduled_sessions_patient_status
+ON public.scheduled_sessions(patient_id, status, completed_at DESC);
 
 -- Index for exercise log queries (trend calculations)
 CREATE INDEX IF NOT EXISTS idx_exercise_logs_patient_date
-ON public.exercise_logs(patient_id, created_at DESC);
+ON public.exercise_logs(patient_id, logged_at DESC);
 
 -- Index for daily readiness queries
 CREATE INDEX IF NOT EXISTS idx_daily_readiness_patient_date
-ON public.daily_readiness(patient_id, check_in_date DESC);
+ON public.daily_readiness(patient_id, date DESC);
 
 -- ============================================================================
 -- UPDATED_AT TRIGGER

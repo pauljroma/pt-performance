@@ -172,7 +172,7 @@ CREATE POLICY "Protocol templates are insertable by staff"
         EXISTS (
             SELECT 1 FROM user_roles
             WHERE user_id = auth.uid()
-            AND role IN ('admin', 'pt', 'coach')
+            AND role_name IN ('admin', 'therapist')
         )
     );
 
@@ -184,7 +184,7 @@ CREATE POLICY "Protocol templates are updatable by staff"
         EXISTS (
             SELECT 1 FROM user_roles
             WHERE user_id = auth.uid()
-            AND role IN ('admin', 'pt', 'coach')
+            AND role_name IN ('admin', 'therapist')
         )
     );
 
@@ -201,7 +201,7 @@ CREATE POLICY "Athlete plans are readable by relevant users"
         OR EXISTS (
             SELECT 1 FROM user_roles
             WHERE user_id = auth.uid()
-            AND role IN ('admin', 'pt', 'coach')
+            AND role_name IN ('admin', 'therapist')
         )
     );
 
@@ -213,7 +213,7 @@ CREATE POLICY "Athlete plans are insertable by staff"
         EXISTS (
             SELECT 1 FROM user_roles
             WHERE user_id = auth.uid()
-            AND role IN ('admin', 'pt', 'coach')
+            AND role_name IN ('admin', 'therapist')
         )
     );
 
@@ -226,7 +226,7 @@ CREATE POLICY "Athlete plans are updatable by staff"
         OR EXISTS (
             SELECT 1 FROM user_roles
             WHERE user_id = auth.uid()
-            AND role IN ('admin', 'pt', 'coach')
+            AND role_name IN ('admin', 'therapist')
         )
     );
 
@@ -243,7 +243,7 @@ CREATE POLICY "Assigned tasks follow plan access"
                OR EXISTS (
                    SELECT 1 FROM user_roles
                    WHERE user_id = auth.uid()
-                   AND role IN ('admin', 'pt', 'coach')
+                   AND role_name IN ('admin', 'therapist')
                )
         )
     );

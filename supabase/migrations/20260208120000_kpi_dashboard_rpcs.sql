@@ -47,17 +47,17 @@ BEGIN
     ) INTO pt_metrics
     FROM (
         SELECT
-            (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist') AS total_pts,
+            (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist') AS total_pts,
             COUNT(DISTINCT ke.user_id) FILTER (
                 WHERE ke.event_type IN ('brief_opened', 'plan_assigned')
-                AND EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = ke.user_id AND ur.role = 'therapist')
+                AND EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = ke.user_id AND ur.role_name = 'therapist')
             ) AS active_pts,
             CASE
-                WHEN (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist') > 0
+                WHEN (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist') > 0
                 THEN COUNT(DISTINCT ke.user_id) FILTER (
                     WHERE ke.event_type IN ('brief_opened', 'plan_assigned')
-                    AND EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = ke.user_id AND ur.role = 'therapist')
-                )::FLOAT / (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist')
+                    AND EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = ke.user_id AND ur.role_name = 'therapist')
+                )::FLOAT / (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist')
                 ELSE 0
             END AS wau_pct,
             COALESCE(AVG(ke.duration_ms) FILTER (WHERE ke.event_type = 'brief_opened' AND ke.duration_ms IS NOT NULL) / 1000.0, 0) AS avg_prep,
@@ -181,7 +181,7 @@ BEGIN
     -- Get total PTs count
     SELECT COUNT(DISTINCT user_id) INTO total_pts
     FROM user_roles
-    WHERE role = 'therapist';
+    WHERE role_name = 'therapist';
 
     -- Return daily active PT percentage
     RETURN QUERY
@@ -193,7 +193,7 @@ BEGIN
             ELSE 0
         END AS value
     FROM kpi_events ke
-    JOIN user_roles ur ON ur.user_id = ke.user_id AND ur.role = 'therapist'
+    JOIN user_roles ur ON ur.user_id = ke.user_id AND ur.role_name = 'therapist'
     WHERE ke.event_type IN ('brief_opened', 'plan_assigned')
     AND ke.created_at >= NOW() - (period_days || ' days')::INTERVAL
     GROUP BY ke.created_at::DATE
@@ -350,16 +350,10 @@ GRANT EXECUTE ON FUNCTION refresh_kpi_aggregates() TO authenticated;
 -- INDEXES FOR OPTIMIZED RPC QUERIES
 -- =============================================================================
 
--- Index for date-based grouping in trend queries
-CREATE INDEX IF NOT EXISTS idx_kpi_events_created_date
-ON kpi_events (DATE(created_at), event_type);
+-- Note: Date-based indexes removed as timestamptz::date is not immutable
+-- The existing idx_kpi_events_type_date provides sufficient performance
 
--- Index for AI claim trend queries
-CREATE INDEX IF NOT EXISTS idx_kpi_events_ai_claims_date
-ON kpi_events (DATE(created_at), duration_ms)
-WHERE event_type = 'ai_claim_generated';
-
--- Index for safety incident counts
+-- Index for safety incident counts (columns only, no functions)
 CREATE INDEX IF NOT EXISTS idx_safety_incidents_guardrail
 ON safety_incidents (severity, status)
 WHERE severity IN ('high', 'critical') AND status IN ('open', 'investigating');

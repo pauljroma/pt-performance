@@ -38,7 +38,7 @@ SELECT
     ) AS avg_pain_level,
 
     -- Recovery Score (from daily_readiness if available)
-    (SELECT dr.overall_score
+    (SELECT dr.readiness_score
      FROM daily_readiness dr
      WHERE dr.patient_id = p.id
        AND dr.date = d.date
@@ -53,22 +53,22 @@ SELECT
      LIMIT 1
     ) AS sleep_quality,
 
-    -- Total Training Volume (sets * reps * weight)
+    -- Training Volume (count of exercise logs as proxy)
     COALESCE(
-        (SELECT SUM(el.weight * el.reps)
+        (SELECT COUNT(*)
          FROM exercise_logs el
          WHERE el.patient_id = p.id
            AND DATE(el.logged_at) = d.date),
         0
     ) AS workload_volume,
 
-    -- Best Estimated 1RM for the day (for strength tracking)
-    (SELECT MAX(el.rm_estimate)
+    -- Average RPE for the day (for intensity tracking)
+    (SELECT AVG(el.rpe)
      FROM exercise_logs el
      WHERE el.patient_id = p.id
        AND DATE(el.logged_at) = d.date
-       AND el.rm_estimate IS NOT NULL
-    ) AS max_strength,
+       AND el.rpe IS NOT NULL
+    ) AS avg_rpe,
 
     -- Session count for the day
     (SELECT COUNT(*)
@@ -153,7 +153,7 @@ BEGIN
                 WHEN 'recovery' THEN recovery_score
                 WHEN 'sleep' THEN sleep_quality
                 WHEN 'volume' THEN workload_volume
-                WHEN 'strength' THEN max_strength
+                WHEN 'intensity' THEN avg_rpe
                 ELSE adherence_score
             END AS value
         FROM mv_daily_patient_metrics
@@ -215,7 +215,7 @@ BEGIN
             WHEN 'recovery' THEN recovery_score
             WHEN 'sleep' THEN sleep_quality
             WHEN 'volume' THEN workload_volume
-            WHEN 'strength' THEN max_strength
+            WHEN 'intensity' THEN avg_rpe
             ELSE adherence_score
         END::DOUBLE PRECISION AS metric_value
     FROM mv_daily_patient_metrics
@@ -261,7 +261,7 @@ BEGIN
                 WHEN 'recovery' THEN recovery_score
                 WHEN 'sleep' THEN sleep_quality
                 WHEN 'volume' THEN workload_volume
-                WHEN 'strength' THEN max_strength
+                WHEN 'intensity' THEN avg_rpe
                 ELSE adherence_score
             END AS value
         FROM mv_daily_patient_metrics
@@ -317,7 +317,7 @@ BEGIN
                 WHEN 'recovery' THEN recovery_score
                 WHEN 'sleep' THEN sleep_quality
                 WHEN 'volume' THEN workload_volume
-                WHEN 'strength' THEN max_strength
+                WHEN 'intensity' THEN avg_rpe
                 ELSE adherence_score
             END AS value
         FROM mv_daily_patient_metrics
@@ -471,6 +471,6 @@ BEGIN
     RAISE NOTICE '============================================';
     RAISE NOTICE '';
     RAISE NOTICE 'To enable automatic refresh, run:';
-    RAISE NOTICE 'SELECT cron.schedule(''refresh_daily_metrics'', ''0 3 * * *'', $$REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_patient_metrics$$);';
+    RAISE NOTICE 'SELECT cron.schedule(''refresh_daily_metrics'', ''0 3 * * *'', ''REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_patient_metrics'');';
     RAISE NOTICE '';
 END $$;

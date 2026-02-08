@@ -256,10 +256,7 @@ CREATE OR REPLACE VIEW vw_risk_escalations_with_patient AS
 SELECT
     re.*,
     p.first_name AS patient_first_name,
-    p.last_name AS patient_last_name,
-    p.sport AS patient_sport,
-    p.injury_type AS patient_injury_type,
-    p.profile_image_url AS patient_image_url
+    p.last_name AS patient_last_name
 FROM risk_escalations re
 JOIN patients p ON re.patient_id = p.id;
 

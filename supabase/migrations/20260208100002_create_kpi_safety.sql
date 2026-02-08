@@ -125,7 +125,7 @@ CREATE POLICY "therapist_view_safety_incidents" ON safety_incidents
         EXISTS (
             SELECT 1 FROM user_roles ur
             WHERE ur.user_id = auth.uid()
-            AND ur.role = 'admin'
+            AND ur.role_name = 'admin'
         )
     );
 
@@ -141,7 +141,7 @@ CREATE POLICY "therapist_insert_safety_incidents" ON safety_incidents
         EXISTS (
             SELECT 1 FROM user_roles ur
             WHERE ur.user_id = auth.uid()
-            AND ur.role = 'admin'
+            AND ur.role_name = 'admin'
         )
     );
 
@@ -157,7 +157,7 @@ CREATE POLICY "therapist_update_safety_incidents" ON safety_incidents
         EXISTS (
             SELECT 1 FROM user_roles ur
             WHERE ur.user_id = auth.uid()
-            AND ur.role = 'admin'
+            AND ur.role_name = 'admin'
         )
     );
 
@@ -172,7 +172,7 @@ CREATE POLICY "admin_view_kpi_events" ON kpi_events
         EXISTS (
             SELECT 1 FROM user_roles ur
             WHERE ur.user_id = auth.uid()
-            AND ur.role = 'admin'
+            AND ur.role_name = 'admin'
         )
     );
 
@@ -195,14 +195,14 @@ CREATE OR REPLACE VIEW vw_pt_wau AS
 SELECT
     date_trunc('week', kpi.created_at) AS week_start,
     COUNT(DISTINCT kpi.user_id) AS active_pts,
-    (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist') AS total_pts,
+    (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist') AS total_pts,
     CASE
-        WHEN (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist') > 0
-        THEN COUNT(DISTINCT kpi.user_id)::FLOAT / (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role = 'therapist')
+        WHEN (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist') > 0
+        THEN COUNT(DISTINCT kpi.user_id)::FLOAT / (SELECT COUNT(DISTINCT user_id) FROM user_roles WHERE role_name = 'therapist')
         ELSE 0
     END AS wau_percentage
 FROM kpi_events kpi
-JOIN user_roles ur ON ur.user_id = kpi.user_id AND ur.role = 'therapist'
+JOIN user_roles ur ON ur.user_id = kpi.user_id AND ur.role_name = 'therapist'
 WHERE kpi.event_type IN ('brief_opened', 'plan_assigned')
 AND kpi.created_at >= NOW() - INTERVAL '7 days'
 GROUP BY week_start;
