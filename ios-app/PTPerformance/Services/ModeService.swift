@@ -44,11 +44,11 @@ class ModeService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Query patient mode
+            // Query patient mode using user_id (not id)
             let response = try await supabase.client
                 .from("patients")
                 .select("id, mode, mode_changed_at, mode_changed_by")
-                .eq("id", value: userId)
+                .eq("user_id", value: userId)
                 .single()
                 .execute()
 

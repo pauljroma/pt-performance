@@ -42,6 +42,44 @@ class QuickSetupViewModel: ObservableObject {
     private let readinessService = ReadinessService()
     private let streakService = StreakTrackingService.shared
 
+    // Cached patient ID (fetched from user_id)
+    private var cachedPatientId: UUID?
+
+    // MARK: - Patient ID Helper
+
+    /// Response struct for patient ID query
+    private struct PatientIdResponse: Decodable {
+        let id: String
+    }
+
+    /// Fetch the patient's database ID from the user's auth ID
+    private func getPatientId() async throws -> UUID {
+        if let cached = cachedPatientId {
+            return cached
+        }
+
+        guard let userId = supabase.userId else {
+            throw NSError(domain: "QuickSetup", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not logged in"])
+        }
+
+        let response = try await supabase.client
+            .from("patients")
+            .select("id")
+            .eq("user_id", value: userId)
+            .single()
+            .execute()
+
+        let decoder = JSONDecoder()
+        let patient = try decoder.decode(PatientIdResponse.self, from: response.data)
+
+        guard let patientId = UUID(uuidString: patient.id) else {
+            throw NSError(domain: "QuickSetup", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid patient ID"])
+        }
+
+        cachedPatientId = patientId
+        return patientId
+    }
+
     // MARK: - Setup Steps
 
     enum SetupStep: Int, CaseIterable {
@@ -274,11 +312,11 @@ class QuickSetupViewModel: ObservableObject {
         }
 
         do {
-            // Update patient mode directly
+            // Update patient mode using user_id (not id)
             try await supabase.client
                 .from("patients")
                 .update(["mode": selectedMode.rawValue])
-                .eq("id", value: userId)
+                .eq("user_id", value: userId)
                 .execute()
 
             // Reload mode in service
@@ -294,14 +332,10 @@ class QuickSetupViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        guard let userId = supabase.userId else {
-            error = "Not logged in"
-            return
-        }
-
-        let patientId = UUID(uuidString: userId)!
-
         do {
+            // Fetch the actual patient ID from user_id
+            let patientId = try await getPatientId()
+
             // Create goals from selected templates
             let goalsToInsert = selectedGoals.map { template in
                 PatientGoalInsert(
@@ -335,14 +369,10 @@ class QuickSetupViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        guard let userId = supabase.userId else {
-            error = "Not logged in"
-            return
-        }
-
-        let patientId = UUID(uuidString: userId)!
-
         do {
+            // Fetch the actual patient ID from user_id
+            let patientId = try await getPatientId()
+
             // Submit readiness check-in
             _ = try await readinessService.submitReadiness(
                 patientId: patientId,
