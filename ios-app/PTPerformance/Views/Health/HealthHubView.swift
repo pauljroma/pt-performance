@@ -1,7 +1,27 @@
+//
+//  HealthHubView.swift
+//  PTPerformance
+//
+//  Health Hub - Unified entry point for all health features
+//  Provides today's snapshot, quick actions, AI insights, and navigation to detailed views
+//
+
 import SwiftUI
 
+/// Health Hub View - The central dashboard for all health features
+/// Aggregates data from Recovery, Fasting, Supplements, and Biomarkers
 struct HealthHubView: View {
     @EnvironmentObject var storeKit: StoreKitService
+    @StateObject private var viewModel = HealthHubViewModel()
+    @Environment(\.colorScheme) private var colorScheme
+
+    // Navigation state for quick actions
+    @State private var showFastingTracker = false
+    @State private var showSupplementDashboard = false
+    @State private var showRecoveryTracking = false
+    @State private var showBiomarkerDashboard = false
+    @State private var showLabResults = false
+    @State private var showAICoach = false
 
     var body: some View {
         NavigationStack {
@@ -11,462 +31,766 @@ struct HealthHubView: View {
                 paywallContent
             }
         }
+        .tint(.modusCyan)
     }
+
+    // MARK: - Premium Content
 
     private var premiumContent: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Unified AI Coach Card (Prominent)
-                unifiedAICoachCard
+            VStack(spacing: Spacing.lg) {
+                // Header with greeting
+                headerSection
 
-                // Health Score Card
-                HealthScoreCard()
+                // Today's Health Snapshot Card (using new component)
+                healthSnapshotSection
 
-                // Biomarker Dashboard Card (Prominent)
-                biomarkerDashboardCard
+                // Quick Actions Grid (using new component)
+                quickActionsGridSection
 
-                // Feature Grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 16) {
-                    HealthFeatureCard(
-                        title: "Nutrition",
-                        icon: "fork.knife",
-                        color: .green,
-                        destination: AnyView(ModusNutritionDashboardView())
-                    )
+                // AI Insights Section (using new component)
+                aiInsightsSection
 
-                    HealthFeatureCard(
-                        title: "Lab Results",
-                        icon: "cross.case.fill",
-                        color: .red,
-                        destination: AnyView(LabResultsView())
-                    )
-
-                    HealthFeatureCard(
-                        title: "Recovery",
-                        icon: "heart.fill",
-                        color: .pink,
-                        destination: AnyView(RecoveryView())
-                    )
-
-                    HealthFeatureCard(
-                        title: "Fasting",
-                        icon: "fork.knife.circle.fill",
-                        color: .teal,
-                        destination: AnyView(FastingView())
-                    )
-
-                    HealthFeatureCard(
-                        title: "Supplements",
-                        icon: "pill.fill",
-                        color: .orange,
-                        destination: AnyView(SupplementsView())
-                    )
-                }
-
-                // Legacy AI Coach Card (keep for backwards compatibility)
-                NavigationLink {
-                    AIHealthCoachView()
-                } label: {
-                    HStack {
-                        Image(systemName: "brain.head.profile")
-                            .font(.title)
-                            .foregroundColor(.purple)
-                            .accessibilityHidden(true)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("AI Health Coach")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text("Get personalized health insights")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .accessibilityHidden(true)
-                    }
-                    .padding()
-                    .background(Color.purple.opacity(0.1))
-                    .cornerRadius(16)
-                }
-                .accessibilityLabel("AI Health Coach")
-                .accessibilityHint("Get personalized health insights powered by AI")
+                // Detailed Views Navigation
+                detailedViewsSection
             }
             .padding()
         }
-        .navigationTitle("Health")
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("Health Hub")
+        .refreshable {
+            await viewModel.refresh()
+        }
+        .task {
+            await viewModel.loadData()
+        }
+        // Navigation destinations for quick actions
+        .navigationDestination(isPresented: $showFastingTracker) {
+            FastingTrackerView()
+        }
+        .navigationDestination(isPresented: $showSupplementDashboard) {
+            SupplementDashboardView()
+        }
+        .navigationDestination(isPresented: $showRecoveryTracking) {
+            RecoveryTrackingView()
+        }
+        .navigationDestination(isPresented: $showBiomarkerDashboard) {
+            BiomarkerDashboardView()
+        }
+        .navigationDestination(isPresented: $showLabResults) {
+            LabResultsView()
+        }
+        .navigationDestination(isPresented: $showAICoach) {
+            UnifiedAICoachView()
+        }
     }
 
-    // MARK: - Biomarker Dashboard Card
+    // MARK: - Header Section
 
-    private var biomarkerDashboardCard: some View {
-        NavigationLink {
-            BiomarkerDashboardView()
-        } label: {
-            HStack(spacing: 16) {
-                // Icon
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.modusTealAccent, Color.modusCyan],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 50, height: 50)
+    private var headerSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greeting)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
 
-                    Image(systemName: "chart.bar.doc.horizontal.fill")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-                .accessibilityHidden(true)
+                Text(Date().formatted(date: .complete, time: .omitted))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Biomarker Dashboard")
-                        .font(.headline)
-                        .foregroundColor(.modusDeepTeal)
+            Spacer()
 
-                    Text("Track your health markers with trends and insights")
-                        .font(.caption)
+            // Health Score Badge
+            NavigationLink {
+                AIHealthCoachView()
+            } label: {
+                VStack(spacing: 2) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 4)
+                            .frame(width: 48, height: 48)
+
+                        Circle()
+                            .trim(from: 0, to: Double(viewModel.recoveryScore) / 100)
+                            .stroke(viewModel.recoveryStatusColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                            .frame(width: 48, height: 48)
+                            .rotationEffect(.degrees(-90))
+
+                        Text("\(viewModel.recoveryScore)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.modusDeepTeal)
+                    }
+
+                    Text("Score")
+                        .font(.caption2)
                         .foregroundColor(.secondary)
-                        .lineLimit(2)
                 }
+            }
+            .accessibilityLabel("Health score \(viewModel.recoveryScore) percent")
+            .accessibilityHint("Tap to view detailed health insights")
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Good Morning"
+        case 12..<17: return "Good Afternoon"
+        case 17..<21: return "Good Evening"
+        default: return "Good Night"
+        }
+    }
+
+    // MARK: - Health Snapshot Section (Using New Component)
+
+    private var healthSnapshotSection: some View {
+        HealthSnapshotCard(
+            data: HealthSnapshotData(
+                recoveryScore: viewModel.recoveryScore,
+                recoveryTrend: recoveryTrend,
+                fastingStatus: HealthSnapshotData.FastingStatus(
+                    isFasting: viewModel.isFasting,
+                    hoursElapsed: fastingHoursElapsed,
+                    targetHours: fastingTargetHours,
+                    currentProtocol: nil
+                ),
+                supplementsCompliance: HealthSnapshotData.SupplementsCompliance(
+                    taken: viewModel.supplementsTaken,
+                    total: viewModel.supplementsTotal
+                ),
+                labAlerts: viewModel.biomarkersNeedingAttention,
+                lastUpdated: Date()
+            ),
+            isLoading: viewModel.isLoading,
+            onRecoveryTap: { showRecoveryTracking = true },
+            onFastingTap: { showFastingTracker = true },
+            onSupplementsTap: { showSupplementDashboard = true },
+            onLabAlertsTap: { showBiomarkerDashboard = true }
+        )
+    }
+
+    private var recoveryTrend: HealthSnapshotData.TrendDirection {
+        if viewModel.hasRecoveredToday && viewModel.recoveryStreak > 2 {
+            return .up
+        } else if viewModel.recoveryStreak > 0 {
+            return .stable
+        } else {
+            return .down
+        }
+    }
+
+    private var fastingHoursElapsed: Double? {
+        guard viewModel.isFasting else { return nil }
+        // Parse elapsed time from "HH:MM" format
+        let components = viewModel.fastingElapsedTime.split(separator: ":")
+        if components.count == 2,
+           let hours = Double(components[0]),
+           let minutes = Double(components[1]) {
+            return hours + (minutes / 60.0)
+        }
+        return nil
+    }
+
+    private var fastingTargetHours: Int? {
+        guard viewModel.isFasting else { return nil }
+        // Parse target time from "HH:00" format
+        let components = viewModel.fastingTargetTime.split(separator: ":")
+        if let hours = components.first, let target = Int(hours) {
+            return target
+        }
+        return 16
+    }
+
+    // MARK: - Quick Actions Grid Section (Using New Component)
+
+    private var quickActionsGridSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Quick Actions")
+                .font(.headline)
+                .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
+
+            QuickActionGrid(
+                actions: QuickActionGrid.defaultActions,
+                onAction: handleQuickAction
+            )
+        }
+    }
+
+    private func handleQuickAction(_ action: QuickAction.QuickActionType) {
+        switch action {
+        case .startFast:
+            showFastingTracker = true
+        case .logSupplements:
+            showSupplementDashboard = true
+        case .logRecovery:
+            showRecoveryTracking = true
+        case .viewLabs:
+            showLabResults = true
+        case .viewBiomarkers:
+            showBiomarkerDashboard = true
+        case .aiCoach:
+            showAICoach = true
+        }
+    }
+
+    // MARK: - AI Insights Section (Using New Component)
+
+    private var aiInsightsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.modusCyan)
+                    .accessibilityHidden(true)
+
+                Text("AI Insights")
+                    .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
 
                 Spacer()
 
-                Image(systemName: "chevron.right.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.modusCyan)
-                    .accessibilityHidden(true)
+                NavigationLink {
+                    UnifiedAICoachView()
+                } label: {
+                    Text("See All")
+                        .font(.caption)
+                        .foregroundColor(.modusCyan)
+                }
             }
-            .padding()
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .accessibilityAddTraits(.isHeader)
+
+            HealthInsightCard(
+                insight: HealthHubInsight(
+                    type: insightType,
+                    category: insightCategory,
+                    title: insightTitle,
+                    message: viewModel.dailyInsight,
+                    actionText: "View Details",
+                    action: { showAICoach = true }
+                )
+            )
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Biomarker Dashboard")
-        .accessibilityHint("View all your biomarkers organized by category with trends and status indicators")
     }
 
-    // MARK: - Unified AI Coach Card
+    private var insightType: HealthInsightType {
+        // Determine insight type based on icon
+        switch viewModel.insightIcon {
+        case "exclamationmark.triangle.fill":
+            return .warning
+        case "checkmark.circle.fill":
+            return .positive
+        case "flame.fill", "trophy.fill", "clock.fill":
+            return .info
+        default:
+            return .info
+        }
+    }
 
-    private var unifiedAICoachCard: some View {
-        NavigationLink {
-            UnifiedAICoachView()
-        } label: {
-            VStack(spacing: 16) {
-                HStack(spacing: 16) {
-                    // Animated icon area
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.modusCyan, Color.modusTealAccent],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 60, height: 60)
+    private var insightCategory: HealthInsightCategory {
+        // Determine category based on icon
+        switch viewModel.insightIcon {
+        case "flame.fill":
+            return .recovery
+        case "clock.fill":
+            return .fasting
+        case "pill.fill":
+            return .supplements
+        case "exclamationmark.triangle.fill":
+            return .biomarkers
+        default:
+            return .general
+        }
+    }
 
-                        Image(systemName: "sparkles")
-                            .font(.title)
-                            .foregroundColor(.white)
-                    }
+    private var insightTitle: String {
+        switch viewModel.insightIcon {
+        case "flame.fill":
+            return "Recovery Streak"
+        case "clock.fill":
+            return "Fasting Progress"
+        case "pill.fill":
+            return "Supplements Due"
+        case "exclamationmark.triangle.fill":
+            return "Biomarkers Alert"
+        case "checkmark.circle.fill":
+            return "Great Progress"
+        case "trophy.fill":
+            return "Achievement"
+        default:
+            return "Daily Insight"
+        }
+    }
+
+    // Legacy support for existing snapshot row
+    private var supplementStatus: HealthSnapshotItem.SnapshotStatus {
+        if viewModel.supplementsTotal == 0 {
+            return .neutral
+        } else if viewModel.supplementComplianceRate >= 1.0 {
+            return .good
+        } else if viewModel.supplementComplianceRate >= 0.5 {
+            return .warning
+        } else {
+            return .needsAttention
+        }
+    }
+
+    // MARK: - Legacy Quick Actions Section (kept for reference)
+
+    private var quickActionsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Quick Actions")
+                .font(.headline)
+                .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible()),
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: Spacing.sm) {
+                LegacyQuickActionButton(
+                    title: "Fast",
+                    icon: "timer",
+                    gradientColors: [.orange, .red.opacity(0.8)],
+                    destination: .fastingTracker
+                )
+
+                LegacyQuickActionButton(
+                    title: "Supps",
+                    icon: "pill.fill",
+                    gradientColors: [.purple, .indigo],
+                    destination: .supplements
+                )
+
+                LegacyQuickActionButton(
+                    title: "Recov",
+                    icon: "snowflake",
+                    gradientColors: [.cyan, .blue],
+                    destination: .recovery
+                )
+
+                LegacyQuickActionButton(
+                    title: "Labs",
+                    icon: "drop.fill",
+                    gradientColors: [.red, .pink],
+                    destination: .biomarkers
+                )
+            }
+        }
+    }
+
+    // MARK: - Legacy Daily Insight Card (kept for reference)
+
+    private var dailyInsightCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "lightbulb.fill")
+                    .foregroundColor(.yellow)
                     .accessibilityHidden(true)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text("AI Performance Coach")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                Text("Today's Insight")
+                    .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
+            }
+            .accessibilityAddTraits(.isHeader)
 
-                            Text("NEW")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.modusCyan)
-                                .foregroundColor(.white)
-                                .cornerRadius(4)
-                        }
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                Image(systemName: viewModel.insightIcon)
+                    .font(.title2)
+                    .foregroundColor(.modusCyan)
+                    .frame(width: 32)
+                    .accessibilityHidden(true)
 
-                        Text("Your complete health picture - training, sleep, labs, recovery - analyzed by AI for personalized guidance")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-
-                    Spacer()
-                }
-
-                // Quick Actions Preview
-                HStack(spacing: 12) {
-                    QuickActionPreview(icon: "moon.fill", label: "Sleep")
-                    QuickActionPreview(icon: "heart.fill", label: "Recovery")
-                    QuickActionPreview(icon: "figure.run", label: "Training")
-                    QuickActionPreview(icon: "cross.case.fill", label: "Labs")
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.modusCyan)
-                        .accessibilityHidden(true)
-                }
+                Text(viewModel.dailyInsight)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding()
             .background(
                 LinearGradient(
-                    colors: [Color.modusCyan.opacity(0.15), Color.modusLightTeal],
+                    colors: [Color.modusCyan.opacity(0.1), Color.modusTealAccent.opacity(0.05)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
-            .cornerRadius(20)
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.modusCyan.opacity(0.3), lineWidth: 1)
-            )
+            .cornerRadius(CornerRadius.md)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("AI Performance Coach")
-        .accessibilityHint("Opens the unified AI coaching interface with insights from all your health data")
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Today's insight: \(viewModel.dailyInsight)")
     }
 
+    // MARK: - Detailed Views Section
+
+    private var detailedViewsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Detailed Views")
+                .font(.headline)
+                .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(spacing: 0) {
+                DetailedViewRow(
+                    title: "Recovery & Readiness",
+                    subtitle: "Sauna, cold plunge, contrast therapy",
+                    icon: "heart.circle.fill",
+                    iconColor: .pink,
+                    destination: RecoveryTrackingView()
+                )
+
+                Divider()
+                    .padding(.leading, 56)
+
+                DetailedViewRow(
+                    title: "Fasting Tracker",
+                    subtitle: "Intermittent fasting protocols",
+                    icon: "timer.circle.fill",
+                    iconColor: .orange,
+                    destination: FastingTrackerView()
+                )
+
+                Divider()
+                    .padding(.leading, 56)
+
+                DetailedViewRow(
+                    title: "Supplements",
+                    subtitle: "Daily stack and compliance",
+                    icon: "pills.circle.fill",
+                    iconColor: .purple,
+                    destination: SupplementDashboardView()
+                )
+
+                Divider()
+                    .padding(.leading, 56)
+
+                DetailedViewRow(
+                    title: "Biomarkers & Labs",
+                    subtitle: "Track your health markers",
+                    icon: "cross.circle.fill",
+                    iconColor: .red,
+                    destination: BiomarkerDashboardView()
+                )
+            }
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.lg)
+        }
+    }
+
+    // MARK: - Paywall Content
+
     private var paywallContent: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Spacing.xl) {
             Spacer()
 
-            Image(systemName: "heart.text.square.fill")
-                .font(.system(size: 64))
-                .foregroundColor(.blue)
-                .accessibilityHidden(true)
+            // Hero Icon
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.modusCyan.opacity(0.2), Color.modusTealAccent.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 120, height: 120)
 
-            Text("Health Intelligence")
-                .font(.title)
-                .fontWeight(.bold)
+                Image(systemName: "heart.text.square.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.modusCyan, .modusTealAccent],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+            .accessibilityHidden(true)
 
-            Text("Unlock premium features to track your labs, recovery protocols, fasting, supplements, and get AI-powered health insights.")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+            VStack(spacing: Spacing.sm) {
+                Text("Health Hub")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
 
-            VStack(alignment: .leading, spacing: 12) {
-                HealthFeatureRow(icon: "fork.knife", text: "Nutrition & Meal Tracking")
-                HealthFeatureRow(icon: "cross.case.fill", text: "Lab Results Analysis")
-                HealthFeatureRow(icon: "heart.fill", text: "Recovery Protocol Tracking")
-                HealthFeatureRow(icon: "fork.knife.circle.fill", text: "Intermittent Fasting")
-                HealthFeatureRow(icon: "pill.fill", text: "Supplement Management")
-                HealthFeatureRow(icon: "brain.head.profile", text: "AI Health Coach")
+                Text("Your complete health intelligence center")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            // Feature List
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                PaywallFeatureRow(icon: "heart.fill", text: "Recovery Protocol Tracking", color: .pink)
+                PaywallFeatureRow(icon: "timer", text: "Intermittent Fasting", color: .orange)
+                PaywallFeatureRow(icon: "pill.fill", text: "Supplement Management", color: .purple)
+                PaywallFeatureRow(icon: "chart.bar.doc.horizontal", text: "Biomarker Dashboard", color: .red)
+                PaywallFeatureRow(icon: "sparkles", text: "AI Health Insights", color: .modusCyan)
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .padding(.horizontal)
 
             Spacer()
 
+            // CTA Button
             NavigationLink {
                 SubscriptionView()
                     .environmentObject(StoreKitService.shared)
             } label: {
-                Text("Upgrade to Premium")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                HStack {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                    Text("Upgrade to Premium")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [.modusCyan, .modusTealAccent],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal)
             .accessibilityLabel("Upgrade to Premium")
-            .accessibilityHint("Opens subscription options to unlock all Health Intelligence features")
+            .accessibilityHint("Unlock all Health Hub features")
 
             Spacer()
         }
-        .navigationTitle("Health")
+        .navigationTitle("Health Hub")
     }
 }
 
-struct HealthScoreCard: View {
-    @StateObject private var viewModel = HealthCoachViewModel()
+// MARK: - Snapshot Row
+
+private struct SnapshotRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let value: String
+    let status: HealthSnapshotItem.SnapshotStatus
+    var statusIcon: String? = nil
+    var progress: Double? = nil
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Health Score")
-                    .font(.headline)
-                Spacer()
-                NavigationLink {
-                    AIHealthCoachView()
-                } label: {
-                    Text("Details")
-                        .font(.caption)
-                }
-                .accessibilityLabel("View health score details")
-            }
+        HStack(spacing: Spacing.sm) {
+            // Icon
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(iconColor)
+                .frame(width: 28)
+                .accessibilityHidden(true)
 
-            if viewModel.isLoading && viewModel.healthScore == nil {
-                // Loading state
-                HStack(spacing: 20) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 8)
-                        ProgressView()
-                    }
-                    .frame(width: 80, height: 80)
+            // Title
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.primary)
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Loading health data...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                }
-            } else {
-                HStack(spacing: 20) {
-                    // Main Score
-                    ZStack {
-                        Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 8)
-
-                        Circle()
-                            .trim(from: 0, to: Double(viewModel.overallScore) / 100)
-                            .stroke(viewModel.scoreColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-
-                        VStack {
-                            Text("\(viewModel.overallScore)")
-                                .font(.title)
-                                .fontWeight(.bold)
-                            Text("/ 100")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(width: 80, height: 80)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Health score \(viewModel.overallScore) out of 100")
-
-                    // Breakdown
-                    VStack(alignment: .leading, spacing: 6) {
-                        if let score = viewModel.healthScore {
-                            HealthScoreRow(label: "Sleep", value: score.sleepScore)
-                            HealthScoreRow(label: "Recovery", value: score.recoveryScore)
-                            HealthScoreRow(label: "Activity", value: score.activityScore)
-                        } else {
-                            Text("No health data available")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .task {
-            await viewModel.loadData()
-        }
-    }
-}
-
-struct HealthScoreRow: View {
-    let label: String
-    let value: Int
-
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
             Spacer()
-            Text("\(value)")
-                .font(.caption)
+
+            // Progress bar (if applicable)
+            if let progress = progress {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.gray.opacity(0.2))
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(iconColor)
+                            .frame(width: geometry.size.width * progress)
+                    }
+                }
+                .frame(width: 50, height: 6)
+                .accessibilityHidden(true)
+            }
+
+            // Value
+            Text(value)
+                .font(.subheadline)
                 .fontWeight(.medium)
+                .foregroundColor(.secondary)
 
-            // Mini bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.gray.opacity(0.3))
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(scoreColor(value))
-                        .frame(width: geometry.size.width * Double(value) / 100)
-                }
+            // Status Icon
+            if let statusIcon = statusIcon {
+                Image(systemName: statusIcon)
+                    .font(.caption)
+                    .foregroundColor(status.indicatorColor)
+                    .accessibilityHidden(true)
+            } else {
+                Circle()
+                    .fill(status.indicatorColor)
+                    .frame(width: 8, height: 8)
+                    .accessibilityHidden(true)
             }
-            .frame(width: 50, height: 4)
-            .accessibilityHidden(true)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label) score: \(value) out of 100")
+        .accessibilityLabel("\(title): \(value)")
+    }
+}
+
+// MARK: - Legacy Quick Action Button (for backward compatibility)
+
+private struct LegacyQuickActionButton: View {
+    let title: String
+    let icon: String
+    let gradientColors: [Color]
+    let destination: HealthHubDestination
+
+    @State private var isPressed = false
+
+    var body: some View {
+        NavigationLink {
+            destinationView
+        } label: {
+            VStack(spacing: Spacing.xs) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: gradientColors,
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 48, height: 48)
+
+                    Image(systemName: icon)
+                        .font(.title3)
+                        .foregroundColor(.white)
+                }
+                .accessibilityHidden(true)
+
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.sm)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.md)
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
+                        isPressed = true
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
+                        isPressed = false
+                    }
+                }
+        )
+        .accessibilityLabel(title)
+        .accessibilityHint("Opens \(title) feature")
     }
 
-    private func scoreColor(_ value: Int) -> Color {
-        switch value {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        case 40..<60: return .orange
-        default: return .red
+    @ViewBuilder
+    private var destinationView: some View {
+        switch destination {
+        case .fastingTracker:
+            FastingTrackerView()
+        case .supplements:
+            SupplementDashboardView()
+        case .recovery:
+            RecoveryTrackingView()
+        case .biomarkers:
+            BiomarkerDashboardView()
+        case .labResults:
+            LabResultsView()
+        case .nutrition:
+            ModusNutritionDashboardView()
+        case .aiCoach:
+            UnifiedAICoachView()
         }
     }
 }
 
-struct HealthFeatureCard: View {
+// MARK: - Detailed View Row
+
+private struct DetailedViewRow<Destination: View>: View {
     let title: String
+    let subtitle: String
     let icon: String
-    let color: Color
-    let destination: AnyView
+    let iconColor: Color
+    let destination: Destination
 
     var body: some View {
         NavigationLink {
             destination
         } label: {
-            VStack(spacing: 12) {
+            HStack(spacing: Spacing.md) {
                 Image(systemName: icon)
-                    .font(.title)
-                    .foregroundColor(color)
+                    .font(.title2)
+                    .foregroundColor(iconColor)
+                    .frame(width: 40)
                     .accessibilityHidden(true)
 
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
-            .background(color.opacity(0.1))
-            .cornerRadius(16)
+            .padding()
         }
         .accessibilityLabel(title)
-        .accessibilityHint("Opens \(title) feature")
+        .accessibilityHint(subtitle)
     }
 }
 
-struct HealthFeatureRow: View {
+// MARK: - Paywall Feature Row
+
+private struct PaywallFeatureRow: View {
     let icon: String
     let text: String
+    let color: Color
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             Image(systemName: icon)
-                .foregroundColor(.blue)
+                .foregroundColor(color)
                 .frame(width: 24)
                 .accessibilityHidden(true)
+
             Text(text)
                 .font(.subheadline)
+                .foregroundColor(.primary)
+
             Spacer()
+
             Image(systemName: "checkmark")
                 .foregroundColor(.green)
+                .font(.caption)
                 .accessibilityHidden(true)
         }
         .accessibilityElement(children: .combine)
@@ -474,20 +798,21 @@ struct HealthFeatureRow: View {
     }
 }
 
-struct QuickActionPreview: View {
-    let icon: String
-    let label: String
+// MARK: - Preview
 
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundColor(.modusCyan)
-                .accessibilityHidden(true)
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+#if DEBUG
+struct HealthHubView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            HealthHubView()
+                .environmentObject(StoreKitService.shared)
+                .previewDisplayName("Premium")
+
+            HealthHubView()
+                .environmentObject(StoreKitService.shared)
+                .preferredColorScheme(.dark)
+                .previewDisplayName("Dark Mode")
         }
-        .accessibilityHidden(true)
     }
 }
+#endif

@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// ACP-901: Main Recovery Tracking Dashboard
-/// Displays quick-log buttons, weekly summary, recent sessions, and streak tracking
+/// ACP-901: Main Recovery Tracking Dashboard with Training Adjustment Recommendations
+/// Displays recovery score, training recommendations, quick-log buttons, weekly trends, and streak tracking
 struct RecoveryTrackingView: View {
     @StateObject private var viewModel = RecoveryTrackingViewModel()
     @Environment(\.colorScheme) private var colorScheme
@@ -86,10 +86,24 @@ struct RecoveryTrackingView: View {
     private var contentView: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
+                // Recovery Score Card (Primary)
+                recoveryScoreCard
+
+                // Low Recovery Alert (conditional)
+                if viewModel.showLowRecoveryAlert {
+                    lowRecoveryAlertCard
+                }
+
+                // Quick Log Recovery Methods
+                recoveryMethodsSection
+
+                // Weekly Trend
+                weeklyTrendSection
+
                 // Streak Card
                 streakCard
 
-                // Quick Log Section
+                // Quick Log Section (existing protocols)
                 quickLogSection
 
                 // Weekly Summary
@@ -99,6 +113,261 @@ struct RecoveryTrackingView: View {
                 recentSessionsSection
             }
             .padding()
+        }
+    }
+
+    // MARK: - Recovery Score Card
+
+    private var recoveryScoreCard: some View {
+        VStack(spacing: Spacing.md) {
+            // Header
+            HStack {
+                Image(systemName: viewModel.recoveryStatus.icon)
+                    .font(.title2)
+                    .foregroundColor(viewModel.recoveryStatus.color)
+                    .accessibilityHidden(true)
+
+                Text("RECOVERY STATUS")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+            }
+            .accessibilityAddTraits(.isHeader)
+
+            // Score Display
+            VStack(spacing: Spacing.sm) {
+                Text(viewModel.formattedRecoveryScore)
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundColor(viewModel.recoveryStatus.color)
+
+                // Progress Bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(viewModel.recoveryStatus.color)
+                            .frame(width: geometry.size.width * CGFloat(viewModel.recoveryScore) / 100.0)
+                    }
+                }
+                .frame(height: 8)
+
+                Text(viewModel.recoveryStatus.displayName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(viewModel.recoveryStatus.color)
+            }
+
+            // Metrics Row
+            HStack(spacing: Spacing.xl) {
+                MetricIndicator(
+                    label: "Sleep",
+                    value: String(format: "%.1fh", viewModel.sleepHours),
+                    status: viewModel.sleepStatus
+                )
+
+                MetricIndicator(
+                    label: "HRV",
+                    value: "\(viewModel.hrvValue)ms",
+                    status: viewModel.hrvStatus
+                )
+
+                MetricIndicator(
+                    label: "Soreness",
+                    value: viewModel.sorenessLevel.displayName,
+                    status: viewModel.sorenessStatus
+                )
+            }
+            .padding(.top, Spacing.sm)
+
+            // Recommendation
+            if let recommendation = viewModel.trainingRecommendation {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "lightbulb.fill")
+                        .foregroundColor(.yellow)
+                        .accessibilityHidden(true)
+
+                    Text(recommendation.headline)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                }
+                .padding(.top, Spacing.sm)
+            }
+
+            // CTA Button
+            Button {
+                viewModel.startTodaysWorkout()
+            } label: {
+                Text("Start Today's Workout")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md)
+                    .background(viewModel.recoveryStatus.color)
+                    .cornerRadius(CornerRadius.md)
+            }
+            .padding(.top, Spacing.sm)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+        .accessibilityElement(children: .contain)
+    }
+
+    // MARK: - Low Recovery Alert Card
+
+    private var lowRecoveryAlertCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Header
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .accessibilityHidden(true)
+
+                Text("LOW RECOVERY DETECTED")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.orange)
+
+                Spacer()
+
+                Button {
+                    viewModel.showLowRecoveryAlert = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Dismiss alert")
+            }
+
+            // Recovery Info
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Your recovery is at \(viewModel.recoveryScore)%")
+                    .font(.headline)
+
+                let hrvNote = viewModel.hrvValue < 40 ? "HRV down \(40 - viewModel.hrvValue)%" : ""
+                let sleepNote = viewModel.sleepHours < 6 ? "poor sleep" : ""
+                let notes = [hrvNote, sleepNote].filter { !$0.isEmpty }.joined(separator: ", ")
+
+                if !notes.isEmpty {
+                    Text("(\(notes))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Recommendation Section
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("RECOMMENDATION:")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Text("Swap today's heavy work for:")
+                    .font(.subheadline)
+
+                if let recommendation = viewModel.trainingRecommendation {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        ForEach(recommendation.alternativeActivities, id: \.self) { activity in
+                            HStack(spacing: Spacing.xs) {
+                                Circle()
+                                    .fill(Color.secondary)
+                                    .frame(width: 6, height: 6)
+                                Text(activity)
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+                    .padding(.leading, Spacing.sm)
+                }
+            }
+
+            // Action Buttons
+            HStack(spacing: Spacing.md) {
+                Button {
+                    viewModel.adjustWorkout()
+                } label: {
+                    Text("Adjust Workout")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.modusCyan)
+                        .cornerRadius(CornerRadius.sm)
+                }
+
+                Button {
+                    viewModel.trainAnyway()
+                } label: {
+                    Text("Train Anyway")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color(.tertiarySystemGroupedBackground))
+                        .cornerRadius(CornerRadius.sm)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color.orange.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+
+    // MARK: - Recovery Methods Section
+
+    private var recoveryMethodsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Quick Log Recovery")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.sm) {
+                    ForEach([RecoveryMethod.coldPlunge, .sauna, .yoga, .massage], id: \.self) { method in
+                        RecoveryMethodButton(
+                            method: method,
+                            isLogged: viewModel.recoveryMethodsLoggedToday.contains(method),
+                            action: {
+                                viewModel.logRecoveryMethod(method)
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, 1) // Prevent clipping
+            }
+        }
+    }
+
+    // MARK: - Weekly Trend Section
+
+    private var weeklyTrendSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Weekly Trend")
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
+
+            VStack(spacing: Spacing.xs) {
+                ForEach(viewModel.weeklyTrendData) { trend in
+                    WeeklyTrendRow(trend: trend)
+                }
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.lg)
         }
     }
 
@@ -379,6 +648,135 @@ struct RecoveryTrackingView: View {
     }
 }
 
+// MARK: - Metric Indicator
+
+private struct MetricIndicator: View {
+    let label: String
+    let value: String
+    let status: MetricStatus
+
+    var body: some View {
+        VStack(spacing: Spacing.xs) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Image(systemName: status.icon)
+                .font(.caption)
+                .foregroundColor(status.color)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
+    }
+}
+
+// MARK: - Recovery Method Button
+
+private struct RecoveryMethodButton: View {
+    let method: RecoveryMethod
+    let isLogged: Bool
+    let action: () -> Void
+
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: Spacing.xs) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .fill(isLogged ? method.color.opacity(0.2) : Color(.tertiarySystemGroupedBackground))
+                        .frame(width: 60, height: 60)
+
+                    Image(systemName: method.icon)
+                        .font(.title2)
+                        .foregroundColor(isLogged ? method.color : .primary)
+                }
+
+                Text(method.displayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(isLogged ? method.color : .primary)
+            }
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
+                        isPressed = true
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
+                        isPressed = false
+                    }
+                }
+        )
+        .accessibilityLabel("Log \(method.fullName)")
+        .accessibilityHint(isLogged ? "Already logged today" : "Tap to log")
+    }
+}
+
+// MARK: - Weekly Trend Row
+
+private struct WeeklyTrendRow: View {
+    let trend: DailyRecoveryTrend
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Text(trend.dayName)
+                .font(.caption)
+                .fontWeight(.medium)
+                .frame(width: 30, alignment: .leading)
+
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(trend.status.color)
+                        .frame(width: geometry.size.width * trend.scorePercentage)
+                }
+            }
+            .frame(height: 12)
+
+            Text("\(trend.score)%")
+                .font(.caption)
+                .fontWeight(.medium)
+                .frame(width: 35, alignment: .trailing)
+
+            // Arrow indicator
+            Image(systemName: "arrow.right")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            // Intensity recommendation
+            HStack(spacing: 2) {
+                Text(trend.recommendedIntensity.displayName)
+                    .font(.caption2)
+                    .foregroundColor(trend.recommendedIntensity.color)
+
+                if trend.workoutCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                }
+            }
+            .frame(width: 70, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(trend.dayName): \(trend.score)% recovery, \(trend.recommendedIntensity.displayName) workout\(trend.workoutCompleted ? ", completed" : "")")
+    }
+}
+
 // MARK: - Quick Log Card
 
 private struct QuickLogCard: View {
@@ -507,7 +905,7 @@ private struct RecentSessionRow: View {
                     .fontWeight(.medium)
 
                 if let temp = session.temperature {
-                    Text(session.protocolType.isColdTherapy ? "\(Int(temp))°F" : "\(Int(temp))°F")
+                    Text(session.protocolType.isColdTherapy ? "\(Int(temp))F" : "\(Int(temp))F")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -544,6 +942,100 @@ struct RecoveryTrackingView_Previews: PreviewProvider {
     static var previews: some View {
         RecoveryTrackingView()
             .previewDisplayName("Recovery Tracking")
+
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: Spacing.lg) {
+                    // Preview with low recovery alert
+                    PreviewLowRecoveryCard()
+                }
+                .padding()
+            }
+        }
+        .previewDisplayName("Low Recovery Alert")
+    }
+}
+
+private struct PreviewLowRecoveryCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+
+                Text("LOW RECOVERY DETECTED")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.orange)
+
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Your recovery is at 45%")
+                    .font(.headline)
+
+                Text("(HRV down 20%, poor sleep)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("RECOMMENDATION:")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Text("Swap today's heavy squats for:")
+                    .font(.subheadline)
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    ForEach(["Light mobility work", "20-min zone 2 cardio", "Extra recovery focus"], id: \.self) { activity in
+                        HStack(spacing: Spacing.xs) {
+                            Circle()
+                                .fill(Color.secondary)
+                                .frame(width: 6, height: 6)
+                            Text(activity)
+                                .font(.subheadline)
+                        }
+                    }
+                }
+                .padding(.leading, Spacing.sm)
+            }
+
+            HStack(spacing: Spacing.md) {
+                Button {} label: {
+                    Text("Adjust Workout")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.modusCyan)
+                        .cornerRadius(CornerRadius.sm)
+                }
+
+                Button {} label: {
+                    Text("Train Anyway")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color(.tertiarySystemGroupedBackground))
+                        .cornerRadius(CornerRadius.sm)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color.orange.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
 #endif

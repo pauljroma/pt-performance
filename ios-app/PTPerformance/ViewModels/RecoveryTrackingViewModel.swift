@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// ACP-901, ACP-902, ACP-903: ViewModel for Recovery Tracking UI
-/// Manages state for recovery dashboard, timer logic, and stats calculations
+/// Manages state for recovery dashboard, timer logic, stats calculations, and training recommendations
 @MainActor
 final class RecoveryTrackingViewModel: ObservableObject {
 
@@ -21,6 +21,23 @@ final class RecoveryTrackingViewModel: ObservableObject {
     @Published var currentStreak: Int = 0
     @Published var longestStreak: Int = 0
     @Published var hasRecoveredToday: Bool = false
+
+    // Recovery Status State
+    @Published var recoveryScore: Int = 0
+    @Published var recoveryStatus: RecoveryStatus = .moderate
+    @Published var sleepHours: Double = 0.0
+    @Published var hrvValue: Int = 0
+    @Published var sorenessLevel: SorenessLevel = .none
+    @Published var trainingRecommendation: TrainingRecommendation?
+
+    // Low Recovery Alert State
+    @Published var showLowRecoveryAlert: Bool = false
+
+    // Weekly Trend Data
+    @Published var weeklyTrendData: [DailyRecoveryTrend] = []
+
+    // Recovery Methods Logged Today
+    @Published var recoveryMethodsLoggedToday: Set<RecoveryMethod> = []
 
     // MARK: - Dependencies
 
@@ -98,6 +115,45 @@ final class RecoveryTrackingViewModel: ObservableObject {
         }
     }
 
+    /// Formatted recovery score for display
+    var formattedRecoveryScore: String {
+        "\(recoveryScore)%"
+    }
+
+    /// Sleep status indicator
+    var sleepStatus: MetricStatus {
+        if sleepHours >= 7.0 {
+            return .good
+        } else if sleepHours >= 6.0 {
+            return .moderate
+        } else {
+            return .poor
+        }
+    }
+
+    /// HRV status indicator
+    var hrvStatus: MetricStatus {
+        if hrvValue >= 50 {
+            return .good
+        } else if hrvValue >= 35 {
+            return .moderate
+        } else {
+            return .poor
+        }
+    }
+
+    /// Soreness status indicator
+    var sorenessStatus: MetricStatus {
+        switch sorenessLevel {
+        case .none, .low:
+            return .good
+        case .moderate:
+            return .moderate
+        case .high, .severe:
+            return .poor
+        }
+    }
+
     // MARK: - Data Loading
 
     func loadData() async {
@@ -116,6 +172,19 @@ final class RecoveryTrackingViewModel: ObservableObject {
             hasRecoveredToday = recentSessions.contains { session in
                 Calendar.current.isDateInToday(session.loggedAt)
             }
+
+            // Calculate recovery status and score
+            await calculateRecoveryStatus()
+
+            // Generate training recommendation
+            generateTrainingRecommendation()
+
+            // Calculate weekly trend
+            calculateWeeklyTrend()
+
+            // Check for low recovery alert
+            checkLowRecoveryAlert()
+
         } catch {
             self.error = error.localizedDescription
             DebugLogger.shared.error("RecoveryTrackingViewModel", "Failed to load data: \(error)")
@@ -171,6 +240,85 @@ final class RecoveryTrackingViewModel: ObservableObject {
         longestStreak = max(maxStreak, streak)
     }
 
+    private func calculateRecoveryStatus() async {
+        // Fetch health data for recovery score calculation
+        // In production, this would pull from HealthKit
+
+        // Simulated values for demo - in production these come from HealthKit
+        sleepHours = 7.2
+        hrvValue = 58
+        sorenessLevel = .low
+
+        // Calculate composite recovery score
+        let sleepScore = min(100, (sleepHours / 8.0) * 100)
+        let hrvScore = min(100, (Double(hrvValue) / 70.0) * 100)
+        let sorenessScore: Double
+        switch sorenessLevel {
+        case .none: sorenessScore = 100
+        case .low: sorenessScore = 85
+        case .moderate: sorenessScore = 60
+        case .high: sorenessScore = 35
+        case .severe: sorenessScore = 10
+        }
+
+        // Weighted average: Sleep 40%, HRV 35%, Soreness 25%
+        let score = (sleepScore * 0.40) + (hrvScore * 0.35) + (sorenessScore * 0.25)
+        recoveryScore = Int(score)
+
+        // Determine status
+        recoveryStatus = RecoveryStatus.from(score: recoveryScore)
+    }
+
+    private func generateTrainingRecommendation() {
+        trainingRecommendation = TrainingRecommendation.generate(
+            recoveryScore: recoveryScore,
+            recoveryStatus: recoveryStatus,
+            sleepHours: sleepHours,
+            hrvValue: hrvValue,
+            sorenessLevel: sorenessLevel
+        )
+    }
+
+    private func calculateWeeklyTrend() {
+        let calendar = Calendar.current
+        var trends: [DailyRecoveryTrend] = []
+
+        for dayOffset in (0..<7).reversed() {
+            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) else {
+                continue
+            }
+
+            let dayFormatter = DateFormatter()
+            dayFormatter.dateFormat = "EEE"
+            let dayName = dayFormatter.string(from: date)
+
+            // Calculate score for this day (simplified - in production would use actual data)
+            let baseScore = 65 + Int.random(in: -15...20)
+            let score = min(100, max(0, baseScore))
+
+            let status = RecoveryStatus.from(score: score)
+            let workoutIntensity = TrainingIntensity.recommended(for: score)
+            let completed = dayOffset > 0 // Past days marked as completed for demo
+
+            trends.append(DailyRecoveryTrend(
+                date: date,
+                dayName: dayName,
+                score: score,
+                status: status,
+                recommendedIntensity: workoutIntensity,
+                workoutCompleted: completed
+            ))
+        }
+
+        weeklyTrendData = trends
+    }
+
+    private func checkLowRecoveryAlert() {
+        if recoveryScore < 50 && !hasRecoveredToday {
+            showLowRecoveryAlert = true
+        }
+    }
+
     // MARK: - Quick Log Actions
 
     func startQuickLog(for type: RecoveryProtocolType) {
@@ -189,6 +337,44 @@ final class RecoveryTrackingViewModel: ObservableObject {
     func showAllSessionTypes() {
         selectedSessionType = nil
         showingLogSheet = true
+    }
+
+    // MARK: - Recovery Method Logging
+
+    func logRecoveryMethod(_ method: RecoveryMethod) {
+        HapticFeedback.medium()
+        recoveryMethodsLoggedToday.insert(method)
+
+        // Map recovery method to protocol type if applicable
+        if let protocolType = method.toProtocolType {
+            startQuickLog(for: protocolType)
+        } else {
+            // For methods without a timer (stretching, compression, sleep), just log
+            Task {
+                // In production, would save to backend
+                await loadData()
+            }
+        }
+    }
+
+    // MARK: - Training Adjustment Actions
+
+    func adjustWorkout() {
+        HapticFeedback.medium()
+        showLowRecoveryAlert = false
+        // In production, this would navigate to workout adjustment screen
+        // or modify today's scheduled workout
+    }
+
+    func trainAnyway() {
+        HapticFeedback.light()
+        showLowRecoveryAlert = false
+        // User proceeds with original workout
+    }
+
+    func startTodaysWorkout() {
+        HapticFeedback.medium()
+        // In production, navigate to workout screen
     }
 
     // MARK: - Session Management
@@ -293,6 +479,301 @@ struct TimerConfiguration {
     let temperature: Double?
 }
 
+// MARK: - Recovery Status Enum
+
+enum RecoveryStatus: String, CaseIterable {
+    case fullyRecovered = "fully_recovered"
+    case readyToTrain = "ready_to_train"
+    case moderate = "moderate"
+    case needsRest = "needs_rest"
+    case critical = "critical"
+
+    var displayName: String {
+        switch self {
+        case .fullyRecovered: return "FULLY RECOVERED"
+        case .readyToTrain: return "READY TO TRAIN"
+        case .moderate: return "MODERATE RECOVERY"
+        case .needsRest: return "NEEDS REST"
+        case .critical: return "CRITICAL - REST DAY"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .fullyRecovered: return .green
+        case .readyToTrain: return .modusTealAccent
+        case .moderate: return .yellow
+        case .needsRest: return .orange
+        case .critical: return .red
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .fullyRecovered: return "battery.100"
+        case .readyToTrain: return "battery.75"
+        case .moderate: return "battery.50"
+        case .needsRest: return "battery.25"
+        case .critical: return "battery.0"
+        }
+    }
+
+    static func from(score: Int) -> RecoveryStatus {
+        switch score {
+        case 90...100: return .fullyRecovered
+        case 70..<90: return .readyToTrain
+        case 50..<70: return .moderate
+        case 30..<50: return .needsRest
+        default: return .critical
+        }
+    }
+}
+
+// MARK: - Soreness Level Enum
+
+enum SorenessLevel: String, CaseIterable {
+    case none = "none"
+    case low = "low"
+    case moderate = "moderate"
+    case high = "high"
+    case severe = "severe"
+
+    var displayName: String {
+        switch self {
+        case .none: return "None"
+        case .low: return "Low"
+        case .moderate: return "Moderate"
+        case .high: return "High"
+        case .severe: return "Severe"
+        }
+    }
+}
+
+// MARK: - Metric Status Enum
+
+enum MetricStatus {
+    case good
+    case moderate
+    case poor
+
+    var icon: String {
+        switch self {
+        case .good: return "checkmark.circle.fill"
+        case .moderate: return "minus.circle.fill"
+        case .poor: return "xmark.circle.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .good: return .green
+        case .moderate: return .yellow
+        case .poor: return .red
+        }
+    }
+}
+
+// MARK: - Recovery Method Enum
+
+enum RecoveryMethod: String, CaseIterable, Identifiable {
+    case coldPlunge = "cold_plunge"
+    case sauna = "sauna"
+    case yoga = "yoga"
+    case massage = "massage"
+    case stretching = "stretching"
+    case compression = "compression"
+    case sleep = "sleep"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .coldPlunge: return "Cold"
+        case .sauna: return "Sauna"
+        case .yoga: return "Yoga"
+        case .massage: return "Mass"
+        case .stretching: return "Stretch"
+        case .compression: return "Comp"
+        case .sleep: return "Sleep"
+        }
+    }
+
+    var fullName: String {
+        switch self {
+        case .coldPlunge: return "Cold Plunge"
+        case .sauna: return "Sauna"
+        case .yoga: return "Yoga"
+        case .massage: return "Massage"
+        case .stretching: return "Stretching"
+        case .compression: return "Compression"
+        case .sleep: return "Extra Sleep"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .coldPlunge: return "snowflake"
+        case .sauna: return "flame.fill"
+        case .yoga: return "figure.yoga"
+        case .massage: return "hand.raised.fill"
+        case .stretching: return "figure.flexibility"
+        case .compression: return "arrow.down.and.line.horizontal.and.arrow.up"
+        case .sleep: return "bed.double.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .coldPlunge: return .cyan
+        case .sauna: return .orange
+        case .yoga: return .purple
+        case .massage: return .pink
+        case .stretching: return .green
+        case .compression: return .blue
+        case .sleep: return .indigo
+        }
+    }
+
+    /// Maps to RecoveryProtocolType if applicable
+    var toProtocolType: RecoveryProtocolType? {
+        switch self {
+        case .coldPlunge: return .coldPlunge
+        case .sauna: return .saunaTraditional
+        case .yoga, .massage, .stretching, .compression, .sleep: return nil
+        }
+    }
+}
+
+// MARK: - Training Intensity Enum
+
+enum TrainingIntensity: String, CaseIterable {
+    case heavy = "heavy"
+    case moderate = "moderate"
+    case light = "light"
+    case rest = "rest"
+
+    var displayName: String {
+        switch self {
+        case .heavy: return "Heavy"
+        case .moderate: return "Moderate"
+        case .light: return "Light"
+        case .rest: return "Rest"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .heavy: return "flame.fill"
+        case .moderate: return "bolt.fill"
+        case .light: return "leaf.fill"
+        case .rest: return "moon.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .heavy: return .red
+        case .moderate: return .orange
+        case .light: return .green
+        case .rest: return .blue
+        }
+    }
+
+    static func recommended(for score: Int) -> TrainingIntensity {
+        switch score {
+        case 80...100: return .heavy
+        case 60..<80: return .moderate
+        case 40..<60: return .light
+        default: return .rest
+        }
+    }
+}
+
+// MARK: - Training Recommendation
+
+struct TrainingRecommendation {
+    let headline: String
+    let description: String
+    let intensity: TrainingIntensity
+    let alternativeActivities: [String]
+    let icon: String
+
+    static func generate(
+        recoveryScore: Int,
+        recoveryStatus: RecoveryStatus,
+        sleepHours: Double,
+        hrvValue: Int,
+        sorenessLevel: SorenessLevel
+    ) -> TrainingRecommendation {
+        switch recoveryStatus {
+        case .fullyRecovered:
+            return TrainingRecommendation(
+                headline: "Peak performance day",
+                description: "All systems go! Great day for PR attempts or high-intensity work.",
+                intensity: .heavy,
+                alternativeActivities: ["Max effort lifts", "High-intensity intervals", "Competition prep"],
+                icon: "bolt.circle.fill"
+            )
+
+        case .readyToTrain:
+            return TrainingRecommendation(
+                headline: "Good day for intensity work",
+                description: "Recovery looks solid. You can push hard today.",
+                intensity: .heavy,
+                alternativeActivities: ["Strength training", "Moderate cardio", "Skill work"],
+                icon: "checkmark.circle.fill"
+            )
+
+        case .moderate:
+            return TrainingRecommendation(
+                headline: "Moderate intensity recommended",
+                description: "Consider reducing volume or intensity by 10-20%.",
+                intensity: .moderate,
+                alternativeActivities: ["Technique work", "Moderate lifts", "Zone 2 cardio"],
+                icon: "arrow.left.arrow.right.circle.fill"
+            )
+
+        case .needsRest:
+            let hrvNote = hrvValue < 40 ? "HRV down significantly" : ""
+            let sleepNote = sleepHours < 6 ? "poor sleep" : ""
+            let notes = [hrvNote, sleepNote].filter { !$0.isEmpty }.joined(separator: ", ")
+
+            return TrainingRecommendation(
+                headline: "Swap today's heavy work",
+                description: "Your recovery is low\(notes.isEmpty ? "" : " (\(notes))"). Focus on light movement.",
+                intensity: .light,
+                alternativeActivities: ["Light mobility work", "20-min zone 2 cardio", "Extra recovery focus"],
+                icon: "exclamationmark.triangle.fill"
+            )
+
+        case .critical:
+            return TrainingRecommendation(
+                headline: "Rest day strongly recommended",
+                description: "Your body needs recovery. Skip training today.",
+                intensity: .rest,
+                alternativeActivities: ["Complete rest", "Light stretching", "Sleep focus", "Hydration"],
+                icon: "moon.circle.fill"
+            )
+        }
+    }
+}
+
+// MARK: - Daily Recovery Trend
+
+struct DailyRecoveryTrend: Identifiable {
+    let id = UUID()
+    let date: Date
+    let dayName: String
+    let score: Int
+    let status: RecoveryStatus
+    let recommendedIntensity: TrainingIntensity
+    let workoutCompleted: Bool
+
+    var scorePercentage: Double {
+        Double(score) / 100.0
+    }
+}
+
 // MARK: - RecoveryProtocolType Extension
 
 extension RecoveryProtocolType {
@@ -319,7 +800,36 @@ extension RecoveryTrackingViewModel {
         viewModel.currentStreak = 5
         viewModel.longestStreak = 12
         viewModel.hasRecoveredToday = true
-        // Sessions would be populated from the service in real usage
+        viewModel.recoveryScore = 78
+        viewModel.recoveryStatus = .readyToTrain
+        viewModel.sleepHours = 7.2
+        viewModel.hrvValue = 58
+        viewModel.sorenessLevel = .low
+        viewModel.trainingRecommendation = TrainingRecommendation.generate(
+            recoveryScore: 78,
+            recoveryStatus: .readyToTrain,
+            sleepHours: 7.2,
+            hrvValue: 58,
+            sorenessLevel: .low
+        )
+        return viewModel
+    }
+
+    static var lowRecoveryPreview: RecoveryTrackingViewModel {
+        let viewModel = RecoveryTrackingViewModel()
+        viewModel.recoveryScore = 45
+        viewModel.recoveryStatus = .needsRest
+        viewModel.sleepHours = 5.2
+        viewModel.hrvValue = 32
+        viewModel.sorenessLevel = .high
+        viewModel.showLowRecoveryAlert = true
+        viewModel.trainingRecommendation = TrainingRecommendation.generate(
+            recoveryScore: 45,
+            recoveryStatus: .needsRest,
+            sleepHours: 5.2,
+            hrvValue: 32,
+            sorenessLevel: .high
+        )
         return viewModel
     }
 }

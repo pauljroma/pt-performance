@@ -1,12 +1,15 @@
 import SwiftUI
 
 /// Main Supplement Dashboard View
-/// Displays today's checklist, quick-log, compliance progress, and "My Stack"
+/// Displays today's checklist with time-grouped supplements, one-tap logging,
+/// swipe-to-log, goal-based recommendations, and evidence grades
 struct SupplementDashboardView: View {
     @StateObject private var viewModel = SupplementDashboardViewModel()
     @Environment(\.colorScheme) private var colorScheme
     @State private var showingQuickLog = false
     @State private var showingRoutineEditor = false
+    @State private var showingSupplementDetail: CatalogSupplement?
+    @State private var showingGoalPicker = false
 
     var body: some View {
         NavigationStack {
@@ -38,6 +41,14 @@ struct SupplementDashboardView: View {
                         } label: {
                             Label("Browse Catalog", systemImage: "books.vertical")
                         }
+
+                        Divider()
+
+                        Button {
+                            showingGoalPicker = true
+                        } label: {
+                            Label("Change Goal", systemImage: "target")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .foregroundColor(.modusCyan)
@@ -56,6 +67,15 @@ struct SupplementDashboardView: View {
             }
             .sheet(isPresented: $showingRoutineEditor) {
                 MySupplementRoutineView()
+            }
+            .sheet(isPresented: $showingGoalPicker) {
+                GoalPickerSheet(
+                    selectedGoal: $viewModel.userGoal,
+                    onSelect: { goal in
+                        viewModel.updateGoal(goal)
+                        showingGoalPicker = false
+                    }
+                )
             }
             .task {
                 await viewModel.loadData()
@@ -87,11 +107,14 @@ struct SupplementDashboardView: View {
                 // Compliance Progress Card
                 complianceCard
 
-                // Today's Checklist
-                todayChecklistSection
+                // Today's Stack Section (Grouped by Timing)
+                todayStackSection
 
                 // Quick Log Button
                 quickLogButton
+
+                // Goal-Based Recommendations
+                recommendationsSection
 
                 // My Stack Section
                 myStackSection
@@ -169,43 +192,45 @@ struct SupplementDashboardView: View {
         .cornerRadius(CornerRadius.lg)
     }
 
-    // MARK: - Today's Checklist Section
+    // MARK: - Today's Stack Section (Time-Grouped)
 
-    private var todayChecklistSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
+    private var todayStackSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Section Header
             HStack {
-                Text("Today's Checklist")
-                    .font(.headline)
+                Image(systemName: "pills.fill")
+                    .foregroundColor(.modusCyan)
+                Text("TODAY'S SUPPLEMENTS")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
                     .foregroundColor(.modusDeepTeal)
 
                 Spacer()
-
-                if !viewModel.todayChecklist.isEmpty {
-                    Button {
-                        HapticFeedback.light()
-                        viewModel.markAllAsTaken()
-                    } label: {
-                        Text("Take All")
-                            .font(.caption)
-                            .foregroundColor(.modusCyan)
-                    }
-                    .accessibilityLabel("Mark all supplements as taken")
-                }
             }
 
             if viewModel.todayChecklist.isEmpty {
                 emptyChecklistView
             } else {
-                ForEach(viewModel.todayChecklist) { item in
-                    SupplementChecklistRow(
-                        item: item,
-                        onToggle: {
+                // Grouped supplements by timing
+                ForEach(viewModel.sortedTimingGroups) { group in
+                    TimingGroupCard(
+                        group: group,
+                        items: viewModel.items(for: group),
+                        isComplete: viewModel.isGroupComplete(group),
+                        isLoggingItem: viewModel.isLoggingItem,
+                        onToggleItem: { item in
                             HapticFeedback.light()
                             viewModel.toggleItem(item)
                         },
-                        onTap: {
+                        onSwipeLog: { item in
+                            viewModel.logSupplementViaSwipe(item)
+                        },
+                        onTapItem: { item in
                             viewModel.selectedSupplementForLog = item.supplement
                             showingQuickLog = true
+                        },
+                        onLogAll: {
+                            viewModel.logAllInGroup(group)
                         }
                     )
                 }
@@ -281,6 +306,70 @@ struct SupplementDashboardView: View {
         }
         .buttonStyle(.plain)
         .shadow(color: Color.modusCyan.opacity(0.3), radius: 8, x: 0, y: 4)
+    }
+
+    // MARK: - Goal-Based Recommendations
+
+    private var recommendationsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Section Header with Goal
+            HStack {
+                Text("FOR YOUR GOALS")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+
+                Text("(\(viewModel.userGoal.displayName))")
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+
+                Spacer()
+
+                Button {
+                    showingGoalPicker = true
+                } label: {
+                    Image(systemName: "chevron.down.circle")
+                        .foregroundColor(.modusCyan)
+                }
+            }
+
+            // Essential Recommendations (Strong Evidence)
+            if !viewModel.essentialRecommendations.isEmpty {
+                RecommendationGroupView(
+                    title: "ESSENTIAL",
+                    subtitle: "Strong Evidence",
+                    recommendations: Array(viewModel.essentialRecommendations.prefix(3)),
+                    onAddToStack: { recommendation in
+                        Task {
+                            await viewModel.addRecommendationToStack(recommendation)
+                        }
+                    }
+                )
+            }
+
+            // Helpful Recommendations (Moderate Evidence)
+            if !viewModel.helpfulRecommendations.isEmpty {
+                RecommendationGroupView(
+                    title: "HELPFUL",
+                    subtitle: "Moderate Evidence",
+                    recommendations: Array(viewModel.helpfulRecommendations.prefix(2)),
+                    onAddToStack: { recommendation in
+                        Task {
+                            await viewModel.addRecommendationToStack(recommendation)
+                        }
+                    }
+                )
+            }
+
+            // Empty state if no recommendations
+            if viewModel.recommendations.isEmpty {
+                Text("No specific recommendations for this goal yet.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, Spacing.md)
+            }
+        }
     }
 
     // MARK: - My Stack Section
@@ -379,72 +468,286 @@ struct SupplementDashboardView: View {
     }
 }
 
-// MARK: - Supplement Checklist Row
+// MARK: - Timing Group Card
 
-private struct SupplementChecklistRow: View {
-    let item: SupplementChecklistItem
-    let onToggle: () -> Void
-    let onTap: () -> Void
+private struct TimingGroupCard: View {
+    let group: SupplementTimingGroup
+    let items: [SupplementChecklistItem]
+    let isComplete: Bool
+    let isLoggingItem: UUID?
+    let onToggleItem: (SupplementChecklistItem) -> Void
+    let onSwipeLog: (SupplementChecklistItem) -> Void
+    let onTapItem: (SupplementChecklistItem) -> Void
+    let onLogAll: () -> Void
 
     var body: some View {
-        HStack(spacing: Spacing.sm) {
-            // Checkbox
-            Button(action: onToggle) {
-                ZStack {
-                    Circle()
-                        .stroke(item.isTaken ? Color.modusTealAccent : Color.gray.opacity(0.3), lineWidth: 2)
-                        .frame(width: 24, height: 24)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Group Header
+            HStack {
+                Image(systemName: group.icon)
+                    .foregroundColor(.modusCyan)
+                    .font(.caption)
 
-                    if item.isTaken {
-                        Circle()
-                            .fill(Color.modusTealAccent)
-                            .frame(width: 24, height: 24)
+                Text(group.displayName)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
 
-                        Image(systemName: "checkmark")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
+                Text("(\(group.subtitle))")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                if isComplete {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.modusTealAccent)
+                        .font(.caption)
+                }
+            }
+
+            // Supplement Items
+            VStack(spacing: 0) {
+                ForEach(items) { item in
+                    SwipeableSupplementRow(
+                        item: item,
+                        isLogging: isLoggingItem == item.id,
+                        onToggle: { onToggleItem(item) },
+                        onSwipeLog: { onSwipeLog(item) },
+                        onTap: { onTapItem(item) }
+                    )
+
+                    if item.id != items.last?.id {
+                        Divider()
+                            .padding(.leading, 40)
                     }
                 }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(item.isTaken ? "Mark \(item.supplement.name) as not taken" : "Mark \(item.supplement.name) as taken")
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.md)
 
-            // Supplement Info
-            Button(action: onTap) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.supplement.name)
-                            .font(.subheadline)
+            // Log All Button for Group
+            if !isComplete {
+                Button(action: onLogAll) {
+                    HStack {
+                        Image(systemName: "checkmark.circle")
+                        Text("Log All \(group.displayName)")
                             .fontWeight(.medium)
-                            .foregroundColor(item.isTaken ? .secondary : .primary)
-                            .strikethrough(item.isTaken)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xs)
+                    .background(Color.modusCyan.opacity(0.1))
+                    .cornerRadius(CornerRadius.sm)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
 
-                        HStack(spacing: Spacing.xs) {
+// MARK: - Swipeable Supplement Row
+
+private struct SwipeableSupplementRow: View {
+    let item: SupplementChecklistItem
+    let isLogging: Bool
+    let onToggle: () -> Void
+    let onSwipeLog: () -> Void
+    let onTap: () -> Void
+
+    @State private var offset: CGFloat = 0
+    @State private var isSwiping = false
+
+    private let swipeThreshold: CGFloat = -80
+
+    var body: some View {
+        ZStack {
+            // Swipe Background (Log action)
+            HStack {
+                Spacer()
+
+                if !item.isTaken {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("LOG")
+                            .fontWeight(.bold)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, Spacing.lg)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(item.isTaken ? Color.gray : Color.modusTealAccent)
+
+            // Main Content
+            HStack(spacing: Spacing.sm) {
+                // Checkbox
+                Button(action: onToggle) {
+                    ZStack {
+                        Circle()
+                            .stroke(item.isTaken ? Color.modusTealAccent : Color.gray.opacity(0.3), lineWidth: 2)
+                            .frame(width: 24, height: 24)
+
+                        if item.isTaken {
+                            Circle()
+                                .fill(Color.modusTealAccent)
+                                .frame(width: 24, height: 24)
+
+                            Image(systemName: "checkmark")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                        }
+
+                        if isLogging {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isLogging)
+                .accessibilityLabel(item.isTaken ? "Mark \(item.supplement.name) as not taken" : "Mark \(item.supplement.name) as taken")
+
+                // Supplement Info
+                Button(action: onTap) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.supplement.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(item.isTaken ? .secondary : .primary)
+                                .strikethrough(item.isTaken)
+
                             Text(item.dosage)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                        }
 
-                            Text("•")
-                                .foregroundColor(.secondary)
-                            Text(item.timing.displayName)
+                        Spacer()
+
+                        if !item.isTaken {
+                            Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundColor(.modusCyan)
+                                .foregroundColor(.secondary)
                         }
                     }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .offset(x: offset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        guard !item.isTaken else { return }
+                        if value.translation.width < 0 {
+                            offset = value.translation.width
+                            isSwiping = true
+                        }
+                    }
+                    .onEnded { value in
+                        guard !item.isTaken else { return }
+                        if value.translation.width < swipeThreshold {
+                            // Trigger log action
+                            withAnimation(.spring(response: 0.3)) {
+                                offset = -UIScreen.main.bounds.width
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                onSwipeLog()
+                                withAnimation(.spring(response: 0.3)) {
+                                    offset = 0
+                                }
+                            }
+                        } else {
+                            withAnimation(.spring(response: 0.3)) {
+                                offset = 0
+                            }
+                        }
+                        isSwiping = false
+                    }
+            )
+        }
+        .clipped()
+    }
+}
+
+// MARK: - Recommendation Group View
+
+private struct RecommendationGroupView: View {
+    let title: String
+    let subtitle: String
+    let recommendations: [GoalBasedRecommendation]
+    let onAddToStack: (GoalBasedRecommendation) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            // Group Title
+            HStack(spacing: Spacing.xs) {
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+
+                Text("(\(subtitle))")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            // Recommendation Items
+            ForEach(recommendations) { recommendation in
+                RecommendationRowView(
+                    recommendation: recommendation,
+                    onAdd: { onAddToStack(recommendation) }
+                )
+            }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+    }
+}
+
+// MARK: - Recommendation Row View
+
+private struct RecommendationRowView: View {
+    let recommendation: GoalBasedRecommendation
+    let onAdd: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            // Status Icon
+            Image(systemName: recommendation.isInStack ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(recommendation.isInStack ? .modusTealAccent : .gray)
+                .font(.subheadline)
+
+            // Supplement Info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(recommendation.supplementName)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+
+                Text(recommendation.benefit)
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+            }
+
+            Spacer()
+
+            // Add Button (if not in stack)
+            if !recommendation.isInStack {
+                Button(action: onAdd) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.modusCyan)
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -481,6 +784,241 @@ private struct SupplementStackItemView: View {
         .padding(.vertical, Spacing.sm)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
+    }
+}
+
+// MARK: - Goal Picker Sheet
+
+private struct GoalPickerSheet: View {
+    @Binding var selectedGoal: UserGoal
+    @Environment(\.dismiss) private var dismiss
+    let onSelect: (UserGoal) -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(UserGoal.allCases) { goal in
+                    Button {
+                        onSelect(goal)
+                    } label: {
+                        HStack {
+                            Image(systemName: goal.icon)
+                                .foregroundColor(.modusCyan)
+                                .frame(width: 30)
+
+                            Text(goal.displayName)
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            if goal == selectedGoal {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.modusTealAccent)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Select Your Goal")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+}
+
+// MARK: - Supplement Detail View with Evidence Grade
+
+struct SupplementDetailWithEvidenceView: View {
+    let supplement: CatalogSupplement
+    @Environment(\.dismiss) private var dismiss
+    @State private var isAddingToStack = false
+
+    private var evidenceGrade: EvidenceGrade {
+        EvidenceGrade.from(supplement.evidenceRating)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                // Header
+                headerSection
+
+                // Evidence Grade
+                evidenceGradeSection
+
+                // Goal Benefits
+                goalBenefitsSection
+
+                // Dosage & Timing
+                dosageTimingSection
+
+                // Add to Stack Button
+                addToStackButton
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle(supplement.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var headerSection: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(supplement.name.uppercased())
+                    .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
+
+                if let brand = supplement.brand {
+                    Text(brand)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(Color.modusCyan.opacity(0.15))
+                    .frame(width: 56, height: 56)
+
+                Image(systemName: supplement.category.icon)
+                    .font(.title2)
+                    .foregroundColor(.modusCyan)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+    }
+
+    private var evidenceGradeSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Evidence Grade:")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            HStack(spacing: 4) {
+                ForEach(0..<5) { index in
+                    Image(systemName: index < evidenceGrade.starCount ? "star.fill" : "star")
+                        .foregroundColor(index < evidenceGrade.starCount ? .yellow : .gray.opacity(0.3))
+                }
+
+                Text("(\(evidenceGrade.displayName))")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(evidenceGrade.color)
+                    .padding(.leading, Spacing.xs)
+            }
+
+            Text(evidenceGrade.fullDescription)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+    }
+
+    private var goalBenefitsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("FOR YOUR GOALS:")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.modusDeepTeal)
+
+            ForEach(supplement.benefits.prefix(4), id: \.self) { benefit in
+                HStack(alignment: .top, spacing: Spacing.sm) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.modusTealAccent)
+                        .font(.caption)
+
+                    Text(benefit)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+    }
+
+    private var dosageTimingSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Dosage
+            HStack {
+                Text("DOSAGE:")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+
+                Text(supplement.dosageRange)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+            }
+
+            // Timing
+            HStack(alignment: .top) {
+                Text("TIMING:")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(supplement.timing) { timing in
+                        Label(timing.displayName, systemImage: timing.icon)
+                            .font(.caption)
+                            .foregroundColor(.modusCyan)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+    }
+
+    private var addToStackButton: some View {
+        Button {
+            isAddingToStack = true
+            HapticFeedback.success()
+            // Add to stack logic would go here
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                isAddingToStack = false
+                dismiss()
+            }
+        } label: {
+            HStack {
+                if isAddingToStack {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else {
+                    Text("Add to My Stack")
+                        .fontWeight(.semibold)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [.modusCyan, .modusTealAccent],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .foregroundColor(.white)
+            .cornerRadius(CornerRadius.lg)
+        }
+        .disabled(isAddingToStack)
     }
 }
 
