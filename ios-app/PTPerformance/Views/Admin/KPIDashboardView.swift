@@ -12,6 +12,13 @@
 //  - p95 summary latency <= 5s
 //  - Unresolved high-severity safety incidents = 0
 //
+//  Features:
+//  - Trend charts for each metric
+//  - Time period selector (7d, 30d, 90d)
+//  - Export functionality
+//  - Auto-refresh indicator
+//  - Pull-to-refresh
+//
 
 import SwiftUI
 import Charts
@@ -20,16 +27,28 @@ import Charts
 
 struct KPIDashboardView: View {
     @StateObject private var viewModel = KPIDashboardViewModel()
+    @ObservedObject private var kpiService = KPITrackingService.shared
     @State private var selectedPeriod: DateRangePeriod = .lastWeek
     @State private var showingExport = false
     @State private var selectedIncident: SafetyIncident?
+    @State private var showTrendCharts = true
+    @State private var autoRefreshEnabled = true
+    @State private var refreshCountdown: Int = 60
+
+    // Timer for auto-refresh countdown
+    private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    // Period Selector
-                    periodSelector
+                    // Period Selector and Controls
+                    controlsSection
+
+                    // Auto-refresh indicator
+                    if autoRefreshEnabled {
+                        autoRefreshIndicator
+                    }
 
                     if viewModel.isLoading && viewModel.dashboard == nil {
                         ProgressView("Loading KPI Dashboard...")
@@ -37,6 +56,11 @@ struct KPIDashboardView: View {
                     } else if let dashboard = viewModel.dashboard {
                         // Overview Status
                         overviewStatusCard(dashboard: dashboard)
+
+                        // Trend Charts Section (collapsible)
+                        if showTrendCharts {
+                            trendChartsSection
+                        }
 
                         // PT Metrics Section
                         ptMetricsSection(dashboard: dashboard)
@@ -54,6 +78,9 @@ struct KPIDashboardView: View {
                         if !viewModel.openIncidents.isEmpty {
                             safetyIncidentsSection
                         }
+
+                        // Last updated timestamp
+                        lastUpdatedFooter
                     } else if let error = viewModel.lastError {
                         errorView(error: error)
                     }
@@ -62,35 +89,83 @@ struct KPIDashboardView: View {
             }
             .navigationTitle("KPI Dashboard")
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    // Toggle trend charts
+                    Button {
+                        withAnimation {
+                            showTrendCharts.toggle()
+                        }
+                    } label: {
+                        Image(systemName: showTrendCharts ? "chart.line.uptrend.xyaxis" : "chart.line.uptrend.xyaxis.circle")
+                    }
+                    .accessibilityLabel(showTrendCharts ? "Hide Charts" : "Show Charts")
+
+                    // Export
                     Button {
                         showingExport = true
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
-                }
 
-                ToolbarItem(placement: .primaryAction) {
+                    // Manual refresh
                     Button {
                         Task {
                             await viewModel.refresh()
+                            refreshCountdown = 60
                         }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
                     .disabled(viewModel.isLoading)
                 }
+
+                ToolbarItem(placement: .topBarLeading) {
+                    // Auto-refresh toggle
+                    Button {
+                        autoRefreshEnabled.toggle()
+                        if autoRefreshEnabled {
+                            kpiService.startAutoRefresh(intervalSeconds: 60)
+                            refreshCountdown = 60
+                        } else {
+                            kpiService.stopAutoRefresh()
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: autoRefreshEnabled ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath.circle")
+                            if autoRefreshEnabled {
+                                Text("Auto")
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                    .tint(autoRefreshEnabled ? .green : .secondary)
+                }
             }
             .refreshable {
                 await viewModel.refresh()
+                refreshCountdown = 60
             }
             .task {
                 await viewModel.loadDashboard(period: selectedPeriod)
+                if autoRefreshEnabled {
+                    kpiService.startAutoRefresh(intervalSeconds: 60)
+                }
             }
             .onChange(of: selectedPeriod) { _, newPeriod in
                 Task {
                     await viewModel.loadDashboard(period: newPeriod)
                 }
+            }
+            .onReceive(refreshTimer) { _ in
+                if autoRefreshEnabled && refreshCountdown > 0 {
+                    refreshCountdown -= 1
+                }
+                if refreshCountdown == 0 {
+                    refreshCountdown = 60
+                }
+            }
+            .onDisappear {
+                kpiService.stopAutoRefresh()
             }
             .sheet(item: $selectedIncident) { incident in
                 SafetyIncidentDetailSheet(incident: incident) {
@@ -100,9 +175,143 @@ struct KPIDashboardView: View {
                 }
             }
             .sheet(isPresented: $showingExport) {
-                KPIExportSheet(dashboard: viewModel.dashboard)
+                KPIExportSheet(dashboard: viewModel.dashboard, viewModel: viewModel)
             }
         }
+    }
+
+    // MARK: - Controls Section
+
+    private var controlsSection: some View {
+        VStack(spacing: 12) {
+            periodSelector
+
+            // View options
+            HStack {
+                Picker("Display", selection: $showTrendCharts) {
+                    Text("Summary").tag(false)
+                    Text("With Trends").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 200)
+
+                Spacer()
+            }
+        }
+    }
+
+    // MARK: - Auto-Refresh Indicator
+
+    private var autoRefreshIndicator: some View {
+        HStack(spacing: 6) {
+            ProgressView()
+                .scaleEffect(0.7)
+                .opacity(viewModel.isLoading ? 1 : 0)
+
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(.caption2)
+                .foregroundColor(.green)
+
+            Text("Auto-refresh in \(refreshCountdown)s")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            if let lastRefresh = kpiService.lastRefreshTime {
+                Text("Last: \(lastRefresh.formatted(date: .omitted, time: .shortened))")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.green.opacity(0.1))
+        .cornerRadius(8)
+    }
+
+    // MARK: - Trend Charts Section
+
+    private var trendChartsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Label("Trend Analysis", systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.headline)
+
+                Spacer()
+
+                Text(selectedPeriod.displayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(.tertiarySystemGroupedBackground))
+                    .cornerRadius(6)
+            }
+
+            // PT WAU Trend
+            PercentageTrendChart(
+                title: "PT Weekly Active Usage",
+                data: kpiService.ptWauTrendData,
+                targetPercentage: KPITargets.ptWauTarget,
+                trendColor: .blue
+            )
+
+            // Athlete WAU Trend
+            PercentageTrendChart(
+                title: "Athlete Weekly Active Usage",
+                data: kpiService.athleteWauTrendData,
+                targetPercentage: KPITargets.athleteWauTarget,
+                trendColor: .purple
+            )
+
+            // Citation Coverage Trend
+            PercentageTrendChart(
+                title: "Citation Coverage",
+                data: kpiService.citationTrendData,
+                targetPercentage: KPITargets.citationCoverageTarget,
+                trendColor: .green
+            )
+
+            // Latency Trend
+            LatencyTrendChart(
+                title: "p95 Latency",
+                data: kpiService.latencyTrendData,
+                targetMs: KPITargets.p95LatencyTargetMs
+            )
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Last Updated Footer
+
+    private var lastUpdatedFooter: some View {
+        HStack {
+            Spacer()
+
+            if let dashboard = viewModel.dashboard {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Period: \(formatDate(dashboard.periodStart)) - \(formatDate(dashboard.periodEnd))")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+
+                    if let lastRefresh = kpiService.lastRefreshTime {
+                        Text("Updated: \(lastRefresh.formatted(date: .abbreviated, time: .shortened))")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter.string(from: date)
     }
 
     // MARK: - Period Selector
@@ -684,12 +893,32 @@ struct SafetyIncidentDetailSheet: View {
 
 struct KPIExportSheet: View {
     let dashboard: KPIDashboard?
+    let viewModel: KPIDashboardViewModel
 
     @Environment(\.dismiss) private var dismiss
+    @State private var exportFormat: ExportFormat = .text
+    @State private var isExporting = false
+    @State private var showShareSheet = false
+    @State private var exportedContent: String = ""
+
+    enum ExportFormat: String, CaseIterable {
+        case text = "Text"
+        case json = "JSON"
+        case csv = "CSV"
+
+        var icon: String {
+            switch self {
+            case .text: return "doc.text"
+            case .json: return "curlybraces"
+            case .csv: return "tablecells"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
+                // Icon
                 Image(systemName: "doc.text")
                     .font(.system(size: 60))
                     .foregroundColor(.blue)
@@ -701,48 +930,155 @@ struct KPIExportSheet: View {
                 Text("Generate a shareable KPI report for the current period.")
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
+                    .padding(.horizontal)
+
+                // Format selector
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Export Format")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Picker("Format", selection: $exportFormat) {
+                        ForEach(ExportFormat.allCases, id: \.self) { format in
+                            Label(format.rawValue, systemImage: format.icon)
+                                .tag(format)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(.horizontal)
+
+                // Preview
+                if let dashboard = dashboard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Report Preview")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        ScrollView {
+                            Text(generatePreview())
+                                .font(.system(.caption, design: .monospaced))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(12)
+                                .background(Color(.tertiarySystemGroupedBackground))
+                                .cornerRadius(8)
+                        }
+                        .frame(height: 200)
+                    }
+                    .padding(.horizontal)
+                }
 
                 Spacer()
 
-                Button {
-                    exportReport()
-                } label: {
-                    Label("Export as PDF", systemImage: "arrow.down.doc")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(dashboard == nil)
+                // Actions
+                VStack(spacing: 12) {
+                    Button {
+                        copyToClipboard()
+                    } label: {
+                        Label("Copy to Clipboard", systemImage: "doc.on.doc")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(dashboard == nil)
 
-                Button {
-                    shareReport()
-                } label: {
-                    Label("Share", systemImage: "square.and.arrow.up")
-                        .frame(maxWidth: .infinity)
+                    Button {
+                        shareReport()
+                    } label: {
+                        Label("Share Report", systemImage: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(dashboard == nil || isExporting)
                 }
-                .buttonStyle(.bordered)
-                .disabled(dashboard == nil)
+                .padding(.horizontal)
             }
-            .padding()
+            .padding(.vertical)
             .navigationTitle("Export")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("Done") {
                         dismiss()
                     }
+                }
+            }
+            .sheet(isPresented: $showShareSheet) {
+                if !exportedContent.isEmpty {
+                    ShareSheet(items: [exportedContent])
                 }
             }
         }
     }
 
-    private func exportReport() {
-        // Export logic would go here
-        dismiss()
+    private func generatePreview() -> String {
+        switch exportFormat {
+        case .text:
+            return viewModel.generateTextSummary()
+        case .json:
+            return generateJSONPreview()
+        case .csv:
+            return generateCSVPreview()
+        }
+    }
+
+    private func generateJSONPreview() -> String {
+        guard let data = viewModel.generateExportData() else {
+            return "{}"
+        }
+
+        if let jsonData = try? JSONSerialization.data(withJSONObject: data, options: [.prettyPrinted, .sortedKeys]),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            // Truncate for preview
+            if jsonString.count > 500 {
+                return String(jsonString.prefix(500)) + "\n..."
+            }
+            return jsonString
+        }
+        return "{}"
+    }
+
+    private func generateCSVPreview() -> String {
+        guard let dashboard = dashboard else { return "" }
+
+        var lines: [String] = []
+        lines.append("Metric,Value,Target,Status")
+        lines.append("PT WAU,\(Int(dashboard.ptMetrics.wauPercentage * 100))%,65%,\(dashboard.ptMetrics.status.rawValue)")
+        lines.append("Athlete WAU,\(Int(dashboard.athleteMetrics.wauPercentage * 100))%,60%,\(dashboard.athleteMetrics.status.rawValue)")
+        lines.append("Citation Coverage,\(Int(dashboard.aiMetrics.citationCoverage * 100))%,95%,\(dashboard.aiMetrics.citationStatus.rawValue)")
+        lines.append("p95 Latency,\(dashboard.aiMetrics.p95LatencyMs)ms,5000ms,\(dashboard.aiMetrics.latencyStatus.rawValue)")
+        lines.append("Unresolved High Severity,\(dashboard.safetyMetrics.unresolvedHighSeverity),0,\(dashboard.safetyMetrics.status.rawValue)")
+
+        return lines.joined(separator: "\n")
+    }
+
+    private func copyToClipboard() {
+        let content = generateFullExport()
+        UIPasteboard.general.string = content
+
+        // Show feedback
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
     }
 
     private func shareReport() {
-        // Share logic would go here
-        dismiss()
+        exportedContent = generateFullExport()
+        showShareSheet = true
+    }
+
+    private func generateFullExport() -> String {
+        switch exportFormat {
+        case .text:
+            return viewModel.generateTextSummary()
+        case .json:
+            guard let data = viewModel.generateExportData(),
+                  let jsonData = try? JSONSerialization.data(withJSONObject: data, options: [.prettyPrinted, .sortedKeys]),
+                  let jsonString = String(data: jsonData, encoding: .utf8) else {
+                return "{}"
+            }
+            return jsonString
+        case .csv:
+            return generateCSVPreview()
+        }
     }
 }
 

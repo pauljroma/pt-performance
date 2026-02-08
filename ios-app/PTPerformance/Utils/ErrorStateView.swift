@@ -296,7 +296,7 @@ extension ErrorStateView {
             return ("calendar.badge.exclamationmark", .orange)
         case .invalidInput, .missingRequiredData, .invalidDateRange:
             return ("exclamationmark.bubble", .yellow)
-        case .unknown:
+        case .unknown, .custom:
             return ("exclamationmark.triangle.fill", .orange)
         }
     }

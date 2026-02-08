@@ -55,6 +55,7 @@ enum AppError: LocalizedError {
     // MARK: - Generic Errors
 
     case unknown(Error)
+    case custom(String)
 
     // MARK: - User-Friendly Error Descriptions
 
@@ -121,6 +122,8 @@ enum AppError: LocalizedError {
         // Generic
         case .unknown:
             return "Something Went Wrong"
+        case .custom(let message):
+            return message
         }
     }
 
@@ -189,6 +192,8 @@ enum AppError: LocalizedError {
         // Generic
         case .unknown:
             return "An unexpected error occurred. Please try again or contact support."
+        case .custom:
+            return "Please try again or contact support if the problem persists."
         }
     }
 
