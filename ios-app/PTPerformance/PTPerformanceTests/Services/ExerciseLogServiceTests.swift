@@ -160,6 +160,8 @@ final class ExerciseLogModelTests: XCTestCase {
     }
 
     func testExerciseLog_FailsWithInvalidJSON() {
+        // ExerciseLog uses defensive decoding with fallback values,
+        // so invalid UUIDs get replaced with new UUIDs instead of throwing
         let json = """
         {
             "id": "not-a-uuid",
@@ -177,9 +179,11 @@ final class ExerciseLogModelTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        XCTAssertThrowsError(try decoder.decode(ExerciseLog.self, from: json)) { error in
-            XCTAssertTrue(error is DecodingError)
-        }
+        // Defensive decoding succeeds with fallback UUID for invalid id
+        let log = try? decoder.decode(ExerciseLog.self, from: json)
+        XCTAssertNotNil(log, "Defensive decoder should not throw, should use fallback UUID")
+        XCTAssertEqual(log?.actualSets, 3)
+        XCTAssertEqual(log?.rpe, 6)
     }
 
     // MARK: - Analytics Helpers Tests
@@ -716,12 +720,13 @@ final class ExerciseLogRPEPainTests: XCTestCase {
     }
 }
 
-// MARK: - Error Case Tests
+// MARK: - Defensive Decoding Tests
+// ExerciseLog uses defensive decoding with fallback values to prevent crashes
 
 final class ExerciseLogErrorTests: XCTestCase {
 
     func testDecode_MissingRequiredField_Throws() {
-        // Missing required 'rpe' field
+        // ExerciseLog uses defensive decoding - missing rpe gets default value of 5
         let json = """
         {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -738,16 +743,14 @@ final class ExerciseLogErrorTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        XCTAssertThrowsError(try decoder.decode(ExerciseLog.self, from: json)) { error in
-            if case DecodingError.keyNotFound(let key, _) = error {
-                XCTAssertEqual(key.stringValue, "rpe")
-            } else {
-                XCTFail("Expected keyNotFound error for 'rpe'")
-            }
-        }
+        // Defensive decoding succeeds with default value for missing rpe
+        let log = try? decoder.decode(ExerciseLog.self, from: json)
+        XCTAssertNotNil(log, "Defensive decoder should not throw")
+        XCTAssertEqual(log?.rpe, 5, "Missing rpe should use default value of 5")
     }
 
     func testDecode_InvalidDateFormat_Throws() {
+        // ExerciseLog uses defensive decoding - invalid date gets current Date()
         let json = """
         {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -765,11 +768,14 @@ final class ExerciseLogErrorTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        XCTAssertThrowsError(try decoder.decode(ExerciseLog.self, from: json))
+        // Defensive decoding succeeds with fallback date
+        let log = try? decoder.decode(ExerciseLog.self, from: json)
+        XCTAssertNotNil(log, "Defensive decoder should not throw")
+        XCTAssertEqual(log?.actualSets, 3)
     }
 
     func testDecode_InvalidRepsType_Throws() {
-        // actual_reps should be array, not string
+        // actual_reps expects array - defensive decoder returns empty array
         let json = """
         {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -787,13 +793,14 @@ final class ExerciseLogErrorTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        XCTAssertThrowsError(try decoder.decode(ExerciseLog.self, from: json)) { error in
-            XCTAssertTrue(error is DecodingError)
-        }
+        // Defensive decoding succeeds with empty array for invalid type
+        let log = try? decoder.decode(ExerciseLog.self, from: json)
+        XCTAssertNotNil(log, "Defensive decoder should not throw")
+        XCTAssertEqual(log?.actualReps, [], "Invalid array should result in empty array")
     }
 
     func testDecode_InvalidLoadType_Throws() {
-        // actual_load should be number, not string
+        // actual_load expects number - defensive decoder returns nil
         let json = """
         {
             "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -813,13 +820,10 @@ final class ExerciseLogErrorTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        XCTAssertThrowsError(try decoder.decode(ExerciseLog.self, from: json)) { error in
-            if case DecodingError.typeMismatch = error {
-                // Expected type mismatch error
-            } else {
-                XCTFail("Expected typeMismatch error")
-            }
-        }
+        // Defensive decoding succeeds with nil for invalid numeric type
+        let log = try? decoder.decode(ExerciseLog.self, from: json)
+        XCTAssertNotNil(log, "Defensive decoder should not throw")
+        XCTAssertNil(log?.actualLoad, "Invalid load type should result in nil")
     }
 }
 

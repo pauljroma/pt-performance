@@ -43,20 +43,28 @@ final class ScheduledSessionModelTests: XCTestCase {
     // MARK: - Scheduled DateTime Computation Tests
 
     func testScheduledDateTime_CombinesDateAndTime() {
-        // Given
+        // Given - use local calendar consistently for both creation and verification
         let calendar = Calendar.current
+
+        // Create date in local timezone
         var dateComponents = DateComponents()
         dateComponents.year = 2024
         dateComponents.month = 6
         dateComponents.day = 15
+        dateComponents.hour = 0
+        dateComponents.minute = 0
         let scheduledDate = calendar.date(from: dateComponents)!
 
+        // Create time in local timezone
         var timeComponents = DateComponents()
+        timeComponents.year = 2024
+        timeComponents.month = 1
+        timeComponents.day = 1
         timeComponents.hour = 14
         timeComponents.minute = 30
         let scheduledTime = calendar.date(from: timeComponents)!
 
-        let session = ScheduledSession.__createDirectly(
+        let session = ScheduledSession(
             id: UUID(),
             patientId: UUID(),
             sessionId: UUID(),
@@ -73,7 +81,7 @@ final class ScheduledSessionModelTests: XCTestCase {
         // When
         let combinedDateTime = session.scheduledDateTime
 
-        // Then
+        // Then - scheduledDateTime uses Calendar.current, so results are in local timezone
         let resultComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: combinedDateTime)
         XCTAssertEqual(resultComponents.year, 2024)
         XCTAssertEqual(resultComponents.month, 6)
@@ -940,6 +948,13 @@ final class RecurringSessionTests: XCTestCase {
 
 final class ScheduledSessionTimeParsingTests: XCTestCase {
 
+    // Use UTC calendar since time parsing uses UTC timezone
+    private var utcCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
+    }
+
     func testTimeParsing_ValidTimeString() throws {
         // Given
         let json = """
@@ -962,10 +977,9 @@ final class ScheduledSessionTimeParsingTests: XCTestCase {
         // When
         let session = try decoder.decode(ScheduledSession.self, from: json)
 
-        // Then
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: session.scheduledTime)
-        let minute = calendar.component(.minute, from: session.scheduledTime)
+        // Then - use UTC calendar since time is parsed in UTC
+        let hour = utcCalendar.component(.hour, from: session.scheduledTime)
+        let minute = utcCalendar.component(.minute, from: session.scheduledTime)
         XCTAssertEqual(hour, 14)
         XCTAssertEqual(minute, 30)
     }
@@ -992,9 +1006,8 @@ final class ScheduledSessionTimeParsingTests: XCTestCase {
         // When
         let session = try decoder.decode(ScheduledSession.self, from: json)
 
-        // Then
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: session.scheduledTime)
+        // Then - use UTC calendar since time is parsed in UTC
+        let hour = utcCalendar.component(.hour, from: session.scheduledTime)
         XCTAssertEqual(hour, 0)
     }
 
@@ -1020,10 +1033,9 @@ final class ScheduledSessionTimeParsingTests: XCTestCase {
         // When
         let session = try decoder.decode(ScheduledSession.self, from: json)
 
-        // Then
-        let calendar = Calendar.current
-        let hour = calendar.component(.hour, from: session.scheduledTime)
-        let minute = calendar.component(.minute, from: session.scheduledTime)
+        // Then - use UTC calendar since time is parsed in UTC
+        let hour = utcCalendar.component(.hour, from: session.scheduledTime)
+        let minute = utcCalendar.component(.minute, from: session.scheduledTime)
         XCTAssertEqual(hour, 23)
         XCTAssertEqual(minute, 59)
     }
