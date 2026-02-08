@@ -35,7 +35,7 @@ struct TherapistDashboardView: View {
             DebugLogView()
         }
         .sheet(isPresented: $showAddPatient) {
-            AddPatientPlaceholderView()
+            TherapistPatientSetupView()
         }
         .sheet(isPresented: $showCreateProgram) {
             CreateProgramPlaceholderView()

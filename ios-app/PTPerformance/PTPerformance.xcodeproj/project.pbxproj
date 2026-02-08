@@ -142,6 +142,7 @@
 		2CF89B8C7278DA7B91E9A298 /* ProgressionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30DD1CE64196E3DC7EDD144 /* ProgressionService.swift */; };
 		2D38482DD82EA02926A5BC7E /* DemoModeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837073694CA66BE826B90C12 /* DemoModeIntegrationTests.swift */; };
 		2D5E56077E6DF2E7701F163A /* TherapistDashboardPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283261F8EAFC591C8D6B232B /* TherapistDashboardPage.swift */; };
+		2DAC43A3364F1600069016DB /* TherapistPatientSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B025C03AEEB5BFBD6713319 /* TherapistPatientSetupView.swift */; };
 		2E1556A815767018B30F402F /* AIChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF44290C2C252B2B43CDBC3F /* AIChatView.swift */; };
 		2E309B913F4EC6B37C32FA69 /* SessionDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE13C2D92E344A2B85FA9A0 /* SessionDetail.swift */; };
 		2E52DA269C638525977FF59C /* ExerciseLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8875A4F1C17A2CCDD1664F26 /* ExerciseLog.swift */; };
@@ -273,6 +274,7 @@
 		55399A5BE2B73C71DCA96DD9 /* HealthHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806D8662805E2FB9FFDCEE69 /* HealthHubView.swift */; };
 		5553BE779FFF19E4ACF6BC08 /* PatientTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F203BAB56648899B1DCD85 /* PatientTabView.swift */; };
 		559C5F2804E997CEF1BA7EA0 /* ProgramTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C954C46A4852619311AA6AC8 /* ProgramTests.swift */; };
+		56B80A0BA9A7F8A9714B2382 /* TherapistPatientSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DD47177BD039230617BD06 /* TherapistPatientSetupViewModel.swift */; };
 		5716D25DAF6CEFF39BAF1DF6 /* RTSProtocolViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDF3142AFCCE65922F6D03F /* RTSProtocolViewModelTests.swift */; };
 		573E9DDBFE547F40A95A3CF4 /* PremiumPackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45577F85AEE3DCB2D6FC7581 /* PremiumPackService.swift */; };
 		57CD33FDA5C2F33701E9BAAD /* SystemWorkoutTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3545656A41FF7848FEEA16 /* SystemWorkoutTemplate.swift */; };
@@ -932,6 +934,7 @@
 		39D448538C380BBF23B630EA /* BigLiftsSummary.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BigLiftsSummary.swift; path = Models/BigLiftsSummary.swift; sourceTree = "<group>"; };
 		3A03ABF73BC8B750EAD8F1D4 /* WorkoutPrescriptionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutPrescriptionService.swift; path = Services/WorkoutPrescriptionService.swift; sourceTree = "<group>"; };
 		3A63B42A0D9999D5F4C74875 /* BigLiftsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BigLiftsViewModel.swift; path = ViewModels/BigLiftsViewModel.swift; sourceTree = "<group>"; };
+		3B025C03AEEB5BFBD6713319 /* TherapistPatientSetupView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistPatientSetupView.swift; path = ../Views/Therapist/TherapistPatientSetupView.swift; sourceTree = "<group>"; };
 		3B8B04A523075AFDC301342C /* RecoveryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecoveryView.swift; path = Views/Health/RecoveryView.swift; sourceTree = "<group>"; };
 		3B9B68793A36920DA037B9A3 /* ReportGenerationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReportGenerationService.swift; path = Services/ReportGenerationService.swift; sourceTree = "<group>"; };
 		3BCF84BD4411E371A5ACA25C /* RecentActivityFeed.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecentActivityFeed.swift; path = ../Views/Therapist/Components/RecentActivityFeed.swift; sourceTree = "<group>"; };
@@ -1279,6 +1282,7 @@
 		B7F09EEC182FCE732CC33BB4 /* MealLogView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MealLogView.swift; path = Views/Nutrition/MealLogView.swift; sourceTree = "<group>"; };
 		B8724D3C884FCD716E45CD3D /* ProgramManagerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramManagerView.swift; path = Views/Therapist/ProgramEditor/ProgramManagerView.swift; sourceTree = "<group>"; };
 		B9AB8EF2D0B422556DC5FEF0 /* ProgressiveOverloadAIServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgressiveOverloadAIServiceTests.swift; path = PTPerformanceTests/Services/ProgressiveOverloadAIServiceTests.swift; sourceTree = "<group>"; };
+		B9DD47177BD039230617BD06 /* TherapistPatientSetupViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TherapistPatientSetupViewModel.swift; path = ViewModels/TherapistPatientSetupViewModel.swift; sourceTree = "<group>"; };
 		BAFA1F751089CD6FD7B00025 /* FatigueTrackingService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FatigueTrackingService.swift; path = Services/FatigueTrackingService.swift; sourceTree = "<group>"; };
 		BB7A7F2826CA2CBCB489BD64 /* FoodSearchView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FoodSearchView.swift; path = Views/Nutrition/FoodSearchView.swift; sourceTree = "<group>"; };
 		BBDB48928DA610B484950710 /* PTPerformanceApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PTPerformanceApp.swift; sourceTree = "<group>"; };
@@ -2276,6 +2280,7 @@
 				DF522EE672677A528232891D /* RTSProtocolViewModel.swift */,
 				FC5BE55E3A28ABB11020C427 /* RTSTestingViewModel.swift */,
 				3A63B42A0D9999D5F4C74875 /* BigLiftsViewModel.swift */,
+				B9DD47177BD039230617BD06 /* TherapistPatientSetupViewModel.swift */,
 			);
 			name = ViewModels;
 			sourceTree = "<group>";
@@ -2580,6 +2585,7 @@
 				86FAE36EA25F5068F6D7EA44 /* Assessments */,
 				37A8A37636BFC6E0124BA3D3 /* Documentation */,
 				706934DB15512EC0E7A74996 /* RTS */,
+				3B025C03AEEB5BFBD6713319 /* TherapistPatientSetupView.swift */,
 			);
 			name = Therapist;
 			path = Therapist;
@@ -3857,6 +3863,8 @@
 				1202F11D9E37B5B3FFC2AFAD /* SafeDecoder.swift in Sources */,
 				085F56308895E8CF9B7CF52D /* QuickSetupViewModel.swift in Sources */,
 				C58D0C82827CF6EB7FCF235F /* QuickSetupView.swift in Sources */,
+				56B80A0BA9A7F8A9714B2382 /* TherapistPatientSetupViewModel.swift in Sources */,
+				2DAC43A3364F1600069016DB /* TherapistPatientSetupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
