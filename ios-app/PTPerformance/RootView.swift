@@ -5,7 +5,9 @@ struct RootView: View {
     @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @ObservedObject private var modeService = ModeService.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
+    @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
     @State private var showPrivacyNotice = false
+    @State private var showQuickSetup = false
     @State private var isCheckingSession = true
 
     var body: some View {
@@ -28,10 +30,20 @@ struct RootView: View {
                     PrivacyNoticeView(onAccept: {
                         hasAcceptedPrivacyNotice = true
                         showPrivacyNotice = false
+                        // Trigger Quick Setup after privacy notice
+                        if !hasCompletedQuickSetup {
+                            showQuickSetup = true
+                        }
                     })
                 } else if appState.userRole == .patient {
                     PatientTabView()
                         .withModeTheme()  // ACP-479: Apply mode-specific theming
+                        .onAppear {
+                            // Show Quick Setup if not completed
+                            if !hasCompletedQuickSetup {
+                                showQuickSetup = true
+                            }
+                        }
                 } else if appState.userRole == .therapist {
                     TherapistTabView()
                 } else {
@@ -47,6 +59,9 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $onboardingCoordinator.shouldShowOnboarding) {
             OnboardingView()
+        }
+        .fullScreenCover(isPresented: $showQuickSetup) {
+            QuickSetupView()
         }
         .task {
             await restoreSession()

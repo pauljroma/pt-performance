@@ -18,10 +18,12 @@ struct ProfileHubView: View {
     @ObservedObject private var supabase = PTSupabaseClient.shared
     @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @ObservedObject private var modeService = ModeService.shared
+    @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
 
     // MARK: - State
 
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
+    @State private var showQuickSetup = false
 
     // MARK: - Computed Properties
 
@@ -98,6 +100,9 @@ struct ProfileHubView: View {
             .navigationTitle("Profile")
             .task {
                 await therapistLinkingVM.checkLinkStatus()
+            }
+            .fullScreenCover(isPresented: $showQuickSetup) {
+                QuickSetupView()
             }
         }
     }
@@ -437,6 +442,26 @@ struct ProfileHubView: View {
             }
             .accessibilityLabel("View Tutorial")
             .accessibilityHint("Replays the app introduction walkthrough")
+
+            // Quick Setup
+            Button {
+                showQuickSetup = true
+            } label: {
+                HStack {
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.modusCyan)
+                        .frame(width: 24)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Quick Setup")
+                            .foregroundColor(.primary)
+                        Text(hasCompletedQuickSetup ? "Redo configuration" : "Configure your account")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .accessibilityLabel("Quick Setup")
+            .accessibilityHint(hasCompletedQuickSetup ? "Redo your mode, goals, and preferences configuration" : "Configure your mode, goals, and initial preferences")
 
             // Privacy Notice
             NavigationLink {
