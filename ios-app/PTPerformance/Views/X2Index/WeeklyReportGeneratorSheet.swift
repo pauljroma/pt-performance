@@ -25,6 +25,7 @@ struct WeeklyReportGeneratorSheet: View {
     @State private var generationProgress: Double = 0
     @State private var generationComplete = false
     @State private var showPatientPicker = false
+    @State private var generationTimer: Timer?
 
     // MARK: - Enums
 
@@ -82,6 +83,10 @@ struct WeeklyReportGeneratorSheet: View {
                     .disabled(isGenerating)
                 }
             }
+            .onDisappear {
+                generationTimer?.invalidate()
+                generationTimer = nil
+            }
         }
     }
 
@@ -128,7 +133,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     private func dateRangeButton(_ range: ReportDateRange) -> some View {
@@ -154,7 +159,7 @@ struct WeeklyReportGeneratorSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
-            .cornerRadius(10)
+            .cornerRadius(DesignTokens.cornerRadiusSmall)
         }
         .buttonStyle(.plain)
     }
@@ -202,7 +207,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Report Options Section
@@ -233,7 +238,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Export Format Section
@@ -252,7 +257,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     private func exportFormatButton(_ format: ExportFormat) -> some View {
@@ -276,7 +281,7 @@ struct WeeklyReportGeneratorSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
         }
         .buttonStyle(.plain)
     }
@@ -296,7 +301,7 @@ struct WeeklyReportGeneratorSheet: View {
             .padding()
             .background(Color.accentColor)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
         }
     }
 
@@ -384,7 +389,7 @@ struct WeeklyReportGeneratorSheet: View {
                         .padding()
                         .background(Color.accentColor)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(DesignTokens.cornerRadiusMedium)
                 }
 
                 Button {
@@ -396,7 +401,7 @@ struct WeeklyReportGeneratorSheet: View {
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
                         .foregroundColor(.accentColor)
-                        .cornerRadius(12)
+                        .cornerRadius(DesignTokens.cornerRadiusMedium)
                 }
 
                 Button {
@@ -422,13 +427,14 @@ struct WeeklyReportGeneratorSheet: View {
         HapticService.medium()
 
         // Simulate report generation
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+        generationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             withAnimation(.linear(duration: 0.1)) {
                 generationProgress += 0.05
             }
 
             if generationProgress >= 1.0 {
                 timer.invalidate()
+                generationTimer = nil
                 HapticService.success()
 
                 withAnimation(.spring(response: 0.4)) {

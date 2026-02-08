@@ -96,8 +96,26 @@ final class FastingTrackerService: ObservableObject {
     // MARK: - Start/End Fast
 
     func startFast(type: FastingType? = nil) async throws {
-        guard let patientId = try await getPatientId() else {
-            throw FastingError.noPatientId
+        DebugLogger.shared.info("FastingTrackerService", "Attempting to start fast...")
+
+        // Check for existing active fast first
+        if currentFast != nil {
+            DebugLogger.shared.warning("FastingTrackerService", "Cannot start fast: a fast is already active")
+            throw FastingError.fastAlreadyActive
+        }
+
+        let patientId: UUID
+        do {
+            guard let fetchedPatientId = try await getPatientId() else {
+                DebugLogger.shared.error("FastingTrackerService", "Failed to start fast: no patient ID available")
+                throw FastingError.noPatientId
+            }
+            patientId = fetchedPatientId
+        } catch let error as FastingError {
+            throw error
+        } catch {
+            DebugLogger.shared.error("FastingTrackerService", "Failed to get patient ID: \(error)")
+            throw FastingError.unknown(error)
         }
 
         // Convert current protocol to FastingType
@@ -126,26 +144,37 @@ final class FastingTrackerService: ObservableObject {
             createdAt: now
         )
 
-        try await supabase.client
-            .from("fasting_logs")
-            .insert(fast)
-            .execute()
+        DebugLogger.shared.info("FastingTrackerService", "Inserting fast record for patient: \(patientId), type: \(fastingType.displayName)")
+
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .insert(fast)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingTrackerService", "Database insert failed: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         currentFast = fast
         await fetchFastingData()
 
         HapticFeedback.success()
-        DebugLogger.shared.info("FastingTrackerService", "Started \(fastingType.displayName) fast")
+        DebugLogger.shared.success("FastingTrackerService", "Started \(fastingType.displayName) fast successfully")
     }
 
     func endFast(energyLevel: Int? = nil, notes: String? = nil, moodEnd: Int? = nil, hungerLevel: Int? = nil) async throws {
         guard let fast = currentFast else {
+            DebugLogger.shared.warning("FastingTrackerService", "Cannot end fast: no active fast")
             throw FastingError.noActiveFast
         }
 
         let endTime = Date()
         let actualHours = endTime.timeIntervalSince(fast.startedAt) / 3600
         let wasBrokenEarly = actualHours < Double(fast.targetHours)
+
+        DebugLogger.shared.info("FastingTrackerService", "Ending fast: \(String(format: "%.1f", actualHours)) hours, target: \(fast.targetHours) hours")
 
         struct FastingUpdate: Encodable {
             let ended_at: String
@@ -167,46 +196,70 @@ final class FastingTrackerService: ObservableObject {
             notes: notes
         )
 
-        try await supabase.client
-            .from("fasting_logs")
-            .update(update)
-            .eq("id", value: fast.id.uuidString)
-            .execute()
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .update(update)
+                .eq("id", value: fast.id.uuidString)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingTrackerService", "Database update failed when ending fast: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         currentFast = nil
         await fetchFastingData()
 
         HapticFeedback.success()
-        DebugLogger.shared.info("FastingTrackerService", "Ended fast after \(String(format: "%.1f", actualHours)) hours")
+        DebugLogger.shared.success("FastingTrackerService", "Ended fast after \(String(format: "%.1f", actualHours)) hours")
     }
 
     func cancelFast() async throws {
         guard let fast = currentFast else {
+            DebugLogger.shared.warning("FastingTrackerService", "Cannot cancel fast: no active fast")
             throw FastingError.noActiveFast
         }
 
-        try await supabase.client
-            .from("fasting_logs")
-            .delete()
-            .eq("id", value: fast.id.uuidString)
-            .execute()
+        DebugLogger.shared.info("FastingTrackerService", "Cancelling fast: \(fast.id)")
+
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .delete()
+                .eq("id", value: fast.id.uuidString)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingTrackerService", "Database delete failed when cancelling fast: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         currentFast = nil
         await fetchFastingData()
 
-        DebugLogger.shared.info("FastingTrackerService", "Cancelled fast")
+        DebugLogger.shared.success("FastingTrackerService", "Cancelled fast successfully")
     }
 
     // MARK: - Delete Fast
 
     func deleteFast(_ fast: FastingLog) async throws {
-        try await supabase.client
-            .from("fasting_logs")
-            .delete()
-            .eq("id", value: fast.id.uuidString)
-            .execute()
+        DebugLogger.shared.info("FastingTrackerService", "Deleting fast: \(fast.id)")
+
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .delete()
+                .eq("id", value: fast.id.uuidString)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingTrackerService", "Database delete failed: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         await fetchFastingData()
+        DebugLogger.shared.success("FastingTrackerService", "Deleted fast successfully")
     }
 
     // MARK: - Stats Calculation
@@ -355,22 +408,39 @@ final class FastingTrackerService: ObservableObject {
 
     // MARK: - Helpers
 
-    private func getPatientId() async throws -> UUID? {
-        guard let userId = supabase.client.auth.currentUser?.id else { return nil }
+    /// Demo patient ID for unauthenticated testing
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
 
-        struct PatientRow: Decodable {
-            let id: UUID
+    private func getPatientId() async throws -> UUID? {
+        // Check for authenticated user first
+        if let userId = supabase.client.auth.currentUser?.id {
+            struct PatientRow: Decodable {
+                let id: UUID
+            }
+
+            do {
+                let patients: [PatientRow] = try await supabase.client
+                    .from("patients")
+                    .select("id")
+                    .eq("user_id", value: userId.uuidString)
+                    .limit(1)
+                    .execute()
+                    .value
+
+                if let patientId = patients.first?.id {
+                    return patientId
+                }
+
+                DebugLogger.shared.warning("FastingTrackerService", "No patient record found for authenticated user: \(userId)")
+            } catch {
+                DebugLogger.shared.error("FastingTrackerService", "Failed to fetch patient ID: \(error)")
+                throw error
+            }
         }
 
-        let patients: [PatientRow] = try await supabase.client
-            .from("patients")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
-            .value
-
-        return patients.first?.id
+        // Fallback to demo patient for unauthenticated users (demo mode)
+        DebugLogger.shared.warning("FastingTrackerService", "No authenticated user, using demo patient")
+        return demoPatientId
     }
 
     private func convertProtocolToType(_ protocol_: FastingProtocolType) -> FastingType {

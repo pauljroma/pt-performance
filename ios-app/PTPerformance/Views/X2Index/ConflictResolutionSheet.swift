@@ -23,6 +23,8 @@ struct ConflictGroupResolutionSheet: View {
     @State private var notes = ""
     @State private var isResolving = false
     @State private var animateIn = false
+    @State private var showError = false
+    @State private var errorMessage: String?
 
     // MARK: - Resolution Options
 
@@ -102,6 +104,11 @@ struct ConflictGroupResolutionSheet: View {
                     animateIn = true
                 }
             }
+            .alert("Resolution Failed", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "An unexpected error occurred while resolving the conflict")
+            }
         }
     }
 
@@ -161,11 +168,11 @@ struct ConflictGroupResolutionSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                         .fill(selectedResolution == .useFirst ? Color.blue.opacity(0.1) : Color(.tertiarySystemFill))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                         .stroke(selectedResolution == .useFirst ? Color.blue : Color.clear, lineWidth: 2)
                 )
                 .onTapGesture {
@@ -196,11 +203,11 @@ struct ConflictGroupResolutionSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                         .fill(selectedResolution == .useSecond ? Color.purple.opacity(0.1) : Color(.tertiarySystemFill))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                         .stroke(selectedResolution == .useSecond ? Color.purple : Color.clear, lineWidth: 2)
                 )
                 .onTapGesture {
@@ -217,7 +224,7 @@ struct ConflictGroupResolutionSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Resolution Options Card
@@ -241,7 +248,7 @@ struct ConflictGroupResolutionSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .animation(.spring(response: 0.3), value: selectedResolution)
     }
 
@@ -288,15 +295,15 @@ struct ConflictGroupResolutionSheet: View {
                 .frame(minHeight: 80)
                 .padding(8)
                 .background(Color(.systemBackground))
-                .cornerRadius(8)
+                .cornerRadius(DesignTokens.cornerRadiusSmall)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusSmall)
                         .stroke(Color(.separator), lineWidth: 1)
                 )
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Resolve Button
@@ -319,7 +326,7 @@ struct ConflictGroupResolutionSheet: View {
             .padding()
             .background(Color.accentColor)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
         }
         .disabled(isResolving || (selectedResolution == .manual && customValue.isEmpty))
     }
@@ -330,17 +337,24 @@ struct ConflictGroupResolutionSheet: View {
         isResolving = true
         HapticService.shared.prepare(for: .success)
 
-        // Simulate resolution
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        do {
+            // Simulate resolution with potential failure
+            try await Task.sleep(nanoseconds: 500_000_000)
 
-        // Success animation
-        HapticService.success()
+            // Success animation
+            HapticService.success()
 
-        // Post notification
-        NotificationCenter.default.post(name: .conflictResolved, object: nil)
+            // Post notification
+            NotificationCenter.default.post(name: .conflictResolved, object: nil)
 
-        dismiss()
-        onDismiss()
+            dismiss()
+            onDismiss()
+        } catch {
+            isResolving = false
+            HapticService.error()
+            errorMessage = error.localizedDescription
+            showError = true
+        }
     }
 }
 

@@ -380,6 +380,13 @@ final class RecoveryTrackingViewModel: ObservableObject {
     // MARK: - Session Management
 
     func saveSession(_ input: RecoverySessionInput) async {
+        // Validate duration before attempting to save
+        guard input.duration > 0 else {
+            self.error = "Session duration must be at least 1 second. Please try again."
+            HapticFeedback.error()
+            return
+        }
+
         isLoading = true
 
         do {
@@ -402,8 +409,19 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
             await loadData()
             HapticFeedback.success()
+        } catch let sessionError as RecoverySessionError {
+            // Handle specific recovery session errors with user-friendly messages
+            self.error = sessionError.errorDescription
+            HapticFeedback.error()
+            DebugLogger.shared.error("RecoveryTrackingViewModel", "Failed to save session: \(sessionError)")
         } catch {
-            self.error = error.localizedDescription
+            // Handle database constraint violations with user-friendly message
+            let errorString = error.localizedDescription
+            if errorString.contains("duration_minutes_check") {
+                self.error = "Session duration is invalid. Please ensure your session is at least 1 minute long."
+            } else {
+                self.error = "Failed to save session. Please check your connection and try again."
+            }
             HapticFeedback.error()
             DebugLogger.shared.error("RecoveryTrackingViewModel", "Failed to save session: \(error)")
         }
@@ -413,6 +431,15 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
     func completeTimerSession(duration: Int, notes: String) async {
         guard let config = timerConfig else { return }
+
+        // Validate duration before attempting to save
+        guard duration > 0 else {
+            self.error = "Session duration must be at least 1 second. Please try again."
+            HapticFeedback.error()
+            showingTimer = false
+            timerConfig = nil
+            return
+        }
 
         let input = RecoverySessionInput(
             sessionType: config.sessionType,

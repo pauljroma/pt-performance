@@ -59,7 +59,7 @@ struct X2CommandCenterView: View {
                 // Section picker
                 sectionPicker
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top, DesignTokens.spacingSmall)
 
                 // Content
                 ZStack {
@@ -133,6 +133,11 @@ struct X2CommandCenterView: View {
                     }
                 }
             }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(viewModel.errorMessage ?? "An unexpected error occurred")
+            }
         }
     }
 
@@ -140,12 +145,12 @@ struct X2CommandCenterView: View {
 
     private var sectionPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.spacingMedium) {
                 ForEach(CommandCenterSection.allCases, id: \.self) { section in
                     sectionButton(section)
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DesignTokens.spacingSmall)
         }
     }
 
@@ -247,7 +252,7 @@ struct X2CommandCenterView: View {
     // MARK: - Active Escalations Card
 
     private var activeEscalationsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
             HStack {
                 Label("Active Escalations", systemImage: "exclamationmark.shield.fill")
                     .font(.headline)
@@ -285,13 +290,13 @@ struct X2CommandCenterView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Pending Conflicts Card
 
     private var pendingConflictsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
             HStack {
                 Label("Data Conflicts", systemImage: "arrow.triangle.2.circlepath")
                     .font(.headline)
@@ -329,13 +334,13 @@ struct X2CommandCenterView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Recent Reports Card
 
     private var recentReportsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
             HStack {
                 Label("Recent Reports", systemImage: "doc.text.fill")
                     .font(.headline)
@@ -357,21 +362,21 @@ struct X2CommandCenterView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Quick Actions Grid
 
     private var quickActionsGrid: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
             Text("Quick Actions")
                 .font(.headline)
                 .foregroundColor(.primary)
 
             LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 12),
-                GridItem(.flexible(), spacing: 12)
-            ], spacing: 12) {
+                GridItem(.flexible(), spacing: DesignTokens.spacingMedium),
+                GridItem(.flexible(), spacing: DesignTokens.spacingMedium)
+            ], spacing: DesignTokens.spacingMedium) {
                 CommandCenterQuickAction(
                     icon: "clock.badge.fill",
                     title: "60s Brief",
@@ -415,7 +420,7 @@ struct X2CommandCenterView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
     }
 
     // MARK: - Escalations Content
@@ -514,7 +519,7 @@ struct X2CommandCenterView: View {
                             .foregroundColor(.accentColor)
                             .padding()
                             .background(Color.accentColor.opacity(0.1))
-                            .cornerRadius(12)
+                            .cornerRadius(DesignTokens.cornerRadiusMedium)
                         }
 
                         ForEach(viewModel.recentReports) { report in
@@ -599,7 +604,7 @@ struct CommandCenterEmptyState: View {
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
                         .background(Color.accentColor)
-                        .cornerRadius(12)
+                        .cornerRadius(DesignTokens.cornerRadiusMedium)
                 }
             }
 
@@ -620,7 +625,7 @@ struct CommandCenterQuickAction: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(color)
@@ -636,7 +641,7 @@ struct CommandCenterQuickAction: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .background(color.opacity(0.1))
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
         }
         .buttonStyle(.plain)
     }
@@ -650,7 +655,7 @@ struct EscalationMiniCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.spacingMedium) {
                 Image(systemName: escalation.severity.icon)
                     .foregroundColor(Color(escalation.severity.colorName))
                     .font(.body)
@@ -671,7 +676,7 @@ struct EscalationMiniCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DesignTokens.spacingSmall)
         }
         .buttonStyle(.plain)
     }
@@ -683,7 +688,7 @@ struct EscalationCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
                 HStack {
                     Image(systemName: escalation.severity.icon)
                         .foregroundColor(Color(escalation.severity.colorName))
@@ -726,9 +731,9 @@ struct EscalationCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                     .stroke(Color(escalation.severity.colorName).opacity(0.3), lineWidth: 1)
             )
         }
@@ -744,7 +749,7 @@ struct ConflictMiniCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: DesignTokens.spacingMedium) {
                 Image(systemName: conflict.conflictType.iconName)
                     .foregroundColor(conflict.conflictType.color)
                     .font(.body)
@@ -765,7 +770,7 @@ struct ConflictMiniCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, DesignTokens.spacingSmall)
         }
         .buttonStyle(.plain)
     }
@@ -777,7 +782,7 @@ struct ConflictGroupCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
                 HStack {
                     Image(systemName: conflict.conflictType.iconName)
                         .foregroundColor(conflict.conflictType.color)
@@ -814,9 +819,9 @@ struct ConflictGroupCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
                     .stroke(conflict.conflictType.color.opacity(0.3), lineWidth: 1)
             )
         }
@@ -830,7 +835,7 @@ struct ReportMiniCard: View {
     let report: WeeklyReportSummary
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: DesignTokens.spacingMedium) {
             Image(systemName: "doc.text.fill")
                 .foregroundColor(.blue)
                 .font(.body)
@@ -855,7 +860,7 @@ struct ReportMiniCard: View {
                     .scaleEffect(0.8)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, DesignTokens.spacingSmall)
     }
 }
 
@@ -863,7 +868,7 @@ struct ReportCard: View {
     let report: WeeklyReportSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
             HStack {
                 Image(systemName: "doc.text.fill")
                     .foregroundColor(.blue)
@@ -912,7 +917,7 @@ struct ReportCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
 }
 

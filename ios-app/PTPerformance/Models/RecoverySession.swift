@@ -97,7 +97,8 @@ struct RecoverySession: Identifiable, Codable, Hashable {
         self.patientId = patientId
         self.protocolType = protocolType
         self.loggedAt = loggedAt
-        self.durationMinutes = durationSeconds / 60
+        // Round up to ensure at least 1 minute (database requires duration_minutes > 0)
+        self.durationMinutes = max(1, (durationSeconds + 59) / 60)
         self.temperature = temperature
         self.heartRateAvg = heartRateAvg
         self.heartRateMax = heartRateMax

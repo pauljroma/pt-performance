@@ -304,9 +304,20 @@ final class FastingTrackerViewModel: ObservableObject {
             try await service.startFast()
             updateTimerState()
             HapticFeedback.success()
+        } catch let fastingError as FastingError {
+            ErrorLogger.shared.logError(fastingError, context: "FastingTrackerViewModel.startFast", metadata: [
+                "protocol": selectedProtocol.rawValue,
+                "customHours": customFastingHours
+            ])
+            self.error = fastingError.errorDescription ?? "Unable to start your fast. Please try again."
+            HapticFeedback.error()
         } catch {
-            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.startFast")
-            self.error = "Unable to start your fast. Please try again."
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.startFast", metadata: [
+                "protocol": selectedProtocol.rawValue,
+                "customHours": customFastingHours,
+                "errorType": String(describing: type(of: error))
+            ])
+            self.error = "Unable to start your fast: \(error.localizedDescription)"
             HapticFeedback.error()
         }
     }
@@ -326,9 +337,18 @@ final class FastingTrackerViewModel: ObservableObject {
                 hungerLevel: hungerLevel
             )
             HapticFeedback.success()
+        } catch let fastingError as FastingError {
+            ErrorLogger.shared.logError(fastingError, context: "FastingTrackerViewModel.endFast", metadata: [
+                "energyLevel": energyLevel,
+                "hasNotes": notes != nil
+            ])
+            self.error = fastingError.errorDescription ?? "Unable to end your fast. Please try again."
+            HapticFeedback.error()
         } catch {
-            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.endFast")
-            self.error = "Unable to end your fast. Please try again."
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.endFast", metadata: [
+                "errorType": String(describing: type(of: error))
+            ])
+            self.error = "Unable to end your fast: \(error.localizedDescription)"
             HapticFeedback.error()
         }
     }
@@ -337,9 +357,14 @@ final class FastingTrackerViewModel: ObservableObject {
         error = nil
         do {
             try await service.cancelFast()
+        } catch let fastingError as FastingError {
+            ErrorLogger.shared.logError(fastingError, context: "FastingTrackerViewModel.cancelFast")
+            self.error = fastingError.errorDescription ?? "Unable to cancel your fast. Please try again."
         } catch {
-            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.cancelFast")
-            self.error = "Unable to cancel your fast. Please try again."
+            ErrorLogger.shared.logError(error, context: "FastingTrackerViewModel.cancelFast", metadata: [
+                "errorType": String(describing: type(of: error))
+            ])
+            self.error = "Unable to cancel your fast: \(error.localizedDescription)"
         }
     }
 

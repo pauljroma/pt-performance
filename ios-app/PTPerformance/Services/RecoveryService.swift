@@ -77,14 +77,14 @@ final class RecoveryService: ObservableObject {
     ///
     /// - Parameters:
     ///   - protocolType: Type of recovery protocol (sauna, cold plunge, etc.)
-    ///   - durationSeconds: Duration in seconds
+    ///   - durationSeconds: Duration in seconds (must be at least 1 second)
     ///   - temperature: Optional temperature (varies by protocol)
     ///   - heartRateAvg: Optional average heart rate during session
     ///   - heartRateMax: Optional maximum heart rate during session
     ///   - perceivedEffort: Optional effort rating (1-10)
     ///   - rating: Optional overall session rating (1-5)
     ///   - notes: Optional notes about the session
-    /// - Throws: Error if patient ID not found or database insert fails
+    /// - Throws: RecoverySessionError if validation fails, or other errors for database issues
     func logSession(
         protocolType: RecoveryProtocolType,
         durationSeconds: Int,
@@ -97,8 +97,22 @@ final class RecoveryService: ObservableObject {
     ) async throws {
         logger.log("[RecoveryService] Logging \(protocolType.displayName) session", level: .diagnostic)
 
+        // Validate duration - database requires duration_minutes > 0
+        guard durationSeconds > 0 else {
+            let error = RecoverySessionError.invalidDuration(
+                message: "Session duration must be at least 1 second."
+            )
+            errorLogger.logError(error, context: "RecoveryService.logSession.validation")
+            throw error
+        }
+
+        // Warn if duration seems unreasonably long (more than 4 hours)
+        if durationSeconds > 14400 {
+            logger.log("[RecoveryService] Warning: Unusually long session duration (\(durationSeconds / 60) minutes)", level: .warning)
+        }
+
         guard let patientId = try await getPatientId() else {
-            let error = NSError(domain: "RecoveryService", code: 1, userInfo: [NSLocalizedDescriptionKey: "No patient ID found"])
+            let error = RecoverySessionError.noPatientId
             errorLogger.logError(error, context: "RecoveryService.logSession")
             throw error
         }
@@ -621,6 +635,37 @@ final class RecoveryService: ObservableObject {
         // Fallback to demo patient for unauthenticated users (demo mode)
         DebugLogger.shared.log("[RecoveryService] No authenticated user, using demo patient", level: .warning)
         return demoPatientId
+    }
+}
+
+// MARK: - Recovery Session Error
+
+/// Errors that can occur when logging recovery sessions
+enum RecoverySessionError: LocalizedError {
+    case invalidDuration(message: String)
+    case noPatientId
+    case databaseError(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidDuration(let message):
+            return message
+        case .noPatientId:
+            return "Unable to find your patient profile. Please try signing out and back in."
+        case .databaseError(let underlying):
+            return "Failed to save session: \(underlying.localizedDescription)"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .invalidDuration:
+            return "Please ensure your session is at least 1 second long."
+        case .noPatientId:
+            return "If the problem persists, contact support."
+        case .databaseError:
+            return "Please check your internet connection and try again."
+        }
     }
 }
 

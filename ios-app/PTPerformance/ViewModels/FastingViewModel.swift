@@ -84,8 +84,17 @@ final class FastingViewModel: ObservableObject {
             showingStartSheet = false
             // Refresh workout recommendation when fast starts
             await fetchWorkoutRecommendation()
+        } catch let fastingError as FastingError {
+            ErrorLogger.shared.logError(fastingError, context: "FastingViewModel.startFast", metadata: [
+                "fastType": selectedFastType.rawValue
+            ])
+            self.error = fastingError.errorDescription ?? "Unable to start your fast. Please try again."
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "FastingViewModel.startFast", metadata: [
+                "fastType": selectedFastType.rawValue,
+                "errorType": String(describing: type(of: error))
+            ])
+            self.error = "Unable to start your fast: \(error.localizedDescription)"
         }
     }
 
@@ -101,8 +110,17 @@ final class FastingViewModel: ObservableObject {
             resetEndForm()
             // Refresh workout recommendation when fast ends
             await fetchWorkoutRecommendation()
+        } catch let fastingError as FastingError {
+            ErrorLogger.shared.logError(fastingError, context: "FastingViewModel.endFast", metadata: [
+                "energyLevel": energyLevel,
+                "hasNotes": !endNotes.isEmpty
+            ])
+            self.error = fastingError.errorDescription ?? "Unable to end your fast. Please try again."
         } catch {
-            self.error = error.localizedDescription
+            ErrorLogger.shared.logError(error, context: "FastingViewModel.endFast", metadata: [
+                "errorType": String(describing: type(of: error))
+            ])
+            self.error = "Unable to end your fast: \(error.localizedDescription)"
         }
     }
 

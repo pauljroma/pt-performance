@@ -324,13 +324,26 @@ final class FastingService: ObservableObject {
         type: FastingType,
         targetHours: Int? = nil
     ) async throws -> FastingLog {
-        guard let patientId = try await getPatientId() else {
-            throw FastingError.noPatientId
+        DebugLogger.shared.info("FastingService", "Attempting to start \(type.displayName) fast...")
+
+        // Check for existing active fast first
+        if activeFast != nil {
+            DebugLogger.shared.warning("FastingService", "Cannot start fast: a fast is already active")
+            throw FastingError.fastAlreadyActive
         }
 
-        // Check for existing active fast
-        if activeFast != nil {
-            throw FastingError.fastAlreadyActive
+        let patientId: UUID
+        do {
+            guard let fetchedPatientId = try await getPatientId() else {
+                DebugLogger.shared.error("FastingService", "Failed to start fast: no patient ID available")
+                throw FastingError.noPatientId
+            }
+            patientId = fetchedPatientId
+        } catch let error as FastingError {
+            throw error
+        } catch {
+            DebugLogger.shared.error("FastingService", "Failed to get patient ID: \(error)")
+            throw FastingError.unknown(error)
         }
 
         let now = Date()
@@ -355,13 +368,21 @@ final class FastingService: ObservableObject {
             createdAt: now
         )
 
-        try await supabase.client
-            .from("fasting_logs")
-            .insert(fast)
-            .execute()
+        DebugLogger.shared.info("FastingService", "Inserting fast record for patient: \(patientId), type: \(type.displayName)")
+
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .insert(fast)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingService", "Database insert failed: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         self.activeFast = fast
-        DebugLogger.shared.success("FastingService", "Started \(type.displayName) fast")
+        DebugLogger.shared.success("FastingService", "Started \(type.displayName) fast successfully")
 
         // Refresh data
         await fetchFastingHistory()
@@ -381,6 +402,7 @@ final class FastingService: ObservableObject {
         notes: String? = nil
     ) async throws -> FastCompletionResult {
         guard let fast = activeFast else {
+            DebugLogger.shared.warning("FastingService", "Cannot end fast: no active fast")
             throw FastingError.noActiveFast
         }
 
@@ -388,6 +410,8 @@ final class FastingService: ObservableObject {
         let actualHours = endTime.timeIntervalSince(fast.startedAt) / 3600
         let wasCompleted = actualHours >= Double(fast.targetHours)
         let wasBrokenEarly = !wasCompleted
+
+        DebugLogger.shared.info("FastingService", "Ending fast: \(String(format: "%.1f", actualHours)) hours, target: \(fast.targetHours) hours")
 
         struct FastingUpdate: Encodable {
             let ended_at: String
@@ -405,11 +429,17 @@ final class FastingService: ObservableObject {
             notes: notes
         )
 
-        try await supabase.client
-            .from("fasting_logs")
-            .update(update)
-            .eq("id", value: fast.id.uuidString)
-            .execute()
+        do {
+            try await supabase.client
+                .from("fasting_logs")
+                .update(update)
+                .eq("id", value: fast.id.uuidString)
+                .execute()
+        } catch {
+            DebugLogger.shared.error("FastingService", "Database update failed when ending fast: \(error)")
+            ErrorLogger.shared.logDatabaseError(error, table: "fasting_logs")
+            throw FastingError.unknown(error)
+        }
 
         self.activeFast = nil
 

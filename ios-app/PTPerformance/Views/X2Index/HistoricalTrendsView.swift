@@ -243,7 +243,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .padding(.horizontal)
     }
 
@@ -316,7 +316,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .padding(.horizontal)
     }
 
@@ -339,7 +339,7 @@ struct HistoricalTrendsView: View {
         .padding(40)
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .padding(.horizontal)
     }
 
@@ -362,7 +362,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .padding(.horizontal)
     }
 
@@ -391,7 +391,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(DesignTokens.cornerRadiusLarge)
         .padding(.horizontal)
     }
 }
@@ -433,7 +433,7 @@ struct TrendStatisticBox: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
 }
 
