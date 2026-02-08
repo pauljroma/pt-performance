@@ -52,7 +52,26 @@ class QuickSetupViewModel: ObservableObject {
         let id: String
     }
 
-    /// Fetch the patient's database ID from the user's auth ID
+    /// Struct for creating a new patient record
+    private struct PatientInsert: Encodable {
+        let userId: String
+        let email: String
+        let firstName: String
+        let lastName: String
+        let sport: String
+        let mode: String
+
+        enum CodingKeys: String, CodingKey {
+            case userId = "user_id"
+            case email
+            case firstName = "first_name"
+            case lastName = "last_name"
+            case sport
+            case mode
+        }
+    }
+
+    /// Fetch the patient's database ID from the user's auth ID, creating a record if needed
     private func getPatientId() async throws -> UUID {
         if let cached = cachedPatientId {
             return cached
@@ -62,10 +81,53 @@ class QuickSetupViewModel: ObservableObject {
             throw NSError(domain: "QuickSetup", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not logged in"])
         }
 
+        // First try to fetch existing patient
         let response = try await supabase.client
             .from("patients")
             .select("id")
             .eq("user_id", value: userId)
+            .execute()
+
+        let decoder = JSONDecoder()
+
+        // Check if we got results
+        if let patients = try? decoder.decode([PatientIdResponse].self, from: response.data),
+           let firstPatient = patients.first,
+           let patientId = UUID(uuidString: firstPatient.id) {
+            cachedPatientId = patientId
+            return patientId
+        }
+
+        // No patient record exists - create one
+        let patientId = try await createPatientRecord(userId: userId)
+        cachedPatientId = patientId
+        return patientId
+    }
+
+    /// Create a new patient record for the user
+    private func createPatientRecord(userId: String) async throws -> UUID {
+        // Get user email from auth
+        let userEmail = supabase.client.auth.currentUser?.email ?? "unknown@example.com"
+
+        // Parse name from email or use defaults
+        let emailName = userEmail.components(separatedBy: "@").first ?? "User"
+        let nameParts = emailName.components(separatedBy: ".")
+        let firstName = nameParts.first?.capitalized ?? "New"
+        let lastName = nameParts.count > 1 ? nameParts.last?.capitalized ?? "User" : "User"
+
+        let patientInsert = PatientInsert(
+            userId: userId,
+            email: userEmail.lowercased(),
+            firstName: firstName,
+            lastName: lastName,
+            sport: "General Fitness",
+            mode: selectedMode.rawValue
+        )
+
+        let response = try await supabase.client
+            .from("patients")
+            .insert(patientInsert)
+            .select("id")
             .single()
             .execute()
 
@@ -76,7 +138,10 @@ class QuickSetupViewModel: ObservableObject {
             throw NSError(domain: "QuickSetup", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid patient ID"])
         }
 
-        cachedPatientId = patientId
+        #if DEBUG
+        print("✅ Created patient record: \(patientId)")
+        #endif
+
         return patientId
     }
 
