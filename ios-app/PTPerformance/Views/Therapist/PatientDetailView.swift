@@ -119,6 +119,10 @@ struct PatientDetailView: View {
         .navigationBarTitleDisplayMode(shouldUseSplitView ? .inline : .large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
+                PTBriefButton(athleteId: patient.id, athleteName: patient.fullName)
+            }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {
                         showReportBuilder = true

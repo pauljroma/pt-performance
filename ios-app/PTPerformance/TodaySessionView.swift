@@ -415,6 +415,9 @@ struct TodaySessionView: View {
     private var sessionContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                // Daily Check-in Prompt Card - prominent entry point
+                CheckInPromptCard()
+
                 // Enrolled Programs Section (only shows if user has enrolled programs)
                 if enrolledProgramsViewModel.hasEnrolledPrograms {
                     TodayEnrolledProgramsSection(
@@ -665,6 +668,10 @@ struct TodaySessionView: View {
     private var noSessionView: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Daily Check-in Prompt Card - always show for better discoverability
+                CheckInPromptCard()
+                    .padding(.horizontal)
+
                 // Show completed workouts even when no prescribed session
                 if viewModel.completedTodayCount > 0 {
                     CompletedWorkoutsSection(

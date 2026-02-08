@@ -1659,3 +1659,37 @@ extension ProtocolTemplate {
         .stressManagement
     ]
 }
+
+// MARK: - TaskType SwiftUI Extensions
+
+import SwiftUI
+
+extension ProtocolTask.TaskType {
+    /// SF Symbol icon name for the task type
+    var icon: String {
+        switch self {
+        case .exercise: return "figure.run"
+        case .stretch: return "figure.flexibility"
+        case .ice: return "snowflake"
+        case .heat: return "flame.fill"
+        case .rest: return "bed.double.fill"
+        case .medication: return "pills.fill"
+        case .checkIn: return "checkmark.circle.fill"
+        case .appointment: return "calendar"
+        }
+    }
+
+    /// SwiftUI Color for the task type
+    var swiftUIColor: Color {
+        switch self {
+        case .exercise: return .orange
+        case .stretch: return .purple
+        case .ice: return .cyan
+        case .heat: return .red
+        case .rest: return .blue
+        case .medication: return .green
+        case .checkIn: return .modusTealAccent
+        case .appointment: return .modusCyan
+        }
+    }
+}

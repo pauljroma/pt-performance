@@ -39,6 +39,12 @@ class ProtocolBuilderViewModel: ObservableObject {
     /// Error message
     @Published var errorMessage: String?
 
+    /// Assignment error (for detailed error handling)
+    @Published var assignmentError: Error?
+
+    /// The assigned plan after successful assignment
+    @Published var assignedPlan: AthletePlan?
+
     /// Elapsed seconds since view appeared (for <60s KPI tracking)
     @Published var elapsedSeconds: Int = 0
 
@@ -175,7 +181,61 @@ class ProtocolBuilderViewModel: ObservableObject {
 
     // MARK: - Plan Creation
 
-    /// Create and assign the plan to the athlete
+    /// Assigns the selected protocol to the athlete
+    func assignProtocol() async {
+        guard let template = selectedTemplate else {
+            DebugLogger.shared.log("[Protocol] No template selected", level: .warning)
+            return
+        }
+
+        guard isValid else {
+            errorMessage = validationErrors.first
+            showingError = true
+            HapticService.error()
+            return
+        }
+
+        isAssigning = true
+        assignmentError = nil
+
+        let assignmentStartTime = Date()
+
+        do {
+            let plan = try await protocolService.createPlan(
+                athleteId: athleteId,
+                template: template,
+                customizations: customization
+            )
+
+            stopTimer()
+
+            // Track assignment time for KPI
+            let assignmentTime = Date().timeIntervalSince(assignmentStartTime)
+            DebugLogger.shared.log("[Protocol] Assigned in \(String(format: "%.1f", assignmentTime))s (target: <60s)", level: .success)
+
+            assignedPlan = plan
+            showingSuccess = true
+            HapticService.success()
+
+            // Track KPI
+            await trackAssignmentKPI(
+                athleteId: athleteId,
+                templateId: template.id,
+                duration: assignmentDuration
+            )
+
+        } catch {
+            assignmentError = error
+            errorMessage = error.localizedDescription
+            showingError = true
+            DebugLogger.shared.log("[Protocol] Assignment failed: \(error.localizedDescription)", level: .error)
+            HapticService.error()
+        }
+
+        isAssigning = false
+    }
+
+    /// Create and assign the plan to the athlete (legacy method for backwards compatibility)
     func createPlan(
         athleteId: UUID,
         template: ProtocolTemplate,
@@ -184,10 +244,14 @@ class ProtocolBuilderViewModel: ObservableObject {
         guard isValid else {
             errorMessage = validationErrors.first
             showingError = true
+            HapticService.error()
             return
         }
 
         isAssigning = true
+        assignmentError = nil
+
+        let assignmentStartTime = Date()
 
         do {
             let plan = try await protocolService.createPlan(
@@ -198,6 +262,14 @@ class ProtocolBuilderViewModel: ObservableObject {
 
             stopTimer()
 
+            // Track assignment time for KPI
+            let assignmentTime = Date().timeIntervalSince(assignmentStartTime)
+            DebugLogger.shared.log("[Protocol] Assigned in \(String(format: "%.1f", assignmentTime))s (target: <60s)", level: .success)
+
+            assignedPlan = plan
+            showingSuccess = true
+            HapticService.success()
+
             // Track KPI
             await trackAssignmentKPI(
                 athleteId: athleteId,
@@ -205,10 +277,12 @@ class ProtocolBuilderViewModel: ObservableObject {
                 duration: assignmentDuration
             )
 
-            showingSuccess = true
         } catch {
+            assignmentError = error
             errorMessage = error.localizedDescription
             showingError = true
+            DebugLogger.shared.log("[Protocol] Assignment failed: \(error.localizedDescription)", level: .error)
+            HapticService.error()
         }
 
         isAssigning = false

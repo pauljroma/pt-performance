@@ -12,18 +12,12 @@ import Foundation
 actor ProtocolService {
     static let shared = ProtocolService()
 
-    private let supabaseURL: URL
-    private let supabaseKey: String
+    private let supabase = PTSupabaseClient.shared
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
 
     private init() {
-        // Get Supabase configuration from environment or use defaults
-        self.supabaseURL = URL(string: ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? "https://api.ptperformance.app")!
-        self.supabaseKey = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? ""
-
-        self.decoder = JSONDecoder()
-        self.decoder.dateDecodingStrategy = .iso8601
+        self.decoder = PTSupabaseClient.flexibleDecoder
 
         self.encoder = JSONEncoder()
         self.encoder.dateEncodingStrategy = .iso8601
@@ -35,36 +29,24 @@ actor ProtocolService {
     /// - Parameter category: Optional category filter
     /// - Returns: Array of protocol templates
     func getTemplates(category: ProtocolTemplate.ProtocolCategory? = nil) async throws -> [ProtocolTemplate] {
-        var urlComponents = URLComponents(url: supabaseURL.appendingPathComponent("/rest/v1/protocol_templates"), resolvingAgainstBaseURL: false)!
-
-        var queryItems = [URLQueryItem(name: "is_active", value: "eq.true")]
-
-        if let category = category {
-            queryItems.append(URLQueryItem(name: "category", value: "eq.\(category.rawValue)"))
-        }
-
-        urlComponents.queryItems = queryItems
-
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
+        DebugLogger.shared.log("[ProtocolService] Fetching templates, category: \(category?.rawValue ?? "all")")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            var query = supabase.client
+                .from("protocol_templates")
+                .select()
+                .eq("is_active", value: true)
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                throw ProtocolServiceError.networkError
+            if let category = category {
+                query = query.eq("category", value: category.rawValue)
             }
 
-            return try decoder.decode([ProtocolTemplate].self, from: data)
-        } catch is DecodingError {
-            // For development, return sample templates
-            return filterTemplates(ProtocolTemplate.sampleTemplates, by: category)
+            let templates: [ProtocolTemplate] = try await query.execute().value
+            DebugLogger.shared.log("[ProtocolService] Fetched \(templates.count) templates", level: .success)
+            return templates
         } catch {
-            // For development, return sample templates
+            DebugLogger.shared.log("[ProtocolService] Failed to fetch templates: \(error.localizedDescription), using sample data", level: .warning)
+            // Fallback to sample templates for development/offline
             return filterTemplates(ProtocolTemplate.sampleTemplates, by: category)
         }
     }
@@ -87,53 +69,68 @@ actor ProtocolService {
         template: ProtocolTemplate,
         customizations: PlanCustomization
     ) async throws -> AthletePlan {
-        // Generate assigned tasks from template tasks and customizations
-        let assignedTasks = generateAssignedTasks(
-            from: template,
-            customizations: customizations,
-            planId: UUID() // Temporary, will be replaced with actual plan ID
-        )
+        DebugLogger.shared.log("[ProtocolService] Creating plan for athlete \(athleteId) with template \(template.name)")
 
-        let plan = CreatePlanRequest(
+        let currentUserId = getCurrentUserId()
+
+        // Prepare plan data for insertion
+        let planData = CreatePlanRequest(
             athleteId: athleteId,
             protocolId: template.id,
             startDate: customizations.startDate,
             endDate: customizations.endDate,
-            assignedBy: getCurrentUserId(),
+            assignedBy: currentUserId,
             status: AthletePlan.PlanStatus.active.rawValue,
             notes: customizations.notes
         )
 
-        var request = URLRequest(url: supabaseURL.appendingPathComponent("/rest/v1/athlete_plans"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("return=representation", forHTTPHeaderField: "Prefer")
-        request.httpBody = try encoder.encode(plan)
-
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            // Insert the athlete plan
+            let createdPlan: AthletePlan = try await supabase.client
+                .from("athlete_plans")
+                .insert(planData)
+                .select()
+                .single()
+                .execute()
+                .value
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                throw ProtocolServiceError.createFailed
+            DebugLogger.shared.log("[ProtocolService] Created plan with ID: \(createdPlan.id)", level: .success)
+
+            // Generate and insert tasks
+            let tasks = generateTaskInsertData(
+                from: template,
+                customizations: customizations,
+                planId: createdPlan.id
+            )
+
+            if !tasks.isEmpty {
+                try await supabase.client
+                    .from("assigned_tasks")
+                    .insert(tasks)
+                    .execute()
+
+                DebugLogger.shared.log("[ProtocolService] Created \(tasks.count) assigned tasks", level: .success)
             }
 
-            let createdPlans = try decoder.decode([AthletePlan].self, from: data)
-            guard var createdPlan = createdPlans.first else {
-                throw ProtocolServiceError.createFailed
+            // Track KPI event for plan assignment
+            try await trackPlanAssignment(athleteId: athleteId, assignedBy: currentUserId)
+
+            // Fetch and return the complete plan with tasks
+            if let completePlan = try await getActivePlan(athleteId: athleteId) {
+                return completePlan
             }
 
-            // Create the assigned tasks
-            try await createAssignedTasks(assignedTasks, for: createdPlan.id)
+            // If we can't fetch the complete plan, return what we have
+            return createdPlan
 
-            // Return the plan with tasks
-            return try await getActivePlan(athleteId: athleteId) ?? createdPlan
         } catch {
-            // For development, create a mock plan
+            DebugLogger.shared.log("[ProtocolService] Failed to create plan: \(error.localizedDescription)", level: .error)
+
+            // For development/offline, create a mock plan
             let planId = UUID()
             let mockTasks = generateAssignedTasks(from: template, customizations: customizations, planId: planId)
+
+            DebugLogger.shared.log("[ProtocolService] Returning mock plan for offline development", level: .warning)
 
             return AthletePlan(
                 id: planId,
@@ -141,12 +138,71 @@ actor ProtocolService {
                 protocolId: template.id,
                 startDate: customizations.startDate,
                 endDate: customizations.endDate,
-                assignedBy: getCurrentUserId(),
+                assignedBy: currentUserId,
                 tasks: mockTasks,
                 status: .active,
                 notes: customizations.notes,
                 createdAt: Date()
             )
+        }
+    }
+
+    /// Generates task data formatted for Supabase insertion
+    private func generateTaskInsertData(
+        from template: ProtocolTemplate,
+        customizations: PlanCustomization,
+        planId: UUID
+    ) -> [CreateTaskRequest] {
+        var taskRequests: [CreateTaskRequest] = []
+
+        for templateTask in template.tasks {
+            guard let taskCustomization = customizations.taskCustomizations[templateTask.id],
+                  taskCustomization.isIncluded else {
+                continue
+            }
+
+            // Generate dates for this task based on frequency
+            let dates = generateTaskDates(
+                for: templateTask.frequency,
+                from: customizations.startDate,
+                to: customizations.endDate
+            )
+
+            for date in dates {
+                let taskRequest = CreateTaskRequest(
+                    planId: planId,
+                    title: templateTask.title,
+                    taskType: templateTask.taskType.rawValue,
+                    dueDate: date,
+                    dueTime: taskCustomization.customTime ?? templateTask.defaultTime,
+                    status: AssignedTask.TaskStatus.pending.rawValue,
+                    notes: taskCustomization.customInstructions
+                )
+                taskRequests.append(taskRequest)
+            }
+        }
+
+        return taskRequests
+    }
+
+    /// Tracks plan assignment event for KPI reporting
+    private func trackPlanAssignment(athleteId: UUID, assignedBy: UUID) async throws {
+        let eventData: [String: String] = [
+            "event_type": "plan_assigned",
+            "user_id": assignedBy.uuidString,
+            "athlete_id": athleteId.uuidString
+        ]
+
+        do {
+            try await supabase.client
+                .from("kpi_events")
+                .insert(eventData)
+                .execute()
+
+            DebugLogger.shared.log("[ProtocolService] Tracked plan assignment KPI event", level: .success)
+        } catch {
+            // Don't fail the whole operation if KPI tracking fails
+            DebugLogger.shared.log("[ProtocolService] Failed to track KPI event: \(error.localizedDescription)", level: .warning)
         }
     }
 
@@ -156,7 +212,6 @@ actor ProtocolService {
         planId: UUID
     ) -> [AssignedTask] {
         var tasks: [AssignedTask] = []
-        let calendar = Calendar.current
 
         for templateTask in template.tasks {
             guard let taskCustomization = customizations.taskCustomizations[templateTask.id],
@@ -234,36 +289,6 @@ actor ProtocolService {
         return dates
     }
 
-    private func createAssignedTasks(_ tasks: [AssignedTask], for planId: UUID) async throws {
-        guard !tasks.isEmpty else { return }
-
-        let taskRequests = tasks.map { task in
-            CreateTaskRequest(
-                planId: planId,
-                title: task.title,
-                taskType: task.taskType.rawValue,
-                dueDate: task.dueDate,
-                dueTime: task.dueTime,
-                status: task.status.rawValue,
-                notes: task.notes
-            )
-        }
-
-        var request = URLRequest(url: supabaseURL.appendingPathComponent("/rest/v1/assigned_tasks"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try encoder.encode(taskRequests)
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw ProtocolServiceError.createFailed
-        }
-    }
-
     // MARK: - Task Methods
 
     /// Updates a task's status
@@ -272,31 +297,28 @@ actor ProtocolService {
     ///   - status: New status
     ///   - notes: Optional notes
     func updateTask(taskId: UUID, status: AssignedTask.TaskStatus, notes: String? = nil) async throws {
-        var urlComponents = URLComponents(url: supabaseURL.appendingPathComponent("/rest/v1/assigned_tasks"), resolvingAgainstBaseURL: false)!
-        urlComponents.queryItems = [URLQueryItem(name: "id", value: "eq.\(taskId.uuidString)")]
+        DebugLogger.shared.log("[ProtocolService] Updating task \(taskId) to status: \(status.rawValue)")
 
-        var updateData: [String: Any] = ["status": status.rawValue]
+        var updateData = TaskUpdateRequest(status: status.rawValue)
 
         if status == .completed {
-            let formatter = ISO8601DateFormatter()
-            updateData["completed_at"] = formatter.string(from: Date())
+            updateData.completedAt = Date()
         }
 
         if let notes = notes {
-            updateData["notes"] = notes
+            updateData.notes = notes
         }
 
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONSerialization.data(withJSONObject: updateData)
+        do {
+            try await supabase.client
+                .from("assigned_tasks")
+                .update(updateData)
+                .eq("id", value: taskId.uuidString)
+                .execute()
 
-        let (_, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+            DebugLogger.shared.log("[ProtocolService] Task updated successfully", level: .success)
+        } catch {
+            DebugLogger.shared.log("[ProtocolService] Failed to update task: \(error.localizedDescription)", level: .error)
             throw ProtocolServiceError.updateFailed
         }
     }
@@ -308,22 +330,18 @@ actor ProtocolService {
     ///   - planId: UUID of the plan
     ///   - status: New status
     func updatePlanStatus(planId: UUID, status: AthletePlan.PlanStatus) async throws {
-        var urlComponents = URLComponents(url: supabaseURL.appendingPathComponent("/rest/v1/athlete_plans"), resolvingAgainstBaseURL: false)!
-        urlComponents.queryItems = [URLQueryItem(name: "id", value: "eq.\(planId.uuidString)")]
+        DebugLogger.shared.log("[ProtocolService] Updating plan \(planId) to status: \(status.rawValue)")
 
-        let updateData = ["status": status.rawValue]
+        do {
+            try await supabase.client
+                .from("athlete_plans")
+                .update(["status": status.rawValue])
+                .eq("id", value: planId.uuidString)
+                .execute()
 
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try encoder.encode(updateData)
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+            DebugLogger.shared.log("[ProtocolService] Plan status updated successfully", level: .success)
+        } catch {
+            DebugLogger.shared.log("[ProtocolService] Failed to update plan status: \(error.localizedDescription)", level: .error)
             throw ProtocolServiceError.updateFailed
         }
     }
@@ -332,84 +350,65 @@ actor ProtocolService {
     /// - Parameter athleteId: UUID of the athlete
     /// - Returns: The active plan if one exists
     func getActivePlan(athleteId: UUID) async throws -> AthletePlan? {
-        var urlComponents = URLComponents(url: supabaseURL.appendingPathComponent("/rest/v1/athlete_plans"), resolvingAgainstBaseURL: false)!
-        urlComponents.queryItems = [
-            URLQueryItem(name: "athlete_id", value: "eq.\(athleteId.uuidString)"),
-            URLQueryItem(name: "status", value: "in.(active,paused)"),
-            URLQueryItem(name: "order", value: "created_at.desc"),
-            URLQueryItem(name: "limit", value: "1")
-        ]
-
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
+        DebugLogger.shared.log("[ProtocolService] Fetching active plan for athlete \(athleteId)")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            // Fetch plan with embedded tasks using Supabase relationship
+            let plans: [AthletePlan] = try await supabase.client
+                .from("athlete_plans")
+                .select("*, assigned_tasks(*)")
+                .eq("athlete_id", value: athleteId.uuidString)
+                .eq("status", value: "active")
+                .order("created_at", ascending: false)
+                .limit(1)
+                .execute()
+                .value
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
-                throw ProtocolServiceError.networkError
+            if let plan = plans.first {
+                DebugLogger.shared.log("[ProtocolService] Found active plan: \(plan.id)", level: .success)
+                return plan
             }
 
-            var plans = try decoder.decode([AthletePlan].self, from: data)
-
-            guard var plan = plans.first else {
-                return nil
-            }
-
-            // Fetch associated tasks
-            let tasks = try await getTasksForPlan(planId: plan.id)
-
-            // Return plan with tasks (need to reconstruct since tasks is let)
-            return AthletePlan(
-                id: plan.id,
-                athleteId: plan.athleteId,
-                protocolId: plan.protocolId,
-                startDate: plan.startDate,
-                endDate: plan.endDate,
-                assignedBy: plan.assignedBy,
-                tasks: tasks,
-                status: plan.status,
-                notes: plan.notes,
-                createdAt: plan.createdAt
-            )
+            DebugLogger.shared.log("[ProtocolService] No active plan found for athlete")
+            return nil
         } catch {
+            DebugLogger.shared.log("[ProtocolService] Failed to fetch active plan: \(error.localizedDescription)", level: .warning)
             // For development, return nil
             return nil
         }
     }
 
     private func getTasksForPlan(planId: UUID) async throws -> [AssignedTask] {
-        var urlComponents = URLComponents(url: supabaseURL.appendingPathComponent("/rest/v1/assigned_tasks"), resolvingAgainstBaseURL: false)!
-        urlComponents.queryItems = [
-            URLQueryItem(name: "plan_id", value: "eq.\(planId.uuidString)"),
-            URLQueryItem(name: "order", value: "due_date.asc,due_time.asc")
-        ]
+        DebugLogger.shared.log("[ProtocolService] Fetching tasks for plan \(planId)")
 
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
+        do {
+            let tasks: [AssignedTask] = try await supabase.client
+                .from("assigned_tasks")
+                .select()
+                .eq("plan_id", value: planId.uuidString)
+                .order("due_date", ascending: true)
+                .order("due_time", ascending: true)
+                .execute()
+                .value
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+            DebugLogger.shared.log("[ProtocolService] Fetched \(tasks.count) tasks", level: .success)
+            return tasks
+        } catch {
+            DebugLogger.shared.log("[ProtocolService] Failed to fetch tasks: \(error.localizedDescription)", level: .error)
             throw ProtocolServiceError.networkError
         }
-
-        return try decoder.decode([AssignedTask].self, from: data)
     }
 
     // MARK: - Helper Methods
 
     private func getCurrentUserId() -> UUID {
-        // In a real implementation, this would get the authenticated user ID
-        // For now, return a placeholder
+        // Get authenticated user ID from PTSupabaseClient
+        if let userIdString = supabase.userId,
+           let userId = UUID(uuidString: userIdString) {
+            return userId
+        }
+        // Fallback to a new UUID if not authenticated (shouldn't happen in production)
+        DebugLogger.shared.log("[ProtocolService] No authenticated user, using placeholder UUID", level: .warning)
         return UUID()
     }
 }
@@ -452,6 +451,18 @@ private struct CreateTaskRequest: Encodable {
         case dueDate = "due_date"
         case dueTime = "due_time"
         case status
+        case notes
+    }
+}
+
+private struct TaskUpdateRequest: Encodable {
+    var status: String
+    var completedAt: Date?
+    var notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case completedAt = "completed_at"
         case notes
     }
 }

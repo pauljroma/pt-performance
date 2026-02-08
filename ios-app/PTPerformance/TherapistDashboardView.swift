@@ -213,7 +213,7 @@ struct TherapistDashboardView: View {
 
 struct PatientCardView: View {
     let patient: Patient
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Avatar
@@ -225,7 +225,7 @@ struct PatientCardView: View {
                         .foregroundColor(.white)
                         .fontWeight(.semibold)
                 )
-            
+
             // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(patient.fullName)
@@ -234,7 +234,7 @@ struct PatientCardView: View {
                 HStack(spacing: 12) {
                     Label("\(Int((patient.adherencePercentage ?? 0.0)))%", systemImage: "checkmark.circle")
                         .font(.caption)
-                    
+
                     if let lastSession = patient.lastSessionDate {
                         Text(lastSession, style: .relative)
                             .font(.caption)
@@ -242,15 +242,18 @@ struct PatientCardView: View {
                 }
                 .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
+            // Quick access to 60s Brief
+            PTBriefButton(athleteId: patient.id, athleteName: patient.fullName, compact: true)
+
             // Flags indicator
             if patient.hasHighSeverityFlags {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
             }
-            
+
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)

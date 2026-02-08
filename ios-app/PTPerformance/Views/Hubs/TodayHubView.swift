@@ -30,6 +30,7 @@ struct TodayHubView: View {
     @State private var showWeeklySummary = false
     @State private var showStreakDashboard = false
     @State private var showArmCareAssessment = false  // ACP-522: Arm Care Assessment
+    @State private var showDailyCheckIn = false       // X2Index: Daily Check-in
     @StateObject private var streakViewModel = StreakIndicatorViewModel()
 
     // ACP-501: Quick Start state
@@ -95,6 +96,10 @@ struct TodayHubView: View {
                        let patientId = UUID(uuidString: patientIdString) {
                         ArmCareAssessmentView(patientId: patientId)
                     }
+                }
+                // X2Index: Daily Check-in full screen cover
+                .fullScreenCover(isPresented: $showDailyCheckIn) {
+                    DailyCheckInView()
                 }
                 // ACP-501: Quick Start Workout Full Screen Cover
                 .fullScreenCover(isPresented: $showQuickStartWorkout) {
@@ -237,6 +242,14 @@ struct TodayHubView: View {
 
             Divider()
 
+            // X2Index: Daily Check-in - prominent for discoverability
+            Button(action: {
+                HapticFeedback.light()
+                showDailyCheckIn = true
+            }) {
+                Label("Daily Check-in", systemImage: "sun.max.fill")
+            }
+
             Button(action: {
                 HapticFeedback.light()
                 showReadinessCheckIn = true
@@ -274,7 +287,7 @@ struct TodayHubView: View {
                 .foregroundColor(.primary)
         }
         .accessibilityLabel("Quick Actions")
-        .accessibilityHint("Access Quick Pick, Timers, Readiness Check-In, Weekly Summary, Streaks, and Arm Care")
+        .accessibilityHint("Access Quick Pick, Timers, Daily Check-in, Readiness Check-In, Weekly Summary, Streaks, and Arm Care")
     }
 }
 
