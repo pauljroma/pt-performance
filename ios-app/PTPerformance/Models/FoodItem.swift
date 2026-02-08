@@ -52,6 +52,33 @@ struct FoodItem: Codable, Identifiable, Hashable, Equatable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        name = container.safeString(forKey: .name, default: "Unknown Food")
+        brand = container.safeOptionalString(forKey: .brand)
+        servingSize = container.safeString(forKey: .servingSize, default: "1 serving")
+        servingGrams = container.safeOptionalDouble(forKey: .servingGrams)
+        calories = container.safeInt(forKey: .calories, default: 0)
+        proteinG = container.safeDouble(forKey: .proteinG, default: 0.0)
+        carbsG = container.safeDouble(forKey: .carbsG, default: 0.0)
+        fatG = container.safeDouble(forKey: .fatG, default: 0.0)
+        fiberG = container.safeOptionalDouble(forKey: .fiberG)
+        sugarG = container.safeOptionalDouble(forKey: .sugarG)
+        sodiumMg = container.safeOptionalDouble(forKey: .sodiumMg)
+        category = container.safeOptionalEnum(FoodCategory.self, forKey: .category)
+        subcategory = container.safeOptionalString(forKey: .subcategory)
+        barcode = container.safeOptionalString(forKey: .barcode)
+        isVerified = container.safeBool(forKey: .isVerified, default: false)
+        isSystem = container.safeBool(forKey: .isSystem, default: false)
+        createdBy = container.safeOptionalString(forKey: .createdBy)
+        createdAt = container.safeOptionalDate(forKey: .createdAt)
+        updatedAt = container.safeOptionalDate(forKey: .updatedAt)
+    }
 }
 
 /// Food categories for organization

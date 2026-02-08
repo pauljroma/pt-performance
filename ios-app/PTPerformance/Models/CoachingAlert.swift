@@ -47,6 +47,24 @@ struct CoachingAlert: Codable, Identifiable, Hashable, Equatable, Sendable {
         case resolvedAt = "resolved_at"
         case metadata
     }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        therapistId = container.safeUUID(forKey: .therapistId)
+        alertType = container.safeEnum(AlertType.self, forKey: .alertType, default: .custom)
+        severity = container.safeEnum(AlertSeverity.self, forKey: .severity, default: .low)
+        title = container.safeString(forKey: .title, default: "Alert")
+        message = container.safeString(forKey: .message, default: "")
+        createdAt = container.safeDate(forKey: .createdAt, default: Date())
+        acknowledgedAt = container.safeOptionalDate(forKey: .acknowledgedAt)
+        resolvedAt = container.safeOptionalDate(forKey: .resolvedAt)
+        metadata = try? container.decodeIfPresent([String: String].self, forKey: .metadata)
+    }
 }
 
 // MARK: - Alert Type

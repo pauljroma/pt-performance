@@ -510,7 +510,7 @@ final class SupplementViewModel: ObservableObject {
         selectedSupplement = supplement
         routineDosage = supplement.dosageRange
         routineTiming = supplement.timing.first ?? .morning
-        routineWithFood = supplement.timing.contains(.withMeals)
+        routineWithFood = supplement.timing.contains(.withMeal)
     }
 
     // MARK: - Patient ID Helper
@@ -636,7 +636,7 @@ extension SupplementViewModel {
                 brand: "Momentous",
                 category: .health,
                 dosage: "3g",
-                timing: .withMeals,
+                timing: .withMeal,
                 scheduledTime: Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!,
                 withFood: true,
                 isTaken: false,

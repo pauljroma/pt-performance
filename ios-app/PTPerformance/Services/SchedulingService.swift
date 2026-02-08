@@ -59,6 +59,24 @@ actor SchedulingService {
         return formatter
     }()
 
+    /// Formatter for DATE columns (yyyy-MM-dd)
+    private let sqlDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        return formatter
+    }()
+
+    /// Formatter for TIME columns (HH:mm:ss)
+    private let sqlTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        return formatter
+    }()
+
     // MARK: - Fetch Methods
 
     /// Fetch all scheduled sessions for a patient.
@@ -167,8 +185,8 @@ actor SchedulingService {
         let newSession = ScheduledSessionInsert(
             patientId: patientId,
             sessionId: sessionId,
-            scheduledDate: date,
-            scheduledTime: time,
+            scheduledDate: sqlDateFormatter.string(from: date),  // "yyyy-MM-dd"
+            scheduledTime: sqlTimeFormatter.string(from: time),  // "HH:mm:ss"
             status: ScheduledSession.ScheduleStatus.scheduled.rawValue,
             reminderSent: false,
             notes: notes
@@ -480,8 +498,8 @@ extension SchedulingService {
 private struct ScheduledSessionInsert: Encodable {
     let patientId: String
     let sessionId: String
-    let scheduledDate: Date
-    let scheduledTime: Date
+    let scheduledDate: String  // "yyyy-MM-dd" format for DATE column
+    let scheduledTime: String  // "HH:mm:ss" format for TIME column
     let status: String
     let reminderSent: Bool
     let notes: String?

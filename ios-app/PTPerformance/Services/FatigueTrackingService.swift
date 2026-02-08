@@ -416,7 +416,7 @@ class FatigueTrackingService: ObservableObject {
         do {
             let params = CalculateFatigueParams(pPatientId: patientId.uuidString)
             let response = try await client.client
-                .rpc("calculate_fatigue_accumulation", params: params)
+                .rpc("calculate_accumulated_fatigue", params: params)
                 .execute()
 
             // Try to decode the result

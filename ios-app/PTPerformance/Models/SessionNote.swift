@@ -20,6 +20,20 @@ struct SessionNote: Codable, Identifiable, Hashable, Equatable {
         case createdAt = "created_at"
     }
 
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        sessionId = container.safeOptionalUUID(forKey: .sessionId)
+        noteType = container.safeString(forKey: .noteType, default: "general")
+        noteText = container.safeString(forKey: .noteText, default: "")
+        createdBy = container.safeOptionalString(forKey: .createdBy)
+        createdAt = container.safeDate(forKey: .createdAt, default: Date())
+    }
+
     var typeIcon: String {
         switch noteType {
         case "assessment": return "stethoscope"

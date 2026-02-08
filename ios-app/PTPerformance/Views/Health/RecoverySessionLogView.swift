@@ -347,9 +347,9 @@ struct RecoverySessionLogView: View {
 // MARK: - Recovery Session Type
 
 enum RecoverySessionType: String, CaseIterable, Identifiable {
-    case traditionalSauna = "traditional_sauna"
-    case infraredSauna = "infrared_sauna"
-    case steamRoom = "steam_room"
+    case traditionalSauna = "sauna_traditional"
+    case infraredSauna = "sauna_infrared"
+    case steamRoom = "sauna_steam"
     case iceBath = "ice_bath"
     case coldShower = "cold_shower"
     case coldPlunge = "cold_plunge"

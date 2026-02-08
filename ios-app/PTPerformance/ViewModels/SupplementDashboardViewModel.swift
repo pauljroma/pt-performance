@@ -146,9 +146,10 @@ enum SupplementTimingGroup: String, CaseIterable, Identifiable {
     static func from(_ timing: SupplementTiming) -> SupplementTimingGroup {
         switch timing {
         case .morning: return .morning
+        case .afternoon: return .withMeals
         case .preWorkout: return .preWorkout
         case .postWorkout: return .postWorkout
-        case .withMeals, .betweenMeals: return .withMeals
+        case .withMeal, .betweenMeals: return .withMeals
         case .evening: return .evening
         case .beforeBed: return .beforeBed
         case .anytime: return .anytime

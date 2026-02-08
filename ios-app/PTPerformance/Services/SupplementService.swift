@@ -651,7 +651,7 @@ final class SupplementService: ObservableObject {
             case .twiceDaily:
                 timings = [.morning, .evening]
             case .threeTimesDaily:
-                timings = [.morning, .withMeals, .evening]
+                timings = [.morning, .withMeal, .evening]
             default:
                 timings = [routine.timing]
             }

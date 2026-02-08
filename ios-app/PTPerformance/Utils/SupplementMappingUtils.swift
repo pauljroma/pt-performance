@@ -16,6 +16,8 @@ enum SupplementMappingUtils {
         case .preworkout: return .preworkout
         case .cognitive: return .adaptogens
         case .hormonal: return .other
+        case .joint: return .other
+        case .digestive: return .other
         case .other: return .other
         }
     }
@@ -24,11 +26,12 @@ enum SupplementMappingUtils {
     static func mapTimingToTimeOfDay(_ timing: SupplementTiming) -> TimeOfDay? {
         switch timing {
         case .morning: return .morning
+        case .afternoon: return .afternoon
         case .preWorkout: return .preWorkout
         case .postWorkout: return .postWorkout
         case .evening: return .evening
         case .beforeBed: return .beforeBed
-        case .withMeals: return .withMeals
+        case .withMeal: return .withMeals
         case .betweenMeals: return .afternoon
         case .anytime: return nil
         }

@@ -64,7 +64,7 @@ final class SupplementCatalogViewModel: ObservableObject {
                 dosage: supplement.dosageRange,
                 timing: supplement.timing.first ?? .morning,
                 frequency: .daily,
-                withFood: supplement.timing.contains(.withMeals),
+                withFood: supplement.timing.contains(.withMeal),
                 notes: nil
             )
         } catch {

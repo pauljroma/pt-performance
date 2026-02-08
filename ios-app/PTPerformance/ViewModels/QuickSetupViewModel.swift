@@ -518,7 +518,7 @@ class QuickSetupViewModel: ObservableObject {
             // Call link-therapist edge function
             _ = try await supabase.client.functions.invoke(
                 "link-therapist",
-                options: .init(body: ["code": therapistCode.uppercased()])
+                options: .init(body: ["action": "link", "code": therapistCode.uppercased()])
             )
 
             hasTherapist = true

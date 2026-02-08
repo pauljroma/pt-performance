@@ -292,11 +292,12 @@ extension SupplementTiming {
     var shortName: String {
         switch self {
         case .morning: return "AM"
+        case .afternoon: return "Noon"
         case .preWorkout: return "Pre"
         case .postWorkout: return "Post"
         case .evening: return "PM"
         case .beforeBed: return "Bed"
-        case .withMeals: return "Meal"
+        case .withMeal: return "Meal"
         case .betweenMeals: return "Btw"
         case .anytime: return "Any"
         }
@@ -305,11 +306,12 @@ extension SupplementTiming {
     var color: Color {
         switch self {
         case .morning: return .orange
+        case .afternoon: return .yellow
         case .preWorkout: return .red
         case .postWorkout: return .green
         case .evening: return .purple
         case .beforeBed: return .indigo
-        case .withMeals: return .brown
+        case .withMeal: return .brown
         case .betweenMeals: return .cyan
         case .anytime: return .gray
         }
@@ -630,13 +632,13 @@ private struct SupplementRoutineAddSheet: View {
     private func mapTimeOfDayToTiming(_ timeOfDay: TimeOfDay) -> SupplementTiming {
         switch timeOfDay {
         case .morning: return .morning
-        case .afternoon: return .anytime
+        case .afternoon: return .afternoon
         case .evening: return .evening
         case .night: return .beforeBed
         case .beforeBed: return .beforeBed
         case .preWorkout: return .preWorkout
         case .postWorkout: return .postWorkout
-        case .withMeals: return .withMeals
+        case .withMeals: return .withMeal
         }
     }
 

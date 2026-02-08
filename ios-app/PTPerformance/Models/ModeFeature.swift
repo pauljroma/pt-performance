@@ -24,6 +24,19 @@ struct ModeFeature: Codable, Identifiable, Hashable, Equatable {
         case featureDescription = "feature_description"
         case enabled
     }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeString(forKey: .id, default: UUID().uuidString)
+        mode = container.safeEnum(Mode.self, forKey: .mode, default: .strength)
+        featureKey = container.safeString(forKey: .featureKey, default: "unknown")
+        featureName = container.safeString(forKey: .featureName, default: "Unknown Feature")
+        featureDescription = container.safeOptionalString(forKey: .featureDescription)
+        enabled = container.safeBool(forKey: .enabled, default: false)
+    }
 }
 
 /// Known feature keys (for compile-time safety)

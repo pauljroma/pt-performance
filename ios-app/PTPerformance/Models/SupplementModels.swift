@@ -50,6 +50,8 @@ enum SupplementCatalogCategory: String, Codable, CaseIterable, Identifiable {
     case preworkout = "preworkout"
     case cognitive = "cognitive"
     case hormonal = "hormonal"
+    case joint = "joint"
+    case digestive = "digestive"
     case other = "other"
 
     var id: String { rawValue }
@@ -66,6 +68,8 @@ enum SupplementCatalogCategory: String, Codable, CaseIterable, Identifiable {
         case .preworkout: return "Pre-Workout"
         case .cognitive: return "Cognitive"
         case .hormonal: return "Hormonal Support"
+        case .joint: return "Joint Health"
+        case .digestive: return "Digestive"
         case .other: return "Other"
         }
     }
@@ -82,6 +86,8 @@ enum SupplementCatalogCategory: String, Codable, CaseIterable, Identifiable {
         case .preworkout: return "flame.fill"
         case .cognitive: return "brain.head.profile"
         case .hormonal: return "waveform.path.ecg"
+        case .joint: return "figure.walk"
+        case .digestive: return "stomach"
         case .other: return "pills.fill"
         }
     }
@@ -98,6 +104,8 @@ enum SupplementCatalogCategory: String, Codable, CaseIterable, Identifiable {
         case .preworkout: return "pink"
         case .cognitive: return "purple"
         case .hormonal: return "mint"
+        case .joint: return "brown"
+        case .digestive: return "cyan"
         case .other: return "gray"
         }
     }
@@ -167,11 +175,12 @@ enum EvidenceRating: String, Codable, CaseIterable, Comparable {
 /// When to take a supplement during the day
 enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     case morning = "morning"
+    case afternoon = "afternoon"
     case preWorkout = "pre_workout"
     case postWorkout = "post_workout"
     case evening = "evening"
     case beforeBed = "before_bed"
-    case withMeals = "with_meals"
+    case withMeal = "with_meal"
     case betweenMeals = "between_meals"
     case anytime = "anytime"
 
@@ -180,11 +189,12 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     var displayName: String {
         switch self {
         case .morning: return "Morning"
+        case .afternoon: return "Afternoon"
         case .preWorkout: return "Pre-Workout"
         case .postWorkout: return "Post-Workout"
         case .evening: return "Evening"
         case .beforeBed: return "Before Bed"
-        case .withMeals: return "With Meals"
+        case .withMeal: return "With Meal"
         case .betweenMeals: return "Between Meals"
         case .anytime: return "Anytime"
         }
@@ -193,11 +203,12 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     var icon: String {
         switch self {
         case .morning: return "sunrise.fill"
+        case .afternoon: return "sun.max.fill"
         case .preWorkout: return "figure.run"
         case .postWorkout: return "figure.cooldown"
         case .evening: return "sunset.fill"
         case .beforeBed: return "moon.fill"
-        case .withMeals: return "fork.knife"
+        case .withMeal: return "fork.knife"
         case .betweenMeals: return "clock.fill"
         case .anytime: return "clock.badge.checkmark.fill"
         }
@@ -206,13 +217,14 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     var sortOrder: Int {
         switch self {
         case .morning: return 0
-        case .preWorkout: return 1
-        case .postWorkout: return 2
-        case .withMeals: return 3
-        case .betweenMeals: return 4
-        case .evening: return 5
-        case .beforeBed: return 6
-        case .anytime: return 7
+        case .afternoon: return 1
+        case .preWorkout: return 2
+        case .postWorkout: return 3
+        case .withMeal: return 4
+        case .betweenMeals: return 5
+        case .evening: return 6
+        case .beforeBed: return 7
+        case .anytime: return 8
         }
     }
 
@@ -220,9 +232,10 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     var approximateHour: Int {
         switch self {
         case .morning: return 7
+        case .afternoon: return 14
         case .preWorkout: return 6
         case .postWorkout: return 8
-        case .withMeals: return 12
+        case .withMeal: return 12
         case .betweenMeals: return 15
         case .evening: return 18
         case .beforeBed: return 21
@@ -778,7 +791,7 @@ extension CatalogSupplement {
             benefits: ["Reduced inflammation", "Heart health", "Brain function", "Joint support"],
             evidenceRating: .strong,
             dosageRange: "2-4g EPA+DHA daily",
-            timing: [.withMeals],
+            timing: [.withMeal],
             contraindications: ["Blood thinners"],
             interactions: ["Anticoagulants"],
             description: "Essential fatty acids for overall health and recovery.",
@@ -797,7 +810,7 @@ extension CatalogSupplement {
             benefits: ["Bone health", "Immune function", "Mood support", "Muscle function"],
             evidenceRating: .strong,
             dosageRange: "2000-5000 IU daily",
-            timing: [.morning, .withMeals],
+            timing: [.morning, .withMeal],
             contraindications: ["Hypercalcemia"],
             interactions: [],
             description: "Essential vitamin that most people are deficient in.",
@@ -891,7 +904,7 @@ extension SupplementStack {
                     supplementId: UUID(),
                     supplementName: "Omega-3 Fish Oil",
                     dosage: "3g EPA+DHA",
-                    timing: .withMeals,
+                    timing: .withMeal,
                     notes: "Take with largest meal for absorption",
                     isOptional: false,
                     priority: 2
@@ -1032,7 +1045,7 @@ extension SupplementRoutine {
                 category: .health
             ),
             dosage: "3g",
-            timing: .withMeals,
+            timing: .withMeal,
             frequency: .daily,
             withFood: true,
             notes: nil,

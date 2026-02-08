@@ -111,6 +111,55 @@ struct PatientGoal: Codable, Identifiable, Hashable, Equatable {
         case updatedAt = "updated_at"
     }
 
+    // MARK: - Memberwise Initializer
+
+    init(
+        id: UUID,
+        patientId: UUID,
+        title: String,
+        description: String?,
+        category: GoalCategory,
+        targetValue: Double?,
+        currentValue: Double?,
+        unit: String?,
+        targetDate: Date?,
+        status: GoalStatus,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.title = title
+        self.description = description
+        self.category = category
+        self.targetValue = targetValue
+        self.currentValue = currentValue
+        self.unit = unit
+        self.targetDate = targetDate
+        self.status = status
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        title = container.safeString(forKey: .title, default: "Untitled Goal")
+        description = container.safeOptionalString(forKey: .description)
+        category = container.safeEnum(GoalCategory.self, forKey: .category, default: .custom)
+        targetValue = container.safeOptionalDouble(forKey: .targetValue)
+        currentValue = container.safeOptionalDouble(forKey: .currentValue)
+        unit = container.safeOptionalString(forKey: .unit)
+        targetDate = container.safeOptionalDate(forKey: .targetDate)
+        status = container.safeEnum(GoalStatus.self, forKey: .status, default: .active)
+        createdAt = container.safeDate(forKey: .createdAt, default: Date())
+        updatedAt = container.safeDate(forKey: .updatedAt, default: Date())
+    }
+
     // MARK: - Computed Properties
 
     /// Progress as a value from 0.0 to 1.0, clamped

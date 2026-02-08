@@ -33,7 +33,7 @@ final class SupplementLogViewModel: ObservableObject {
                 dosage: catalogItem.dosageRange,
                 frequency: .daily,
                 timeOfDay: catalogItem.timing.compactMap { SupplementMappingUtils.mapTimingToTimeOfDay($0) },
-                withFood: catalogItem.timing.contains(.withMeals),
+                withFood: catalogItem.timing.contains(.withMeal),
                 notes: catalogItem.description,
                 momentousProductId: nil,
                 isActive: true,

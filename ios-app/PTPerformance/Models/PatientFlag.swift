@@ -34,4 +34,19 @@ struct PatientFlag: Codable, Identifiable, Hashable, Equatable, Sendable {
         case resolvedAt = "resolved_at"
         case autoCreated = "auto_created"
     }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        patientId = container.safeUUID(forKey: .patientId)
+        flagType = container.safeString(forKey: .flagType, default: "unknown")
+        severity = container.safeString(forKey: .severity, default: "LOW")
+        description = container.safeString(forKey: .description, default: "")
+        createdAt = container.safeDate(forKey: .createdAt, default: Date())
+        resolvedAt = container.safeOptionalDate(forKey: .resolvedAt)
+        autoCreated = container.safeBool(forKey: .autoCreated, default: false)
+    }
 }

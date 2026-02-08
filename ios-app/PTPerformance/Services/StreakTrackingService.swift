@@ -175,19 +175,26 @@ class StreakTrackingService: ObservableObject {
         dateFormatter.timeZone = TimeZone.current
         let dateString = dateFormatter.string(from: date)
 
-        let params: [String: String?] = [
-            DatabaseConstants.RPCParams.patientId: patientId.uuidString,
-            DatabaseConstants.RPCParams.activityDate: dateString,
-            DatabaseConstants.RPCParams.workoutCompleted: workoutCompleted ? "true" : "false",
-            DatabaseConstants.RPCParams.armCareCompleted: armCareCompleted ? "true" : "false",
-            DatabaseConstants.RPCParams.sessionId: sessionId?.uuidString,
-            "p_manual_session_id": manualSessionId?.uuidString,
-            DatabaseConstants.RPCParams.notes: notes
+        var params: [String: AnyEncodable] = [
+            DatabaseConstants.RPCParams.patientId: AnyEncodable(patientId.uuidString),
+            DatabaseConstants.RPCParams.activityDate: AnyEncodable(dateString),
+            DatabaseConstants.RPCParams.workoutCompleted: AnyEncodable(workoutCompleted),
+            DatabaseConstants.RPCParams.armCareCompleted: AnyEncodable(armCareCompleted)
         ]
+
+        if let sessionId = sessionId {
+            params[DatabaseConstants.RPCParams.sessionId] = AnyEncodable(sessionId.uuidString)
+        }
+        if let manualSessionId = manualSessionId {
+            params["p_manual_session_id"] = AnyEncodable(manualSessionId.uuidString)
+        }
+        if let notes = notes {
+            params[DatabaseConstants.RPCParams.notes] = AnyEncodable(notes)
+        }
 
         do {
             let response = try await client.client
-                .rpc(DatabaseConstants.RPCFunctions.recordStreakActivity, params: params.compactMapValues { $0 })
+                .rpc(DatabaseConstants.RPCFunctions.recordStreakActivity, params: params)
                 .execute()
 
             let decoder = createStreakDecoder()
@@ -446,5 +453,21 @@ enum StreakError: LocalizedError {
         case .fetchFailed:
             return "Please check your internet connection and try again."
         }
+    }
+}
+
+// MARK: - AnyEncodable Helper
+
+private struct AnyEncodable: Encodable {
+    private let _encode: (Encoder) throws -> Void
+
+    init<T: Encodable>(_ value: T) {
+        _encode = { encoder in
+            try value.encode(to: encoder)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try _encode(encoder)
     }
 }

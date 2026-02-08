@@ -6,12 +6,10 @@ import SwiftUI
 /// RPC parameters for activating deload
 private struct ActivateDeloadParams: Encodable {
     let pRecommendationId: String
-    let pPatientId: String
     let pStartDate: String
 
     enum CodingKeys: String, CodingKey {
         case pRecommendationId = "p_recommendation_id"
-        case pPatientId = "p_patient_id"
         case pStartDate = "p_start_date"
     }
 }
@@ -35,6 +33,15 @@ private struct IsInDeloadPeriodParams: Encodable {
 
     enum CodingKeys: String, CodingKey {
         case pPatientId = "p_patient_id"
+    }
+}
+
+/// Request parameters for the ai-deload-recommendation edge function
+private struct DeloadRequestParams: Encodable {
+    let patientId: String
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
     }
 }
 
@@ -584,10 +591,6 @@ class DeloadRecommendationService: ObservableObject {
     /// - Returns: The created ActiveDeloadPeriod
     /// - Throws: DeloadRecommendationError if activation fails
     func activateDeload(recommendationId: UUID, startDate: Date) async throws -> ActiveDeloadPeriod {
-        guard let patientId = UUID(uuidString: client.userId ?? "") else {
-            throw DeloadRecommendationError.invalidPatientId
-        }
-
         isLoading = true
         defer { isLoading = false }
 
@@ -595,7 +598,6 @@ class DeloadRecommendationService: ObservableObject {
             // Call the RPC function to activate deload
             let params = ActivateDeloadParams(
                 pRecommendationId: recommendationId.uuidString,
-                pPatientId: patientId.uuidString,
                 pStartDate: ISO8601DateFormatter().string(from: startDate)
             )
             let response = try await client.client
@@ -615,7 +617,7 @@ class DeloadRecommendationService: ObservableObject {
 
             #if DEBUG
             DebugLogger.shared.success("DELOAD", """
-                Activated deload for patient \(patientId.uuidString.prefix(8)):
+                Activated deload:
                 Period ID: \(deloadPeriod.id.uuidString.prefix(8))
                 Start: \(deloadPeriod.startDate)
                 End: \(deloadPeriod.endDate)
@@ -804,8 +806,9 @@ class DeloadRecommendationService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Create request body
-            let bodyData = try JSONEncoder().encode(["patientId": patientId.uuidString])
+            // Create request body with proper snake_case encoding
+            let requestParams = DeloadRequestParams(patientId: patientId.uuidString)
+            let bodyData = try JSONEncoder().encode(requestParams)
 
             // Call edge function to get/generate recommendation
             let responseData: Data = try await client.client.functions.invoke(
@@ -880,7 +883,7 @@ class DeloadRecommendationService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Create request body with proper encoding
+            // Create request body with proper snake_case encoding
             struct ActivateDeloadRequest: Encodable {
                 let patientId: String
                 let durationDays: Int
@@ -888,6 +891,15 @@ class DeloadRecommendationService: ObservableObject {
                 let volumeReductionPct: Double
                 let focus: String
                 let startDate: String
+
+                enum CodingKeys: String, CodingKey {
+                    case patientId = "patient_id"
+                    case durationDays = "duration_days"
+                    case loadReductionPct = "load_reduction_pct"
+                    case volumeReductionPct = "volume_reduction_pct"
+                    case focus
+                    case startDate = "start_date"
+                }
             }
 
             let requestBody = ActivateDeloadRequest(

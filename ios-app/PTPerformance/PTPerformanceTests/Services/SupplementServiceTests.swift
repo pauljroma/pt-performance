@@ -1063,33 +1063,36 @@ final class SupplementTimingServiceTests: XCTestCase {
 
     func testSupplementTiming_RawValues() {
         XCTAssertEqual(SupplementTiming.morning.rawValue, "morning")
+        XCTAssertEqual(SupplementTiming.afternoon.rawValue, "afternoon")
         XCTAssertEqual(SupplementTiming.preWorkout.rawValue, "pre_workout")
         XCTAssertEqual(SupplementTiming.postWorkout.rawValue, "post_workout")
         XCTAssertEqual(SupplementTiming.evening.rawValue, "evening")
         XCTAssertEqual(SupplementTiming.beforeBed.rawValue, "before_bed")
-        XCTAssertEqual(SupplementTiming.withMeals.rawValue, "with_meals")
+        XCTAssertEqual(SupplementTiming.withMeal.rawValue, "with_meal")
         XCTAssertEqual(SupplementTiming.betweenMeals.rawValue, "between_meals")
         XCTAssertEqual(SupplementTiming.anytime.rawValue, "anytime")
     }
 
     func testSupplementTiming_DisplayNames() {
         XCTAssertEqual(SupplementTiming.morning.displayName, "Morning")
+        XCTAssertEqual(SupplementTiming.afternoon.displayName, "Afternoon")
         XCTAssertEqual(SupplementTiming.preWorkout.displayName, "Pre-Workout")
         XCTAssertEqual(SupplementTiming.postWorkout.displayName, "Post-Workout")
         XCTAssertEqual(SupplementTiming.evening.displayName, "Evening")
         XCTAssertEqual(SupplementTiming.beforeBed.displayName, "Before Bed")
-        XCTAssertEqual(SupplementTiming.withMeals.displayName, "With Meals")
+        XCTAssertEqual(SupplementTiming.withMeal.displayName, "With Meal")
         XCTAssertEqual(SupplementTiming.betweenMeals.displayName, "Between Meals")
         XCTAssertEqual(SupplementTiming.anytime.displayName, "Anytime")
     }
 
     func testSupplementTiming_Icons() {
         XCTAssertEqual(SupplementTiming.morning.icon, "sunrise.fill")
+        XCTAssertEqual(SupplementTiming.afternoon.icon, "sun.max.fill")
         XCTAssertEqual(SupplementTiming.preWorkout.icon, "figure.run")
         XCTAssertEqual(SupplementTiming.postWorkout.icon, "figure.cooldown")
         XCTAssertEqual(SupplementTiming.evening.icon, "sunset.fill")
         XCTAssertEqual(SupplementTiming.beforeBed.icon, "moon.fill")
-        XCTAssertEqual(SupplementTiming.withMeals.icon, "fork.knife")
+        XCTAssertEqual(SupplementTiming.withMeal.icon, "fork.knife")
         XCTAssertEqual(SupplementTiming.betweenMeals.icon, "clock.fill")
         XCTAssertEqual(SupplementTiming.anytime.icon, "clock.badge.checkmark.fill")
     }
@@ -1103,9 +1106,10 @@ final class SupplementTimingServiceTests: XCTestCase {
 
     func testSupplementTiming_ApproximateHour() {
         XCTAssertEqual(SupplementTiming.morning.approximateHour, 7)
+        XCTAssertEqual(SupplementTiming.afternoon.approximateHour, 14)
         XCTAssertEqual(SupplementTiming.preWorkout.approximateHour, 6)
         XCTAssertEqual(SupplementTiming.postWorkout.approximateHour, 8)
-        XCTAssertEqual(SupplementTiming.withMeals.approximateHour, 12)
+        XCTAssertEqual(SupplementTiming.withMeal.approximateHour, 12)
         XCTAssertEqual(SupplementTiming.betweenMeals.approximateHour, 15)
         XCTAssertEqual(SupplementTiming.evening.approximateHour, 18)
         XCTAssertEqual(SupplementTiming.beforeBed.approximateHour, 21)

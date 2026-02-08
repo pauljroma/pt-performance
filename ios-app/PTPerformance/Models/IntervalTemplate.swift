@@ -29,6 +29,52 @@ struct IntervalTemplate: Codable, Identifiable, Hashable, Equatable, Sendable {
         case updatedAt = "updated_at"
     }
 
+    // MARK: - Memberwise Initializer
+
+    init(
+        id: UUID,
+        name: String,
+        type: TimerType,
+        workSeconds: Int,
+        restSeconds: Int,
+        rounds: Int,
+        cycles: Int,
+        createdBy: UUID?,
+        isPublic: Bool,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.id = id
+        self.name = name
+        self.type = type
+        self.workSeconds = workSeconds
+        self.restSeconds = restSeconds
+        self.rounds = rounds
+        self.cycles = cycles
+        self.createdBy = createdBy
+        self.isPublic = isPublic
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    // MARK: - Safe Decoding
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = container.safeUUID(forKey: .id)
+        name = container.safeString(forKey: .name, default: "Untitled Template")
+        type = container.safeEnum(TimerType.self, forKey: .type, default: .custom)
+        workSeconds = container.safeInt(forKey: .workSeconds, default: 30)
+        restSeconds = container.safeInt(forKey: .restSeconds, default: 30)
+        rounds = container.safeInt(forKey: .rounds, default: 1)
+        cycles = container.safeInt(forKey: .cycles, default: 1)
+        createdBy = container.safeOptionalUUID(forKey: .createdBy)
+        isPublic = container.safeBool(forKey: .isPublic, default: false)
+        createdAt = container.safeDate(forKey: .createdAt, default: Date())
+        updatedAt = container.safeDate(forKey: .updatedAt, default: Date())
+    }
+
     // MARK: - Computed Properties
 
     /// Total duration in seconds for one cycle
