@@ -155,30 +155,40 @@ final class SupplementService: ObservableObject {
             throw SupplementServiceError.noPatientId
         }
 
+        // Database schema (patient_supplement_routines):
+        // dose (NUMERIC), dose_unit (TEXT), timing (supplement_timing_type), days_of_week (INTEGER[])
+        // is_active, start_date, end_date, notes
+        // NO: dosage, frequency, with_food columns
         struct RoutineInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let dosage: String
+            let dose: Double
+            let dose_unit: String
             let timing: String
-            let frequency: String
-            let with_food: Bool
+            let days_of_week: [Int]?
             let notes: String?
             let is_active: Bool
             let start_date: String
         }
 
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime]
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        // Parse dosage string to extract number and unit (e.g., "500mg" -> 500, "mg")
+        let (doseValue, doseUnit) = parseDosage(dosage)
+
+        // Map frequency to days_of_week array
+        let daysOfWeek: [Int]? = frequency == .daily ? [0, 1, 2, 3, 4, 5, 6] : nil
 
         let insert = RoutineInsert(
             id: UUID(),
             patient_id: patientId,
             supplement_id: supplementId,
-            dosage: dosage,
+            dose: doseValue,
+            dose_unit: doseUnit,
             timing: timing.rawValue,
-            frequency: frequency.rawValue,
-            with_food: withFood,
+            days_of_week: daysOfWeek,
             notes: notes,
             is_active: true,
             start_date: dateFormatter.string(from: Date())
@@ -235,6 +245,7 @@ final class SupplementService: ObservableObject {
     }
 
     /// Updates a routine item
+    /// Database schema: dose, dose_unit, timing, days_of_week, notes, is_active, start_date, end_date
     func updateRoutine(
         _ routineId: UUID,
         dosage: String? = nil,
@@ -243,24 +254,49 @@ final class SupplementService: ObservableObject {
         withFood: Bool? = nil,
         notes: String? = nil
     ) async throws {
+        // Database schema (patient_supplement_routines):
+        // dose, dose_unit, timing, days_of_week, is_active, start_date, end_date, notes
+        // NO: dosage, frequency, with_food columns
         struct RoutineUpdate: Encodable {
-            var dosage: String?
+            var dose: Double?
+            var dose_unit: String?
             var timing: String?
-            var frequency: String?
-            var with_food: Bool?
+            var days_of_week: [Int]?
             var notes: String?
         }
 
+        // Parse dosage if provided
+        var doseValue: Double?
+        var doseUnit: String?
+        if let dosage = dosage {
+            let parsed = parseDosage(dosage)
+            doseValue = parsed.0
+            doseUnit = parsed.1
+        }
+
+        // Map frequency to days_of_week if provided
+        var daysOfWeek: [Int]?
+        if let frequency = frequency {
+            switch frequency {
+            case .daily:
+                daysOfWeek = [0, 1, 2, 3, 4, 5, 6]
+            case .weekly:
+                daysOfWeek = [0] // Sunday only
+            default:
+                daysOfWeek = nil
+            }
+        }
+
         let update = RoutineUpdate(
-            dosage: dosage,
+            dose: doseValue,
+            dose_unit: doseUnit,
             timing: timing?.rawValue,
-            frequency: frequency?.rawValue,
-            with_food: withFood,
+            days_of_week: daysOfWeek,
             notes: notes
         )
 
         // Only update if at least one field is non-nil
-        guard dosage != nil || timing != nil || frequency != nil || withFood != nil || notes != nil else { return }
+        guard dosage != nil || timing != nil || frequency != nil || notes != nil else { return }
 
         try await supabase.client
             .from("patient_supplement_routines")
@@ -284,18 +320,18 @@ final class SupplementService: ObservableObject {
             throw SupplementServiceError.noPatientId
         }
 
+        // Database schema (patient_supplement_logs):
+        // id, patient_id, supplement_id, dose_amount, dose_unit, taken_at, timing, with_food, notes
+        // NO: supplement_name, dosage, routine_id, skipped, perceived_effect, side_effects
         struct LogInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let routine_id: UUID?
-            let supplement_name: String
-            let dosage: String
-            let timing: String
+            let dose_amount: Double
+            let dose_unit: String
             let taken_at: String
-            let skipped: Bool
-            let perceived_effect: String?
-            let side_effects: [String]?
+            let timing: String
+            let with_food: Bool
             let notes: String?
         }
 
@@ -303,19 +339,28 @@ final class SupplementService: ObservableObject {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime]
 
+        // Parse dosage to get dose_amount and dose_unit
+        let (doseAmount, doseUnit) = parseDosage(dose.dosage)
+
+        // Combine notes with perceived effect and side effects if present
+        var combinedNotes = notes ?? ""
+        if let effect = perceivedEffect {
+            combinedNotes += combinedNotes.isEmpty ? "Effect: \(effect.rawValue)" : " | Effect: \(effect.rawValue)"
+        }
+        if let effects = sideEffects, !effects.isEmpty {
+            combinedNotes += combinedNotes.isEmpty ? "Side effects: \(effects.joined(separator: ", "))" : " | Side effects: \(effects.joined(separator: ", "))"
+        }
+
         let insert = LogInsert(
             id: logId,
             patient_id: patientId,
             supplement_id: dose.supplementId,
-            routine_id: dose.routineId,
-            supplement_name: dose.supplementName,
-            dosage: dose.dosage,
-            timing: dose.timing.rawValue,
+            dose_amount: doseAmount,
+            dose_unit: doseUnit,
             taken_at: dateFormatter.string(from: Date()),
-            skipped: false,
-            perceived_effect: perceivedEffect?.rawValue,
-            side_effects: sideEffects,
-            notes: notes
+            timing: dose.timing.rawValue,
+            with_food: dose.withFood,
+            notes: combinedNotes.isEmpty ? nil : combinedNotes
         )
 
         try await supabase.client
@@ -337,38 +382,47 @@ final class SupplementService: ObservableObject {
     }
 
     /// Marks a supplement as skipped
+    /// Note: Database schema doesn't have a "skipped" field, so we log with dose_amount = 0
+    /// and include skip reason in notes
     func skipSupplement(dose: TodaySupplementDose, reason: String?) async throws {
         guard let patientId = try await getPatientId() else {
             throw SupplementServiceError.noPatientId
         }
 
+        // Database schema (patient_supplement_logs):
+        // id, patient_id, supplement_id, dose_amount, dose_unit, taken_at, timing, with_food, notes
+        // NO: skipped, skip_reason columns - use notes field and dose_amount = 0 to indicate skip
         struct LogInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let routine_id: UUID?
-            let supplement_name: String
-            let dosage: String
-            let timing: String
+            let dose_amount: Double
+            let dose_unit: String
             let taken_at: String
-            let skipped: Bool
-            let skip_reason: String?
+            let timing: String
+            let with_food: Bool
+            let notes: String?
         }
 
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime]
 
+        // Parse dosage to get unit (amount will be 0 for skipped)
+        let (_, doseUnit) = parseDosage(dose.dosage)
+
+        // Use notes to indicate skip and reason
+        let skipNote = reason != nil ? "[SKIPPED] \(reason!)" : "[SKIPPED]"
+
         let insert = LogInsert(
             id: UUID(),
             patient_id: patientId,
             supplement_id: dose.supplementId,
-            routine_id: dose.routineId,
-            supplement_name: dose.supplementName,
-            dosage: dose.dosage,
-            timing: dose.timing.rawValue,
+            dose_amount: 0, // 0 indicates skipped
+            dose_unit: doseUnit,
             taken_at: dateFormatter.string(from: Date()),
-            skipped: true,
-            skip_reason: reason
+            timing: dose.timing.rawValue,
+            with_food: dose.withFood,
+            notes: skipNote
         )
 
         try await supabase.client
@@ -886,6 +940,30 @@ final class SupplementService: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    /// Parses a dosage string like "500mg" into (500.0, "mg")
+    private func parseDosage(_ dosage: String) -> (Double, String) {
+        // Extract numeric part and unit from strings like "500mg", "1000 mg", "2g", "5000 IU"
+        let trimmed = dosage.trimmingCharacters(in: .whitespaces)
+
+        var numberPart = ""
+        var unitPart = ""
+        var foundNumber = false
+
+        for char in trimmed {
+            if char.isNumber || char == "." {
+                numberPart.append(char)
+                foundNumber = true
+            } else if foundNumber {
+                unitPart.append(char)
+            }
+        }
+
+        let value = Double(numberPart) ?? 0
+        let unit = unitPart.trimmingCharacters(in: .whitespaces)
+
+        return (value, unit.isEmpty ? "mg" : unit)
+    }
 
     private func getPatientId() async throws -> UUID? {
         // Check for authenticated user first
