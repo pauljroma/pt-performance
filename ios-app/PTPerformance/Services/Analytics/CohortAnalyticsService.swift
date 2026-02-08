@@ -205,9 +205,10 @@ final class CohortAnalyticsService {
             throw CohortAnalyticsError.invalidTherapistId
         }
 
-        // Fetch program enrollments with outcomes
+        // Fetch program enrollments with outcomes using the joined view
+        // Note: program_enrollments -> program_library -> programs relationship
         let response = try await supabase.client
-            .from("program_enrollments")
+            .from("vw_program_enrollments_with_programs")
             .select("""
                 id,
                 patient_id,
@@ -215,14 +216,11 @@ final class CohortAnalyticsService {
                 status,
                 started_at,
                 completed_at,
-                programs!inner(
-                    id,
-                    name,
-                    type,
-                    therapist_id
-                )
+                program_name,
+                library_category,
+                program_therapist_id
             """)
-            .eq("programs.therapist_id", value: therapistId)
+            .eq("program_therapist_id", value: therapistId)
             .execute()
 
         struct EnrollmentRow: Codable {
@@ -232,14 +230,9 @@ final class CohortAnalyticsService {
             let status: String
             let started_at: Date?
             let completed_at: Date?
-
-            struct ProgramJoin: Codable {
-                let id: UUID
-                let name: String
-                let type: String?
-                let therapist_id: UUID
-            }
-            let programs: ProgramJoin
+            let program_name: String
+            let library_category: String?
+            let program_therapist_id: UUID
         }
 
         let decoder = JSONDecoder()
@@ -283,8 +276,8 @@ final class CohortAnalyticsService {
             programSummaries.append(ProgramOutcomeSummary(
                 id: UUID(),
                 programId: programId,
-                programName: firstEnrollment.programs.name,
-                programType: firstEnrollment.programs.type ?? "General",
+                programName: firstEnrollment.program_name,
+                programType: firstEnrollment.library_category ?? "General",
                 enrolledPatients: enrolled,
                 completedPatients: completed,
                 completionRate: completionRate,
@@ -306,19 +299,19 @@ final class CohortAnalyticsService {
             throw CohortAnalyticsError.invalidTherapistId
         }
 
-        // Fetch program enrollments with dates
+        // Fetch program enrollments with dates using the joined view
+        // Note: program_enrollments -> program_library -> programs relationship
         let response = try await supabase.client
-            .from("program_enrollments")
+            .from("vw_program_enrollments_with_programs")
             .select("""
                 id,
                 patient_id,
                 started_at,
                 completed_at,
-                dropped_at,
                 status,
-                programs!inner(therapist_id)
+                program_therapist_id
             """)
-            .eq("programs.therapist_id", value: therapistId)
+            .eq("program_therapist_id", value: therapistId)
             .not("started_at", operator: .is, value: "null")
             .execute()
 
@@ -327,7 +320,6 @@ final class CohortAnalyticsService {
             let patient_id: UUID
             let started_at: Date
             let completed_at: Date?
-            let dropped_at: Date?
             let status: String
         }
 
@@ -371,16 +363,21 @@ final class CohortAnalyticsService {
             let activeAtWeek = enrollments.filter { enrollment in
                 // Patient is active if:
                 // 1. They started before this week
-                // 2. They haven't dropped/completed before this week
+                // 2. They haven't completed before this week and status is active
                 let startedBeforeWeek = enrollment.started_at <= weekDate
 
                 let stillActive: Bool
-                if let droppedAt = enrollment.dropped_at {
-                    stillActive = droppedAt > weekDate
+                if enrollment.status == "cancelled" || enrollment.status == "dropped" {
+                    // Use completed_at as proxy for when they dropped if available
+                    if let completedAt = enrollment.completed_at {
+                        stillActive = completedAt > weekDate
+                    } else {
+                        stillActive = false
+                    }
                 } else if let completedAt = enrollment.completed_at {
                     stillActive = completedAt >= weekDate
                 } else {
-                    stillActive = true
+                    stillActive = enrollment.status == "active"
                 }
 
                 return startedBeforeWeek && stillActive
@@ -399,18 +396,12 @@ final class CohortAnalyticsService {
         }
 
         let completedCount = enrollments.filter { $0.status == "completed" }.count
-        let droppedCount = enrollments.filter { $0.status == "dropped" || $0.dropped_at != nil }.count
+        let droppedCount = enrollments.filter { $0.status == "cancelled" || $0.status == "dropped" }.count
         let overallRetention = Double(totalPatients - droppedCount) / Double(totalPatients) * 100
 
-        // Calculate average drop-off week
-        var dropOffWeeks: [Double] = []
-        for enrollment in enrollments {
-            if let droppedAt = enrollment.dropped_at {
-                let weeks = droppedAt.timeIntervalSince(enrollment.started_at) / (86400 * 7)
-                dropOffWeeks.append(weeks)
-            }
-        }
-        let avgDropOffWeek = dropOffWeeks.isEmpty ? nil : dropOffWeeks.reduce(0, +) / Double(dropOffWeeks.count)
+        // Calculate average drop-off week based on status changes
+        // Since dropped_at may not be available, we estimate from completed_at for cancelled enrollments
+        let avgDropOffWeek: Double? = nil // Would need additional tracking to calculate accurately
 
         return RetentionData(
             weeklyData: weeklyData,
@@ -674,10 +665,11 @@ final class CohortAnalyticsService {
 
     private func fetchAverageProgramCompletion(therapistId: String) async throws -> Double {
         do {
+            // Use the joined view to access program therapist_id
             let response = try await supabase.client
-                .from("program_enrollments")
-                .select("status, programs!inner(therapist_id)")
-                .eq("programs.therapist_id", value: therapistId)
+                .from("vw_program_enrollments_with_programs")
+                .select("status, program_therapist_id")
+                .eq("program_therapist_id", value: therapistId)
                 .execute()
 
             struct EnrollmentRow: Codable {
