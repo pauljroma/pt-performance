@@ -541,6 +541,8 @@ final class RecoverySessionDecodingTests: XCTestCase {
 final class RecoveryServiceEdgeCaseTests: XCTestCase {
 
     func testRecoverySession_ZeroDuration() {
+        // Zero duration input should be converted to minimum 1 minute
+        // to satisfy database constraint (duration_minutes > 0)
         let session = RecoverySession(
             id: UUID(),
             patientId: UUID(),
@@ -556,8 +558,9 @@ final class RecoveryServiceEdgeCaseTests: XCTestCase {
             createdAt: Date()
         )
 
-        XCTAssertEqual(session.durationMinutes, 0)
-        XCTAssertEqual(session.durationSeconds, 0)
+        // Model enforces minimum 1 minute for database constraint compliance
+        XCTAssertEqual(session.durationMinutes, 1, "Zero duration should be converted to minimum 1 minute")
+        XCTAssertEqual(session.durationSeconds, 60, "Duration seconds should reflect the 1 minute minimum")
     }
 
     func testRecoverySession_VeryLongDuration() {

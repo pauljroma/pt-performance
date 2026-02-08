@@ -171,6 +171,9 @@ struct HistoricalTrendsView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(metric.displayName) metric")
+        .accessibilityHint("Double tap to view \(metric.displayName) trends")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     // MARK: - Time Range Selector
@@ -203,6 +206,9 @@ struct HistoricalTrendsView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(range.accessibilityName) time range")
+        .accessibilityHint("Double tap to view data for \(range.accessibilityName.lowercased())")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     // MARK: - Main Trend Chart
@@ -493,6 +499,15 @@ enum HistoricalTimeRange: String, CaseIterable, Identifiable {
         case .month: return "1M"
         case .threeMonths: return "3M"
         case .year: return "1Y"
+        }
+    }
+
+    var accessibilityName: String {
+        switch self {
+        case .week: return "One week"
+        case .month: return "One month"
+        case .threeMonths: return "Three months"
+        case .year: return "One year"
         }
     }
 

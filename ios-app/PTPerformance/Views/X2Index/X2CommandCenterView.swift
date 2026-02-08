@@ -193,6 +193,8 @@ struct X2CommandCenterView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(section.rawValue), \(badgeCount) items")
+        .accessibilityHint("Double tap to view \(section.rawValue.lowercased())")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     // MARK: - Section Content

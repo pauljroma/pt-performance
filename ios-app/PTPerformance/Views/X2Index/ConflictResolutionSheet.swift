@@ -152,70 +152,81 @@ struct ConflictGroupResolutionSheet: View {
 
             HStack(spacing: 16) {
                 // Source 1
-                VStack(spacing: 8) {
-                    Image(systemName: "1.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-
-                    Text("Source 1")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text("Value A")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
-                        .fill(selectedResolution == .useFirst ? Color.blue.opacity(0.1) : Color(.tertiarySystemFill))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
-                        .stroke(selectedResolution == .useFirst ? Color.blue : Color.clear, lineWidth: 2)
-                )
-                .onTapGesture {
+                Button {
                     withAnimation(.spring(response: 0.3)) {
                         HapticService.selection()
                         selectedResolution = .useFirst
                     }
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: "1.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+
+                        Text("Source 1")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("Value A")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                            .fill(selectedResolution == .useFirst ? Color.blue.opacity(0.1) : Color(.tertiarySystemFill))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                            .stroke(selectedResolution == .useFirst ? Color.blue : Color.clear, lineWidth: 2)
+                    )
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Source 1, Value A")
+                .accessibilityHint("Double tap to select this source for resolution")
+                .accessibilityAddTraits(selectedResolution == .useFirst ? .isSelected : [])
 
                 Text("vs")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
 
                 // Source 2
-                VStack(spacing: 8) {
-                    Image(systemName: "2.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.purple)
-
-                    Text("Source 2")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text("Value B")
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
-                        .fill(selectedResolution == .useSecond ? Color.purple.opacity(0.1) : Color(.tertiarySystemFill))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
-                        .stroke(selectedResolution == .useSecond ? Color.purple : Color.clear, lineWidth: 2)
-                )
-                .onTapGesture {
+                Button {
                     withAnimation(.spring(response: 0.3)) {
                         HapticService.selection()
                         selectedResolution = .useSecond
                     }
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: "2.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.purple)
+
+                        Text("Source 2")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("Value B")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                            .fill(selectedResolution == .useSecond ? Color.purple.opacity(0.1) : Color(.tertiarySystemFill))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                            .stroke(selectedResolution == .useSecond ? Color.purple : Color.clear, lineWidth: 2)
+                    )
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Source 2, Value B")
+                .accessibilityHint("Double tap to select this source for resolution")
+                .accessibilityAddTraits(selectedResolution == .useSecond ? .isSelected : [])
             }
 
             Text(conflict.timestamp, style: .date)
