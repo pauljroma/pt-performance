@@ -63,6 +63,66 @@ struct TherapistWorkoutAssignment: Identifiable {
 @MainActor
 class TherapistProgramBuilderViewModel: ObservableObject {
 
+    // MARK: - Builder Step Enum
+
+    enum BuilderStep: Int, CaseIterable {
+        case start = 0
+        case patient = 1
+        case basics = 2
+        case phases = 3
+        case workouts = 4
+        case preview = 5
+
+        var displayName: String {
+            switch self {
+            case .start: return "Start"
+            case .patient: return "Patient"
+            case .basics: return "Basics"
+            case .phases: return "Phases"
+            case .workouts: return "Workouts"
+            case .preview: return "Preview"
+            }
+        }
+    }
+
+    // MARK: - Creation Mode Enum
+
+    enum CreationMode: String, CaseIterable {
+        case quickBuild
+        case fromTemplate
+        case custom
+
+        var title: String {
+            switch self {
+            case .quickBuild: return "Quick Build"
+            case .fromTemplate: return "From Template"
+            case .custom: return "Custom Program"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .quickBuild: return "AI-assisted program creation with smart defaults"
+            case .fromTemplate: return "Start from an existing program template"
+            case .custom: return "Build from scratch with full control"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .quickBuild: return "sparkles"
+            case .fromTemplate: return "doc.on.doc"
+            case .custom: return "hammer"
+            }
+        }
+    }
+
+    // MARK: - Published Properties - Wizard State
+
+    @Published var currentStep: BuilderStep = .start
+    @Published var selectedPatient: Patient?
+    @Published var creationMode: CreationMode = .custom
+
     // MARK: - Published Properties - Program Metadata
 
     @Published var programName: String = ""
@@ -117,6 +177,75 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     /// Total duration of all phases combined
     var totalPhaseDuration: Int {
         phases.reduce(0) { $0 + $1.durationWeeks }
+    }
+
+    /// Whether the current step can proceed to next
+    var canProceed: Bool {
+        switch currentStep {
+        case .start:
+            // Always can proceed from start (mode is pre-selected)
+            return true
+        case .patient:
+            // Patient is optional, can always proceed
+            return true
+        case .basics:
+            // Need a valid program name
+            return isValid
+        case .phases:
+            // Can proceed even without phases (will be validated on preview)
+            return true
+        case .workouts:
+            // Can proceed even without workouts assigned
+            return true
+        case .preview:
+            // Need to be ready to publish
+            return isReadyToPublish
+        }
+    }
+
+    // MARK: - Wizard Navigation
+
+    /// Advance to the next step
+    func nextStep() {
+        guard let nextIndex = BuilderStep(rawValue: currentStep.rawValue + 1) else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = nextIndex
+        }
+    }
+
+    /// Go back to the previous step
+    func previousStep() {
+        guard let prevIndex = BuilderStep(rawValue: currentStep.rawValue - 1) else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = prevIndex
+        }
+    }
+
+    /// Jump to a specific step
+    func goToStep(_ step: BuilderStep) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = step
+        }
+    }
+
+    /// Reset the wizard to the beginning
+    func resetWizard() {
+        currentStep = .start
+        selectedPatient = nil
+        creationMode = .custom
+        programName = ""
+        description = ""
+        category = ProgramCategory.strength.rawValue
+        difficultyLevel = DifficultyLevel.intermediate.rawValue
+        durationWeeks = 12
+        equipmentRequired = []
+        tags = []
+        equipmentInput = ""
+        tagsInput = ""
+        phases = []
+        errorMessage = nil
+        successMessage = nil
+        createdProgramId = nil
     }
 
     // MARK: - Equipment Management

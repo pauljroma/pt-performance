@@ -41,7 +41,7 @@ struct TherapistDashboardView: View {
             TherapistPatientSetupView()
         }
         .sheet(isPresented: $showCreateProgram) {
-            CreateProgramPlaceholderView()
+            EnhancedProgramBuilderView()
         }
         .sheet(isPresented: $showReports) {
             TherapistReportingView()
@@ -380,42 +380,6 @@ struct AddPatientPlaceholderView: View {
     }
 }
 
-/// Placeholder view for Create Program action
-/// Replace with actual implementation when available
-struct CreateProgramPlaceholderView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Image(systemName: "doc.badge.plus")
-                    .font(.system(size: 60))
-                    .foregroundColor(.green)
-
-                Text("Create Program")
-                    .font(.title)
-                    .fontWeight(.bold)
-
-                Text("Program builder coming soon.\nThis feature will allow you to create custom rehabilitation programs for your patients.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("Create Program")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
 
 // MARK: - Preview
 
