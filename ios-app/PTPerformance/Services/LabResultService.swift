@@ -382,11 +382,23 @@ final class LabResultService: ObservableObject {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
+        // Map provider to database enum values: 'quest', 'labcorp', 'other'
+        // Swift LabProvider has .unknown which maps to 'other' in the database
+        let dbProvider: String
+        switch parsedResult.provider {
+        case .quest:
+            dbProvider = "quest"
+        case .labcorp:
+            dbProvider = "labcorp"
+        case .unknown:
+            dbProvider = "other"
+        }
+
         let labResultInsert = LabResultInsert(
             id: labResultId,
             patient_id: patientId,
             test_date: dateFormatter.string(from: testDate),
-            provider: parsedResult.provider.rawValue,
+            provider: dbProvider,
             pdf_url: nil,
             notes: "Parsed from PDF with \(selectedBiomarkers.count) biomarkers. Confidence: \(parsedResult.confidence.rawValue)"
         )
@@ -401,27 +413,27 @@ final class LabResultService: ObservableObject {
         DebugLogger.shared.info("LabResultService", "Lab result inserted, now inserting biomarkers...")
 
         // 2. Insert biomarkers into biomarker_values table
+        // Note: Database schema only has is_flagged (boolean), not reference_low/high/flag
         struct BiomarkerValueInsert: Encodable {
             let id: UUID
             let lab_result_id: UUID
             let biomarker_type: String
             let value: Double
             let unit: String
-            let reference_low: Double?
-            let reference_high: Double?
-            let flag: String?
+            let is_flagged: Bool
         }
 
         let biomarkerInserts = selectedBiomarkers.map { biomarker in
-            BiomarkerValueInsert(
+            // is_flagged = true if flag is 'low', 'high', or 'critical'
+            let isFlagged = biomarker.flag != nil && biomarker.flag != .normal
+
+            return BiomarkerValueInsert(
                 id: UUID(),
                 lab_result_id: labResultId,
                 biomarker_type: biomarker.name.lowercased().replacingOccurrences(of: " ", with: "_"),
                 value: biomarker.value,
                 unit: biomarker.unit,
-                reference_low: biomarker.referenceLow,
-                reference_high: biomarker.referenceHigh,
-                flag: biomarker.flag?.rawValue
+                is_flagged: isFlagged
             )
         }
 
