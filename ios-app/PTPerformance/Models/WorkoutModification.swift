@@ -323,6 +323,31 @@ struct WorkoutModificationRequest: Codable {
         case reason
         case detailedExplanation = "detailed_explanation"
     }
+
+    /// Custom encoding to format scheduledDate as yyyy-MM-dd for DATE column
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(patientId, forKey: .patientId)
+        try container.encodeIfPresent(scheduledSessionId, forKey: .scheduledSessionId)
+
+        // Encode date as yyyy-MM-dd string for DATE column
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: scheduledDate)
+        try container.encode(dateString, forKey: .scheduledDate)
+
+        try container.encode(modificationType, forKey: .modificationType)
+        try container.encode(trigger, forKey: .trigger)
+        try container.encodeIfPresent(readinessScore, forKey: .readinessScore)
+        try container.encodeIfPresent(fatigueScore, forKey: .fatigueScore)
+        try container.encodeIfPresent(loadAdjustmentPercentage, forKey: .loadAdjustmentPercentage)
+        try container.encodeIfPresent(volumeReductionSets, forKey: .volumeReductionSets)
+        try container.encodeIfPresent(delayDays, forKey: .delayDays)
+        try container.encodeIfPresent(deloadDurationDays, forKey: .deloadDurationDays)
+        try container.encodeIfPresent(exerciseModifications, forKey: .exerciseModifications)
+        try container.encode(reason, forKey: .reason)
+        try container.encodeIfPresent(detailedExplanation, forKey: .detailedExplanation)
+    }
 }
 
 // MARK: - Modification Response

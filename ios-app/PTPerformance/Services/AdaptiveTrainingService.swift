@@ -126,9 +126,10 @@ class AdaptiveTrainingService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        let today = Calendar.current.startOfDay(for: Date())
-        let dateFormatter = ISO8601DateFormatter()
-        let todayString = dateFormatter.string(from: today)
+        // Use date-only format for the DATE column
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let todayString = dateFormatter.string(from: Date())
 
         let response = try await client.client
             .from("workout_modifications")
@@ -139,12 +140,46 @@ class AdaptiveTrainingService: ObservableObject {
             .order("scheduled_date", ascending: true)
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let modifications = try decoder.decode([WorkoutModification].self, from: response.data)
+        let modifications = try flexibleDecoder.decode([WorkoutModification].self, from: response.data)
 
         pendingModifications = modifications
         return modifications
+    }
+
+    /// Flexible decoder that handles both DATE (yyyy-MM-dd) and TIMESTAMPTZ formats
+    private var flexibleDecoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+
+            // Try ISO8601 with fractional seconds first (TIMESTAMPTZ format)
+            let iso8601Formatter = ISO8601DateFormatter()
+            iso8601Formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            // Try ISO8601 without fractional seconds
+            iso8601Formatter.formatOptions = [.withInternetDateTime]
+            if let date = iso8601Formatter.date(from: dateString) {
+                return date
+            }
+
+            // Try date-only format (DATE column returns yyyy-MM-dd)
+            let dateOnlyFormatter = DateFormatter()
+            dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+            dateOnlyFormatter.timeZone = TimeZone(identifier: "UTC")
+            if let date = dateOnlyFormatter.date(from: dateString) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Cannot decode date: \(dateString)"
+            )
+        }
+        return decoder
     }
 
     // MARK: - Accept Modification
@@ -502,9 +537,7 @@ class AdaptiveTrainingService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(WorkoutModification.self, from: response.data)
+        return try flexibleDecoder.decode(WorkoutModification.self, from: response.data)
     }
 
     // MARK: - Private: Resolve Modification
@@ -541,9 +574,7 @@ class AdaptiveTrainingService: ObservableObject {
             .single()
             .execute()
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let modification = try decoder.decode(WorkoutModification.self, from: response.data)
+        let modification = try flexibleDecoder.decode(WorkoutModification.self, from: response.data)
 
         // Update local state
         if let index = pendingModifications.firstIndex(where: { $0.id == modificationId }) {
