@@ -169,6 +169,12 @@ final class TabBarBadgeManager: ObservableObject {
         intelligenceBadge = count
     }
 
+    /// Sets badge for risk escalations (combines with intelligence badge)
+    func setRiskEscalationsBadge(_ count: Int) {
+        // Risk escalations are shown on the Intelligence tab
+        intelligenceBadge = count
+    }
+
     // MARK: - Private Methods
 
     private func setupNotificationObservers() {
@@ -203,6 +209,18 @@ final class TabBarBadgeManager: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        // Listen for new risk escalations
+        NotificationCenter.default.publisher(for: .newRiskEscalation)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let count = notification.userInfo?["count"] as? Int {
+                    self?.intelligenceBadge = count
+                } else {
+                    self?.intelligenceBadge += 1
+                }
+            }
+            .store(in: &cancellables)
     }
 }
 
@@ -217,4 +235,7 @@ extension Notification.Name {
 
     /// Posted when there's a new profile notification
     static let profileNotification = Notification.Name("profileNotification")
+
+    /// Posted when a new risk escalation is created
+    static let newRiskEscalation = Notification.Name("newRiskEscalation")
 }

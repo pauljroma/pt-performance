@@ -233,10 +233,29 @@ struct TherapistSettingsView: View {
     @EnvironmentObject var appState: AppState
     @State private var showingLogoutConfirmation = false
     @State private var isLoggingOut = false
+    @State private var showCommandCenter = false
 
     var body: some View {
         NavigationStack {
             List {
+                // Phase 3: X2 Command Center access
+                Section("X2Index") {
+                    Button {
+                        showCommandCenter = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "square.grid.2x2.fill")
+                                .foregroundColor(.modusCyan)
+                            Text("Command Center")
+                                .foregroundColor(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+
                 Section("Help & Support") {
                     Button {
                         onboardingCoordinator.resetOnboarding()
@@ -267,6 +286,10 @@ struct TherapistSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showCommandCenter) {
+                X2CommandCenterView()
+                    .environmentObject(appState)
+            }
             .alert("Log Out", isPresented: $showingLogoutConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Log Out", role: .destructive) {

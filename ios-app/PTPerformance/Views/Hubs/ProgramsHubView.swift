@@ -8,11 +8,13 @@
 //  BUILD 320: Baseball Pack Integration
 //  Added Baseball Pack promo card entry point in the programs section
 //
+//  Phase 3: Added Trends section for historical data analysis
+//
 
 import SwiftUI
 
 /// Programs Hub View - Unified programs and history tab
-/// Provides segmented access to Program Library and Workout History
+/// Provides segmented access to Program Library, Workout History, and Trends
 struct ProgramsHubView: View {
     // MARK: - Environment
 
@@ -28,8 +30,8 @@ struct ProgramsHubView: View {
     enum ProgramsSection: String, CaseIterable {
         case programs = "Programs"
         case packs = "Packs"
-        case baseball = "Baseball"
         case history = "History"
+        case trends = "Trends"  // Phase 3: Historical Trends
 
         var title: String { rawValue }
     }
@@ -81,13 +83,13 @@ struct ProgramsHubView: View {
             PremiumPacksBrowserView()
                 .environmentObject(storeKit)
 
-        case .baseball:
-            // Baseball Pack section with premium gating
-            baseballContent
-
         case .history:
             // History content
             historyContent
+
+        case .trends:
+            // Phase 3: Historical Trends content
+            trendsContent
         }
     }
 
@@ -126,6 +128,34 @@ struct ProgramsHubView: View {
             EmptyStateView(
                 title: "Not Signed In",
                 message: "Please sign in to view your workout history, programs, and track your progress.",
+                icon: "person.crop.circle.badge.exclamationmark",
+                iconColor: .orange
+            )
+        }
+    }
+
+    // MARK: - Phase 3: Trends Content
+
+    @ViewBuilder
+    private var trendsContent: some View {
+        if let patientIdString = supabase.userId,
+           let patientId = UUID(uuidString: patientIdString) {
+            // Premium-gated trends view
+            if storeKit.isPremium {
+                HistoricalTrendsView(patientId: patientId)
+            } else {
+                PremiumLockedView(
+                    feature: "Trends",
+                    icon: "chart.line.uptrend.xyaxis",
+                    description: "Analyze your progress trends over time with advanced analytics"
+                )
+                .environmentObject(storeKit)
+            }
+        } else {
+            // No patient ID available
+            EmptyStateView(
+                title: "Not Signed In",
+                message: "Please sign in to view your historical trends and progress analytics.",
                 icon: "person.crop.circle.badge.exclamationmark",
                 iconColor: .orange
             )

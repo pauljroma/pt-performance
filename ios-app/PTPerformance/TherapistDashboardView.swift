@@ -10,12 +10,15 @@ import SwiftUI
 struct TherapistDashboardView: View {
     @StateObject private var viewModel = PatientListViewModel()
     @StateObject private var schedulingViewModel = TherapistSchedulingViewModel()
+    @StateObject private var escalationService = RiskEscalationService.shared
     @State private var selectedPatient: Patient?
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State private var showDebugLogs = false
     @State private var showAddPatient = false
     @State private var showCreateProgram = false
     @State private var showReports = false
+    @State private var showEscalationQueue = false
+    @State private var selectedEscalation: RiskEscalation?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
 
@@ -44,11 +47,28 @@ struct TherapistDashboardView: View {
             TherapistReportingView()
                 .environmentObject(appState)
         }
+        .sheet(isPresented: $showEscalationQueue) {
+            EscalationQueueView()
+        }
+        .sheet(item: $selectedEscalation) { escalation in
+            EscalationDetailSheet(
+                escalation: escalation,
+                patient: viewModel.patient(for: escalation.patientId),
+                onAcknowledge: {
+                    Task {
+                        _ = try? await escalationService.acknowledgeEscalation(escalation.id)
+                    }
+                },
+                onResolve: nil,
+                onDismiss: nil
+            )
+        }
         .task {
             if let therapistId = appState.userId {
                 await viewModel.loadPatients(therapistId: therapistId)
                 await viewModel.loadActiveFlags(therapistId: therapistId)
                 await schedulingViewModel.loadAllSessions(therapistId: therapistId)
+                try? await escalationService.fetchActiveEscalations(for: therapistId)
             } else {
                 // SECURITY: Do NOT load patients without therapist ID
                 // This prevents unauthorized access to patient data
@@ -109,6 +129,62 @@ struct TherapistDashboardView: View {
     private var patientListContent: some View {
         ScrollView {
             VStack(spacing: 20) {
+                // Safety Alerts Section (prominent position for critical escalations)
+                if !escalationService.activeEscalations.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Safety Alerts")
+                                .font(.title2)
+                                .fontWeight(.bold)
+
+                            Spacer()
+
+                            if escalationService.unacknowledgedCount > 0 {
+                                Button {
+                                    showEscalationQueue = true
+                                } label: {
+                                    Text("View All (\(escalationService.activeEscalations.count))")
+                                        .font(.subheadline)
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+
+                        // Show top critical/high escalations
+                        ForEach(escalationService.activeEscalations.filter { $0.severity >= .high }.prefix(3)) { escalation in
+                            SafetyAlertCard(
+                                escalation: escalation,
+                                patient: viewModel.patient(for: escalation.patientId),
+                                onAcknowledge: {
+                                    Task {
+                                        _ = try? await escalationService.acknowledgeEscalation(escalation.id)
+                                    }
+                                },
+                                onCallPatient: {
+                                    // Handle call action
+                                    if let patient = viewModel.patient(for: escalation.patientId) {
+                                        handlePatientSelection(patient)
+                                    }
+                                },
+                                onViewDetails: {
+                                    selectedEscalation = escalation
+                                }
+                            )
+                            .padding(.horizontal)
+                        }
+
+                        // Summary banner for remaining alerts
+                        if escalationService.activeEscalations.count > 3 {
+                            SafetyAlertsBanner(summary: escalationService.summary) {
+                                showEscalationQueue = true
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                    .padding(.top)
+                }
+
                 // KPI Section at the top
                 DashboardKPISection(
                     patients: viewModel.patients,
@@ -121,7 +197,6 @@ struct TherapistDashboardView: View {
                         handlePatientSelection(item.patient)
                     }
                 )
-                .padding(.top)
 
                 // Active Alerts Section
                 if !viewModel.activeFlags.isEmpty {
@@ -178,6 +253,7 @@ struct TherapistDashboardView: View {
             if let therapistId = appState.userId {
                 await viewModel.refresh(therapistId: therapistId)
                 await schedulingViewModel.refresh(therapistId: therapistId)
+                try? await escalationService.fetchActiveEscalations(for: therapistId)
             } else {
                 // SECURITY: Do NOT refresh without therapist ID
                 // This prevents unauthorized access to patient data

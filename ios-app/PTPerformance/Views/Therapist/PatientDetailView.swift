@@ -13,6 +13,8 @@ struct PatientDetailView: View {
     @State private var showIntakeAssessment = false
     @State private var showSOAPNote = false
     @State private var showAssessmentHistory = false
+    @State private var showWeeklyReports = false
+    @State private var showGenerateWeeklyReport = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -124,6 +126,21 @@ struct PatientDetailView: View {
 
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
+                    // Weekly Reports Section
+                    Button {
+                        showWeeklyReports = true
+                    } label: {
+                        Label("Weekly Reports", systemImage: "calendar.badge.clock")
+                    }
+
+                    Button {
+                        showGenerateWeeklyReport = true
+                    } label: {
+                        Label("Generate Weekly Report", systemImage: "plus.rectangle.on.folder")
+                    }
+
+                    Divider()
+
                     Button {
                         showReportBuilder = true
                     } label: {
@@ -221,6 +238,25 @@ struct PatientDetailView: View {
         .sheet(isPresented: $showAssessmentHistory) {
             NavigationView {
                 AssessmentHistoryView(patientId: patient.id, patientName: patient.fullName)
+            }
+        }
+        .sheet(isPresented: $showWeeklyReports) {
+            NavigationView {
+                ReportHistoryView(patient: patient)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Close") {
+                                showWeeklyReports = false
+                            }
+                        }
+                    }
+            }
+        }
+        .sheet(isPresented: $showGenerateWeeklyReport) {
+            NavigationView {
+                GenerateWeeklyReportSheet(patient: patient, onDismiss: {
+                    showGenerateWeeklyReport = false
+                })
             }
         }
     }
