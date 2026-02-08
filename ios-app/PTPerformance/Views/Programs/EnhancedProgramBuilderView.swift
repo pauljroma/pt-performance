@@ -159,6 +159,7 @@ struct EnhancedProgramBuilderView: View {
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
                 }
+                .accessibilityLabel("Go back to previous step")
             }
 
             // Continue/Finish button
@@ -188,6 +189,8 @@ struct EnhancedProgramBuilderView: View {
                 .cornerRadius(12)
             }
             .disabled(!viewModel.canProceed || viewModel.isLoading)
+            .accessibilityLabel(viewModel.currentStep == .preview ? "Publish program" : "Continue to next step")
+            .accessibilityHint(viewModel.canProceed ? "" : "Complete required fields to continue")
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 30)
@@ -317,6 +320,8 @@ private struct CreationModeCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(mode.title). \(mode.description)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

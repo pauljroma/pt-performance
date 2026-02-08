@@ -373,14 +373,14 @@ class PatientContextViewModel: ObservableObject {
         isLoading = true
         error = nil
 
-        // Calculate suggested program type
-        suggestedProgramType = suggestProgramType(for: patient)
-
-        // Load data in parallel
+        // Load data in parallel first
         async let programsTask: () = loadPreviousPrograms(for: patient.id)
         async let goalsTask: () = loadActiveGoals(for: patient.id)
 
         _ = await (programsTask, goalsTask)
+
+        // Calculate suggested program type AFTER goals are loaded
+        suggestedProgramType = suggestProgramType(for: patient)
 
         isLoading = false
     }
@@ -472,10 +472,6 @@ class PatientContextViewModel: ObservableObject {
             let goals = try decoder.decode([PatientGoal].self, from: response.data)
 
             activeGoals = goals
-
-            // Re-evaluate suggestion after goals are loaded
-            // Note: This will be called after the initial suggestion
-
         } catch {
             ErrorLogger.shared.logError(error, context: "PatientContextViewModel.loadActiveGoals")
             // Don't show error to user - this is supplementary data

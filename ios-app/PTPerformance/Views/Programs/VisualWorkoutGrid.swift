@@ -143,8 +143,8 @@ struct VisualWorkoutGrid: View {
                 .frame(width: 50, height: 40)
                 .background(Color(.tertiarySystemGroupedBackground))
 
-            // Week columns
-            ForEach(1...phase.durationWeeks, id: \.self) { week in
+            // Week columns - guard against 0 weeks
+            ForEach(Array(1...max(1, phase.durationWeeks)), id: \.self) { week in
                 Text("Week \(week)")
                     .font(.caption)
                     .fontWeight(.semibold)
@@ -179,8 +179,8 @@ struct VisualWorkoutGrid: View {
                     alignment: .top
                 )
 
-            // Cells for each week
-            ForEach(1...phase.durationWeeks, id: \.self) { week in
+            // Cells for each week - guard against 0 weeks
+            ForEach(Array(1...max(1, phase.durationWeeks)), id: \.self) { week in
                 gridCell(week: week, day: day)
             }
         }
@@ -258,22 +258,15 @@ struct VisualWorkoutGrid: View {
         )
         .padding(.horizontal, 4)
         .contentShape(Rectangle())
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                deleteAssignment(assignment)
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
         .contextMenu {
             Button(role: .destructive) {
                 deleteAssignment(assignment)
             } label: {
-                Label("Remove", systemImage: "trash")
+                Label("Remove Workout", systemImage: "trash")
             }
         }
         .accessibilityLabel("\(assignment.templateName)")
-        .accessibilityHint("Swipe left to delete")
+        .accessibilityHint("Long press to remove")
     }
 
     private func addMoreButton(week: Int, day: Int) -> some View {

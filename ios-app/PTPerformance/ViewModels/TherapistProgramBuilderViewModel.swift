@@ -380,7 +380,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
         let phaseInput = TherapistCreatePhaseInput(
             programId: programId.uuidString,
-            phaseNumber: phase.sequence,
+            sequence: phase.sequence,
             name: phase.name.trimmingCharacters(in: .whitespacesAndNewlines),
             durationWeeks: phase.durationWeeks,
             goals: phase.goals.isEmpty ? nil : phase.goals
@@ -534,14 +534,14 @@ private struct TherapistCreateProgramInput: Codable {
 
 private struct TherapistCreatePhaseInput: Codable {
     let programId: String
-    let phaseNumber: Int
+    let sequence: Int
     let name: String
     let durationWeeks: Int?
     let goals: String?
 
     enum CodingKeys: String, CodingKey {
         case programId = "program_id"
-        case phaseNumber = "phase_number"
+        case sequence
         case name
         case durationWeeks = "duration_weeks"
         case goals
