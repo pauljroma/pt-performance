@@ -853,11 +853,16 @@ struct TodaySessionView: View {
             DebugLogger.shared.log("Creating session from prescription: \(prescription.name)", level: .diagnostic)
 
             // 1. Create manual session with prescribed source
+            // Note: sourceTemplateType must only be set if sourceTemplateId is set (database constraint)
+            let templateType: SourceTemplateType? = prescription.templateId != nil
+                ? (prescription.templateType == "system" ? .system : .patient)
+                : nil
+
             let session = try await service.createManualSession(
                 name: prescription.name,
                 patientId: patientUUID,
                 sourceTemplateId: prescription.templateId,
-                sourceTemplateType: prescription.templateType == "system" ? .system : .patient,
+                sourceTemplateType: templateType,
                 assignedByUserId: prescription.therapistId,
                 sessionSource: .prescribed
             )

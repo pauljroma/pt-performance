@@ -108,9 +108,11 @@ final class SupplementService: ObservableObject {
                 return
             }
 
+            // Note: Only select columns that exist in the supplements table
+            // The 'brand' column may not exist in all database versions
             let results: [SupplementRoutine] = try await supabase.client
                 .from("patient_supplement_routines")
-                .select("*, supplement:supplements(id, name, brand, category)")
+                .select("*, supplement:supplements(id, name, category)")
                 .eq("patient_id", value: patientId.uuidString)
                 .eq("is_active", value: true)
                 .order("timing")
