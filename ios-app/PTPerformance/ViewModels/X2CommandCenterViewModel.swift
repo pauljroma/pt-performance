@@ -10,39 +10,6 @@ import Foundation
 import SwiftUI
 import Combine
 
-// MARK: - Weekly Report Summary Model
-
-struct WeeklyReportSummary: Identifiable, Codable {
-    let id: UUID
-    let title: String
-    let dateRange: String
-    let patientCount: Int
-    let isReady: Bool
-    let highlights: String?
-    let generatedAt: Date?
-    let pdfUrl: String?
-
-    init(
-        id: UUID = UUID(),
-        title: String,
-        dateRange: String,
-        patientCount: Int,
-        isReady: Bool = true,
-        highlights: String? = nil,
-        generatedAt: Date? = nil,
-        pdfUrl: String? = nil
-    ) {
-        self.id = id
-        self.title = title
-        self.dateRange = dateRange
-        self.patientCount = patientCount
-        self.isReady = isReady
-        self.highlights = highlights
-        self.generatedAt = generatedAt
-        self.pdfUrl = pdfUrl
-    }
-}
-
 // MARK: - X2 Command Center ViewModel
 
 @MainActor
@@ -56,13 +23,28 @@ final class X2CommandCenterViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var hasLoaded = false
     @Published var errorMessage: String?
+    @Published var showError = false
 
     // MARK: - Private Properties
 
     private let safetyService = SafetyService.shared
+    private let conflictService = ConflictResolutionService.shared
+    private let reportService = WeeklyReportService.shared
     private let supabase = PTSupabaseClient.shared
     private var therapistId: String?
     private var cancellables = Set<AnyCancellable>()
+
+    // MARK: - Demo Mode
+
+    /// Whether to use demo data instead of live backend data
+    /// Enabled via USE_DEMO_DATA environment variable or when not authenticated
+    private var useDemoData: Bool {
+        #if DEBUG
+        return ProcessInfo.isDemoMode || supabase.currentSession == nil
+        #else
+        return false
+        #endif
+    }
 
     // MARK: - Initialization
 
@@ -137,10 +119,29 @@ final class X2CommandCenterViewModel: ObservableObject {
     func resolveConflict(_ conflict: ConflictGroup, resolution: ConflictResolution) async {
         HapticService.success()
 
-        // TODO: Implement conflict resolution service
-        // For now, just remove from local state
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-            pendingConflicts.removeAll { $0.id == conflict.id }
+        do {
+            // Resolve the conflict based on resolution type
+            switch resolution.resolution {
+            case .useSource(let sourceId):
+                // Find the source type string from the ID
+                try await conflictService.userResolve(conflict.id, selectedSource: sourceId.uuidString)
+            case .useAverage:
+                // For average, we dismiss with a note
+                try await conflictService.dismissConflict(conflict.id, reason: "Resolved with average value")
+            case .dismiss:
+                try await conflictService.dismissConflict(conflict.id, reason: resolution.notes)
+            case .manual(let value):
+                try await conflictService.userResolveWithCustomValue(conflict.id, customValue: .string(value))
+            }
+
+            // Remove from local state with animation
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                pendingConflicts.removeAll { $0.id == conflict.id }
+            }
+        } catch {
+            HapticService.error()
+            errorMessage = error.localizedDescription
+            showError = true
         }
     }
 
@@ -159,6 +160,12 @@ final class X2CommandCenterViewModel: ObservableObject {
     }
 
     private func loadEscalations() async {
+        // Use demo data when in demo mode
+        if useDemoData {
+            activeEscalations = DemoDataProvider.sampleSafetyIncidents
+            return
+        }
+
         let incidents = await safetyService.getOpenIncidents()
 
         // Sort by severity (critical first) then by age (oldest first)
@@ -173,30 +180,58 @@ final class X2CommandCenterViewModel: ObservableObject {
     }
 
     private func loadConflicts() async {
-        // TODO: Implement conflict loading from timeline service
-        // For now, return empty or mock data
-        pendingConflicts = []
+        // Use demo data when in demo mode
+        if useDemoData {
+            pendingConflicts = DemoDataProvider.sampleConflictGroups
+            return
+        }
+
+        guard let therapistId = therapistId else { return }
+
+        do {
+            // Get pending conflicts for therapist's patients
+            let conflicts = try await conflictService.getPendingConflicts(for: therapistId)
+            pendingConflicts = conflicts.map { ConflictGroup(from: $0) }
+        } catch {
+            DebugLogger.shared.log("Failed to load conflicts: \(error)", level: .error)
+        }
     }
 
     private func loadReports() async {
-        // TODO: Implement report loading from report service
-        // For now, return mock data for development
-        #if DEBUG
-        recentReports = [
+        // Use demo data when in demo mode
+        if useDemoData {
+            recentReports = DemoDataProvider.sampleReportSummaries
+            return
+        }
+
+        guard let therapistId = therapistId else { return }
+
+        do {
+            let reports = try await reportService.getRecentReports(for: therapistId, limit: 5)
+            recentReports = reports.map { WeeklyReportSummary(from: $0) }
+        } catch {
+            DebugLogger.shared.log("Failed to load reports: \(error)", level: .error)
+            // In development, use mock data
+            recentReports = generateMockReports()
+        }
+    }
+
+    private func generateMockReports() -> [WeeklyReportSummary] {
+        // Return mock data for development
+        return [
             WeeklyReportSummary(
-                title: "Weekly Progress Report",
-                dateRange: "Feb 1 - Feb 7, 2026",
+                title: "Week 5",
+                dateRange: "Jan 27 - Feb 2",
                 patientCount: 12,
-                highlights: "8 patients improved adherence. 2 new PRs logged."
+                highlights: "85% adherence rate"
             ),
             WeeklyReportSummary(
-                title: "Weekly Progress Report",
-                dateRange: "Jan 25 - Jan 31, 2026",
-                patientCount: 11,
-                highlights: "Average adherence: 87%. 1 escalation resolved."
+                title: "Week 4",
+                dateRange: "Jan 20 - Jan 26",
+                patientCount: 12,
+                highlights: "3 patients hit goals"
             )
         ]
-        #endif
     }
 }
 

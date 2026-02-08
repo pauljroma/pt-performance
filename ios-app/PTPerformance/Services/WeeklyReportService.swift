@@ -124,6 +124,35 @@ final class WeeklyReportService: ObservableObject {
         }
     }
 
+    /// Fetch recent reports for a therapist (across all their patients)
+    /// - Parameters:
+    ///   - therapistId: The therapist's ID string
+    ///   - limit: Maximum number of reports to fetch
+    /// - Returns: Array of WeeklyReport sorted by date descending
+    func getRecentReports(for therapistId: String, limit: Int = 5) async throws -> [WeeklyReport] {
+        guard let therapistUUID = UUID(uuidString: therapistId) else {
+            throw WeeklyReportError.fetchFailed("Invalid therapist ID")
+        }
+
+        do {
+            let response: [WeeklyReport] = try await supabase
+                .from("weekly_reports")
+                .select()
+                .eq("therapist_id", value: therapistUUID.uuidString)
+                .order("week_start_date", ascending: false)
+                .limit(limit)
+                .execute()
+                .value
+
+            DebugLogger.shared.info("WeeklyReport", "Fetched \(response.count) recent reports for therapist")
+            return response
+
+        } catch {
+            errorLogger.logError(error, context: "WeeklyReportService.getRecentReports")
+            throw WeeklyReportError.fetchFailed(error.localizedDescription)
+        }
+    }
+
     /// Fetch historical reports for a patient
     /// - Parameters:
     ///   - patientId: The patient's UUID

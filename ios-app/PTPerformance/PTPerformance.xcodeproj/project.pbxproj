@@ -770,6 +770,8 @@
 		E831BAFC95BE47A07CCFB797 /* WorkoutBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB36D08F45CC3DE456E85EA5 /* WorkoutBlock.swift */; };
 		E847406EA559CB5A39871CFF /* HealthKitServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA4867A478B487538DED98C /* HealthKitServiceTests.swift */; };
 		E875E5058349EF0760C0A933 /* ValidationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B59D8AD08E0E73806B2BA66 /* ValidationHelpers.swift */; };
+		A54A1D0FCC2DE766C135225E /* PatientPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5174434765761E74B050AC /* PatientPickerSheet.swift */; };
+		C68F06C4E3106869D98AF6A2 /* DemoDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D08386ACACCC783C07C1D43 /* DemoDataProvider.swift */; };
 		E88524D0C025E28E0D8B0F48 /* ProgramLibraryBrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F6EB6A009B99A626D9EB358 /* ProgramLibraryBrowserViewModel.swift */; };
 		E8F1EE6C3F4E93B61493B7D4 /* ProgramBuilderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C731539D09D56302ACAFBD /* ProgramBuilderViewModel.swift */; };
 		E9BFC91246D73CEDBB054A14 /* TrendAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0108E22E601382F435D56D2 /* TrendAnalysisService.swift */; };
@@ -1107,6 +1109,8 @@
 		4A15F45BE43124223A9B2F0E /* MetricTrendCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MetricTrendCard.swift; path = Views/Analytics/MetricTrendCard.swift; sourceTree = "<group>"; };
 		4A55D1B56D9FFD10C653C86E /* AchievementsDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AchievementsDashboardView.swift; path = Views/Achievements/AchievementsDashboardView.swift; sourceTree = "<group>"; };
 		4B59D8AD08E0E73806B2BA66 /* ValidationHelpers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationHelpers.swift; path = Utils/ValidationHelpers.swift; sourceTree = "<group>"; };
+		EA5174434765761E74B050AC /* PatientPickerSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientPickerSheet.swift; path = Views/Components/PatientPickerSheet.swift; sourceTree = "<group>"; };
+		6D08386ACACCC783C07C1D43 /* DemoDataProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DemoDataProvider.swift; path = Utils/DemoDataProvider.swift; sourceTree = "<group>"; };
 		4B9840FC867B90BE84D4D8ED /* WorkoutExerciseItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutExerciseItem.swift; path = Models/WorkoutExerciseItem.swift; sourceTree = "<group>"; };
 		4BC4E5A4DBE08ED78211DD2C /* ReadinessStatusCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ReadinessStatusCard.swift; path = Views/Today/ReadinessStatusCard.swift; sourceTree = "<group>"; };
 		4BC6D28486B30A8F4C42DA36 /* HealthIntelligenceModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HealthIntelligenceModelTests.swift; path = PTPerformanceTests/Models/HealthIntelligenceModelTests.swift; sourceTree = "<group>"; };
@@ -2662,6 +2666,7 @@
 			isa = PBXGroup;
 			children = (
 				4B59D8AD08E0E73806B2BA66 /* ValidationHelpers.swift */,
+				6D08386ACACCC783C07C1D43 /* DemoDataProvider.swift */,
 				1E9C8603D0EE3B6ABE22F262 /* AppError.swift */,
 				69FCF8230F7F45B9EFC2E985 /* DesignSystem.swift */,
 				B054839184677883B0A4483B /* DesignTokens.swift */,
@@ -3753,6 +3758,8 @@
 				BB4C70BCFA9A23B0285D4D61 /* VideoPlayerView.swift in Sources */,
 				C7FD46C6F0CDD52DFBFACD69 /* ExerciseCuesCard.swift in Sources */,
 				E875E5058349EF0760C0A933 /* ValidationHelpers.swift in Sources */,
+				A54A1D0FCC2DE766C135225E /* PatientPickerSheet.swift in Sources */,
+				C68F06C4E3106869D98AF6A2 /* DemoDataProvider.swift in Sources */,
 				A34ACCA0E0C375F5D57DF72C /* AccessibleFormField.swift in Sources */,
 				61B07397DE7184A5590C057F /* FormValidationIndicator.swift in Sources */,
 				383E14F95EC7AEF8105BBEBB /* OnboardingView.swift in Sources */,

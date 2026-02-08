@@ -448,6 +448,52 @@ struct ReportSchedule: Codable, Identifiable, Sendable {
     }
 }
 
+// MARK: - Weekly Report Summary
+
+/// Summary view model for report cards
+struct WeeklyReportSummary: Identifiable, Codable {
+    let id: UUID
+    let title: String
+    let dateRange: String
+    let patientCount: Int
+    let isReady: Bool
+    let highlights: String?
+    let generatedAt: Date?
+    let pdfUrl: String?
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        dateRange: String,
+        patientCount: Int,
+        isReady: Bool = true,
+        highlights: String? = nil,
+        generatedAt: Date? = nil,
+        pdfUrl: String? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.dateRange = dateRange
+        self.patientCount = patientCount
+        self.isReady = isReady
+        self.highlights = highlights
+        self.generatedAt = generatedAt
+        self.pdfUrl = pdfUrl
+    }
+
+    /// Create from WeeklyReport
+    init(from report: WeeklyReport) {
+        self.id = report.id
+        self.title = "Week \(report.weekNumber)"
+        self.dateRange = report.dateRangeString
+        self.patientCount = 1
+        self.isReady = true
+        self.highlights = report.achievements.first
+        self.generatedAt = report.generatedAt
+        self.pdfUrl = nil
+    }
+}
+
 // MARK: - Sample Data
 
 extension WeeklyReport {

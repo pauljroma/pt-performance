@@ -75,6 +75,29 @@ final class ConflictResolutionService: ObservableObject {
 
     // MARK: - Fetch Conflicts
 
+    /// Fetch all pending conflicts for a therapist (across all their patients)
+    /// - Parameter therapistId: The therapist's ID string
+    /// - Returns: Array of pending DataConflicts
+    func getPendingConflicts(for therapistId: String) async throws -> [DataConflict] {
+        do {
+            let response = try await client.client
+                .from("data_conflicts")
+                .select()
+                .eq("status", value: "pending")
+                .order("conflict_date", ascending: false)
+                .execute()
+
+            let decoder = PTSupabaseClient.flexibleDecoder
+            let conflicts = try decoder.decode([DataConflict].self, from: response.data)
+
+            DebugLogger.shared.success("ConflictResolution", "Fetched \(conflicts.count) pending conflicts for therapist")
+            return conflicts
+        } catch {
+            ErrorLogger.shared.logError(error, context: "ConflictResolutionService.getPendingConflicts(for:)")
+            throw error
+        }
+    }
+
     /// Fetch all pending conflicts for a patient
     /// - Parameter patientId: The patient's UUID
     func fetchPendingConflicts(patientId: UUID) async throws {

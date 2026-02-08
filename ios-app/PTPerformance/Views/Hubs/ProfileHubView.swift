@@ -590,6 +590,8 @@ struct ProfileHubView: View {
 
     // MARK: - Debug Section
 
+    @AppStorage("debug_demo_mode") private var debugDemoMode = false
+
     private var debugSection: some View {
         Section("Debug") {
             Toggle(isOn: Binding(
@@ -616,6 +618,25 @@ struct ProfileHubView: View {
                 .accessibilityLabel("Reset to Real Status")
                 .accessibilityHint("Removes debug override and uses actual subscription status")
             }
+
+            // Demo Mode Toggle for X2 Command Center testing
+            Toggle(isOn: $debugDemoMode) {
+                HStack {
+                    Image(systemName: debugDemoMode ? "play.circle.fill" : "play.circle")
+                        .foregroundColor(debugDemoMode ? .cyan : .gray)
+                        .frame(width: 24)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Demo Mode")
+                        Text("Use sample data for X2 Command Center")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .accessibilityLabel("Demo Mode")
+            .accessibilityValue(debugDemoMode ? "Enabled" : "Disabled")
+            .accessibilityHint("Toggle to use demo data instead of live backend data")
         }
     }
 

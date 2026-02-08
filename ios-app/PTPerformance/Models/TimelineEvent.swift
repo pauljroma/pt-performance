@@ -296,6 +296,9 @@ struct ConflictGroup: Identifiable, Hashable {
         case duplicateEntry = "duplicate_entry"
         case timeOverlap = "time_overlap"
         case sourceDisagreement = "source_disagreement"
+        case missingData = "missing_data"
+        case timestampMismatch = "timestamp_mismatch"
+        case sourceConflict = "source_conflict"
 
         var displayName: String {
             switch self {
@@ -303,6 +306,9 @@ struct ConflictGroup: Identifiable, Hashable {
             case .duplicateEntry: return "Duplicate Entry"
             case .timeOverlap: return "Time Overlap"
             case .sourceDisagreement: return "Source Disagreement"
+            case .missingData: return "Missing Data"
+            case .timestampMismatch: return "Timestamp Mismatch"
+            case .sourceConflict: return "Source Conflict"
             }
         }
 
@@ -312,6 +318,9 @@ struct ConflictGroup: Identifiable, Hashable {
             case .duplicateEntry: return "doc.on.doc.fill"
             case .timeOverlap: return "clock.badge.exclamationmark.fill"
             case .sourceDisagreement: return "arrow.triangle.2.circlepath"
+            case .missingData: return "questionmark.circle.fill"
+            case .timestampMismatch: return "clock.badge.exclamationmark.fill"
+            case .sourceConflict: return "arrow.triangle.2.circlepath"
             }
         }
 
@@ -321,8 +330,24 @@ struct ConflictGroup: Identifiable, Hashable {
             case .duplicateEntry: return .yellow
             case .timeOverlap: return .purple
             case .sourceDisagreement: return .red
+            case .missingData: return .red
+            case .timestampMismatch: return .purple
+            case .sourceConflict: return .blue
             }
         }
+    }
+}
+
+// MARK: - ConflictGroup Extensions
+
+extension ConflictGroup {
+    /// Create from a DataConflict
+    init(from conflict: DataConflict) {
+        self.id = conflict.id
+        self.eventIds = [conflict.id]
+        self.conflictType = .valueDiscrepancy
+        self.description = "Conflicting values for \(conflict.metricType.displayName)"
+        self.timestamp = conflict.conflictDate
     }
 }
 

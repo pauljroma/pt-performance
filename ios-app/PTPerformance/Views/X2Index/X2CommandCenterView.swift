@@ -27,6 +27,8 @@ struct X2CommandCenterView: View {
     @State private var showEscalationDetail = false
     @State private var showConflictResolution = false
     @State private var showReportGenerator = false
+    @State private var showPatientPicker = false
+    @State private var showTrendAnalysis = false
     @State private var selectedEscalation: SafetyIncident?
     @State private var selectedConflict: ConflictGroup?
     @State private var selectedPatient: Patient?
@@ -104,6 +106,32 @@ struct X2CommandCenterView: View {
             }
             .sheet(isPresented: $showReportGenerator) {
                 WeeklyReportGeneratorSheet()
+            }
+            .sheet(isPresented: $showPatientPicker) {
+                PatientPickerSheet(onSelect: { patient in
+                    selectedPatient = patient
+                    showPatientPicker = false
+                    showPTBrief = true
+                })
+            }
+            .sheet(isPresented: $showTrendAnalysis) {
+                NavigationStack {
+                    if let patient = selectedPatient {
+                        HistoricalTrendsView(patientId: patient.id)
+                    } else if let userIdString = appState.userId,
+                              let userId = UUID(uuidString: userIdString) {
+                        HistoricalTrendsView(patientId: userId)
+                    } else {
+                        PatientPickerSheet(onSelect: { patient in
+                            selectedPatient = patient
+                            showTrendAnalysis = false
+                            // Re-open with selected patient
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                showTrendAnalysis = true
+                            }
+                        })
+                    }
+                }
             }
         }
     }
@@ -350,8 +378,8 @@ struct X2CommandCenterView: View {
                     subtitle: "Quick patient scan",
                     color: .modusCyan
                 ) {
-                    // Navigate to patient picker for PT Brief
                     HapticService.light()
+                    showPatientPicker = true
                 }
 
                 CommandCenterQuickAction(
@@ -361,6 +389,7 @@ struct X2CommandCenterView: View {
                     color: .purple
                 ) {
                     HapticService.light()
+                    showTrendAnalysis = true
                 }
 
                 CommandCenterQuickAction(
@@ -892,8 +921,30 @@ struct ReportCard: View {
 #if DEBUG
 struct X2CommandCenterView_Previews: PreviewProvider {
     static var previews: some View {
-        X2CommandCenterView()
-            .environmentObject(AppState())
+        Group {
+            // Default preview with demo data
+            X2CommandCenterView()
+                .environmentObject(AppState.preview)
+                .environment(\.useDemoData, true)
+                .previewDisplayName("Demo Data")
+
+            // Empty state preview
+            X2CommandCenterView()
+                .environmentObject(AppState.preview)
+                .previewDisplayName("Default")
+        }
     }
+}
+
+#Preview("X2 Command Center - Demo Data") {
+    X2CommandCenterView()
+        .environmentObject(AppState.preview)
+        .demoMode()
+}
+
+#Preview("X2 Command Center - Patient Role") {
+    X2CommandCenterView()
+        .environmentObject(AppState.patientPreview)
+        .demoMode()
 }
 #endif

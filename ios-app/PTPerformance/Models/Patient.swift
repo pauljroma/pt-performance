@@ -178,3 +178,88 @@ struct PatientWithStats: Codable, Identifiable, Hashable, Equatable {
 
     var id: UUID { patient.id }
 }
+
+// MARK: - Mock Data Extension
+
+extension Patient {
+    /// Mock patients for development and preview purposes
+    static var mockPatients: [Patient] {
+        [
+            Patient(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000010")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                firstName: "John",
+                lastName: "Smith",
+                email: "john.smith@example.com",
+                sport: "Baseball",
+                position: "Pitcher",
+                injuryType: "Rotator Cuff Strain",
+                targetLevel: "College",
+                createdAt: Date(),
+                flagCount: 0,
+                highSeverityFlagCount: 0,
+                adherencePercentage: 88.5
+            ),
+            Patient(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000011")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                firstName: "Sarah",
+                lastName: "Johnson",
+                email: "sarah.johnson@example.com",
+                sport: "Basketball",
+                position: "Guard",
+                injuryType: "ACL Recovery",
+                targetLevel: "Professional",
+                createdAt: Date(),
+                flagCount: 2,
+                highSeverityFlagCount: 1,
+                adherencePercentage: 92.0
+            ),
+            Patient(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000012")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                firstName: "Mike",
+                lastName: "Williams",
+                email: "mike.williams@example.com",
+                sport: "Football",
+                position: "Quarterback",
+                injuryType: "Shoulder Impingement",
+                targetLevel: "High School",
+                createdAt: Date(),
+                flagCount: 1,
+                highSeverityFlagCount: 0,
+                adherencePercentage: 75.0
+            ),
+            Patient(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000013")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                firstName: "Emily",
+                lastName: "Davis",
+                email: "emily.davis@example.com",
+                sport: "Soccer",
+                position: "Forward",
+                injuryType: "Hamstring Strain",
+                targetLevel: "College",
+                createdAt: Date(),
+                flagCount: 0,
+                highSeverityFlagCount: 0,
+                adherencePercentage: 95.0
+            ),
+            Patient(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000014")!,
+                therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,
+                firstName: "Chris",
+                lastName: "Brown",
+                email: "chris.brown@example.com",
+                sport: "Tennis",
+                position: nil,
+                injuryType: "Tennis Elbow",
+                targetLevel: "Recreational",
+                createdAt: Date(),
+                flagCount: 3,
+                highSeverityFlagCount: 2,
+                adherencePercentage: 65.0
+            )
+        ]
+    }
+}
