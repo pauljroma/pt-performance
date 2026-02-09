@@ -59,7 +59,7 @@ struct DataConsentView: View {
             .task {
                 await viewModel.loadConsents()
             }
-            .refreshable {
+            .refreshableWithHaptic {
                 await viewModel.loadConsents()
             }
             .alert("Success", isPresented: $viewModel.showingSuccessAlert) {
@@ -321,6 +321,7 @@ struct DataConsentView: View {
 
     private var auditLogSection: some View {
         Button {
+            HapticFeedback.light()
             Task {
                 await viewModel.loadAuditLog()
                 viewModel.showingAuditLog = true

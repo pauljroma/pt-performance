@@ -626,23 +626,20 @@ struct RecoveryTrackingView: View {
     }
 
     private var emptySessionsView: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "figure.mind.and.body")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.5))
-                .accessibilityHidden(true)
-
-            Text("No Recovery Sessions Yet")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            Text("Tap a quick log button above to track your first recovery session.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(Spacing.xl)
+        EmptyStateView(
+            title: "No Recovery Data Yet",
+            message: "Track sauna, cold plunge, or other recovery sessions to see your recovery trends and build your streak.",
+            icon: "figure.mind.and.body",
+            iconColor: .modusCyan,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Log First Session",
+                icon: "plus.circle.fill",
+                action: {
+                    viewModel.startQuickLog(for: .saunaTraditional)
+                }
+            )
+        )
+        .padding(Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
     }

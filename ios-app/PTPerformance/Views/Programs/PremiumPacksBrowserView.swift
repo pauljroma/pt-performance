@@ -59,7 +59,7 @@ struct PremiumPacksBrowserView: View {
             .onChange(of: searchText) { _, newValue in
                 viewModel.filterPacks(searchText: newValue)
             }
-            .refreshable {
+            .refreshableWithHaptic {
                 await viewModel.loadData()
             }
             .overlay {

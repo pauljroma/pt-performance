@@ -77,7 +77,7 @@ struct ActiveProgramDetailView: View {
                     .accessibilityLabel("Close")
                 }
             }
-            .sheet(item: $selectedWorkout) { workout in
+            .springSheet(item: $selectedWorkout) { workout in
                 WorkoutStartSheet(
                     workout: workout,
                     onStart: {
@@ -86,7 +86,7 @@ struct ActiveProgramDetailView: View {
                     }
                 )
             }
-            .sheet(item: $selectedPhaseSession) { session in
+            .springSheet(item: $selectedPhaseSession) { session in
                 PhaseSessionStartSheet(
                     session: session,
                     onStart: {
@@ -104,7 +104,7 @@ struct ActiveProgramDetailView: View {
             .fullScreenCover(item: $phaseSessionToPlay) { session in
                 PhaseSessionPlayerWrapper(session: session)
             }
-            .sheet(isPresented: $showWorkoutHistory) {
+            .springSheet(isPresented: $showWorkoutHistory) {
                 ProgramWorkoutHistoryView(enrollment: enrollment)
             }
             .confirmationDialog(

@@ -91,46 +91,46 @@ struct TherapistProgramsView: View {
                     }
                 }
             }
-            .sheet(item: $selectedProgram) { program in
+            .springSheet(item: $selectedProgram) { program in
                 NavigationStack {
                     ProgramViewerView(patientId: program.patientId)
                 }
             }
-            .sheet(isPresented: $showProgramBuilder) {
+            .springSheet(isPresented: $showProgramBuilder, onDismiss: {
                 // Refresh programs list when builder is dismissed
                 Task {
                     await viewModel.loadPrograms()
                 }
-            } content: {
+            }) {
                 ProgramBuilderView(patientId: nil)
             }
-            .sheet(isPresented: $showLibraryProgramBuilder) {
+            .springSheet(isPresented: $showLibraryProgramBuilder, onDismiss: {
                 // Refresh programs list when library builder is dismissed
                 Task {
                     await viewModel.loadPrograms()
                 }
-            } content: {
+            }) {
                 TherapistProgramBuilderView()
             }
-            .sheet(isPresented: $showProgramManager) {
+            .springSheet(isPresented: $showProgramManager) {
                 ProgramManagerView()
             }
-            .sheet(isPresented: $showEditor) {
+            .springSheet(isPresented: $showEditor, onDismiss: {
                 // Refresh programs list when editor is dismissed
                 Task {
                     await viewModel.loadPrograms()
                 }
-            } content: {
+            }) {
                 if let programId = editingProgramId, let patientId = editingPatientId {
                     ProgramEditorView(programId: programId, patientId: patientId)
                 }
             }
-            .sheet(isPresented: $showProgramAnalytics) {
+            .springSheet(isPresented: $showProgramAnalytics) {
                 NavigationStack {
                     ProgramEffectivenessView()
                 }
             }
-            .sheet(isPresented: $showComparePrograms) {
+            .springSheet(isPresented: $showComparePrograms) {
                 NavigationStack {
                     ProgramEffectivenessView()
                 }

@@ -58,7 +58,7 @@ struct HealthHubView: View {
         }
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Health Hub")
-        .refreshable {
+        .refreshableWithHaptic {
             await viewModel.refresh()
         }
         .task {

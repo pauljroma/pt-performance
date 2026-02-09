@@ -81,7 +81,7 @@ struct OptimisticWorkoutExecutionView: View {
             } message: {
                 Text("Your completed sets will be saved.")
             }
-            .sheet(isPresented: $showCompletionSheet) {
+            .springSheet(isPresented: $showCompletionSheet) {
                 WorkoutCompletionSummary(viewModel: viewModel) {
                     dismiss()
                 }

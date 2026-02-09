@@ -36,30 +36,30 @@ struct TherapistDashboardView: View {
                 iPhoneLayout
             }
         }
-        .sheet(isPresented: $showDebugLogs) {
+        .springSheet(isPresented: $showDebugLogs) {
             DebugLogView()
         }
-        .sheet(isPresented: $showAddPatient) {
+        .springSheet(isPresented: $showAddPatient) {
             TherapistPatientSetupView()
         }
-        .sheet(isPresented: $showCreateProgram) {
+        .springSheet(isPresented: $showCreateProgram) {
             EnhancedProgramBuilderView()
         }
-        .sheet(isPresented: $showReports) {
+        .springSheet(isPresented: $showReports) {
             TherapistReportingView()
                 .environmentObject(appState)
         }
-        .sheet(isPresented: $showEscalationQueue) {
+        .springSheet(isPresented: $showEscalationQueue) {
             EscalationQueueView()
         }
-        .sheet(isPresented: $showCreateTemplate) {
+        .springSheet(isPresented: $showCreateTemplate) {
             WorkoutTemplateBuilderView()
         }
-        .sheet(isPresented: $showProgramAnalytics) {
+        .springSheet(isPresented: $showProgramAnalytics) {
             ProgramAnalyticsDashboardView()
                 .environmentObject(appState)
         }
-        .sheet(item: $selectedEscalation) { escalation in
+        .springSheet(item: $selectedEscalation) { escalation in
             EscalationDetailSheet(
                 escalation: escalation,
                 patient: viewModel.patient(for: escalation.patientId),
@@ -259,8 +259,7 @@ struct TherapistDashboardView: View {
             }
             .padding(.bottom)
         }
-        .refreshable {
-            HapticFeedback.light()
+        .refreshableWithHaptic {
             if let therapistId = appState.userId {
                 await viewModel.refresh(therapistId: therapistId)
                 await schedulingViewModel.refresh(therapistId: therapistId)

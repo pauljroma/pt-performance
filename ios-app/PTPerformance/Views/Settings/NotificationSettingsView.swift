@@ -90,12 +90,15 @@ struct NotificationSettingsView: View {
             await loadData()
         }
         .onChange(of: smartTimingEnabled) { _, newValue in
+            HapticFeedback.toggle()
             saveSettings()
         }
         .onChange(of: streakAlertsEnabled) { _, newValue in
+            HapticFeedback.toggle()
             saveSettings()
         }
         .onChange(of: weeklySummaryEnabled) { _, newValue in
+            HapticFeedback.toggle()
             saveSettings()
         }
         .alert("Error", isPresented: $showError) {
@@ -138,6 +141,7 @@ struct NotificationSettingsView: View {
 
                 if !hasPermission {
                     Button("Enable") {
+                        HapticFeedback.medium()
                         Task {
                             await requestPermission()
                         }
@@ -255,6 +259,7 @@ struct NotificationSettingsView: View {
                 }
             }
             .onChange(of: prescriptionPreferences.newPrescriptionEnabled) { _, _ in
+                HapticFeedback.toggle()
                 savePrescriptionPreferences()
             }
             .accessibilityLabel("New Prescription Alerts")
@@ -264,16 +269,19 @@ struct NotificationSettingsView: View {
             DisclosureGroup {
                 Toggle("24 Hours Before", isOn: $prescriptionPreferences.deadline24hEnabled)
                     .onChange(of: prescriptionPreferences.deadline24hEnabled) { _, _ in
+                        HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
 
                 Toggle("6 Hours Before", isOn: $prescriptionPreferences.deadline6hEnabled)
                     .onChange(of: prescriptionPreferences.deadline6hEnabled) { _, _ in
+                        HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
 
                 Toggle("1 Hour Before", isOn: $prescriptionPreferences.deadline1hEnabled)
                     .onChange(of: prescriptionPreferences.deadline1hEnabled) { _, _ in
+                        HapticFeedback.toggle()
                         savePrescriptionPreferences()
                     }
             } label: {
@@ -298,6 +306,7 @@ struct NotificationSettingsView: View {
                 }
             }
             .onChange(of: prescriptionPreferences.overdueEnabled) { _, _ in
+                HapticFeedback.toggle()
                 savePrescriptionPreferences()
             }
             .accessibilityLabel("Overdue Alerts")
@@ -343,6 +352,7 @@ struct NotificationSettingsView: View {
 
             // Refresh button
             Button {
+                HapticFeedback.medium()
                 Task {
                     await refreshPatterns()
                 }

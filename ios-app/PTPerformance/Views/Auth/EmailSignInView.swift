@@ -72,6 +72,7 @@ struct EmailSignInView: View {
             // MARK: - Sign In Button
             Section {
                 Button(action: {
+                    HapticFeedback.medium()
                     Task {
                         await signIn()
                     }
@@ -98,6 +99,7 @@ struct EmailSignInView: View {
             // MARK: - Forgot Password
             Section {
                 Button(action: {
+                    HapticFeedback.light()
                     showPasswordReset = true
                 }) {
                     Text("Forgot Password?")
@@ -184,6 +186,7 @@ struct EmailSignInView: View {
             // Update app state after successful login
             let supabase = PTSupabaseClient.shared
             await MainActor.run {
+                HapticFeedback.formSubmission(success: true)
                 if let userRole = supabase.userRole {
                     appState.userRole = userRole
                 }
@@ -200,12 +203,14 @@ struct EmailSignInView: View {
                 let remainingTime = SecurityMonitor.shared.getRemainingLockoutTime(email: trimmedEmail)
                 let remainingMinutes = Int(remainingTime / 60) + 1
                 await MainActor.run {
+                    HapticFeedback.formSubmission(success: false)
                     errorMessage = "Account locked due to too many failed login attempts. Please try again in \(remainingMinutes) minutes."
                     isLoading = false
                 }
             } else {
                 let remaining = SecurityMonitor.shared.getRemainingAttempts(email: trimmedEmail)
                 await MainActor.run {
+                    HapticFeedback.formSubmission(success: false)
                     errorMessage = "Sign in failed: \(error.localizedDescription)\n\(remaining) attempts remaining."
                     isLoading = false
                 }

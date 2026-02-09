@@ -10,6 +10,7 @@ import SwiftUI
 
 /// Profile Hub View - Unified settings and features tab
 /// Provides organized access to Settings, Health features, and Support
+/// Uses staggered entrance animations for enhanced visual feedback
 struct ProfileHubView: View {
     // MARK: - Environment
 
@@ -24,6 +25,9 @@ struct ProfileHubView: View {
 
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     @State private var showQuickSetup = false
+
+    // Animation state for staggered section reveal
+    @State private var sectionsVisible = false
 
     // MARK: - Computed Properties
 
@@ -73,37 +77,100 @@ struct ProfileHubView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Profile header with mode indicator - hero section
+                profileHeaderSection
+                    .staggeredAnimation(index: 0)
+
                 // Health Section (Premium features consolidated here)
                 healthSection
+                    .staggeredAnimation(index: 1)
 
                 // Tools & Tracking
                 toolsSection
+                    .staggeredAnimation(index: 2)
 
                 // Training Mode
                 trainingModeSection
+                    .staggeredAnimation(index: 3)
 
                 // Therapist Section
                 therapistSection
+                    .staggeredAnimation(index: 4)
 
                 // Support Section
                 supportSection
+                    .staggeredAnimation(index: 5)
 
                 // Subscription Section
                 subscriptionSection
+                    .staggeredAnimation(index: 6)
 
                 // Account Section
                 accountSection
+                    .staggeredAnimation(index: 7)
 
                 // Debug Section
                 debugSection
+                    .staggeredAnimation(index: 8)
             }
             .navigationTitle("Profile")
             .task {
                 await therapistLinkingVM.checkLinkStatus()
             }
-            .fullScreenCover(isPresented: $showQuickSetup) {
+            .fullScreenCoverWithHaptic(isPresented: $showQuickSetup) {
                 QuickSetupView()
             }
+        }
+    }
+
+    // MARK: - Profile Header Section
+
+    /// Hero header section with user mode and status
+    private var profileHeaderSection: some View {
+        Section {
+            HStack(spacing: 16) {
+                // Mode icon with gradient background
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [modeThemeColor.opacity(0.8), modeThemeColor],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 60, height: 60)
+
+                    Image(systemName: modeService.currentMode.iconName)
+                        .font(.title)
+                        .foregroundColor(.white)
+                }
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(modeService.currentMode.displayName)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    Text(subscriptionPlanText)
+                        .font(.subheadline)
+                        .foregroundColor(storeKit.isPremium ? .green : .secondary)
+
+                    if therapistLinkingVM.isLinked {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.2.fill")
+                                .font(.caption2)
+                            Text("Connected to PT")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.blue)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(.vertical, 8)
         }
     }
 
@@ -445,6 +512,7 @@ struct ProfileHubView: View {
 
             // Quick Setup
             Button {
+                HapticFeedback.light()
                 showQuickSetup = true
             } label: {
                 HStack {
@@ -555,6 +623,7 @@ struct ProfileHubView: View {
     private var accountSection: some View {
         Section("Account") {
             Button {
+                HapticFeedback.medium()
                 Task {
                     await logout()
                 }
@@ -596,7 +665,10 @@ struct ProfileHubView: View {
         Section("Debug") {
             Toggle(isOn: Binding(
                 get: { storeKit.debugPremiumOverride ?? false },
-                set: { storeKit.debugPremiumOverride = $0 }
+                set: { newValue in
+                    HapticFeedback.toggle()
+                    storeKit.debugPremiumOverride = newValue
+                }
             )) {
                 HStack {
                     Image(systemName: storeKit.isPremium ? "lock.open.fill" : "lock.fill")
@@ -612,6 +684,7 @@ struct ProfileHubView: View {
 
             if storeKit.debugPremiumOverride != nil {
                 Button("Reset to Real Status") {
+                    HapticFeedback.light()
                     storeKit.debugPremiumOverride = nil
                 }
                 .foregroundColor(.blue)
@@ -620,7 +693,13 @@ struct ProfileHubView: View {
             }
 
             // Demo Mode Toggle for X2 Command Center testing
-            Toggle(isOn: $debugDemoMode) {
+            Toggle(isOn: Binding(
+                get: { debugDemoMode },
+                set: { newValue in
+                    HapticFeedback.toggle()
+                    debugDemoMode = newValue
+                }
+            )) {
                 HStack {
                     Image(systemName: debugDemoMode ? "play.circle.fill" : "play.circle")
                         .foregroundColor(debugDemoMode ? .cyan : .gray)

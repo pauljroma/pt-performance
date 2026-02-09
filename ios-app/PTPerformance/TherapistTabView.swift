@@ -286,7 +286,7 @@ struct TherapistSettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .sheet(isPresented: $showCommandCenter) {
+            .springSheet(isPresented: $showCommandCenter) {
                 X2CommandCenterView()
                     .environmentObject(appState)
             }

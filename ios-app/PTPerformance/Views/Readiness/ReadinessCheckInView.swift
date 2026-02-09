@@ -104,7 +104,7 @@ struct ReadinessCheckInView: View {
                         submitSection
                     }
                     .disabled(viewModel.isLoading)
-                    .sheet(isPresented: $showHealthKitPrompt) {
+                    .springSheet(isPresented: $showHealthKitPrompt) {
                         HealthKitAuthorizationView()
                     }
                 }

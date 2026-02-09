@@ -545,22 +545,13 @@ private struct FastingLogRow: View {
 
 private struct FastingEmptyHistoryView: View {
     var body: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.6))
-
-            Text("No Fasting History")
-                .font(.headline)
-                .foregroundColor(.primary)
-
-            Text("Start your first fast to begin tracking your progress")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.vertical, Spacing.xl)
-        .frame(maxWidth: .infinity)
+        EmptyStateView(
+            title: "Start Your First Fast",
+            message: "Begin your intermittent fasting journey to track progress, build streaks, and optimize your health.",
+            icon: "timer",
+            iconColor: .modusCyan
+        )
+        .padding(.vertical, Spacing.md)
     }
 }
 

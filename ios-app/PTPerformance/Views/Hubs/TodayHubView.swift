@@ -58,11 +58,11 @@ struct TodayHubView: View {
                         quickAccessMenu
                     }
                 }
-                .sheet(isPresented: $showQuickPick) {
+                .sheetWithHaptic(isPresented: $showQuickPick) {
                     WorkoutPickerView()
                         .environmentObject(appState)
                 }
-                .sheet(isPresented: $showTimers) {
+                .sheetWithHaptic(isPresented: $showTimers) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -70,19 +70,19 @@ struct TodayHubView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $showReadinessCheckIn) {
+                .sheetWithHaptic(isPresented: $showReadinessCheckIn) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         ReadinessCheckInView(patientId: patientId)
                     }
                 }
-                .sheet(isPresented: $showWeeklySummary) {
+                .sheetWithHaptic(isPresented: $showWeeklySummary) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         WeeklySummaryView(patientId: patientId)
                     }
                 }
-                .sheet(isPresented: $showStreakDashboard) {
+                .sheetWithHaptic(isPresented: $showStreakDashboard) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         NavigationStack {
@@ -91,18 +91,18 @@ struct TodayHubView: View {
                     }
                 }
                 // ACP-522: Arm Care Assessment sheet
-                .sheet(isPresented: $showArmCareAssessment) {
+                .sheetWithHaptic(isPresented: $showArmCareAssessment) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         ArmCareAssessmentView(patientId: patientId)
                     }
                 }
                 // X2Index: Daily Check-in full screen cover
-                .fullScreenCover(isPresented: $showDailyCheckIn) {
+                .fullScreenCoverWithHaptic(isPresented: $showDailyCheckIn) {
                     DailyCheckInView()
                 }
                 // ACP-501: Quick Start Workout Full Screen Cover
-                .fullScreenCover(isPresented: $showQuickStartWorkout) {
+                .fullScreenCoverWithHaptic(isPresented: $showQuickStartWorkout) {
                     if let session = quickStartSession,
                        let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {

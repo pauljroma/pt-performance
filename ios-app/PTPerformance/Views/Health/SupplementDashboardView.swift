@@ -239,41 +239,20 @@ struct SupplementDashboardView: View {
     }
 
     private var emptyChecklistView: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "pills")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary.opacity(0.5))
-
-            Text("No Supplements Scheduled")
-                .font(.subheadline)
-                .fontWeight(.medium)
-
-            Text("Add supplements to your routine to see them here.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-
-            Button {
-                showingRoutineEditor = true
-            } label: {
-                Text("Set Up Routine")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, Spacing.sm)
-                    .background(
-                        LinearGradient(
-                            colors: [.modusCyan, .modusTealAccent],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(CornerRadius.md)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(Spacing.xl)
+        EmptyStateView(
+            title: "No Supplements Tracked",
+            message: "Add supplements to your routine to track your daily intake and build healthy habits.",
+            icon: "pills.fill",
+            iconColor: .modusCyan,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Set Up Routine",
+                icon: "plus.circle.fill",
+                action: {
+                    showingRoutineEditor = true
+                }
+            )
+        )
+        .padding(Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
     }

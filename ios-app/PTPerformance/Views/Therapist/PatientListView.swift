@@ -17,8 +17,8 @@ struct PatientListView: View {
 
     var body: some View {
         ZStack {
-            if viewModel.isLoading {
-                ProgressView("Loading patients...")
+            if viewModel.isLoading && viewModel.patients.isEmpty {
+                PatientListSkeletonView()
             } else if let error = viewModel.errorMessage {
                 ErrorView(message: error) {
                     Task {
@@ -114,10 +114,10 @@ struct PatientListView: View {
                 .accessibilityLabel(viewModel.isSelectionModeActive ? "Exit selection mode" : "Enter selection mode")
             }
         }
-        .sheet(isPresented: $showFilterSheet) {
+        .sheetWithHaptic(isPresented: $showFilterSheet) {
             FilterSheet(viewModel: viewModel)
         }
-        .sheet(isPresented: $showBulkAssignmentSheet) {
+        .sheetWithHaptic(isPresented: $showBulkAssignmentSheet) {
             BulkProgramAssignmentSheet(
                 viewModel: viewModel,
                 therapistId: therapistId,
@@ -126,10 +126,10 @@ struct PatientListView: View {
                 }
             )
         }
-        .sheet(isPresented: $showExportShareSheet) {
+        .sheetWithHaptic(isPresented: $showExportShareSheet) {
             ShareSheet(items: [exportedSummary])
         }
-        .refreshable {
+        .refreshableWithHaptic {
             await viewModel.refresh(therapistId: therapistId)
             await loadCoachingAlerts()
         }

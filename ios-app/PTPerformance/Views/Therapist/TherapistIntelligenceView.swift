@@ -81,7 +81,7 @@ struct TherapistIntelligenceView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Practice Intelligence")
             .navigationBarTitleDisplayMode(.large)
-            .refreshable {
+            .refreshableWithHaptic {
                 if let therapistId = appState.userId {
                     await viewModel.refresh(therapistId: therapistId)
                 }
