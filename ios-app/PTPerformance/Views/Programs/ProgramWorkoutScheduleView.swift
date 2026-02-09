@@ -64,12 +64,18 @@ struct ProgramWorkoutScheduleView: View {
         .fullScreenCover(item: $workoutToPlay) { workout in
             WorkoutTemplatePlayerWrapper(
                 templateId: workout.templateId,
-                workoutName: workout.name
+                workoutName: workout.name,
+                programName: enrollment.program.title,
+                phaseName: nil,
+                enrollmentId: enrollment.enrollment.id
             )
         }
         .fullScreenCover(item: $phaseSessionToPlay) { session in
             PhaseSessionPlayerWrapper(
-                session: session
+                session: session,
+                programName: enrollment.program.title,
+                phaseName: nil,
+                enrollmentId: enrollment.enrollment.id
             )
         }
         .task {
@@ -529,6 +535,10 @@ struct WorkoutStartSheet: View {
 struct WorkoutTemplatePlayerWrapper: View {
     let templateId: UUID
     let workoutName: String
+    var programName: String = ""
+    var phaseName: String? = nil
+    var enrollmentId: UUID? = nil
+
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = WorkoutTemplatePlayerViewModel()
@@ -1189,6 +1199,9 @@ struct PhaseSessionStartSheet: View {
 
 struct PhaseSessionPlayerWrapper: View {
     let session: BaseballProgramStructure.SessionWithExercises
+    var programName: String = ""
+    var phaseName: String? = nil
+    var enrollmentId: UUID? = nil
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var appState: AppState

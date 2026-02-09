@@ -105,7 +105,7 @@ struct EnrolledProgramCardInline: View {
             contextMenuContent
         }
         .sheet(isPresented: $showDetailSheet) {
-            EnrolledProgramDetailSheet(enrollment: enrollment)
+            ActiveProgramDetailView(enrollment: enrollment)
         }
     }
 

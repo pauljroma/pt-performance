@@ -42,7 +42,7 @@ struct EnrolledProgramsSection: View {
             }
         }
         .sheet(item: $selectedEnrollment) { enrollment in
-            EnrolledProgramDetailSheet(enrollment: enrollment, viewModel: viewModel)
+            ActiveProgramDetailView(enrollment: enrollment)
         }
         .task {
             await viewModel.loadEnrolledPrograms()
