@@ -16,10 +16,14 @@ import Charts
 /// - Green: Optimal range
 /// - Yellow/Teal: Normal range
 /// - Red: Outside normal (concerning)
+///
+/// Features animated line drawing with reduce motion support
 struct BiomarkerTrendChartView: View {
     let dataPoints: [BiomarkerTrendPoint]
     let biomarkerName: String
     var height: CGFloat = 220
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var accessibilitySummary: String {
         guard !dataPoints.isEmpty else { return "No data available for \(biomarkerName)" }
@@ -211,6 +215,7 @@ struct BiomarkerTrendChartView: View {
             }
         }
         .frame(height: height)
+        .animatedTrim(duration: 0.8, delay: 0.1)
     }
 
     // MARK: - Empty State

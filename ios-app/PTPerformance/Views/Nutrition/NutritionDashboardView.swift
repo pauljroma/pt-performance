@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  BUILD 222: Nutrition Module - Main dashboard view
+//  ACP-1018: Visual upgrade with circular progress rings, improved cards, and animations
 //
 
 import SwiftUI
@@ -13,6 +14,10 @@ struct NutritionDashboardView: View {
     @State private var showMealLogSheet = false
     @State private var selectedMealType: MealType = .lunch
     @State private var showAIRecommendation = false
+    @State private var selectedPeriod: NutritionViewPeriod = .daily
+    @State private var isContentVisible = false
+    @State private var showCalorieGoalCelebration = false
+    @State private var showProteinGoalCelebration = false
 
     var body: some View {
         Group {
@@ -65,10 +70,35 @@ struct NutritionDashboardView: View {
                 }
             }
         }
+        .overlay {
+            if showCalorieGoalCelebration {
+                NutritionGoalCelebration(goalType: "Calorie", isShowing: $showCalorieGoalCelebration)
+            }
+            if showProteinGoalCelebration {
+                NutritionGoalCelebration(goalType: "Protein", isShowing: $showProteinGoalCelebration)
+            }
+        }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(viewModel.error?.localizedDescription ?? "An error occurred")
+        }
+        .onAppear {
+            withAnimation(.easeOut(duration: AnimationDuration.standard).delay(0.1)) {
+                isContentVisible = true
+            }
+        }
+        .onChange(of: viewModel.calorieProgress) { oldValue, newValue in
+            // Trigger celebration when calorie goal is first met
+            if newValue >= 1.0 && oldValue < 1.0 {
+                showCalorieGoalCelebration = true
+            }
+        }
+        .onChange(of: viewModel.proteinProgress) { oldValue, newValue in
+            // Trigger celebration when protein goal is first met
+            if newValue >= 1.0 && oldValue < 1.0 {
+                showProteinGoalCelebration = true
+            }
         }
     }
 
@@ -83,30 +113,126 @@ struct NutritionDashboardView: View {
 
     private var dashboardContent: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Today's Progress Card
-                todayProgressCard
+            VStack(spacing: Spacing.lg) {
+                // View period toggle
+                NutritionViewPeriodToggle(selectedPeriod: $selectedPeriod)
+                    .staggeredAppearance(index: 0, isVisible: isContentVisible)
 
-                // AI Meal Suggestion Card
-                aiSuggestionCard
-
-                // Macro Distribution
-                macroDistributionCard
-
-                // Quick Log Buttons
-                quickLogSection
-
-                // Today's Meals
-                todaysMealsSection
-
-                // Weekly Trend
-                weeklyTrendSection
+                NutritionAnimatedContainer(period: selectedPeriod) {
+                    switch selectedPeriod {
+                    case .daily:
+                        dailyContentView
+                    case .weekly:
+                        weeklyContentView
+                    }
+                }
             }
             .padding()
         }
     }
 
-    // MARK: - Today's Progress
+    // MARK: - Daily Content View
+
+    private var dailyContentView: some View {
+        VStack(spacing: Spacing.lg) {
+            // Today's Progress Card with circular rings
+            enhancedProgressCard
+                .staggeredAppearance(index: 1, isVisible: isContentVisible)
+
+            // AI Meal Suggestion Card
+            aiSuggestionCard
+                .staggeredAppearance(index: 2, isVisible: isContentVisible)
+
+            // Macro Distribution with rings
+            enhancedMacroCard
+                .staggeredAppearance(index: 3, isVisible: isContentVisible)
+
+            // Quick Log Buttons
+            quickLogSection
+                .staggeredAppearance(index: 4, isVisible: isContentVisible)
+
+            // Today's Meals
+            todaysMealsSection
+                .staggeredAppearance(index: 5, isVisible: isContentVisible)
+        }
+    }
+
+    // MARK: - Weekly Content View
+
+    private var weeklyContentView: some View {
+        VStack(spacing: Spacing.lg) {
+            // Weekly Chart
+            WeeklyNutritionChart(
+                trends: viewModel.weeklyTrends,
+                calorieGoal: viewModel.calorieGoal
+            )
+            .staggeredAppearance(index: 1, isVisible: isContentVisible)
+
+            // Weekly Summary Cards
+            weeklyTrendSection
+                .staggeredAppearance(index: 2, isVisible: isContentVisible)
+        }
+    }
+
+    // MARK: - Enhanced Progress Card (ACP-1018)
+
+    private var enhancedProgressCard: some View {
+        VStack(spacing: Spacing.lg) {
+            // Header
+            HStack {
+                Text("Today's Progress")
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                if viewModel.hasLoggedToday {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        Text("\(viewModel.mealsLoggedToday) meals")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            // Large calorie progress ring
+            HStack(spacing: Spacing.lg) {
+                CalorieProgressRing(
+                    currentCalories: viewModel.caloriesToday,
+                    targetCalories: viewModel.calorieGoal,
+                    size: 120
+                )
+
+                // Quick stats
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    NutritionStatRow(
+                        icon: "flame.fill",
+                        label: "Calories",
+                        value: "\(viewModel.caloriesToday)",
+                        target: "\(viewModel.calorieGoal)",
+                        color: .orange,
+                        progress: viewModel.calorieProgress
+                    )
+
+                    NutritionStatRow(
+                        icon: "p.circle.fill",
+                        label: "Protein",
+                        value: "\(Int(viewModel.proteinToday))g",
+                        target: "\(Int(viewModel.proteinGoal))g",
+                        color: .red,
+                        progress: viewModel.proteinProgress
+                    )
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .background(Color(.systemBackground))
+        .cornerRadius(CornerRadius.lg)
+        .adaptiveShadow(Shadow.subtle)
+    }
+
+    // MARK: - Legacy Today's Progress (kept for reference)
 
     private var todayProgressCard: some View {
         VStack(spacing: 16) {
@@ -213,7 +339,46 @@ struct NutritionDashboardView: View {
         .accessibilityHint("Get personalized meal recommendations based on your goals")
     }
 
-    // MARK: - Macro Distribution
+    // MARK: - Enhanced Macro Distribution (ACP-1018)
+
+    private var enhancedMacroCard: some View {
+        VStack(spacing: Spacing.md) {
+            HStack {
+                Text("Macros")
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+
+                // Goal indicator
+                if viewModel.proteinProgress >= 1.0 && viewModel.calorieProgress >= 1.0 {
+                    HStack(spacing: Spacing.xxs) {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundColor(.yellow)
+                        Text("On track!")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+
+            // Triple macro progress rings
+            TripleMacroRingsView(
+                proteinCurrent: viewModel.proteinToday,
+                proteinTarget: viewModel.proteinGoal,
+                carbsCurrent: viewModel.carbsToday,
+                carbsTarget: viewModel.activeGoal?.targetCarbsG ?? 200,
+                fatCurrent: viewModel.fatToday,
+                fatTarget: viewModel.activeGoal?.targetFatG ?? 65
+            )
+        }
+        .padding(Spacing.md)
+        .background(Color(.systemBackground))
+        .cornerRadius(CornerRadius.lg)
+        .adaptiveShadow(Shadow.subtle)
+    }
+
+    // MARK: - Legacy Macro Distribution
 
     private var macroDistributionCard: some View {
         VStack(spacing: 12) {
@@ -267,14 +432,14 @@ struct NutritionDashboardView: View {
     // MARK: - Quick Log Section
 
     private var quickLogSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Quick Log")
                 .font(.headline)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
+                HStack(spacing: Spacing.sm) {
                     ForEach(MealType.allCases, id: \.self) { mealType in
-                        QuickLogButton(mealType: mealType) {
+                        EnhancedQuickLogButton(mealType: mealType) {
                             selectedMealType = mealType
                             showMealLogSheet = true
                         }
@@ -284,52 +449,56 @@ struct NutritionDashboardView: View {
         }
     }
 
-    // MARK: - Today's Meals
+    // MARK: - Today's Meals (Enhanced - ACP-1018)
 
     private var todaysMealsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.md) {
             HStack {
                 Text("Today's Meals")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 let totalCount = viewModel.todaysLogs.count + viewModel.todaysPlannedMeals.count
                 if totalCount > 0 {
-                    Text("\(viewModel.todaysLogs.count) logged, \(viewModel.todaysPlannedMeals.count) planned")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: Spacing.xs) {
+                        if viewModel.todaysLogs.count > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.green)
+                                Text("\(viewModel.todaysLogs.count)")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        if viewModel.todaysPlannedMeals.count > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "calendar")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                                Text("\(viewModel.todaysPlannedMeals.count)")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
                 }
             }
 
-            // BUILD 244: Show planned meals from meal plan
+            // Planned meals from meal plan
             if !viewModel.todaysPlannedMeals.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Planned")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.blue)
-
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     ForEach(viewModel.todaysPlannedMeals) { meal in
-                        PlannedMealRow(meal: meal)
+                        EnhancedPlannedMealCard(meal: meal)
                     }
-                }
-
-                if !viewModel.todaysLogs.isEmpty {
-                    Divider()
                 }
             }
 
-            // Logged meals
+            // Logged meals with enhanced cards
             if !viewModel.todaysLogs.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    if !viewModel.todaysPlannedMeals.isEmpty {
-                        Text("Logged")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.green)
-                    }
-
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     ForEach(viewModel.todaysLogs) { log in
-                        MealLogRow(log: log) {
+                        EnhancedMealCard(log: log) {
                             Task {
                                 await viewModel.deleteLog(log)
                             }
@@ -346,53 +515,217 @@ struct NutritionDashboardView: View {
                 }
             }
         }
-        .padding()
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.subtle)
     }
 
-    // MARK: - Weekly Trend
+    // MARK: - Weekly Trend (Enhanced - ACP-1018)
 
     private var weeklyTrendSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly Trend")
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Weekly Summary")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             if viewModel.weeklyTrends.isEmpty {
-                Text("No data yet")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding()
+                VStack(spacing: Spacing.sm) {
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(.system(size: 32))
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    Text("No data yet")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    Text("Log meals to see your weekly trends")
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
             } else {
                 ForEach(viewModel.weeklyTrends) { trend in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(trend.weekStart, style: .date)
-                                .font(.subheadline)
-                            Text("\(trend.daysLogged) days logged")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        VStack(alignment: .trailing) {
-                            Text("\(Int(trend.avgDailyCalories)) cal/day")
-                                .font(.subheadline)
-                            Text("\(Int(trend.avgDailyProteinG))g protein")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
+                    WeekTrendCard(trend: trend, calorieGoal: viewModel.calorieGoal)
                 }
             }
         }
-        .padding()
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.subtle)
+    }
+}
+
+// MARK: - Nutrition Stat Row Component (ACP-1018)
+
+struct NutritionStatRow: View {
+    let icon: String
+    let label: String
+    let value: String
+    let target: String
+    let color: Color
+    let progress: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
+            HStack(spacing: Spacing.xxs) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundColor(color)
+
+                Text(label)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            HStack(spacing: Spacing.xxs) {
+                Text(value)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+
+                Text("/")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(target)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Mini progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color.opacity(0.15))
+                        .frame(height: 4)
+
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(progress >= 1.0 ? Color.green : color)
+                        .frame(width: geometry.size.width * min(progress, 1.0), height: 4)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: progress)
+                }
+            }
+            .frame(height: 4)
+        }
+    }
+}
+
+// MARK: - Week Trend Card (ACP-1018)
+
+struct WeekTrendCard: View {
+    let trend: WeeklyNutritionTrend
+    let calorieGoal: Int
+
+    private var calorieProgress: Double {
+        guard calorieGoal > 0 else { return 0 }
+        return trend.avgDailyCalories / Double(calorieGoal)
+    }
+
+    private var isOnTrack: Bool {
+        calorieProgress >= 0.85 && calorieProgress <= 1.15
+    }
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            // Week indicator
+            VStack(spacing: 2) {
+                Text(weekDayAbbrev)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Text("\(trend.daysLogged)")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Text("days")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(width: 50)
+            .padding(.vertical, Spacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.sm)
+                    .fill(Color(.tertiarySystemBackground))
+            )
+
+            // Stats
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text(formatDateRange(trend.weekStart))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: Spacing.sm) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+
+                        Text("\(Int(trend.avgDailyCalories))")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        Text("cal/day")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    HStack(spacing: 4) {
+                        Text("P:")
+                            .font(.caption)
+                            .foregroundColor(.red)
+
+                        Text("\(Int(trend.avgDailyProteinG))g")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                }
+            }
+
+            Spacer()
+
+            // Status badge
+            if isOnTrack {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.green)
+            } else if calorieProgress < 0.85 {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.orange)
+            } else {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(Spacing.sm)
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.sm)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private var weekDayAbbrev: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        return formatter.string(from: trend.weekStart)
+    }
+
+    private func formatDateRange(_ startDate: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        let start = formatter.string(from: startDate)
+
+        if let endDate = Calendar.current.date(byAdding: .day, value: 6, to: startDate) {
+            let end = formatter.string(from: endDate)
+            return "\(start) - \(end)"
+        }
+        return start
     }
 }
 
@@ -558,19 +891,18 @@ struct NutritionEmptyMealsView: View {
     let onLogMeal: () -> Void
 
     var body: some View {
-        ContentUnavailableView {
-            Label("No Meals Logged Today", systemImage: "fork.knife.circle")
-        } description: {
-            Text("Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.")
-        } actions: {
-            Button {
-                onLogMeal()
-            } label: {
-                Label("Log Your First Meal", systemImage: "plus.circle.fill")
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding(.vertical, Spacing.lg)
+        EmptyStateView(
+            title: "No Meals Logged Today",
+            message: "Track your nutrition by logging meals throughout the day to monitor your calorie and macro intake.",
+            icon: "fork.knife.circle",
+            iconColor: .orange,
+            action: EmptyStateView.EmptyStateAction(
+                title: "Log Your First Meal",
+                icon: "plus.circle.fill",
+                action: onLogMeal
+            )
+        )
+        .padding(.vertical, Spacing.md)
     }
 }
 

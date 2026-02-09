@@ -10,10 +10,14 @@ import SwiftUI
 import Charts
 
 /// Reusable volume trend chart component
+/// Features animated line drawing with reduce motion support
 struct VolumeChart: View {
     let dataPoints: [VolumeDataPoint]
     var height: CGFloat = 200
     var showAverage: Bool = true
+
+    @State private var isAnimated = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var averageVolume: Double {
         guard !dataPoints.isEmpty else { return 0 }
@@ -73,6 +77,7 @@ struct VolumeChart: View {
                 emptyState
             } else {
                 chartView
+                    .animatedTrim(duration: 0.8, delay: 0.1)
             }
         }
         .padding()
@@ -82,6 +87,17 @@ struct VolumeChart: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Volume Trend Chart")
         .accessibilityValue(accessibilitySummary)
+        .onAppear {
+            if reduceMotion {
+                isAnimated = true
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.8)) {
+                        isAnimated = true
+                    }
+                }
+            }
+        }
     }
 
     private var emptyState: some View {

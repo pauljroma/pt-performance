@@ -10,12 +10,16 @@ import SwiftUI
 import Charts
 
 /// Reusable strength progression chart component
+/// Features animated line drawing with reduce motion support
 struct StrengthChart: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let dataPoints: [StrengthDataPoint]
     let exerciseName: String
     var height: CGFloat = 200
     var showImprovement: Bool = true
+
+    @State private var isAnimated = false
 
     private var startingMax: Double {
         dataPoints.first?.estimatedOneRepMax ?? 0
@@ -80,6 +84,7 @@ struct StrengthChart: View {
                 emptyState
             } else {
                 chartView
+                    .animatedTrim(duration: 0.8, delay: 0.1)
             }
         }
         .padding()
@@ -89,6 +94,17 @@ struct StrengthChart: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Strength Progression Chart")
         .accessibilityValue(accessibilitySummary)
+        .onAppear {
+            if reduceMotion {
+                isAnimated = true
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.8)) {
+                        isAnimated = true
+                    }
+                }
+            }
+        }
     }
 
     private var emptyState: some View {

@@ -13,9 +13,13 @@ import Charts
 
 /// A line chart showing exercise weight progress over time
 /// Displays data points with a smooth interpolation line
+/// Features animated line drawing with reduce motion support
 struct ExerciseProgressChart: View {
     let dataPoints: [ExerciseDataPoint]
     let displayUnit: String
+
+    @State private var isAnimated = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -29,14 +33,14 @@ struct ExerciseProgressChart: View {
                         x: .value("Date", point.date, unit: .day),
                         y: .value("Weight", point.weight)
                     )
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(DesignTokens.chartPrimary)
                     .interpolationMethod(.catmullRom)
 
                     PointMark(
                         x: .value("Date", point.date, unit: .day),
                         y: .value("Weight", point.weight)
                     )
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(DesignTokens.chartPrimary)
                     .symbolSize(30)
                 }
             }
@@ -49,12 +53,24 @@ struct ExerciseProgressChart: View {
             }
             .frame(height: 180)
             .padding(.vertical, Spacing.xs)
+            .animatedTrim(duration: 0.8, delay: 0.1)
             .accessibilityLabel(chartAccessibilityLabel)
             .accessibilityHint("Shows weight progress over time")
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(8)
+        .onAppear {
+            if reduceMotion {
+                isAnimated = true
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.easeOut(duration: 0.8)) {
+                        isAnimated = true
+                    }
+                }
+            }
+        }
     }
 
     private var chartAccessibilityLabel: String {

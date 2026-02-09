@@ -2,10 +2,13 @@ import SwiftUI
 import Charts
 
 /// Reusable pain trend chart component
+/// Features animated line drawing with reduce motion support
 struct PainTrendChart: View {
     let dataPoints: [PainDataPoint]
     var showThreshold: Bool = true
     var height: CGFloat = 200
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var accessibilitySummary: String {
         guard !dataPoints.isEmpty else { return "No pain data available" }
@@ -83,6 +86,7 @@ struct PainTrendChart: View {
             }
         }
         .frame(height: height)
+        .animatedTrim(duration: 0.8, delay: 0.1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Pain Trend Chart")
         .accessibilityValue(accessibilitySummary)

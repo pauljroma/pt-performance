@@ -42,6 +42,7 @@ struct AchievementsDashboardView: View {
     @State private var selectedAchievement: AchievementProgress?
     @State private var showShareSheet = false
     @State private var shareText = ""
+    @State private var isInitialLoading = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -52,7 +53,11 @@ struct AchievementsDashboardView: View {
 
             // Content based on selected tab
             if selectedTab == .achievements {
-                achievementsContent
+                if isInitialLoading && achievementService.achievementProgress.isEmpty {
+                    AchievementsDashboardSkeletonView()
+                } else {
+                    achievementsContent
+                }
             } else {
                 AchievementLeaderboardView(patientId: patientId)
             }
@@ -66,6 +71,7 @@ struct AchievementsDashboardView: View {
         }
         .task {
             await achievementService.initialize(for: patientId)
+            isInitialLoading = false
         }
         .sheet(item: $selectedAchievement) { achievement in
             AchievementDetailSheet(progress: achievement, onShare: {
@@ -306,10 +312,11 @@ struct AchievementsDashboardView: View {
                 emptyStateView
             } else {
                 LazyVStack(spacing: Spacing.md) {
-                    ForEach(filteredAchievements) { achievement in
+                    ForEach(Array(filteredAchievements.enumerated()), id: \.element.id) { index, achievement in
                         AchievementCardView(progress: achievement) {
                             selectedAchievement = achievement
                         }
+                        .staggeredAnimation(index: index)
                     }
                 }
             }
@@ -319,21 +326,51 @@ struct AchievementsDashboardView: View {
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: selectedFilter.icon)
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.5))
+        EmptyStateView(
+            title: emptyStateTitle,
+            message: emptyStateMessage,
+            icon: selectedFilter.icon,
+            iconColor: selectedFilter.color
+        )
+        .padding(.vertical, Spacing.lg)
+    }
 
-            Text("No \(selectedFilter.displayName.lowercased()) achievements yet")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text("Keep working out to unlock achievements!")
-                .font(.subheadline)
-                .foregroundColor(.secondary.opacity(0.8))
+    private var emptyStateTitle: String {
+        switch selectedFilter {
+        case .all:
+            return "Start Your Journey"
+        case .unlocked:
+            return "No Achievements Yet"
+        case .inProgress:
+            return "No Progress Started"
+        case .streak:
+            return "Build Your Streak"
+        case .workouts:
+            return "Complete Workouts"
+        case .prs:
+            return "Set Personal Records"
+        case .volume:
+            return "Lift More Volume"
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, Spacing.xxl)
+    }
+
+    private var emptyStateMessage: String {
+        switch selectedFilter {
+        case .all:
+            return "Complete workouts to unlock achievements and earn points!"
+        case .unlocked:
+            return "Keep pushing yourself to unlock your first achievement."
+        case .inProgress:
+            return "Start working toward any achievement to track your progress here."
+        case .streak:
+            return "Work out consistently to build streaks and unlock flame badges."
+        case .workouts:
+            return "Every workout counts! Complete more to earn workout achievements."
+        case .prs:
+            return "Push your limits and set new personal records to earn trophies."
+        case .volume:
+            return "Lift more total weight to unlock volume milestones."
+        }
     }
 
     // MARK: - Computed Properties
@@ -615,13 +652,207 @@ struct AchievementDetailSheet: View {
     }
 }
 
+// MARK: - Skeleton Loading Views
+
+/// Skeleton loading state for achievements dashboard
+struct AchievementsDashboardSkeletonView: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                // Stats header skeleton
+                statsHeaderSkeleton
+
+                // Up Next section skeleton
+                upNextSkeleton
+
+                // Filter tabs skeleton
+                filterTabsSkeleton
+
+                // Achievement cards skeleton
+                achievementCardsSkeleton
+            }
+            .padding()
+        }
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+
+    private var statsHeaderSkeleton: some View {
+        VStack(spacing: Spacing.md) {
+            // Points and stats
+            HStack(spacing: Spacing.lg) {
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 60, height: 36)
+                            .shimmer(isAnimating: isAnimating)
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 50, height: 12)
+                            .shimmer(isAnimating: isAnimating)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+
+            // Progress bar skeleton
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                HStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 120, height: 14)
+                        .shimmer(isAnimating: isAnimating)
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 40, height: 14)
+                        .shimmer(isAnimating: isAnimating)
+                }
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 8)
+                    .shimmer(isAnimating: isAnimating)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+        }
+    }
+
+    private var upNextSkeleton: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+                Spacer()
+            }
+
+            ForEach(0..<2, id: \.self) { _ in
+                achievementCardSkeleton
+            }
+        }
+    }
+
+    private var filterTabsSkeleton: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                ForEach(0..<5, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 80, height: 32)
+                        .shimmer(isAnimating: isAnimating)
+                }
+            }
+        }
+    }
+
+    private var achievementCardsSkeleton: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 140, height: 18)
+                    .shimmer(isAnimating: isAnimating)
+                Spacer()
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 100, height: 12)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            ForEach(0..<4, id: \.self) { _ in
+                achievementCardSkeleton
+            }
+        }
+    }
+
+    private var achievementCardSkeleton: some View {
+        HStack(spacing: Spacing.md) {
+            // Badge skeleton
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 50)
+                .shimmer(isAnimating: isAnimating)
+
+            // Info skeleton
+            VStack(alignment: .leading, spacing: 6) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 140, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 200, height: 12)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(height: 6)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            Spacer()
+
+            // Points skeleton
+            VStack(spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 30, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 20, height: 8)
+                    .shimmer(isAnimating: isAnimating)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+    }
+}
+
 // MARK: - Preview
 
 #if DEBUG
 struct AchievementsDashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationStack {
-            AchievementsDashboardView(patientId: UUID())
+        Group {
+            NavigationStack {
+                AchievementsDashboardView(patientId: UUID())
+            }
+            .previewDisplayName("Dashboard")
+
+            AchievementsDashboardSkeletonView()
+                .previewDisplayName("Skeleton Loading")
         }
     }
 }

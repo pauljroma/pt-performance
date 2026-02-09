@@ -16,6 +16,13 @@ struct NextAchievementCard: View {
     var onTap: (() -> Void)?
 
     @Environment(\.colorScheme) private var colorScheme
+    @State private var animatedProgress: Double = 0
+    @State private var showPulse = false
+
+    /// Whether progress is close to completion (90%+)
+    private var isAlmostComplete: Bool {
+        progress.progress >= 0.9
+    }
 
     var body: some View {
         Button(action: {
@@ -25,13 +32,23 @@ struct NextAchievementCard: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 // Header with badge and title
                 HStack(spacing: Spacing.md) {
-                    // Badge
-                    AchievementBadgeView(
-                        definition: progress.definition,
-                        isUnlocked: false,
-                        size: 50,
-                        showTier: false
-                    )
+                    // Badge with pulse effect when close
+                    ZStack {
+                        if isAlmostComplete {
+                            Circle()
+                                .stroke(progress.definition.type.color.opacity(0.3), lineWidth: 2)
+                                .frame(width: 56, height: 56)
+                                .scaleEffect(showPulse ? 1.2 : 1.0)
+                                .opacity(showPulse ? 0 : 0.5)
+                        }
+
+                        AchievementBadgeView(
+                            definition: progress.definition,
+                            isUnlocked: false,
+                            size: 50,
+                            showTier: false
+                        )
+                    }
 
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         // Tier badge
@@ -58,7 +75,7 @@ struct NextAchievementCard: View {
 
                     Spacer()
 
-                    // Points badge
+                    // Points badge with glow when close
                     VStack(spacing: 2) {
                         Text("+\(progress.definition.tier.points)")
                             .font(.caption)
@@ -68,19 +85,26 @@ struct NextAchievementCard: View {
                             .font(.system(size: 8))
                             .foregroundColor(.secondary)
                     }
+                    .padding(6)
+                    .background(
+                        isAlmostComplete
+                            ? Circle()
+                                .fill(progress.definition.tier.color.opacity(0.1))
+                            : nil
+                    )
                 }
 
-                // Progress section
+                // Progress section with animated bar
                 VStack(spacing: Spacing.xs) {
-                    // Progress bar
+                    // Animated progress bar
                     GeometryReader { geometry in
                         ZStack(alignment: .leading) {
-                            // Background
+                            // Background track
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color(.systemGray5))
                                 .frame(height: 8)
 
-                            // Progress fill
+                            // Progress fill with gradient
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(
                                     LinearGradient(
@@ -92,8 +116,43 @@ struct NextAchievementCard: View {
                                         endPoint: .trailing
                                     )
                                 )
-                                .frame(width: geometry.size.width * progress.progress, height: 8)
-                                .animation(.easeInOut(duration: 0.5), value: progress.progress)
+                                .frame(width: max(0, geometry.size.width * animatedProgress), height: 8)
+
+                            // Shine effect
+                            if animatedProgress > 0 {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.white.opacity(0.4),
+                                                Color.white.opacity(0.1),
+                                                Color.clear
+                                            ],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .frame(width: max(0, geometry.size.width * animatedProgress), height: 4)
+                                    .offset(y: -2)
+                                    .mask(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .frame(width: max(0, geometry.size.width * animatedProgress), height: 8)
+                                    )
+                            }
+
+                            // Pulsing indicator at end when almost complete
+                            if isAlmostComplete && animatedProgress > 0 {
+                                Circle()
+                                    .fill(progress.definition.type.color)
+                                    .frame(width: 12, height: 12)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.white, lineWidth: 2)
+                                    )
+                                    .shadow(color: progress.definition.type.color.opacity(0.5), radius: 4)
+                                    .offset(x: max(0, geometry.size.width * animatedProgress) - 6)
+                                    .scaleEffect(showPulse ? 1.2 : 1.0)
+                            }
                         }
                     }
                     .frame(height: 8)
@@ -103,14 +162,14 @@ struct NextAchievementCard: View {
                         Text(motivationalMessage)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(progress.definition.type.color)
+                            .foregroundColor(isAlmostComplete ? progress.definition.type.color : .secondary)
 
                         Spacer()
 
                         Text("\(progress.progressPercentage)%")
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(isAlmostComplete ? progress.definition.type.color : .secondary)
                     }
                 }
             }
@@ -123,19 +182,35 @@ struct NextAchievementCard: View {
                             .stroke(
                                 LinearGradient(
                                     colors: [
-                                        progress.definition.type.color.opacity(0.3),
-                                        progress.definition.tier.color.opacity(0.2)
+                                        progress.definition.type.color.opacity(isAlmostComplete ? 0.5 : 0.3),
+                                        progress.definition.tier.color.opacity(isAlmostComplete ? 0.4 : 0.2)
                                     ],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
-                                lineWidth: 1
+                                lineWidth: isAlmostComplete ? 1.5 : 1
                             )
                     )
             )
             .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(.plain)
+        .onAppear {
+            // Animate progress bar
+            withAnimation(.easeOut(duration: 0.8).delay(0.2)) {
+                animatedProgress = progress.progress
+            }
+
+            // Start pulse animation for almost complete achievements
+            if isAlmostComplete {
+                withAnimation(
+                    .easeInOut(duration: 1.2)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    showPulse = true
+                }
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(progress.definition.title) achievement, \(progress.progressPercentage) percent complete, \(motivationalMessage)")
         .accessibilityHint("Tap for more details")

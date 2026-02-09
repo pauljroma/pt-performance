@@ -2,13 +2,17 @@ import SwiftUI
 import Charts
 
 /// History view showing pain trends, adherence, and recent sessions
+/// Uses scroll-triggered micro-animations for enhanced visual feedback
 struct HistoryView: View {
     let patientId: String
 
     @StateObject private var viewModel = HistoryViewModel()
 
+    // Scroll animation state
+    @State private var scrollOffset: CGFloat = 0
+
     var body: some View {
-        ScrollView {
+        ScrollTrackingContainer(scrollOffset: $scrollOffset) {
             VStack(spacing: 24) {
                 if viewModel.isLoading {
                     // Build 60: Skeleton loading states
@@ -24,29 +28,36 @@ struct HistoryView: View {
                     // Empty state when no data is available
                     EmptyHistoryView()
                 } else {
-                    // Summary cards
+                    // Summary cards - hero section with parallax effect
                     if let stats = viewModel.summaryStats {
                         SummaryCardsView(stats: stats)
+                            .parallax(scrollOffset: scrollOffset, intensity: 0.12)
+                            .scaleOnScroll(scrollOffset: scrollOffset, minScale: 0.98)
+                            .staggeredAnimation(index: 0)
                     }
 
                     // Pain trend chart
                     if !viewModel.painTrend.isEmpty {
                         PainTrendSection(dataPoints: viewModel.painTrend)
+                            .staggeredAnimation(index: 1)
                     } else if viewModel.summaryStats != nil {
                         EmptyDataSection(
                             title: "No Pain Data Yet",
                             message: "Complete sessions and log pain scores to see your pain trend over time",
                             icon: "chart.line.uptrend.xyaxis"
                         )
+                        .staggeredAnimation(index: 1)
                     }
 
                     // Adherence card
                     if let adherence = viewModel.adherence {
                         AdherenceSection(adherence: adherence)
+                            .staggeredAnimation(index: 2)
                     }
 
                     // BUILD 219: Combined workout history (prescribed + manual)
                     // BUILD 296: Added NavigationLink → SessionDetailView (ACP-588)
+                    // Individual workout cards have their own staggered animations
                     if !viewModel.allWorkouts.isEmpty {
                         RecentWorkoutsSection(
                             workouts: viewModel.allWorkouts,
@@ -65,6 +76,7 @@ struct HistoryView: View {
                             message: "Your completed sessions and manual workouts will appear here",
                             icon: "calendar.badge.clock"
                         )
+                        .staggeredAnimation(index: 3)
                     }
                 }
             }
@@ -407,11 +419,12 @@ struct RecentWorkoutsSection: View {
                 .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 12) {
-                ForEach(workouts) { workout in
+                ForEach(Array(workouts.enumerated()), id: \.element.id) { index, workout in
                     NavigationLink(destination: SessionDetailView(workout: workout, patientId: patientId)) {
                         WorkoutHistoryRow(workout: workout)
                     }
                     .buttonStyle(.plain)
+                    .staggeredAnimation(index: index)
                 }
 
                 // Pagination: Load More button or loading indicator

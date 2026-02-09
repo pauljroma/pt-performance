@@ -35,6 +35,9 @@ struct TodaySessionView: View {
     @State private var isLoadingPrescriptions = false
     @State private var selectedPrescription: WorkoutPrescription?
 
+    // Scroll animation state
+    @State private var scrollOffset: CGFloat = 0
+
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
@@ -75,15 +78,15 @@ struct TodaySessionView: View {
                 iPhoneLayout
             }
         }
-        .sheet(isPresented: $showDebugLogs) {
+        .springSheet(isPresented: $showDebugLogs) {
             DebugLogView()
         }
         // Use sheet(item:) pattern to prevent black screen when session is nil
-        .sheet(item: $completedSession) { session in
+        .springSheet(item: $completedSession) { session in
             SessionSummaryView(session: session)
                 .environmentObject(appState)
         }
-        .sheet(isPresented: $showReadinessCheckIn, onDismiss: {
+        .springSheet(isPresented: $showReadinessCheckIn, onDismiss: {
             // Reload readiness data after check-in submission
             Task {
                 await loadTodayReadiness()
@@ -98,7 +101,7 @@ struct TodaySessionView: View {
                 ReadinessCheckInView(patientId: UUID(uuidString: patientId) ?? UUID())
             }
         }
-        .sheet(isPresented: $showReadinessDashboard) {
+        .springSheet(isPresented: $showReadinessDashboard) {
             if let patientId = appState.userId {
                 NavigationStack {
                     ReadinessDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
@@ -106,7 +109,7 @@ struct TodaySessionView: View {
             }
         }
         // ACP-522: Arm Care Assessment sheet
-        .sheet(isPresented: $showArmCareAssessment, onDismiss: {
+        .springSheet(isPresented: $showArmCareAssessment, onDismiss: {
             Task {
                 await loadTodayArmCare()
             }
@@ -116,7 +119,7 @@ struct TodaySessionView: View {
             }
         }
         // Adaptive Training: Modification suggestion sheet
-        .sheet(isPresented: $showModificationSheet) {
+        .springSheet(isPresented: $showModificationSheet) {
             if let modification = adaptiveWorkoutVM.todayModification {
                 NavigationStack {
                     ScrollView {
@@ -148,14 +151,14 @@ struct TodaySessionView: View {
             }
         }
         // Recovery Intelligence sheets
-        .sheet(isPresented: $showRecoveryProtocol) {
+        .springSheet(isPresented: $showRecoveryProtocol) {
             if let patientId = appState.userId {
                 NavigationStack {
                     RecoveryProtocolView(patientId: UUID(uuidString: patientId) ?? UUID())
                 }
             }
         }
-        .sheet(isPresented: $showReadinessInsights) {
+        .springSheet(isPresented: $showReadinessInsights) {
             if let patientId = appState.userId {
                 NavigationStack {
                     ReadinessInsightsView(patientId: UUID(uuidString: patientId) ?? UUID())
@@ -163,7 +166,7 @@ struct TodaySessionView: View {
             }
         }
         // Manual Workout Sheets
-        .sheet(isPresented: $showTemplateLibrary) {
+        .springSheet(isPresented: $showTemplateLibrary) {
             if let patientId = appState.userId {
                 NavigationStack {
                     WorkoutTemplateLibraryView(
@@ -180,7 +183,7 @@ struct TodaySessionView: View {
                 }
             }
         }
-        .sheet(isPresented: $showWorkoutCreator) {
+        .springSheet(isPresented: $showWorkoutCreator) {
             if let patientId = appState.userId {
                 NavigationStack {
                     ManualWorkoutCreatorView(
@@ -190,7 +193,7 @@ struct TodaySessionView: View {
             }
         }
         // Add exercise to today's session picker
-        .sheet(isPresented: $showAddToTodayPicker) {
+        .springSheet(isPresented: $showAddToTodayPicker) {
             NavigationStack {
                 AddExerciseToTodaySheet(
                     onExerciseAdded: {
@@ -359,6 +362,9 @@ struct TodaySessionView: View {
                     noSessionView
                 } else {
                     sessionContent
+                        .refreshableWithHaptic {
+                            await viewModel.refresh()
+                        }
                 }
 
                 // Add to Today FAB option (ACP-591)
@@ -411,12 +417,17 @@ struct TodaySessionView: View {
     }
 
     // Simplified session content - just cards and Start Workout button
+    // Uses scroll-triggered micro-animations for enhanced visual feedback
+    // Combines parallax hero section with staggered card entrance animations
     @ViewBuilder
     private var sessionContent: some View {
-        ScrollView {
+        ScrollTrackingContainer(scrollOffset: $scrollOffset) {
             VStack(alignment: .leading, spacing: 20) {
-                // Daily Check-in Prompt Card - prominent entry point
+                // Daily Check-in Prompt Card - hero section with parallax depth effect
                 CheckInPromptCard()
+                    .parallax(scrollOffset: scrollOffset, intensity: 0.15)
+                    .scaleOnScroll(scrollOffset: scrollOffset, minScale: 0.98)
+                    .staggeredAnimation(index: 0)
 
                 // Enrolled Programs Section (only shows if user has enrolled programs)
                 if enrolledProgramsViewModel.hasEnrolledPrograms {
@@ -428,6 +439,7 @@ struct TodaySessionView: View {
                         progressPercentage: { enrolledProgramsViewModel.progressPercentage(for: $0) },
                         daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) }
                     )
+                    .staggeredAnimation(index: 1)
                 }
 
                 // Today's completed workouts counter
@@ -436,6 +448,7 @@ struct TodaySessionView: View {
                         completedCount: viewModel.completedTodayCount,
                         completedWorkouts: viewModel.todaysCompletedWorkouts
                     )
+                    .staggeredAnimation(index: 2)
                 }
 
                 // Readiness Section
@@ -445,6 +458,7 @@ struct TodaySessionView: View {
                     onCheckIn: { showReadinessCheckIn = true },
                     onShowDashboard: { showReadinessDashboard = true }
                 )
+                .staggeredAnimation(index: 3)
 
                 // ACP-522: Arm Care Section (for baseball/throwing athletes)
                 ArmCareStatusCard(
@@ -453,6 +467,7 @@ struct TodaySessionView: View {
                     onCheckIn: { showArmCareAssessment = true },
                     onShowDetails: { showArmCareAssessment = true }
                 )
+                .staggeredAnimation(index: 4)
 
                 // Adaptive Training: Workout Modification Suggestion
                 if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
@@ -463,6 +478,7 @@ struct TodaySessionView: View {
                             showModificationSheet = true
                         }
                     )
+                    .staggeredAnimation(index: 5)
                 } else if adaptiveWorkoutVM.isLoading {
                     // Loading placeholder for modification check
                     HStack(spacing: 12) {
@@ -475,6 +491,7 @@ struct TodaySessionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.secondarySystemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .staggeredAnimation(index: 5)
                 }
 
                 // Recovery Intelligence: Readiness-Based Workout Recommendation
@@ -490,8 +507,10 @@ struct TodaySessionView: View {
                             }
                         }
                     )
+                    .staggeredAnimation(index: 6)
                 } else if isLoadingAdaptation {
                     ReadinessWorkoutRecommendationCard.loadingPlaceholder
+                        .staggeredAnimation(index: 6)
                 }
 
                 // Prescribed Workouts from Therapist
@@ -508,6 +527,7 @@ struct TodaySessionView: View {
                             // Could navigate to a full prescription list view if needed
                         }
                     )
+                    .staggeredAnimation(index: 7)
                 }
 
                 // Session Card with Start Workout
@@ -519,6 +539,7 @@ struct TodaySessionView: View {
                             onCreateCustomWorkout: { showWorkoutCreator = true },
                             onViewSummary: { completedSession = viewModel.session }
                         )
+                        .staggeredAnimation(index: 8)
                     } else {
                         TodayWorkoutCard(
                             session: session,
@@ -529,6 +550,7 @@ struct TodaySessionView: View {
                                 selectedExercise = exercise
                             }
                         )
+                        .staggeredAnimation(index: 8)
                     }
                 }
 
@@ -709,6 +731,9 @@ struct TodaySessionView: View {
                 .padding(.top, 8)
             }
             .padding()
+        }
+        .refreshableWithHaptic {
+            await viewModel.refresh()
         }
     }
 

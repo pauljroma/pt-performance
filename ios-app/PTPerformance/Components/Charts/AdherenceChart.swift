@@ -1,11 +1,15 @@
 import SwiftUI
 
 /// Reusable circular adherence chart component
+/// Respects @Environment(\.accessibilityReduceMotion) for accessibility
 struct AdherenceChart: View {
     let adherencePercentage: Double
     var size: CGFloat = 200
     var lineWidth: CGFloat = 20
     var showLabel: Bool = true
+
+    @State private var animatedProgress: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -13,12 +17,11 @@ struct AdherenceChart: View {
             Circle()
                 .stroke(Color.gray.opacity(0.2), lineWidth: lineWidth)
 
-            // Progress circle
+            // Progress circle with animated trim
             Circle()
-                .trim(from: 0, to: adherencePercentage / 100)
-                .stroke(adherenceColor, lineWidth: lineWidth)
+                .trim(from: 0, to: animatedProgress / 100)
+                .stroke(adherenceColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: adherencePercentage)
 
             // Center label
             if showLabel {
@@ -34,6 +37,24 @@ struct AdherenceChart: View {
             }
         }
         .frame(width: size, height: size)
+        .onAppear {
+            if reduceMotion {
+                animatedProgress = adherencePercentage
+            } else {
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7)) {
+                    animatedProgress = adherencePercentage
+                }
+            }
+        }
+        .onChange(of: adherencePercentage) { _, newValue in
+            if reduceMotion {
+                animatedProgress = newValue
+            } else {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    animatedProgress = newValue
+                }
+            }
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Adherence chart")
         .accessibilityValue("\(Int(adherencePercentage)) percent complete")
@@ -51,33 +72,23 @@ struct AdherenceChart: View {
 }
 
 /// Bar chart version for weekly adherence breakdown
+/// Respects @Environment(\.accessibilityReduceMotion) for accessibility
 struct WeeklyAdherenceChart: View {
     let weeklyData: [WeeklyAdherence]
     var height: CGFloat = 150
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            ForEach(weeklyData) { week in
-                VStack(spacing: 4) {
-                    // Bar
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(barColor(week.adherencePercentage))
-                        .frame(width: 30, height: CGFloat(week.adherencePercentage / 100) * height)
-
-                    // Week label
-                    Text("W\(week.weekNumber)")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-
-                    // Percentage
-                    Text("\(Int(week.adherencePercentage))%")
-                        .font(.caption2)
-                        .bold()
-                        .foregroundColor(barColor(week.adherencePercentage))
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Week \(week.weekNumber)")
-                .accessibilityValue("\(Int(week.adherencePercentage)) percent adherence")
+            ForEach(Array(weeklyData.enumerated()), id: \.element.id) { index, week in
+                AnimatedAdherenceBar(
+                    percentage: week.adherencePercentage,
+                    weekNumber: week.weekNumber,
+                    maxHeight: height,
+                    delay: reduceMotion ? 0 : Double(index) * 0.1,
+                    reduceMotion: reduceMotion
+                )
             }
         }
         .frame(height: height + 40)
@@ -87,13 +98,75 @@ struct WeeklyAdherenceChart: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Weekly adherence chart")
     }
+}
 
-    private func barColor(_ percentage: Double) -> Color {
+/// Animated bar for weekly adherence chart
+private struct AnimatedAdherenceBar: View {
+    let percentage: Double
+    let weekNumber: Int
+    let maxHeight: CGFloat
+    let delay: Double
+    let reduceMotion: Bool
+
+    @State private var animatedHeight: CGFloat = 0
+
+    private var targetHeight: CGFloat {
+        CGFloat(percentage / 100) * maxHeight
+    }
+
+    private var barColor: Color {
         switch percentage {
         case 80...: return .green
         case 60..<80: return .yellow
         default: return .red
         }
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            // Animated bar
+            VStack {
+                Spacer(minLength: 0)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(barColor)
+                    .frame(width: 30, height: animatedHeight)
+            }
+            .frame(height: maxHeight)
+
+            // Week label
+            Text("W\(weekNumber)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            // Percentage
+            Text("\(Int(percentage))%")
+                .font(.caption2)
+                .bold()
+                .foregroundColor(barColor)
+        }
+        .onAppear {
+            if reduceMotion {
+                animatedHeight = targetHeight
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                        animatedHeight = targetHeight
+                    }
+                }
+            }
+        }
+        .onChange(of: percentage) { _, _ in
+            if reduceMotion {
+                animatedHeight = targetHeight
+            } else {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    animatedHeight = targetHeight
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Week \(weekNumber)")
+        .accessibilityValue("\(Int(percentage)) percent adherence")
     }
 }
 

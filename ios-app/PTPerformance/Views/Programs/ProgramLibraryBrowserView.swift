@@ -259,18 +259,19 @@ struct ProgramLibraryBrowserView: View {
     private var programsGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(viewModel.cachedFilteredPrograms) { program in
+                ForEach(Array(viewModel.cachedFilteredPrograms.enumerated()), id: \.element.id) { index, program in
                     ProgramLibraryCard(program: program) {
                         programToDuplicate = program
                     }
                     .onTapGesture {
                         selectedProgram = program
                     }
+                    .staggeredAnimation(index: index)
                 }
             }
             .padding()
         }
-        .refreshable {
+        .refreshableWithHaptic {
             await viewModel.loadAllData()
         }
     }
@@ -278,51 +279,28 @@ struct ProgramLibraryBrowserView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.2)
-                .accessibilityHidden(true)
-            Text("Loading programs...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Loading programs, please wait")
+        ProgramLibrarySkeletonView()
+            .accessibilityLabel("Loading programs, please wait")
     }
 
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: viewModel.hasActiveFilters ? "magnifyingglass" : "figure.strengthtraining.traditional")
-                .font(.system(size: 56))
-                .foregroundColor(viewModel.hasActiveFilters ? .secondary : .blue.opacity(0.6))
-                .accessibilityHidden(true)
-
-            Text(viewModel.hasActiveFilters ? "No Matching Programs" : "Explore Training Programs")
-                .font(.headline)
-
-            Text(viewModel.hasActiveFilters
-                 ? "No programs match your current filters. Try adjusting your search criteria or browse all available programs."
-                 : "Browse our library of professionally designed training programs for strength, mobility, conditioning, and more. New programs are added regularly.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-
-            if viewModel.hasActiveFilters {
-                Button {
+        EmptyStateView(
+            title: viewModel.hasActiveFilters ? "No Matching Programs" : "No Programs Assigned Yet",
+            message: viewModel.hasActiveFilters
+                ? "No programs match your current filters. Try adjusting your search criteria or browse all available programs."
+                : "Browse our library of professionally designed training programs for strength, mobility, conditioning, and more.",
+            icon: viewModel.hasActiveFilters ? "magnifyingglass" : "figure.strengthtraining.traditional",
+            iconColor: viewModel.hasActiveFilters ? .secondary : .blue,
+            action: viewModel.hasActiveFilters ? EmptyStateView.EmptyStateAction(
+                title: "Clear All Filters",
+                icon: "xmark.circle",
+                action: {
                     viewModel.clearFilters()
-                } label: {
-                    Label("Clear All Filters", systemImage: "xmark.circle")
                 }
-                .buttonStyle(.bordered)
-                .accessibilityLabel("Clear all filters")
-                .accessibilityHint("Removes all search and category filters")
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ) : nil
+        )
     }
 
     // MARK: - Helper Functions

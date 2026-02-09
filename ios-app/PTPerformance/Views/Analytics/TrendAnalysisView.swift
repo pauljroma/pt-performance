@@ -21,6 +21,7 @@ struct TrendAnalysisView: View {
     @StateObject private var viewModel: TrendAnalysisViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // MARK: - Initialization
 
@@ -301,6 +302,7 @@ struct TrendAnalysisView: View {
                     }
                 }
                 .frame(height: 250)
+                .animatedTrim(duration: 0.8, delay: 0.1)
                 .accessibilityLabel("Trend chart for \(analysis.metricType.displayName)")
                 .accessibilityValue("\(analysis.dataPoints.count) data points from \(analysis.timeRange.displayName)")
             }
