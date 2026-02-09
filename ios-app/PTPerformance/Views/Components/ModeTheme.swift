@@ -47,13 +47,37 @@ struct ModeTheme {
     )
 
     // MARK: - PERFORMANCE Theme (Elite Gold)
-    static let performance = ModeTheme(
-        primaryColor: Color(red: 255/255, green: 215/255, blue: 0/255),  // #FFD700
-        secondaryColor: Color(red: 26/255, green: 26/255, blue: 26/255),  // Black
-        backgroundColor: Color(red: 18/255, green: 18/255, blue: 18/255),  // Very dark gray
-        textColor: Color(red: 255/255, green: 215/255, blue: 0/255),  // Gold text
-        accentColor: Color(red: 255/255, green: 215/255, blue: 0/255)
-    )
+    // Uses adaptive colors for proper dark mode support
+    static var performance: ModeTheme {
+        ModeTheme(
+            primaryColor: Color(UIColor { traitCollection in
+                // Gold color - slightly brighter in dark mode
+                traitCollection.userInterfaceStyle == .dark
+                    ? UIColor(red: 255/255, green: 220/255, blue: 50/255, alpha: 1.0)
+                    : UIColor(red: 255/255, green: 215/255, blue: 0/255, alpha: 1.0)
+            }),
+            secondaryColor: Color(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark
+                    ? UIColor(red: 40/255, green: 40/255, blue: 40/255, alpha: 1.0)
+                    : UIColor(red: 26/255, green: 26/255, blue: 26/255, alpha: 1.0)
+            }),
+            backgroundColor: Color(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark
+                    ? UIColor(red: 12/255, green: 12/255, blue: 12/255, alpha: 1.0)  // Darker in dark mode
+                    : UIColor(red: 18/255, green: 18/255, blue: 18/255, alpha: 1.0)
+            }),
+            textColor: Color(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark
+                    ? UIColor(red: 255/255, green: 220/255, blue: 50/255, alpha: 1.0)
+                    : UIColor(red: 255/255, green: 215/255, blue: 0/255, alpha: 1.0)
+            }),
+            accentColor: Color(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark
+                    ? UIColor(red: 255/255, green: 220/255, blue: 50/255, alpha: 1.0)
+                    : UIColor(red: 255/255, green: 215/255, blue: 0/255, alpha: 1.0)
+            })
+        )
+    }
 }
 
 /// Environment key for current mode

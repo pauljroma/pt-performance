@@ -63,7 +63,7 @@ struct WorkoutModificationCard: View {
         }
         .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .adaptiveCardShadow(radius: 8, y: 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Workout modification suggestion")
     }

@@ -90,10 +90,10 @@ struct TimerPickerView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
-            .sheet(isPresented: $showCustomBuilder) {
+            .springSheet(isPresented: $showCustomBuilder) {
                 customBuilderSheet
             }
-            .sheet(isPresented: $showPresetDetail) {
+            .springSheet(isPresented: $showPresetDetail) {
                 presetDetailSheet
             }
             .fullScreenCover(isPresented: $showActiveTimer) {

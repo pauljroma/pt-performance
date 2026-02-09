@@ -18,14 +18,19 @@ struct PatientPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    loadingView
-                } else if viewModel.patients.isEmpty {
-                    emptyStateView
-                } else {
-                    patientListView
+            VStack(spacing: 0) {
+                SheetDragIndicator()
+
+                Group {
+                    if viewModel.isLoading {
+                        loadingView
+                    } else if viewModel.patients.isEmpty {
+                        emptyStateView
+                    } else {
+                        patientListView
+                    }
                 }
+                .springPresentation()
             }
             .searchable(text: $searchText, prompt: "Search patients")
             .navigationTitle("Select Patient")
@@ -39,6 +44,7 @@ struct PatientPickerSheet: View {
                 await viewModel.loadPatients()
             }
         }
+        .presentationDragIndicator(.hidden)
     }
 
     // MARK: - Patient List View

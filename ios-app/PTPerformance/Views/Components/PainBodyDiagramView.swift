@@ -238,7 +238,7 @@ struct PainBodyDiagramView: View {
         }
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+        .adaptiveCardShadow(radius: 6, y: 3)
         .sheet(isPresented: $showingIntensityEditor) {
             intensityEditorSheet
         }

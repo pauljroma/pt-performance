@@ -1,13 +1,41 @@
 import SwiftUI
 
 /// Color definitions for widgets
+/// Uses adaptive colors for proper dark mode support
 enum WidgetColors {
-    // MARK: - Readiness Band Colors
+    // MARK: - Readiness Band Colors (Dark Mode Optimized)
 
-    static let readinessGreen = Color.green
-    static let readinessYellow = Color.yellow
-    static let readinessOrange = Color.orange
-    static let readinessRed = Color.red
+    static var readinessGreen: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 0.2, green: 0.85, blue: 0.4, alpha: 1.0)  // Brighter green
+                : UIColor.systemGreen
+        })
+    }
+
+    static var readinessYellow: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 1.0, green: 0.85, blue: 0.3, alpha: 1.0)  // Brighter yellow
+                : UIColor.systemYellow
+        })
+    }
+
+    static var readinessOrange: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0)  // Brighter orange
+                : UIColor.systemOrange
+        })
+    }
+
+    static var readinessRed: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 1.0)  // Brighter red
+                : UIColor.systemRed
+        })
+    }
 
     static func colorForBand(_ band: String) -> Color {
         switch band.lowercased() {
@@ -30,10 +58,10 @@ enum WidgetColors {
 
     // MARK: - Fatigue Band Colors
 
-    static let fatigueLow = Color.green
-    static let fatigueModerate = Color.yellow
-    static let fatigueHigh = Color.orange
-    static let fatigueCritical = Color.red
+    static var fatigueLow: Color { readinessGreen }
+    static var fatigueModerate: Color { readinessYellow }
+    static var fatigueHigh: Color { readinessOrange }
+    static var fatigueCritical: Color { readinessRed }
 
     static func colorForFatigueBand(_ band: String) -> Color {
         switch band.lowercased() {
@@ -45,21 +73,63 @@ enum WidgetColors {
         }
     }
 
-    // MARK: - Workout Status Colors
+    // MARK: - Workout Status Colors (Dark Mode Optimized)
 
-    static let statusScheduled = Color.blue
-    static let statusInProgress = Color.orange
-    static let statusCompleted = Color.green
-    static let statusSkipped = Color.red
-    static let statusRestDay = Color.purple
+    static var statusScheduled: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 0.35, green: 0.65, blue: 1.0, alpha: 1.0)  // Brighter blue
+                : UIColor.systemBlue
+        })
+    }
 
-    // MARK: - Adherence Colors
+    static var statusInProgress: Color { readinessOrange }
+    static var statusCompleted: Color { readinessGreen }
+    static var statusSkipped: Color { readinessRed }
 
-    static let adherenceCompleted = Color.green
-    static let adherenceScheduled = Color.blue.opacity(0.3)
-    static let adherenceSkipped = Color.red.opacity(0.5)
-    static let adherenceRestDay = Color.gray.opacity(0.3)
-    static let adherenceFuture = Color.gray.opacity(0.2)
+    static var statusRestDay: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 0.7, green: 0.45, blue: 0.9, alpha: 1.0)  // Brighter purple
+                : UIColor.systemPurple
+        })
+    }
+
+    // MARK: - Adherence Colors (Dark Mode Optimized)
+
+    static var adherenceCompleted: Color { readinessGreen }
+
+    static var adherenceScheduled: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.systemBlue.withAlphaComponent(0.4)
+                : UIColor.systemBlue.withAlphaComponent(0.3)
+        })
+    }
+
+    static var adherenceSkipped: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.systemRed.withAlphaComponent(0.6)
+                : UIColor.systemRed.withAlphaComponent(0.5)
+        })
+    }
+
+    static var adherenceRestDay: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.systemGray.withAlphaComponent(0.4)
+                : UIColor.systemGray.withAlphaComponent(0.3)
+        })
+    }
+
+    static var adherenceFuture: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.systemGray.withAlphaComponent(0.3)
+                : UIColor.systemGray.withAlphaComponent(0.2)
+        })
+    }
 
     // MARK: - Streak Colors
 
@@ -69,9 +139,39 @@ enum WidgetColors {
         endPoint: .top
     )
 
-    // MARK: - Chart Colors
+    // MARK: - Chart Colors (Dark Mode Optimized)
 
-    static let chartLine = Color.blue
-    static let chartFill = Color.blue.opacity(0.2)
-    static let chartGrid = Color.gray.opacity(0.2)
+    static var chartLine: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor(red: 0.35, green: 0.65, blue: 1.0, alpha: 1.0)  // Brighter blue
+                : UIColor.systemBlue
+        })
+    }
+
+    static var chartFill: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.systemBlue.withAlphaComponent(0.3)  // More visible in dark
+                : UIColor.systemBlue.withAlphaComponent(0.2)
+        })
+    }
+
+    static var chartGrid: Color {
+        Color(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark
+                ? UIColor.white.withAlphaComponent(0.15)  // Lighter grid on dark
+                : UIColor.gray.withAlphaComponent(0.2)
+        })
+    }
+
+    // MARK: - Widget Background Colors
+
+    static var widgetBackground: Color {
+        Color(UIColor.systemBackground)
+    }
+
+    static var widgetSecondaryBackground: Color {
+        Color(UIColor.secondarySystemBackground)
+    }
 }

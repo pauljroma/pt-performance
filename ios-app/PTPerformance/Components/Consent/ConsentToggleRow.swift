@@ -114,7 +114,10 @@ struct ConsentToggleRow: View {
             } else {
                 Toggle("", isOn: Binding(
                     get: { isEnabled },
-                    set: { _ in onToggle() }
+                    set: { _ in
+                        HapticFeedback.toggle()
+                        onToggle()
+                    }
                 ))
                 .labelsHidden()
                 .tint(.modusCyan)
@@ -231,7 +234,10 @@ struct ConsentToggleRowCompact: View {
             } else {
                 Toggle("", isOn: Binding(
                     get: { isEnabled },
-                    set: { _ in onToggle() }
+                    set: { _ in
+                        HapticFeedback.toggle()
+                        onToggle()
+                    }
                 ))
                 .labelsHidden()
                 .tint(.modusCyan)

@@ -84,7 +84,7 @@ struct ROMInputCard: View {
         }
         .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+        .adaptiveCardShadow(radius: 6, y: 3)
         .animation(.spring(response: 0.3), value: isExpanded)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("ROM measurement input for \(selectedJoint.displayName) \(selectedMovement.displayName)")
