@@ -178,8 +178,10 @@ class LeaderboardViewModel: ObservableObject {
             self.error = error
             logger.log("LeaderboardViewModel: Failed to load leaderboard: \(error)", level: .warning)
 
-            // Load sample data for preview/fallback
+            #if DEBUG
+            // Load sample data for preview/fallback in debug builds only
             loadSampleData(patientId: patientId)
+            #endif
         }
     }
 
@@ -189,10 +191,12 @@ class LeaderboardViewModel: ObservableObject {
         return records
     }
 
+    #if DEBUG
     private func loadSampleData(patientId: UUID) {
         entries = LeaderboardEntry.sampleEntries
         currentUserEntry = entries.first { $0.isCurrentUser }
     }
+    #endif
 }
 
 // MARK: - Achievement Leaderboard View
@@ -495,24 +499,230 @@ struct AchievementLeaderboardView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: Spacing.lg) {
-            ProgressView()
-                .scaleEffect(1.2)
-            Text("Loading leaderboard...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        LeaderboardSkeletonView()
     }
 
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        EmptyStateView(
-            title: "No Rankings Yet",
-            message: "Complete achievements to appear on the leaderboard!",
-            icon: "trophy.fill",
-            iconColor: .yellow
+        VStack(spacing: Spacing.lg) {
+            // Animated trophy with podium
+            ZStack {
+                // Podium base
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.yellow.opacity(0.3), Color.orange.opacity(0.2)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 80, height: 30)
+                    .offset(y: 40)
+
+                // Trophy
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.yellow, .orange],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: Spacing.sm) {
+                Text("Be the First!")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Text("Complete achievements to climb the leaderboard and compete with other athletes.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Spacing.xl)
+            }
+
+            // Motivational hint
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "flame.fill")
+                    .foregroundColor(.orange)
+                Text("Tip: Build a streak to earn quick points!")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, Spacing.sm)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No rankings yet. Complete achievements to appear on the leaderboard.")
+    }
+}
+
+// MARK: - Leaderboard Skeleton View
+
+/// Skeleton loading state for leaderboard
+struct LeaderboardSkeletonView: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: Spacing.md) {
+            // Current user rank card skeleton
+            userRankCardSkeleton
+
+            // Podium skeleton
+            podiumSkeleton
+
+            // Rankings list skeleton
+            rankingsListSkeleton
+        }
+        .padding()
+        .onAppear {
+            withAnimation(
+                Animation.linear(duration: 1.5)
+                    .repeatForever(autoreverses: false)
+            ) {
+                isAnimating = true
+            }
+        }
+    }
+
+    private var userRankCardSkeleton: some View {
+        HStack(spacing: Spacing.md) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 40, height: 28)
+                .shimmer(isAnimating: isAnimating)
+
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 45, height: 45)
+                .shimmer(isAnimating: isAnimating)
+
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 100, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 12)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 60, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 40, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .fill(Color.blue.opacity(0.1))
+        )
+    }
+
+    private var podiumSkeleton: some View {
+        HStack(alignment: .bottom, spacing: Spacing.md) {
+            // Second place
+            podiumSpotSkeleton(height: 80)
+
+            // First place
+            podiumSpotSkeleton(height: 100, isFirst: true)
+
+            // Third place
+            podiumSpotSkeleton(height: 60)
+        }
+        .padding(.vertical, Spacing.lg)
+    }
+
+    private func podiumSpotSkeleton(height: CGFloat, isFirst: Bool = false) -> some View {
+        VStack(spacing: Spacing.xs) {
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: isFirst ? 70 : 55, height: isFirst ? 70 : 55)
+                .shimmer(isAnimating: isAnimating)
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 12)
+                .shimmer(isAnimating: isAnimating)
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 40, height: 10)
+                .shimmer(isAnimating: isAnimating)
+
+            RoundedRectangle(cornerRadius: CornerRadius.sm)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 70, height: height)
+                .shimmer(isAnimating: isAnimating)
+        }
+    }
+
+    private var rankingsListSkeleton: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 80, height: 16)
+                .shimmer(isAnimating: isAnimating)
+
+            ForEach(0..<5, id: \.self) { _ in
+                rankingRowSkeleton
+            }
+        }
+    }
+
+    private var rankingRowSkeleton: some View {
+        HStack(spacing: Spacing.md) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 30, height: 14)
+                .shimmer(isAnimating: isAnimating)
+
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 36, height: 36)
+                .shimmer(isAnimating: isAnimating)
+
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 80, height: 14)
+                    .shimmer(isAnimating: isAnimating)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 60, height: 10)
+                    .shimmer(isAnimating: isAnimating)
+            }
+
+            Spacer()
+
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 14)
+                .shimmer(isAnimating: isAnimating)
+        }
+        .padding(.vertical, Spacing.sm)
+        .padding(.horizontal, Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.sm)
+                .fill(Color(.secondarySystemGroupedBackground))
         )
     }
 }
