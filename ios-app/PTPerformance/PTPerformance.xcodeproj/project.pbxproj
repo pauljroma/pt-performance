@@ -271,6 +271,7 @@
 		47FA37F1DB3C47F0E2855160 /* TherapistTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A46406372400B25ED6C979 /* TherapistTabView.swift */; };
 		4816F1F0879EC432E57D625A /* CrashPrevention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F0F688D5E0727EDFC7909A9 /* CrashPrevention.swift */; };
 		4818EF18FDC520E2BE395EDF /* BodyCompositionEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9F0ED05F0247315D5CDD8A /* BodyCompositionEntryView.swift */; };
+		481DA1A4D4514C86079984DC /* BiomarkerGlossaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFF5818ABADCD141130D99F /* BiomarkerGlossaryView.swift */; };
 		48600F93CDE87138356E2CC6 /* WeeklySummaryPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2EDB7590266023E9CA7CDF /* WeeklySummaryPreferencesView.swift */; };
 		491212C9590904197D1C0D61 /* ROMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD3FFF60ED1FC2E10C29C242 /* ROMeasurement.swift */; };
 		492620064B4AF0CB317316D5 /* WidgetAdherence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E463A154B86FCB5A7E06E7 /* WidgetAdherence.swift */; };
@@ -468,6 +469,7 @@
 		83167C47B0B91C8B7948A08F /* NutritionProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17C6D406B6F98633E701F4F /* NutritionProfileSetupView.swift */; };
 		83B9845E1F960083AAB63BF1 /* AlertBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D2C57A9994EF4D4EF3CEDA /* AlertBannerView.swift */; };
 		841E8B15641A3B0B1E913D79 /* SupplementDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84867E91760A4F85E5AB2786 /* SupplementDetailViewModel.swift */; };
+		845DE30F4085AAEFDEB6B14B /* BiomarkerEducation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256C1F3B75B1C25068B60DDE /* BiomarkerEducation.swift */; };
 		84A330ECCF6F54008279BCD9 /* PhaseAdvancement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F99EA30988C945BC47159A /* PhaseAdvancement.swift */; };
 		84A56F43FD87158223BC63FB /* AdherenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C5F9605453D03C0FF5B53F /* AdherenceService.swift */; };
 		85077C860240A6F8AB6AED55 /* PTBriefActionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0F19B5F75B587FD8F7ED53 /* PTBriefActionsSection.swift */; };
@@ -992,6 +994,7 @@
 		24F1B64042E9EE6FA6FBAE28 /* CacheCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CacheCoordinator.swift; path = Services/CacheCoordinator.swift; sourceTree = "<group>"; };
 		2526F4359F5F8FC5107207D4 /* UndoManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UndoManager.swift; path = Services/UndoManager.swift; sourceTree = "<group>"; };
 		25683FB4E5ED67007D98BFC6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		256C1F3B75B1C25068B60DDE /* BiomarkerEducation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Models/BiomarkerEducation.swift; sourceTree = "<group>"; };
 		2593F7CA17CD2076439CDC3E /* RTSPhaseProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RTSPhaseProgressView.swift; path = Views/RTS/RTSPhaseProgressView.swift; sourceTree = "<group>"; };
 		25DD470A68498493E7E841E9 /* SyncStatusIndicator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SyncStatusIndicator.swift; path = Views/Components/SyncStatusIndicator.swift; sourceTree = "<group>"; };
 		25F1821FB93F1E1A79E8E46E /* ConflictsListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConflictsListView.swift; path = Views/Conflicts/ConflictsListView.swift; sourceTree = "<group>"; };
@@ -1682,6 +1685,7 @@
 		EE2D4F4A42C4CA0EE0CD1EA8 /* Program.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Program.swift; path = Models/Program.swift; sourceTree = "<group>"; };
 		EE4F7379E5F908DE370D26D7 /* HealthSyncStatusView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HealthSyncStatusView.swift; path = Views/HealthKit/HealthSyncStatusView.swift; sourceTree = "<group>"; };
 		EEADE16333C51D70602994D5 /* SmartNotificationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmartNotificationService.swift; path = Services/SmartNotificationService.swift; sourceTree = "<group>"; };
+		EEFF5818ABADCD141130D99F /* BiomarkerGlossaryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Views/HealthIntelligence/BiomarkerGlossaryView.swift; sourceTree = "<group>"; };
 		EF30EC58001D93A16720BA6F /* RTSService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RTSService.swift; path = Services/RTSService.swift; sourceTree = "<group>"; };
 		EF40BE0506408AD1E931543E /* E2ETestUtilities.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = E2ETestUtilities.swift; path = Tests/UI/Helpers/E2ETestUtilities.swift; sourceTree = "<group>"; };
 		EF68E739EB5F7F670A0399E3 /* ProgramPhase.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProgramPhase.swift; path = Models/ProgramPhase.swift; sourceTree = "<group>"; };
@@ -2547,6 +2551,14 @@
 			name = HealthKit;
 			sourceTree = "<group>";
 		};
+		56C6CB58C8A6A369CC4BD640 /* HealthIntelligence */ = {
+			isa = PBXGroup;
+			children = (
+				EEFF5818ABADCD141130D99F /* BiomarkerGlossaryView.swift */,
+			);
+			name = HealthIntelligence;
+			sourceTree = "<group>";
+		};
 		572CC3D912C005597126C6D2 /* Components */ = {
 			isa = PBXGroup;
 			children = (
@@ -3141,6 +3153,7 @@
 				53B6FE8F857E92548CBDF2D7 /* EvidenceClaim.swift */,
 				E9A131E881B567607F8A4EED /* RiskEscalation.swift */,
 				E304A838A22635678413C2AC /* WeeklyReport.swift */,
+				256C1F3B75B1C25068B60DDE /* BiomarkerEducation.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -3205,6 +3218,7 @@
 				F2F9910C0E6B53F015AA0C87 /* Admin */,
 				049A9598339B6C2DD9E5D0C9 /* Evidence */,
 				9715A09D168D8F98E9695949 /* X2Index */,
+				56C6CB58C8A6A369CC4BD640 /* HealthIntelligence */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -4483,6 +4497,8 @@
 				16EA9D2CE80289319C546DA0 /* PatientProgramProgressViewModel.swift in Sources */,
 				2AE20CEC21F5D2295D0B5B8D /* ProgramAnalyticsViewModel.swift in Sources */,
 				377C37D613629D99E67AE287 /* ModelColorExtensions.swift in Sources */,
+				845DE30F4085AAEFDEB6B14B /* BiomarkerEducation.swift in Sources */,
+				481DA1A4D4514C86079984DC /* BiomarkerGlossaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

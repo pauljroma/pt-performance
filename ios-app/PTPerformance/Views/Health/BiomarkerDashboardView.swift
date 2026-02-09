@@ -13,6 +13,7 @@ struct BiomarkerDashboardView: View {
     @StateObject private var viewModel = BiomarkerDashboardViewModel()
     @State private var showingBiomarkerDetail = false
     @State private var showingProgramAdjustment = false
+    @State private var showingGlossary = false
 
     var body: some View {
         NavigationStack {
@@ -27,6 +28,17 @@ struct BiomarkerDashboardView: View {
             }
             .navigationTitle("Biomarkers")
             .searchable(text: $viewModel.searchText, prompt: "Search biomarkers")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingGlossary = true
+                    } label: {
+                        Image(systemName: "book.fill")
+                    }
+                    .accessibilityLabel("Biomarker Glossary")
+                    .accessibilityHint("Learn about what each biomarker means")
+                }
+            }
             .refreshable {
                 await viewModel.refreshDashboard()
             }
@@ -41,6 +53,9 @@ struct BiomarkerDashboardView: View {
                         isLoadingHistory: viewModel.isLoadingHistory
                     )
                 }
+            }
+            .sheet(isPresented: $showingGlossary) {
+                BiomarkerGlossaryView()
             }
             .onChange(of: viewModel.selectedBiomarker) { _, newValue in
                 showingBiomarkerDetail = newValue != nil
