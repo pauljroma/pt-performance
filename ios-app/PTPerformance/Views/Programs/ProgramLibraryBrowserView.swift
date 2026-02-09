@@ -23,6 +23,7 @@ struct ProgramLibraryBrowserView: View {
     @StateObject private var viewModel = ProgramLibraryBrowserViewModel()
     @State private var selectedProgram: ProgramLibrary?
     @State private var showBaseballLocked = false
+    @State private var programToDuplicate: ProgramLibrary?
 
     // MARK: - Constants
 
@@ -67,6 +68,59 @@ struct ProgramLibraryBrowserView: View {
         } message: {
             if let error = viewModel.errorMessage {
                 Text(error)
+            }
+        }
+        .alert("Success", isPresented: Binding(
+            get: { viewModel.successMessage != nil },
+            set: { if !$0 { viewModel.successMessage = nil } }
+        )) {
+            Button("OK") { viewModel.successMessage = nil }
+        } message: {
+            if let message = viewModel.successMessage {
+                Text(message)
+            }
+        }
+        .confirmationDialog(
+            "Duplicate Program",
+            isPresented: Binding(
+                get: { programToDuplicate != nil },
+                set: { if !$0 { programToDuplicate = nil } }
+            ),
+            presenting: programToDuplicate
+        ) { program in
+            Button("Duplicate") {
+                Task {
+                    do {
+                        _ = try await viewModel.duplicateProgram(program)
+                    } catch {
+                        // Error is handled by viewModel
+                    }
+                    programToDuplicate = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                programToDuplicate = nil
+            }
+        } message: { program in
+            Text("Create a copy of '\(program.title)'? The copy will include all phases and workout assignments.")
+        }
+        .overlay {
+            if viewModel.isDuplicating {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Duplicating program...")
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                    }
+                    .padding(24)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .shadow(radius: 10)
+                }
             }
         }
         .task {
@@ -206,10 +260,12 @@ struct ProgramLibraryBrowserView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(viewModel.cachedFilteredPrograms) { program in
-                    ProgramLibraryCard(program: program)
-                        .onTapGesture {
-                            selectedProgram = program
-                        }
+                    ProgramLibraryCard(program: program) {
+                        programToDuplicate = program
+                    }
+                    .onTapGesture {
+                        selectedProgram = program
+                    }
                 }
             }
             .padding()
@@ -406,6 +462,7 @@ private struct BaseballCategoryChip: View {
 
 struct ProgramLibraryCard: View {
     let program: ProgramLibrary
+    var onDuplicate: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -483,11 +540,22 @@ struct ProgramLibraryCard: View {
         .accessibilityLabel("\(program.title)\(program.featured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty")
         .accessibilityHint("Double tap to view program details")
         .contextMenu {
+            if let onDuplicate = onDuplicate {
+                Button {
+                    HapticFeedback.medium()
+                    onDuplicate()
+                } label: {
+                    Label("Duplicate Program", systemImage: "doc.on.doc")
+                }
+            }
+
+            Divider()
+
             Button {
                 HapticFeedback.light()
                 UIPasteboard.general.string = program.title
             } label: {
-                Label("Copy Title", systemImage: "doc.on.doc")
+                Label("Copy Title", systemImage: "doc.on.clipboard")
             }
 
             if let description = program.description, !description.isEmpty {

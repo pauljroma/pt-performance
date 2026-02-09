@@ -18,18 +18,34 @@ struct TemplateExerciseItem: Identifiable, Equatable {
     var reps: String
     var notes: String
 
+    // Exercise library reference (optional - nil for custom exercises)
+    var templateId: UUID?
+    var category: String?
+    var bodyRegion: String?
+
     init(
         id: UUID = UUID(),
         name: String = "",
         sets: Int = 3,
         reps: String = "10",
-        notes: String = ""
+        notes: String = "",
+        templateId: UUID? = nil,
+        category: String? = nil,
+        bodyRegion: String? = nil
     ) {
         self.id = id
         self.name = name
         self.sets = sets
         self.reps = reps
         self.notes = notes
+        self.templateId = templateId
+        self.category = category
+        self.bodyRegion = bodyRegion
+    }
+
+    /// Whether this exercise was selected from the library
+    var isFromLibrary: Bool {
+        templateId != nil
     }
 }
 
@@ -126,6 +142,32 @@ private enum Limits {
 
 @MainActor
 class WorkoutTemplateBuilderViewModel: ObservableObject {
+    // MARK: - Exercise Library State
+
+    /// Exercise templates loaded from the database
+    @Published var exerciseLibrary: [ExerciseTemplateData] = []
+
+    /// Search text for filtering exercise suggestions
+    @Published var exerciseSearchText: String = ""
+
+    /// Whether exercise library is loading
+    @Published var isLoadingLibrary: Bool = false
+
+    /// Filtered exercises based on search text
+    var filteredExercises: [ExerciseTemplateData] {
+        guard !exerciseSearchText.isEmpty else { return [] }
+
+        let searchLower = exerciseSearchText.lowercased()
+        return exerciseLibrary
+            .filter { template in
+                template.name.lowercased().contains(searchLower) ||
+                (template.category?.lowercased().contains(searchLower) ?? false) ||
+                (template.bodyRegion?.lowercased().contains(searchLower) ?? false)
+            }
+            .prefix(10)
+            .map { $0 }
+    }
+
     // MARK: - Form State
 
     /// Template name (required, 3-100 characters)
@@ -200,6 +242,53 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
         updateValidation()
+
+        // Load exercise library on initialization
+        Task {
+            await loadExerciseLibrary()
+        }
+    }
+
+    // MARK: - Exercise Library Loading
+
+    /// Load all exercise templates from the database for autocomplete
+    func loadExerciseLibrary() async {
+        guard exerciseLibrary.isEmpty else { return } // Only load once
+
+        isLoadingLibrary = true
+        defer { isLoadingLibrary = false }
+
+        do {
+            DebugLogger.shared.log("Loading exercise library for autocomplete", level: .diagnostic)
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            let result = try await supabase.client
+                .from("exercise_templates")
+                .select("id, name, category, body_region")
+                .order("name")
+                .execute()
+
+            let templates = try decoder.decode([ExerciseTemplateData].self, from: result.data)
+
+            exerciseLibrary = templates
+            DebugLogger.shared.log("Loaded \(templates.count) exercise templates for autocomplete", level: .success)
+        } catch {
+            DebugLogger.shared.log("Failed to load exercise library: \(error)", level: .error)
+            // Don't show error to user - autocomplete is optional enhancement
+        }
+    }
+
+    /// Select an exercise from the library and add it to the current exercise being edited
+    func selectExerciseFromLibrary(_ template: ExerciseTemplateData, forExerciseAt index: Int) {
+        guard index >= 0 && index < exercises.count else { return }
+
+        exercises[index].name = template.name
+        exercises[index].templateId = template.id
+        exercises[index].category = template.category
+        exercises[index].bodyRegion = template.bodyRegion
+        exerciseSearchText = ""
     }
 
     // MARK: - Computed Properties
@@ -410,7 +499,7 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
         let databaseExercises = exercises.enumerated().map { index, exercise in
             DatabaseExercise(
                 id: UUID(),
-                exerciseTemplateId: nil,
+                exerciseTemplateId: exercise.templateId,
                 name: exercise.name.trimmingCharacters(in: .whitespaces),
                 sequence: index,
                 prescribedSets: exercise.sets,
