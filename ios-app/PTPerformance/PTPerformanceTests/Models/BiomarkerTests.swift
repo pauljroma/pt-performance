@@ -17,7 +17,7 @@ final class BiomarkerCategoryTests: XCTestCase {
 
     func testBiomarkerCategory_AllCases() {
         let allCases = BiomarkerCategory.allCases
-        XCTAssertEqual(allCases.count, 10)
+        XCTAssertEqual(allCases.count, 11)
     }
 
     func testBiomarkerCategory_AllHaveIcons() {
@@ -104,13 +104,24 @@ final class BiomarkerCategoryTests: XCTestCase {
         XCTAssertEqual(BiomarkerCategory.category(for: "Vitamin B12"), .vitamins)
         XCTAssertEqual(BiomarkerCategory.category(for: "B12"), .vitamins)
         XCTAssertEqual(BiomarkerCategory.category(for: "Folate"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "Iron"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "Ferritin"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "TIBC"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "Zinc"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "Magnesium"), .vitamins)
-        XCTAssertEqual(BiomarkerCategory.category(for: "Calcium"), .vitamins)
         XCTAssertEqual(BiomarkerCategory.category(for: "D3"), .vitamins)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Thiamine"), .vitamins)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Riboflavin"), .vitamins)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Niacin"), .vitamins)
+    }
+
+    // MARK: - Category Mapping - Minerals
+
+    func testCategoryMapping_Minerals() {
+        XCTAssertEqual(BiomarkerCategory.category(for: "Iron"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Ferritin"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "TIBC"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Zinc"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Magnesium"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Calcium"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Potassium"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Sodium"), .minerals)
+        XCTAssertEqual(BiomarkerCategory.category(for: "Selenium"), .minerals)
     }
 
     // MARK: - Category Mapping - Inflammation
