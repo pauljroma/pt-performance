@@ -240,9 +240,11 @@ private struct StartStepView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.accentColor)
                         .padding(.bottom, 8)
+                        .accessibilityHidden(true)
 
                     Text("How would you like to build?")
                         .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Choose a starting point for your program")
                         .font(.body)
@@ -385,24 +387,11 @@ private struct TemplatePickerStepView: View {
             // Content
             if viewModel.isLoadingTemplates {
                 Spacer()
-                ProgressView("Loading templates...")
-                    .padding()
+                ProgramLoadingView("Loading templates...")
                 Spacer()
             } else if viewModel.filteredTemplates.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
-                    Image(systemName: "doc.text.magnifyingglass")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary)
-                    Text(viewModel.templateSearchText.isEmpty ? "No templates available" : "No matching templates")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    if !viewModel.templateSearchText.isEmpty {
-                        Text("Try a different search term")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                ProgramEmptyStateView.noTemplates(searchText: viewModel.templateSearchText)
                 Spacer()
             } else {
                 ScrollView {
@@ -594,6 +583,7 @@ private struct SelectedPatientCard: View {
                         .font(.title2.bold())
                         .foregroundColor(.accentColor)
                 )
+                .accessibilityHidden(true)
 
             // Info
             VStack(alignment: .leading, spacing: 4) {
@@ -619,6 +609,8 @@ private struct SelectedPatientCard: View {
                     .font(.title2)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Remove patient")
+            .accessibilityHint("Deselects \(patient.fullName) from this program")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -627,6 +619,8 @@ private struct SelectedPatientCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.accentColor, lineWidth: 2)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Selected patient: \(patient.fullName)")
     }
 }
 
@@ -642,6 +636,7 @@ private struct BasicsStepView: View {
                 VStack(spacing: 8) {
                     Text("Program Details")
                         .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Enter the basic information for your program")
                         .font(.body)
@@ -655,6 +650,8 @@ private struct BasicsStepView: View {
                     FormField(title: "Program Name") {
                         TextField("Enter program name", text: $viewModel.programName)
                             .textInputAutocapitalization(.words)
+                            .accessibilityLabel("Program name")
+                            .accessibilityHint("Enter a descriptive name for your program")
                     }
 
                     // Description
@@ -664,6 +661,8 @@ private struct BasicsStepView: View {
                             .padding(8)
                             .background(Color(.systemBackground))
                             .cornerRadius(8)
+                            .accessibilityLabel("Program description")
+                            .accessibilityHint("Optional description of the program goals")
                     }
 
                     // Category picker
@@ -687,6 +686,8 @@ private struct BasicsStepView: View {
                             }
                         }
                         .pickerStyle(.segmented)
+                        .accessibilityLabel("Difficulty level")
+                        .accessibilityValue(viewModel.difficultyLevel.capitalized)
                     }
 
                     // Duration
@@ -696,6 +697,9 @@ private struct BasicsStepView: View {
                             value: $viewModel.durationWeeks,
                             in: 1...52
                         )
+                        .accessibilityLabel("Program duration")
+                        .accessibilityValue("\(viewModel.durationWeeks) weeks")
+                        .accessibilityHint("Adjust duration between 1 and 52 weeks")
                     }
                 }
                 .padding(.horizontal, 20)
@@ -741,6 +745,7 @@ private struct PhasesStepView: View {
                 VStack(spacing: 8) {
                     Text("Program Phases")
                         .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Add phases to structure your program progression")
                         .font(.body)
@@ -786,6 +791,8 @@ private struct PhasesStepView: View {
                         .background(Color.accentColor.opacity(0.1))
                         .cornerRadius(12)
                     }
+                    .accessibilityLabel("Add phase")
+                    .accessibilityHint("Creates a new phase for your program")
                 }
                 .padding(.horizontal, 20)
 
@@ -794,6 +801,7 @@ private struct PhasesStepView: View {
                     Text("Total Duration: \(viewModel.totalPhaseDuration) weeks")
                         .font(.footnote)
                         .foregroundColor(.secondary)
+                        .accessibilityLabel("Total program duration: \(viewModel.totalPhaseDuration) weeks")
                 }
 
                 Spacer(minLength: 40)
@@ -806,24 +814,10 @@ private struct PhasesStepView: View {
 
 private struct EmptyPhasesCard: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "calendar.badge.plus")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-
-            Text("No phases yet")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text("Add phases to structure your program's progression")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        ProgramEmptyStateView.noPhases()
+            .padding(.vertical, 8)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(16)
     }
 }
 
@@ -840,6 +834,10 @@ private struct PhaseCard: View {
         return colors[(phaseNumber - 1) % colors.count]
     }
 
+    private var phaseName: String {
+        phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name
+    }
+
     var body: some View {
         Button(action: onEdit) {
             HStack(spacing: 16) {
@@ -849,10 +847,11 @@ private struct PhaseCard: View {
                     .foregroundColor(.white)
                     .frame(width: 36, height: 36)
                     .background(Circle().fill(phaseColor))
+                    .accessibilityHidden(true)
 
                 // Phase info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name)
+                    Text(phaseName)
                         .font(.headline)
                         .foregroundColor(.primary)
 
@@ -879,12 +878,17 @@ private struct PhaseCard: View {
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Phase options")
+                .accessibilityHint("Opens menu with edit and delete options")
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(16)
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(phaseName), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts")
+        .accessibilityHint("Double tap to edit phase details")
     }
 }
 
@@ -902,6 +906,7 @@ private struct WorkoutsStepView: View {
                 VStack(spacing: 8) {
                     Text("Assign Workouts")
                         .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Add workouts to each phase of your program")
                         .font(.body)
@@ -912,21 +917,12 @@ private struct WorkoutsStepView: View {
 
                 // Phases with workout counts
                 if viewModel.phases.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 40))
-                            .foregroundColor(.orange)
-
-                        Text("No phases added")
-                            .font(.headline)
-
-                        Text("Go back and add phases before assigning workouts")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(32)
-                    .frame(maxWidth: .infinity)
+                    ProgramErrorView(
+                        title: "No Phases Added",
+                        message: "Go back and add phases before assigning workouts.",
+                        icon: "exclamationmark.triangle",
+                        iconColor: .orange
+                    )
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(16)
                     .padding(.horizontal, 20)
@@ -972,6 +968,10 @@ private struct PhaseWorkoutCard: View {
         return colors[(phaseNumber - 1) % colors.count]
     }
 
+    private var phaseName: String {
+        phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name
+    }
+
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
@@ -983,7 +983,7 @@ private struct PhaseWorkoutCard: View {
                         .frame(width: 24, height: 24)
                         .background(Circle().fill(phaseColor))
 
-                    Text(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name)
+                    Text(phaseName)
                         .font(.headline)
 
                     Spacer()
@@ -995,6 +995,7 @@ private struct PhaseWorkoutCard: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                 }
 
                 // Workout summary or empty state
@@ -1020,6 +1021,8 @@ private struct PhaseWorkoutCard: View {
             .cornerRadius(16)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(phaseName), \(phase.workoutAssignments.count) workouts")
+        .accessibilityHint(phase.workoutAssignments.isEmpty ? "Tap to add workouts" : "Tap to edit workouts")
     }
 }
 
@@ -1038,9 +1041,11 @@ private struct PreviewStepView: View {
                         .font(.system(size: 60))
                         .foregroundColor(.green)
                         .padding(.bottom, 8)
+                        .accessibilityHidden(true)
 
                     Text("Review Your Program")
                         .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Make sure everything looks good before publishing")
                         .font(.body)
@@ -1125,6 +1130,7 @@ private struct SummaryCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             content
         }
@@ -1152,6 +1158,8 @@ private struct SummaryRow: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.trailing)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

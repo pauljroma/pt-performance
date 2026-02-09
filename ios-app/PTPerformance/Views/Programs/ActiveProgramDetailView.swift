@@ -22,6 +22,7 @@ struct ActiveProgramDetailView: View {
     @State private var workoutToPlay: ProgramScheduleWorkout?
     @State private var selectedPhaseSession: BaseballProgramStructure.SessionWithExercises?
     @State private var phaseSessionToPlay: BaseballProgramStructure.SessionWithExercises?
+    @State private var showWorkoutHistory = false
 
     init(enrollment: EnrollmentWithProgram) {
         self.enrollment = enrollment
@@ -37,6 +38,9 @@ struct ActiveProgramDetailView: View {
 
                     // Progress Overview
                     progressOverview
+
+                    // Workout History Section
+                    workoutHistorySection
 
                     // Phase Timeline
                     phaseTimeline
@@ -100,6 +104,9 @@ struct ActiveProgramDetailView: View {
             .fullScreenCover(item: $phaseSessionToPlay) { session in
                 PhaseSessionPlayerWrapper(session: session)
             }
+            .sheet(isPresented: $showWorkoutHistory) {
+                ProgramWorkoutHistoryView(enrollment: enrollment)
+            }
             .confirmationDialog(
                 "Leave Program",
                 isPresented: $showLeaveConfirmation,
@@ -144,6 +151,7 @@ struct ActiveProgramDetailView: View {
                 .padding(.vertical, 4)
                 .background(enrollment.enrollment.enrollmentStatus.color.opacity(0.15))
                 .cornerRadius(6)
+                .accessibilityLabel("Status: \(enrollment.enrollment.enrollmentStatus.displayName)")
 
                 Spacer()
             }
@@ -152,6 +160,7 @@ struct ActiveProgramDetailView: View {
             Text(enrollment.program.title)
                 .font(.title2)
                 .fontWeight(.bold)
+                .accessibilityAddTraits(.isHeader)
 
             // Author and dates
             HStack(spacing: 16) {
@@ -159,11 +168,13 @@ struct ActiveProgramDetailView: View {
                     Label(author, systemImage: "person.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityLabel("Author: \(author)")
                 }
 
                 Label(enrollment.program.formattedDuration, systemImage: "calendar")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityLabel("Duration: \(enrollment.program.formattedDuration)")
 
                 ProgramDifficultyBadge(difficulty: enrollment.program.difficultyLevel)
             }
@@ -176,10 +187,13 @@ struct ActiveProgramDetailView: View {
                     .font(.caption)
             }
             .foregroundColor(.secondary)
+            .accessibilityElement(children: .combine)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Program: \(enrollment.program.title)")
     }
 
     // MARK: - Progress Overview
@@ -188,6 +202,7 @@ struct ActiveProgramDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(LocalizedStrings.SectionHeaders.yourProgress)
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: 20) {
                 // Current Week
@@ -200,6 +215,8 @@ struct ActiveProgramDetailView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Week \(viewModel.currentWeek) of \(enrollment.program.durationWeeks)")
 
                 Spacer()
 
@@ -225,7 +242,9 @@ struct ActiveProgramDetailView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .accessibilityLabel("\(viewModel.progressPercentage) percent complete")
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Program progress: \(viewModel.progressPercentage) percent complete")
+                .accessibilityValue("\(viewModel.completedWorkouts) of \(viewModel.completedWorkouts + viewModel.remainingWorkouts) workouts completed")
             }
 
             // Workout Stats
@@ -277,12 +296,80 @@ struct ActiveProgramDetailView: View {
         .accessibilityLabel("\(label): \(value)")
     }
 
+    // MARK: - Workout History Section
+
+    private var workoutHistorySection: some View {
+        Button {
+            HapticFeedback.light()
+            showWorkoutHistory = true
+        } label: {
+            HStack(spacing: 12) {
+                // History Icon
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+                    .frame(width: 44, height: 44)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(10)
+                    .accessibilityHidden(true)
+
+                // Content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Workout History")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    HStack(spacing: 12) {
+                        // Completed count
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.green)
+                            Text("\(viewModel.completedWorkouts) completed")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        // Streak indicator if applicable
+                        if !viewModel.completedWorkoutIds.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "flame.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.orange)
+                                Text("View details")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
+            }
+            .padding(12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(DesignTokens.cornerRadiusMedium)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Workout History, \(viewModel.completedWorkouts) workouts completed")
+        .accessibilityHint("Double tap to view your completed workouts from this program")
+        .accessibilityAddTraits(.isButton)
+    }
+
     // MARK: - Phase Timeline
 
     private var phaseTimeline: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Program Phases")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             if viewModel.phases.isEmpty && !viewModel.isLoading {
                 Text("Phase information not available")
@@ -304,6 +391,7 @@ struct ActiveProgramDetailView: View {
                         }
                     }
                 }
+                .accessibilityLabel("Phase timeline with \(viewModel.phases.count) phases")
             }
         }
         .padding()
@@ -311,65 +399,29 @@ struct ActiveProgramDetailView: View {
         .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
 
+
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-            Text("Loading program structure...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        ProgramLoadingView("Loading program structure...")
     }
 
     // MARK: - Error View
 
     private func errorView(_ message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundColor(.orange)
-
-            Text("Couldn't Load Program")
-                .font(.headline)
-
-            Text(message)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-
-            Button("Try Again") {
-                Task {
-                    await viewModel.loadProgramStructure()
-                }
+        ProgramErrorView.loadingFailed(message) {
+            Task {
+                await viewModel.loadProgramStructure()
             }
-            .buttonStyle(.bordered)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
     }
 
     // MARK: - Empty Program View
 
     private var emptyProgramView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 48))
-                .foregroundColor(.blue.opacity(0.7))
-
-            Text("Program Template")
-                .font(.headline)
-
-            Text("This is a program template. Workouts will appear once your therapist customizes it for you.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .frame(maxWidth: .infinity)
+        ProgramEmptyStateView.programTemplate()
     }
+
 
     // MARK: - Phase-Based Content
 
@@ -379,6 +431,7 @@ struct ActiveProgramDetailView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Workout Schedule")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(structure.phases, id: \.phase.id) { phaseWithSessions in
                     ProgramPhaseSection(
@@ -402,11 +455,13 @@ struct ActiveProgramDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(LocalizedStrings.SectionHeaders.workoutSchedule)
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(viewModel.weeks) { week in
                 ProgramWeekSection(
                     week: week,
                     isCurrentWeek: week.weekNumber == viewModel.currentWeek,
+                    completedWorkoutIds: viewModel.completedWorkoutIds,
                     onWorkoutTap: { workout in
                         selectedWorkout = workout
                     }
@@ -424,6 +479,7 @@ struct ActiveProgramDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Program Options")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
             Button {
                 HapticFeedback.warning()
@@ -436,6 +492,7 @@ struct ActiveProgramDetailView: View {
                         .frame(width: 44, height: 44)
                         .background(Color.red.opacity(0.1))
                         .cornerRadius(10)
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Leave Program")
@@ -453,10 +510,12 @@ struct ActiveProgramDetailView: View {
                     if isProcessing {
                         ProgressView()
                             .scaleEffect(0.8)
+                            .accessibilityLabel("Processing")
                     } else {
                         Image(systemName: "chevron.right")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .accessibilityHidden(true)
                     }
                 }
                 .padding(12)
@@ -466,6 +525,7 @@ struct ActiveProgramDetailView: View {
             .disabled(isProcessing)
             .accessibilityLabel("Leave program")
             .accessibilityHint("Double tap to stop participating in this program")
+            .accessibilityAddTraits(.isButton)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -693,6 +753,8 @@ private struct ProgramSessionCard: View {
                         .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(showExercises ? "Collapse exercises" : "Expand exercises")
+                .accessibilityHint("Shows the list of exercises in this session")
 
                 // Start Button
                 Button {
@@ -705,6 +767,7 @@ private struct ProgramSessionCard: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Start \(sessionWithExercises.session.name)")
+                .accessibilityHint("Begins the workout session")
             }
             .padding(12)
             .background(Color(.systemBackground))
@@ -722,6 +785,7 @@ private struct ProgramSessionCard: View {
                                 .foregroundColor(.white)
                                 .frame(width: 20, height: 20)
                                 .background(Circle().fill(Color.blue))
+                                .accessibilityHidden(true)
 
                             Text(exercise.exerciseTemplate?.name ?? "Exercise")
                                 .font(.caption)
@@ -739,11 +803,15 @@ private struct ProgramSessionCard: View {
                         .padding(.vertical, 6)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(6)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Exercise \(exercise.sequence): \(exercise.exerciseTemplate?.name ?? "Exercise")\(exercise.targetSets != nil && exercise.targetReps != nil ? ", \(exercise.targetSets!) sets of \(exercise.targetReps!) reps" : "")")
                     }
                 }
                 .padding(.leading, 24)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(sessionWithExercises.session.name), \(sessionWithExercises.exercises.count) exercises\(sessionWithExercises.session.isThrowingDay == true ? ", throwing day" : "")")
     }
 }
 
@@ -752,13 +820,20 @@ private struct ProgramSessionCard: View {
 private struct ProgramWeekSection: View {
     let week: ProgramScheduleWeek
     let isCurrentWeek: Bool
+    let completedWorkoutIds: Set<UUID>
     let onWorkoutTap: (ProgramScheduleWorkout) -> Void
 
     @State private var isExpanded: Bool
 
-    init(week: ProgramScheduleWeek, isCurrentWeek: Bool, onWorkoutTap: @escaping (ProgramScheduleWorkout) -> Void) {
+    /// Count of completed workouts in this week
+    private var completedCount: Int {
+        week.days.flatMap { $0.workouts }.filter { completedWorkoutIds.contains($0.templateId) }.count
+    }
+
+    init(week: ProgramScheduleWeek, isCurrentWeek: Bool, completedWorkoutIds: Set<UUID>, onWorkoutTap: @escaping (ProgramScheduleWorkout) -> Void) {
         self.week = week
         self.isCurrentWeek = isCurrentWeek
+        self.completedWorkoutIds = completedWorkoutIds
         self.onWorkoutTap = onWorkoutTap
         self._isExpanded = State(initialValue: isCurrentWeek)
     }
@@ -789,6 +864,22 @@ private struct ProgramWeekSection: View {
                                     .background(Color.blue)
                                     .cornerRadius(4)
                             }
+
+                            // Week completion badge
+                            if completedCount > 0 {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.caption2)
+                                    Text("\(completedCount)/\(week.workoutCount)")
+                                        .font(.caption2)
+                                        .fontWeight(.medium)
+                                }
+                                .foregroundColor(.green)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.green.opacity(0.15))
+                                .cornerRadius(4)
+                            }
                         }
 
                         Text("\(week.workoutCount) workout\(week.workoutCount == 1 ? "" : "s")")
@@ -808,14 +899,14 @@ private struct ProgramWeekSection: View {
                 .cornerRadius(10)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(week.workoutCount) workouts")
+            .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(completedCount) of \(week.workoutCount) workouts completed")
             .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand")")
 
             // Week Content
             if isExpanded {
                 VStack(spacing: 8) {
                     ForEach(week.activeDays) { day in
-                        ProgramDayRow(day: day, onWorkoutTap: onWorkoutTap)
+                        ProgramDayRow(day: day, completedWorkoutIds: completedWorkoutIds, onWorkoutTap: onWorkoutTap)
                     }
 
                     if week.activeDays.isEmpty {
@@ -835,6 +926,7 @@ private struct ProgramWeekSection: View {
 
 private struct ProgramDayRow: View {
     let day: ProgramScheduleDay
+    let completedWorkoutIds: Set<UUID>
     let onWorkoutTap: (ProgramScheduleWorkout) -> Void
 
     var body: some View {
@@ -843,15 +935,20 @@ private struct ProgramDayRow: View {
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(.secondary)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(day.workouts) { workout in
-                ProgramWorkoutCard(workout: workout)
-                    .onTapGesture {
-                        HapticFeedback.light()
-                        onWorkoutTap(workout)
-                    }
+                ProgramWorkoutCard(
+                    workout: workout,
+                    isCompleted: completedWorkoutIds.contains(workout.templateId)
+                )
+                .onTapGesture {
+                    HapticFeedback.light()
+                    onWorkoutTap(workout)
+                }
             }
         }
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -859,23 +956,51 @@ private struct ProgramDayRow: View {
 
 private struct ProgramWorkoutCard: View {
     let workout: ProgramScheduleWorkout
+    var isCompleted: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
-            // Category Icon
-            Image(systemName: categoryIcon)
-                .font(.title3)
-                .foregroundColor(categoryColor)
-                .frame(width: 40, height: 40)
-                .background(categoryColor.opacity(0.15))
-                .cornerRadius(8)
+            // Category Icon with completion overlay
+            ZStack(alignment: .bottomTrailing) {
+                Image(systemName: categoryIcon)
+                    .font(.title3)
+                    .foregroundColor(isCompleted ? .gray : categoryColor)
+                    .frame(width: 40, height: 40)
+                    .background((isCompleted ? Color.gray : categoryColor).opacity(0.15))
+                    .cornerRadius(8)
+
+                // Completion checkmark
+                if isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .offset(x: 4, y: 4)
+                        .accessibilityHidden(true)
+                }
+            }
 
             // Workout Info
             VStack(alignment: .leading, spacing: 2) {
-                Text(workout.name)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(workout.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .foregroundColor(isCompleted ? .secondary : .primary)
+
+                    if isCompleted {
+                        Text("Done")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.15))
+                            .cornerRadius(4)
+                    }
+                }
 
                 HStack(spacing: 8) {
                     if let duration = workout.durationMinutes {
@@ -893,18 +1018,18 @@ private struct ProgramWorkoutCard: View {
 
             Spacer()
 
-            // Start Button
-            Image(systemName: "play.circle.fill")
+            // Action Button - replay or start
+            Image(systemName: isCompleted ? "arrow.clockwise.circle.fill" : "play.circle.fill")
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(isCompleted ? .green : .blue)
         }
         .padding(12)
         .background(Color(.systemBackground))
         .cornerRadius(10)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(workout.name)\(workout.durationMinutes.map { ", \($0) minutes" } ?? "")")
-        .accessibilityHint("Double tap to start workout")
+        .accessibilityLabel("\(workout.name)\(isCompleted ? ", completed" : "")\(workout.durationMinutes.map { ", \($0) minutes" } ?? "")")
+        .accessibilityHint(isCompleted ? "Double tap to repeat workout" : "Double tap to start workout")
     }
 
     private var categoryIcon: String {

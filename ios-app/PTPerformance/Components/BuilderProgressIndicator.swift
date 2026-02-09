@@ -13,6 +13,14 @@ struct BuilderProgressIndicator: View {
 
     private let allSteps = TherapistProgramBuilderViewModel.BuilderStep.allCases
 
+    private var completedSteps: Int {
+        currentStep.rawValue
+    }
+
+    private var totalSteps: Int {
+        allSteps.count
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             // Step dots
@@ -24,12 +32,16 @@ struct BuilderProgressIndicator: View {
                     )
                 }
             }
+            .accessibilityHidden(true)
 
             // Step label
             Text(currentStep.displayName)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress: Step \(completedSteps + 1) of \(totalSteps), \(currentStep.displayName)")
+        .accessibilityValue("\(completedSteps) steps completed")
     }
 }
 
@@ -92,6 +104,10 @@ struct BuilderProgressBar: View {
         return Double(currentStep.rawValue) / total
     }
 
+    private var progressPercentage: Int {
+        Int(progress * 100)
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             // Progress bar
@@ -110,6 +126,7 @@ struct BuilderProgressBar: View {
                 }
             }
             .frame(height: 4)
+            .accessibilityHidden(true)
 
             // Step indicator
             HStack {
@@ -124,6 +141,9 @@ struct BuilderProgressBar: View {
                     .foregroundColor(.secondary)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress: Step \(currentStep.rawValue + 1) of \(TherapistProgramBuilderViewModel.BuilderStep.allCases.count), \(currentStep.displayName)")
+        .accessibilityValue("\(progressPercentage) percent complete")
     }
 }
 

@@ -470,11 +470,7 @@ struct ProgramWorkoutExecutionView: View {
 
                 // Loading overlay
                 if viewModel.isLoading {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .tint(.white)
+                    ProgramLoadingOverlay("Saving exercise...")
                 }
             }
             .navigationTitle(viewModel.workoutName)
@@ -541,6 +537,7 @@ struct ProgramWorkoutExecutionView: View {
         HStack(spacing: 8) {
             Image(systemName: "calendar.badge.checkmark")
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
 
             Text(viewModel.headerSubtitle)
                 .font(.caption)
@@ -552,6 +549,8 @@ struct ProgramWorkoutExecutionView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .background(Color.blue.opacity(0.1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Program: \(viewModel.headerSubtitle)")
     }
 
     // MARK: - Exercise List Section
@@ -560,23 +559,29 @@ struct ProgramWorkoutExecutionView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Exercises")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
 
-            ForEach(viewModel.exercises) { exercise in
-                ExerciseListRow(
-                    exercise: exercise,
-                    isCompleted: viewModel.isExerciseCompleted(exercise),
-                    isSkipped: viewModel.isExerciseSkipped(exercise),
-                    isCurrent: viewModel.isCurrentExercise(exercise),
-                    exerciseNumber: (viewModel.exercises.firstIndex(where: { $0.id == exercise.id }) ?? 0) + 1,
-                    totalExercises: viewModel.totalExercises,
-                    onTap: {
-                        if !viewModel.isExerciseCompleted(exercise) && !viewModel.isExerciseSkipped(exercise) {
-                            viewModel.selectExercise(exercise)
+            if viewModel.exercises.isEmpty {
+                ProgramEmptyStateView.noExercises()
+            } else {
+                ForEach(viewModel.exercises) { exercise in
+                    ExerciseListRow(
+                        exercise: exercise,
+                        isCompleted: viewModel.isExerciseCompleted(exercise),
+                        isSkipped: viewModel.isExerciseSkipped(exercise),
+                        isCurrent: viewModel.isCurrentExercise(exercise),
+                        exerciseNumber: (viewModel.exercises.firstIndex(where: { $0.id == exercise.id }) ?? 0) + 1,
+                        totalExercises: viewModel.totalExercises,
+                        onTap: {
+                            if !viewModel.isExerciseCompleted(exercise) && !viewModel.isExerciseSkipped(exercise) {
+                                viewModel.selectExercise(exercise)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
+        .accessibilityLabel("Exercise list, \(viewModel.completedCount) of \(viewModel.totalExercises) completed")
     }
 
     // MARK: - Current Exercise Section
@@ -587,11 +592,14 @@ struct ProgramWorkoutExecutionView: View {
             HStack {
                 Text("Current Exercise")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 Text("Exercise \(viewModel.currentExerciseIndex + 1) of \(viewModel.totalExercises)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Current exercise: \(viewModel.currentExerciseIndex + 1) of \(viewModel.totalExercises)")
 
             // Exercise details card
             VStack(alignment: .leading, spacing: 16) {
@@ -600,6 +608,7 @@ struct ProgramWorkoutExecutionView: View {
                     Text(exercise.exerciseName)
                         .font(.title3)
                         .fontWeight(.bold)
+                        .accessibilityAddTraits(.isHeader)
 
                     // Target prescription
                     HStack(spacing: 16) {
@@ -609,6 +618,8 @@ struct ProgramWorkoutExecutionView: View {
                             targetPill(icon: "scalemass", value: "\(Int(load)) \(exercise.loadUnit ?? "lbs")")
                         }
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Target: \(exercise.targetSets ?? 0) sets of \(exercise.targetReps ?? "0") reps\(exercise.targetLoad != nil && exercise.targetLoad! > 0 ? " at \(Int(exercise.targetLoad!)) \(exercise.loadUnit ?? "lbs")" : "")")
                 }
 
                 Divider()
@@ -618,6 +629,7 @@ struct ProgramWorkoutExecutionView: View {
                     Text("Log Your Sets")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .accessibilityAddTraits(.isHeader)
 
                     ForEach(0..<viewModel.actualSets, id: \.self) { setIndex in
                         GestureSetRow(
@@ -642,6 +654,7 @@ struct ProgramWorkoutExecutionView: View {
                             prescribedWeight: exercise.targetLoad ?? 0,
                             loadUnit: viewModel.loadUnit
                         )
+                        .accessibilityLabel("Set \(setIndex + 1): \(viewModel.repsPerSet[safe: setIndex] ?? 10) reps at \(Int(viewModel.weightPerSet[safe: setIndex] ?? 0)) \(viewModel.loadUnit)")
                     }
                 }
 
@@ -659,12 +672,15 @@ struct ProgramWorkoutExecutionView: View {
                     TextField("Add notes...", text: $viewModel.notes, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(2...4)
+                        .accessibilityLabel("Exercise notes")
+                        .accessibilityHint("Optional notes about this exercise")
                 }
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
         }
+        .accessibilityElement(children: .contain)
     }
 
     private func targetPill(icon: String, value: String) -> some View {
@@ -701,6 +717,7 @@ struct ProgramWorkoutExecutionView: View {
                     .tint(rpeColor(Int(viewModel.rpe)))
                     .accessibilityLabel("RPE Effort level")
                     .accessibilityValue("\(Int(viewModel.rpe)) out of 10")
+                    .accessibilityHint("1 is easy, 10 is max effort")
 
                 HStack {
                     Text("Easy")
@@ -711,6 +728,7 @@ struct ProgramWorkoutExecutionView: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityHidden(true)
             }
 
             // Pain slider
@@ -730,6 +748,7 @@ struct ProgramWorkoutExecutionView: View {
                     .tint(painColor(Int(viewModel.painScore)))
                     .accessibilityLabel("Pain level")
                     .accessibilityValue("\(Int(viewModel.painScore)) out of 10")
+                    .accessibilityHint("0 is no pain, 10 is severe pain")
 
                 HStack {
                     Text("No Pain")
@@ -740,6 +759,7 @@ struct ProgramWorkoutExecutionView: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityHidden(true)
             }
         }
     }
@@ -760,6 +780,8 @@ struct ProgramWorkoutExecutionView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(viewModel.currentExercise == nil)
+                .accessibilityLabel("Skip exercise")
+                .accessibilityHint("Skips the current exercise and moves to the next one")
 
                 // Complete button
                 Button {
@@ -772,6 +794,8 @@ struct ProgramWorkoutExecutionView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(viewModel.currentExercise == nil || viewModel.isLoading)
+                .accessibilityLabel("Complete exercise")
+                .accessibilityHint("Saves your logged sets and marks exercise as complete")
             }
 
             // Quick complete option
@@ -786,6 +810,8 @@ struct ProgramWorkoutExecutionView: View {
                         .foregroundColor(.blue)
                 }
                 .disabled(viewModel.isLoading)
+                .accessibilityLabel("Quick complete with prescribed values")
+                .accessibilityHint("Completes exercise using the target sets and reps")
             }
 
             // Finish workout button (when exercises are done)
@@ -804,6 +830,9 @@ struct ProgramWorkoutExecutionView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(viewModel.allExercisesCompleted ? .green : .orange)
                 .disabled(viewModel.isLoading)
+                .accessibilityLabel(viewModel.allExercisesCompleted ? "Finish workout" : "Finish workout early")
+                .accessibilityHint("Saves your workout and shows completion summary")
+                .accessibilityValue("\(viewModel.completedCount) of \(viewModel.totalExercises) exercises completed")
             }
         }
         .padding()

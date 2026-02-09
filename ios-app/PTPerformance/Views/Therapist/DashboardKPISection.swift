@@ -19,6 +19,7 @@ struct DashboardKPISection: View {
     var onCreateProgram: () -> Void
     var onCreateTemplate: (() -> Void)?
     var onViewReports: () -> Void
+    var onViewAnalytics: (() -> Void)?
     var onSessionTap: ((TherapistSessionItem) -> Void)?
 
     // MARK: - Computed Properties
@@ -187,9 +188,9 @@ struct DashboardKPISection: View {
             }
             .padding(.horizontal)
 
-            // Second row with template builder
-            if let onCreateTemplate = onCreateTemplate {
-                HStack(spacing: 12) {
+            // Second row with template builder and analytics
+            HStack(spacing: 12) {
+                if let onCreateTemplate = onCreateTemplate {
                     QuickActionButton(
                         icon: "dumbbell.fill",
                         title: "Create Template",
@@ -198,16 +199,31 @@ struct DashboardKPISection: View {
                     )
                     .accessibilityLabel("Create workout template")
                     .accessibilityHint("Opens the workout template builder")
+                }
 
-                    // Placeholder for balance (hidden but maintains grid alignment)
-                    Color.clear
-                        .frame(maxWidth: .infinity)
+                if let onViewAnalytics = onViewAnalytics {
+                    QuickActionButton(
+                        icon: "chart.bar.xaxis",
+                        title: "Analytics",
+                        color: .teal,
+                        action: onViewAnalytics
+                    )
+                    .accessibilityLabel("View program analytics")
+                    .accessibilityHint("Opens the program analytics dashboard")
+                }
 
+                // Placeholder for balance (hidden but maintains grid alignment)
+                if onCreateTemplate == nil || onViewAnalytics == nil {
                     Color.clear
                         .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal)
+
+                if onCreateTemplate == nil && onViewAnalytics == nil {
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                }
             }
+            .padding(.horizontal)
         }
     }
 
@@ -533,6 +549,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 onCreateProgram: { print("Create Program tapped") },
                 onCreateTemplate: { print("Create Template tapped") },
                 onViewReports: { print("View Reports tapped") },
+                onViewAnalytics: { print("View Analytics tapped") },
                 onSessionTap: { item in print("Session tapped: \(item.patient.fullName)") }
             )
             .padding(.vertical)
@@ -550,6 +567,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 onCreateProgram: {},
                 onCreateTemplate: {},
                 onViewReports: {},
+                onViewAnalytics: {},
                 onSessionTap: nil
             )
             .padding(.vertical)
@@ -568,6 +586,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 onCreateProgram: {},
                 onCreateTemplate: nil,
                 onViewReports: {},
+                onViewAnalytics: nil,
                 onSessionTap: nil
             )
             .padding(.vertical)

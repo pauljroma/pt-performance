@@ -19,6 +19,7 @@ struct TherapistDashboardView: View {
     @State private var showCreateTemplate = false
     @State private var showReports = false
     @State private var showEscalationQueue = false
+    @State private var showProgramAnalytics = false
     @State private var selectedEscalation: RiskEscalation?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var appState: AppState
@@ -53,6 +54,10 @@ struct TherapistDashboardView: View {
         }
         .sheet(isPresented: $showCreateTemplate) {
             WorkoutTemplateBuilderView()
+        }
+        .sheet(isPresented: $showProgramAnalytics) {
+            ProgramAnalyticsDashboardView()
+                .environmentObject(appState)
         }
         .sheet(item: $selectedEscalation) { escalation in
             EscalationDetailSheet(
@@ -198,6 +203,7 @@ struct TherapistDashboardView: View {
                     onCreateProgram: { showCreateProgram = true },
                     onCreateTemplate: { showCreateTemplate = true },
                     onViewReports: { showReports = true },
+                    onViewAnalytics: { showProgramAnalytics = true },
                     onSessionTap: { item in
                         handlePatientSelection(item.patient)
                     }

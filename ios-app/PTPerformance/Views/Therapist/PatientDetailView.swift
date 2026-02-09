@@ -15,6 +15,7 @@ struct PatientDetailView: View {
     @State private var showAssessmentHistory = false
     @State private var showWeeklyReports = false
     @State private var showGenerateWeeklyReport = false
+    @State private var showProgramProgress = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -111,7 +112,8 @@ struct PatientDetailView: View {
                         onPrescribeWorkout: { showPrescribeWorkout = true },
                         onGenerateReport: { showReportBuilder = true },
                         onNewAssessment: { showIntakeAssessment = true },
-                        onNewSOAPNote: { showSOAPNote = true }
+                        onNewSOAPNote: { showSOAPNote = true },
+                        onProgramProgress: { showProgramProgress = true }
                     )
                 }
             }
@@ -151,6 +153,12 @@ struct PatientDetailView: View {
                         showProgressReport = true
                     } label: {
                         Label("View Progress Summary", systemImage: "chart.line.uptrend.xyaxis")
+                    }
+
+                    Button {
+                        showProgramProgress = true
+                    } label: {
+                        Label("Program Progress", systemImage: "chart.bar.doc.horizontal")
                     }
 
                     Divider()
@@ -257,6 +265,18 @@ struct PatientDetailView: View {
                 GenerateWeeklyReportSheet(patient: patient, onDismiss: {
                     showGenerateWeeklyReport = false
                 })
+            }
+        }
+        .sheet(isPresented: $showProgramProgress) {
+            NavigationView {
+                PatientProgramProgressView(patient: patient)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Close") {
+                                showProgramProgress = false
+                            }
+                        }
+                    }
             }
         }
     }
@@ -472,6 +492,7 @@ struct QuickActionsCard: View {
     var onGenerateReport: (() -> Void)? = nil
     var onNewAssessment: (() -> Void)? = nil
     var onNewSOAPNote: (() -> Void)? = nil
+    var onProgramProgress: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 12) {
@@ -528,6 +549,15 @@ struct QuickActionsCard: View {
                         icon: "doc.text",
                         color: .indigo,
                         action: onNewSOAPNote
+                    )
+                }
+
+                if let onProgramProgress = onProgramProgress {
+                    ActionButton(
+                        title: "Program Progress",
+                        icon: "chart.bar.doc.horizontal",
+                        color: .cyan,
+                        action: onProgramProgress
                     )
                 }
             }

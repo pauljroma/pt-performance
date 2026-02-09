@@ -299,22 +299,24 @@ struct WorkoutTemplateBuilderView: View {
     // MARK: - Empty Exercises View
 
     private var emptyExercisesView: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 16) {
             Image(systemName: "dumbbell")
-                .font(.largeTitle)
+                .font(.system(size: 48))
                 .foregroundColor(.secondary)
-                .accessibilityHidden(true)
 
-            Text("No exercises added")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            Text("No Exercises Added")
+                .font(.headline)
+                .multilineTextAlignment(.center)
 
             Text("Tap 'Add Exercise' to get started")
-                .font(.caption)
-                .foregroundColor(.secondary.opacity(0.8))
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
+        .padding(.vertical, 40)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No exercises added. Tap Add Exercise to get started")
     }
 
     // MARK: - Saving Overlay
@@ -327,6 +329,7 @@ struct WorkoutTemplateBuilderView: View {
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
+                    .tint(.white)
 
                 Text("Saving Template...")
                     .font(.headline)
@@ -337,6 +340,9 @@ struct WorkoutTemplateBuilderView: View {
             .cornerRadius(16)
             .shadow(radius: 10)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Saving template")
+        .accessibilityAddTraits(.isModal)
     }
 
     // MARK: - Actions
@@ -397,11 +403,14 @@ private struct TemplateExerciseRowView: View {
                                     .font(.body.monospacedDigit())
                                     .frame(minWidth: 24)
                             }
+                            .accessibilityLabel("Number of sets")
+                            .accessibilityValue("\(exercise.sets) sets")
                         }
 
                         Divider()
                             .frame(height: 40)
                             .padding(.horizontal, 8)
+                            .accessibilityHidden(true)
 
                         // Reps input
                         VStack(alignment: .leading, spacing: 4) {
@@ -415,6 +424,8 @@ private struct TemplateExerciseRowView: View {
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 80)
                             .keyboardType(.default)
+                            .accessibilityLabel("Repetitions per set")
+                            .accessibilityHint("Enter number or range like 8-10")
                         }
                     }
 
@@ -428,6 +439,8 @@ private struct TemplateExerciseRowView: View {
                             set: { onUpdate(nil, nil, nil, $0) }
                         ))
                         .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Exercise notes")
+                        .accessibilityHint("Optional instructions or tips for this exercise")
                     }
                 }
                 .padding(.vertical, 8)
@@ -554,8 +567,10 @@ private struct ExerciseSuggestionsView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
+                .accessibilityAddTraits(.isHeader)
 
             Divider()
+                .accessibilityHidden(true)
 
             ForEach(suggestions, id: \.id) { template in
                 Button {
@@ -595,16 +610,20 @@ private struct ExerciseSuggestionsView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(.blue)
                             .font(.title3)
+                            .accessibilityHidden(true)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Add \(template.name)")
+                .accessibilityHint("Selects this exercise from the library")
 
                 if template.id != suggestions.last?.id {
                     Divider()
                         .padding(.leading, 12)
+                        .accessibilityHidden(true)
                 }
             }
         }
@@ -614,6 +633,7 @@ private struct ExerciseSuggestionsView: View {
             RoundedRectangle(cornerRadius: 10)
                 .stroke(Color(uiColor: .separator), lineWidth: 0.5)
         )
+        .accessibilityLabel("Exercise suggestions, \(suggestions.count) results")
     }
 }
 
@@ -631,6 +651,7 @@ private struct EquipmentTag: View {
             .padding(.vertical, 4)
             .background(Color.blue.opacity(0.1))
             .cornerRadius(6)
+            .accessibilityLabel("Equipment: \(text)")
     }
 }
 
@@ -648,6 +669,7 @@ private struct TagBadge: View {
             .padding(.vertical, 4)
             .background(Color.purple.opacity(0.1))
             .cornerRadius(6)
+            .accessibilityLabel("Tag: \(text)")
     }
 }
 
