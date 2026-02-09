@@ -3,7 +3,7 @@
 //  PTPerformance
 //
 //  Enhanced step-by-step wizard for building programs
-//  6 steps: Start, Patient, Basics, Phases, Workouts, Preview
+//  7 steps: Start, Template (conditional), Patient, Basics, Phases, Workouts, Preview
 //
 
 import SwiftUI
@@ -25,8 +25,8 @@ struct EnhancedProgramBuilderView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Progress indicator (hide on start and preview)
-                    if viewModel.currentStep != .start && viewModel.currentStep != .preview {
+                    // Progress indicator (hide on start, templatePicker, and preview)
+                    if viewModel.currentStep != .start && viewModel.currentStep != .templatePicker && viewModel.currentStep != .preview {
                         BuilderProgressIndicator(currentStep: viewModel.currentStep)
                             .padding(.top, 8)
                             .padding(.horizontal)
@@ -38,6 +38,9 @@ struct EnhancedProgramBuilderView: View {
                             selectedMode: $viewModel.creationMode
                         )
                         .tag(TherapistProgramBuilderViewModel.BuilderStep.start)
+
+                        TemplatePickerStepView(viewModel: viewModel)
+                            .tag(TherapistProgramBuilderViewModel.BuilderStep.templatePicker)
 
                         PatientStepView(
                             selectedPatient: $viewModel.selectedPatient,
@@ -126,6 +129,8 @@ struct EnhancedProgramBuilderView: View {
         switch viewModel.currentStep {
         case .start:
             return "Create Program"
+        case .templatePicker:
+            return "Choose Template"
         case .patient:
             return "Select Patient"
         case .basics:
@@ -200,6 +205,8 @@ struct EnhancedProgramBuilderView: View {
         switch viewModel.currentStep {
         case .start:
             return "Get Started"
+        case .templatePicker:
+            return "Use Template"
         case .preview:
             return "Publish Program"
         default:
@@ -321,6 +328,185 @@ private struct CreationModeCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(mode.title). \(mode.description)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+// MARK: - Template Picker Step View
+
+private struct TemplatePickerStepView: View {
+    @ObservedObject var viewModel: TherapistProgramBuilderViewModel
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            VStack(spacing: 8) {
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 60))
+                    .foregroundColor(.accentColor)
+                    .padding(.bottom, 8)
+
+                Text("Choose a Template")
+                    .font(.system(size: 28, weight: .bold))
+
+                Text("Select an existing program to use as your starting point")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            .padding(.top, 24)
+            .padding(.bottom, 16)
+
+            // Search bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+
+                TextField("Search templates...", text: $viewModel.templateSearchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .autocorrectionDisabled()
+
+                if !viewModel.templateSearchText.isEmpty {
+                    Button {
+                        viewModel.templateSearchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+
+            // Content
+            if viewModel.isLoadingTemplates {
+                Spacer()
+                ProgressView("Loading templates...")
+                    .padding()
+                Spacer()
+            } else if viewModel.filteredTemplates.isEmpty {
+                Spacer()
+                VStack(spacing: 12) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+                    Text(viewModel.templateSearchText.isEmpty ? "No templates available" : "No matching templates")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    if !viewModel.templateSearchText.isEmpty {
+                        Text("Try a different search term")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(viewModel.filteredTemplates) { template in
+                            ProgramTemplateCard(
+                                template: template,
+                                isSelected: viewModel.selectedTemplate?.id == template.id,
+                                onTap: {
+                                    Task {
+                                        await viewModel.applyTemplate(template)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+            }
+        }
+        .task {
+            await viewModel.loadTemplates()
+        }
+    }
+}
+
+// MARK: - Template Card
+
+private struct ProgramTemplateCard: View {
+    let template: ProgramLibrary
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                // Category icon
+                Image(systemName: template.categoryIcon)
+                    .font(.system(size: 24))
+                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .frame(width: 50, height: 50)
+                    .background(isSelected ? Color.accentColor : Color.accentColor.opacity(0.1))
+                    .cornerRadius(10)
+
+                // Template info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(template.title)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
+                    HStack(spacing: 8) {
+                        // Category badge
+                        Text(template.category.capitalized)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(4)
+
+                        // Difficulty badge
+                        Text(template.difficultyLevel.capitalized)
+                            .font(.caption)
+                            .foregroundColor(template.difficultyColor)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(template.difficultyColor.opacity(0.1))
+                            .cornerRadius(4)
+
+                        // Duration
+                        Text(template.formattedDuration)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let description = template.description, !description.isEmpty {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                Spacer()
+
+                // Selection indicator
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.accentColor)
+                }
+            }
+            .padding()
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(template.title). \(template.category) program. \(template.difficultyLevel) difficulty. \(template.formattedDuration).")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

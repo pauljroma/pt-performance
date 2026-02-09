@@ -17,6 +17,7 @@ struct DashboardKPISection: View {
 
     var onAddPatient: () -> Void
     var onCreateProgram: () -> Void
+    var onCreateTemplate: (() -> Void)?
     var onViewReports: () -> Void
     var onSessionTap: ((TherapistSessionItem) -> Void)?
 
@@ -155,6 +156,7 @@ struct DashboardKPISection: View {
                 .fontWeight(.bold)
                 .padding(.horizontal)
 
+            // First row of actions
             HStack(spacing: 12) {
                 QuickActionButton(
                     icon: "person.badge.plus",
@@ -184,6 +186,28 @@ struct DashboardKPISection: View {
                 .accessibilityHint("Opens the reporting dashboard")
             }
             .padding(.horizontal)
+
+            // Second row with template builder
+            if let onCreateTemplate = onCreateTemplate {
+                HStack(spacing: 12) {
+                    QuickActionButton(
+                        icon: "dumbbell.fill",
+                        title: "Create Template",
+                        color: .purple,
+                        action: onCreateTemplate
+                    )
+                    .accessibilityLabel("Create workout template")
+                    .accessibilityHint("Opens the workout template builder")
+
+                    // Placeholder for balance (hidden but maintains grid alignment)
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal)
+            }
         }
     }
 
@@ -507,6 +531,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 upcomingSessions: TherapistSessionItem.sampleListForKPI,
                 onAddPatient: { print("Add Patient tapped") },
                 onCreateProgram: { print("Create Program tapped") },
+                onCreateTemplate: { print("Create Template tapped") },
                 onViewReports: { print("View Reports tapped") },
                 onSessionTap: { item in print("Session tapped: \(item.patient.fullName)") }
             )
@@ -523,6 +548,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 upcomingSessions: TherapistSessionItem.sampleListForKPI,
                 onAddPatient: {},
                 onCreateProgram: {},
+                onCreateTemplate: {},
                 onViewReports: {},
                 onSessionTap: nil
             )
@@ -540,6 +566,7 @@ struct DashboardKPISection_Previews: PreviewProvider {
                 upcomingSessions: [],
                 onAddPatient: {},
                 onCreateProgram: {},
+                onCreateTemplate: nil,
                 onViewReports: {},
                 onSessionTap: nil
             )

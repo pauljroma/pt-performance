@@ -16,6 +16,7 @@ struct TherapistDashboardView: View {
     @State private var showDebugLogs = false
     @State private var showAddPatient = false
     @State private var showCreateProgram = false
+    @State private var showCreateTemplate = false
     @State private var showReports = false
     @State private var showEscalationQueue = false
     @State private var selectedEscalation: RiskEscalation?
@@ -49,6 +50,9 @@ struct TherapistDashboardView: View {
         }
         .sheet(isPresented: $showEscalationQueue) {
             EscalationQueueView()
+        }
+        .sheet(isPresented: $showCreateTemplate) {
+            WorkoutTemplateBuilderView()
         }
         .sheet(item: $selectedEscalation) { escalation in
             EscalationDetailSheet(
@@ -192,6 +196,7 @@ struct TherapistDashboardView: View {
                     upcomingSessions: schedulingViewModel.sessions,
                     onAddPatient: { showAddPatient = true },
                     onCreateProgram: { showCreateProgram = true },
+                    onCreateTemplate: { showCreateTemplate = true },
                     onViewReports: { showReports = true },
                     onSessionTap: { item in
                         handlePatientSelection(item.patient)

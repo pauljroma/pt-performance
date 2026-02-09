@@ -67,15 +67,17 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     enum BuilderStep: Int, CaseIterable {
         case start = 0
-        case patient = 1
-        case basics = 2
-        case phases = 3
-        case workouts = 4
-        case preview = 5
+        case templatePicker = 1
+        case patient = 2
+        case basics = 3
+        case phases = 4
+        case workouts = 5
+        case preview = 6
 
         var displayName: String {
             switch self {
             case .start: return "Start"
+            case .templatePicker: return "Template"
             case .patient: return "Patient"
             case .basics: return "Basics"
             case .phases: return "Phases"
@@ -141,6 +143,13 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     @Published var phases: [TherapistPhaseData] = []
 
+    // MARK: - Published Properties - Template Selection
+
+    @Published var availableTemplates: [ProgramLibrary] = []
+    @Published var selectedTemplate: ProgramLibrary?
+    @Published var templateSearchText: String = ""
+    @Published var isLoadingTemplates: Bool = false
+
     // MARK: - Published Properties - State
 
     @Published var isLoading: Bool = false
@@ -150,6 +159,8 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     // MARK: - Private Properties
 
     private let supabase = PTSupabaseClient.shared
+    private let programLibraryService = ProgramLibraryService()
+    private let programBuilderService = ProgramBuilderService()
     private let logger = DebugLogger.shared
     private var createdProgramId: UUID?
 
@@ -185,6 +196,9 @@ class TherapistProgramBuilderViewModel: ObservableObject {
         case .start:
             // Always can proceed from start (mode is pre-selected)
             return true
+        case .templatePicker:
+            // Must select a template when in fromTemplate mode
+            return selectedTemplate != nil
         case .patient:
             // Patient is optional, can always proceed
             return true
@@ -207,7 +221,14 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     /// Advance to the next step
     func nextStep() {
-        guard let nextIndex = BuilderStep(rawValue: currentStep.rawValue + 1) else { return }
+        var nextRawValue = currentStep.rawValue + 1
+
+        // Skip templatePicker step unless in fromTemplate mode
+        if currentStep == .start && creationMode != .fromTemplate {
+            nextRawValue = BuilderStep.patient.rawValue
+        }
+
+        guard let nextIndex = BuilderStep(rawValue: nextRawValue) else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
             currentStep = nextIndex
         }
@@ -215,7 +236,14 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     /// Go back to the previous step
     func previousStep() {
-        guard let prevIndex = BuilderStep(rawValue: currentStep.rawValue - 1) else { return }
+        var prevRawValue = currentStep.rawValue - 1
+
+        // Skip templatePicker step when going back unless in fromTemplate mode
+        if currentStep == .patient && creationMode != .fromTemplate {
+            prevRawValue = BuilderStep.start.rawValue
+        }
+
+        guard let prevIndex = BuilderStep(rawValue: prevRawValue) else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
             currentStep = prevIndex
         }
@@ -243,6 +271,9 @@ class TherapistProgramBuilderViewModel: ObservableObject {
         equipmentInput = ""
         tagsInput = ""
         phases = []
+        availableTemplates = []
+        selectedTemplate = nil
+        templateSearchText = ""
         errorMessage = nil
         successMessage = nil
         createdProgramId = nil
@@ -316,6 +347,168 @@ class TherapistProgramBuilderViewModel: ObservableObject {
         for i in phases.indices {
             phases[i].sequence = i + 1
         }
+    }
+
+    // MARK: - Template Management
+
+    /// Computed property for filtered templates based on search text
+    var filteredTemplates: [ProgramLibrary] {
+        if templateSearchText.isEmpty {
+            return availableTemplates
+        }
+        let lowercasedSearch = templateSearchText.lowercased()
+        return availableTemplates.filter { template in
+            template.title.lowercased().contains(lowercasedSearch) ||
+            (template.description?.lowercased().contains(lowercasedSearch) ?? false) ||
+            template.category.lowercased().contains(lowercasedSearch) ||
+            (template.tagsList.contains { $0.lowercased().contains(lowercasedSearch) })
+        }
+    }
+
+    /// Load available program templates from the program_library table
+    func loadTemplates() async {
+        guard availableTemplates.isEmpty else { return } // Skip if already loaded
+
+        isLoadingTemplates = true
+        logger.log("Loading program templates from library...", level: .diagnostic)
+
+        do {
+            let templates = try await programLibraryService.fetchPrograms()
+            await MainActor.run {
+                self.availableTemplates = templates
+                self.isLoadingTemplates = false
+            }
+            logger.log("Loaded \(templates.count) program templates", level: .success)
+        } catch {
+            logger.log("Failed to load templates: \(error.localizedDescription)", level: .error)
+            await MainActor.run {
+                self.isLoadingTemplates = false
+                self.errorMessage = "Failed to load program templates. Please try again."
+            }
+        }
+    }
+
+    /// Apply a selected template to pre-fill the wizard state
+    /// Copies the program's metadata, phases, and workout assignments
+    func applyTemplate(_ template: ProgramLibrary) async {
+        logger.log("Applying template: \(template.title)", level: .diagnostic)
+        selectedTemplate = template
+
+        // Pre-fill basic program metadata from the template
+        programName = "\(template.title) (Copy)"
+        description = template.description ?? ""
+        category = template.category
+        difficultyLevel = template.difficultyLevel
+        durationWeeks = template.durationWeeks
+        equipmentRequired = template.equipment
+        tags = template.tagsList
+
+        // If the template has a linked program_id, fetch its phases and workout assignments
+        guard let programId = template.programId else {
+            logger.log("Template has no linked program_id, using metadata only", level: .warning)
+            return
+        }
+
+        isLoading = true
+
+        do {
+            // Fetch the full program structure including phases and workout assignments
+            let programWithPhases = try await programBuilderService.getProgram(id: programId)
+
+            // Convert PhaseWithAssignments to TherapistPhaseData
+            var newPhases: [TherapistPhaseData] = []
+
+            for phaseData in programWithPhases.phases {
+                // Fetch workout template names for the assignments
+                let workoutAssignments = await fetchWorkoutAssignmentNames(for: phaseData.assignments)
+
+                let therapistPhase = TherapistPhaseData(
+                    id: UUID(), // New ID for the copy
+                    name: phaseData.name,
+                    sequence: phaseData.sequence,
+                    durationWeeks: phaseData.durationWeeks ?? 4,
+                    goals: phaseData.goals ?? "",
+                    workoutAssignments: workoutAssignments
+                )
+                newPhases.append(therapistPhase)
+            }
+
+            await MainActor.run {
+                self.phases = newPhases
+                self.isLoading = false
+            }
+
+            logger.log("Applied template with \(newPhases.count) phases", level: .success)
+
+        } catch {
+            logger.log("Failed to load template phases: \(error.localizedDescription)", level: .error)
+            await MainActor.run {
+                self.isLoading = false
+                // Template metadata is already applied, just couldn't load phases
+                self.errorMessage = "Could not load template phases. You can add phases manually."
+            }
+        }
+    }
+
+    /// Helper to fetch workout template names for assignments
+    private func fetchWorkoutAssignmentNames(for assignments: [ProgramWorkoutAssignment]) async -> [TherapistWorkoutAssignment] {
+        var therapistAssignments: [TherapistWorkoutAssignment] = []
+
+        // Collect all template IDs
+        let templateIds = assignments.map { $0.templateId }
+
+        guard !templateIds.isEmpty else { return [] }
+
+        // Fetch template names in batch
+        do {
+            let response = try await supabase.client
+                .from("system_workout_templates")
+                .select("id, name")
+                .in("id", values: templateIds.map { $0.uuidString })
+                .execute()
+
+            struct TemplateNameRow: Codable {
+                let id: UUID
+                let name: String
+            }
+
+            let templateNames = try JSONDecoder().decode([TemplateNameRow].self, from: response.data)
+            let nameLookup = Dictionary(uniqueKeysWithValues: templateNames.map { ($0.id, $0.name) })
+
+            // Create therapist assignments with names
+            for assignment in assignments {
+                let templateName = nameLookup[assignment.templateId] ?? "Unknown Workout"
+                let therapistAssignment = TherapistWorkoutAssignment(
+                    id: UUID(), // New ID for the copy
+                    templateId: assignment.templateId,
+                    templateName: templateName,
+                    weekNumber: assignment.weekNumber,
+                    dayOfWeek: assignment.dayOfWeek
+                )
+                therapistAssignments.append(therapistAssignment)
+            }
+        } catch {
+            logger.log("Failed to fetch workout template names: \(error.localizedDescription)", level: .warning)
+            // Return assignments with placeholder names
+            for assignment in assignments {
+                let therapistAssignment = TherapistWorkoutAssignment(
+                    id: UUID(),
+                    templateId: assignment.templateId,
+                    templateName: "Workout",
+                    weekNumber: assignment.weekNumber,
+                    dayOfWeek: assignment.dayOfWeek
+                )
+                therapistAssignments.append(therapistAssignment)
+            }
+        }
+
+        return therapistAssignments
+    }
+
+    /// Clear template selection (allows re-selecting)
+    func clearTemplateSelection() {
+        selectedTemplate = nil
+        // Don't clear the pre-filled data - user might want to keep it
     }
 
     // MARK: - CRUD Operations
@@ -478,13 +671,46 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
             logger.log("Program published to library with ID: \(libraryEntry.id)", level: .success)
 
-            successMessage = "Program '\(programName)' published to library!"
+            // Auto-assign to patient if one was selected
+            if let patient = selectedPatient {
+                try await assignProgramToPatient(libraryEntryId: libraryEntry.id, patient: patient)
+                successMessage = "Program published and assigned to \(patient.fullName)!"
+            } else {
+                successMessage = "Program '\(programName)' published to library!"
+            }
 
         } catch {
             logger.log("Failed to publish to library: \(error)", level: .error)
             errorMessage = "Unable to publish your program. Please try again."
             throw error
         }
+    }
+
+    /// Assigns a program to a patient by creating a patient_programs record
+    /// - Parameters:
+    ///   - libraryEntryId: The ID of the program_library entry
+    ///   - patient: The patient to assign the program to
+    func assignProgramToPatient(libraryEntryId: UUID, patient: Patient) async throws {
+        guard let therapistId = supabase.userId else {
+            throw TherapistProgramBuilderError.assignmentFailed
+        }
+
+        logger.log("Assigning program to patient: \(patient.fullName)", level: .diagnostic)
+
+        let assignmentInput = TherapistPatientProgramInsert(
+            patientId: patient.id.uuidString,
+            templateId: libraryEntryId.uuidString,
+            therapistId: therapistId,
+            status: "active",
+            startDate: ISO8601DateFormatter().string(from: Date())
+        )
+
+        try await supabase.client
+            .from("patient_programs")
+            .insert(assignmentInput)
+            .execute()
+
+        logger.log("Program assigned to patient \(patient.fullName)", level: .success)
     }
 
     /// Gets the current therapist's name for the author field
@@ -590,6 +816,22 @@ private struct TherapistCreateLibraryEntryInput: Codable {
     }
 }
 
+private struct TherapistPatientProgramInsert: Codable {
+    let patientId: String
+    let templateId: String
+    let therapistId: String
+    let status: String
+    let startDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case patientId = "patient_id"
+        case templateId = "template_id"
+        case therapistId = "therapist_id"
+        case status
+        case startDate = "start_date"
+    }
+}
+
 // MARK: - Error Types
 
 enum TherapistProgramBuilderError: LocalizedError {
@@ -598,6 +840,7 @@ enum TherapistProgramBuilderError: LocalizedError {
     case programCreationFailed
     case phaseCreationFailed
     case publishFailed
+    case assignmentFailed
 
     var errorDescription: String? {
         switch self {
@@ -611,6 +854,8 @@ enum TherapistProgramBuilderError: LocalizedError {
             return "Failed to create phase"
         case .publishFailed:
             return "Failed to publish to library"
+        case .assignmentFailed:
+            return "Failed to assign program to patient"
         }
     }
 }
