@@ -1058,7 +1058,7 @@ final class SupplementTimingServiceTests: XCTestCase {
 
     func testSupplementTiming_AllCases() {
         let allCases = SupplementTiming.allCases
-        XCTAssertEqual(allCases.count, 8)
+        XCTAssertEqual(allCases.count, 9) // morning, afternoon, preWorkout, postWorkout, evening, beforeBed, withMeal, betweenMeals, anytime
     }
 
     func testSupplementTiming_RawValues() {
