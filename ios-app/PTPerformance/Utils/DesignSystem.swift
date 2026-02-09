@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Design System
 // Centralized design system with spacing, colors, animations, and haptic feedback
@@ -166,6 +167,39 @@ enum HapticFeedback {
         let generator = UIImpactFeedbackGenerator(style: .rigid)
         generator.prepare()
         generator.impactOccurred(intensity: 0.5)
+    }
+
+    /// Pull-to-refresh trigger feedback - light haptic to confirm refresh started
+    static func pullToRefresh() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred(intensity: 0.6)
+    }
+
+    /// Sheet/modal presentation feedback - subtle feedback for context switch
+    static func sheetPresented() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred(intensity: 0.4)
+    }
+
+    /// Toggle switch feedback - selection feedback for toggle state changes
+    static func toggle() {
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        generator.selectionChanged()
+    }
+
+    /// Form submission feedback with success/error indication
+    static func formSubmission(success: Bool) {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(success ? .success : .error)
+    }
+
+    /// Scroll threshold feedback - subtle feedback when crossing scroll thresholds
+    static func scrollThreshold() {
+        let generator = UIImpactFeedbackGenerator(style: .soft)
+        generator.impactOccurred(intensity: 0.3)
     }
 }
 
@@ -442,6 +476,137 @@ struct AdaptiveShadowModifier: ViewModifier {
     }
 }
 
+// MARK: - Haptic Feedback Modifiers
+
+/// Modifier that adds haptic feedback when a sheet is presented
+struct SheetHapticModifier<SheetContent: View>: ViewModifier {
+    @Binding var isPresented: Bool
+    let sheetContent: () -> SheetContent
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isPresented) {
+                sheetContent()
+            }
+            .onChange(of: isPresented) { _, newValue in
+                if newValue {
+                    HapticFeedback.sheetPresented()
+                }
+            }
+    }
+}
+
+/// Modifier that adds haptic feedback when a full screen cover is presented
+struct FullScreenCoverHapticModifier<CoverContent: View>: ViewModifier {
+    @Binding var isPresented: Bool
+    let coverContent: () -> CoverContent
+
+    func body(content: Content) -> some View {
+        content
+            .fullScreenCover(isPresented: $isPresented) {
+                coverContent()
+            }
+            .onChange(of: isPresented) { _, newValue in
+                if newValue {
+                    HapticFeedback.sheetPresented()
+                }
+            }
+    }
+}
+
+/// Modifier that provides haptic feedback at scroll thresholds
+/// Useful for indicating when user has scrolled past important points
+struct ScrollHapticModifier: ViewModifier {
+    let threshold: CGFloat
+    let onThresholdCrossed: (() -> Void)?
+
+    @State private var hasTriggered = false
+    @State private var scrollOffset: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .preference(
+                            key: ScrollOffsetPreferenceKey.self,
+                            value: geometry.frame(in: .named("scroll")).minY
+                        )
+                }
+            )
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                let previousOffset = scrollOffset
+                scrollOffset = offset
+
+                // Trigger haptic when crossing threshold (pull down past threshold)
+                if !hasTriggered && offset < -threshold && previousOffset >= -threshold {
+                    HapticFeedback.scrollThreshold()
+                    hasTriggered = true
+                    onThresholdCrossed?()
+                }
+
+                // Reset trigger when scrolling back up
+                if hasTriggered && offset > -threshold + 20 {
+                    hasTriggered = false
+                }
+            }
+    }
+}
+
+// Note: ScrollOffsetPreferenceKey is defined in ScrollAnimations.swift
+
+/// Modifier that wraps refreshable with haptic feedback
+struct RefreshableHapticModifier: ViewModifier {
+    let action: @Sendable () async -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .refreshable {
+                HapticFeedback.pullToRefresh()
+                await action()
+            }
+    }
+}
+
+/// Toggle style that provides haptic feedback on toggle
+struct HapticToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Toggle(configuration)
+            .onChange(of: configuration.isOn) { _, _ in
+                HapticFeedback.toggle()
+            }
+    }
+}
+
+/// Button style that provides haptic feedback on tap
+struct HapticButtonStyle: ButtonStyle {
+    let hapticType: HapticButtonType
+
+    enum HapticButtonType {
+        case light
+        case medium
+        case selection
+    }
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: AnimationDuration.quick), value: configuration.isPressed)
+            .onChange(of: configuration.isPressed) { _, isPressed in
+                if isPressed {
+                    switch hapticType {
+                    case .light:
+                        HapticFeedback.light()
+                    case .medium:
+                        HapticFeedback.medium()
+                    case .selection:
+                        HapticFeedback.selectionChanged()
+                    }
+                }
+            }
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {
@@ -493,6 +658,45 @@ extension View {
     /// Useful for timer displays and other large fixed-size text that shouldn't grow too large
     func dynamicTypeSize(maximum: DynamicTypeSize) -> some View {
         self.dynamicTypeSize(...maximum)
+    }
+
+    // MARK: - Haptic Feedback Extensions
+
+    /// Presents a sheet with haptic feedback on presentation
+    func sheetWithHaptic<Content: View>(
+        isPresented: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        modifier(SheetHapticModifier(isPresented: isPresented, sheetContent: content))
+    }
+
+    /// Presents a full screen cover with haptic feedback on presentation
+    func fullScreenCoverWithHaptic<Content: View>(
+        isPresented: Binding<Bool>,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        modifier(FullScreenCoverHapticModifier(isPresented: isPresented, coverContent: content))
+    }
+
+    /// Adds scroll threshold haptic feedback
+    /// - Parameters:
+    ///   - threshold: The scroll distance (in points) to trigger haptic
+    ///   - onThresholdCrossed: Optional callback when threshold is crossed
+    func scrollHaptic(
+        threshold: CGFloat = 60,
+        onThresholdCrossed: (() -> Void)? = nil
+    ) -> some View {
+        modifier(ScrollHapticModifier(threshold: threshold, onThresholdCrossed: onThresholdCrossed))
+    }
+
+    /// Adds refreshable with haptic feedback on trigger
+    func refreshableWithHaptic(action: @Sendable @escaping () async -> Void) -> some View {
+        modifier(RefreshableHapticModifier(action: action))
+    }
+
+    /// Applies haptic button style with the specified haptic type
+    func hapticButtonStyle(_ type: HapticButtonStyle.HapticButtonType = .light) -> some View {
+        self.buttonStyle(HapticButtonStyle(hapticType: type))
     }
 }
 
