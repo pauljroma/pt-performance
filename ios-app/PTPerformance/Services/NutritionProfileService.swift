@@ -235,7 +235,9 @@ class NutritionProfileService: ObservableObject {
         }
         let userId = authUserId.uuidString
 
+        #if DEBUG
         logger.diagnostic("NutritionProfileService: Fetching profile for auth user: \(userId)")
+        #endif
         isLoading = true
         error = nil
         defer { isLoading = false }

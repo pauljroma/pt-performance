@@ -58,8 +58,8 @@ class EnrolledProgramsViewModel: ObservableObject {
 
         #if DEBUG
         print("📱 [EnrolledPrograms] Loading for patientId: \(patientId)")
-        #endif
         DebugLogger.shared.log("📱 [EnrolledPrograms] Loading for patientId: \(patientId)", level: .diagnostic)
+        #endif
 
         isLoading = true
         errorMessage = nil

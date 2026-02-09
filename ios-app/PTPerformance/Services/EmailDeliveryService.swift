@@ -84,7 +84,9 @@ actor EmailDeliveryService {
         subject: String,
         message: String
     ) async throws -> EmailHistoryItem {
+        #if DEBUG
         debugLogger.log("Sending report email to: \(recipientEmail)", level: .info)
+        #endif
 
         // Validate recipient email
         guard validateEmail(recipientEmail) else {
@@ -167,7 +169,9 @@ actor EmailDeliveryService {
         subject: String,
         message: String
     ) async throws -> EmailHistoryItem {
+        #if DEBUG
         debugLogger.log("Sending report data email to: \(recipientEmail)", level: .info)
+        #endif
 
         // Validate attachment size
         guard pdfData.count <= Constants.maxAttachmentSize else {
@@ -270,7 +274,9 @@ actor EmailDeliveryService {
     ///   - limit: Maximum number of records to return (default 50)
     /// - Returns: Array of email history items
     func getEmailHistory(patientId: UUID, limit: Int = 50) async throws -> [EmailHistoryItem] {
+        #if DEBUG
         debugLogger.log("Fetching email history for patient: \(patientId)", level: .info)
+        #endif
 
         let response: [EmailHistoryItem] = try await supabase.client
             .from(Constants.emailHistoryTable)
@@ -576,6 +582,33 @@ enum EmailDeliveryError: LocalizedError {
             return "Please try again."
         case .rateLimited:
             return "Wait a few minutes before sending more emails."
+        }
+    }
+
+    /// PII-safe error type for analytics tracking
+    /// Does not include any email addresses, names, or other personal information
+    var analyticsErrorType: String {
+        switch self {
+        case .invalidEmail:
+            return "invalid_email"
+        case .notAuthenticated:
+            return "not_authenticated"
+        case .attachmentTooLarge:
+            return "attachment_too_large"
+        case .uploadFailed:
+            return "upload_failed"
+        case .sendFailed:
+            return "send_failed"
+        case .networkError:
+            return "network_error"
+        case .emailNotFound:
+            return "email_not_found"
+        case .cannotResend:
+            return "cannot_resend"
+        case .recordCreationFailed:
+            return "record_creation_failed"
+        case .rateLimited:
+            return "rate_limited"
         }
     }
 }

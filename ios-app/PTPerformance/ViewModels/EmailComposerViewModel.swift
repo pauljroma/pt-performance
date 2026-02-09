@@ -342,7 +342,7 @@ final class EmailComposerViewModel: ObservableObject {
         AnalyticsTracker.shared.track(
             event: "email_composer_error",
             properties: [
-                "error": error.localizedDescription
+                "error_type": error.analyticsErrorType
             ]
         )
     }

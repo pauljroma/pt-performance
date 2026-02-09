@@ -194,7 +194,9 @@ actor PushNotificationService: NSObject {
         let tokenString = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         self.deviceToken = tokenString
 
+        #if DEBUG
         debugLogger.log("Received APNs device token: \(tokenString.prefix(16))...", level: .success)
+        #endif
 
         // Register token with backend
         await registerDeviceTokenWithBackend(tokenString)
@@ -211,7 +213,9 @@ actor PushNotificationService: NSObject {
     /// Register device token with the backend server.
     private func registerDeviceTokenWithBackend(_ token: String) async {
         guard let userId = PTSupabaseClient.shared.userId else {
+            #if DEBUG
             debugLogger.log("Cannot register device token: no user ID", level: .warning)
+            #endif
             return
         }
 
@@ -223,7 +227,9 @@ actor PushNotificationService: NSObject {
                 .upsert(payload, onConflict: "user_id,device_token")
                 .execute()
 
+            #if DEBUG
             debugLogger.log("Device token registered with backend", level: .success)
+            #endif
 
             // Also call edge function for any additional server-side setup
             try await supabase.functions.invoke(
@@ -232,7 +238,9 @@ actor PushNotificationService: NSObject {
             )
         } catch {
             errorLogger.logError(error, context: "PushNotificationService.registerDeviceTokenWithBackend")
+            #if DEBUG
             debugLogger.log("Failed to register device token: \(error.localizedDescription)", level: .error)
+            #endif
         }
     }
 
@@ -251,7 +259,9 @@ actor PushNotificationService: NSObject {
                 .eq("device_token", value: token)
                 .execute()
 
+            #if DEBUG
             debugLogger.log("Device token unregistered", level: .success)
+            #endif
             self.deviceToken = nil
         } catch {
             errorLogger.logError(error, context: "PushNotificationService.unregisterDeviceToken")

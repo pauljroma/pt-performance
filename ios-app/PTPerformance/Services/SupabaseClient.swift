@@ -142,15 +142,19 @@ class PTSupabaseClient: ObservableObject {
 
         Task(priority: .utility) {
             let logger = DebugLogger.shared
+            #if DEBUG
             logger.log("Initializing PTSupabaseClient...")
             logger.log("Supabase URL: \(urlString)")
             logger.log("Anon Key: \(keyPrefix)...")
+            #endif
 
             if !isValid {
                 logger.log("Invalid Supabase URL: \(urlString). Client will be non-functional.", level: .error)
             }
 
+            #if DEBUG
             logger.log("Supabase client initialized with flexible decoder", level: .success)
+            #endif
         }
 
         // Check for existing session on init (already properly deferred)

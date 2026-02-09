@@ -237,10 +237,14 @@ actor PushNotificationManager {
         let tokenString = token.map { String(format: "%02.2hhx", $0) }.joined()
         self.deviceToken = tokenString
 
+        #if DEBUG
         debugLogger.log("Received APNs device token: \(tokenString.prefix(16))...", level: .success)
+        #endif
 
         guard let userId = PTSupabaseClient.shared.userId else {
+            #if DEBUG
             debugLogger.log("Cannot register device token: no user ID", level: .warning)
+            #endif
             throw PushNotificationManagerError.notAuthenticated
         }
 
@@ -272,7 +276,9 @@ actor PushNotificationManager {
                 .upsert(payload)
                 .execute()
 
+            #if DEBUG
             debugLogger.log("Device token registered with backend", level: .success)
+            #endif
         } catch {
             errorLogger.logError(error, context: "PushNotificationManager.registerDeviceToken")
             throw PushNotificationManagerError.registrationFailed(error)
@@ -294,7 +300,9 @@ actor PushNotificationManager {
                 .eq("device_token", value: token)
                 .execute()
 
+            #if DEBUG
             debugLogger.log("Device token unregistered", level: .success)
+            #endif
             self.deviceToken = nil
         } catch {
             errorLogger.logError(error, context: "PushNotificationManager.unregisterDeviceToken")

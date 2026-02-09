@@ -99,8 +99,8 @@ class TodaySessionViewModel: ObservableObject {
             // No cache - show loading state and fetch
             isLoading = true
 
-            logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
             #if DEBUG
+            logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
             print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
             #endif
 

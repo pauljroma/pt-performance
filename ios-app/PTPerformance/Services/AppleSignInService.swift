@@ -38,15 +38,21 @@ final class AppleSignInService: NSObject, ObservableObject {
     private func storeTokens(token: String, refreshToken: String?) {
         do {
             try secureStore.set(token, forKey: SecureStore.Keys.authToken)
+            #if DEBUG
             logger.diagnostic("AppleSignIn: Stored auth token securely")
+            #endif
 
             if let refresh = refreshToken {
                 try secureStore.set(refresh, forKey: SecureStore.Keys.refreshToken)
+                #if DEBUG
                 logger.diagnostic("AppleSignIn: Stored refresh token securely")
+                #endif
             }
         } catch {
             ErrorLogger.shared.logError(error, context: "AppleSignInService.storeTokens")
+            #if DEBUG
             logger.error("AppleSignIn", "Failed to store tokens: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -55,10 +61,14 @@ final class AppleSignInService: NSObject, ObservableObject {
     private func storeUserIdentifier(_ userIdentifier: String) {
         do {
             try secureStore.set(userIdentifier, forKey: SecureStore.Keys.userIdentifier)
+            #if DEBUG
             logger.diagnostic("AppleSignIn: Stored user identifier securely")
+            #endif
         } catch {
             ErrorLogger.shared.logError(error, context: "AppleSignInService.storeUserIdentifier")
+            #if DEBUG
             logger.error("AppleSignIn", "Failed to store user identifier: \(error.localizedDescription)")
+            #endif
         }
     }
 
@@ -213,20 +223,26 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
 
         guard let idTokenData = appleIDCredential.identityToken,
               let idTokenString = String(data: idTokenData, encoding: .utf8) else {
+            #if DEBUG
             logger.error("AppleSignIn", "Missing identity token in credential")
+            #endif
             self.continuation?.resume(throwing: AppleSignInError.missingIdentityToken)
             self.continuation = nil
             return
         }
 
         guard let nonce = self.currentNonce else {
+            #if DEBUG
             logger.error("AppleSignIn", "Nonce was not set for this request")
+            #endif
             self.continuation?.resume(throwing: AppleSignInError.missingNonce)
             self.continuation = nil
             return
         }
 
+        #if DEBUG
         logger.diagnostic("AppleSignIn: Received valid ID token, authenticating with Supabase")
+        #endif
 
         // Store Apple user identifier for credential state checks
         let userIdentifier = appleIDCredential.user

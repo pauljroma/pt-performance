@@ -589,6 +589,7 @@
 		ADF2D91DE9EACFCA0D54FA66 /* ProgramManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8724D3C884FCD716E45CD3D /* ProgramManagerView.swift */; };
 		ADFA76F62EE71DBA9CDFF2C6 /* LabAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4848F2C77FB1E436EF68544C /* LabAnalysis.swift */; };
 		AE47C24955C6B345E441AC7B /* SessionCompletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356CFCA70633A08F8D217C81 /* SessionCompletedView.swift */; };
+		AE63279A2510118BB79F685E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2BCBB2E27E669BB9FC1D095D /* PrivacyInfo.xcprivacy */; };
 		AF4EE5291D555EE3D0706CAD /* WeeklyReportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD5E723D100AF0B18B877356 /* WeeklyReportViewModel.swift */; };
 		AF78FC30C6B9008567912032 /* ExerciseVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2B392B003097D57E741C5C /* ExerciseVideoView.swift */; };
 		B0489ED936147B996E04EE15 /* ParsedLabResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACB800AD76C4212C2108AF2 /* ParsedLabResult.swift */; };
@@ -1013,6 +1014,7 @@
 		2A40F808B4AEC06BD02626C5 /* FatigueAdjustmentTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FatigueAdjustmentTests.swift; path = PTPerformanceTests/Models/FatigueAdjustmentTests.swift; sourceTree = "<group>"; };
 		2A7549ED60F9CE15F10060E3 /* TodaySessionView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TodaySessionView.swift; sourceTree = "<group>"; };
 		2BB60A3C6B516574EB70A2B1 /* FastingProtocolPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FastingProtocolPickerView.swift; path = Views/Health/FastingProtocolPickerView.swift; sourceTree = "<group>"; };
+		2BCBB2E27E669BB9FC1D095D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2BD6D78165C6EB79286EB0EE /* RTSActivityItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RTSActivityItem.swift; path = Models/RTS/RTSActivityItem.swift; sourceTree = "<group>"; };
 		2C09A0DEE78548F57AA53061 /* AdherenceDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AdherenceDashboardView.swift; path = Views/Therapist/Coaching/AdherenceDashboardView.swift; sourceTree = "<group>"; };
 		2C303B3CBD632F3F2FC19B43 /* ConflictResolutionService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConflictResolutionService.swift; path = Services/ConflictResolutionService.swift; sourceTree = "<group>"; };
@@ -2229,6 +2231,7 @@
 				F239600636E26901348E4B91 /* OptimisticUpdateManager.swift */,
 				A4C8B498975B0D6FC1FF99F2 /* SiriIntentService.swift */,
 				10EF2D789A0E00F820CA2111 /* Shared */,
+				2BCBB2E27E669BB9FC1D095D /* PrivacyInfo.xcprivacy */,
 			);
 			name = PTPerformance;
 			sourceTree = "<group>";
@@ -3689,6 +3692,7 @@
 				F7724E35CC87CDB752F32F19 /* Assets.xcassets in Resources */,
 				39B2B3C34FD7A97C4ED4F5F2 /* LaunchScreen.storyboard in Resources */,
 				D9B87F0579566F2EA5E2581B /* HelpContent.json in Resources */,
+				AE63279A2510118BB79F685E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
