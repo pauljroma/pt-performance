@@ -200,7 +200,7 @@ struct PTPerformanceApp: App {
 
         // ACP-932: Defer heavy initialization to background
         // This moves blocking work off the main thread during cold start
-        Task.detached(priority: .utility) {
+        Task(priority: .utility) {
             // Initialize Sentry error monitoring (ACP-599)
             // Deferred to avoid blocking main thread
             SentryConfig.initialize()

@@ -6,7 +6,7 @@
 //  Model definitions for the achievement system
 //
 
-import SwiftUI
+import Foundation
 
 // MARK: - Achievement Type
 
@@ -43,14 +43,14 @@ enum AchievementType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .streak: return .orange
-        case .volume: return .blue
-        case .workouts: return .green
-        case .personalRecord: return .yellow
-        case .consistency: return .purple
-        case .special: return .pink
+        case .streak: return "orange"
+        case .volume: return "blue"
+        case .workouts: return "green"
+        case .personalRecord: return "yellow"
+        case .consistency: return "purple"
+        case .special: return "pink"
         }
     }
 }
@@ -69,23 +69,23 @@ enum AchievementTier: String, Codable, CaseIterable, Comparable {
         rawValue.capitalized
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .bronze: return Color(red: 0.8, green: 0.5, blue: 0.2)
-        case .silver: return Color(red: 0.75, green: 0.75, blue: 0.8)
-        case .gold: return .yellow
-        case .platinum: return Color(red: 0.9, green: 0.9, blue: 1.0)
-        case .diamond: return .cyan
+        case .bronze: return "bronze"
+        case .silver: return "silver"
+        case .gold: return "yellow"
+        case .platinum: return "platinum"
+        case .diamond: return "cyan"
         }
     }
 
-    var glowColor: Color {
+    var glowColorName: String {
         switch self {
-        case .bronze: return Color(red: 0.8, green: 0.5, blue: 0.2).opacity(0.5)
-        case .silver: return Color.gray.opacity(0.5)
-        case .gold: return Color.yellow.opacity(0.6)
-        case .platinum: return Color.white.opacity(0.7)
-        case .diamond: return Color.cyan.opacity(0.8)
+        case .bronze: return "bronze"
+        case .silver: return "gray"
+        case .gold: return "yellow"
+        case .platinum: return "white"
+        case .diamond: return "cyan"
         }
     }
 
@@ -583,12 +583,12 @@ enum PRCelebrationType {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .firstPR: return .yellow
-        case .newPR: return .orange
-        case .majorPR: return .purple
-        case .milestonePR: return .cyan
+        case .firstPR: return "yellow"
+        case .newPR: return "orange"
+        case .majorPR: return "purple"
+        case .milestonePR: return "cyan"
         }
     }
 }

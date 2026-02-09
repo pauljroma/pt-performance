@@ -4,6 +4,13 @@ import SwiftUI
 /// Manages state for the readiness dashboard with trend charts and statistics
 @MainActor
 class ReadinessDashboardViewModel: ObservableObject {
+    // MARK: - Static Formatters
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     // MARK: - Dependencies
     private let readinessService: ReadinessService
     private let patientId: UUID
@@ -227,11 +234,8 @@ class ReadinessDashboardViewModel: ObservableObject {
     /// - Parameter dataPoint: The chart data point
     /// - Returns: Detailed readiness info string
     func detailsForDataPoint(_ dataPoint: ChartDataPoint) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-
         return """
-        \(formatter.string(from: dataPoint.date))
+        \(Self.mediumDateFormatter.string(from: dataPoint.date))
         Score: \(String(format: "%.1f", dataPoint.score))
         Category: \(dataPoint.category.displayName)
         """
@@ -247,18 +251,26 @@ struct ChartDataPoint: Identifiable {
     let score: Double
     let category: ReadinessCategory
 
-    /// Formatted date for chart labels (e.g., "Jan 3")
-    var formattedDate: String {
+    private static let shortDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
+    /// Formatted date for chart labels (e.g., "Jan 3")
+    var formattedDate: String {
+        Self.shortDateFormatter.string(from: date)
     }
 
     /// Formatted date for tooltips (e.g., "Jan 3, 2026")
     var formattedDateLong: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        Self.mediumDateFormatter.string(from: date)
     }
 
     /// Formatted score text

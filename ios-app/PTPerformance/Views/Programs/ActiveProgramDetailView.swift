@@ -804,7 +804,7 @@ private struct ProgramSessionCard: View {
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(6)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Exercise \(exercise.sequence): \(exercise.exerciseTemplate?.name ?? "Exercise")\(exercise.targetSets != nil && exercise.targetReps != nil ? ", \(exercise.targetSets!) sets of \(exercise.targetReps!) reps" : "")")
+                        .accessibilityLabel("Exercise \(exercise.sequence): \(exercise.exerciseTemplate?.name ?? "Exercise")\(exercise.targetSets.flatMap { sets in exercise.targetReps.map { reps in ", \(sets) sets of \(reps) reps" } } ?? "")")
                     }
                 }
                 .padding(.leading, 24)

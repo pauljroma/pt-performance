@@ -149,7 +149,7 @@ final class FastingService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
 
     /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
 
     private init() {}
 
@@ -471,7 +471,13 @@ final class FastingService: ObservableObject {
     /// - Returns: FastCompletionResult with completion details
     @discardableResult
     func breakFastEarly(reason: String? = nil) async throws -> FastCompletionResult {
-        return try await endFast(notes: reason != nil ? "Ended early: \(reason!)" : "Ended early")
+        let notes: String
+        if let reason = reason {
+            notes = "Ended early: \(reason)"
+        } else {
+            notes = "Ended early"
+        }
+        return try await endFast(notes: notes)
     }
 
     // MARK: - Set Goal

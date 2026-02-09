@@ -10,6 +10,35 @@ import SwiftUI
 /// ViewModel for timer history view displaying completed sessions and statistics
 @MainActor
 class TimerHistoryViewModel: ObservableObject {
+    // MARK: - Static Formatters
+
+    private static let dayNameFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter
+    }()
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
     // MARK: - Dependencies
 
     private let timerService: IntervalTimerService
@@ -297,32 +326,21 @@ class TimerHistoryViewModel: ObservableObject {
             return "Yesterday"
         } else if calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear) {
             // This week - show day name
-            let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE"  // Full day name
-            return formatter.string(from: date)
+            return Self.dayNameFormatter.string(from: date)
         } else {
             // Older - show date
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-            return formatter.string(from: date)
+            return Self.mediumDateFormatter.string(from: date)
         }
     }
 
     /// Format a time for display (e.g., "2:30 PM")
     func formattedTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.timeFormatter.string(from: date)
     }
 
     /// Format a full date and time (e.g., "Jan 1, 2024 at 2:30 PM")
     func formattedDateTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.dateTimeFormatter.string(from: date)
     }
 
     // MARK: - Category Filtering

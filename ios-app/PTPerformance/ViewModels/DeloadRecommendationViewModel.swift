@@ -206,11 +206,15 @@ struct FatigueTrendPoint: Identifiable {
     let fatigueScore: Double
     let band: FatigueBand
 
-    /// Formatted date for chart labels
-    var formattedDate: String {
+    private static let dayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "E"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    /// Formatted date for chart labels
+    var formattedDate: String {
+        Self.dayFormatter.string(from: date)
     }
 
     /// Formatted score text

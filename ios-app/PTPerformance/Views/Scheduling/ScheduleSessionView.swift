@@ -28,7 +28,7 @@ struct ScheduleSessionView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Session selection
                 sessionSection

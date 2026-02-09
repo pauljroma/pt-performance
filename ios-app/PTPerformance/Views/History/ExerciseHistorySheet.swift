@@ -23,7 +23,7 @@ struct ExerciseHistorySheet: View {
     @AppStorage("preferredWeightUnit") private var preferredWeightUnit: String = "lbs"
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading {
                     VStack(spacing: 16) {
@@ -285,7 +285,7 @@ private struct Estimated1RMCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Estimated one rep max: \(formatWeight(estimated1RM))\(formula != nil ? ", \(formula!)" : "")")
+        .accessibilityLabel("Estimated one rep max: \(formatWeight(estimated1RM))\(formula.map { ", \($0)" } ?? "")")
         .accessibilityCustomContent("Percentage breakdown", "90% is \(formatWeight(estimated1RM * 0.90)), 80% is \(formatWeight(estimated1RM * 0.80)), 70% is \(formatWeight(estimated1RM * 0.70)), 60% is \(formatWeight(estimated1RM * 0.60))")
     }
 

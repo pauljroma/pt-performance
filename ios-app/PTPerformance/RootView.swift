@@ -127,7 +127,7 @@ struct RootView: View {
 
             // ACP-932/945: Defer non-critical work to after UI is displayed
             // These operations don't affect the initial UI render
-            Task.detached(priority: .utility) {
+            Task(priority: .utility) {
                 // ACP-479: Load patient mode after session restore
                 if supabase.userRole == .patient {
                     await modeService.loadPatientMode()

@@ -32,7 +32,7 @@ struct ExerciseLogView: View {
     @State private var showExerciseHistory = false  // BUILD 333: Exercise history lookup
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Exercise header
                 Section {

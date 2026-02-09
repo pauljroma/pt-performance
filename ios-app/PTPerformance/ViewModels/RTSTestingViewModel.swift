@@ -15,6 +15,13 @@ import Combine
 @MainActor
 class RTSTestingViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     // MARK: - Published Properties - Criteria Data
 
     /// Milestone criteria for the current phase
@@ -435,14 +442,11 @@ class RTSTestingViewModel: ObservableObject {
                 )
             }
 
-            let dateFormatter = ISO8601DateFormatter()
-            dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
             var input = RTSReadinessScoreInput(
                 protocolId: protocolId.uuidString,
                 phaseId: phaseId.uuidString,
                 recordedBy: recordedBy.uuidString,
-                recordedAt: dateFormatter.string(from: Date()),
+                recordedAt: Self.iso8601Formatter.string(from: Date()),
                 physicalScore: physicalScore,
                 functionalScore: functionalScore,
                 psychologicalScore: psychologicalScore,

@@ -372,7 +372,11 @@ final class OutcomeMeasureService: ObservableObject {
                 mcidCount += 1
             }
 
-            if latestDate == nil || latest.assessmentDate > latestDate! {
+            if let existingLatestDate = latestDate {
+                if latest.assessmentDate > existingLatestDate {
+                    latestDate = latest.assessmentDate
+                }
+            } else {
                 latestDate = latest.assessmentDate
             }
         }

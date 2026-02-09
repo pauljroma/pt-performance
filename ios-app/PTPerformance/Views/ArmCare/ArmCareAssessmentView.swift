@@ -43,7 +43,7 @@ struct ArmCareAssessmentView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 ScrollView {
                     VStack(spacing: 24) {

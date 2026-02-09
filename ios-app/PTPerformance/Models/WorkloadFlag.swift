@@ -5,7 +5,7 @@
 //  Model for throwing workload alerts and flags
 //
 
-import SwiftUI
+import Foundation
 
 struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
     let id: UUID
@@ -40,8 +40,8 @@ struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
         case warning = "yellow"
         case critical = "red"
         
-        var color: Color {
-            self == .critical ? .red : .orange
+        var colorName: String {
+            self == .critical ? "red" : "orange"
         }
     }
     
@@ -60,8 +60,8 @@ struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
         }
     }
     
-    var color: Color {
-        severity.color
+    var colorName: String {
+        severity.colorName
     }
     
     // Sample flags for testing

@@ -395,6 +395,7 @@ class StoreKitService: ObservableObject {
     // MARK: - Transaction Listener
 
     private func listenForTransactions() -> Task<Void, Error> {
+        // Task.detached required: Long-running listener must run independently of caller's actor context
         return Task.detached { [weak self] in
             let logger = DebugLogger.shared
             logger.info("StoreKit", "Transaction listener started")

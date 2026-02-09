@@ -316,7 +316,9 @@ struct ConflictsSummarySection: View {
 #Preview("MiniConflictCard") {
     VStack(spacing: 8) {
         MiniConflictCard(conflict: .sample) { }
-        MiniConflictCard(conflict: DataConflict.generateSampleConflicts(count: 1).first!) { }
+        if let conflict = DataConflict.generateSampleConflicts(count: 1).first {
+            MiniConflictCard(conflict: conflict) { }
+        }
     }
     .padding()
 }

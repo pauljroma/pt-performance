@@ -47,6 +47,13 @@ struct AssessmentSectionStatus: Equatable {
 @MainActor
 class IntakeAssessmentViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     // MARK: - Published Properties - Form State
 
     // Patient & Session Info
@@ -155,9 +162,7 @@ class IntakeAssessmentViewModel: ObservableObject {
 
     /// Formatted assessment date
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: assessmentDate)
+        Self.mediumDateFormatter.string(from: assessmentDate)
     }
 
     // MARK: - Initialization

@@ -165,7 +165,7 @@ class HelpContentLoader: ObservableObject {
         // Fallback to hardcoded sample articles if JSON file not found
         articles = [
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID(),
                 title: "Getting Started with Modus",
                 content: """
                 # Welcome to Modus
@@ -192,7 +192,7 @@ class HelpContentLoader: ObservableObject {
                 keywords: ["welcome", "introduction", "setup", "basics"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000002") ?? UUID(),
                 title: "Creating Your First Program",
                 content: """
                 # Creating a Training Program
@@ -219,7 +219,7 @@ class HelpContentLoader: ObservableObject {
                 keywords: ["program", "create", "training plan", "structure"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000003") ?? UUID(),
                 title: "Completing Your Workouts",
                 content: """
                 # How to Complete Workouts
@@ -249,7 +249,7 @@ class HelpContentLoader: ObservableObject {
                 keywords: ["workout", "exercise", "log", "complete", "tracking"]
             ),
             HelpArticle(
-                id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000004") ?? UUID(),
                 title: "Understanding Your Analytics",
                 content: """
                 # Analytics & Progress Tracking

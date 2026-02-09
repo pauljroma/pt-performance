@@ -210,7 +210,7 @@ class HRVService {
     private func dayBoundaries(for date: Date) -> (Date, Date) {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay.addingTimeInterval(86400)
         return (startOfDay, endOfDay)
     }
 }

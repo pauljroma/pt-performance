@@ -610,7 +610,7 @@ final class RecoveryService: ObservableObject {
     // MARK: - Helpers
 
     /// Demo patient ID for unauthenticated testing
-    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
 
     private func getPatientId() async throws -> UUID? {
         // Check for authenticated user first

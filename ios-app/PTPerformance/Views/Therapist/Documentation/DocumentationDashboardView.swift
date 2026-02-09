@@ -73,12 +73,12 @@ struct DocumentationDashboardView: View {
             }
         }
         .sheet(item: $selectedDraft) { draft in
-            NavigationView {
+            NavigationStack {
                 SOAPNoteEditorView(patientId: draft.patientId, sessionId: draft.sessionId)
             }
         }
         .sheet(item: $selectedNote) { note in
-            NavigationView {
+            NavigationStack {
                 if note.type == "soap" {
                     SOAPNoteEditorView(patientId: note.patientId, sessionId: note.sessionId)
                 } else {
@@ -560,7 +560,7 @@ struct NewDocumentationSheet: View {
     @State private var isLoading = true
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Documentation Type") {
                     Picker("Type", selection: $selectedType) {
@@ -649,7 +649,7 @@ struct PatientFilterSheet: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if isLoading {
                     ProgressView("Loading patients...")
@@ -752,7 +752,7 @@ class DocumentationDashboardViewModel: ObservableObject {
                     noteType: "SOAP Note",
                     lastModified: resp.updatedAt ?? resp.createdAt,
                     completionPercent: calculateCompletion(resp),
-                    sessionId: resp.sessionId != nil ? UUID(uuidString: resp.sessionId!) : nil
+                    sessionId: resp.sessionId.flatMap { UUID(uuidString: $0) }
                 )
             }
 
@@ -779,7 +779,7 @@ class DocumentationDashboardViewModel: ObservableObject {
                     type: "soap",
                     createdAt: resp.createdAt,
                     isSigned: resp.status == "signed",
-                    sessionId: resp.sessionId != nil ? UUID(uuidString: resp.sessionId!) : nil
+                    sessionId: resp.sessionId.flatMap { UUID(uuidString: $0) }
                 )
             }
 
@@ -811,16 +811,16 @@ class DocumentationDashboardViewModel: ObservableObject {
         var sections = 0.0
         var completed = 0.0
 
-        if note.subjective != nil && !note.subjective!.isEmpty { completed += 1 }
+        if !(note.subjective?.isEmpty ?? true) { completed += 1 }
         sections += 1
 
-        if note.objective != nil && !note.objective!.isEmpty { completed += 1 }
+        if !(note.objective?.isEmpty ?? true) { completed += 1 }
         sections += 1
 
-        if note.assessment != nil && !note.assessment!.isEmpty { completed += 1 }
+        if !(note.assessment?.isEmpty ?? true) { completed += 1 }
         sections += 1
 
-        if note.plan != nil && !note.plan!.isEmpty { completed += 1 }
+        if !(note.plan?.isEmpty ?? true) { completed += 1 }
         sections += 1
 
         return completed / sections
@@ -828,7 +828,7 @@ class DocumentationDashboardViewModel: ObservableObject {
 
     private func calculateStatistics(patientId: String?) async {
         let calendar = Calendar.current
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date())!
+        guard let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date()) else { return }
 
         do {
             // Notes this week

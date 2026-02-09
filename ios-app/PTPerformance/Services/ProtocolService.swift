@@ -259,26 +259,30 @@ actor ProtocolService {
         case .daily:
             while currentDate <= endDay {
                 dates.append(currentDate)
-                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+                guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+                currentDate = nextDate
             }
 
         case .twiceDaily:
             while currentDate <= endDay {
                 dates.append(currentDate)
-                currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
+                guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else { break }
+                currentDate = nextDate
             }
             // Note: In real implementation, we'd create two tasks per day with different times
 
         case .everyOtherDay:
             while currentDate <= endDay {
                 dates.append(currentDate)
-                currentDate = calendar.date(byAdding: .day, value: 2, to: currentDate)!
+                guard let nextDate = calendar.date(byAdding: .day, value: 2, to: currentDate) else { break }
+                currentDate = nextDate
             }
 
         case .weekly:
             while currentDate <= endDay {
                 dates.append(currentDate)
-                currentDate = calendar.date(byAdding: .day, value: 7, to: currentDate)!
+                guard let nextDate = calendar.date(byAdding: .day, value: 7, to: currentDate) else { break }
+                currentDate = nextDate
             }
 
         case .asNeeded:

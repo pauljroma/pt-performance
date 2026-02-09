@@ -157,8 +157,8 @@ final class RecoveryTrackingService: ObservableObject {
 
         for date in sortedDates {
             if let previous = previousDate {
-                let expectedPrevious = calendar.date(byAdding: .day, value: 1, to: date)
-                if expectedPrevious != nil && calendar.isDate(previous, inSameDayAs: expectedPrevious!) {
+                if let expectedPrevious = calendar.date(byAdding: .day, value: 1, to: date),
+                   calendar.isDate(previous, inSameDayAs: expectedPrevious) {
                     tempStreak += 1
                 } else {
                     longestStreak = max(longestStreak, tempStreak)

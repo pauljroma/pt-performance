@@ -115,7 +115,7 @@ struct TherapistIntelligenceView: View {
                     .environmentObject(appState)
             }
             .sheet(isPresented: $showClinicalDocumentation) {
-                NavigationView {
+                NavigationStack {
                     DocumentationDashboardView()
                 }
                 .environmentObject(appState)

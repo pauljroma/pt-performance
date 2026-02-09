@@ -140,7 +140,7 @@ class PTSupabaseClient: ObservableObject {
         let urlString = supabaseURL
         let keyPrefix = String(supabaseAnonKey.prefix(20))
 
-        Task.detached(priority: .utility) {
+        Task(priority: .utility) {
             let logger = DebugLogger.shared
             logger.log("Initializing PTSupabaseClient...")
             logger.log("Supabase URL: \(urlString)")
@@ -172,11 +172,18 @@ class PTSupabaseClient: ObservableObject {
             await MainActor.run {
                 self.currentSession = session
                 self.currentUser = session.user
+                // Set hasActiveSession flag for Siri intent compatibility
+                // Note: App Intents cannot access SecureStore, so we use UserDefaults for this boolean flag only
+                UserDefaults.standard.set(true, forKey: "hasActiveSession")
             }
 
             // Fetch user role from database
             await fetchUserRole(userId: session.user.id.uuidString)
         } catch {
+            await MainActor.run {
+                // Clear hasActiveSession flag when no session exists
+                UserDefaults.standard.set(false, forKey: "hasActiveSession")
+            }
             #if DEBUG
             print("No existing session: \(error.localizedDescription)")
             #endif
@@ -200,6 +207,8 @@ class PTSupabaseClient: ObservableObject {
         await MainActor.run {
             self.currentSession = session
             self.currentUser = session.user
+            // Set hasActiveSession flag for Siri intent compatibility
+            UserDefaults.standard.set(true, forKey: "hasActiveSession")
         }
 
         // Fetch user role from database
@@ -348,6 +357,8 @@ class PTSupabaseClient: ObservableObject {
             await MainActor.run {
                 self.currentSession = session
                 self.currentUser = session.user
+                // Set hasActiveSession flag for Siri intent compatibility
+                UserDefaults.standard.set(true, forKey: "hasActiveSession")
             }
             let userId = session.user.id.uuidString
             let userEmail = session.user.email ?? email
@@ -392,6 +403,8 @@ class PTSupabaseClient: ObservableObject {
         await MainActor.run {
             self.currentSession = session
             self.currentUser = session.user
+            // Set hasActiveSession flag for Siri intent compatibility
+            UserDefaults.standard.set(true, forKey: "hasActiveSession")
         }
     }
 
@@ -473,11 +486,21 @@ class PTSupabaseClient: ObservableObject {
             AppleSignInService.shared.clearStoredCredentials()
         }
 
+        // Clear WHOOP tokens if stored
+        do {
+            try SecureStore.shared.delete(forKey: SecureStore.Keys.whoopAccessToken)
+            try SecureStore.shared.delete(forKey: SecureStore.Keys.whoopRefreshToken)
+        } catch {
+            // Silent fail - tokens may not exist
+        }
+
         await MainActor.run {
             self.currentSession = nil
             self.currentUser = nil
             self.userRole = nil
             self.userId = nil
+            // Clear hasActiveSession flag for Siri intent compatibility
+            UserDefaults.standard.set(false, forKey: "hasActiveSession")
         }
     }
 

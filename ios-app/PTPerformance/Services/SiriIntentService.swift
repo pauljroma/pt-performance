@@ -180,10 +180,14 @@ final class SiriIntentService: ObservableObject {
 
         DebugLogger.shared.info("SiriIntentService", "Processing start workout")
 
+        var userInfo: [String: Any] = [:]
+        if let name = workoutName {
+            userInfo["workoutName"] = name
+        }
         NotificationCenter.default.post(
             name: .siriStartWorkoutIntent,
             object: nil,
-            userInfo: workoutName != nil ? ["workoutName": workoutName!] : [:]
+            userInfo: userInfo
         )
     }
 

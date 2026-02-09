@@ -597,6 +597,8 @@ extension SupplementViewModel {
         viewModel.routines = SupplementRoutine.demoRoutines
 
         // Generate demo today doses
+        let calendar = Calendar.current
+        let today = Date()
         viewModel.todayDoses = [
             TodaySupplementDose(
                 id: UUID(),
@@ -607,7 +609,7 @@ extension SupplementViewModel {
                 category: .performance,
                 dosage: "5g",
                 timing: .postWorkout,
-                scheduledTime: Calendar.current.date(bySettingHour: 8, minute: 0, second: 0, of: Date())!,
+                scheduledTime: calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today) ?? today,
                 withFood: false,
                 isTaken: true,
                 takenAt: Date(),
@@ -622,7 +624,7 @@ extension SupplementViewModel {
                 category: .vitamin,
                 dosage: "5000 IU",
                 timing: .morning,
-                scheduledTime: Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date())!,
+                scheduledTime: calendar.date(bySettingHour: 7, minute: 0, second: 0, of: today) ?? today,
                 withFood: true,
                 isTaken: true,
                 takenAt: Date(),
@@ -637,7 +639,7 @@ extension SupplementViewModel {
                 category: .health,
                 dosage: "3g",
                 timing: .withMeal,
-                scheduledTime: Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: Date())!,
+                scheduledTime: calendar.date(bySettingHour: 12, minute: 0, second: 0, of: today) ?? today,
                 withFood: true,
                 isTaken: false,
                 takenAt: nil,
@@ -652,7 +654,7 @@ extension SupplementViewModel {
                 category: .mineral,
                 dosage: "300mg",
                 timing: .beforeBed,
-                scheduledTime: Calendar.current.date(bySettingHour: 21, minute: 0, second: 0, of: Date())!,
+                scheduledTime: calendar.date(bySettingHour: 21, minute: 0, second: 0, of: today) ?? today,
                 withFood: false,
                 isTaken: false,
                 takenAt: nil,

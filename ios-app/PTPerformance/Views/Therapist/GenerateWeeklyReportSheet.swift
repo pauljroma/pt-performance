@@ -54,7 +54,7 @@ struct GenerateWeeklyReportSheet: View {
         }
         .sheet(isPresented: $showGeneratedReport) {
             if let report = viewModel.report {
-                NavigationView {
+                NavigationStack {
                     WeeklyReportView(report: report, patientName: patient.fullName)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {

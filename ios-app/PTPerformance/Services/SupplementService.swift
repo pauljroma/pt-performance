@@ -411,7 +411,12 @@ final class SupplementService: ObservableObject {
         let (_, doseUnit) = parseDosage(dose.dosage)
 
         // Use notes to indicate skip and reason
-        let skipNote = reason != nil ? "[SKIPPED] \(reason!)" : "[SKIPPED]"
+        let skipNote: String
+        if let reason = reason {
+            skipNote = "[SKIPPED] \(reason)"
+        } else {
+            skipNote = "[SKIPPED]"
+        }
 
         let insert = LogInsert(
             id: UUID(),
@@ -508,7 +513,9 @@ final class SupplementService: ObservableObject {
         do {
             guard let patientId = try await getPatientId() else { return [] }
 
-            let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+            guard let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) else {
+                return []
+            }
             let dateFormatter = ISO8601DateFormatter()
             dateFormatter.formatOptions = [.withInternetDateTime]
 

@@ -20,7 +20,7 @@ struct TemplateDetailView: View {
     @State private var showingAssignSheet = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header
@@ -459,7 +459,7 @@ struct AssignTemplateSheet: View {
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Patient") {
                     if patients.isEmpty {

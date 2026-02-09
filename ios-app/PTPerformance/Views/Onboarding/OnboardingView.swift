@@ -38,7 +38,7 @@ struct OnboardingView: View {
                     // Page 1: Welcome
                     OnboardingPage(
                         icon: "figure.wave",
-                        title: "Welcome to Modus",
+                        title: "Your Recovery Starts Here",
                         description: "Stop Guessing. Start Recovering.\n\nThe complete platform for physical therapy program management and patient progress tracking.",
                         accentColor: .modusCyan
                     )

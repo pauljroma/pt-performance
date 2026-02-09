@@ -18,7 +18,7 @@ struct UpcomingSessionsView: View {
     @State private var showingSessionDetail = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if isLoading && scheduledSessions.isEmpty {
                     ProgressView("Loading sessions...")
@@ -351,7 +351,7 @@ struct ScheduledSessionDetailView: View {
     let session: ScheduledSession
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section("Details") {
                     LabeledContent("Session", value: session.sessionId.uuidString)

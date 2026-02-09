@@ -53,7 +53,7 @@ struct TimerPickerView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
@@ -100,7 +100,6 @@ struct TimerPickerView: View {
                 activeTimerView
             }
         }
-        .navigationViewStyle(.stack)
     }
 
     // MARK: - Content View
@@ -420,7 +419,7 @@ struct TimerPickerView: View {
     private var presetDetailSheet: some View {
         Group {
             if let preset = selectedPreset {
-                NavigationView {
+                NavigationStack {
                     PresetDetailView(preset: preset)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {

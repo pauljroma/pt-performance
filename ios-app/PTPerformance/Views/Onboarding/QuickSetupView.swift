@@ -185,7 +185,7 @@ struct WelcomeStepView: View {
                 .padding(.bottom, 16)
 
             // Title
-            Text("Welcome to Modus")
+            Text("Start Training Smarter")
                 .font(.system(size: 32, weight: .bold))
                 .multilineTextAlignment(.center)
 

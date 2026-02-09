@@ -301,10 +301,10 @@ class SOAPNoteService: ObservableObject {
         do {
             // Verify note has all required sections
             if let existingNote = notes.first(where: { $0.id.uuidString == noteId }) {
-                guard existingNote.subjective != nil && !existingNote.subjective!.isEmpty,
-                      existingNote.objective != nil && !existingNote.objective!.isEmpty,
-                      existingNote.assessment != nil && !existingNote.assessment!.isEmpty,
-                      existingNote.plan != nil && !existingNote.plan!.isEmpty else {
+                guard let subjective = existingNote.subjective, !subjective.isEmpty,
+                      let objective = existingNote.objective, !objective.isEmpty,
+                      let assessment = existingNote.assessment, !assessment.isEmpty,
+                      let plan = existingNote.plan, !plan.isEmpty else {
                     throw SOAPNoteServiceError.incompleteNote
                 }
             }

@@ -226,7 +226,7 @@ struct AddNoteSheet: View {
     let noteTypes = ["assessment", "progress", "clinical", "general"]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Note type
                 Section("Note Type") {

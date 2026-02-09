@@ -17,7 +17,7 @@ struct PrescribeWorkoutSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if viewModel.isSuccess {
                     successView

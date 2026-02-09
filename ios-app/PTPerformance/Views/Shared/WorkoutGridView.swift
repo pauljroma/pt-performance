@@ -29,7 +29,7 @@ struct WorkoutGridView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading {
                     loadingView
@@ -360,7 +360,7 @@ struct GridExercisePickerView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 ForEach(filteredExercises) { exercise in
                     Button(action: {

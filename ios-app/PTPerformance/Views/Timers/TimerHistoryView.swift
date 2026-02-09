@@ -35,7 +35,7 @@ struct TimerHistoryView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading && viewModel.sessions.isEmpty {
                     // Initial loading state

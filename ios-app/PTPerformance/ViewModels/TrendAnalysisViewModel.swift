@@ -13,6 +13,13 @@ import Combine
 @MainActor
 class TrendAnalysisViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let isoDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     @Published var selectedMetric: TrendMetricType = .sessionAdherence
@@ -92,9 +99,7 @@ class TrendAnalysisViewModel: ObservableObject {
     // MARK: - Private Methods
 
     private func formattedDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: Date())
+        Self.isoDateFormatter.string(from: Date())
     }
 }
 

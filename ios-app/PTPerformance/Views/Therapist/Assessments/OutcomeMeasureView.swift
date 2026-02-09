@@ -42,7 +42,7 @@ struct OutcomeMeasureView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 VStack(spacing: 0) {
                     // Progress header
@@ -497,7 +497,7 @@ private struct MeasureTypeSelector: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section("Upper Extremity") {
                     ForEach(OutcomeMeasureType.allCases.filter { $0.bodyRegion == "Upper Extremity" }) { type in

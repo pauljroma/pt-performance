@@ -5,6 +5,13 @@ import SwiftUI
 @MainActor
 final class RecoveryTrackingViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+
     // MARK: - Published State
 
     @Published var recentSessions: [RecoverySession] = []
@@ -288,9 +295,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
                 continue
             }
 
-            let dayFormatter = DateFormatter()
-            dayFormatter.dateFormat = "EEE"
-            let dayName = dayFormatter.string(from: date)
+            let dayName = Self.dayFormatter.string(from: date)
 
             // Calculate score for this day (simplified - in production would use actual data)
             let baseScore = 65 + Int.random(in: -15...20)

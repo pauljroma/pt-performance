@@ -90,7 +90,7 @@ class TodaySessionViewModel: ObservableObject {
                 await fetchTodaysCompletedWorkouts()
 
                 // Background refresh (non-blocking)
-                Task.detached(priority: .utility) { @MainActor in
+                Task(priority: .utility) { @MainActor in
                     await self.backgroundRefreshFromSupabase(patientId: patientId)
                 }
                 return

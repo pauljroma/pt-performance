@@ -16,7 +16,7 @@ struct ProgressChartsView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     if let patientId = appState.userId {

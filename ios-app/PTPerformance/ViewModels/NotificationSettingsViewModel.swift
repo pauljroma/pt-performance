@@ -34,6 +34,13 @@ import UserNotifications
 @MainActor
 final class NotificationSettingsViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     /// Master toggle for all notifications
@@ -159,9 +166,7 @@ final class NotificationSettingsViewModel: ObservableObject {
         do {
             guard let userId = supabase.userId else { return }
 
-            let timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = "HH:mm:ss"
-            let timeString = timeFormatter.string(from: checkInReminderTime)
+            let timeString = Self.timeFormatter.string(from: checkInReminderTime)
 
             let payload = NotificationPreferencesRow(
                 userId: userId,
@@ -304,10 +309,7 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     /// Parse time string in "HH:mm:ss" format
     private func parseTimeString(_ timeString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-
-        if let date = formatter.date(from: timeString) {
+        if let date = Self.timeFormatter.date(from: timeString) {
             // Combine with today's date
             let calendar = Calendar.current
             let components = calendar.dateComponents([.hour, .minute], from: date)

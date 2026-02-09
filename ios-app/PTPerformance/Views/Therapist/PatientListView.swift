@@ -478,7 +478,7 @@ struct FilterSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Flag filter
                 Section("Risk Level") {

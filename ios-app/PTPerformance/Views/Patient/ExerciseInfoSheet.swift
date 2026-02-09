@@ -18,7 +18,7 @@ struct ExerciseTemplateInfoSheet: View {
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading exercise info...")

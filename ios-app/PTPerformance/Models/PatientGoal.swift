@@ -5,7 +5,7 @@
 //  ACP-523: Patient Profile Goals & Progress
 //
 
-import SwiftUI
+import Foundation
 
 // MARK: - Goal Category
 
@@ -45,15 +45,15 @@ enum GoalCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .strength: return .red
-        case .mobility: return .blue
-        case .endurance: return .green
-        case .painReduction: return .purple
-        case .bodyComposition: return .orange
-        case .rehabilitation: return .teal
-        case .custom: return .indigo
+        case .strength: return "red"
+        case .mobility: return "blue"
+        case .endurance: return "green"
+        case .painReduction: return "purple"
+        case .bodyComposition: return "orange"
+        case .rehabilitation: return "teal"
+        case .custom: return "indigo"
         }
     }
 }

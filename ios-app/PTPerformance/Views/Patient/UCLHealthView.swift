@@ -19,7 +19,7 @@ struct UCLHealthView: View {
     @State private var showEducation = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     if appState.userId != nil {
@@ -572,7 +572,7 @@ struct UCLCheckInSheet: View {
     let steps = ["Pain", "Stress", "Neuro", "Workload", "Recovery"]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Progress indicator
                 progressIndicator
@@ -965,7 +965,7 @@ struct UCLEducationSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section(header: Text("Key Facts")) {
                     ForEach(UCLEducationalContent.keyFacts, id: \.self) { fact in

@@ -30,7 +30,7 @@ struct CustomTimerBuilderView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 templateInfoSection
                 timerTypeSection

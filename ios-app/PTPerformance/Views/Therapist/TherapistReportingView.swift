@@ -259,9 +259,7 @@ struct TherapistReportingView: View {
             ReportSummaryCard(
                 icon: "checkmark.circle.fill",
                 label: "Avg Adherence",
-                value: viewModel.averageAdherence != nil
-                    ? "\(Int(viewModel.averageAdherence!))%"
-                    : "N/A",
+                value: viewModel.averageAdherence.map { "\(Int($0))%" } ?? "N/A",
                 color: .green
             )
 
@@ -516,9 +514,9 @@ struct NeedsAttentionRow: View {
                     .fontWeight(.medium)
 
                 HStack(spacing: 8) {
-                    if (patient.highSeverityFlagCount ?? 0) > 0 {
+                    if let flagCount = patient.highSeverityFlagCount, flagCount > 0 {
                         attentionBadge(
-                            text: "\(patient.highSeverityFlagCount!) High Severity",
+                            text: "\(flagCount) High Severity",
                             color: .red
                         )
                     }

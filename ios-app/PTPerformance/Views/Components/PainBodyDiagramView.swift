@@ -355,7 +355,11 @@ struct PainBodyDiagramView: View {
 
     private func painRegionButton(region: PainBodyRegion, at position: CGPoint) -> some View {
         let existingLocation = painLocations.first { $0.region == region }
+
+        // Safely extract values from existingLocation for use in the view
         let isSelected = existingLocation != nil
+        let intensityColor = existingLocation?.intensityColor ?? Color(.quaternarySystemFill)
+        let intensity = existingLocation?.intensity ?? 0
 
         return Button {
             handleRegionTap(region)
@@ -363,16 +367,16 @@ struct PainBodyDiagramView: View {
             ZStack {
                 // Background circle
                 Circle()
-                    .fill(isSelected ? existingLocation!.intensityColor.opacity(0.3) : Color(.quaternarySystemFill))
+                    .fill(isSelected ? intensityColor.opacity(0.3) : Color(.quaternarySystemFill))
                     .frame(width: 36, height: 36)
 
                 // Inner circle with intensity
                 if isSelected {
                     Circle()
-                        .fill(existingLocation!.intensityColor)
+                        .fill(intensityColor)
                         .frame(width: 24, height: 24)
 
-                    Text("\(existingLocation!.intensity)")
+                    Text("\(intensity)")
                         .font(.caption2.weight(.bold))
                         .foregroundColor(.white)
                 } else {
@@ -381,11 +385,11 @@ struct PainBodyDiagramView: View {
                         .frame(width: 24, height: 24)
                 }
             }
-            .shadow(color: isSelected ? existingLocation!.intensityColor.opacity(0.4) : .clear, radius: 4)
+            .shadow(color: isSelected ? intensityColor.opacity(0.4) : .clear, radius: 4)
         }
         .buttonStyle(.plain)
         .position(position)
-        .accessibilityLabel("\(region.displayName)\(isSelected ? ", pain level \(existingLocation!.intensity)" : "")")
+        .accessibilityLabel("\(region.displayName)\(isSelected ? ", pain level \(intensity)" : "")")
         .accessibilityHint("Tap to \(isSelected ? "edit or remove" : "add") pain location")
     }
 
@@ -482,7 +486,7 @@ struct PainBodyDiagramView: View {
     // MARK: - Intensity Editor Sheet
 
     private var intensityEditorSheet: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 24) {
                 // Region header
                 if let location = editingLocation {

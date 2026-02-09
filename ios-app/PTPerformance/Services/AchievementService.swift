@@ -209,12 +209,9 @@ class AchievementService: ObservableObject {
         let celebrationType: PRCelebrationType
         let improvement: Double?
 
-        if previousWeight == nil {
-            celebrationType = .firstPR
-            improvement = nil
-        } else if let prev = previousWeight {
+        if let prev = previousWeight {
             improvement = newWeight - prev
-            let improvementPercent = (improvement! / prev) * 100
+            let improvementPercent = (improvement ?? 0) / prev * 100
 
             // Check for milestone weights
             let milestoneWeights: [Double] = [100, 135, 185, 225, 275, 315, 365, 405, 495, 500]
@@ -226,7 +223,7 @@ class AchievementService: ObservableObject {
                 celebrationType = .newPR
             }
         } else {
-            celebrationType = .newPR
+            celebrationType = .firstPR
             improvement = nil
         }
 

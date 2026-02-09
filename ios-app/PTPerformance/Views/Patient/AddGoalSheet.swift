@@ -19,7 +19,7 @@ struct AddGoalSheet: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // MARK: - Title Section
                 Section {

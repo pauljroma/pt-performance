@@ -10,7 +10,7 @@ struct PatientProfileView: View {
     let patientId: String
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading {
                     ProgressView("Loading profile...")

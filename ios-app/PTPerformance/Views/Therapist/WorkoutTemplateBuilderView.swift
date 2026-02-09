@@ -22,7 +22,7 @@ struct WorkoutTemplateBuilderView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 basicInfoSection
                 classificationSection

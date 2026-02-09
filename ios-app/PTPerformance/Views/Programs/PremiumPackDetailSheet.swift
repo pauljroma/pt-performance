@@ -433,7 +433,7 @@ private struct PriceOptionCard: View {
                 .strokeBorder(isSelected ? themeColor : Color.clear, lineWidth: 2)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title) pricing: \(price) \(period)\(savings != nil ? ", \(savings!)" : "")")
+        .accessibilityLabel("\(title) pricing: \(price) \(period)\(savings.map { ", \($0)" } ?? "")")
     }
 }
 

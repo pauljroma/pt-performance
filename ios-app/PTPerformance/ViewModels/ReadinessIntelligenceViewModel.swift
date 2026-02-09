@@ -456,8 +456,10 @@ extension ReadinessIntelligenceViewModel {
 
         vm.workoutAdaptation = .sampleHighReadiness
 
-        vm.weeklyReadinessData = (0..<7).map { offset in
-            let date = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+        let calendar = Calendar.current
+        let today = Date()
+        vm.weeklyReadinessData = (0..<7).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
             let score = Double.random(in: 55...85)
             let band: ReadinessBand = score >= 80 ? .green : score >= 60 ? .yellow : .orange
             return DailyReadinessDataPoint(date: date, score: score, band: band)

@@ -358,7 +358,9 @@ final class CohortAnalyticsService {
         var weeklyData: [RetentionDataPoint] = []
 
         for week in 1...12 {
-            let weekDate = Calendar.current.date(byAdding: .day, value: week * 7, to: Date())!
+            guard let weekDate = Calendar.current.date(byAdding: .day, value: week * 7, to: Date()) else {
+                continue
+            }
 
             let activeAtWeek = enrollments.filter { enrollment in
                 // Patient is active if:
@@ -445,7 +447,9 @@ final class CohortAnalyticsService {
                 status = .onTrack
             } else if adherence >= 50 {
                 status = .needsAttention
-            } else if patient.lastSessionDate == nil || patient.lastSessionDate! < Date().addingTimeInterval(-604800) {
+            } else if let lastSession = patient.lastSessionDate, lastSession < Date().addingTimeInterval(-604800) {
+                status = .inactive
+            } else if patient.lastSessionDate == nil {
                 status = .inactive
             } else {
                 status = .atRisk
@@ -610,7 +614,9 @@ final class CohortAnalyticsService {
     }
 
     private func fetchAverageSessionsPerWeek(therapistId: String) async throws -> Double {
-        let fourWeeksAgo = Calendar.current.date(byAdding: .day, value: -28, to: Date())!
+        guard let fourWeeksAgo = Calendar.current.date(byAdding: .day, value: -28, to: Date()) else {
+            return 0
+        }
 
         do {
             let response = try await supabase.client
@@ -639,7 +645,9 @@ final class CohortAnalyticsService {
     }
 
     private func fetchPatientSessionsPerWeek(patientId: String) async throws -> Double {
-        let fourWeeksAgo = Calendar.current.date(byAdding: .day, value: -28, to: Date())!
+        guard let fourWeeksAgo = Calendar.current.date(byAdding: .day, value: -28, to: Date()) else {
+            return 0
+        }
 
         do {
             let response = try await supabase.client

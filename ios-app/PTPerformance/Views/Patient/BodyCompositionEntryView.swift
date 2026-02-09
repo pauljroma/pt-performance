@@ -17,7 +17,7 @@ struct BodyCompositionEntryView: View {
     let patientId: String
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // MARK: - Weight & Body Fat Section
                 Section(header: Text("Weight & Body Fat")) {

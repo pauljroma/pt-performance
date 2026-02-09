@@ -11,7 +11,7 @@ struct DailyReadinessCheckInView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // MARK: - Sleep Section
                 Section(header: Text("Sleep")) {

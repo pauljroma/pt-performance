@@ -15,6 +15,15 @@ import Combine
 @MainActor
 class RTSProtocolViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let apiDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+
     // MARK: - Published Properties - Protocol Data
 
     /// All protocols for the current therapist or patient
@@ -411,9 +420,6 @@ class RTSProtocolViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let dateFormatter = ISO8601DateFormatter()
-            dateFormatter.formatOptions = [.withInternetDateTime]
-
             let input = RTSProtocolInput(
                 patientId: patientId.uuidString,
                 therapistId: therapistId.uuidString,
@@ -818,11 +824,7 @@ class RTSProtocolViewModel: ObservableObject {
 
     /// Format a date for API submission
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        return formatter.string(from: date)
+        Self.apiDateFormatter.string(from: date)
     }
 }
 

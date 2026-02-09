@@ -65,7 +65,7 @@ struct ReadinessCheckInView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Show initial loading state
                 if isInitialLoading {

@@ -35,7 +35,7 @@ struct CreateTemplateView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Creation mode selector
                 modeSection

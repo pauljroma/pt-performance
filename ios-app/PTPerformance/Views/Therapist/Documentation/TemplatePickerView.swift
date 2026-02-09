@@ -18,7 +18,7 @@ struct TemplatePickerView: View {
     @State private var showPreview = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading templates...")
@@ -288,7 +288,7 @@ private struct TPTemplatePreviewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Template Info

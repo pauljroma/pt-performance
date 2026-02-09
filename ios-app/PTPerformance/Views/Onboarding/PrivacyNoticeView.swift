@@ -26,7 +26,7 @@ struct PrivacyNoticeView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     headerSection

@@ -60,7 +60,7 @@ struct LazyAsyncImage<Content: View, Placeholder: View>: View {
         }
 
         // Load asynchronously
-        Task.detached(priority: .userInitiated) {
+        Task(priority: .userInitiated) {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 if let loadedImage = UIImage(data: data) {

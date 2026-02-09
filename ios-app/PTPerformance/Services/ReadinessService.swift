@@ -933,7 +933,7 @@ extension ReadinessService {
         if let hrv = hrv, let baseline = baseline, baseline > 0 {
             hrvDeviation = ((hrv - baseline) / baseline) * 100
             // HRV score: 100 at +20% above baseline, 50 at baseline, 0 at -40% below
-            hrvScore = min(100, max(0, 50 + (hrvDeviation! * 2.5)))
+            hrvScore = min(100, max(0, 50 + (hrvDeviation ?? 0) * 2.5))
         }
 
         var sleepScore: Double?
@@ -1077,8 +1077,8 @@ extension ReadinessService {
         let scores = historicalData.compactMap { $0.readinessScore }
         guard !scores.isEmpty else {
             // No historical data, return baseline forecasts
-            return (1...3).map { days in
-                let forecastDate = calendar.date(byAdding: .day, value: days, to: today)!
+            return (1...3).compactMap { days in
+                guard let forecastDate = calendar.date(byAdding: .day, value: days, to: today) else { return nil }
                 return ReadinessForecast(
                     date: forecastDate,
                     predictedScore: 65.0,  // Default moderate readiness

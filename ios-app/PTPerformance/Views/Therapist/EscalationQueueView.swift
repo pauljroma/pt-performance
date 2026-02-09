@@ -23,7 +23,7 @@ struct EscalationQueueView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading && viewModel.escalations.isEmpty {
                     loadingView
@@ -255,7 +255,7 @@ struct EscalationQueueView: View {
     }
 
     private var resolveSheet: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section {
                     TextEditor(text: $resolutionNotes)
@@ -294,7 +294,7 @@ struct EscalationQueueView: View {
     }
 
     private var dismissSheet: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section {
                     TextField("Reason for dismissal", text: $dismissReason)
@@ -487,7 +487,7 @@ struct EscalationDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     // Header card
@@ -683,7 +683,7 @@ struct EscalationFilterSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Severity") {
                     ForEach(EscalationSeverity.allCases, id: \.self) { severity in

@@ -84,7 +84,7 @@ struct HealthKitSettingsView: View {
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Heart Rate Variability: \(healthKitService.todayHRV != nil ? "\(Int(healthKitService.todayHRV!)) milliseconds" : "No data")")
+                    .accessibilityLabel("Heart Rate Variability: \(healthKitService.todayHRV.map { "\(Int($0)) milliseconds" } ?? "No data")")
 
                     // Resting Heart Rate
                     HStack {
@@ -103,7 +103,7 @@ struct HealthKitSettingsView: View {
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Resting Heart Rate: \(healthKitService.todayRestingHR != nil ? "\(Int(healthKitService.todayRestingHR!)) beats per minute" : "No data")")
+                    .accessibilityLabel("Resting Heart Rate: \(healthKitService.todayRestingHR.map { "\(Int($0)) beats per minute" } ?? "No data")")
 
                     // Sleep
                     HStack {

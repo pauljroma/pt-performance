@@ -83,7 +83,8 @@ final class KPITrackingService: ObservableObject {
 
     /// Check if auto-refresh is currently active
     var isAutoRefreshActive: Bool {
-        autoRefreshTask != nil && !autoRefreshTask!.isCancelled
+        guard let task = autoRefreshTask else { return false }
+        return !task.isCancelled
     }
 
     // MARK: - Event Tracking
@@ -248,7 +249,16 @@ final class KPITrackingService: ObservableObject {
         }
 
         let periodEnd = Date()
-        let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: periodEnd)!
+        guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: periodEnd) else {
+            return KPIDashboard(
+                periodStart: periodEnd,
+                periodEnd: periodEnd,
+                ptMetrics: PTMetrics(totalPTs: 0, weeklyActivePTs: 0, wauPercentage: 0, avgPrepTimeSeconds: 0, briefsOpened: 0, plansAssigned: 0),
+                athleteMetrics: AthleteMetrics(totalAthletes: 0, weeklyActiveAthletes: 0, wauPercentage: 0, checkInsCompleted: 0, taskCompletionRate: 0, avgStreakDays: 0),
+                aiMetrics: AIMetrics(claimsGenerated: 0, citationCoverage: 0, avgConfidence: 0, p95LatencyMs: 0, abstentions: 0, uncertaintyFlags: 0),
+                safetyMetrics: SafetyMetrics(totalIncidents: 0, unresolvedHighSeverity: 0, escalationsTriggered: 0, thresholdBreaches: 0)
+            )
+        }
 
         // Try to use RPC for efficient dashboard query first, fallback to views/manual queries
         do {
@@ -363,7 +373,9 @@ final class KPITrackingService: ObservableObject {
 
             if let row = rows.first {
                 // Get additional metrics from kpi_events
-                let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+                guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                    throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
+                }
                 let startString = ISO8601DateFormatter().string(from: periodStart)
 
                 // Briefs opened
@@ -414,7 +426,10 @@ final class KPITrackingService: ObservableObject {
         }
 
         // Fallback to manual query
-        return await fetchPTMetrics(from: Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!, to: Date())
+        guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+            return PTMetrics(totalPTs: 0, weeklyActivePTs: 0, wauPercentage: 0, avgPrepTimeSeconds: 0, briefsOpened: 0, plansAssigned: 0)
+        }
+        return await fetchPTMetrics(from: periodStart, to: Date())
     }
 
     /// Fetch athlete metrics from vw_athlete_wau view
@@ -444,7 +459,9 @@ final class KPITrackingService: ObservableObject {
             let rows = try decoder.decode([AthleteWauViewRow].self, from: response.data)
 
             if let row = rows.first {
-                let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+                guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                    throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
+                }
                 let startString = ISO8601DateFormatter().string(from: periodStart)
 
                 // Check-ins completed
@@ -488,7 +505,10 @@ final class KPITrackingService: ObservableObject {
             errorLogger.logError(error, context: "KPITrackingService.fetchAthleteMetricsFromView")
         }
 
-        return await fetchAthleteMetrics(from: Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!, to: Date())
+        guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+            return AthleteMetrics(totalAthletes: 0, weeklyActiveAthletes: 0, wauPercentage: 0, checkInsCompleted: 0, taskCompletionRate: 0, avgStreakDays: 0)
+        }
+        return await fetchAthleteMetrics(from: periodStart, to: Date())
     }
 
     /// Fetch AI metrics from vw_ai_metrics view
@@ -516,7 +536,9 @@ final class KPITrackingService: ObservableObject {
                 }
             }
 
-            let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+            guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
+            }
             let startString = ISO8601DateFormatter().string(from: periodStart)
 
             let response = try await supabase.client
@@ -558,7 +580,10 @@ final class KPITrackingService: ObservableObject {
             errorLogger.logError(error, context: "KPITrackingService.fetchAIMetricsFromView")
         }
 
-        return await fetchAIMetrics(from: Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!, to: Date())
+        guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+            return AIMetrics(claimsGenerated: 0, citationCoverage: 0, avgConfidence: 0, p95LatencyMs: 0, abstentions: 0, uncertaintyFlags: 0)
+        }
+        return await fetchAIMetrics(from: periodStart, to: Date())
     }
 
     /// Fetch safety metrics from vw_safety_metrics view
@@ -607,7 +632,10 @@ final class KPITrackingService: ObservableObject {
             errorLogger.logError(error, context: "KPITrackingService.fetchSafetyMetricsFromView")
         }
 
-        return await fetchSafetyMetrics(from: Calendar.current.date(byAdding: .day, value: -7, to: Date())!, to: Date())
+        guard let periodStart = Calendar.current.date(byAdding: .day, value: -7, to: Date()) else {
+            return SafetyMetrics(totalIncidents: 0, unresolvedHighSeverity: 0, escalationsTriggered: 0, thresholdBreaches: 0)
+        }
+        return await fetchSafetyMetrics(from: periodStart, to: Date())
     }
 
     // MARK: - Trend Data Loading
@@ -630,7 +658,9 @@ final class KPITrackingService: ObservableObject {
     /// Load PT WAU trend data
     private func loadPTWauTrendData(periodDays: Int) async -> [KPITrendDataPoint] {
         do {
-            let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+            guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                return generateSampleTrendData(periodDays: periodDays, baseValue: 0.65, variance: 0.1)
+            }
             let startString = ISO8601DateFormatter().string(from: periodStart)
 
             // Get daily PT activity counts
@@ -687,7 +717,9 @@ final class KPITrackingService: ObservableObject {
                 }
             }
 
-            let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+            guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                return generateSampleTrendData(periodDays: periodDays, baseValue: 0.95, variance: 0.03)
+            }
             let startString = ISO8601DateFormatter().string(from: periodStart)
 
             let response = try await supabase.client
@@ -719,7 +751,9 @@ final class KPITrackingService: ObservableObject {
                 }
             }
 
-            let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
+            guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
+                return generateSampleTrendData(periodDays: periodDays, baseValue: 3000, variance: 500)
+            }
             let startString = ISO8601DateFormatter().string(from: periodStart)
 
             let response = try await supabase.client
@@ -1088,8 +1122,12 @@ final class KPITrackingService: ObservableObject {
         let currentDashboard = await getDashboard(periodDays: periodDays)
 
         // Get previous period
-        let previousEnd = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date())!
-        let previousStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: previousEnd)!
+        let now = Date()
+        guard let previousEnd = Calendar.current.date(byAdding: .day, value: -periodDays, to: now),
+              let previousStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: previousEnd) else {
+            // Return current dashboard with stable trends if date calculation fails
+            return (currentDashboard, DashboardTrends(ptWauTrend: .stable, athleteWauTrend: .stable, citationTrend: .stable, latencyTrend: .stable))
+        }
 
         async let previousPT = fetchPTMetrics(from: previousStart, to: previousEnd)
         async let previousAthlete = fetchAthleteMetrics(from: previousStart, to: previousEnd)

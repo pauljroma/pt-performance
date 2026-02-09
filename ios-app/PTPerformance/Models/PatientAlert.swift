@@ -5,7 +5,7 @@
 //  Clinical Safety Checks - Alert model for triggered safety rules
 //
 
-import SwiftUI
+import Foundation
 
 // MARK: - Alert Type
 
@@ -47,16 +47,16 @@ enum AlertType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Color for UI display
-    var color: Color {
+    /// Color name for UI display
+    var colorName: String {
         switch self {
-        case .safety: return .red
-        case .adherence: return .orange
-        case .progress: return .yellow
-        case .milestone: return .blue
-        case .checkIn: return .purple
-        case .workload: return .pink
-        case .clinical: return .teal
+        case .safety: return "red"
+        case .adherence: return "orange"
+        case .progress: return "yellow"
+        case .milestone: return "blue"
+        case .checkIn: return "purple"
+        case .workload: return "pink"
+        case .clinical: return "teal"
         }
     }
 }
@@ -84,14 +84,14 @@ enum CoachingAlertSeverity: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Color for UI display
-    var color: Color {
+    /// Color name for UI display
+    var colorName: String {
         switch self {
-        case .critical: return .red
-        case .high: return .orange
-        case .medium: return .yellow
-        case .low: return .blue
-        case .info: return .gray
+        case .critical: return "red"
+        case .high: return "orange"
+        case .medium: return "yellow"
+        case .low: return "blue"
+        case .info: return "gray"
         }
     }
 
@@ -143,15 +143,15 @@ enum AlertStatus: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// Color for UI display
-    var color: Color {
+    /// Color name for UI display
+    var colorName: String {
         switch self {
-        case .active: return .red
-        case .acknowledged: return .orange
-        case .inProgress: return .blue
-        case .resolved: return .green
-        case .dismissed: return .gray
-        case .escalated: return .purple
+        case .active: return "red"
+        case .acknowledged: return "orange"
+        case .inProgress: return "blue"
+        case .resolved: return "green"
+        case .dismissed: return "gray"
+        case .escalated: return "purple"
         }
     }
 
@@ -296,9 +296,9 @@ struct PatientAlert: Codable, Identifiable, Hashable, Equatable {
         severity.iconName
     }
 
-    /// Color for the alert
-    var color: Color {
-        severity.color
+    /// Color name for the alert
+    var colorName: String {
+        severity.colorName
     }
 
     /// Whether the alert is still active

@@ -206,17 +206,17 @@ struct PatientDetailView: View {
             await viewModel.fetchData(for: patient.id.uuidString)
         }
         .sheet(isPresented: $showProgramViewer) {
-            NavigationView {
+            NavigationStack {
                 ProgramViewerView(patientId: patient.id.uuidString)
             }
         }
         .sheet(isPresented: $showAddNote) {
-            NavigationView {
+            NavigationStack {
                 NotesView(patientId: patient.id.uuidString)
             }
         }
         .sheet(isPresented: $showProgressReport) {
-            NavigationView {
+            NavigationStack {
                 PatientProgressReportView(patient: patient)
             }
         }
@@ -231,7 +231,7 @@ struct PatientDetailView: View {
             ReportBuilderView(patient: patient)
         }
         .sheet(isPresented: $showIntakeAssessment) {
-            NavigationView {
+            NavigationStack {
                 IntakeAssessmentView(
                     patientId: patient.id,
                     therapistId: UUID(uuidString: PTSupabaseClient.shared.userId ?? "") ?? UUID()
@@ -239,17 +239,17 @@ struct PatientDetailView: View {
             }
         }
         .sheet(isPresented: $showSOAPNote) {
-            NavigationView {
+            NavigationStack {
                 SOAPNoteEditorView(patientId: patient.id.uuidString, sessionId: nil)
             }
         }
         .sheet(isPresented: $showAssessmentHistory) {
-            NavigationView {
+            NavigationStack {
                 AssessmentHistoryView(patientId: patient.id, patientName: patient.fullName)
             }
         }
         .sheet(isPresented: $showWeeklyReports) {
-            NavigationView {
+            NavigationStack {
                 ReportHistoryView(patient: patient)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
@@ -261,14 +261,14 @@ struct PatientDetailView: View {
             }
         }
         .sheet(isPresented: $showGenerateWeeklyReport) {
-            NavigationView {
+            NavigationStack {
                 GenerateWeeklyReportSheet(patient: patient, onDismiss: {
                     showGenerateWeeklyReport = false
                 })
             }
         }
         .sheet(isPresented: $showProgramProgress) {
-            NavigationView {
+            NavigationStack {
                 PatientProgramProgressView(patient: patient)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {

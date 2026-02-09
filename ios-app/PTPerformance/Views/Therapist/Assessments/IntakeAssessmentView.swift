@@ -44,7 +44,7 @@ struct IntakeAssessmentView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 ScrollView {
                     VStack(spacing: 20) {
@@ -947,7 +947,7 @@ private struct AddROMMeasurementSheet: View {
     @State private var notes = ""
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Joint & Movement") {
                     Picker("Joint", selection: $selectedJoint) {
@@ -1042,7 +1042,7 @@ private struct AddFunctionalTestSheet: View {
     ]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Test Information") {
                     Picker("Test Name", selection: $testName) {

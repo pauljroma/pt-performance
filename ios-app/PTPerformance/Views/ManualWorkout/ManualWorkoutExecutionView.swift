@@ -786,7 +786,7 @@ struct ManualWorkoutExecutionView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 if viewModel.isLoading && viewModel.exercises.isEmpty {
                     // Loading exercises state
@@ -895,7 +895,7 @@ struct ManualWorkoutExecutionView: View {
             // BUILD 285: AI substitution sheet with real alternative lookup
             .sheet(isPresented: $showAISubstitution) {
                 if let exercise = selectedExerciseForSubstitution {
-                    NavigationView {
+                    NavigationStack {
                         AISubstitutionSheetForManual(
                             exercise: exercise,
                             patientId: viewModel.patientId,
@@ -910,7 +910,7 @@ struct ManualWorkoutExecutionView: View {
             }
             // BUILD 260: Add exercise sheet
             .sheet(isPresented: $showAddExercise) {
-                NavigationView {
+                NavigationStack {
                     ExercisePickerForWorkout(
                         onExerciseSelected: { template in
                             viewModel.addExerciseFromTemplate(template)
@@ -1937,7 +1937,7 @@ struct ManualWorkoutExecutionView: View {
         }
 
         let prescription = "\(exercise.targetSets ?? 3) sets, \(exercise.targetReps ?? "10") reps"
-        let loadText = exercise.targetLoad != nil ? ", \(Int(exercise.targetLoad!)) \(exercise.loadUnit ?? "lbs")" : ""
+        let loadText = exercise.targetLoad.map { ", \(Int($0)) \(exercise.loadUnit ?? "lbs")" } ?? ""
 
         return "\(displayName)\(statusText), \(prescription)\(loadText)"
     }
@@ -1958,7 +1958,7 @@ struct ExerciseInfoSheet: View {
     @State private var isLoading = true
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Exercise Name & Metadata

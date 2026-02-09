@@ -619,7 +619,7 @@ struct ProgramWorkoutExecutionView: View {
                         }
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Target: \(exercise.targetSets ?? 0) sets of \(exercise.targetReps ?? "0") reps\(exercise.targetLoad != nil && exercise.targetLoad! > 0 ? " at \(Int(exercise.targetLoad!)) \(exercise.loadUnit ?? "lbs")" : "")")
+                    .accessibilityLabel("Target: \(exercise.targetSets ?? 0) sets of \(exercise.targetReps ?? "0") reps\(exercise.targetLoad.map { $0 > 0 ? " at \(Int($0)) \(exercise.loadUnit ?? "lbs")" : "" } ?? "")")
                 }
 
                 Divider()
@@ -908,7 +908,7 @@ private struct ExerciseListRow: View {
                         .foregroundColor(isSkipped ? .secondary : .primary)
                         .strikethrough(isSkipped)
 
-                    Text(exercise.setsRepsDisplay + (exercise.targetLoad != nil ? " @ \(Int(exercise.targetLoad!)) \(exercise.loadUnit ?? "lbs")" : ""))
+                    Text(exercise.setsRepsDisplay + (exercise.targetLoad.map { " @ \(Int($0)) \(exercise.loadUnit ?? "lbs")" } ?? ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

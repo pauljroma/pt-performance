@@ -16,7 +16,7 @@ struct JaegerBandView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if viewModel.isSessionActive {
                     ActiveRoutineView(viewModel: viewModel)
@@ -393,7 +393,7 @@ private struct VideoPlayerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             if let url = URL(string: videoUrl) {
                 VideoPlayer(player: AVPlayer(url: url))
                     .edgesIgnoringSafeArea(.all)

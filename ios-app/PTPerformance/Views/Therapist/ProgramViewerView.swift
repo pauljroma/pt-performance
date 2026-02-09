@@ -259,7 +259,7 @@ struct ExerciseRowCompact: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(8)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Exercise \(exercise.orderIndex + 1): \(exercise.exerciseName), \(exercise.sets) sets of \(exercise.reps) reps\(exercise.load != nil ? ", \(Int(exercise.load!)) \(exercise.loadUnit ?? "lbs")" : "")\(exercise.restPeriod != nil ? ", \(exercise.restPeriod!) seconds rest" : "")")
+        .accessibilityLabel("Exercise \(exercise.orderIndex + 1): \(exercise.exerciseName), \(exercise.sets) sets of \(exercise.reps) reps\(exercise.load.map { ", \(Int($0)) \(exercise.loadUnit ?? "lbs")" } ?? "")\(exercise.restPeriod.map { ", \($0) seconds rest" } ?? "")")
     }
 }
 

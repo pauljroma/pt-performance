@@ -114,12 +114,12 @@ struct DashboardKPISection: View {
                     KPICard(
                         icon: "checkmark.circle.fill",
                         title: "Avg Adherence",
-                        value: averageAdherence != nil ? "\(Int(averageAdherence!))%" : "N/A",
+                        value: averageAdherence.map { "\(Int($0))%" } ?? "N/A",
                         trend: nil,
                         trendLabel: nil,
                         accentColor: adherenceColor(for: averageAdherence)
                     )
-                    .accessibilityLabel("Average adherence: \(averageAdherence != nil ? "\(Int(averageAdherence!)) percent" : "Not available")")
+                    .accessibilityLabel("Average adherence: \(averageAdherence.map { "\(Int($0)) percent" } ?? "Not available")")
 
                     // High Priority Alerts
                     KPICard(

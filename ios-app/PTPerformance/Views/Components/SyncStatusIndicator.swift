@@ -118,7 +118,7 @@ struct SyncStatusDetailView: View {
     @State private var isSyncing = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 // Summary Section
                 Section {

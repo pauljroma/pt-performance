@@ -5,7 +5,7 @@
 //  Model representing a user's enrollment in a program
 //
 
-import SwiftUI
+import Foundation
 
 /// A user's enrollment in a program from the program library
 struct ProgramEnrollment: Codable, Identifiable, Hashable, Equatable {
@@ -127,12 +127,12 @@ enum EnrollmentStatus: String, Codable, CaseIterable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .active: return .green
-        case .completed: return .blue
-        case .paused: return .orange
-        case .cancelled: return .gray
+        case .active: return "green"
+        case .completed: return "blue"
+        case .paused: return "orange"
+        case .cancelled: return "gray"
         }
     }
 

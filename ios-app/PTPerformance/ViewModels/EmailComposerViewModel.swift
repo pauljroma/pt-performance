@@ -16,6 +16,13 @@ import Combine
 @MainActor
 final class EmailComposerViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     // Recipient fields
@@ -344,9 +351,7 @@ final class EmailComposerViewModel: ObservableObject {
 
     /// Format date for display
     private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        Self.mediumDateFormatter.string(from: date)
     }
 
     /// Reset the form for a new email

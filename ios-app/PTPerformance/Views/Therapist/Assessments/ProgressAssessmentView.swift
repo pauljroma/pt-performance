@@ -44,7 +44,7 @@ struct ProgressAssessmentView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Tab selector
                 tabSelector

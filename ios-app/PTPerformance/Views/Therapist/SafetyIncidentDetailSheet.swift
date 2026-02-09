@@ -28,7 +28,7 @@ struct SafetyIncidentDetailSheet: View {
     @State private var isPerformingAction = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     // Incident Header
@@ -363,7 +363,7 @@ struct SafetyIncidentDetailSheet: View {
     // MARK: - Resolution Form Sheet
 
     private var resolutionFormSheet: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section {
                     TextEditor(text: $resolutionNotes)

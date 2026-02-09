@@ -81,7 +81,7 @@ struct ReportHistoryView: View {
         }
         .sheet(isPresented: $showReportDetail) {
             if let report = selectedReport {
-                NavigationView {
+                NavigationStack {
                     WeeklyReportView(report: report, patientName: patient.fullName)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
@@ -98,7 +98,7 @@ struct ReportHistoryView: View {
         }
         .sheet(isPresented: $showCompareSheet) {
             if compareReports.count >= 2 {
-                NavigationView {
+                NavigationStack {
                     ReportComparisonView(
                         reports: Array(compareReports.prefix(2)),
                         patientName: patient.fullName
@@ -262,7 +262,7 @@ struct ReportHistoryView: View {
     // MARK: - Week Picker Sheet
 
     private var weekPickerSheet: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: Spacing.lg) {
                 Text("Select Week")
                     .font(.headline)

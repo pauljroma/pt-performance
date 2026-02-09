@@ -63,7 +63,7 @@ class PerformanceMonitor {
 
     private init() {
         // ACP-932/945: Defer logging to avoid blocking during cold start
-        Task.detached(priority: .utility) {
+        Task(priority: .utility) {
             Logger(subsystem: "com.getmodus.app", category: "Performance")
                 .info("PerformanceMonitor initialized")
         }

@@ -176,7 +176,9 @@ class WorkoutExportService {
             try await builder.addMetadata(metadata)
 
             // Add energy burned sample
-            let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
+            guard let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else {
+                throw HealthKitError.saveFailed("Failed to create energy type")
+            }
             let energySample = HKQuantitySample(
                 type: energyType,
                 quantity: HKQuantity(unit: .kilocalorie(), doubleValue: estimatedCalories),

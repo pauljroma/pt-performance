@@ -134,7 +134,7 @@ struct StreakCalendarView: View {
         let hasArmCare = entry?.armCareCompleted ?? false
         let hasAnyActivity = entry?.hasAnyActivity ?? false
         let isToday = Calendar.current.isDateInToday(date)
-        let isSelected = selectedDate != nil && Calendar.current.isDate(date, inSameDayAs: selectedDate!)
+        let isSelected = selectedDate.map { Calendar.current.isDate(date, inSameDayAs: $0) } ?? false
         let isFuture = date > Date()
 
         Button(action: {

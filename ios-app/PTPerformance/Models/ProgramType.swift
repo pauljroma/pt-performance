@@ -5,7 +5,7 @@
 //  Build 294: Program type classification for rehab, performance, and lifestyle programs
 //
 
-import SwiftUI
+import Foundation
 
 /// The three program categories available in the system
 enum ProgramType: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -39,11 +39,11 @@ enum ProgramType: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .rehab: return .orange
-        case .performance: return .blue
-        case .lifestyle: return .green
+        case .rehab: return "orange"
+        case .performance: return "blue"
+        case .lifestyle: return "green"
         }
     }
 

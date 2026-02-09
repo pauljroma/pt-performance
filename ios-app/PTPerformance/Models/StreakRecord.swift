@@ -6,7 +6,7 @@
 //  Models for streak records and history
 //
 
-import SwiftUI
+import Foundation
 
 // MARK: - Streak Type
 
@@ -34,11 +34,11 @@ enum StreakType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .workout: return .blue
-        case .armCare: return .orange
-        case .combined: return .red
+        case .workout: return "blue"
+        case .armCare: return "orange"
+        case .combined: return "red"
         }
     }
 }
@@ -322,14 +322,14 @@ enum StreakBadge: Int, CaseIterable {
         }
     }
 
-    var color: Color {
+    var colorName: String {
         switch self {
-        case .starter: return .gray
-        case .committed: return .blue
-        case .dedicated: return .green
-        case .champion: return .orange
-        case .elite: return .purple
-        case .legend: return .yellow
+        case .starter: return "gray"
+        case .committed: return "blue"
+        case .dedicated: return "green"
+        case .champion: return "orange"
+        case .elite: return "purple"
+        case .legend: return "yellow"
         }
     }
 

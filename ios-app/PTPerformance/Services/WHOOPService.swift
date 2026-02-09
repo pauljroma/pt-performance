@@ -9,10 +9,65 @@ class WHOOPService {
     private let redirectUri: String = "modus://whoop-callback"
 
     private let baseURL = "https://api.whoop.com/v1"
+    private let secureStore = SecureStore.shared
 
     init(clientId: String, clientSecret: String) {
         self.clientId = clientId
         self.clientSecret = clientSecret
+    }
+
+    // MARK: - Secure Token Storage
+
+    /// Stores WHOOP tokens securely in the Keychain
+    /// - Parameter token: The WHOOPAccessToken to store
+    func storeTokens(_ token: WHOOPAccessToken) {
+        do {
+            try secureStore.set(token.accessToken, forKey: SecureStore.Keys.whoopAccessToken)
+            try secureStore.set(token.refreshToken, forKey: SecureStore.Keys.whoopRefreshToken)
+            DebugLogger.shared.info("WHOOPService", "WHOOP tokens stored securely in Keychain")
+        } catch {
+            ErrorLogger.shared.logError(error, context: "WHOOPService.storeTokens")
+            DebugLogger.shared.error("WHOOPService", "Failed to store WHOOP tokens: \(error.localizedDescription)")
+        }
+    }
+
+    /// Retrieves the stored WHOOP access token from Keychain
+    /// - Returns: The access token, or nil if not found
+    func getStoredAccessToken() -> String? {
+        do {
+            return try secureStore.getString(forKey: SecureStore.Keys.whoopAccessToken)
+        } catch {
+            DebugLogger.shared.error("WHOOPService", "Failed to retrieve WHOOP access token: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Retrieves the stored WHOOP refresh token from Keychain
+    /// - Returns: The refresh token, or nil if not found
+    func getStoredRefreshToken() -> String? {
+        do {
+            return try secureStore.getString(forKey: SecureStore.Keys.whoopRefreshToken)
+        } catch {
+            DebugLogger.shared.error("WHOOPService", "Failed to retrieve WHOOP refresh token: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Clears all stored WHOOP tokens from Keychain
+    func clearStoredTokens() {
+        do {
+            try secureStore.delete(forKey: SecureStore.Keys.whoopAccessToken)
+            try secureStore.delete(forKey: SecureStore.Keys.whoopRefreshToken)
+            DebugLogger.shared.info("WHOOPService", "WHOOP tokens cleared from Keychain")
+        } catch {
+            DebugLogger.shared.error("WHOOPService", "Failed to clear WHOOP tokens: \(error.localizedDescription)")
+        }
+    }
+
+    /// Checks if WHOOP tokens are stored
+    /// - Returns: True if access token exists in Keychain
+    func hasStoredTokens() -> Bool {
+        return getStoredAccessToken() != nil
     }
 
     // MARK: - OAuth 2.0 Flow
@@ -35,7 +90,9 @@ class WHOOPService {
     /// - Parameter code: Authorization code from OAuth callback
     /// - Returns: WHOOPAccessToken containing access token, refresh token, and expiry
     func exchangeCodeForToken(code: String) async throws -> WHOOPAccessToken {
-        let url = URL(string: "https://api.whoop.com/oauth/token")!
+        guard let url = URL(string: "https://api.whoop.com/oauth/token") else {
+            throw WHOOPError.apiError("Invalid token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -57,7 +114,9 @@ class WHOOPService {
     /// - Parameter refreshToken: The refresh token from previous authentication
     /// - Returns: New WHOOPAccessToken with updated credentials
     func refreshAccessToken(refreshToken: String) async throws -> WHOOPAccessToken {
-        let url = URL(string: "https://api.whoop.com/oauth/token")!
+        guard let url = URL(string: "https://api.whoop.com/oauth/token") else {
+            throw WHOOPError.apiError("Invalid token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -82,7 +141,9 @@ class WHOOPService {
     /// - Parameter accessToken: Valid WHOOP access token
     /// - Returns: WHOOPRecovery with latest recovery data
     func fetchTodayRecovery(accessToken: String) async throws -> WHOOPRecovery {
-        let url = URL(string: "\(baseURL)/recovery")!
+        guard let url = URL(string: "\(baseURL)/recovery") else {
+            throw WHOOPError.apiError("Invalid recovery URL")
+        }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 
@@ -113,7 +174,9 @@ class WHOOPService {
     /// - Parameter accessToken: Valid WHOOP access token
     /// - Returns: WHOOPSleep with latest sleep data
     func fetchTodaySleep(accessToken: String) async throws -> WHOOPSleep {
-        let url = URL(string: "\(baseURL)/sleep")!
+        guard let url = URL(string: "\(baseURL)/sleep") else {
+            throw WHOOPError.apiError("Invalid sleep URL")
+        }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 

@@ -195,5 +195,9 @@ extension SecureStore {
         static let authToken = "auth_token"
         static let refreshToken = "refresh_token"
         static let userIdentifier = "user_identifier"
+
+        // WHOOP Integration tokens (Build 40)
+        static let whoopAccessToken = "whoop_access_token"
+        static let whoopRefreshToken = "whoop_refresh_token"
     }
 }

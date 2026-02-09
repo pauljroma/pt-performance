@@ -44,7 +44,7 @@ struct TemplateLibraryView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Search and filters
                 searchAndFilters

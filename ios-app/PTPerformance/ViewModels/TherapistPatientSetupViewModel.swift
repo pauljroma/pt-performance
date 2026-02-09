@@ -377,7 +377,10 @@ class TherapistPatientSetupViewModel: ObservableObject {
 
             let decoder = JSONDecoder()
             let createdPatient = try decoder.decode(PatientIdResponse.self, from: patientResponse.data)
-            let patientId = UUID(uuidString: createdPatient.id)!
+            guard let patientId = UUID(uuidString: createdPatient.id) else {
+                self.error = "Invalid patient ID format returned from server"
+                return
+            }
             self.createdPatientId = patientId
 
             // 2. Create goals
@@ -497,10 +500,17 @@ class TherapistPatientSetupViewModel: ObservableObject {
         // Generate a secure 8-character code
         let code = generateSecureCode()
 
+        guard let expirationDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) else {
+            #if DEBUG
+            print("Failed to calculate expiration date for linking code")
+            #endif
+            return
+        }
+
         let codeInsert = LinkingCodeInsert(
             patientId: patientId.uuidString,
             code: code,
-            expiresAt: Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+            expiresAt: expirationDate
         )
 
         do {

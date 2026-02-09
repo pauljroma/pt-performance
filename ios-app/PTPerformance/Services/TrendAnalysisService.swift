@@ -609,7 +609,9 @@ final class TrendAnalysisService: ObservableObject {
         }
 
         for i in 0..<days {
-            let date = Calendar.current.date(byAdding: .day, value: -days + i + 1, to: Date())!
+            guard let date = Calendar.current.date(byAdding: .day, value: -days + i + 1, to: Date()) else {
+                continue
+            }
             let trendAdjustment = Double(i) * 0.2  // Slight upward trend
             let value = baseValue + trendAdjustment + Double.random(in: -variance...variance)
             let clampedValue = max(metric.typicalRange.lowerBound, min(metric.typicalRange.upperBound, value))

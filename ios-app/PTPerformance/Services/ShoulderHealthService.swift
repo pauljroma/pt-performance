@@ -199,7 +199,9 @@ class ShoulderHealthService {
         patientId: String,
         days: Int = 30
     ) async throws -> ShoulderTrendData {
-        let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) else {
+            throw NSError(domain: "ShoulderHealthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate start date"])
+        }
         let startDateStr = ISO8601DateFormatter().string(from: startDate)
 
         // Fetch ROM data

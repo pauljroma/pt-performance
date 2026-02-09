@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 /// Helper model for readiness score ranges and categories
 /// Provides categorization and recommendations based on readiness scores
@@ -15,9 +15,9 @@ struct ReadinessScoreHelper {
         return ReadinessCategory.category(for: score)
     }
     
-    /// Get the color for this score
-    var color: Color {
-        return category.color
+    /// Get the color name for this score
+    var colorName: String {
+        return category.colorName
     }
     
     /// Get the recommendation for this score
@@ -65,19 +65,19 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
     
     // MARK: - Display Properties
     
-    /// Color associated with this category
-    var color: Color {
+    /// Color name associated with this category
+    var colorName: String {
         switch self {
         case .elite:
-            return .green
+            return "green"
         case .high:
-            return .blue
+            return "blue"
         case .moderate:
-            return .yellow
+            return "yellow"
         case .low:
-            return .orange
+            return "orange"
         case .poor:
-            return .red
+            return "red"
         }
     }
     

@@ -59,7 +59,7 @@ class ImageCacheService: ObservableObject {
         )
 
         // Cleanup old cache on init
-        Task.detached(priority: .utility) { [weak self] in
+        Task(priority: .utility) { [weak self] in
             await self?.cleanupOldCache()
         }
     }
@@ -97,7 +97,7 @@ class ImageCacheService: ObservableObject {
     /// Preload images in background for better UX
     /// - Parameter urls: Array of image URLs to preload
     func preloadImages(urls: [URL]) {
-        Task.detached(priority: .utility) { [weak self] in
+        Task(priority: .utility) { [weak self] in
             for url in urls {
                 _ = try? await self?.loadImage(from: url)
             }

@@ -153,11 +153,15 @@ struct TrainingSyncRecommendation {
     let protocol_: FastingProtocolType
     let reason: String
 
-    /// Formatted eating window string
-    var formattedWindow: String {
+    private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return "\(formatter.string(from: suggestedEatingStart)) - \(formatter.string(from: suggestedEatingEnd))"
+        return formatter
+    }()
+
+    /// Formatted eating window string
+    var formattedWindow: String {
+        "\(Self.timeFormatter.string(from: suggestedEatingStart)) - \(Self.timeFormatter.string(from: suggestedEatingEnd))"
     }
 
     /// Protocol display string

@@ -14,6 +14,14 @@ import Combine
 @MainActor
 final class CanonicalTimelineViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     /// All events for current date range and filters
@@ -267,11 +275,7 @@ final class CanonicalTimelineViewModel: ObservableObject {
             return selectedDateRange.displayName
         }
 
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-
-        return "\(formatter.string(from: dateRange.start)) - \(formatter.string(from: dateRange.end))"
+        return "\(Self.mediumDateFormatter.string(from: dateRange.start)) - \(Self.mediumDateFormatter.string(from: dateRange.end))"
     }
 
     // MARK: - Private Helpers

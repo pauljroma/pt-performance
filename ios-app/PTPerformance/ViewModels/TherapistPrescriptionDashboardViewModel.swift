@@ -259,7 +259,11 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
             await loadPatients(therapistId: therapistId)
 
             // Load prescriptions with patient data
-            let loadedPrescriptions = try await prescriptionService.fetchTherapistDashboardPrescriptions(therapistId: UUID(uuidString: therapistId)!)
+            guard let therapistUUID = UUID(uuidString: therapistId) else {
+                errorMessage = "Invalid therapist ID format"
+                return
+            }
+            let loadedPrescriptions = try await prescriptionService.fetchTherapistDashboardPrescriptions(therapistId: therapistUUID)
 
             // Map prescriptions to patients
             prescriptions = loadedPrescriptions.compactMap { prescription in

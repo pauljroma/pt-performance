@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 // MARK: - Readiness Band System Types
 
@@ -29,13 +29,13 @@ enum ReadinessBand: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Color for UI display
-    var color: Color {
+    /// Color name for UI display
+    var colorName: String {
         switch self {
-        case .green: return .green
-        case .yellow: return .yellow
-        case .orange: return .orange
-        case .red: return .red
+        case .green: return "green"
+        case .yellow: return "yellow"
+        case .orange: return "orange"
+        case .red: return "red"
         }
     }
 
@@ -401,9 +401,9 @@ extension DailyReadiness {
         return ReadinessCategory.category(for: score)
     }
 
-    /// Color for displaying the readiness score
-    var scoreColor: Color {
-        return category?.color ?? .gray
+    /// Color name for displaying the readiness score
+    var scoreColorName: String {
+        return category?.colorName ?? "gray"
     }
 
     /// Formatted score text for display

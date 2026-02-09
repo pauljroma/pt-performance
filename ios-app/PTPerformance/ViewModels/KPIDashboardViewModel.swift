@@ -16,6 +16,14 @@ import Combine
 @MainActor
 final class KPIDashboardViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let dateTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     @Published private(set) var dashboard: KPIDashboard?
@@ -248,10 +256,7 @@ final class KPIDashboardViewModel: ObservableObject {
     }
 
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.dateTimeFormatter.string(from: date)
     }
 }
 

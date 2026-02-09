@@ -11,6 +11,13 @@ import SwiftUI
 @MainActor
 class BodyCompGoalsViewModel: ObservableObject {
 
+    // MARK: - Static Formatters
+    private static let isoDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
     // MARK: - Published Properties
 
     @Published var currentGoals: BodyCompGoals?
@@ -229,9 +236,7 @@ class BodyCompGoalsViewModel: ObservableObject {
             }
 
             // Format target date as YYYY-MM-DD string for PostgreSQL DATE type
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let targetDateString = dateFormatter.string(from: targetDate)
+            let targetDateString = Self.isoDateFormatter.string(from: targetDate)
 
             // Create the new goal with current values as starting point
             let input = CreateBodyCompGoalInput(
@@ -289,9 +294,7 @@ class BodyCompGoalsViewModel: ObservableObject {
         do {
             var targetDateString: String? = nil
             if let date = targetDate {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd"
-                targetDateString = dateFormatter.string(from: date)
+                targetDateString = Self.isoDateFormatter.string(from: date)
             }
 
             var update = UpdateBodyCompGoalInput()

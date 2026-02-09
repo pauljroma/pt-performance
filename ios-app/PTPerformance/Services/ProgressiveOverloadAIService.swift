@@ -1140,26 +1140,19 @@ extension ExercisePerformance {
     /// Sample performance entries for testing
     static var sampleEntries: [ExercisePerformance] {
         let calendar = Calendar.current
-        return [
-            ExercisePerformance(
-                date: calendar.date(byAdding: .day, value: -1, to: Date())!,
-                load: 135,
-                reps: [8, 8, 7],
-                rpe: 7.5
-            ),
-            ExercisePerformance(
-                date: calendar.date(byAdding: .day, value: -4, to: Date())!,
-                load: 135,
-                reps: [8, 8, 8],
-                rpe: 7.0
-            ),
-            ExercisePerformance(
-                date: calendar.date(byAdding: .day, value: -7, to: Date())!,
-                load: 132.5,
-                reps: [8, 8, 8],
-                rpe: 7.0
-            )
-        ]
+        var entries: [ExercisePerformance] = []
+
+        if let date1 = calendar.date(byAdding: .day, value: -1, to: Date()) {
+            entries.append(ExercisePerformance(date: date1, load: 135, reps: [8, 8, 7], rpe: 7.5))
+        }
+        if let date2 = calendar.date(byAdding: .day, value: -4, to: Date()) {
+            entries.append(ExercisePerformance(date: date2, load: 135, reps: [8, 8, 8], rpe: 7.0))
+        }
+        if let date3 = calendar.date(byAdding: .day, value: -7, to: Date()) {
+            entries.append(ExercisePerformance(date: date3, load: 132.5, reps: [8, 8, 8], rpe: 7.0))
+        }
+
+        return entries
     }
 }
 

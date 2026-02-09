@@ -18,10 +18,14 @@ struct TrendDataPoint: Identifiable {
     let value: Double
     let label: String?
 
-    var formattedDate: String {
+    private static let shortDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    var formattedDate: String {
+        Self.shortDateFormatter.string(from: date)
     }
 }
 

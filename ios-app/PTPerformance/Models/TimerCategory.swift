@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 /// Timer category enum - maps to database timer_category enum
 /// Used for organizing and filtering timer presets
@@ -39,19 +39,19 @@ enum TimerCategory: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Category color for UI display
-    var color: Color {
+    /// Category color name for UI display
+    var colorName: String {
         switch self {
         case .cardio:
-            return .red
+            return "red"
         case .strength:
-            return .blue
+            return "blue"
         case .warmup:
-            return .orange
+            return "orange"
         case .cooldown:
-            return .purple
+            return "purple"
         case .recovery:
-            return .green
+            return "green"
         }
     }
 
