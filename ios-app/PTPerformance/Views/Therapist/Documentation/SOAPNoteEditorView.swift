@@ -16,6 +16,8 @@ struct SOAPNoteEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showTemplatePickerSheet = false
     @State private var showSignConfirmation = false
+    @State private var showPlanSuggestions = false
+    @State private var showSessionDataImport = false
 
     var body: some View {
         ZStack {
@@ -77,6 +79,20 @@ struct SOAPNoteEditorView: View {
         .sheet(isPresented: $showTemplatePickerSheet) {
             TemplatePickerView(templateType: .soapNote) { template in
                 viewModel.applyTemplate(template)
+            }
+        }
+        .sheet(isPresented: $showPlanSuggestions) {
+            SOAPPlanSuggestionView(
+                subjective: viewModel.subjective,
+                objective: viewModel.objective,
+                assessment: viewModel.assessment,
+                plan: $viewModel.plan,
+                patientId: patientId
+            )
+        }
+        .sheet(isPresented: $showSessionDataImport) {
+            SessionDataImportView(patientId: patientId) { importedText in
+                appendToObjective(importedText)
             }
         }
         .alert("Sign Note", isPresented: $showSignConfirmation) {
@@ -196,14 +212,34 @@ struct SOAPNoteEditorView: View {
                 isLocked: viewModel.isSigned
             )
 
-            // Objective
+            // Objective with Session Import
             SOAPSectionEditor(
                 title: "Objective",
                 icon: "ruler",
                 iconColor: .green,
                 placeholder: "Measurable findings, vital signs, ROM, strength testing...",
                 text: $viewModel.objective,
-                isLocked: viewModel.isSigned
+                isLocked: viewModel.isSigned,
+                trailingButton: !viewModel.isSigned ? AnyView(
+                    Button {
+                        HapticService.light()
+                        showSessionDataImport = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "square.and.arrow.down.on.square")
+                            Text("Import")
+                        }
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .accessibilityLabel("Import session data")
+                    .accessibilityHint("Opens session data importer to auto-fill objective metrics from recent sessions")
+                ) : nil
             )
 
             // Assessment
@@ -216,16 +252,49 @@ struct SOAPNoteEditorView: View {
                 isLocked: viewModel.isSigned
             )
 
-            // Plan
+            // Plan with AI suggestions
             SOAPSectionEditor(
                 title: "Plan",
                 icon: "list.clipboard",
                 iconColor: .orange,
                 placeholder: "Treatment plan, goals, next steps, patient education...",
                 text: $viewModel.plan,
-                isLocked: viewModel.isSigned
+                isLocked: viewModel.isSigned,
+                trailingButton: !viewModel.isSigned ? AnyView(
+                    Button {
+                        HapticService.light()
+                        showPlanSuggestions = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "sparkles")
+                            Text("AI Suggest")
+                        }
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .accessibilityLabel("Get AI suggestions for treatment plan")
+                    .accessibilityHint("Opens AI-powered suggestions based on your note content")
+                ) : nil
             )
         }
+    }
+
+    // MARK: - Helper Functions
+
+    /// Appends imported session data to the Objective section
+    private func appendToObjective(_ importedText: String) {
+        if viewModel.objective.isEmpty {
+            viewModel.objective = importedText
+        } else {
+            // Add separator and append
+            viewModel.objective += "\n\n--- Imported Session Data ---\n\n" + importedText
+        }
+        HapticService.success()
     }
 
     // MARK: - Sign Button
@@ -302,40 +371,50 @@ struct SOAPSectionEditor: View {
     let placeholder: String
     @Binding var text: String
     let isLocked: Bool
+    var trailingButton: AnyView? = nil
 
     @State private var isExpanded = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
-            } label: {
-                HStack {
-                    Image(systemName: icon)
-                        .foregroundColor(iconColor)
-                        .frame(width: 24)
-
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Spacer()
-
-                    if !text.isEmpty {
-                        Text("\(text.count) chars")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded.toggle()
                     }
+                } label: {
+                    HStack {
+                        Image(systemName: icon)
+                            .foregroundColor(iconColor)
+                            .frame(width: 24)
 
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(.secondary)
-                        .font(.caption)
+                        Text(title)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        Spacer()
+
+                        if !text.isEmpty {
+                            Text("\(text.count) chars")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(title) section")
+                .accessibilityHint(isExpanded ? "Tap to collapse" : "Tap to expand")
+
+                // Trailing action button (e.g., Import, AI Suggest)
+                if let button = trailingButton {
+                    button
                 }
             }
-            .buttonStyle(.plain)
 
             // Editor
             if isExpanded {
@@ -347,6 +426,7 @@ struct SOAPSectionEditor: View {
                         .padding()
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(8)
+                        .accessibilityLabel("\(title) content: \(text.isEmpty ? "No content" : text)")
                 } else {
                     TextEditor(text: $text)
                         .font(.body)
@@ -367,6 +447,8 @@ struct SOAPSectionEditor: View {
                             },
                             alignment: .topLeading
                         )
+                        .accessibilityLabel("\(title) text editor")
+                        .accessibilityHint(placeholder)
                 }
             }
         }
