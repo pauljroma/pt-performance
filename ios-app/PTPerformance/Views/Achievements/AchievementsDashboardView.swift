@@ -8,35 +8,54 @@
 
 import SwiftUI
 
+// MARK: - Dashboard Tab
+
+enum AchievementDashboardTab: String, CaseIterable, Identifiable {
+    case achievements = "achievements"
+    case leaderboard = "leaderboard"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .achievements: return "Achievements"
+        case .leaderboard: return "Leaderboard"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .achievements: return "trophy.fill"
+        case .leaderboard: return "chart.bar.fill"
+        }
+    }
+}
+
 // MARK: - Achievements Dashboard View
 
 struct AchievementsDashboardView: View {
     let patientId: UUID
 
     @StateObject private var achievementService = AchievementService.shared
+    @State private var selectedTab: AchievementDashboardTab = .achievements
     @State private var selectedFilter: AchievementFilter = .all
     @State private var selectedAchievement: AchievementProgress?
     @State private var showShareSheet = false
     @State private var shareText = ""
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Points and stats header
-                statsHeader
+        VStack(spacing: 0) {
+            // Tab selector
+            tabSelector
+                .padding(.horizontal)
+                .padding(.top, Spacing.sm)
 
-                // Recent unlocks section
-                if !recentUnlocks.isEmpty {
-                    recentUnlocksSection
-                }
-
-                // Filter tabs
-                filterTabs
-
-                // Achievements grid/list
-                achievementsSection
+            // Content based on selected tab
+            if selectedTab == .achievements {
+                achievementsContent
+            } else {
+                AchievementLeaderboardView(patientId: patientId)
             }
-            .padding()
         }
         .navigationTitle("Achievements")
         .navigationBarTitleDisplayMode(.large)
@@ -59,6 +78,74 @@ struct AchievementsDashboardView: View {
         }
     }
 
+    // MARK: - Tab Selector
+
+    private var tabSelector: some View {
+        HStack(spacing: Spacing.xs) {
+            ForEach(AchievementDashboardTab.allCases) { tab in
+                Button(action: {
+                    HapticFeedback.selectionChanged()
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedTab = tab
+                    }
+                }) {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: tab.icon)
+                            .font(.subheadline)
+                        Text(tab.displayName)
+                            .font(.subheadline)
+                            .fontWeight(selectedTab == tab ? .semibold : .regular)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.sm)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .fill(selectedTab == tab ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                    )
+                    .foregroundColor(selectedTab == tab ? .white : .primary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(tab.displayName) tab")
+                .accessibilityAddTraits(selectedTab == tab ? .isSelected : [])
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Dashboard tabs")
+    }
+
+    // MARK: - Achievements Content
+
+    private var achievementsContent: some View {
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                // Points and stats header
+                statsHeader
+
+                // Up Next recommendations section
+                if !upNextAchievements.isEmpty {
+                    UpNextAchievementsSection(
+                        achievements: upNextAchievements
+                    ) { achievement in
+                        selectedAchievement = achievement
+                    }
+                }
+
+                // Recent unlocks section
+                if !recentUnlocks.isEmpty {
+                    recentUnlocksSection
+                }
+
+                // Filter tabs
+                filterTabs
+
+                // Achievements grid/list
+                achievementsSection
+            }
+            .padding()
+        }
+    }
+
     // MARK: - Stats Header
 
     private var statsHeader: some View {
@@ -69,6 +156,7 @@ struct AchievementsDashboardView: View {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: "star.fill")
                             .foregroundColor(.yellow)
+                            .accessibilityHidden(true)
                         Text("\(achievementService.totalPoints)")
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                     }
@@ -76,9 +164,12 @@ struct AchievementsDashboardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(achievementService.totalPoints) total points")
 
                 Divider()
                     .frame(height: 50)
+                    .accessibilityHidden(true)
 
                 VStack {
                     Text("\(unlockedCount)")
@@ -88,9 +179,12 @@ struct AchievementsDashboardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(unlockedCount) achievements unlocked")
 
                 Divider()
                     .frame(height: 50)
+                    .accessibilityHidden(true)
 
                 VStack {
                     Text("\(AchievementCatalog.all.count - unlockedCount)")
@@ -100,6 +194,8 @@ struct AchievementsDashboardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(AchievementCatalog.all.count - unlockedCount) achievements remaining")
             }
             .padding()
             .background(
@@ -129,6 +225,8 @@ struct AchievementsDashboardView: View {
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemGroupedBackground))
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Overall progress: \(Int(overallProgress * 100)) percent")
         }
     }
 
@@ -139,10 +237,14 @@ struct AchievementsDashboardView: View {
             HStack {
                 Image(systemName: "sparkles")
                     .foregroundColor(.yellow)
+                    .accessibilityHidden(true)
                 Text("Recently Unlocked")
                     .font(.headline)
                 Spacer()
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityLabel("Recently unlocked achievements")
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Spacing.md) {
@@ -174,10 +276,14 @@ struct AchievementsDashboardView: View {
                             selectedFilter = filter
                         }
                     }
+                    .accessibilityLabel("\(filter.displayName) filter")
+                    .accessibilityAddTraits(selectedFilter == filter ? .isSelected : [])
                 }
             }
             .padding(.horizontal, 1)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Achievement category filters")
     }
 
     // MARK: - Achievements Section
@@ -192,6 +298,9 @@ struct AchievementsDashboardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityLabel("\(selectedFilter == .all ? "All Achievements" : selectedFilter.displayName), \(filteredAchievements.count) achievements")
 
             if filteredAchievements.isEmpty {
                 emptyStateView
@@ -242,6 +351,14 @@ struct AchievementsDashboardView: View {
         achievementService.achievementProgress
             .filter { $0.isUnlocked }
             .sorted { ($0.unlockedAt ?? .distantPast) > ($1.unlockedAt ?? .distantPast) }
+    }
+
+    /// Achievements closest to being unlocked (for "Up Next" section)
+    private var upNextAchievements: [AchievementProgress] {
+        AchievementRecommendations.getNextGoals(
+            from: achievementService.achievementProgress,
+            limit: 3
+        )
     }
 
     private var filteredAchievements: [AchievementProgress] {
@@ -362,6 +479,9 @@ struct RecentAchievementCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(progress.definition.title), \(progress.definition.tier.displayName) tier, unlocked \(progress.unlockedAt?.formatted(date: .abbreviated, time: .omitted) ?? "recently")")
+        .accessibilityHint("Tap for details")
     }
 }
 

@@ -117,6 +117,7 @@
 		1D90F36BA83EDEB56E5A1AFA /* ProgramWorkoutHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F2A002F613C9A877272ED7 /* ProgramWorkoutHistoryViewModel.swift */; };
 		1DB35D9247882181C945B09D /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = B054839184677883B0A4483B /* DesignTokens.swift */; };
 		1DD02C2F212E0EC88E49F61E /* RTSProtocolViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF522EE672677A528232891D /* RTSProtocolViewModel.swift */; };
+		1E464A7245B0D14D6ED0747C /* NextAchievementCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA465F70C8F4E305D398CBD /* NextAchievementCard.swift */; };
 		1E4E2C3FF52A1744AB6B9839 /* ManualSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE07A8E72DFA98075AD82F5 /* ManualSession.swift */; };
 		1EFD4F28B95C36278DD2A170 /* ArmCareAssessmentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23DDC5A9E48AEFF94816021E /* ArmCareAssessmentService.swift */; };
 		1F189168D7764FA20000D029 /* AthleteTaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F189168D7764FA29794D029 /* AthleteTaskListView.swift */; };
@@ -133,6 +134,7 @@
 		205B9327549AFE1883914A50 /* RecoveryInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9EE5ECEA00CC722E42C9D /* RecoveryInsightsView.swift */; };
 		20719D6D495E6EE3B5976A66 /* SOAPNoteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A0BFCB9D5D850E5B6D2AF1 /* SOAPNoteService.swift */; };
 		2095E3DF703C98FEFFD0A7DD /* RTSTestRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5D05E416AA0F81F8D38E70 /* RTSTestRecordingView.swift */; };
+		209C5CE3085228EE75DF148F /* AchievementLeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E506D3506CCFF0BE25626A /* AchievementLeaderboardView.swift */; };
 		20C0658A9670BC50B74A2EFB /* WorkoutHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE133C4AD452718E473C037 /* WorkoutHistoryService.swift */; };
 		20C167D58206FA47744A6AD5 /* ExerciseLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C9CA7D0D42DF95009AA74E /* ExerciseLogView.swift */; };
 		20E2995009397B65B392DEEB /* AIHealthCoachView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CCD5CA4A32F394DA2FE4D9 /* AIHealthCoachView.swift */; };
@@ -1556,6 +1558,7 @@
 		CA79BAE9E762917B40F8168C /* PTBriefView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PTBriefView.swift; path = Views/PT/PTBriefView.swift; sourceTree = "<group>"; };
 		CAA21F762554C73A48E16264 /* FloatingActionButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FloatingActionButton.swift; path = Components/FloatingActionButton.swift; sourceTree = "<group>"; };
 		CAA2E1A7BA43176D9DB41672 /* PatientProgramProgressViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PatientProgramProgressViewModel.swift; path = PatientProgramProgressViewModel.swift; sourceTree = "<group>"; };
+		CAA465F70C8F4E305D398CBD /* NextAchievementCard.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NextAchievementCard.swift; path = Views/Achievements/NextAchievementCard.swift; sourceTree = "<group>"; };
 		CB277E50952D3B2B43158C4B /* TodayHubView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TodayHubView.swift; path = Views/Hubs/TodayHubView.swift; sourceTree = "<group>"; };
 		CB3F5F6DB25029F81277B46F /* WorkoutTemplateLibraryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutTemplateLibraryView.swift; path = Views/ManualWorkout/WorkoutTemplateLibraryView.swift; sourceTree = "<group>"; };
 		CB84505391C56CFBEE0B5FE0 /* StreakDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StreakDashboardView.swift; path = Views/Streaks/StreakDashboardView.swift; sourceTree = "<group>"; };
@@ -1649,6 +1652,7 @@
 		E391497B95D3CEF5517871CF /* NutritionProfileService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionProfileService.swift; path = Services/NutritionProfileService.swift; sourceTree = "<group>"; };
 		E39EF83AC3A1CD86978909FE /* ArticleContent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ArticleContent.swift; path = Models/ArticleContent.swift; sourceTree = "<group>"; };
 		E3B40A5453C77F473F67B021 /* SupplementDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SupplementDetailView.swift; path = Views/Health/SupplementDetailView.swift; sourceTree = "<group>"; };
+		E3E506D3506CCFF0BE25626A /* AchievementLeaderboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AchievementLeaderboardView.swift; path = Views/Achievements/AchievementLeaderboardView.swift; sourceTree = "<group>"; };
 		E429ADA2A79D11C2ED12A19B /* TimerPreset.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TimerPreset.swift; path = Models/TimerPreset.swift; sourceTree = "<group>"; };
 		E4589F3AB48FF5F7C5C14984 /* VideoAngleSelectorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VideoAngleSelectorView.swift; path = Views/Exercise/VideoAngleSelectorView.swift; sourceTree = "<group>"; };
 		E48114AE73615DE758F9B1BB /* MySupplementRoutineViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MySupplementRoutineViewModel.swift; path = ViewModels/MySupplementRoutineViewModel.swift; sourceTree = "<group>"; };
@@ -3111,6 +3115,8 @@
 			children = (
 				4A55D1B56D9FFD10C653C86E /* AchievementsDashboardView.swift */,
 				F6C9FCEE811046F45E81B878 /* AchievementUnlockedView.swift */,
+				E3E506D3506CCFF0BE25626A /* AchievementLeaderboardView.swift */,
+				CAA465F70C8F4E305D398CBD /* NextAchievementCard.swift */,
 			);
 			name = Achievements;
 			sourceTree = "<group>";
@@ -4522,6 +4528,8 @@
 				76CE296B1A0EC79DFDB9622E /* SessionToObjectiveFormatter.swift in Sources */,
 				8E0BBFBF372489ADDA1A70B8 /* SOAPPlanSuggestionService.swift in Sources */,
 				DC32F19DC8120DCE982AD5C8 /* SOAPPlanSuggestionView.swift in Sources */,
+				209C5CE3085228EE75DF148F /* AchievementLeaderboardView.swift in Sources */,
+				1E464A7245B0D14D6ED0747C /* NextAchievementCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
