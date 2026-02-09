@@ -48,6 +48,34 @@ struct CoachingAlert: Codable, Identifiable, Hashable, Equatable, Sendable {
         case metadata
     }
 
+    // MARK: - Memberwise Initializer
+
+    init(
+        id: UUID = UUID(),
+        patientId: UUID,
+        therapistId: UUID,
+        alertType: AlertType,
+        severity: AlertSeverity,
+        title: String,
+        message: String,
+        createdAt: Date = Date(),
+        acknowledgedAt: Date? = nil,
+        resolvedAt: Date? = nil,
+        metadata: [String: String]? = nil
+    ) {
+        self.id = id
+        self.patientId = patientId
+        self.therapistId = therapistId
+        self.alertType = alertType
+        self.severity = severity
+        self.title = title
+        self.message = message
+        self.createdAt = createdAt
+        self.acknowledgedAt = acknowledgedAt
+        self.resolvedAt = resolvedAt
+        self.metadata = metadata
+    }
+
     // MARK: - Safe Decoding
 
     init(from decoder: Decoder) throws {
