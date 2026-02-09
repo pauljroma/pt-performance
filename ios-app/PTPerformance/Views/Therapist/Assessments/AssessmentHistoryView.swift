@@ -224,9 +224,8 @@ struct AssessmentHistoryView: View {
         Group {
             if viewModel.romProgress.isEmpty {
                 EmptyChartView(message: "No ROM data available")
-            } else {
+            } else if let firstROM = viewModel.romProgress.first {
                 // Show first ROM measurement trend as example
-                let firstROM = viewModel.romProgress.first!
                 Chart {
                     ForEach(firstROM.measurements) { point in
                         LineMark(
