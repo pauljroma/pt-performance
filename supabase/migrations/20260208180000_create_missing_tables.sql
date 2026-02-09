@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.soap_note_templates (
     category TEXT,
     template_content JSONB,
     is_active BOOLEAN DEFAULT true,
-    created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
