@@ -3,7 +3,8 @@
 //  PTPerformance
 //
 //  Preview of a program before publishing.
-//  Shows program summary, timeline, phase cards, and publish action.
+//  Shows program name, type, patient name (if assigned), timeline,
+//  phase breakdown with week ranges, and publish action.
 //
 
 import SwiftUI
@@ -21,13 +22,18 @@ struct ProgramPreviewView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Header Section
+                    // Header Section (program name and type)
                     headerSection
+
+                    // Patient Section (if assigned)
+                    if viewModel.selectedPatient != nil {
+                        patientSection
+                    }
 
                     // Timeline Section
                     timelineSection
 
-                    // Phase Cards Section
+                    // Phase Cards Section (with week ranges)
                     phaseCardsSection
 
                     // Summary Stats Section
@@ -71,6 +77,7 @@ struct ProgramPreviewView: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
 
             // Type badge and duration
             HStack(spacing: 12) {
@@ -99,6 +106,64 @@ struct ProgramPreviewView: View {
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
         .cornerRadius(16)
+    }
+
+    // MARK: - Patient Section
+
+    private var patientSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Assigned Patient")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            if let patient = viewModel.selectedPatient {
+                HStack(spacing: 12) {
+                    // Patient avatar
+                    Circle()
+                        .fill(Color.blue.gradient)
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            Text(patient.initials)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                        )
+                        .accessibilityHidden(true)
+
+                    // Patient info
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(patient.fullName)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+
+                        if let condition = patient.injuryType {
+                            Text(condition)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if let sport = patient.sport {
+                            Text(sport)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "person.fill.checkmark")
+                        .foregroundColor(.green)
+                        .font(.title3)
+                        .accessibilityLabel("Patient assigned")
+                }
+                .padding()
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .accessibilityElement(children: .contain)
     }
 
     private var categoryBadge: some View {
@@ -158,15 +223,22 @@ struct ProgramPreviewView: View {
 
     private var phaseCardsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Phases (\(viewModel.phases.count))")
+            Text("Phase Breakdown (\(viewModel.phases.count))")
                 .font(.headline)
                 .fontWeight(.semibold)
 
             if viewModel.phases.isEmpty {
                 emptyPhasesCard
             } else {
+                let phaseWeekRanges = calculatePhaseWeekRanges()
                 ForEach(Array(viewModel.phases.enumerated()), id: \.element.id) { index, phase in
-                    PhasePreviewCard(phase: phase, phaseNumber: index + 1)
+                    let range = phaseWeekRanges[index]
+                    PhasePreviewCard(
+                        phase: phase,
+                        phaseNumber: index + 1,
+                        startWeek: range.start,
+                        endWeek: range.end
+                    )
                 }
             }
         }
@@ -174,6 +246,21 @@ struct ProgramPreviewView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground))
         .cornerRadius(16)
+    }
+
+    /// Calculate the week ranges for each phase
+    private func calculatePhaseWeekRanges() -> [(start: Int, end: Int)] {
+        var ranges: [(start: Int, end: Int)] = []
+        var currentWeek = 1
+
+        for phase in viewModel.phases {
+            let startWeek = currentWeek
+            let endWeek = currentWeek + phase.durationWeeks - 1
+            ranges.append((start: startWeek, end: endWeek))
+            currentWeek = endWeek + 1
+        }
+
+        return ranges
     }
 
     private var emptyPhasesCard: some View {
@@ -360,11 +447,21 @@ private struct TimelinePhaseSegment: View {
 private struct PhasePreviewCard: View {
     let phase: TherapistPhaseData
     let phaseNumber: Int
+    let startWeek: Int
+    let endWeek: Int
 
     private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
 
     private var phaseColor: Color {
         phaseColors[(phaseNumber - 1) % phaseColors.count]
+    }
+
+    private var weekRangeText: String {
+        if startWeek == endWeek {
+            return "Week \(startWeek)"
+        } else {
+            return "Weeks \(startWeek)-\(endWeek)"
+        }
     }
 
     var body: some View {
@@ -396,6 +493,17 @@ private struct PhasePreviewCard: View {
                     .cornerRadius(6)
             }
 
+            // Week range
+            HStack(spacing: 4) {
+                Image(systemName: "calendar")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(weekRangeText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             // Goals (if any)
             if !phase.goals.isEmpty {
                 HStack(alignment: .top, spacing: 8) {
@@ -422,6 +530,8 @@ private struct PhasePreviewCard: View {
             }
         }
         .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name), \(weekRangeText), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts")
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
     }

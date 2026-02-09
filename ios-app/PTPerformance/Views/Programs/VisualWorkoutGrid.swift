@@ -2,502 +2,320 @@
 //  VisualWorkoutGrid.swift
 //  PTPerformance
 //
-//  A calendar-style grid for workout assignment.
-//  Horizontal scroll with weeks as columns and days as rows (Mon-Sun).
-//  Supports tap-to-add and swipe-to-delete functionality.
+//  A simple calendar-style grid for viewing workout assignments.
+//  Horizontal scroll with weeks as columns.
+//  Shows workout count per week in a compact, read-only format.
 //
 
 import SwiftUI
 
 // MARK: - Visual Workout Grid View
 
+/// A simple calendar-style grid for viewing workout assignments.
+/// Displays weeks as columns with workout counts per week.
 struct VisualWorkoutGrid: View {
-    @Binding var phase: TherapistPhaseData
-    @Binding var isPresented: Bool
+    let phases: [TherapistPhaseData]
 
-    @State private var showWorkoutPicker = false
-    @State private var selectedCell: GridCell?
-    @State private var templates: [SystemWorkoutTemplate] = []
-    @State private var isLoadingTemplates = false
-
-    // Days of the week (Mon = 1 through Sun = 7)
-    private let days: [(Int, String)] = [
-        (1, "Mon"),
-        (2, "Tue"),
-        (3, "Wed"),
-        (4, "Thu"),
-        (5, "Fri"),
-        (6, "Sat"),
-        (7, "Sun")
-    ]
+    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Header with phase info
-                headerView
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            Text("Workout Schedule")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .accessibilityAddTraits(.isHeader)
 
-                Divider()
-
+            if phases.isEmpty {
+                emptyState
+            } else {
                 // Grid content
-                gridContent
-            }
-            .navigationTitle("Workout Grid")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
-                        isPresented = false
+                ScrollView(.horizontal, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Week headers
+                        weekHeadersRow
+
+                        // Phase rows
+                        ForEach(Array(phases.enumerated()), id: \.element.id) { index, phase in
+                            phaseRow(phase: phase, phaseNumber: index + 1)
+                        }
                     }
+                    .padding(.vertical, 8)
                 }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                }
-            }
-            .sheet(isPresented: $showWorkoutPicker) {
-                if let cell = selectedCell {
-                    WorkoutPickerSheet(
-                        templates: templates,
-                        weekNumber: cell.week,
-                        dayOfWeek: cell.day,
-                        onSelect: { template in
-                            addWorkout(template: template, week: cell.week, day: cell.day)
-                            showWorkoutPicker = false
-                        },
-                        isPresented: $showWorkoutPicker
-                    )
-                }
-            }
-            .task {
-                await loadTemplates()
-            }
-        }
-    }
-
-    // MARK: - Header View
-
-    private var headerView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(phase.name.isEmpty ? "Phase" : phase.name)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text("\(phase.durationWeeks) weeks - \(phase.workoutAssignments.count) workouts assigned")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            // Legend
-            HStack(spacing: 12) {
-                legendItem(color: .blue, label: "Assigned")
-                legendItem(color: Color(.systemGray5), label: "Empty")
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
     }
 
-    private func legendItem(color: Color, label: String) -> some View {
-        HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(color)
-                .frame(width: 12, height: 12)
-            Text(label)
-                .font(.caption2)
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "calendar.badge.exclamationmark")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+
+            Text("No workout schedule")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Text("Add phases and workouts to see the schedule")
+                .font(.caption)
                 .foregroundColor(.secondary)
         }
-    }
-
-    // MARK: - Grid Content
-
-    private var gridContent: some View {
-        ScrollView(.horizontal, showsIndicators: true) {
-            VStack(spacing: 0) {
-                // Week headers row
-                weekHeadersRow
-
-                // Day rows
-                ForEach(days, id: \.0) { day, dayName in
-                    dayRow(day: day, dayName: dayName)
-                }
-            }
-        }
-        .background(Color(.systemBackground))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
     }
 
     // MARK: - Week Headers Row
 
     private var weekHeadersRow: some View {
         HStack(spacing: 0) {
-            // Empty corner cell
-            Text("Day")
+            // Phase label column
+            Text("Phase")
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundColor(.secondary)
-                .frame(width: 50, height: 40)
-                .background(Color(.tertiarySystemGroupedBackground))
+                .frame(width: 80, alignment: .leading)
 
-            // Week columns - guard against 0 weeks
-            ForEach(Array(1...max(1, phase.durationWeeks)), id: \.self) { week in
-                Text("Week \(week)")
+            // Week columns
+            ForEach(1...totalWeeks, id: \.self) { week in
+                Text("W\(week)")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .frame(width: 44)
+            }
+        }
+    }
+
+    // MARK: - Phase Row
+
+    private func phaseRow(phase: TherapistPhaseData, phaseNumber: Int) -> some View {
+        let color = phaseColors[(phaseNumber - 1) % phaseColors.count]
+        let startWeek = calculateStartWeek(for: phaseNumber - 1)
+
+        return HStack(spacing: 0) {
+            // Phase name
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+
+                Text(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name)
                     .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 100, height: 40)
-                    .background(Color(.tertiarySystemGroupedBackground))
-                    .overlay(
-                        Rectangle()
-                            .fill(Color(.separator).opacity(0.3))
-                            .frame(width: 1),
-                        alignment: .leading
-                    )
+                    .fontWeight(.medium)
+                    .lineLimit(1)
             }
-        }
-    }
+            .frame(width: 80, alignment: .leading)
 
-    // MARK: - Day Row
-
-    private func dayRow(day: Int, dayName: String) -> some View {
-        HStack(spacing: 0) {
-            // Day label
-            Text(dayName)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .frame(width: 50, height: 80)
-                .background(Color(.secondarySystemGroupedBackground))
-                .overlay(
-                    Rectangle()
-                        .fill(Color(.separator).opacity(0.3))
-                        .frame(height: 1),
-                    alignment: .top
+            // Week cells
+            ForEach(1...totalWeeks, id: \.self) { week in
+                weekCell(
+                    phase: phase,
+                    week: week,
+                    phaseStartWeek: startWeek,
+                    phaseDuration: phase.durationWeeks,
+                    color: color
                 )
-
-            // Cells for each week - guard against 0 weeks
-            ForEach(Array(1...max(1, phase.durationWeeks)), id: \.self) { week in
-                gridCell(week: week, day: day)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts")
     }
 
-    // MARK: - Grid Cell
+    // MARK: - Week Cell
 
-    private func gridCell(week: Int, day: Int) -> some View {
-        let assignments = assignmentsFor(week: week, day: day)
+    private func weekCell(
+        phase: TherapistPhaseData,
+        week: Int,
+        phaseStartWeek: Int,
+        phaseDuration: Int,
+        color: Color
+    ) -> some View {
+        let phaseEndWeek = phaseStartWeek + phaseDuration - 1
+        let isInPhase = week >= phaseStartWeek && week <= phaseEndWeek
+        let phaseWeek = week - phaseStartWeek + 1
+        let workoutCount = isInPhase ? countWorkouts(in: phase, forWeek: phaseWeek) : 0
 
-        return VStack(spacing: 4) {
-            if assignments.isEmpty {
-                // Empty cell - tap to add
-                emptyCell(week: week, day: day)
+        return ZStack {
+            if isInPhase {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(color.opacity(0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(color.opacity(0.3), lineWidth: 0.5)
+                    )
+
+                if workoutCount > 0 {
+                    Text("\(workoutCount)")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(color)
+                } else {
+                    Text("-")
+                        .font(.caption2)
+                        .foregroundColor(color.opacity(0.5))
+                }
             } else {
-                // Show assigned workouts
-                ForEach(assignments) { assignment in
-                    assignedWorkoutCell(assignment: assignment)
-                }
-
-                // Add more button if there's room
-                if assignments.count < 3 {
-                    addMoreButton(week: week, day: day)
-                }
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(.systemGray6))
             }
         }
-        .frame(width: 100, height: 80)
-        .background(Color(.systemBackground))
-        .overlay(
-            Rectangle()
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 0.5)
-        )
-    }
-
-    private func emptyCell(week: Int, day: Int) -> some View {
-        Button {
-            selectedCell = GridCell(week: week, day: day)
-            showWorkoutPicker = true
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: "plus.circle")
-                    .font(.title3)
-                    .foregroundColor(.blue.opacity(0.5))
-
-                Text("Add")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .buttonStyle(.plain)
-        .contentShape(Rectangle())
-        .accessibilityLabel("Add workout to Week \(week), \(dayName(for: day))")
-        .accessibilityHint("Double tap to add a workout to this slot")
-    }
-
-    private func assignedWorkoutCell(assignment: TherapistWorkoutAssignment) -> some View {
-        HStack(spacing: 4) {
-            Text(assignment.templateName)
-                .font(.caption2)
-                .fontWeight(.medium)
-                .lineLimit(1)
-                .foregroundColor(.primary)
-
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.15))
-        .cornerRadius(6)
-        .overlay(
-            RoundedRectangle(cornerRadius: 6)
-                .stroke(Color.blue.opacity(0.3), lineWidth: 0.5)
-        )
-        .padding(.horizontal, 4)
-        .contentShape(Rectangle())
-        .contextMenu {
-            Button(role: .destructive) {
-                deleteAssignment(assignment)
-            } label: {
-                Label("Remove Workout", systemImage: "trash")
-            }
-        }
-        .accessibilityLabel("\(assignment.templateName)")
-        .accessibilityHint("Long press to remove")
-    }
-
-    private func addMoreButton(week: Int, day: Int) -> some View {
-        Button {
-            selectedCell = GridCell(week: week, day: day)
-            showWorkoutPicker = true
-        } label: {
-            HStack(spacing: 2) {
-                Image(systemName: "plus")
-                    .font(.caption2)
-                Text("Add")
-                    .font(.caption2)
-            }
-            .foregroundColor(.blue.opacity(0.7))
-        }
-        .buttonStyle(.plain)
-        .padding(.top, 2)
+        .frame(width: 40, height: 32)
+        .padding(.horizontal, 2)
     }
 
     // MARK: - Helper Methods
 
-    private func assignmentsFor(week: Int, day: Int) -> [TherapistWorkoutAssignment] {
-        phase.workoutAssignments.filter { $0.weekNumber == week && $0.dayOfWeek == day }
+    private var totalWeeks: Int {
+        max(1, phases.reduce(0) { $0 + $1.durationWeeks })
     }
 
-    private func addWorkout(template: SystemWorkoutTemplate, week: Int, day: Int) {
-        let assignment = TherapistWorkoutAssignment(
-            id: UUID(),
-            templateId: template.id,
-            templateName: template.name,
-            weekNumber: week,
-            dayOfWeek: day
-        )
-        phase.workoutAssignments.append(assignment)
-    }
-
-    private func deleteAssignment(_ assignment: TherapistWorkoutAssignment) {
-        phase.workoutAssignments.removeAll { $0.id == assignment.id }
-    }
-
-    private func dayName(for day: Int) -> String {
-        switch day {
-        case 1: return "Monday"
-        case 2: return "Tuesday"
-        case 3: return "Wednesday"
-        case 4: return "Thursday"
-        case 5: return "Friday"
-        case 6: return "Saturday"
-        case 7: return "Sunday"
-        default: return "Day \(day)"
+    private func calculateStartWeek(for phaseIndex: Int) -> Int {
+        var startWeek = 1
+        for i in 0..<phaseIndex {
+            startWeek += phases[i].durationWeeks
         }
+        return startWeek
     }
 
-    private func loadTemplates() async {
-        isLoadingTemplates = true
-
-        do {
-            let response = try await PTSupabaseClient.shared.client
-                .from("system_workout_templates")
-                .select()
-                .order("name", ascending: true)
-                .execute()
-
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            templates = try decoder.decode([SystemWorkoutTemplate].self, from: response.data)
-        } catch {
-            DebugLogger.shared.log("Failed to load workout templates: \(error)", level: .error)
-        }
-
-        isLoadingTemplates = false
+    private func countWorkouts(in phase: TherapistPhaseData, forWeek week: Int) -> Int {
+        phase.workoutAssignments.filter { $0.weekNumber == week }.count
     }
 }
 
-// MARK: - Grid Cell Model
+// MARK: - Compact Workout Grid
 
-private struct GridCell {
-    let week: Int
-    let day: Int
-}
+/// A more compact version of the workout grid showing just summary stats
+struct CompactWorkoutGrid: View {
+    let phases: [TherapistPhaseData]
 
-// MARK: - Workout Picker Sheet
-
-private struct WorkoutPickerSheet: View {
-    let templates: [SystemWorkoutTemplate]
-    let weekNumber: Int
-    let dayOfWeek: Int
-    let onSelect: (SystemWorkoutTemplate) -> Void
-    @Binding var isPresented: Bool
-
-    @State private var searchText = ""
-
-    private let days = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Context header
-                HStack {
-                    Image(systemName: "calendar")
-                        .foregroundColor(.blue)
-                    Text("Week \(weekNumber), \(days[dayOfWeek])")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color(.secondarySystemGroupedBackground))
-
-                // Search bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-
-                    TextField("Search workouts...", text: $searchText)
-                        .textFieldStyle(PlainTextFieldStyle())
-
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(10)
-                .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(10)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-
-                // Template list
-                if filteredTemplates.isEmpty {
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.largeTitle)
-                            .foregroundColor(.secondary)
-                        Text("No workouts found")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                } else {
-                    List(filteredTemplates) { template in
-                        WorkoutTemplateRow(template: template) {
-                            onSelect(template)
-                        }
-                    }
-                    .listStyle(.plain)
-                }
-            }
-            .navigationTitle("Select Workout")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(phases.enumerated()), id: \.element.id) { index, phase in
+                compactPhaseRow(phase: phase, phaseNumber: index + 1)
             }
         }
     }
 
-    private var filteredTemplates: [SystemWorkoutTemplate] {
-        if searchText.isEmpty {
-            return templates
+    private func compactPhaseRow(phase: TherapistPhaseData, phaseNumber: Int) -> some View {
+        let color = phaseColors[(phaseNumber - 1) % phaseColors.count]
+        let workoutsPerWeek = phase.durationWeeks > 0
+            ? Double(phase.workoutAssignments.count) / Double(phase.durationWeeks)
+            : 0
+
+        return HStack(spacing: 12) {
+            // Phase indicator
+            Circle()
+                .fill(color)
+                .frame(width: 10, height: 10)
+
+            // Phase name
+            Text(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name)
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            Spacer()
+
+            // Stats
+            HStack(spacing: 16) {
+                // Duration
+                Label("\(phase.durationWeeks)w", systemImage: "calendar")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                // Total workouts
+                Label("\(phase.workoutAssignments.count)", systemImage: "dumbbell.fill")
+                    .font(.caption)
+                    .foregroundColor(color)
+
+                // Avg per week
+                Text(String(format: "%.1f/wk", workoutsPerWeek))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
-        let lowercasedSearch = searchText.lowercased()
-        return templates.filter { template in
-            template.name.lowercased().contains(lowercasedSearch) ||
-            (template.category?.lowercased().contains(lowercasedSearch) ?? false)
-        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(10)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts, \(String(format: "%.1f", workoutsPerWeek)) per week average")
     }
 }
 
-// MARK: - Workout Template Row
+// MARK: - Week Summary Grid
 
-private struct WorkoutTemplateRow: View {
-    let template: SystemWorkoutTemplate
-    let onSelect: () -> Void
+/// A grid showing workout distribution across weeks
+struct WeekSummaryGrid: View {
+    let phases: [TherapistPhaseData]
 
     var body: some View {
-        Button(action: onSelect) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(template.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Weekly Distribution")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
 
-                    HStack(spacing: 8) {
-                        if let category = template.category {
-                            Text(category.capitalized)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+            // Calculate total weeks
+            let totalWeeks = max(1, phases.reduce(0) { $0 + $1.durationWeeks })
 
-                        if let duration = template.durationDisplay {
-                            Text(duration)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        if let difficulty = template.difficulty {
-                            Text(difficulty.capitalized)
-                                .font(.caption)
-                                .foregroundColor(difficultyColor(difficulty))
-                        }
-                    }
+            LazyVGrid(columns: gridColumns(for: totalWeeks), spacing: 8) {
+                ForEach(1...totalWeeks, id: \.self) { week in
+                    weekSummaryCell(week: week)
                 }
-
-                Spacer()
-
-                Image(systemName: "plus.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.blue)
             }
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
     }
 
-    private func difficultyColor(_ difficulty: String) -> Color {
-        switch difficulty.lowercased() {
-        case "beginner": return .green
-        case "intermediate": return .orange
-        case "advanced": return .red
-        default: return .secondary
+    private func gridColumns(for weeks: Int) -> [GridItem] {
+        let columnCount = min(7, weeks)
+        return Array(repeating: GridItem(.flexible(), spacing: 8), count: columnCount)
+    }
+
+    private func weekSummaryCell(week: Int) -> some View {
+        let count = workoutCount(forWeek: week)
+        let intensity = min(1.0, Double(count) / 5.0) // Normalize to 0-1 for color intensity
+
+        return VStack(spacing: 4) {
+            Text("W\(week)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.blue.opacity(0.1 + intensity * 0.4))
+
+                Text("\(count)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(count > 0 ? .blue : .secondary)
+            }
+            .frame(height: 32)
         }
+        .accessibilityLabel("Week \(week), \(count) workouts")
+    }
+
+    private func workoutCount(forWeek absoluteWeek: Int) -> Int {
+        var currentWeek = 1
+
+        for phase in phases {
+            let phaseEndWeek = currentWeek + phase.durationWeeks - 1
+
+            if absoluteWeek >= currentWeek && absoluteWeek <= phaseEndWeek {
+                let phaseWeek = absoluteWeek - currentWeek + 1
+                return phase.workoutAssignments.filter { $0.weekNumber == phaseWeek }.count
+            }
+
+            currentWeek = phaseEndWeek + 1
+        }
+
+        return 0
     }
 }
 
@@ -505,11 +323,11 @@ private struct WorkoutTemplateRow: View {
 
 #if DEBUG
 struct VisualWorkoutGrid_Previews: PreviewProvider {
-    static var previews: some View {
-        VisualWorkoutGrid(
-            phase: .constant(TherapistPhaseData(
+    static var samplePhases: [TherapistPhaseData] {
+        [
+            TherapistPhaseData(
                 id: UUID(),
-                name: "Foundation Phase",
+                name: "Foundation",
                 sequence: 1,
                 durationWeeks: 4,
                 goals: "Build baseline strength",
@@ -517,35 +335,92 @@ struct VisualWorkoutGrid_Previews: PreviewProvider {
                     TherapistWorkoutAssignment(
                         id: UUID(),
                         templateId: UUID(),
-                        templateName: "Lower Body Strength A",
+                        templateName: "Lower Body A",
                         weekNumber: 1,
                         dayOfWeek: 1
                     ),
                     TherapistWorkoutAssignment(
                         id: UUID(),
                         templateId: UUID(),
-                        templateName: "Upper Body Push",
+                        templateName: "Upper Body A",
                         weekNumber: 1,
                         dayOfWeek: 3
                     ),
                     TherapistWorkoutAssignment(
                         id: UUID(),
                         templateId: UUID(),
-                        templateName: "Lower Body Strength B",
+                        templateName: "Full Body",
                         weekNumber: 1,
                         dayOfWeek: 5
                     ),
                     TherapistWorkoutAssignment(
                         id: UUID(),
                         templateId: UUID(),
-                        templateName: "Full Body",
+                        templateName: "Lower Body B",
                         weekNumber: 2,
                         dayOfWeek: 1
+                    ),
+                    TherapistWorkoutAssignment(
+                        id: UUID(),
+                        templateId: UUID(),
+                        templateName: "Upper Body B",
+                        weekNumber: 2,
+                        dayOfWeek: 3
                     )
                 ]
-            )),
-            isPresented: .constant(true)
-        )
+            ),
+            TherapistPhaseData(
+                id: UUID(),
+                name: "Strength",
+                sequence: 2,
+                durationWeeks: 3,
+                goals: "Increase max strength",
+                workoutAssignments: [
+                    TherapistWorkoutAssignment(
+                        id: UUID(),
+                        templateId: UUID(),
+                        templateName: "Heavy Legs",
+                        weekNumber: 1,
+                        dayOfWeek: 1
+                    ),
+                    TherapistWorkoutAssignment(
+                        id: UUID(),
+                        templateId: UUID(),
+                        templateName: "Heavy Push",
+                        weekNumber: 1,
+                        dayOfWeek: 3
+                    )
+                ]
+            ),
+            TherapistPhaseData(
+                id: UUID(),
+                name: "Power",
+                sequence: 3,
+                durationWeeks: 2,
+                goals: "Develop explosiveness",
+                workoutAssignments: []
+            )
+        ]
+    }
+
+    static var previews: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                VisualWorkoutGrid(phases: samplePhases)
+
+                CompactWorkoutGrid(phases: samplePhases)
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+
+                WeekSummaryGrid(phases: samplePhases)
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
     }
 }
 #endif

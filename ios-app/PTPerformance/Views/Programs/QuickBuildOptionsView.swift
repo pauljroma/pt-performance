@@ -8,344 +8,362 @@
 
 import SwiftUI
 
-// MARK: - Quick Build Option Model
+// MARK: - Data Structures
+
+/// Represents a phase within a program template
+struct PhaseTemplate {
+    let name: String
+    let weekStart: Int
+    let weekEnd: Int
+    let goal: String
+}
 
 /// Represents a pre-built program template for quick creation
-struct QuickBuildOption: Identifiable {
+struct QuickBuildTemplate: Identifiable {
     let id = UUID()
-    let title: String
-    let subtitle: String
+    let name: String
+    let type: String // "rehab", "performance", "lifestyle"
+    let durationWeeks: Int
+    let phases: [PhaseTemplate]
     let icon: String
-    let color: Color
-    let estimatedSetupTime: String
-    let category: ProgramCategory
-    let difficulty: DifficultyLevel
-    let phases: [QuickBuildPhase]
-    let isCustom: Bool
+    let description: String
+}
 
-    /// A phase definition for quick builds
-    struct QuickBuildPhase {
-        let name: String
-        let durationWeeks: Int
-        let goals: String
-    }
+// MARK: - Template Data
 
-    /// Total duration of all phases in weeks
-    var totalDurationWeeks: Int {
-        phases.reduce(0) { $0 + $1.durationWeeks }
-    }
+extension QuickBuildTemplate {
+    /// All available program templates
+    static let templates: [QuickBuildTemplate] = [
+        // 4-Week Post-Op Recovery - Rehab type, 4 weeks, 3 phases
+        QuickBuildTemplate(
+            name: "4-Week Post-Op Recovery",
+            type: "rehab",
+            durationWeeks: 4,
+            phases: [
+                PhaseTemplate(
+                    name: "Protection Phase",
+                    weekStart: 1,
+                    weekEnd: 1,
+                    goal: "Manage pain and swelling, protect surgical site, begin gentle ROM exercises"
+                ),
+                PhaseTemplate(
+                    name: "Early Mobility",
+                    weekStart: 2,
+                    weekEnd: 3,
+                    goal: "Restore range of motion, reduce inflammation, begin gentle strengthening"
+                ),
+                PhaseTemplate(
+                    name: "Progressive Loading",
+                    weekStart: 4,
+                    weekEnd: 4,
+                    goal: "Build foundational strength, improve functional movement patterns"
+                )
+            ],
+            icon: "cross.case.fill",
+            description: "Structured recovery protocol for post-surgical rehabilitation with progressive loading"
+        ),
+
+        // 8-Week Return to Sport - Performance type, 8 weeks, 4 phases
+        QuickBuildTemplate(
+            name: "8-Week Return to Sport",
+            type: "performance",
+            durationWeeks: 8,
+            phases: [
+                PhaseTemplate(
+                    name: "Foundation",
+                    weekStart: 1,
+                    weekEnd: 2,
+                    goal: "Establish movement quality and baseline aerobic conditioning"
+                ),
+                PhaseTemplate(
+                    name: "Strength Development",
+                    weekStart: 3,
+                    weekEnd: 4,
+                    goal: "Build sport-specific strength and increase training volume"
+                ),
+                PhaseTemplate(
+                    name: "Power & Agility",
+                    weekStart: 5,
+                    weekEnd: 6,
+                    goal: "Develop explosive power, agility, and change of direction skills"
+                ),
+                PhaseTemplate(
+                    name: "Sport Integration",
+                    weekStart: 7,
+                    weekEnd: 8,
+                    goal: "Full sport-specific training and competition preparation"
+                )
+            ],
+            icon: "figure.run",
+            description: "Progressive return to athletic performance with sport-specific conditioning phases"
+        ),
+
+        // 12-Week Strength Foundation - Lifestyle type, 12 weeks, 3 phases
+        QuickBuildTemplate(
+            name: "12-Week Strength Foundation",
+            type: "lifestyle",
+            durationWeeks: 12,
+            phases: [
+                PhaseTemplate(
+                    name: "Movement Mastery",
+                    weekStart: 1,
+                    weekEnd: 4,
+                    goal: "Learn fundamental movement patterns, build exercise consistency"
+                ),
+                PhaseTemplate(
+                    name: "Strength Building",
+                    weekStart: 5,
+                    weekEnd: 8,
+                    goal: "Progressive overload training, develop muscular strength"
+                ),
+                PhaseTemplate(
+                    name: "Performance Peak",
+                    weekStart: 9,
+                    weekEnd: 12,
+                    goal: "Maximize strength gains, establish sustainable training habits"
+                )
+            ],
+            icon: "dumbbell.fill",
+            description: "Comprehensive strength program for building a solid fitness foundation"
+        ),
+
+        // 6-Week ACL Protocol - Rehab type, 6 weeks
+        QuickBuildTemplate(
+            name: "6-Week ACL Protocol",
+            type: "rehab",
+            durationWeeks: 6,
+            phases: [
+                PhaseTemplate(
+                    name: "Initial Recovery",
+                    weekStart: 1,
+                    weekEnd: 2,
+                    goal: "Control inflammation, restore knee extension, quad activation"
+                ),
+                PhaseTemplate(
+                    name: "Strength & Stability",
+                    weekStart: 3,
+                    weekEnd: 4,
+                    goal: "Progressive strengthening, proprioceptive training, gait normalization"
+                ),
+                PhaseTemplate(
+                    name: "Functional Progression",
+                    weekStart: 5,
+                    weekEnd: 6,
+                    goal: "Dynamic stability, early plyometrics, return to running protocol"
+                )
+            ],
+            icon: "figure.walk",
+            description: "Evidence-based ACL rehabilitation with neuromuscular training focus"
+        ),
+
+        // Custom Program - Blank slate
+        QuickBuildTemplate(
+            name: "Custom Program",
+            type: "custom",
+            durationWeeks: 0,
+            phases: [],
+            icon: "plus.rectangle.on.folder.fill",
+            description: "Start from scratch and build your own fully customized program"
+        )
+    ]
 }
 
 // MARK: - Quick Build Options View
 
 struct QuickBuildOptionsView: View {
-    @ObservedObject var viewModel: TherapistProgramBuilderViewModel
-    var onQuickBuildSelected: ((QuickBuildOption) -> Void)?
+    let onTemplateSelected: (QuickBuildTemplate) -> Void
 
     private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.adaptive(minimum: 160, maximum: 200), spacing: 16)
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Quick Build Templates")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                headerSection
 
-                Text("Start with a pre-built template or create from scratch")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-
-            // Grid of options
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(QuickBuildOption.allOptions) { option in
-                    QuickBuildCard(option: option) {
-                        applyQuickBuild(option)
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(QuickBuildTemplate.templates) { template in
+                        QuickBuildTemplateCard(template: template)
+                            .onTapGesture {
+                                onTemplateSelected(template)
+                            }
                     }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
+            .padding(.vertical)
         }
+        .background(Color(.systemGroupedBackground))
     }
 
-    private func applyQuickBuild(_ option: QuickBuildOption) {
-        viewModel.applyQuickBuild(option)
-        onQuickBuildSelected?(option)
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Quick Build")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text("Choose a template to get started quickly")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal)
     }
 }
 
-// MARK: - Quick Build Card
+// MARK: - Template Card View
 
-private struct QuickBuildCard: View {
-    let option: QuickBuildOption
-    let onTap: () -> Void
+struct QuickBuildTemplateCard: View {
+    let template: QuickBuildTemplate
+
+    @State private var isPressed = false
+
+    private var typeColor: Color {
+        switch template.type {
+        case "rehab":
+            return .blue
+        case "performance":
+            return .orange
+        case "lifestyle":
+            return .green
+        case "custom":
+            return .purple
+        default:
+            return .gray
+        }
+    }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Icon and category badge
-                HStack {
-                    Image(systemName: option.icon)
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(option.color)
-                        .cornerRadius(10)
+        VStack(alignment: .leading, spacing: 12) {
+            // Icon and duration badge
+            HStack {
+                ZStack {
+                    Circle()
+                        .fill(typeColor.opacity(0.15))
+                        .frame(width: 44, height: 44)
 
-                    Spacer()
-
-                    // Setup time badge
-                    Text(option.estimatedSetupTime)
-                        .font(.caption2)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(6)
+                    Image(systemName: template.icon)
+                        .font(.system(size: 20))
+                        .foregroundColor(typeColor)
                 }
 
-                // Title
-                Text(option.title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                Spacer()
 
-                // Subtitle (duration)
-                Text(option.subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                // Category tag
-                if !option.isCustom {
-                    HStack(spacing: 4) {
-                        Image(systemName: option.category.icon)
-                            .font(.caption2)
-                        Text(option.category.displayName)
-                            .font(.caption2)
-                    }
-                    .foregroundColor(option.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(option.color.opacity(0.15))
-                    .cornerRadius(6)
+                if template.durationWeeks > 0 {
+                    DurationBadge(weeks: template.durationWeeks)
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
-            )
+
+            // Title
+            Text(template.name)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Description
+            Text(template.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+
+            // Phase count indicator or custom label
+            phaseIndicator
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .frame(minHeight: 180)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.04), radius: 2, x: 0, y: 1)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(typeColor.opacity(0.2), lineWidth: 1)
+        )
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isPressed)
+        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(option.title), \(option.subtitle)")
-        .accessibilityHint("Double tap to start building with this template. Estimated setup time: \(option.estimatedSetupTime)")
+        .accessibilityLabel("\(template.name), \(template.durationWeeks > 0 ? "\(template.durationWeeks) weeks" : "custom duration")")
+        .accessibilityHint("Double tap to start building with this template")
     }
-}
 
-// MARK: - Predefined Quick Build Options
-
-extension QuickBuildOption {
-    /// All available quick build options
-    static let allOptions: [QuickBuildOption] = [
-        postOpRecovery,
-        returnToSport,
-        strengthFoundation,
-        aclProtocol,
-        customProgram
-    ]
-
-    /// 4-Week Post-Op Recovery (Rehab)
-    static let postOpRecovery = QuickBuildOption(
-        title: "4-Week Post-Op Recovery",
-        subtitle: "4 weeks",
-        icon: "cross.case.fill",
-        color: .blue,
-        estimatedSetupTime: "~2 min",
-        category: .recovery,
-        difficulty: .beginner,
-        phases: [
-            QuickBuildPhase(
-                name: "Protection",
-                durationWeeks: 1,
-                goals: "Protect surgical site, manage pain and swelling, begin gentle ROM"
-            ),
-            QuickBuildPhase(
-                name: "Early Motion",
-                durationWeeks: 1,
-                goals: "Restore ROM, reduce swelling, begin light activation exercises"
-            ),
-            QuickBuildPhase(
-                name: "Strengthening",
-                durationWeeks: 1,
-                goals: "Progressive strengthening, improve stability, functional movements"
-            ),
-            QuickBuildPhase(
-                name: "Return to Activity",
-                durationWeeks: 1,
-                goals: "Sport-specific preparation, full strength, gradual return to activities"
-            )
-        ],
-        isCustom: false
-    )
-
-    /// 8-Week Return to Sport (Performance)
-    static let returnToSport = QuickBuildOption(
-        title: "8-Week Return to Sport",
-        subtitle: "8 weeks",
-        icon: "figure.run",
-        color: .green,
-        estimatedSetupTime: "~2 min",
-        category: .sport,
-        difficulty: .intermediate,
-        phases: [
-            QuickBuildPhase(
-                name: "Foundation",
-                durationWeeks: 2,
-                goals: "Build aerobic base, movement quality, joint preparation"
-            ),
-            QuickBuildPhase(
-                name: "Build",
-                durationWeeks: 2,
-                goals: "Increase training volume, sport-specific conditioning, strength development"
-            ),
-            QuickBuildPhase(
-                name: "Peak",
-                durationWeeks: 2,
-                goals: "High-intensity training, competition simulation, performance optimization"
-            ),
-            QuickBuildPhase(
-                name: "Taper",
-                durationWeeks: 2,
-                goals: "Reduce volume, maintain intensity, optimize recovery for competition"
-            )
-        ],
-        isCustom: false
-    )
-
-    /// 12-Week Strength Foundation (Strength)
-    static let strengthFoundation = QuickBuildOption(
-        title: "12-Week Strength Foundation",
-        subtitle: "12 weeks",
-        icon: "dumbbell.fill",
-        color: .orange,
-        estimatedSetupTime: "~2 min",
-        category: .strength,
-        difficulty: .intermediate,
-        phases: [
-            QuickBuildPhase(
-                name: "Adaptation",
-                durationWeeks: 3,
-                goals: "Movement proficiency, work capacity, tissue preparation"
-            ),
-            QuickBuildPhase(
-                name: "Hypertrophy",
-                durationWeeks: 3,
-                goals: "Muscle growth, increased volume, progressive overload"
-            ),
-            QuickBuildPhase(
-                name: "Strength",
-                durationWeeks: 3,
-                goals: "Maximal strength development, neural adaptations, compound lifts"
-            ),
-            QuickBuildPhase(
-                name: "Power",
-                durationWeeks: 3,
-                goals: "Rate of force development, explosive training, sport transfer"
-            )
-        ],
-        isCustom: false
-    )
-
-    /// 6-Week ACL Protocol (Rehab)
-    static let aclProtocol = QuickBuildOption(
-        title: "6-Week ACL Protocol",
-        subtitle: "6 weeks",
-        icon: "figure.walk",
-        color: .purple,
-        estimatedSetupTime: "~2 min",
-        category: .recovery,
-        difficulty: .beginner,
-        phases: [
-            QuickBuildPhase(
-                name: "Early Rehab",
-                durationWeeks: 2,
-                goals: "Reduce swelling, restore ROM, quad activation, gait normalization"
-            ),
-            QuickBuildPhase(
-                name: "Progressive Loading",
-                durationWeeks: 2,
-                goals: "Strength progression, single-leg stability, controlled loading"
-            ),
-            QuickBuildPhase(
-                name: "Advanced Training",
-                durationWeeks: 2,
-                goals: "Plyometrics introduction, sport-specific movements, return to running"
-            )
-        ],
-        isCustom: false
-    )
-
-    /// Custom Program (Blank slate)
-    static let customProgram = QuickBuildOption(
-        title: "Custom Program",
-        subtitle: "Build from scratch",
-        icon: "square.and.pencil",
-        color: .gray,
-        estimatedSetupTime: "~5 min",
-        category: .strength,
-        difficulty: .intermediate,
-        phases: [],
-        isCustom: true
-    )
-}
-
-// MARK: - ViewModel Extension
-
-extension TherapistProgramBuilderViewModel {
-    /// Applies a quick build template to the current program
-    func applyQuickBuild(_ option: QuickBuildOption) {
-        // Clear existing data if this is a template (not custom)
-        if !option.isCustom {
-            // Set program name to template name
-            programName = option.title
-
-            // Set category
-            category = option.category.rawValue
-
-            // Set difficulty
-            difficultyLevel = option.difficulty.rawValue
-
-            // Set duration based on template
-            durationWeeks = option.totalDurationWeeks
-
-            // Pre-create phases with names and durations
-            phases = option.phases.enumerated().map { index, phaseData in
-                TherapistPhaseData(
-                    name: phaseData.name,
-                    sequence: index + 1,
-                    durationWeeks: phaseData.durationWeeks,
-                    goals: phaseData.goals,
-                    workoutAssignments: []
-                )
+    @ViewBuilder
+    private var phaseIndicator: some View {
+        if !template.phases.isEmpty {
+            HStack(spacing: 4) {
+                Image(systemName: "list.bullet")
+                    .font(.caption2)
+                Text("\(template.phases.count) phases")
+                    .font(.caption2)
             }
+            .foregroundColor(.secondary)
+        } else if template.type == "custom" {
+            HStack(spacing: 4) {
+                Image(systemName: "sparkles")
+                    .font(.caption2)
+                Text("Blank slate")
+                    .font(.caption2)
+            }
+            .foregroundColor(.purple)
         }
-
-        // For custom programs, we don't pre-fill anything - let user start fresh
-        // The calling view should handle navigation to the appropriate step
     }
+}
+
+// MARK: - Duration Badge
+
+struct DurationBadge: View {
+    let weeks: Int
+
+    var body: some View {
+        Text("\(weeks)W")
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color.accentBlue)
+            )
+    }
+}
+
+// MARK: - Color Extension
+
+private extension Color {
+    static let accentBlue = Color(red: 0.2, green: 0.5, blue: 0.9)
+}
+
+// MARK: - Legacy Support
+
+/// Backward-compatible type alias for existing code using QuickBuildOption
+// Legacy alias removed - use QuickBuildTemplate directly
+
+extension QuickBuildTemplate {
+    /// Legacy accessor for backward compatibility
+    static var allOptions: [QuickBuildTemplate] { templates }
+
+    /// Computed properties for backward compatibility
+    var title: String { name }
+    var subtitle: String { durationWeeks > 0 ? "\(durationWeeks) weeks" : "Build from scratch" }
+    var color: Color {
+        switch type {
+        case "rehab": return .blue
+        case "performance": return .orange
+        case "lifestyle": return .green
+        case "custom": return .purple
+        default: return .gray
+        }
+    }
+    var isCustom: Bool { type == "custom" }
+    var totalDurationWeeks: Int { durationWeeks }
 }
 
 // MARK: - Preview
@@ -353,11 +371,9 @@ extension TherapistProgramBuilderViewModel {
 #if DEBUG
 struct QuickBuildOptionsView_Previews: PreviewProvider {
     static var previews: some View {
-        ScrollView {
-            QuickBuildOptionsView(viewModel: TherapistProgramBuilderViewModel())
-                .padding(.vertical)
+        QuickBuildOptionsView { template in
+            print("Selected: \(template.name)")
         }
-        .background(Color(.systemGroupedBackground))
     }
 }
 #endif
