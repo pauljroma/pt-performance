@@ -523,6 +523,8 @@ struct CompletionRateGauge: View {
                 .fontWeight(.bold)
                 .foregroundColor(color)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Completion rate \(Int(rate)) percent")
     }
 }
 

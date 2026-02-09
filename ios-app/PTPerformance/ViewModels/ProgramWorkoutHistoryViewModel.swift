@@ -23,13 +23,19 @@ struct ProgramWorkoutHistoryItem: Identifiable {
     let phaseName: String?
     let weekNumber: Int?
 
-    // MARK: - Computed Display Properties
+    // MARK: - Static Formatters (Performance Optimization)
 
-    var dateDisplay: String {
+    private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: completedAt)
+        return formatter
+    }()
+
+    // MARK: - Computed Display Properties
+
+    var dateDisplay: String {
+        Self.dateFormatter.string(from: completedAt)
     }
 
     var durationDisplay: String? {
@@ -188,6 +194,7 @@ class ProgramWorkoutHistoryViewModel: ObservableObject {
         guard hasMoreWorkouts && !isLoadingMore && !isLoading else { return }
 
         isLoadingMore = true
+        let previousOffset = currentOffset
         currentOffset += pageSize
 
         do {
@@ -197,8 +204,9 @@ class ProgramWorkoutHistoryViewModel: ObservableObject {
             isLoadingMore = false
         } catch {
             DebugLogger.shared.log("Failed to load more workouts: \(error.localizedDescription)", level: .warning)
+            currentOffset = previousOffset  // Reset offset on failure to allow retry
             isLoadingMore = false
-            hasMoreWorkouts = false
+            // Don't set hasMoreWorkouts = false, allow user to retry
         }
     }
 
@@ -382,7 +390,9 @@ class ProgramWorkoutHistoryViewModel: ObservableObject {
 
         // Check if today or yesterday has a workout for current streak
         let today = calendar.startOfDay(for: Date())
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+            return (0, 0)
+        }
 
         for i in 1..<sortedDates.count {
             let prevDay = calendar.startOfDay(for: sortedDates[i-1])
