@@ -181,8 +181,8 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     case evening = "evening"
     case beforeBed = "before_bed"
     case withMeal = "with_meal"
-    case betweenMeals = "between_meals"
-    case anytime = "anytime"
+    case emptyStomach = "empty_stomach"  // Database: empty_stomach
+    case anytime = "any_time"  // Database uses underscore: any_time
 
     var id: String { rawValue }
 
@@ -195,7 +195,7 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
         case .evening: return "Evening"
         case .beforeBed: return "Before Bed"
         case .withMeal: return "With Meal"
-        case .betweenMeals: return "Between Meals"
+        case .emptyStomach: return "Empty Stomach"
         case .anytime: return "Anytime"
         }
     }
@@ -209,7 +209,7 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
         case .evening: return "sunset.fill"
         case .beforeBed: return "moon.fill"
         case .withMeal: return "fork.knife"
-        case .betweenMeals: return "clock.fill"
+        case .emptyStomach: return "clock.fill"
         case .anytime: return "clock.badge.checkmark.fill"
         }
     }
@@ -221,7 +221,7 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
         case .preWorkout: return 2
         case .postWorkout: return 3
         case .withMeal: return 4
-        case .betweenMeals: return 5
+        case .emptyStomach: return 5
         case .evening: return 6
         case .beforeBed: return 7
         case .anytime: return 8
@@ -236,7 +236,7 @@ enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
         case .preWorkout: return 6
         case .postWorkout: return 8
         case .withMeal: return 12
-        case .betweenMeals: return 15
+        case .emptyStomach: return 15
         case .evening: return 18
         case .beforeBed: return 21
         case .anytime: return 12
@@ -867,7 +867,7 @@ extension CatalogSupplement {
             benefits: ["Muscle protein synthesis", "Recovery", "Convenient protein source"],
             evidenceRating: .strong,
             dosageRange: "20-40g per serving",
-            timing: [.postWorkout, .betweenMeals],
+            timing: [.postWorkout, .emptyStomach],
             contraindications: ["Dairy allergy"],
             interactions: [],
             description: "Fast-digesting protein for post-workout recovery.",

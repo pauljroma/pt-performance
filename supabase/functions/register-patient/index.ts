@@ -276,30 +276,27 @@ serve(async (req) => {
     if (authResult instanceof Response) return authResult
     const authUser = authResult as AuthUser
 
-    // Service role key is acceptable here because:
-    // 1. We verify userId matches JWT user_id below
-    // 2. This is a registration endpoint that creates the patient record
-    // 3. RLS policies don't exist for this user yet
+    // Service role key to bypass RLS (new user has no policies yet)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { userId, email, fullName, authProvider }: RegisterRequest = await req.json();
 
-    if (!userId || !email || !fullName) {
+    if (!email || !fullName) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: userId, email, fullName" }),
+        JSON.stringify({ error: "Missing required fields: email, fullName" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Critical: userId must match authenticated user
-    // This prevents users from registering patients under someone else's account
-    if (userId !== authUser.user_id) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden', message: 'Cannot register patient for another user' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // Use the authenticated user's ID from the JWT (more secure than trusting body)
+    // This ensures users can only create patient records for themselves
+    const actualUserId = authUser.user_id;
+
+    // Log if there's a mismatch for debugging (but don't fail)
+    if (userId && userId !== actualUserId) {
+      console.warn(`userId mismatch: body=${userId}, jwt=${actualUserId} - using JWT value`);
     }
 
     // Parse name
@@ -311,7 +308,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("patients")
       .select("id")
-      .eq("user_id", userId)
+      .eq("user_id", actualUserId)
       .maybeSingle();
 
     if (existing) {
@@ -325,7 +322,7 @@ serve(async (req) => {
     const { data: patient, error } = await supabase
       .from("patients")
       .insert({
-        user_id: userId,
+        user_id: actualUserId,
         email: email.toLowerCase(),
         first_name: firstName,
         last_name: lastName,

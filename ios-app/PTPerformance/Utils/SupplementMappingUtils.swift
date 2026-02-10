@@ -32,7 +32,7 @@ enum SupplementMappingUtils {
         case .evening: return .evening
         case .beforeBed: return .beforeBed
         case .withMeal: return .withMeals
-        case .betweenMeals: return .afternoon
+        case .emptyStomach: return .morning
         case .anytime: return nil
         }
     }

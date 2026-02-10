@@ -26,7 +26,6 @@ struct TodayHubView: View {
 
     @State private var showQuickPick = false
     @State private var showTimers = false
-    @State private var showReadinessCheckIn = false
     @State private var showWeeklySummary = false
     @State private var showStreakDashboard = false
     @State private var showArmCareAssessment = false  // ACP-522: Arm Care Assessment
@@ -70,12 +69,6 @@ struct TodayHubView: View {
                         }
                     }
                 }
-                .sheetWithHaptic(isPresented: $showReadinessCheckIn) {
-                    if let patientIdString = supabase.userId,
-                       let patientId = UUID(uuidString: patientIdString) {
-                        ReadinessCheckInView(patientId: patientId)
-                    }
-                }
                 .sheetWithHaptic(isPresented: $showWeeklySummary) {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
@@ -97,9 +90,12 @@ struct TodayHubView: View {
                         ArmCareAssessmentView(patientId: patientId)
                     }
                 }
-                // X2Index: Daily Check-in full screen cover
-                .fullScreenCoverWithHaptic(isPresented: $showDailyCheckIn) {
-                    DailyCheckInView()
+                // X2Index: Daily Check-in - now uses compact ReadinessCheckInView
+                .sheetWithHaptic(isPresented: $showDailyCheckIn) {
+                    if let patientIdString = supabase.userId,
+                       let patientId = UUID(uuidString: patientIdString) {
+                        ReadinessCheckInView(patientId: patientId)
+                    }
                 }
                 // ACP-501: Quick Start Workout Full Screen Cover
                 .fullScreenCoverWithHaptic(isPresented: $showQuickStartWorkout) {
@@ -242,19 +238,12 @@ struct TodayHubView: View {
 
             Divider()
 
-            // X2Index: Daily Check-in - prominent for discoverability
+            // Daily Check-in - uses compact ReadinessCheckInView
             Button(action: {
                 HapticFeedback.light()
                 showDailyCheckIn = true
             }) {
-                Label("Daily Check-in", systemImage: "sun.max.fill")
-            }
-
-            Button(action: {
-                HapticFeedback.light()
-                showReadinessCheckIn = true
-            }) {
-                Label("Readiness Check-In", systemImage: "heart.text.square")
+                Label("Daily Check-in", systemImage: "heart.text.square")
             }
 
             Button(action: {
@@ -287,7 +276,7 @@ struct TodayHubView: View {
                 .foregroundColor(.primary)
         }
         .accessibilityLabel("Quick Actions")
-        .accessibilityHint("Access Quick Pick, Timers, Daily Check-in, Readiness Check-In, Weekly Summary, Streaks, and Arm Care")
+        .accessibilityHint("Access Quick Pick, Timers, Daily Check-in, Weekly Summary, Streaks, and Arm Care")
     }
 }
 

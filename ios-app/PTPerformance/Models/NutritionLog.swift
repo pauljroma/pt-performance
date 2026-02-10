@@ -265,4 +265,28 @@ struct CreateNutritionLogDTO: Codable {
         case notes
         case photoUrl = "photo_url"
     }
+
+    /// Date formatter for Supabase (ISO8601)
+    private static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    /// Custom encoder to format dates correctly for Supabase
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(patientId, forKey: .patientId)
+        // Encode date as ISO8601 string for Supabase compatibility
+        try container.encode(Self.dateFormatter.string(from: loggedAt), forKey: .loggedAt)
+        try container.encodeIfPresent(mealType, forKey: .mealType)
+        try container.encode(foodItems, forKey: .foodItems)
+        try container.encode(totalCalories, forKey: .totalCalories)
+        try container.encode(totalProteinG, forKey: .totalProteinG)
+        try container.encode(totalCarbsG, forKey: .totalCarbsG)
+        try container.encode(totalFatG, forKey: .totalFatG)
+        try container.encodeIfPresent(totalFiberG, forKey: .totalFiberG)
+        try container.encodeIfPresent(notes, forKey: .notes)
+        try container.encodeIfPresent(photoUrl, forKey: .photoUrl)
+    }
 }

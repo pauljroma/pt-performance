@@ -19,6 +19,7 @@ struct CheckInPromptCard: View {
 
     // MARK: - Properties
 
+    @EnvironmentObject var supabase: PTSupabaseClient
     @StateObject private var checkInService = CheckInService.shared
     @State private var hasCheckedInToday = false
     @State private var streak: CheckInStreak?
@@ -91,13 +92,16 @@ struct CheckInPromptCard: View {
             .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
-        .fullScreenCover(isPresented: $showingCheckIn) {
-            DailyCheckInView(onComplete: {
-                // Refresh status after check-in completion
-                Task {
-                    await loadStatus()
-                }
-            })
+        .sheet(isPresented: $showingCheckIn, onDismiss: {
+            // Refresh status after check-in is dismissed
+            Task {
+                await loadStatus()
+            }
+        }) {
+            if let patientIdString = supabase.userId,
+               let patientId = UUID(uuidString: patientIdString) {
+                ReadinessCheckInView(patientId: patientId)
+            }
         }
         .task {
             await loadStatus()

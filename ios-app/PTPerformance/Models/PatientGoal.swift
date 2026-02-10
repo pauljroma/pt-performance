@@ -214,4 +214,26 @@ struct PatientGoalInsert: Codable {
         case targetDate = "target_date"
         case status
     }
+
+    /// Date formatter for Supabase (ISO8601)
+    private static let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    /// Custom encoder to format dates correctly for Supabase
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(patientId.uuidString, forKey: .patientId)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encode(category, forKey: .category)
+        try container.encodeIfPresent(targetValue, forKey: .targetValue)
+        try container.encodeIfPresent(currentValue, forKey: .currentValue)
+        try container.encodeIfPresent(unit, forKey: .unit)
+        // Encode date as ISO8601 string for Supabase compatibility
+        try container.encodeIfPresent(targetDate.map { Self.dateFormatter.string(from: $0) }, forKey: .targetDate)
+        try container.encode(status, forKey: .status)
+    }
 }

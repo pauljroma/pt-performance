@@ -298,7 +298,7 @@ extension SupplementTiming {
         case .evening: return "PM"
         case .beforeBed: return "Bed"
         case .withMeal: return "Meal"
-        case .betweenMeals: return "Btw"
+        case .emptyStomach: return "Empty"
         case .anytime: return "Any"
         }
     }
@@ -312,7 +312,7 @@ extension SupplementTiming {
         case .evening: return .purple
         case .beforeBed: return .indigo
         case .withMeal: return .brown
-        case .betweenMeals: return .cyan
+        case .emptyStomach: return .cyan
         case .anytime: return .gray
         }
     }

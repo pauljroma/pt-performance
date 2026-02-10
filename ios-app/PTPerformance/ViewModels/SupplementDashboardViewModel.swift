@@ -149,7 +149,7 @@ enum SupplementTimingGroup: String, CaseIterable, Identifiable {
         case .afternoon: return .withMeals
         case .preWorkout: return .preWorkout
         case .postWorkout: return .postWorkout
-        case .withMeal, .betweenMeals: return .withMeals
+        case .withMeal, .emptyStomach: return .withMeals
         case .evening: return .evening
         case .beforeBed: return .beforeBed
         case .anytime: return .anytime
