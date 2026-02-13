@@ -37,11 +37,12 @@ struct RecoverySession: Identifiable, Codable, Hashable {
         return formatter
     }()
 
-    /// Custom encoder to exclude fields not in database schema and format dates correctly
+    /// Custom encoder to exclude fields not in database schema and format dates/UUIDs correctly
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(patientId, forKey: .patientId)
+        // Encode UUIDs as strings for Supabase compatibility
+        try container.encode(id.uuidString, forKey: .id)
+        try container.encode(patientId.uuidString, forKey: .patientId)
         try container.encode(protocolType, forKey: .protocolType)
         // Encode dates as ISO8601 strings for Supabase compatibility
         try container.encode(Self.dateFormatter.string(from: loggedAt), forKey: .loggedAt)

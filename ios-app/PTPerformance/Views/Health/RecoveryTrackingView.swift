@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// ACP-901: Main Recovery Tracking Dashboard with Training Adjustment Recommendations
@@ -65,6 +66,18 @@ struct RecoveryTrackingView: View {
             .refreshable {
                 await viewModel.loadData()
             }
+            .alert("Error", isPresented: .init(
+                get: { viewModel.error != nil },
+                set: { if !$0 { viewModel.error = nil } }
+            )) {
+                Button("OK", role: .cancel) {
+                    viewModel.error = nil
+                }
+            } message: {
+                if let error = viewModel.error {
+                    Text(error)
+                }
+            }
         }
     }
 
@@ -86,6 +99,11 @@ struct RecoveryTrackingView: View {
     private var contentView: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
+                // HealthKit Permission Banner (conditional)
+                if viewModel.healthKitPermissionNeeded {
+                    healthKitPermissionBanner
+                }
+
                 // Recovery Score Card (Primary)
                 recoveryScoreCard
 
@@ -116,6 +134,64 @@ struct RecoveryTrackingView: View {
         }
     }
 
+    // MARK: - HealthKit Permission Banner
+
+    private var healthKitPermissionBanner: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "heart.text.square.fill")
+                    .font(.title2)
+                    .foregroundColor(.pink)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Connect Apple Health")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text("Get accurate recovery scores from your sleep and HRV data")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            Button {
+                Task {
+                    do {
+                        _ = try await HealthKitService.shared.requestAuthorization()
+                        viewModel.healthKitPermissionNeeded = false
+                        await viewModel.loadData()
+                    } catch {
+                        DebugLogger.shared.error("RecoveryTrackingView", "HealthKit authorization failed: \(error)")
+                    }
+                }
+            } label: {
+                Text("Connect")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                    .background(Color.pink)
+                    .cornerRadius(CornerRadius.sm)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color.pink.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
+                        .stroke(Color.pink.opacity(0.3), lineWidth: 1)
+                )
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Connect Apple Health to get accurate recovery scores from your sleep and HRV data")
+        .accessibilityHint("Double tap to request HealthKit permissions")
+    }
+
     // MARK: - Recovery Score Card
 
     private var recoveryScoreCard: some View {
@@ -141,6 +217,8 @@ struct RecoveryTrackingView: View {
                 Text(viewModel.formattedRecoveryScore)
                     .font(.system(size: 56, weight: .bold, design: .rounded))
                     .foregroundColor(viewModel.recoveryStatus.color)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: AnimationDuration.standard), value: viewModel.recoveryScore)
 
                 // Progress Bar
                 GeometryReader { geometry in
@@ -151,14 +229,17 @@ struct RecoveryTrackingView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(viewModel.recoveryStatus.color)
                             .frame(width: geometry.size.width * CGFloat(viewModel.recoveryScore) / 100.0)
+                            .animation(.easeInOut(duration: AnimationDuration.standard), value: viewModel.recoveryScore)
                     }
                 }
                 .frame(height: 8)
+                .accessibilityLabel("Recovery progress: \(viewModel.recoveryScore) percent")
 
                 Text(viewModel.recoveryStatus.displayName)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(viewModel.recoveryStatus.color)
+                    .animation(.easeInOut(duration: AnimationDuration.quick), value: viewModel.recoveryStatus)
             }
 
             // Metrics Row
@@ -216,7 +297,9 @@ struct RecoveryTrackingView: View {
             RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
-        .accessibilityElement(children: .contain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Recovery score \(viewModel.recoveryScore) percent, \(viewModel.recoveryStatus.displayName). Sleep: \(String(format: "%.1f", viewModel.sleepHours)) hours. HRV: \(viewModel.hrvValue) milliseconds. Soreness: \(viewModel.sorenessLevel.displayName)")
+        .accessibilityHint("Shows your current recovery status based on sleep, HRV, and soreness data")
     }
 
     // MARK: - Low Recovery Alert Card
@@ -368,6 +451,8 @@ struct RecoveryTrackingView: View {
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Weekly recovery trend chart showing daily scores and workout recommendations")
         }
     }
 

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AchievementUnlockedView.swift
 //  PTPerformance
@@ -225,7 +226,7 @@ struct AchievementUnlockedView: View {
                     }) {
                         Text("Awesome!")
                             .font(.headline)
-                            .foregroundColor(.black)
+                            .foregroundColor(Color(.systemBackground))
                             .padding(.horizontal, Spacing.xxl)
                             .padding(.vertical, Spacing.md)
                             .background(

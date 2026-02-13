@@ -180,7 +180,7 @@ struct PhaseSessionsView: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         ProgramStructureView(
             viewModel: ProgramEditorViewModel(
                 patientId: UUID(),

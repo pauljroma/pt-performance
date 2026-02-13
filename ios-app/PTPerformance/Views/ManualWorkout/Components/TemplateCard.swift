@@ -27,6 +27,7 @@ struct TemplateCardView: View {
                 // Favorite button
                 if showFavoriteButton {
                     Button {
+                        HapticFeedback.light()
                         onFavoriteToggle?()
                     } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
@@ -34,6 +35,7 @@ struct TemplateCardView: View {
                             .foregroundColor(isFavorite ? .red : .secondary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
                 } else if template.isSystemTemplate {
                     Image(systemName: "building.2.fill")
                         .font(.caption)
@@ -63,15 +65,17 @@ struct TemplateCardView: View {
             // Stats row
             statsRow
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
         .contextMenu {
             contextMenuContent
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(template.name), \(template.exerciseCount) exercises")
     }
 
     // MARK: - Exercise List Preview
@@ -216,10 +220,10 @@ struct TemplateCategoryBadge: View {
             .font(.caption2)
             .fontWeight(.semibold)
             .foregroundColor(categoryColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(categoryColor.opacity(0.15))
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
     }
 
     private var categoryColor: Color {
@@ -249,10 +253,10 @@ struct TemplateDifficultyBadge: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(difficultyColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(difficultyColor.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var difficultyIcon: String {

@@ -55,7 +55,7 @@ struct SessionDetailView: View {
                             .padding(.vertical, 3)
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 
@@ -70,7 +70,7 @@ struct SessionDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Stats Grid
@@ -225,7 +225,7 @@ private struct StatTile: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -296,7 +296,7 @@ struct ExerciseLogRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private func rpeColor(_ rpe: Double) -> Color {

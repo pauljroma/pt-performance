@@ -113,6 +113,19 @@ class ActiveProgramDetailViewModel: ObservableObject {
         return max(0, totalWorkouts - completedWorkouts)
     }
 
+    /// Whether the program has no content to display
+    var isEmpty: Bool {
+        !isLoading && phases.isEmpty && weeks.isEmpty && programStructure == nil
+    }
+
+    /// Empty state message for UI display
+    var emptyStateMessage: String {
+        if errorMessage != nil {
+            return "Unable to load program details. Pull down to refresh."
+        }
+        return "This program doesn't have any workouts yet. Your therapist may still be setting it up."
+    }
+
     /// Days remaining in program
     var daysRemaining: Int {
         guard let startedAt = enrollment.enrollment.startedAt else {

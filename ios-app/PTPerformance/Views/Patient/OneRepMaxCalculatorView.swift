@@ -48,14 +48,14 @@ struct OneRepMaxCalculatorView: View {
     private var percentageRows: [(label: String, percentage: Double, repRange: String)] {
         [
             ("100%", 1.00, "1 rep (1RM)"),
-            ("95%",  0.95, "~2 reps"),
-            ("90%",  0.90, "~3 reps"),
-            ("85%",  0.85, "~5 reps"),
-            ("80%",  0.80, "~6-8 reps"),
-            ("75%",  0.75, "~8-10 reps"),
-            ("70%",  0.70, "~10-12 reps"),
-            ("65%",  0.65, "~12-15 reps"),
-            ("60%",  0.60, "~15-20 reps")
+            ("95%", 0.95, "~2 reps"),
+            ("90%", 0.90, "~3 reps"),
+            ("85%", 0.85, "~5 reps"),
+            ("80%", 0.80, "~6-8 reps"),
+            ("75%", 0.75, "~8-10 reps"),
+            ("70%", 0.70, "~10-12 reps"),
+            ("65%", 0.65, "~12-15 reps"),
+            ("60%", 0.60, "~15-20 reps")
         ]
     }
 
@@ -202,7 +202,7 @@ struct OneRepMaxCalculatorView: View {
                         .padding(8)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
 
                     Text("The Epley formula is one of the most widely used methods for estimating one-rep max from submaximal lifts. It provides a reasonable estimate for most compound exercises when reps are between 2 and 10.")
                         .font(.caption)

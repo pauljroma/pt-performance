@@ -80,7 +80,7 @@ struct HealthKitAuthorizationView: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                     .padding(.horizontal)
 
                     // Privacy note
@@ -99,7 +99,7 @@ struct HealthKitAuthorizationView: View {
                     }
                     .padding()
                     .background(Color.green.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                     .padding(.horizontal)
 
                     Spacer(minLength: 20)
@@ -124,7 +124,7 @@ struct HealthKitAuthorizationView: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(isRequesting)
                     .padding(.horizontal)

@@ -409,7 +409,12 @@ final class KPITrackingService: ObservableObject {
                         case durationMs = "duration_ms"
                     }
                 }
-                let durations = (try? decoder.decode([DurationRow].self, from: prepResponse.data)) ?? []
+                var durations: [DurationRow] = []
+                do {
+                    durations = try decoder.decode([DurationRow].self, from: prepResponse.data)
+                } catch {
+                    errorLogger.logWarning("Failed to decode prep time durations: \(error.localizedDescription)")
+                }
                 let avgPrepTime = durations.isEmpty ? 0.0 : Double(durations.map(\.durationMs).reduce(0, +)) / Double(durations.count) / 1000.0
 
                 return PTMetrics(
@@ -818,8 +823,13 @@ final class KPITrackingService: ObservableObject {
 
             // Parse unique user IDs
             let decoder = JSONDecoder()
-            let events = try? decoder.decode([[String: String]].self, from: activeResponse.data)
-            let uniquePTIds = Set(events?.compactMap { $0["user_id"] } ?? [])
+            var events: [[String: String]] = []
+            do {
+                events = try decoder.decode([[String: String]].self, from: activeResponse.data)
+            } catch {
+                errorLogger.logWarning("Failed to decode PT events: \(error.localizedDescription)")
+            }
+            let uniquePTIds = Set(events.compactMap { $0["user_id"] })
             let weeklyActivePTs = uniquePTIds.count
 
             // Calculate WAU percentage
@@ -855,8 +865,13 @@ final class KPITrackingService: ObservableObject {
                 .not("duration_ms", operator: .is, value: "null")
                 .execute()
 
-            let prepTimes = try? decoder.decode([[String: Int]].self, from: prepTimeResponse.data)
-            let durations = prepTimes?.compactMap { $0["duration_ms"] } ?? []
+            var prepTimes: [[String: Int]] = []
+            do {
+                prepTimes = try decoder.decode([[String: Int]].self, from: prepTimeResponse.data)
+            } catch {
+                errorLogger.logWarning("Failed to decode prep times: \(error.localizedDescription)")
+            }
+            let durations = prepTimes.compactMap { $0["duration_ms"] }
             let avgPrepTimeSeconds = durations.isEmpty ? 0 : Double(durations.reduce(0, +)) / Double(durations.count) / 1000
 
             return PTMetrics(
@@ -903,8 +918,13 @@ final class KPITrackingService: ObservableObject {
                 .execute()
 
             let decoder = JSONDecoder()
-            let events = try? decoder.decode([[String: String]].self, from: activeResponse.data)
-            let uniqueAthleteIds = Set(events?.compactMap { $0["athlete_id"] } ?? [])
+            var events: [[String: String]] = []
+            do {
+                events = try decoder.decode([[String: String]].self, from: activeResponse.data)
+            } catch {
+                errorLogger.logWarning("Failed to decode athlete events: \(error.localizedDescription)")
+            }
+            let uniqueAthleteIds = Set(events.compactMap { $0["athlete_id"] })
             let weeklyActiveAthletes = uniqueAthleteIds.count
 
             // Calculate WAU percentage
@@ -1007,7 +1027,12 @@ final class KPITrackingService: ObservableObject {
                 }
             }
 
-            let claimEvents = (try? decoder.decode([ClaimEvent].self, from: claimsResponse.data)) ?? []
+            var claimEvents: [ClaimEvent] = []
+            do {
+                claimEvents = try decoder.decode([ClaimEvent].self, from: claimsResponse.data)
+            } catch {
+                errorLogger.logWarning("Failed to decode AI claim events: \(error.localizedDescription)")
+            }
             let claimsGenerated = claimEvents.count
 
             // Calculate citation coverage
@@ -1160,9 +1185,10 @@ struct DashboardTrends: Sendable {
 
 /// Single data point for trend charts
 struct KPITrendDataPoint: Identifiable, Sendable {
-    let id = UUID()
     let date: Date
     let value: Double
+
+    var id: String { "\(date.timeIntervalSince1970)-\(value)" }
 
     /// Formatted date for display
     var formattedDate: String {

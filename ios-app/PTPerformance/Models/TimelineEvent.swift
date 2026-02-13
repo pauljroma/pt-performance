@@ -94,7 +94,7 @@ enum TimelineDataSource: String, Codable, Hashable {
         case .garmin: return "Garmin"
         case .fitbit: return "Fitbit"
         case .appleWatch: return "Apple Watch"
-        case .supabase: return "PT Performance"
+        case .supabase: return "Modus"
         }
     }
 
@@ -406,11 +406,19 @@ enum TimelineDateRange: String, CaseIterable, Identifiable {
 // MARK: - Sample Data
 
 extension TimelineEvent {
+    // Static UUIDs for sample data to avoid unnecessary re-renders
+    private static let sampleEventID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private static let samplePatientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+    private static let sampleWorkoutID = UUID(uuidString: "00000000-0000-0000-0000-000000000003")!
+    private static let sampleSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000004")!
+    private static let sampleConflictID = UUID(uuidString: "00000000-0000-0000-0000-000000000005")!
+    private static let sampleConflictRefID = UUID(uuidString: "00000000-0000-0000-0000-000000000006")!
+
     /// Sample event for previews
     static var sample: TimelineEvent {
         TimelineEvent(
-            id: UUID(),
-            patientId: UUID(),
+            id: sampleEventID,
+            patientId: samplePatientID,
             eventType: TimelineEventType.checkIn,
             timestamp: Date(),
             title: "Morning Check-in",
@@ -428,8 +436,8 @@ extension TimelineEvent {
     /// Sample workout event
     static var sampleWorkout: TimelineEvent {
         TimelineEvent(
-            id: UUID(),
-            patientId: UUID(),
+            id: sampleWorkoutID,
+            patientId: samplePatientID,
             eventType: TimelineEventType.workout,
             timestamp: Calendar.current.date(byAdding: .hour, value: -2, to: Date()) ?? Date(),
             title: "Upper Body Strength",
@@ -447,8 +455,8 @@ extension TimelineEvent {
     /// Sample sleep event
     static var sampleSleep: TimelineEvent {
         TimelineEvent(
-            id: UUID(),
-            patientId: UUID(),
+            id: sampleSleepID,
+            patientId: samplePatientID,
             eventType: TimelineEventType.sleep,
             timestamp: Calendar.current.date(byAdding: .hour, value: -8, to: Date()) ?? Date(),
             title: "Sleep Session",
@@ -466,14 +474,14 @@ extension TimelineEvent {
     /// Sample with conflict
     static var sampleWithConflict: TimelineEvent {
         TimelineEvent(
-            id: UUID(),
-            patientId: UUID(),
+            id: sampleConflictID,
+            patientId: samplePatientID,
             eventType: TimelineEventType.vital,
             timestamp: Date(),
             title: "Heart Rate",
             summary: "Resting HR: 58 bpm (Apple Watch: 62 bpm)",
             sourceType: TimelineDataSource.whoop,
-            conflictsWith: [UUID()],
+            conflictsWith: [sampleConflictRefID],
             metadata: [
                 "resting_hr": AnyCodableValue.int(58),
                 "alternate_hr": AnyCodableValue.int(62)
@@ -482,6 +490,7 @@ extension TimelineEvent {
     }
 
     /// Generate sample events for previews
+    /// Uses deterministic UUIDs based on index to avoid unnecessary re-renders
     static func generateSampleEvents(count: Int = 10) -> [TimelineEvent] {
         let types = TimelineEventType.allCases
         let sources: [TimelineDataSource] = [.supabase, .healthKit, .whoop, .manual]
@@ -493,10 +502,15 @@ extension TimelineEvent {
             let hoursAgo = index * 4
             let timestamp = calendar.date(byAdding: .hour, value: -hoursAgo, to: Date()) ?? Date()
 
-            let conflicts: [UUID]? = index % 5 == 0 ? [UUID()] : nil
+            // Deterministic UUIDs based on index
+            let eventID = UUID(uuidString: String(format: "00000000-0000-0000-0001-%012d", index))!
+            let patientID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+            let conflictID = UUID(uuidString: String(format: "00000000-0000-0000-0002-%012d", index))!
+
+            let conflicts: [UUID]? = index % 5 == 0 ? [conflictID] : nil
             return TimelineEvent(
-                id: UUID(),
-                patientId: UUID(),
+                id: eventID,
+                patientId: patientID,
                 eventType: type,
                 timestamp: timestamp,
                 title: "\(type.displayName) Entry",
@@ -510,24 +524,35 @@ extension TimelineEvent {
 }
 
 extension TimelineEventDetail {
+    // Static UUIDs for sample data to avoid unnecessary re-renders
+    private static let sampleDetailID = UUID(uuidString: "00000000-0000-0000-0000-000000000010")!
+    private static let sampleSectionMetricsID = UUID(uuidString: "00000000-0000-0000-0000-000000000011")!
+    private static let sampleSectionNotesID = UUID(uuidString: "00000000-0000-0000-0000-000000000012")!
+    private static let sampleItemEnergyID = UUID(uuidString: "00000000-0000-0000-0000-000000000013")!
+    private static let sampleItemSleepID = UUID(uuidString: "00000000-0000-0000-0000-000000000014")!
+    private static let sampleItemSorenessID = UUID(uuidString: "00000000-0000-0000-0000-000000000015")!
+    private static let sampleItemCommentID = UUID(uuidString: "00000000-0000-0000-0000-000000000016")!
+
     /// Sample detail for previews
     static var sample: TimelineEventDetail {
         TimelineEventDetail(
-            id: UUID(),
+            id: sampleDetailID,
             event: .sample,
             detailSections: [
                 DetailSection(
+                    id: sampleSectionMetricsID,
                     title: "Metrics",
                     items: [
-                        DetailItem(label: "Energy Level", value: "8/10", icon: "bolt.fill"),
-                        DetailItem(label: "Sleep Hours", value: "7.5h", icon: "bed.double.fill"),
-                        DetailItem(label: "Soreness", value: "Low (3/10)", icon: "figure.walk")
+                        DetailItem(id: sampleItemEnergyID, label: "Energy Level", value: "8/10", icon: "bolt.fill"),
+                        DetailItem(id: sampleItemSleepID, label: "Sleep Hours", value: "7.5h", icon: "bed.double.fill"),
+                        DetailItem(id: sampleItemSorenessID, label: "Soreness", value: "Low (3/10)", icon: "figure.walk")
                     ]
                 ),
                 DetailSection(
+                    id: sampleSectionNotesID,
                     title: "Notes",
                     items: [
-                        DetailItem(label: "Comment", value: "Feeling well-rested and ready for training")
+                        DetailItem(id: sampleItemCommentID, label: "Comment", value: "Feeling well-rested and ready for training")
                     ]
                 )
             ],

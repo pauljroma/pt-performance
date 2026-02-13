@@ -497,7 +497,7 @@ struct SleepTrendChart: View {
                     point.hours >= 7 ? Color.indigo :
                     point.hours >= 6 ? Color.yellow : Color.orange
                 )
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
             }
             .chartYScale(domain: 0...12)
             .chartYAxis {

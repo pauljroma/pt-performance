@@ -1,0 +1,94 @@
+name: "Epic 8 Health Intelligence Polish"
+description: "Complete Health Intelligence Platform with demo data, cross-mode access, and UI polish"
+created: "2026-02-12"
+linear_issues:
+  - ACP-873  # Biomarker Database & Reference Ranges
+  - ACP-875  # AI Lab Analysis & Recommendations
+  - ACP-876  # Lab-Based Training Adjustments
+  - ACP-877  # Ask Questions About Labs (AI Chat)
+
+phases:
+  - phase: 1
+    name: "Demo Data Seeding"
+    agents:
+      - id: "agent-1"
+        task: "Seed comprehensive demo patient lab results with biomarkers"
+        zone: "supabase"
+        files:
+          - "supabase/migrations/20260212200000_seed_demo_lab_results.sql"
+        requirements:
+          - "Create 3 lab results for demo patient (blood panel, metabolic, hormone)"
+          - "Add 20+ biomarker values with realistic data"
+          - "Include both normal and flagged values for AI analysis demo"
+          - "Add historical data (3 months) for trend visualization"
+
+      - id: "agent-2"
+        task: "Seed demo fasting and supplement data"
+        zone: "supabase"
+        files:
+          - "supabase/migrations/20260212200001_seed_demo_health_data.sql"
+        requirements:
+          - "Add fasting logs for demo patient (past 14 days)"
+          - "Add supplement stack with compliance data"
+          - "Add recovery sessions (sauna, cold plunge)"
+          - "Ensure Health Hub has data to display"
+
+  - phase: 2
+    name: "Cross-Mode Health Access"
+    agents:
+      - id: "agent-3"
+        task: "Add Health Hub access to all modes via Settings"
+        zone: "ios-app"
+        files:
+          - "ios-app/PTPerformance/PatientTabView.swift"
+        requirements:
+          - "Add Health Hub NavigationLink to PatientSettingsView"
+          - "Available in Rehab, Strength, and Performance modes"
+          - "Use heart.text.square icon with cyan color"
+          - "Place in 'Tools & Tracking' section"
+
+  - phase: 3
+    name: "UI Polish & Edge Cases"
+    agents:
+      - id: "agent-4"
+        task: "Add empty state handling for lab results"
+        zone: "ios-app"
+        files:
+          - "ios-app/PTPerformance/Views/Health/LabResultsView.swift"
+          - "ios-app/PTPerformance/Views/Health/BiomarkerDashboardView.swift"
+        requirements:
+          - "Add ContentUnavailableView for empty lab results"
+          - "Add 'Upload Your First Lab' CTA"
+          - "Handle loading states gracefully"
+          - "Add error state with retry button"
+
+      - id: "agent-5"
+        task: "Add lab upload CTA to Health Hub"
+        zone: "ios-app"
+        files:
+          - "ios-app/PTPerformance/Views/Health/HealthHubView.swift"
+        requirements:
+          - "If no lab results, show prominent upload CTA card"
+          - "Explain benefits of uploading labs"
+          - "Navigate directly to LabPDFUploadView"
+
+  - phase: 4
+    name: "Integration Testing"
+    agents:
+      - id: "agent-6"
+        task: "Verify demo flow end-to-end"
+        zone: "testing"
+        requirements:
+          - "Build app successfully"
+          - "Test Health Hub with demo data"
+          - "Verify biomarker dashboard shows data"
+          - "Verify AI coach has lab context"
+          - "Test in all 3 modes (Rehab, Strength, Performance)"
+
+success_criteria:
+  - "Demo patient has 3+ lab results with biomarkers"
+  - "Health Hub accessible from Settings in all modes"
+  - "Biomarker Dashboard shows trend charts"
+  - "AI Coach references lab data in responses"
+  - "Empty states have clear CTAs"
+  - "Build compiles without errors"

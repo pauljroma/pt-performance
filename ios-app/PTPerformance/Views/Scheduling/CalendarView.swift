@@ -58,11 +58,15 @@ struct CalendarView: View {
 
     private var calendarHeader: some View {
         HStack {
-            Button(action: previousPeriod) {
+            Button(action: {
+                HapticFeedback.light()
+                previousPeriod()
+            }) {
                 Image(systemName: "chevron.left")
                     .font(.title3)
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Previous \(viewMode == .month ? "month" : "week")")
 
             Spacer()
 
@@ -79,11 +83,15 @@ struct CalendarView: View {
 
             Spacer()
 
-            Button(action: nextPeriod) {
+            Button(action: {
+                HapticFeedback.light()
+                nextPeriod()
+            }) {
                 Image(systemName: "chevron.right")
                     .font(.title3)
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Next \(viewMode == .month ? "month" : "week")")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -440,14 +448,16 @@ struct ScheduledSessionRow: View {
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(statusColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(statusColor.opacity(0.1))
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.sm)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(session.displayName), \(session.formattedTime), \(session.status.displayName)")
     }
 
     private var statusColor: Color {

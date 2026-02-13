@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  SwipeableSetTrackingView.swift
 //  PTPerformance
@@ -152,12 +153,12 @@ struct SwipeableSetTrackingView: View {
 
                     // Completed progress (green)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.green)
+                        .fill(Color(.systemGreen))
                         .frame(width: geometry.size.width * (Double(completedSetsCount) / Double(max(sets.count, 1))))
 
                     // Skipped overlay (orange, stacked after completed)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.orange)
+                        .fill(Color(.systemOrange))
                         .frame(width: geometry.size.width * (Double(skippedSetsCount) / Double(max(sets.count, 1))))
                         .offset(x: geometry.size.width * (Double(completedSetsCount) / Double(max(sets.count, 1))))
                 }
@@ -174,13 +175,13 @@ struct SwipeableSetTrackingView: View {
                 if completedSetsCount > 0 {
                     Label("\(completedSetsCount) completed", systemImage: "checkmark.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(Color(.systemGreen))
                 }
 
                 if skippedSetsCount > 0 {
                     Label("\(skippedSetsCount) skipped", systemImage: "forward.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color(.systemOrange))
                 }
 
                 Spacer()
@@ -201,7 +202,7 @@ struct SwipeableSetTrackingView: View {
         HStack(spacing: 12) {
             Image(systemName: "hand.draw")
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(Color(.systemBlue))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Swipe to Track Sets")
@@ -216,7 +217,7 @@ struct SwipeableSetTrackingView: View {
             Spacer()
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(Color(.systemBlue).opacity(0.15))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Instructions: Swipe right to complete, left for options")
@@ -255,15 +256,15 @@ struct SwipeableSetTrackingView: View {
             // Celebration message
             HStack {
                 Image(systemName: "star.fill")
-                    .foregroundColor(.yellow)
+                    .foregroundColor(Color(.systemYellow))
                 Text("Exercise Complete!")
                     .font(.headline)
                     .fontWeight(.bold)
                 Image(systemName: "star.fill")
-                    .foregroundColor(.yellow)
+                    .foregroundColor(Color(.systemYellow))
             }
             .padding()
-            .background(Color.green.opacity(0.1))
+            .background(Color(.systemGreen).opacity(0.15))
             .cornerRadius(CornerRadius.md)
 
             // Summary
@@ -272,7 +273,7 @@ struct SwipeableSetTrackingView: View {
                     Text("\(completedSetsCount)")
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(.green)
+                        .foregroundColor(Color(.systemGreen))
                     Text("Completed")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -283,7 +284,7 @@ struct SwipeableSetTrackingView: View {
                         Text("\(skippedSetsCount)")
                             .font(.title)
                             .fontWeight(.bold)
-                            .foregroundColor(.orange)
+                            .foregroundColor(Color(.systemOrange))
                         Text("Skipped")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -300,7 +301,7 @@ struct SwipeableSetTrackingView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color(.systemBlue))
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
@@ -380,7 +381,7 @@ struct SwipeableSetTrackingView: View {
 // MARK: - Preview
 
 #Preview("Swipeable Set Tracking") {
-    NavigationView {
+    NavigationStack {
         SwipeableSetTrackingView(
             exercise: ManualSessionExercise(
                 id: UUID(),

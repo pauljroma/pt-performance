@@ -103,9 +103,9 @@ struct CueGroupBoxStyle: GroupBoxStyle {
                 .padding(16)
         }
         .background(accentColor.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(accentColor.opacity(0.2), lineWidth: 1.5)
         )
     }

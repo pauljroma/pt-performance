@@ -198,7 +198,7 @@ struct MultiSeverityBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(color.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

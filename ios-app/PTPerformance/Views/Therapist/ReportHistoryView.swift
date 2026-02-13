@@ -591,7 +591,7 @@ struct ReportComparisonView: View {
 #if DEBUG
 struct ReportHistoryView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             ReportHistoryView(patient: Patient.samplePatients[0])
         }
     }

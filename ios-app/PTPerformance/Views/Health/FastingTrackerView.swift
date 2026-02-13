@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Main Fasting Tracker Dashboard (ACP-1001)
@@ -7,6 +8,8 @@ struct FastingTrackerView: View {
     @State private var showingProtocolPicker = false
     @State private var showingHistory = false
     @State private var showingEndFastSheet = false
+    @State private var showingErrorRecoverySheet = false
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -86,10 +89,28 @@ struct FastingTrackerView: View {
                 get: { viewModel.error != nil },
                 set: { if !$0 { viewModel.error = nil } }
             )) {
-                Button("OK", role: .cancel) { }
+                Button("Try Again") {
+                    Task {
+                        await viewModel.loadData()
+                    }
+                }
+                Button("OK", role: .cancel) {
+                    viewModel.error = nil
+                }
             } message: {
                 if let error = viewModel.error {
                     Text(error)
+                }
+            }
+            .overlay {
+                // Celebration overlay when goal is reached
+                if viewModel.showCelebration {
+                    FastingGoalCelebrationView(
+                        elapsedTime: viewModel.formattedElapsedTime,
+                        onDismiss: { viewModel.dismissCelebration() }
+                    )
+                    .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+                    .zIndex(100)
                 }
             }
             .task {
@@ -99,6 +120,35 @@ struct FastingTrackerView: View {
                 await viewModel.loadData()
             }
         }
+    }
+
+    // MARK: - Accessibility Helpers
+
+    private var accessibleTimerLabel: String {
+        let hours = Int(viewModel.elapsedHours)
+        let minutes = Int((viewModel.elapsedHours - Double(hours)) * 60)
+
+        var label = ""
+        if hours > 0 {
+            label += "\(hours) hour\(hours == 1 ? "" : "s")"
+        }
+        if minutes > 0 {
+            if hours > 0 { label += " and " }
+            label += "\(minutes) minute\(minutes == 1 ? "" : "s")"
+        }
+        if label.isEmpty {
+            label = "Just started"
+        }
+        label += " elapsed"
+
+        if viewModel.goalReached {
+            label += ". Goal reached!"
+        } else {
+            let remainingHours = viewModel.targetHours - hours
+            label += ". \(remainingHours) hour\(remainingHours == 1 ? "" : "s") remaining to goal."
+        }
+
+        return label
     }
 
     // MARK: - Active Fast Card
@@ -128,6 +178,9 @@ struct FastingTrackerView: View {
                     .font(.system(size: 56, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                     .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .accessibilityLabel(accessibleTimerLabel)
+                    .accessibilityAddTraits(.updatesFrequently)
 
                 // Progress Bar
                 GeometryReader { geometry in
@@ -145,9 +198,11 @@ struct FastingTrackerView: View {
                                 )
                             )
                             .frame(width: geometry.size.width * min(viewModel.progress, 1.0), height: 8)
+                            .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
                     }
                 }
                 .frame(height: 8)
+                .accessibilityLabel("Progress: \(Int(viewModel.progress * 100)) percent")
 
                 Text("of \(viewModel.formattedTargetTime) goal")
                     .font(.subheadline)
@@ -523,6 +578,7 @@ private struct ZoneStatusIndicator: View {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(isActive ? color : .gray)
+                .accessibilityHidden(true)
 
             Text(title)
                 .font(.caption)
@@ -537,6 +593,9 @@ private struct ZoneStatusIndicator: View {
         .padding(.vertical, Spacing.sm)
         .background(isActive ? color.opacity(0.1) : Color.gray.opacity(0.05))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(status)")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }
 
@@ -568,6 +627,9 @@ private struct QuickProtocolButton: View {
             .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Start \(protocol_.displayName) fast, \(protocol_.fastingHours) hours fasting")
+        .accessibilityHint(isSelected ? "Currently selected protocol" : "Double tap to start this fast")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -648,12 +710,12 @@ private struct FastingZoneTimelineView: View {
                         // Deep Ketosis (18-48h)
                         if maxDisplayHours > 18 {
                             Rectangle()
-                                .fill(Color.blue.opacity(0.3))
+                                .fill(Color.modusCyan.opacity(0.3))
                                 .frame(width: min(30, max(0, maxDisplayHours - 18)) * hourWidth)
                         }
                     }
                     .frame(height: 8)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
 
                     // Progress indicator
                     let progressWidth = min(elapsedHours, maxDisplayHours) * hourWidth
@@ -667,7 +729,7 @@ private struct FastingZoneTimelineView: View {
                         .frame(width: 16, height: 16)
                         .overlay(
                             Circle()
-                                .stroke(Color.white, lineWidth: 2)
+                                .stroke(Color(.systemBackground), lineWidth: 2)
                         )
                         .shadow(color: currentZone.color.opacity(0.5), radius: 4)
                         .offset(x: max(0, progressWidth - 8))
@@ -777,6 +839,7 @@ private struct EndFastSheetView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         isSaving = true
+                        HapticFeedback.light()
                         Task {
                             await viewModel.endFast(
                                 energyLevel: energyLevel,
@@ -787,7 +850,10 @@ private struct EndFastSheetView: View {
                             isSaving = false
                             // Only dismiss if there was no error
                             if viewModel.error == nil {
+                                HapticFeedback.success()
                                 onDismiss()
+                            } else {
+                                HapticFeedback.error()
                             }
                         }
                     } label: {
@@ -804,6 +870,167 @@ private struct EndFastSheetView: View {
             }
         }
     }
+}
+
+// MARK: - Goal Celebration View
+
+private struct FastingGoalCelebrationView: View {
+    let elapsedTime: String
+    let onDismiss: () -> Void
+
+    @State private var animateConfetti = false
+    @State private var animateScale = false
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+
+    var body: some View {
+        ZStack {
+            // Dimmed background
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onDismiss()
+                }
+
+            // Celebration card
+            VStack(spacing: Spacing.xl) {
+                // Trophy icon with animation
+                ZStack {
+                    // Glow effect
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [.yellow.opacity(0.6), .clear],
+                                center: .center,
+                                startRadius: 20,
+                                endRadius: 80
+                            )
+                        )
+                        .frame(width: 160, height: 160)
+                        .scaleEffect(animateScale ? 1.2 : 1.0)
+                        .opacity(animateScale ? 0.8 : 0.4)
+
+                    // Trophy
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.yellow, .orange],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .scaleEffect(animateScale ? 1.1 : 1.0)
+                }
+
+                VStack(spacing: Spacing.sm) {
+                    Text("Goal Reached!")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+
+                    Text("You fasted for \(elapsedTime)")
+                        .font(.title3)
+                        .foregroundColor(.white.opacity(0.9))
+
+                    Text("Amazing discipline!")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
+                        .padding(.top, Spacing.xs)
+                }
+
+                // Dismiss button
+                Button {
+                    onDismiss()
+                } label: {
+                    Text("Continue")
+                        .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.md)
+                        .background(Color.white)
+                        .cornerRadius(CornerRadius.lg)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, Spacing.xl)
+            }
+            .padding(Spacing.xl)
+
+            // Confetti particles (if motion is not reduced)
+            if !reduceMotion && animateConfetti {
+                FastingConfettiView()
+            }
+        }
+        .onAppear {
+            if !reduceMotion {
+                withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                    animateScale = true
+                }
+                animateConfetti = true
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Goal reached! You fasted for \(elapsedTime). Tap to continue.")
+        .accessibilityAddTraits(.isModal)
+    }
+}
+
+// MARK: - Confetti View
+
+private struct FastingConfettiView: View {
+    @State private var particles: [FastingConfettiParticle] = []
+
+    private let colors: [Color] = [.yellow, .orange, .modusCyan, .modusTealAccent, .purple, .pink]
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(particles) { particle in
+                    Circle()
+                        .fill(particle.color)
+                        .frame(width: particle.size, height: particle.size)
+                        .position(particle.position)
+                        .opacity(particle.opacity)
+                }
+            }
+            .onAppear {
+                createParticles(in: geometry.size)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func createParticles(in size: CGSize) {
+        for i in 0..<50 {
+            let particle = FastingConfettiParticle(
+                id: i,
+                color: colors.randomElement() ?? .yellow,
+                size: CGFloat.random(in: 4...10),
+                position: CGPoint(x: CGFloat.random(in: 0...size.width), y: -20),
+                opacity: 1.0
+            )
+            particles.append(particle)
+
+            // Animate each particle falling
+            withAnimation(
+                .easeIn(duration: Double.random(in: 1.5...3.0))
+                .delay(Double.random(in: 0...0.5))
+            ) {
+                if let index = particles.firstIndex(where: { $0.id == i }) {
+                    particles[index].position.y = size.height + 20
+                    particles[index].position.x += CGFloat.random(in: -50...50)
+                    particles[index].opacity = 0
+                }
+            }
+        }
+    }
+}
+
+private struct FastingConfettiParticle: Identifiable {
+    let id: Int
+    let color: Color
+    let size: CGFloat
+    var position: CGPoint
+    var opacity: Double
 }
 
 // MARK: - Preview

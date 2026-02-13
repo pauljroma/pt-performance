@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ExercisePickerView.swift
 //  PTPerformance
@@ -84,7 +85,7 @@ struct ExercisePickerView: View {
                                             ? .white
                                             : .primary
                                     )
-                                    .cornerRadius(20)
+                                    .cornerRadius(CornerRadius.xl)
                             }
                         }
                     }
@@ -117,7 +118,7 @@ struct ExercisePickerView: View {
                                         ? .white
                                         : .primary
                                 )
-                                .cornerRadius(20)
+                                .cornerRadius(CornerRadius.xl)
                             }
                         }
                     }
@@ -181,7 +182,7 @@ struct ExercisePickerView: View {
             .overlay {
                 if isAdding {
                     ZStack {
-                        Color.black.opacity(0.3)
+                        Color(.label).opacity(0.3)
                             .ignoresSafeArea()
 
                         VStack(spacing: 16) {
@@ -189,11 +190,11 @@ struct ExercisePickerView: View {
                                 .scaleEffect(1.5)
                             Text("Adding exercise...")
                                 .font(.subheadline)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                         }
                         .padding(24)
-                        .background(Color(uiColor: .systemBackground))
-                        .cornerRadius(12)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(CornerRadius.md)
                     }
                 }
             }

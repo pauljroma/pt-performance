@@ -124,7 +124,7 @@ struct FoodSearchView: View {
                         .padding(.vertical, 6)
                         .background(selectedCategory == nil ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == nil ? .white : .primary)
-                        .cornerRadius(16)
+                        .cornerRadius(CornerRadius.lg)
                 }
 
                 ForEach(FoodCategory.allCases, id: \.self) { category in
@@ -142,7 +142,7 @@ struct FoodSearchView: View {
                         .padding(.vertical, 6)
                         .background(selectedCategory == category ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == category ? .white : .primary)
-                        .cornerRadius(16)
+                        .cornerRadius(CornerRadius.lg)
                     }
                 }
             }
@@ -396,7 +396,7 @@ struct MacroBadge: View {
         }
         .frame(width: 28, height: 28)
         .background(color.opacity(0.2))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

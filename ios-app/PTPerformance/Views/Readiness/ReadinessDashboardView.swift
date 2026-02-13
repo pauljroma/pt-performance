@@ -163,7 +163,7 @@ struct ReadinessDashboardView: View {
             }
         }
         .pickerStyle(.segmented)
-        .onChange(of: viewModel.selectedPeriod) { oldValue, newValue in
+        .onChange(of: viewModel.selectedPeriod) { _, newValue in
             Task {
                 await viewModel.changePeriod(newValue)
             }
@@ -224,7 +224,7 @@ struct ReadinessDashboardView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: viewModel.selectedPeriod == .week ? 1 : 5)) { value in
+                AxisMarks(values: .stride(by: .day, count: viewModel.selectedPeriod == .week ? 1 : 5)) { _ in
                     AxisGridLine()
                     AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                 }
@@ -234,10 +234,10 @@ struct ReadinessDashboardView: View {
                     .background(
                         Color(.separator)
                     )
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
             // Reference lines for categories
-            .chartOverlay { proxy in
+            .chartOverlay { _ in
                 GeometryReader { geometry in
                     // Elite threshold (90)
                     Rectangle()

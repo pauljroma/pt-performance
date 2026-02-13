@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  EmailSignInView.swift
 //  PTPerformance
@@ -104,7 +105,7 @@ struct EmailSignInView: View {
                 }) {
                     Text("Forgot Password?")
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Forgot Password")
                 .accessibilityHint("Navigate to password reset")

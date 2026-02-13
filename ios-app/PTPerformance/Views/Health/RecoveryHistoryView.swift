@@ -717,9 +717,11 @@ class RecoveryHistoryViewModel: ObservableObject {
         let sessionDates = Set(sessions.map { calendar.startOfDay(for: $0.loggedAt) })
         let sortedDates = sessionDates.sorted(by: >)
 
+        guard let firstDate = sortedDates.first else { return 0 }
+
         var streak = 1
         var maxStreak = 1
-        var previousDate = sortedDates[0]
+        var previousDate = firstDate
 
         for date in sortedDates.dropFirst() {
             if let dayBefore = calendar.date(byAdding: .day, value: -1, to: previousDate),

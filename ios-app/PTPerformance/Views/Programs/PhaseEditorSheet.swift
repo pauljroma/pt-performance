@@ -255,6 +255,8 @@ private struct WorkoutAssignmentRow: View {
                     .foregroundColor(.red)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Delete workout")
+            .accessibilityHint("Removes this workout assignment from the phase")
         }
         .padding(.vertical, 4)
     }
@@ -296,11 +298,13 @@ struct WorkoutSearchSheet: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.secondary)
                         }
+                        .accessibilityLabel("Clear search")
+                        .accessibilityHint("Clears the current search text")
                     }
                 }
                 .padding(10)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
                 .padding(.horizontal)
                 .padding(.top, 8)
 

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  RTSPatientListView.swift
 //  PTPerformance
@@ -359,7 +360,7 @@ private struct RTSFilterChip: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(isSelected ? Color.white.opacity(0.3) : Color(.systemGray5))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
@@ -469,14 +470,10 @@ class RTSPatientListViewModel: ObservableObject {
 
             protocolSummaries = summaries
 
-            #if DEBUG
-            print("[RTSPatientListVM] Loaded \(summaries.count) protocol summaries")
-            #endif
+            DebugLogger.shared.log("[RTSPatientListVM] Loaded \(summaries.count) protocol summaries", level: .success)
         } catch {
             errorMessage = error.localizedDescription
-            #if DEBUG
-            print("[RTSPatientListVM] Error loading data: \(error)")
-            #endif
+            DebugLogger.shared.log("[RTSPatientListVM] Error loading data: \(error)", level: .error)
         }
 
         isLoading = false

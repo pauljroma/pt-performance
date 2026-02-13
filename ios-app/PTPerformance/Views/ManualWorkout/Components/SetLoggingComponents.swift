@@ -324,7 +324,7 @@ struct GestureHintOverlay: View {
                 }
                 .padding(24)
                 .background(Color(.systemBackground))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
                 .adaptiveShadow(Shadow.prominent)
 
                 Button {
@@ -338,7 +338,7 @@ struct GestureHintOverlay: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal, 24)
                 .accessibilityLabel("Dismiss gesture hints")
@@ -424,7 +424,7 @@ struct SwipeableExerciseRow<Content: View>: View {
                 .background(Color.orange)
                 .opacity(offset < -20 ? 1 : 0)
             }
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
 
             // Main content
             content()

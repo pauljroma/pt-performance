@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  QuickBuildOptionsView.swift
 //  PTPerformance
@@ -22,11 +23,13 @@ struct PhaseTemplate {
 struct QuickBuildTemplate: Identifiable {
     let id = UUID()
     let name: String
-    let type: String // "rehab", "performance", "lifestyle"
+    let type: String // "rehab", "performance", "strength", "custom"
     let durationWeeks: Int
     let phases: [PhaseTemplate]
     let icon: String
     let description: String
+    let workoutsPerWeek: Int
+    let difficultyLevel: String // "beginner", "intermediate", "advanced"
 }
 
 // MARK: - Template Data
@@ -60,7 +63,9 @@ extension QuickBuildTemplate {
                 )
             ],
             icon: "cross.case.fill",
-            description: "Structured recovery protocol for post-surgical rehabilitation with progressive loading"
+            description: "Structured recovery protocol for post-surgical rehabilitation with progressive loading",
+            workoutsPerWeek: 3,
+            difficultyLevel: "beginner"
         ),
 
         // 8-Week Return to Sport - Performance type, 8 weeks, 4 phases
@@ -95,13 +100,15 @@ extension QuickBuildTemplate {
                 )
             ],
             icon: "figure.run",
-            description: "Progressive return to athletic performance with sport-specific conditioning phases"
+            description: "Progressive return to athletic performance with sport-specific conditioning phases",
+            workoutsPerWeek: 4,
+            difficultyLevel: "intermediate"
         ),
 
-        // 12-Week Strength Foundation - Lifestyle type, 12 weeks, 3 phases
+        // 12-Week Strength Foundation - Strength type, 12 weeks, 3 phases
         QuickBuildTemplate(
             name: "12-Week Strength Foundation",
-            type: "lifestyle",
+            type: "strength",
             durationWeeks: 12,
             phases: [
                 PhaseTemplate(
@@ -124,7 +131,9 @@ extension QuickBuildTemplate {
                 )
             ],
             icon: "dumbbell.fill",
-            description: "Comprehensive strength program for building a solid fitness foundation"
+            description: "Comprehensive strength program for building a solid fitness foundation",
+            workoutsPerWeek: 4,
+            difficultyLevel: "intermediate"
         ),
 
         // 6-Week ACL Protocol - Rehab type, 6 weeks
@@ -153,7 +162,9 @@ extension QuickBuildTemplate {
                 )
             ],
             icon: "figure.walk",
-            description: "Evidence-based ACL rehabilitation with neuromuscular training focus"
+            description: "Evidence-based ACL rehabilitation with neuromuscular training focus",
+            workoutsPerWeek: 5,
+            difficultyLevel: "beginner"
         ),
 
         // Custom Program - Blank slate
@@ -163,7 +174,9 @@ extension QuickBuildTemplate {
             durationWeeks: 0,
             phases: [],
             icon: "plus.rectangle.on.folder.fill",
-            description: "Start from scratch and build your own fully customized program"
+            description: "Start from scratch and build your own fully customized program",
+            workoutsPerWeek: 0,
+            difficultyLevel: "intermediate"
         )
     ]
 }
@@ -224,7 +237,7 @@ struct QuickBuildTemplateCard: View {
             return .blue
         case "performance":
             return .orange
-        case "lifestyle":
+        case "strength":
             return .green
         case "custom":
             return .purple
@@ -233,9 +246,37 @@ struct QuickBuildTemplateCard: View {
         }
     }
 
+    private var difficultyColor: Color {
+        switch template.difficultyLevel {
+        case "beginner":
+            return .green
+        case "intermediate":
+            return .orange
+        case "advanced":
+            return .red
+        default:
+            return .gray
+        }
+    }
+
+    private var typeDisplayName: String {
+        switch template.type {
+        case "rehab":
+            return "Rehab"
+        case "performance":
+            return "Performance"
+        case "strength":
+            return "Strength"
+        case "custom":
+            return "Custom"
+        default:
+            return template.type.capitalized
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Icon and duration badge
+            // Icon and type badge
             HStack {
                 ZStack {
                     Circle()
@@ -249,9 +290,17 @@ struct QuickBuildTemplateCard: View {
 
                 Spacer()
 
-                if template.durationWeeks > 0 {
-                    DurationBadge(weeks: template.durationWeeks)
-                }
+                // Type badge
+                Text(typeDisplayName)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(typeColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(typeColor.opacity(0.12))
+                    )
             }
 
             // Title
@@ -271,13 +320,13 @@ struct QuickBuildTemplateCard: View {
 
             Spacer(minLength: 0)
 
-            // Phase count indicator or custom label
-            phaseIndicator
+            // Template details row
+            templateDetailsRow
         }
         .padding(16)
-        .frame(minHeight: 180)
+        .frame(minHeight: 200)
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
         .shadow(color: Color.black.opacity(0.04), radius: 2, x: 0, y: 1)
         .overlay(
@@ -290,21 +339,14 @@ struct QuickBuildTemplateCard: View {
             isPressed = pressing
         }, perform: {})
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(template.name), \(template.durationWeeks > 0 ? "\(template.durationWeeks) weeks" : "custom duration")")
+        .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint("Double tap to start building with this template")
     }
 
     @ViewBuilder
-    private var phaseIndicator: some View {
-        if !template.phases.isEmpty {
-            HStack(spacing: 4) {
-                Image(systemName: "list.bullet")
-                    .font(.caption2)
-                Text("\(template.phases.count) phases")
-                    .font(.caption2)
-            }
-            .foregroundColor(.secondary)
-        } else if template.type == "custom" {
+    private var templateDetailsRow: some View {
+        if template.type == "custom" {
+            // Custom program shows blank slate indicator
             HStack(spacing: 4) {
                 Image(systemName: "sparkles")
                     .font(.caption2)
@@ -312,6 +354,74 @@ struct QuickBuildTemplateCard: View {
                     .font(.caption2)
             }
             .foregroundColor(.purple)
+        } else {
+            // Pre-built templates show detailed info
+            VStack(alignment: .leading, spacing: 6) {
+                // Duration and phases row
+                HStack(spacing: 12) {
+                    // Duration
+                    HStack(spacing: 3) {
+                        Image(systemName: "calendar")
+                            .font(.caption2)
+                        Text("\(template.durationWeeks)W")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.secondary)
+
+                    // Phases
+                    HStack(spacing: 3) {
+                        Image(systemName: "list.bullet")
+                            .font(.caption2)
+                        Text("\(template.phases.count) phases")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+                }
+
+                // Workouts per week and difficulty row
+                HStack(spacing: 12) {
+                    // Workouts per week
+                    HStack(spacing: 3) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.caption2)
+                        Text("\(template.workoutsPerWeek)x/week")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+
+                    // Difficulty level
+                    HStack(spacing: 3) {
+                        Image(systemName: difficultyIcon)
+                            .font(.caption2)
+                        Text(template.difficultyLevel.capitalized)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(difficultyColor)
+                }
+            }
+        }
+    }
+
+    private var difficultyIcon: String {
+        switch template.difficultyLevel {
+        case "beginner":
+            return "1.circle.fill"
+        case "intermediate":
+            return "2.circle.fill"
+        case "advanced":
+            return "3.circle.fill"
+        default:
+            return "circle.fill"
+        }
+    }
+
+    private var accessibilityLabelText: String {
+        if template.type == "custom" {
+            return "\(template.name). Build a custom program from scratch."
+        } else {
+            return "\(template.name). \(template.durationWeeks) weeks, \(template.phases.count) phases, \(template.workoutsPerWeek) workouts per week, \(template.difficultyLevel) difficulty."
         }
     }
 }
@@ -341,7 +451,7 @@ private extension Color {
     static let accentBlue = Color(red: 0.2, green: 0.5, blue: 0.9)
 }
 
-// MARK: - Legacy Support
+// MARK: - Legacy Support & ViewModel Integration
 
 /// Backward-compatible type alias for existing code using QuickBuildOption
 // Legacy alias removed - use QuickBuildTemplate directly
@@ -357,13 +467,42 @@ extension QuickBuildTemplate {
         switch type {
         case "rehab": return .blue
         case "performance": return .orange
-        case "lifestyle": return .green
+        case "strength": return .green
         case "custom": return .purple
         default: return .gray
         }
     }
     var isCustom: Bool { type == "custom" }
     var totalDurationWeeks: Int { durationWeeks }
+
+    /// Map type to category for ViewModel
+    var categoryForViewModel: String {
+        switch type {
+        case "rehab":
+            return "rehab"
+        case "performance":
+            return "performance"
+        case "strength":
+            return "strength"
+        case "custom":
+            return "strength" // Default for custom
+        default:
+            return "strength"
+        }
+    }
+
+    /// Convert phases to TherapistPhaseData for ViewModel integration
+    func toTherapistPhases() -> [TherapistPhaseData] {
+        phases.enumerated().map { index, phaseTemplate in
+            TherapistPhaseData(
+                name: phaseTemplate.name,
+                sequence: index + 1,
+                durationWeeks: phaseTemplate.weekEnd - phaseTemplate.weekStart + 1,
+                goals: phaseTemplate.goal,
+                workoutAssignments: []
+            )
+        }
+    }
 }
 
 // MARK: - Preview

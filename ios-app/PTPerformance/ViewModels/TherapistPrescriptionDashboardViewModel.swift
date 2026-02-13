@@ -184,7 +184,7 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
     var complianceByPatient: [PatientCompliance] {
         let grouped = Dictionary(grouping: prescriptions) { $0.patient.id }
 
-        return grouped.compactMap { (patientId, items) -> PatientCompliance? in
+        return grouped.compactMap { (_, items) -> PatientCompliance? in
             guard let patient = items.first?.patient else { return nil }
 
             let nonCancelled = items.filter { $0.prescription.status != .cancelled }
@@ -380,6 +380,8 @@ class TherapistPrescriptionDashboardViewModel: ObservableObject {
 
         } catch {
             DebugLogger.shared.log("Failed to load patients: \(error.localizedDescription)", level: .error)
+            // Note: Not setting errorMessage here as patient list is supplementary data
+            // The main prescription data loading already handles user-facing errors
         }
     }
 

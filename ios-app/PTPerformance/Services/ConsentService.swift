@@ -58,9 +58,7 @@ final class ConsentService: ObservableObject {
 
             isLoading = false
 
-            #if DEBUG
-            print("[ConsentService] Loaded \(fetchedConsents.count) consents for patient \(patientId)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Loaded \(fetchedConsents.count) consents for patient \(patientId)", level: .success)
 
             return fetchedConsents
         } catch {
@@ -68,9 +66,7 @@ final class ConsentService: ObservableObject {
             ErrorLogger.shared.logError(error, context: "ConsentService.getConsents")
             isLoading = false
 
-            #if DEBUG
-            print("[ConsentService] Error loading consents: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Error loading consents: \(error.localizedDescription)", level: .error)
 
             return []
         }
@@ -154,9 +150,7 @@ final class ConsentService: ObservableObject {
 
             HapticFeedback.success()
 
-            #if DEBUG
-            print("[ConsentService] Granted consent for \(dataSource.displayName)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Granted consent for \(dataSource.displayName)", level: .success)
         } catch {
             self.error = AppError.from(error)
             ErrorLogger.shared.logError(error, context: "ConsentService.grantConsent")
@@ -214,9 +208,7 @@ final class ConsentService: ObservableObject {
 
             HapticFeedback.warning()
 
-            #if DEBUG
-            print("[ConsentService] Revoked consent for \(dataSource.displayName)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Revoked consent for \(dataSource.displayName)", level: .success)
         } catch {
             self.error = AppError.from(error)
             ErrorLogger.shared.logError(error, context: "ConsentService.revokeConsent")
@@ -255,18 +247,12 @@ final class ConsentService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[ConsentService] Loaded \(entries.count) audit entries for patient \(patientId)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Loaded \(entries.count) audit entries for patient \(patientId)", level: .success)
 
             return entries
         } catch {
             ErrorLogger.shared.logError(error, context: "ConsentService.getConsentAuditLog")
-
-            #if DEBUG
-            print("[ConsentService] Error loading audit log: \(error.localizedDescription)")
-            #endif
-
+            DebugLogger.shared.log("[ConsentService] Error loading audit log: \(error.localizedDescription)", level: .error)
             return []
         }
     }
@@ -318,9 +304,7 @@ final class ConsentService: ObservableObject {
 
             HapticFeedback.warning()
 
-            #if DEBUG
-            print("[ConsentService] Revoked all consents for patient \(patientId)")
-            #endif
+            DebugLogger.shared.log("[ConsentService] Revoked all consents for patient \(patientId)", level: .success)
         } catch {
             self.error = AppError.from(error)
             ErrorLogger.shared.logError(error, context: "ConsentService.revokeAllConsents")

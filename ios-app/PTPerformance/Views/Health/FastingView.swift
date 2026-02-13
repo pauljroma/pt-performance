@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 struct FastingView: View {
@@ -117,7 +118,7 @@ struct FastingView: View {
                 endPoint: .trailing
             )
         )
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Extended fast warning: You've been fasting for \(String(format: "%.1f", viewModel.elapsedHours)) hours. Exercise caution when training.")
     }
@@ -231,7 +232,7 @@ struct FastingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func intensityGradient(for percentage: Int) -> LinearGradient {
@@ -282,7 +283,7 @@ struct FastingView: View {
         .padding(.vertical, 6)
         .background(Color.modusCyan.opacity(0.15))
         .foregroundColor(.modusCyan)
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func iconForWorkoutType(_ type: String) -> String {
@@ -331,7 +332,7 @@ struct FastingView: View {
                         phase: "Pre-Workout",
                         advice: preWorkout,
                         icon: "arrow.right.circle.fill",
-                        color: .blue
+                        color: .modusCyan
                     )
                 }
 
@@ -361,7 +362,7 @@ struct FastingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Empty History View
@@ -383,7 +384,7 @@ struct FastingView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var activeFastCard: some View {
@@ -451,7 +452,7 @@ struct FastingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .accessibilityElement(children: .contain)
     }
 
@@ -482,7 +483,7 @@ struct FastingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func statsSection(_ stats: FastingStats) -> some View {
@@ -543,7 +544,7 @@ struct FastingView: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Recommended eating window: \(recommendation.suggestedStart.formatted(date: .omitted, time: .shortened)) to \(recommendation.suggestedEnd.formatted(date: .omitted, time: .shortened)). \(recommendation.reason)")
     }
@@ -587,7 +588,7 @@ struct FastingStatCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
     }
@@ -746,7 +747,7 @@ struct NutritionTimingCard: View {
         }
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

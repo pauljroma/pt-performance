@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  VideoAngleSelectorView.swift
 //  PTPerformance
@@ -189,7 +190,7 @@ struct CompactAngleSelectorView: View {
         }
         .padding(4)
         .background(Color.black.opacity(0.3))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private func compactAngleButton(for angle: ExerciseVideo.VideoAngle) -> some View {
@@ -213,7 +214,7 @@ struct CompactAngleSelectorView: View {
             .padding(.horizontal, isSelected ? 12 : 8)
             .padding(.vertical, 6)
             .background(isSelected ? Color.blue : Color.clear)
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }

@@ -52,7 +52,10 @@ struct ExerciseVideoView: View {
                 VideoPlayer(player: player)
                     .frame(height: 300)
                     .overlay(alignment: .topTrailing) {
-                        Button(action: { showingFormCues.toggle() }) {
+                        Button(action: {
+                            HapticFeedback.light()
+                            showingFormCues.toggle()
+                        }) {
                             Image(systemName: showingFormCues ? "info.circle.fill" : "info.circle")
                                 .font(.title2)
                                 .foregroundColor(.white)
@@ -60,6 +63,8 @@ struct ExerciseVideoView: View {
                                 .background(Color.black.opacity(0.5))
                                 .clipShape(Circle())
                         }
+                        .accessibilityLabel(showingFormCues ? "Hide form cues" : "Show form cues")
+                        .accessibilityHint("Displays exercise form guidance")
                         .padding(8)
                     }
             }
@@ -97,10 +102,15 @@ struct ExerciseVideoView: View {
 
                 Spacer()
 
-                Button(action: { showingFormCues = false }) {
+                Button(action: {
+                    HapticFeedback.light()
+                    showingFormCues = false
+                }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Close form cues")
+                .accessibilityHint("Hides the exercise form guidance")
             }
 
             ForEach(cues.indices, id: \.self) { index in

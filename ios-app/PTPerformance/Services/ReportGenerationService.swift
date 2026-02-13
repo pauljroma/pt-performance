@@ -343,9 +343,7 @@ final class ReportGenerationService: ObservableObject {
             logMessage += ", error=\(error.localizedDescription)"
         }
 
-        #if DEBUG
-        print("[ReportGenerationService] \(logMessage)")
-        #endif
+        DebugLogger.shared.log("[ReportGenerationService] \(logMessage)", level: success ? .success : .error)
 
         // Track analytics
         AnalyticsTracker.shared.track(
@@ -447,9 +445,7 @@ class TherapistBrandingService: ObservableObject {
         } catch {
             // Use default branding if fetch fails
             branding = ClinicBranding()
-            #if DEBUG
-            print("[TherapistBrandingService] Failed to load branding: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[TherapistBrandingService] Failed to load branding: \(error.localizedDescription)", level: .error)
         }
     }
 

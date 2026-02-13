@@ -61,7 +61,7 @@ struct PainTrendChart: View {
                             .font(.caption2)
                             .padding(4)
                             .background(Color.orange.opacity(0.2))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.orange)
                     }
             }
@@ -79,7 +79,7 @@ struct PainTrendChart: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .stride(by: .day, count: 2)) { value in
+            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
                 AxisGridLine()
                 AxisValueLabel(format: .dateTime.month().day())
                     .font(.caption)

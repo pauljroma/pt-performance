@@ -164,7 +164,7 @@ struct UCLHealthView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             } else {
                 // No assessment yet
                 VStack(spacing: 12) {
@@ -193,7 +193,7 @@ struct UCLHealthView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
@@ -226,7 +226,7 @@ struct UCLHealthView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.orange, lineWidth: 1)
@@ -293,7 +293,7 @@ struct UCLHealthView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
@@ -310,7 +310,7 @@ struct UCLHealthView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
@@ -341,11 +341,11 @@ struct UCLHealthView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
@@ -405,12 +405,12 @@ private struct ScoreRow: View {
                     Rectangle()
                         .fill(Color(.tertiarySystemGroupedBackground))
                         .frame(height: 6)
-                        .cornerRadius(3)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
                         .fill(color)
                         .frame(width: geometry.size.width * (value / maxValue), height: 6)
-                        .cornerRadius(3)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .frame(height: 6)

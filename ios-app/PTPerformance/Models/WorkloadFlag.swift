@@ -17,14 +17,14 @@ struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
     let threshold: Double
     let timestamp: Date
     let isResolved: Bool
-    
+
     enum FlagType: String, Codable, Hashable {
         case highWorkload = "high_workload"
         case velocityDrop = "velocity_drop"
         case commandLoss = "command_loss"
         case consecutiveDays = "consecutive_days"
         case painIncrease = "pain_increase"
-        
+
         var displayName: String {
             switch self {
             case .highWorkload: return "High Workload"
@@ -35,16 +35,16 @@ struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
             }
         }
     }
-    
+
     enum Severity: String, Codable, Hashable {
         case warning = "yellow"
         case critical = "red"
-        
+
         var colorName: String {
             self == .critical ? "red" : "orange"
         }
     }
-    
+
     var icon: String {
         switch flagType {
         case .highWorkload:
@@ -59,11 +59,11 @@ struct WorkloadFlag: Identifiable, Codable, Hashable, Equatable {
             return "exclamationmark.triangle.fill"
         }
     }
-    
+
     var colorName: String {
         severity.colorName
     }
-    
+
     // Sample flags for testing
     static let sampleFlags: [WorkloadFlag] = [
         WorkloadFlag(

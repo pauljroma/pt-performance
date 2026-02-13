@@ -409,7 +409,7 @@ class ManualWorkoutExecutionViewModel: ObservableObject {
         var defaultWeight = exercise.targetLoad ?? 0
         if let adjustment = fatigueAdjustment, adjustment.isActive {
             // Reduce weight by the fatigue adjustment percentage
-            defaultWeight = defaultWeight * (1.0 - adjustment.loadReductionPct)
+            defaultWeight *= (1.0 - adjustment.loadReductionPct)
             // Round to nearest 5 for practical gym use
             defaultWeight = (defaultWeight / 5.0).rounded() * 5.0
         }
@@ -1028,7 +1028,7 @@ struct ManualWorkoutExecutionView: View {
                     .padding(.vertical, 4)
                     .background(adjustment.fatigueBand.color.opacity(0.2))
                     .foregroundColor(adjustment.fatigueBand.color)
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Info button
                 Button {
@@ -1043,7 +1043,7 @@ struct ManualWorkoutExecutionView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
@@ -1169,7 +1169,7 @@ struct ManualWorkoutExecutionView: View {
         }
         .padding(12)
         .background(isCurrent ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(blockTypeEnum?.displayName ?? blockType) block, \(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count) of \(exercises.count) completed")
         .accessibilityAddTraits(isCompleted ? [.isSelected] : [])
@@ -1325,7 +1325,7 @@ struct ManualWorkoutExecutionView: View {
                         .padding(.vertical, 10)
                         .background(Color.green.opacity(0.1))
                         .foregroundColor(.green)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .padding(.horizontal, 12)
                     .accessibilityLabel("Complete as prescribed")
@@ -1345,7 +1345,7 @@ struct ManualWorkoutExecutionView: View {
                         .padding(.vertical, 10)
                         .background(Color.blue.opacity(0.1))
                         .foregroundColor(.blue)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .padding(.horizontal, 12)
                     .accessibilityLabel("Log with custom values")
@@ -1381,7 +1381,7 @@ struct ManualWorkoutExecutionView: View {
             }
             }
             .background(Color(.systemBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(isCurrent ? Color.blue.opacity(0.3) : Color(.separator).opacity(0.3), lineWidth: 1)
@@ -1658,7 +1658,7 @@ struct ManualWorkoutExecutionView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.medium)
     }
 
@@ -1688,7 +1688,7 @@ struct ManualWorkoutExecutionView: View {
                 .padding()
                 .background(Color.green)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(viewModel.currentExercise == nil)
             .accessibilityLabel("Complete exercise")
@@ -1717,7 +1717,7 @@ struct ManualWorkoutExecutionView: View {
                 .padding()
                 .background(Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(.primary)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(viewModel.currentExercise == nil)
             .accessibilityLabel("Skip exercise")
@@ -1739,7 +1739,7 @@ struct ManualWorkoutExecutionView: View {
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("Complete workout")
                 .accessibilityHint("Finishes the workout and shows your summary")
@@ -1765,7 +1765,7 @@ struct ManualWorkoutExecutionView: View {
             }
             .padding(32)
             .background(Color(.systemGray3).opacity(0.9))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
     }
 
@@ -1975,7 +1975,7 @@ struct ExerciseInfoSheet: View {
                                     .padding(.vertical, 4)
                                     .background(Color.blue.opacity(0.1))
                                     .foregroundColor(.blue)
-                                    .cornerRadius(6)
+                                    .cornerRadius(CornerRadius.sm)
                             }
                             if let category = template?.category {
                                 Label(category.capitalized, systemImage: "tag")
@@ -1984,7 +1984,7 @@ struct ExerciseInfoSheet: View {
                                     .padding(.vertical, 4)
                                     .background(Color.purple.opacity(0.1))
                                     .foregroundColor(.purple)
-                                    .cornerRadius(6)
+                                    .cornerRadius(CornerRadius.sm)
                             }
                             if let bodyRegion = template?.body_region {
                                 Label(bodyRegion.capitalized, systemImage: "figure.arms.open")
@@ -1993,7 +1993,7 @@ struct ExerciseInfoSheet: View {
                                     .padding(.vertical, 4)
                                     .background(Color.green.opacity(0.1))
                                     .foregroundColor(.green)
-                                    .cornerRadius(6)
+                                    .cornerRadius(CornerRadius.sm)
                             }
                         }
                     }
@@ -2002,7 +2002,7 @@ struct ExerciseInfoSheet: View {
                     if let videoUrl = template?.videoUrl, !videoUrl.isEmpty {
                         VideoPlayerView(videoUrl: videoUrl)
                             .frame(height: 220)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                     }
 
                     // Target Prescription
@@ -2023,7 +2023,7 @@ struct ExerciseInfoSheet: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Technique Cues
                     if let cues = template?.techniqueCues,
@@ -2062,7 +2062,7 @@ struct ExerciseInfoSheet: View {
                                                 .padding(.horizontal, 8)
                                                 .padding(.vertical, 2)
                                                 .background(Color(.tertiarySystemGroupedBackground))
-                                                .cornerRadius(4)
+                                                .cornerRadius(CornerRadius.xs)
                                         }
                                     }
                                 }
@@ -2070,7 +2070,7 @@ struct ExerciseInfoSheet: View {
                         }
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
 
                     // Common Mistakes
@@ -2086,7 +2086,7 @@ struct ExerciseInfoSheet: View {
                         }
                         .padding()
                         .background(Color.orange.opacity(0.08))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
 
                     // Safety Notes
@@ -2102,7 +2102,7 @@ struct ExerciseInfoSheet: View {
                         }
                         .padding()
                         .background(Color.red.opacity(0.08))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
 
                     // Exercise Notes
@@ -2224,7 +2224,7 @@ struct AISubstitutionSheetForManual: View {
                             .padding(.vertical, 4)
                             .background(Color.orange.opacity(0.1))
                             .foregroundColor(.orange)
-                            .cornerRadius(6)
+                            .cornerRadius(CornerRadius.sm)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -2308,7 +2308,7 @@ struct AISubstitutionSheetForManual: View {
                                     }
                                     .padding()
                                     .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(10)
+                                    .cornerRadius(CornerRadius.sm)
                                 }
                                 .id(alt.id)
                             }
@@ -2367,7 +2367,7 @@ struct AISubstitutionSheetForManual: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -2483,7 +2483,7 @@ struct ExercisePickerForWorkout: View {
                                     ? .white
                                     : .primary
                                 )
-                                .cornerRadius(16)
+                                .cornerRadius(CornerRadius.lg)
                         }
                     }
                 }
@@ -2522,7 +2522,7 @@ struct ExercisePickerForWorkout: View {
                                                 .padding(.horizontal, 6)
                                                 .padding(.vertical, 2)
                                                 .background(Color.blue.opacity(0.7))
-                                                .cornerRadius(4)
+                                                .cornerRadius(CornerRadius.xs)
                                         }
                                         if let region = template.bodyRegion {
                                             Text(region.capitalized)
@@ -2624,7 +2624,7 @@ struct ProgressionSuggestionCard: View {
                     .padding(.vertical, 4)
                     .background(suggestion.progressionType.color.opacity(0.2))
                     .foregroundColor(suggestion.progressionType.color)
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             // Reasoning text
@@ -2645,12 +2645,12 @@ struct ProgressionSuggestionCard: View {
                 .padding(.vertical, 10)
                 .background(Color.purple)
                 .foregroundColor(.white)
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(radius: 2)
     }
 }

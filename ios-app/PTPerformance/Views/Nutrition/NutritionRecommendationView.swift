@@ -114,7 +114,7 @@ struct NutritionRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 
@@ -136,7 +136,7 @@ struct NutritionRecommendationView: View {
         .padding(32)
         .frame(maxWidth: .infinity)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -164,7 +164,7 @@ struct NutritionRecommendationView: View {
         }
         .padding()
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -189,7 +189,7 @@ struct NutritionRecommendationView: View {
         .padding(24)
         .frame(maxWidth: .infinity)
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -222,7 +222,7 @@ struct NutritionRecommendationView: View {
         .padding(24)
         .frame(maxWidth: .infinity)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 

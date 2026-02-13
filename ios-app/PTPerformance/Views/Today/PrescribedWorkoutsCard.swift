@@ -31,6 +31,7 @@ struct PrescribedWorkoutsCard: View {
                     }
                     .font(.subheadline)
                     .foregroundColor(.blue)
+                    .accessibilityLabel("View all prescribed workouts")
                 }
             }
 
@@ -137,7 +138,7 @@ struct PrescribedWorkoutsCard: View {
                         .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.systemGray6))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
 

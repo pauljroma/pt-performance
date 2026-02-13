@@ -10,7 +10,7 @@ import SwiftUI
 struct StrengthTargetsCard: View {
     let exercise: Exercise
     let oneRepMax: Double?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -19,7 +19,7 @@ struct StrengthTargetsCard: View {
                 Text("Strength Targets")
                     .font(.headline)
             }
-            
+
             if let rm = oneRepMax {
                 VStack(alignment: .leading, spacing: 12) {
                     // 1RM Display
@@ -33,9 +33,9 @@ struct StrengthTargetsCard: View {
                             .fontWeight(.bold)
                             .foregroundColor(.blue)
                     }
-                    
+
                     Divider()
-                    
+
                     // Training Zones
                     VStack(spacing: 10) {
                         TargetRow(
@@ -45,7 +45,7 @@ struct StrengthTargetsCard: View {
                             color: .red,
                             icon: "bolt.fill"
                         )
-                        
+
                         TargetRow(
                             goal: "Hypertrophy",
                             percentage: 0.70,
@@ -53,7 +53,7 @@ struct StrengthTargetsCard: View {
                             color: .orange,
                             icon: "figure.arms.open"
                         )
-                        
+
                         TargetRow(
                             goal: "Endurance",
                             percentage: 0.50,
@@ -76,7 +76,7 @@ struct StrengthTargetsCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -87,11 +87,11 @@ struct TargetRow: View {
     let oneRM: Double
     let color: Color
     let icon: String
-    
+
     var targetWeight: Int {
         Int(oneRM * percentage)
     }
-    
+
     var repRange: String {
         switch percentage {
         case 0.85...:
@@ -102,32 +102,32 @@ struct TargetRow: View {
             return "12-20 reps"
         }
     }
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(color)
                 .frame(width: 24)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(goal)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                
+
                 Text(repRange)
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(targetWeight) lbs")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(color)
-                
+
                 Text("\(Int(percentage * 100))% of 1RM")
                     .font(.caption2)
                     .foregroundColor(.secondary)

@@ -174,7 +174,7 @@ struct ExerciseHistorySheet: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                 }
             }
@@ -222,7 +222,7 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
     }
@@ -283,7 +283,7 @@ private struct Estimated1RMCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Estimated one rep max: \(formatWeight(estimated1RM))\(formula.map { ", \($0)" } ?? "")")
         .accessibilityCustomContent("Percentage breakdown", "90% is \(formatWeight(estimated1RM * 0.90)), 80% is \(formatWeight(estimated1RM * 0.80)), 70% is \(formatWeight(estimated1RM * 0.70)), 60% is \(formatWeight(estimated1RM * 0.60))")
@@ -354,7 +354,7 @@ private struct SessionHistoryRow: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(sessionAccessibilityLabel)

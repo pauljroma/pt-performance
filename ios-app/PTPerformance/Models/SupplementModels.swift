@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Supplement Catalog (Database Supplements)
 
 /// A supplement in the master catalog (reference data)
-struct CatalogSupplement: Identifiable, Codable, Hashable {
+struct CatalogSupplement: Identifiable, Codable, Hashable, Equatable, Sendable {
     let id: UUID
     let name: String
     let brand: String?
@@ -172,7 +172,12 @@ enum EvidenceRating: String, Codable, CaseIterable, Comparable {
 
 // MARK: - Supplement Timing
 
-/// When to take a supplement during the day
+/// When to take a supplement during the day.
+///
+/// Note: This enum is the primary timing enum for supplements in SupplementModels.
+/// A similar `TimeOfDay` enum exists in `Supplement.swift` for legacy compatibility.
+/// Use `SupplementTiming` for new code involving supplement routines, logs, and catalog items.
+/// Use `TimeOfDay` only when interfacing with legacy Supplement model code.
 enum SupplementTiming: String, Codable, CaseIterable, Identifiable, Hashable {
     case morning = "morning"
     case afternoon = "afternoon"
@@ -337,7 +342,7 @@ enum Weekday: Int, Codable, CaseIterable, Identifiable, Hashable {
 // MARK: - Dosage
 
 /// Dosage amount with unit
-struct Dosage: Codable, Hashable {
+struct Dosage: Codable, Hashable, Sendable {
     var amount: Double
     var unit: DosageUnit
 
@@ -448,7 +453,7 @@ struct SupplementStackItem: Identifiable, Codable, Hashable {
 // MARK: - Supplement Routine
 
 /// A user's personalized daily supplement routine
-struct SupplementRoutine: Identifiable, Codable, Hashable {
+struct SupplementRoutine: Identifiable, Codable, Hashable, Equatable, Sendable {
     let id: UUID
     let patientId: UUID
     let supplementId: UUID
@@ -478,7 +483,7 @@ struct SupplementRoutine: Identifiable, Codable, Hashable {
 }
 
 /// Supplement data for routine display and editing
-struct RoutineSupplement: Identifiable, Codable, Hashable {
+struct RoutineSupplement: Identifiable, Codable, Hashable, Equatable, Sendable {
     let id: UUID
     var name: String
     var brand: String?
@@ -528,7 +533,7 @@ struct RoutineSupplement: Identifiable, Codable, Hashable {
 // MARK: - Supplement Log (Extended)
 
 /// Extended supplement log with additional tracking data
-struct SupplementLogEntry: Identifiable, Codable, Hashable {
+struct SupplementLogEntry: Identifiable, Codable, Hashable, Equatable, Sendable {
     let id: UUID
     let patientId: UUID
     let supplementId: UUID
@@ -656,9 +661,10 @@ struct SupplementCompliance: Identifiable, Codable {
 
 /// Weekly compliance summary
 struct WeeklySupplementCompliance: Identifiable {
-    let id = UUID()
     let weekStartDate: Date
     let dailyCompliance: [SupplementCompliance]
+
+    var id: String { "\(weekStartDate.timeIntervalSince1970)" }
 
     var averageComplianceRate: Double {
         guard !dailyCompliance.isEmpty else { return 0 }
@@ -681,7 +687,7 @@ struct WeeklySupplementCompliance: Identifiable {
 // MARK: - Today's Schedule
 
 /// A scheduled supplement dose for today
-struct TodaySupplementDose: Identifiable, Hashable {
+struct TodaySupplementDose: Identifiable, Hashable, Equatable {
     let id: UUID
     let routineId: UUID
     let supplementId: UUID
@@ -973,10 +979,13 @@ extension SupplementStack {
 }
 
 extension SupplementRoutine {
+    // swiftlint:disable:next force_unwrapping
+    private static let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID()
+
     static let demoRoutines: [SupplementRoutine] = [
         SupplementRoutine(
             id: UUID(),
-            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            patientId: demoPatientId,
             supplementId: UUID(),
             supplement: RoutineSupplement(
                 id: UUID(),
@@ -990,13 +999,13 @@ extension SupplementRoutine {
             withFood: false,
             notes: nil,
             isActive: true,
-            startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date())!,
+            startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(),
             endDate: nil,
             createdAt: Date()
         ),
         SupplementRoutine(
             id: UUID(),
-            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            patientId: demoPatientId,
             supplementId: UUID(),
             supplement: RoutineSupplement(
                 id: UUID(),
@@ -1010,13 +1019,13 @@ extension SupplementRoutine {
             withFood: true,
             notes: "Take with breakfast",
             isActive: true,
-            startDate: Calendar.current.date(byAdding: .month, value: -2, to: Date())!,
+            startDate: Calendar.current.date(byAdding: .month, value: -2, to: Date()) ?? Date(),
             endDate: nil,
             createdAt: Date()
         ),
         SupplementRoutine(
             id: UUID(),
-            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            patientId: demoPatientId,
             supplementId: UUID(),
             supplement: RoutineSupplement(
                 id: UUID(),
@@ -1030,13 +1039,13 @@ extension SupplementRoutine {
             withFood: false,
             notes: "30 min before sleep",
             isActive: true,
-            startDate: Calendar.current.date(byAdding: .day, value: -14, to: Date())!,
+            startDate: Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date(),
             endDate: nil,
             createdAt: Date()
         ),
         SupplementRoutine(
             id: UUID(),
-            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID(),
             supplementId: UUID(),
             supplement: RoutineSupplement(
                 id: UUID(),
@@ -1050,13 +1059,13 @@ extension SupplementRoutine {
             withFood: true,
             notes: nil,
             isActive: true,
-            startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date())!,
+            startDate: Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date(),
             endDate: nil,
             createdAt: Date()
         ),
         SupplementRoutine(
             id: UUID(),
-            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            patientId: UUID(uuidString: "00000000-0000-0000-0000-000000000001") ?? UUID(),
             supplementId: UUID(),
             supplement: RoutineSupplement(
                 id: UUID(),
@@ -1070,7 +1079,7 @@ extension SupplementRoutine {
             withFood: false,
             notes: "Within 30 min of training",
             isActive: true,
-            startDate: Calendar.current.date(byAdding: .day, value: -7, to: Date())!,
+            startDate: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date(),
             endDate: nil,
             createdAt: Date()
         )

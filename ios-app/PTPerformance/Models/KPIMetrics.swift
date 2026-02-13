@@ -33,22 +33,6 @@ struct KPIDashboard: Codable, Sendable {
         case aiMetrics = "ai_metrics"
         case safetyMetrics = "safety_metrics"
     }
-
-    init(
-        periodStart: Date,
-        periodEnd: Date,
-        ptMetrics: PTMetrics,
-        athleteMetrics: AthleteMetrics,
-        aiMetrics: AIMetrics,
-        safetyMetrics: SafetyMetrics
-    ) {
-        self.periodStart = periodStart
-        self.periodEnd = periodEnd
-        self.ptMetrics = ptMetrics
-        self.athleteMetrics = athleteMetrics
-        self.aiMetrics = aiMetrics
-        self.safetyMetrics = safetyMetrics
-    }
 }
 
 // MARK: - PT Metrics

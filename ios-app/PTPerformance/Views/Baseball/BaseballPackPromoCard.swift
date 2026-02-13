@@ -23,8 +23,10 @@ struct BaseballPackPromoCard: View {
             contentSection
         }
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Baseball Pack promo, 12 plus programs for pitchers and position players")
     }
 
     // MARK: - Cover Image
@@ -51,12 +53,12 @@ struct BaseballPackPromoCard: View {
                 Text("PREMIUM")
                     .font(.caption2)
                     .fontWeight(.bold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.orange)
                     .foregroundColor(.white)
-                    .cornerRadius(4)
-                    .padding(8)
+                    .cornerRadius(CornerRadius.sm)
+                    .padding(Spacing.xs)
             }
         }
     }
@@ -94,7 +96,7 @@ struct BaseballPackPromoCard: View {
             }
             .padding(.top, 4)
         }
-        .padding(12)
+        .padding(Spacing.sm)
     }
 
     // MARK: - Feature Tag
@@ -107,10 +109,10 @@ struct BaseballPackPromoCard: View {
                 .font(.caption2)
         }
         .foregroundColor(.orange)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -142,12 +144,12 @@ struct BaseballPackPromoCardCompact: View {
                     Text("PREMIUM")
                         .font(.system(size: 9))
                         .fontWeight(.bold)
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, Spacing.xxs)
                         .padding(.vertical, 2)
                         .background(Color.orange)
                         .foregroundColor(.white)
-                        .cornerRadius(4)
-                        .padding(6)
+                        .cornerRadius(CornerRadius.sm)
+                        .padding(Spacing.xxs)
                 }
             }
 
@@ -162,10 +164,10 @@ struct BaseballPackPromoCardCompact: View {
                         .fontWeight(.semibold)
                 }
                 .foregroundColor(.orange)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color.orange.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
 
                 // Title
                 Text("Baseball Pack")
@@ -199,13 +201,15 @@ struct BaseballPackPromoCardCompact: View {
                     }
                 }
             }
-            .padding(12)
+            .padding(Spacing.sm)
         }
         .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .clipped()
         .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Baseball Pack compact, 12 plus programs")
     }
 }
 

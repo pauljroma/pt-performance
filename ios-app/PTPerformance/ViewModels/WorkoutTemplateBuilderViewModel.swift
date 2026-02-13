@@ -171,44 +171,28 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
     // MARK: - Form State
 
     /// Template name (required, 3-100 characters)
-    @Published var name: String = "" {
-        didSet { updateValidation() }
-    }
+    @Published var name: String = ""
 
     /// Template category
-    @Published var category: WorkoutCategory = .strength {
-        didSet { updateValidation() }
-    }
+    @Published var category: WorkoutCategory = .strength
 
     /// Template difficulty
-    @Published var difficulty: WorkoutDifficulty = .intermediate {
-        didSet { updateValidation() }
-    }
+    @Published var difficulty: WorkoutDifficulty = .intermediate
 
     /// Duration in minutes
-    @Published var durationMinutes: Int = 45 {
-        didSet { updateValidation() }
-    }
+    @Published var durationMinutes: Int = 45
 
     /// Optional description
-    @Published var description: String = "" {
-        didSet { updateValidation() }
-    }
+    @Published var description: String = ""
 
     /// Equipment required (comma-separated in UI, stored as array)
-    @Published var equipmentText: String = "" {
-        didSet { updateValidation() }
-    }
+    @Published var equipmentText: String = ""
 
     /// Tags (comma-separated in UI, stored as array)
-    @Published var tagsText: String = "" {
-        didSet { updateValidation() }
-    }
+    @Published var tagsText: String = ""
 
     /// List of exercises in the template
-    @Published var exercises: [TemplateExerciseItem] = [] {
-        didSet { updateValidation() }
-    }
+    @Published var exercises: [TemplateExerciseItem] = []
 
     // MARK: - UI State
 
@@ -227,11 +211,15 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
     /// Success message to display
     @Published var successMessage: String = ""
 
-    /// Whether form is valid for submission
-    @Published private(set) var isValid: Bool = false
+    /// Whether form is valid for submission (computed lazily to avoid cascading updates)
+    var isValid: Bool {
+        validationMessage == nil
+    }
 
-    /// Validation error message (nil if valid)
-    @Published private(set) var validationMessage: String?
+    /// Validation error message (nil if valid) - computed lazily to avoid cascading updates
+    var validationMessage: String? {
+        computeValidation()
+    }
 
     // MARK: - Dependencies
 
@@ -241,7 +229,6 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
 
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
-        updateValidation()
 
         // Load exercise library on initialization
         Task {
@@ -316,74 +303,56 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
 
     // MARK: - Validation
 
-    /// Update validation state based on current form values
-    private func updateValidation() {
+    /// Compute validation state based on current form values (lazy evaluation)
+    /// Returns nil if valid, or an error message if invalid
+    private func computeValidation() -> String? {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
 
         // Name validation
         if trimmedName.isEmpty {
-            validationMessage = "Template name is required"
-            isValid = false
-            return
+            return "Template name is required"
         }
 
         if trimmedName.count < Limits.minNameLength {
-            validationMessage = "Name must be at least \(Limits.minNameLength) characters"
-            isValid = false
-            return
+            return "Name must be at least \(Limits.minNameLength) characters"
         }
 
         if trimmedName.count > Limits.maxNameLength {
-            validationMessage = "Name must be \(Limits.maxNameLength) characters or less"
-            isValid = false
-            return
+            return "Name must be \(Limits.maxNameLength) characters or less"
         }
 
         // Description validation
         if description.count > Limits.maxDescriptionLength {
-            validationMessage = "Description must be \(Limits.maxDescriptionLength) characters or less"
-            isValid = false
-            return
+            return "Description must be \(Limits.maxDescriptionLength) characters or less"
         }
 
         // Duration validation
         if durationMinutes < Limits.minDuration {
-            validationMessage = "Duration must be at least \(Limits.minDuration) minutes"
-            isValid = false
-            return
+            return "Duration must be at least \(Limits.minDuration) minutes"
         }
 
         if durationMinutes > Limits.maxDuration {
-            validationMessage = "Duration cannot exceed \(Limits.maxDuration) minutes"
-            isValid = false
-            return
+            return "Duration cannot exceed \(Limits.maxDuration) minutes"
         }
 
         // Exercise validation
         if exercises.count > Limits.maxExercises {
-            validationMessage = "Maximum \(Limits.maxExercises) exercises allowed"
-            isValid = false
-            return
+            return "Maximum \(Limits.maxExercises) exercises allowed"
         }
 
         // Validate each exercise has a name
         for (index, exercise) in exercises.enumerated() {
             if exercise.name.trimmingCharacters(in: .whitespaces).isEmpty {
-                validationMessage = "Exercise \(index + 1) needs a name"
-                isValid = false
-                return
+                return "Exercise \(index + 1) needs a name"
             }
         }
 
         // Tags validation
         if tagsList.count > Limits.maxTags {
-            validationMessage = "Maximum \(Limits.maxTags) tags allowed"
-            isValid = false
-            return
+            return "Maximum \(Limits.maxTags) tags allowed"
         }
 
-        validationMessage = nil
-        isValid = true
+        return nil
     }
 
     // MARK: - Exercise Management
@@ -432,9 +401,7 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
     /// Save the template to Supabase
     /// - Returns: The created template ID if successful
     func saveTemplate() async throws -> UUID {
-        // Validate first
-        updateValidation()
-
+        // Validate first (computed lazily)
         guard isValid else {
             throw WorkoutTemplateBuilderError.validationFailed(validationMessage ?? "Invalid form data")
         }
@@ -561,7 +528,7 @@ class WorkoutTemplateBuilderViewModel: ObservableObject {
         errorMessage = ""
         showSuccess = false
         successMessage = ""
-        updateValidation()
+        // Validation is now computed lazily, no need to call updateValidation()
     }
 
     // MARK: - Error Handling

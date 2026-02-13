@@ -138,9 +138,7 @@ class QuickSetupViewModel: ObservableObject {
             throw NSError(domain: "QuickSetup", code: -2, userInfo: [NSLocalizedDescriptionKey: "Invalid patient ID"])
         }
 
-        #if DEBUG
-        print("✅ Created patient record: \(patientId)")
-        #endif
+        DebugLogger.shared.log("[QuickSetup] Created patient record: \(patientId)", level: .success)
 
         return patientId
     }
@@ -377,7 +375,7 @@ class QuickSetupViewModel: ObservableObject {
         }
 
         do {
-            // Update patient mode using user_id (not id)
+            // Update patient mode using user_id
             try await supabase.client
                 .from("patients")
                 .update(["mode": selectedMode.rawValue])
@@ -498,9 +496,7 @@ class QuickSetupViewModel: ObservableObject {
                     .execute()
             } catch {
                 // Non-fatal - streaks will be created on first activity
-                #if DEBUG
-                print("⚠️ Could not initialize \(streakType) streak: \(error)")
-                #endif
+                DebugLogger.shared.log("[QuickSetup] Could not initialize \(streakType) streak: \(error)", level: .warning)
             }
         }
     }

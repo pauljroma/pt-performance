@@ -160,6 +160,10 @@ class ProgramAnalyticsViewModel: ObservableObject {
         // No initialization needed - data loaded when view appears
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Public Methods
 
     /// Load all analytics data for the therapist

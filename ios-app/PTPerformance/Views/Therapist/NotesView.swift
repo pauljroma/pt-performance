@@ -193,7 +193,7 @@ struct NoteCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
     }
@@ -358,7 +358,7 @@ extension PTSupabaseClient {
 #if DEBUG
 struct NotesView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             NotesView(patientId: "patient-1")
         }
     }

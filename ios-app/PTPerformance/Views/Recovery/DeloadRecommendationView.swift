@@ -452,7 +452,7 @@ struct DeloadRecommendationView: View {
                 }
             }
             .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 1)) { value in
+                AxisMarks(values: .stride(by: .day, count: 1)) { _ in
                     AxisGridLine()
                     AxisValueLabel(format: .dateTime.weekday(.abbreviated))
                 }
@@ -462,10 +462,10 @@ struct DeloadRecommendationView: View {
                     .background(
                         Color(.separator)
                     )
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
             // Reference lines for fatigue bands
-            .chartOverlay { proxy in
+            .chartOverlay { _ in
                 GeometryReader { geometry in
                     // High threshold (70)
                     Rectangle()
@@ -903,7 +903,7 @@ struct FatigueTrendChart: View {
                 .background(
                     Color(.separator)
                 )
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
         }
         .frame(height: height)
         .accessibilityLabel("Fatigue trend chart")

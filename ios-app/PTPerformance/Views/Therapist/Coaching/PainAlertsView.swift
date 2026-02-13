@@ -530,9 +530,7 @@ struct PainAlertsView_Previews: PreviewProvider {
     static var previews: some View {
         PainAlertsView(
             exceptions: sampleExceptions,
-            onSelectPatient: { patient in
-                print("Selected: \(patient.fullName)")
-            }
+            onSelectPatient: { _ in }
         )
     }
 }

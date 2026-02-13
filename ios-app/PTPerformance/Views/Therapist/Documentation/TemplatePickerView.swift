@@ -252,7 +252,7 @@ struct TemplateCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
@@ -390,7 +390,7 @@ struct PreviewSection: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
         }
     }
 }

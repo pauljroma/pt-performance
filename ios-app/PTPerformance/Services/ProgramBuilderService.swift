@@ -353,6 +353,7 @@ enum ProgramServiceError: LocalizedError {
 // MARK: - Service
 
 /// Service for therapists to create and manage training programs
+@MainActor
 class ProgramBuilderService: ObservableObject {
     private let supabase: PTSupabaseClient
     private let logger = DebugLogger.shared

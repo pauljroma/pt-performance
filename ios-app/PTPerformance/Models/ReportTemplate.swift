@@ -340,13 +340,14 @@ struct GeneratedReport: Identifiable {
 
 /// Quick preset configurations for common report scenarios
 struct ReportPreset: Identifiable {
-    let id = UUID()
     let name: String
     let description: String
     let reportType: ReportType
     let period: ReportPeriod
     let sections: [ReportSection]
     let icon: String
+
+    var id: String { "\(reportType.rawValue)-\(period.rawValue)-\(name)" }
 
     static let weeklyProgress = ReportPreset(
         name: "Weekly Progress",

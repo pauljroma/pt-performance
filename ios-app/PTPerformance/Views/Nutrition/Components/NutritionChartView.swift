@@ -114,7 +114,7 @@ struct WeeklyNutritionChart: View {
                         endPoint: .top
                     )
                 )
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
 
                 // Protein line overlay
                 LineMark(

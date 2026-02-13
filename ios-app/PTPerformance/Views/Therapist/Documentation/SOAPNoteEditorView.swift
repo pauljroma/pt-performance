@@ -167,7 +167,7 @@ struct SOAPNoteEditorView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var statusBadge: some View {
@@ -182,7 +182,7 @@ struct SOAPNoteEditorView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.green.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
             } else if viewModel.isDraft {
                 HStack(spacing: 4) {
                     Image(systemName: "doc.badge.ellipsis")
@@ -193,7 +193,7 @@ struct SOAPNoteEditorView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color.orange.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
             }
         }
     }
@@ -235,7 +235,7 @@ struct SOAPNoteEditorView: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.green.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("Import session data")
                     .accessibilityHint("Opens session data importer to auto-fill objective metrics from recent sessions")
@@ -275,7 +275,7 @@ struct SOAPNoteEditorView: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("Get AI suggestions for treatment plan")
                     .accessibilityHint("Opens AI-powered suggestions based on your note content")
@@ -314,7 +314,7 @@ struct SOAPNoteEditorView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(viewModel.canSign ? Color.blue : Color.gray)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(!viewModel.canSign)
 
@@ -341,7 +341,7 @@ struct SOAPNoteEditorView: View {
                 }
                 .padding()
                 .background(Color.green.opacity(0.1))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
         }
     }
@@ -358,7 +358,7 @@ struct SOAPNoteEditorView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(.ultraThinMaterial)
-        .cornerRadius(20)
+        .cornerRadius(CornerRadius.xl)
     }
 }
 
@@ -425,7 +425,7 @@ struct SOAPSectionEditor: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                         .accessibilityLabel("\(title) content: \(text.isEmpty ? "No content" : text)")
                 } else {
                     TextEditor(text: $text)
@@ -433,7 +433,7 @@ struct SOAPSectionEditor: View {
                         .frame(minHeight: 120)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                         .overlay(
                             Group {
                                 if text.isEmpty {
@@ -454,7 +454,7 @@ struct SOAPSectionEditor: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -720,12 +720,12 @@ struct DocumentationTemplate: Identifiable {
 #if DEBUG
 struct SOAPNoteEditorView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             SOAPNoteEditorView(patientId: "patient-1", sessionId: nil)
         }
         .preferredColorScheme(.light)
 
-        NavigationView {
+        NavigationStack {
             SOAPNoteEditorView(patientId: "patient-1", sessionId: nil)
         }
         .preferredColorScheme(.dark)

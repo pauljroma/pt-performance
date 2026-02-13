@@ -318,7 +318,7 @@ struct TagChip: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .contain)
     }
 }

@@ -93,7 +93,7 @@ struct TaskCustomizationSheet: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -156,7 +156,7 @@ struct TaskCustomizationSheet: View {
             .lineLimit(3...6)
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -235,7 +235,7 @@ struct TaskCustomizationRow: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .opacity(customization.isIncluded ? 1 : 0.6)
     }
 }

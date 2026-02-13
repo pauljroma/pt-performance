@@ -1,15 +1,22 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 import Charts
+import UIKit
 
 struct LabResultsView: View {
     @StateObject private var viewModel = LabResultsViewModel()
     @State private var showingPDFUpload = false
+
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+    private let notificationFeedback = UINotificationFeedbackGenerator()
 
     var body: some View {
         NavigationStack {
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading lab results...")
+                } else if let error = viewModel.error {
+                    errorState(error)
                 } else if viewModel.labResults.isEmpty {
                     emptyState
                 } else {
@@ -69,18 +76,19 @@ struct LabResultsView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Lab Results", systemImage: "cross.case")
+            Label("No Lab Results Yet", systemImage: "doc.text.magnifyingglass")
                 .foregroundColor(.modusDeepTeal)
         } description: {
-            Text("Upload your blood work and lab results to track your health markers over time.")
+            Text("Upload your lab results to get AI-powered insights and track your biomarkers over time.")
         } actions: {
             VStack(spacing: Spacing.sm) {
                 Button {
                     showingPDFUpload = true
                 } label: {
-                    Label("Upload Lab PDF", systemImage: "doc.viewfinder")
+                    Label("Upload Lab Results", systemImage: "doc.viewfinder")
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.modusCyan)
 
                 Button {
                     viewModel.showingAddSheet = true
@@ -92,6 +100,25 @@ struct LabResultsView: View {
         }
     }
 
+    private func errorState(_ error: String) -> some View {
+        ContentUnavailableView {
+            Label("Unable to Load", systemImage: "exclamationmark.triangle")
+                .foregroundColor(.orange)
+        } description: {
+            Text(error)
+        } actions: {
+            Button {
+                Task {
+                    await viewModel.loadResults()
+                }
+            } label: {
+                Label("Try Again", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.modusCyan)
+        }
+    }
+
     private var resultsList: some View {
         List {
             ForEach(viewModel.groupedResults, id: \.0) { testType, results in
@@ -100,10 +127,12 @@ struct LabResultsView: View {
                         LabResultRow(result: result)
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                impactFeedback.impactOccurred()
                                 viewModel.selectResult(result)
                             }
                     }
                     .onDelete { indexSet in
+                        notificationFeedback.notificationOccurred(.warning)
                         Task {
                             for index in indexSet {
                                 await viewModel.deleteResult(results[index])
@@ -145,7 +174,7 @@ struct LabResultRow: View {
                     .padding(.vertical, 4)
                     .background(Color.orange.opacity(0.2))
                     .foregroundColor(.orange)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 } else {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle")
@@ -157,7 +186,7 @@ struct LabResultRow: View {
                     .padding(.vertical, 4)
                     .background(Color.modusTealAccent.opacity(0.2))
                     .foregroundColor(.modusTealAccent)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
 
@@ -189,6 +218,9 @@ struct LabResultDetailView: View {
     @ObservedObject var viewModel: LabResultsViewModel
     @State private var selectedBiomarkerType: String?
     @Environment(\.dismiss) private var dismiss
+
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+    private let notificationFeedback = UINotificationFeedbackGenerator()
 
     var body: some View {
         NavigationStack {
@@ -285,7 +317,8 @@ struct LabResultDetailView: View {
                 MarkerRow(marker: marker)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        withAnimation {
+                        impactFeedback.impactOccurred()
+                        withAnimation(.easeInOut(duration: 0.25)) {
                             // Toggle selection or select new
                             if selectedBiomarkerType == marker.name {
                                 selectedBiomarkerType = nil
@@ -346,11 +379,20 @@ struct LabResultDetailView: View {
 
     private var analyzeButton: some View {
         Button {
+            impactFeedback.impactOccurred()
             Task {
                 do {
-                    _ = try await viewModel.fetchAIAnalysis(for: result)
+                    let analysis = try await viewModel.fetchAIAnalysis(for: result)
+                    // Success haptic feedback when analysis completes
+                    if analysis.overallHealthScore >= 80 {
+                        notificationFeedback.notificationOccurred(.success)
+                    } else if analysis.overallHealthScore >= 60 {
+                        notificationFeedback.notificationOccurred(.warning)
+                    } else {
+                        notificationFeedback.notificationOccurred(.error)
+                    }
                 } catch {
-                    // Error is handled by viewModel
+                    notificationFeedback.notificationOccurred(.error)
                 }
             }
         } label: {
@@ -431,7 +473,7 @@ struct LabResultDetailView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.secondary.opacity(0.2))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
 
@@ -559,7 +601,7 @@ struct LabResultDetailView: View {
                     .fontWeight(.semibold)
             }
 
-            ForEach(Array(actions.enumerated()), id: \.offset) { index, action in
+            ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
                 HStack(alignment: .top, spacing: Spacing.sm) {
                     Image(systemName: "checkmark.circle")
                         .foregroundColor(.modusCyan)
@@ -630,7 +672,7 @@ struct LabResultDetailView: View {
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
 }

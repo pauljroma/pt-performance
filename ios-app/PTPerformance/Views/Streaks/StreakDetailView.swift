@@ -264,7 +264,7 @@ struct StreakDetailView: View {
                             .padding(.vertical, 2)
                             .background(badge.color.opacity(0.2))
                             .foregroundColor(badge.color)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 

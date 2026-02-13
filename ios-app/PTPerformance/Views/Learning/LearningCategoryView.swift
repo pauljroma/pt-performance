@@ -87,7 +87,7 @@ struct LearningCategoryCard: View {
                     .foregroundColor(.white)
                     .frame(width: 80, height: 80)
                     .background(categoryColor)
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
 
                 // Category name
                 Text(category.rawValue)
@@ -105,10 +105,11 @@ struct LearningCategoryCard: View {
             .frame(height: 180)
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("\(category.rawValue) category, \(articleCount) articles")
     }
 
     private var categoryColor: Color {

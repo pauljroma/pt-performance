@@ -554,7 +554,7 @@ struct FilterSheet: View {
 #if DEBUG
 struct PatientListView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             PatientListView(therapistId: "therapist-1")
         }
     }

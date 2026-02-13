@@ -61,6 +61,15 @@ struct HealthSnapshotData {
             case .unknown: return .secondary
             }
         }
+
+        var accessibilityDescription: String {
+            switch self {
+            case .up: return "improving"
+            case .down: return "declining"
+            case .stable: return "stable"
+            case .unknown: return "unknown"
+            }
+        }
     }
 
     /// Empty snapshot for loading state
@@ -86,6 +95,7 @@ struct HealthSnapshotCard: View {
     var onLabAlertsTap: (() -> Void)?
 
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: Spacing.md) {
@@ -94,12 +104,15 @@ struct HealthSnapshotCard: View {
                 Text("Today's Health")
                     .font(.headline)
                     .foregroundColor(.modusDeepTeal)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                    .accessibilityAddTraits(.isHeader)
 
                 Spacer()
 
                 Text(data.lastUpdated.formatted(date: .omitted, time: .shortened))
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             }
 
             if isLoading {
@@ -129,6 +142,8 @@ struct HealthSnapshotCard: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("healthSnapshotCard")
     }
 
     // MARK: - Loading View
@@ -158,10 +173,12 @@ struct HealthSnapshotCard: View {
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.primary)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                             Image(systemName: data.recoveryTrend.icon)
                                 .font(.caption)
                                 .foregroundColor(data.recoveryTrend.color)
+                                .accessibilityHidden(true)
                         }
                     } else {
                         Text("--")
@@ -174,8 +191,10 @@ struct HealthSnapshotCard: View {
         }
         .buttonStyle(.plain)
         .disabled(onRecoveryTap == nil)
-        .accessibilityLabel("Recovery: \(data.recoveryScore.map { "\($0) percent" } ?? "no data")")
-        .accessibilityHint(onRecoveryTap != nil ? "Tap to view recovery details" : "")
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel("Recovery: \(data.recoveryScore.map { "\($0) percent, trend \(data.recoveryTrend.accessibilityDescription)" } ?? "no data")")
+        .accessibilityHint(onRecoveryTap != nil ? "Double tap to view recovery details" : "")
+        .accessibilityIdentifier("recoveryMetric")
     }
 
     // MARK: - Fasting Metric
@@ -193,6 +212,7 @@ struct HealthSnapshotCard: View {
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.modusTealAccent)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                             if let target = data.fastingStatus.targetHours {
                                 Text("of \(target)h")
@@ -211,8 +231,10 @@ struct HealthSnapshotCard: View {
         }
         .buttonStyle(.plain)
         .disabled(onFastingTap == nil)
+        .frame(minWidth: 44, minHeight: 44)
         .accessibilityLabel(fastingAccessibilityLabel)
-        .accessibilityHint(onFastingTap != nil ? "Tap to view fasting details" : "")
+        .accessibilityHint(onFastingTap != nil ? "Double tap to view fasting details" : "")
+        .accessibilityIdentifier("fastingMetric")
     }
 
     private var fastingAccessibilityLabel: String {
@@ -238,11 +260,13 @@ struct HealthSnapshotCard: View {
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(data.supplementsCompliance.isComplete ? .modusTealAccent : .primary)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                             if data.supplementsCompliance.isComplete {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.caption)
                                     .foregroundColor(.modusTealAccent)
+                                    .accessibilityHidden(true)
                             }
                         }
                     } else {
@@ -256,8 +280,10 @@ struct HealthSnapshotCard: View {
         }
         .buttonStyle(.plain)
         .disabled(onSupplementsTap == nil)
-        .accessibilityLabel("Supplements: \(data.supplementsCompliance.taken) of \(data.supplementsCompliance.total) taken")
-        .accessibilityHint(onSupplementsTap != nil ? "Tap to view supplement details" : "")
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel("Supplements: \(data.supplementsCompliance.taken) of \(data.supplementsCompliance.total) taken\(data.supplementsCompliance.isComplete ? ", all complete" : "")")
+        .accessibilityHint(onSupplementsTap != nil ? "Double tap to view supplement details" : "")
+        .accessibilityIdentifier("supplementsMetric")
     }
 
     // MARK: - Lab Alerts Metric
@@ -275,16 +301,19 @@ struct HealthSnapshotCard: View {
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.red)
+                                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.caption)
                                 .foregroundColor(.red)
+                                .accessibilityHidden(true)
                         }
                     } else {
                         HStack(spacing: 4) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.subheadline)
                                 .foregroundColor(.modusTealAccent)
+                                .accessibilityHidden(true)
 
                             Text("Clear")
                                 .font(.subheadline)
@@ -297,8 +326,10 @@ struct HealthSnapshotCard: View {
         }
         .buttonStyle(.plain)
         .disabled(onLabAlertsTap == nil)
-        .accessibilityLabel(data.labAlerts > 0 ? "\(data.labAlerts) lab alerts requiring attention" : "No lab alerts")
-        .accessibilityHint(onLabAlertsTap != nil ? "Tap to view lab details" : "")
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel(data.labAlerts > 0 ? "\(data.labAlerts) lab alert\(data.labAlerts == 1 ? "" : "s") requiring attention" : "No lab alerts, all clear")
+        .accessibilityHint(onLabAlertsTap != nil ? "Double tap to view lab details" : "")
+        .accessibilityIdentifier("labAlertsMetric")
     }
 }
 
@@ -308,6 +339,8 @@ private struct SnapshotMetricView<Content: View>: View {
     let icon: String
     let iconColor: Color
     let content: Content
+
+    @Environment(\.colorScheme) private var colorScheme
 
     init(
         title: String,
@@ -336,8 +369,10 @@ private struct SnapshotMetricView<Content: View>: View {
             Text(title)
                 .font(.caption2)
                 .foregroundColor(.secondary)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         }
         .frame(maxWidth: .infinity)
+        .frame(minHeight: 44) // Minimum touch target
         .padding(.vertical, Spacing.sm)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
@@ -354,42 +389,51 @@ struct MiniHealthSnapshotCard: View {
             MiniMetric(
                 icon: "heart.fill",
                 value: data.recoveryScore.map { "\($0)%" } ?? "--",
-                color: .pink
+                color: .pink,
+                accessibilityLabel: "Recovery: \(data.recoveryScore.map { "\($0) percent" } ?? "no data")"
             )
 
             Divider()
                 .frame(height: 30)
+                .accessibilityHidden(true)
 
             // Fasting
             MiniMetric(
                 icon: "fork.knife.circle.fill",
                 value: data.fastingStatus.isFasting ? String(format: "%.0fh", data.fastingStatus.hoursElapsed ?? 0) : "Eat",
-                color: data.fastingStatus.isFasting ? .teal : .orange
+                color: data.fastingStatus.isFasting ? .teal : .orange,
+                accessibilityLabel: data.fastingStatus.isFasting ? "Fasting: \(String(format: "%.0f", data.fastingStatus.hoursElapsed ?? 0)) hours" : "Currently eating"
             )
 
             Divider()
                 .frame(height: 30)
+                .accessibilityHidden(true)
 
             // Supplements
             MiniMetric(
                 icon: "pill.fill",
                 value: "\(data.supplementsCompliance.taken)/\(data.supplementsCompliance.total)",
-                color: data.supplementsCompliance.isComplete ? .modusTealAccent : .orange
+                color: data.supplementsCompliance.isComplete ? .modusTealAccent : .orange,
+                accessibilityLabel: "Supplements: \(data.supplementsCompliance.taken) of \(data.supplementsCompliance.total) taken"
             )
 
             Divider()
                 .frame(height: 30)
+                .accessibilityHidden(true)
 
             // Lab alerts
             MiniMetric(
                 icon: data.labAlerts > 0 ? "exclamationmark.triangle.fill" : "checkmark.circle.fill",
                 value: data.labAlerts > 0 ? "\(data.labAlerts)" : "",
-                color: data.labAlerts > 0 ? .red : .modusTealAccent
+                color: data.labAlerts > 0 ? .red : .modusTealAccent,
+                accessibilityLabel: data.labAlerts > 0 ? "\(data.labAlerts) lab alerts" : "No lab alerts"
             )
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("miniHealthSnapshotCard")
     }
 }
 
@@ -398,21 +442,27 @@ private struct MiniMetric: View {
     let icon: String
     let value: String
     let color: Color
+    let accessibilityLabel: String
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption)
                 .foregroundColor(color)
+                .accessibilityHidden(true)
 
             if !value.isEmpty {
                 Text(value)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
         }
         .frame(maxWidth: .infinity)
+        .frame(minHeight: 44) // Minimum touch target
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
     }
 }
 

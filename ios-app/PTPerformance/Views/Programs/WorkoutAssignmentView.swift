@@ -100,7 +100,7 @@ struct WorkoutAssignmentView: View {
             VStack(spacing: 0) {
                 // Header row
                 HStack(spacing: 0) {
-                    ForEach(weekdays, id: \.0) { day, name in
+                    ForEach(weekdays, id: \.0) { _, name in
                         Text(name)
                             .font(.caption)
                             .fontWeight(.semibold)
@@ -163,7 +163,7 @@ struct WorkoutAssignmentView: View {
             }
             .padding(8)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
             .padding(8)
 
             Divider()
@@ -459,7 +459,7 @@ private struct QuickWorkoutPickerSheet: View {
                 }
                 .padding(10)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
                 .padding(.horizontal)
                 .padding(.top, 8)
 

@@ -104,6 +104,7 @@ struct FoodDetailSheet: View {
             HStack(spacing: 20) {
                 // Decrement
                 Button {
+                    HapticFeedback.light()
                     if servings > 0.25 {
                         servings -= 0.25
                     }
@@ -113,6 +114,7 @@ struct FoodDetailSheet: View {
                         .foregroundColor(servings > 0.25 ? .blue : .gray)
                 }
                 .disabled(servings <= 0.25)
+                .accessibilityLabel("Decrease servings")
 
                 // Current value
                 Text(String(format: "%.2f", servings))
@@ -121,34 +123,38 @@ struct FoodDetailSheet: View {
 
                 // Increment
                 Button {
+                    HapticFeedback.light()
                     servings += 0.25
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title)
                         .foregroundColor(.blue)
                 }
+                .accessibilityLabel("Increase servings")
             }
 
             // Quick select buttons
             HStack(spacing: 12) {
                 ForEach([0.5, 1.0, 1.5, 2.0], id: \.self) { value in
                     Button {
+                        HapticFeedback.light()
                         servings = value
                     } label: {
                         Text(value == 1.0 ? "1" : String(format: "%.1f", value))
                             .font(.subheadline)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
                             .background(servings == value ? Color.blue : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(servings == value ? .white : .primary)
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                     }
+                    .accessibilityLabel("\(value == 1.0 ? "1" : String(format: "%.1f", value)) servings")
                 }
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Nutrition Summary
@@ -195,7 +201,7 @@ struct FoodDetailSheet: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -219,7 +225,7 @@ struct FoodDetailSheet: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }

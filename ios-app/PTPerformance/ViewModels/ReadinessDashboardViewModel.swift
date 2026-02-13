@@ -66,6 +66,19 @@ class ReadinessDashboardViewModel: ObservableObject {
         !trendData.isEmpty
     }
 
+    /// Empty state message for UI display
+    var emptyStateMessage: String {
+        if showError {
+            return errorMessage
+        }
+        return "No readiness data yet. Complete your first readiness check-in to start tracking your recovery and training readiness!"
+    }
+
+    /// Empty state action button text
+    var emptyStateActionText: String {
+        "Start Check-in"
+    }
+
     /// Chart-ready data points with dates and scores
     var chartData: [ChartDataPoint] {
         trendData.compactMap { entry in
@@ -246,7 +259,7 @@ class ReadinessDashboardViewModel: ObservableObject {
 
 /// Chart data point with date, score, and category
 struct ChartDataPoint: Identifiable {
-    let id = UUID()
+    var id: String { "\(date.timeIntervalSince1970)-\(category)" }
     let date: Date
     let score: Double
     let category: ReadinessCategory

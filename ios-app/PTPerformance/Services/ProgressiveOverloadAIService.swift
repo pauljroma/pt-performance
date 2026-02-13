@@ -1024,6 +1024,8 @@ class ProgressiveOverloadAIService: ObservableObject {
 
     /// Assess fatigue impact based on recent sessions
     private func assessFatigueImpact(from sessions: [ExercisePerformance]) -> String {
+        guard !sessions.isEmpty else { return "insufficient data" }
+
         let averageRPE = sessions.reduce(0.0) { $0 + $1.rpe } / Double(sessions.count)
 
         // Check for declining rep performance

@@ -433,7 +433,7 @@ struct CompletionRPESheet: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("Save and Continue")
                 .accessibilityHint("Save RPE rating of \(selectedRPE) and return to workout")

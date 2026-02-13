@@ -11,6 +11,7 @@ import Sentry
 #endif
 
 /// Monitors security events and failed login attempts
+@MainActor
 final class SecurityMonitor: ObservableObject {
 
     // MARK: - Properties

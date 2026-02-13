@@ -32,7 +32,7 @@ struct TemplateSearchBar: View {
         }
         .padding(10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
         .padding(.top, 8)
     }
@@ -96,7 +96,7 @@ struct TemplateCategoryChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 }
@@ -123,7 +123,7 @@ struct TabButton: View {
             .padding(.vertical, 10)
             .background(isSelected ? Color.blue : Color.clear)
             .foregroundColor(isSelected ? .white : .secondary)
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .padding(4)
     }
@@ -161,7 +161,7 @@ struct TemplateTabPicker: View {
             }
         }
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
         .padding(.bottom, 8)
     }

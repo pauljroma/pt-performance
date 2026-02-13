@@ -32,7 +32,7 @@ struct AddExerciseToTodaySheet: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .padding()
 
             // Category filter chips
@@ -156,7 +156,7 @@ struct AddExerciseToTodaySheet: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(viewModel.isAdding)
                     .padding(.horizontal)
@@ -208,7 +208,7 @@ struct AddExercisePickerRow: View {
                                 .padding(.vertical, 2)
                                 .background(Color.blue.opacity(0.1))
                                 .foregroundColor(.blue)
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
 
                         if let bodyRegion = exercise.bodyRegion {
@@ -342,9 +342,7 @@ class AddExerciseViewModel: ObservableObject {
 
             // Step 2: Fallback to program-based session lookup
             if sessionId == nil {
-                #if DEBUG
-                print("📱 [AddToToday] No scheduled session, trying program-based lookup")
-                #endif
+                DebugLogger.shared.log("[AddToToday] No scheduled session, trying program-based lookup", level: .diagnostic)
 
                 struct ProgramSession: Codable {
                     let id: String
@@ -375,9 +373,7 @@ class AddExerciseViewModel: ObservableObject {
                 sessionId = programSessions.first?.id
 
                 if let id = sessionId {
-                    #if DEBUG
-                    print("✅ [AddToToday] Found program-based session: \(id)")
-                    #endif
+                    DebugLogger.shared.log("[AddToToday] Found program-based session: \(id)", level: .success)
                 }
             }
 
@@ -428,9 +424,7 @@ class AddExerciseViewModel: ObservableObject {
                 .insert(newExercise)
                 .execute()
 
-#if DEBUG
-            print("✅ [AddToToday] Added exercise \(exercise.name) to session \(sessionId)")
-            #endif
+            DebugLogger.shared.log("[AddToToday] Added exercise \(exercise.name) to session \(sessionId)", level: .success)
             isAdding = false
 
         } catch {

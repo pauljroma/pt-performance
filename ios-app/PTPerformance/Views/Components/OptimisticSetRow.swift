@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  OptimisticSetRow.swift
 //  PTPerformance
@@ -28,7 +29,7 @@ struct OptimisticSetRow: View {
     @State private var isAnimating = false
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Set number badge
             setNumberBadge
 
@@ -46,7 +47,7 @@ struct OptimisticSetRow: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(backgroundColor)
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm + 2)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(setAccessibilityLabel)
         .accessibilityHint(isCompleted ? "Set completed" : "Double tap to complete this set")
@@ -93,7 +94,7 @@ struct OptimisticSetRow: View {
             HapticService.light()
             showingRepsEditor = true
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: Spacing.xxs) {
                 Text("\(reps)")
                     .font(.headline)
                     .fontWeight(.bold)
@@ -103,8 +104,8 @@ struct OptimisticSetRow: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(8)
+            .background(Color.modusCyan.opacity(0.15))
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
         .disabled(isCompleted)
@@ -127,7 +128,7 @@ struct OptimisticSetRow: View {
             HapticService.light()
             showingWeightEditor = true
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: Spacing.xxs) {
                 if weight > 0 {
                     Text(String(format: "%.0f", weight))
                         .font(.headline)
@@ -143,8 +144,8 @@ struct OptimisticSetRow: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(Color.orange.opacity(0.1))
-            .cornerRadius(8)
+            .background(Color(.systemOrange).opacity(0.15))
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
         .disabled(isCompleted)
@@ -238,7 +239,7 @@ struct RepsEditorSheet: View {
                 .font(.headline)
 
             // Quick preset buttons
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(presetValues, id: \.self) { value in
                     presetButton(value: value)
                 }
@@ -252,7 +253,7 @@ struct RepsEditorSheet: View {
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 Text("\(localValue)")
@@ -265,7 +266,7 @@ struct RepsEditorSheet: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -293,9 +294,9 @@ struct RepsEditorSheet: View {
             Text("\(value)")
                 .font(.headline)
                 .frame(width: 50, height: 50)
-                .background(value == targetReps ? Color.blue : Color.gray.opacity(0.2))
-                .foregroundColor(value == targetReps ? .white : .primary)
-                .cornerRadius(10)
+                .background(value == targetReps ? Color.modusCyan : Color(.tertiarySystemBackground))
+                .foregroundColor(value == targetReps ? .white : Color(.label))
+                .cornerRadius(CornerRadius.sm + 2)
         }
     }
 }
@@ -335,7 +336,7 @@ struct WeightEditorSheet: View {
                 .font(.headline)
 
             // Quick preset buttons
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(presetWeights, id: \.self) { value in
                     presetButton(value: value)
                 }
@@ -349,7 +350,7 @@ struct WeightEditorSheet: View {
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color(.systemOrange))
                 }
 
                 VStack {
@@ -367,11 +368,11 @@ struct WeightEditorSheet: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color(.systemOrange))
                 }
             }
 
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 Button("Bodyweight") {
                     HapticService.medium()
                     weight = 0
@@ -403,9 +404,9 @@ struct WeightEditorSheet: View {
             Text(String(format: "%.0f", value))
                 .font(.headline)
                 .frame(width: 50, height: 50)
-                .background(value == targetWeight ? Color.orange : Color.gray.opacity(0.2))
-                .foregroundColor(value == targetWeight ? .white : .primary)
-                .cornerRadius(10)
+                .background(value == targetWeight ? Color(.systemOrange) : Color(.tertiarySystemBackground))
+                .foregroundColor(value == targetWeight ? .white : Color(.label))
+                .cornerRadius(CornerRadius.sm + 2)
         }
     }
 }
@@ -415,7 +416,7 @@ struct WeightEditorSheet: View {
 #if DEBUG
 struct OptimisticSetRow_Previews: PreviewProvider {
     static var previews: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Spacing.xs) {
             StatefulPreviewWrapper(false) { isCompleted in
                 OptimisticSetRow(
                     setNumber: 1,

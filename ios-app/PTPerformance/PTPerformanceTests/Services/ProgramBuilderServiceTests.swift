@@ -9,6 +9,7 @@
 import XCTest
 @testable import PTPerformance
 
+@MainActor
 final class ProgramBuilderServiceTests: XCTestCase {
 
     var service: ProgramBuilderService!

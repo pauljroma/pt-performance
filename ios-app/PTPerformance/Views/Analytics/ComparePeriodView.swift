@@ -178,7 +178,7 @@ struct ComparePeriodView: View {
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -289,7 +289,7 @@ struct ComparePeriodView: View {
             .frame(height: 200)
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .adaptiveShadow(Shadow.subtle)
         }
     }
@@ -336,7 +336,7 @@ struct ComparePeriodView: View {
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -454,7 +454,7 @@ private struct PresetChip: View {
                 .padding(.vertical, 8)
                 .background(isSelected ? Color.blue : Color(.tertiarySystemBackground))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(20)
+                .cornerRadius(CornerRadius.xl)
         }
     }
 }
@@ -490,7 +490,7 @@ private struct PeriodSummaryCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var dateRangeString: String {
@@ -566,7 +566,7 @@ private struct CompareInsightCard: View {
         }
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

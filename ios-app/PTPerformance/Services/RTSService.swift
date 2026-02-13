@@ -168,6 +168,7 @@ class RTSService: ObservableObject {
 
     private let client = PTSupabaseClient.shared.client
     private let errorLogger = ErrorLogger.shared
+    private let debugLogger = DebugLogger.shared
 
     // MARK: - Table Names
 
@@ -202,9 +203,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(sports.count) sports")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(sports.count) sports", level: .diagnostic)
 
             return sports
         } catch {
@@ -258,9 +257,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Created protocol: \(createdProtocol.id)")
-            #endif
+            debugLogger.log("[RTSService] Created protocol: \(createdProtocol.id)", level: .success)
 
             return createdProtocol
         } catch let validationError as RTSProtocolError {
@@ -289,9 +286,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(protocols.count) protocols for therapist")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(protocols.count) protocols for therapist", level: .diagnostic)
 
             return protocols
         } catch {
@@ -317,9 +312,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(protocols.count) protocols for patient")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(protocols.count) protocols for patient", level: .diagnostic)
 
             return protocols
         } catch {
@@ -373,9 +366,7 @@ class RTSService: ObservableObject {
                 .eq("id", value: id.uuidString)
                 .execute()
 
-            #if DEBUG
-            print("[RTSService] Updated protocol \(id) status to \(status.rawValue)")
-            #endif
+            debugLogger.log("[RTSService] Updated protocol \(id) status to \(status.rawValue)", level: .success)
         } catch {
             errorLogger.logError(error, context: "RTSService.updateProtocolStatus", metadata: ["id": id.uuidString])
             errorMessage = error.localizedDescription
@@ -404,9 +395,7 @@ class RTSService: ObservableObject {
                 .eq("id", value: id.uuidString)
                 .execute()
 
-            #if DEBUG
-            print("[RTSService] Completed protocol \(id) with return date \(returnDate)")
-            #endif
+            debugLogger.log("[RTSService] Completed protocol \(id) with return date \(returnDate)", level: .success)
         } catch {
             errorLogger.logError(error, context: "RTSService.completeProtocol", metadata: ["id": id.uuidString])
             errorMessage = error.localizedDescription
@@ -432,9 +421,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(phases.count) phases for protocol")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(phases.count) phases for protocol", level: .diagnostic)
 
             return phases
         } catch {
@@ -467,9 +454,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Started phase \(id)")
-            #endif
+            debugLogger.log("[RTSService] Started phase \(id)", level: .success)
 
             return phase
         } catch {
@@ -502,9 +487,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Completed phase \(id)")
-            #endif
+            debugLogger.log("[RTSService] Completed phase \(id)", level: .success)
 
             return phase
         } catch {
@@ -541,9 +524,7 @@ class RTSService: ObservableObject {
                 .insert(phaseInputs)
                 .execute()
 
-            #if DEBUG
-            print("[RTSService] Created \(phaseInputs.count) phases from template for protocol \(protocolId)")
-            #endif
+            debugLogger.log("[RTSService] Created \(phaseInputs.count) phases from template for protocol \(protocolId)", level: .success)
         } catch {
             errorLogger.logError(error, context: "RTSService.createPhasesFromTemplate", metadata: ["protocolId": protocolId.uuidString])
             errorMessage = error.localizedDescription
@@ -569,9 +550,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(criteria.count) criteria for phase")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(criteria.count) criteria for phase", level: .diagnostic)
 
             return criteria
         } catch {
@@ -597,9 +576,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Added criterion: \(criterion.id)")
-            #endif
+            debugLogger.log("[RTSService] Added criterion: \(criterion.id)", level: .success)
 
             return criterion
         } catch {
@@ -663,9 +640,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Recorded test result: \(result.id), passed: \(passed)")
-            #endif
+            debugLogger.log("[RTSService] Recorded test result: \(result.id), passed: \(passed)", level: .success)
 
             return result
         } catch {
@@ -691,9 +666,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(results.count) test results for protocol")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(results.count) test results for protocol", level: .diagnostic)
 
             return results
         } catch {
@@ -739,9 +712,7 @@ class RTSService: ObservableObject {
                 }
             }
 
-            #if DEBUG
-            print("[RTSService] Fetched latest results for \(latestResults.count) criteria")
-            #endif
+            debugLogger.log("[RTSService] Fetched latest results for \(latestResults.count) criteria", level: .diagnostic)
 
             return latestResults
         } catch {
@@ -809,9 +780,7 @@ class RTSService: ObservableObject {
                     .execute()
             }
 
-            #if DEBUG
-            print("[RTSService] Recorded advancement: \(advancement.id), decision: \(decision.rawValue)")
-            #endif
+            debugLogger.log("[RTSService] Recorded advancement: \(advancement.id), decision: \(decision.rawValue)", level: .success)
 
             return advancement
         } catch {
@@ -837,9 +806,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(advancements.count) advancements for protocol")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(advancements.count) advancements for protocol", level: .diagnostic)
 
             return advancements
         } catch {
@@ -869,9 +836,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Created clearance: \(clearance.id)")
-            #endif
+            debugLogger.log("[RTSService] Created clearance: \(clearance.id)", level: .success)
 
             return clearance
         } catch let validationError as RTSClearanceError {
@@ -900,9 +865,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(clearances.count) clearances for protocol")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(clearances.count) clearances for protocol", level: .diagnostic)
 
             return clearances
         } catch {
@@ -944,9 +907,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Updated clearance: \(clearance.id)")
-            #endif
+            debugLogger.log("[RTSService] Updated clearance: \(clearance.id)", level: .success)
 
             return clearance
         } catch let clearanceError as RTSClearanceError {
@@ -981,9 +942,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Marked clearance \(id) as complete")
-            #endif
+            debugLogger.log("[RTSService] Marked clearance \(id) as complete", level: .success)
 
             return clearance
         } catch {
@@ -1033,9 +992,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Signed clearance \(id)")
-            #endif
+            debugLogger.log("[RTSService] Signed clearance \(id)", level: .success)
 
             return clearance
         } catch let serviceError as RTSServiceError {
@@ -1088,9 +1045,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Co-signed clearance \(id)")
-            #endif
+            debugLogger.log("[RTSService] Co-signed clearance \(id)", level: .success)
 
             return clearance
         } catch let serviceError as RTSServiceError {
@@ -1125,9 +1080,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Recorded readiness score: \(score.id), overall: \(score.overallScore)")
-            #endif
+            debugLogger.log("[RTSService] Recorded readiness score: \(score.id), overall: \(score.overallScore)", level: .success)
 
             return score
         } catch let validationError as RTSReadinessError {
@@ -1156,9 +1109,7 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
-            print("[RTSService] Fetched \(scores.count) readiness scores for protocol")
-            #endif
+            debugLogger.log("[RTSService] Fetched \(scores.count) readiness scores for protocol", level: .diagnostic)
 
             return scores
         } catch {
@@ -1185,13 +1136,11 @@ class RTSService: ObservableObject {
                 .execute()
                 .value
 
-            #if DEBUG
             if let score = scores.first {
-                print("[RTSService] Latest readiness score: \(score.overallScore)")
+                debugLogger.log("[RTSService] Latest readiness score: \(score.overallScore)", level: .diagnostic)
             } else {
-                print("[RTSService] No readiness scores found for protocol")
+                debugLogger.log("[RTSService] No readiness scores found for protocol", level: .diagnostic)
             }
-            #endif
 
             return scores.first
         } catch {
@@ -1212,9 +1161,7 @@ class RTSService: ObservableObject {
             let scores = try await fetchReadinessScores(protocolId: protocolId)
 
             guard scores.count >= 2 else {
-                #if DEBUG
-                print("[RTSService] Insufficient data for trend calculation")
-                #endif
+                debugLogger.log("[RTSService] Insufficient data for trend calculation", level: .diagnostic)
                 return nil
             }
 
@@ -1225,8 +1172,12 @@ class RTSService: ObservableObject {
             let avgPsychological = scores.map { $0.psychologicalScore }.reduce(0, +) / Double(scores.count)
 
             // Determine trend direction (compare latest 2 scores)
-            let latest = scores[0].overallScore
-            let previous = scores[1].overallScore
+            guard let latestScore = scores.first,
+                  let previousScore = scores.dropFirst().first else {
+                return nil
+            }
+            let latest = latestScore.overallScore
+            let previous = previousScore.overallScore
             let diff = latest - previous
 
             let direction: RTSReadinessTrendDirection
@@ -1248,9 +1199,7 @@ class RTSService: ObservableObject {
                 trendDirection: direction
             )
 
-            #if DEBUG
-            print("[RTSService] Calculated trend: \(direction.rawValue), avg overall: \(avgOverall)")
-            #endif
+            debugLogger.log("[RTSService] Calculated trend: \(direction.rawValue), avg overall: \(avgOverall)", level: .diagnostic)
 
             return trend
         } catch {

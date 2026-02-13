@@ -258,11 +258,11 @@ class AchievementService: ObservableObject {
     /// Share achievement
     func shareAchievement(_ achievement: AchievementDefinition) -> String {
         let shareText = """
-        I just unlocked the "\(achievement.title)" achievement in PT Performance!
+        I just unlocked the "\(achievement.title)" achievement in Modus!
 
         \(achievement.description)
 
-        #PTPerformance #FitnessGoals #Achievement
+        #Modus #FitnessGoals #Achievement
         """
         return shareText
     }
@@ -459,7 +459,7 @@ private struct PatientStats {
 
 /// Data for PR celebration display
 struct PRCelebrationData: Identifiable, Equatable {
-    let id = UUID()
+    var id: String { "\(exerciseName)-\(newWeight)-\(type)" }
     let exerciseName: String
     let newWeight: Double
     let previousWeight: Double?

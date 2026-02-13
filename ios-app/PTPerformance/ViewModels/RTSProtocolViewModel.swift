@@ -162,10 +162,10 @@ class RTSProtocolViewModel: ObservableObject {
 
     // MARK: - Initialization
 
+    private let logger = DebugLogger.shared
+
     init() {
-        #if DEBUG
-        print("[RTSProtocolVM] Initialized")
-        #endif
+        logger.log("[RTSProtocolVM] Initialized", level: .diagnostic)
     }
 
     deinit {
@@ -181,10 +181,7 @@ class RTSProtocolViewModel: ObservableObject {
 
         do {
             sports = try await service.fetchSports()
-
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(sports.count) sports")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(sports.count) sports", level: .diagnostic)
         } catch {
             handleError(error, context: "loading sports")
         }
@@ -200,10 +197,7 @@ class RTSProtocolViewModel: ObservableObject {
 
         do {
             protocols = try await service.fetchProtocols(therapistId: therapistId)
-
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(protocols.count) protocols for therapist")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(protocols.count) protocols for therapist", level: .diagnostic)
         } catch {
             handleError(error, context: "loading protocols")
         }
@@ -219,10 +213,7 @@ class RTSProtocolViewModel: ObservableObject {
 
         do {
             protocols = try await service.fetchProtocolsForPatient(patientId: patientId)
-
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(protocols.count) protocols for patient")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(protocols.count) protocols for patient", level: .diagnostic)
         } catch {
             handleError(error, context: "loading patient protocols")
         }
@@ -266,9 +257,7 @@ class RTSProtocolViewModel: ObservableObject {
             // Build recent activity
             await loadRecentActivity(protocolId: rtsProtocol.id)
 
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded dashboard data for patient: \(patientId)")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded dashboard data for patient: \(patientId)", level: .diagnostic)
         } catch {
             handleError(error, context: "loading dashboard data")
         }
@@ -335,9 +324,7 @@ class RTSProtocolViewModel: ObservableObject {
                 currentPhase = activePhases.first
             }
 
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded protocol details: \(protocolId)")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded protocol details: \(protocolId)", level: .diagnostic)
         } catch {
             handleError(error, context: "loading protocol details")
         }
@@ -356,11 +343,9 @@ class RTSProtocolViewModel: ObservableObject {
                 currentPhase = phases.first { $0.id == phaseId }
             }
 
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(phases.count) phases")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(phases.count) phases", level: .diagnostic)
         } catch {
-            DebugLogger.shared.error("RTSProtocolViewModel", "Failed to load phases: \(error.localizedDescription)")
+            logger.log("[RTSProtocolVM] Failed to load phases: \(error.localizedDescription)", level: .error)
         }
     }
 
@@ -370,11 +355,9 @@ class RTSProtocolViewModel: ObservableObject {
         do {
             clearances = try await service.fetchClearances(protocolId: protocolId)
 
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(clearances.count) clearances")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(clearances.count) clearances", level: .diagnostic)
         } catch {
-            DebugLogger.shared.error("RTSProtocolViewModel", "Failed to load clearances: \(error.localizedDescription)")
+            logger.log("[RTSProtocolVM] Failed to load clearances: \(error.localizedDescription)", level: .error)
         }
     }
 
@@ -385,11 +368,9 @@ class RTSProtocolViewModel: ObservableObject {
             readinessScores = try await service.fetchReadinessScores(protocolId: protocolId)
             latestReadiness = readinessScores.first
 
-            #if DEBUG
-            print("[RTSProtocolVM] Loaded \(readinessScores.count) readiness scores")
-            #endif
+            logger.log("[RTSProtocolVM] Loaded \(readinessScores.count) readiness scores", level: .diagnostic)
         } catch {
-            DebugLogger.shared.error("RTSProtocolViewModel", "Failed to load readiness scores: \(error.localizedDescription)")
+            logger.log("[RTSProtocolVM] Failed to load readiness scores: \(error.localizedDescription)", level: .error)
         }
     }
 
@@ -450,10 +431,7 @@ class RTSProtocolViewModel: ObservableObject {
             await loadPhases(protocolId: newProtocol.id)
 
             showSuccessMessage("Protocol created successfully")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Created protocol: \(newProtocol.id)")
-            #endif
+            logger.log("[RTSProtocolVM] Created protocol: \(newProtocol.id)", level: .success)
 
             isSaving = false
             return true
@@ -487,10 +465,7 @@ class RTSProtocolViewModel: ObservableObject {
             }
 
             showSuccessMessage("Protocol activated")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Activated protocol: \(protocolId)")
-            #endif
+            logger.log("[RTSProtocolVM] Activated protocol: \(protocolId)", level: .success)
         } catch {
             handleError(error, context: "activating protocol")
         }
@@ -520,10 +495,7 @@ class RTSProtocolViewModel: ObservableObject {
             }
 
             showSuccessMessage("Protocol completed - Athlete cleared for return to sport!")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Completed protocol: \(protocolId)")
-            #endif
+            logger.log("[RTSProtocolVM] Completed protocol: \(protocolId)", level: .success)
         } catch {
             handleError(error, context: "completing protocol")
         }
@@ -549,10 +521,7 @@ class RTSProtocolViewModel: ObservableObject {
             }
 
             showSuccessMessage("Protocol discontinued")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Discontinued protocol: \(protocolId)")
-            #endif
+            logger.log("[RTSProtocolVM] Discontinued protocol: \(protocolId)", level: .success)
         } catch {
             handleError(error, context: "discontinuing protocol")
         }
@@ -579,10 +548,7 @@ class RTSProtocolViewModel: ObservableObject {
             }
 
             showSuccessMessage("Phase started: \(updatedPhase.phaseName)")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Started phase: \(phaseId)")
-            #endif
+            logger.log("[RTSProtocolVM] Started phase: \(phaseId)", level: .success)
         } catch {
             handleError(error, context: "starting phase")
         }
@@ -607,10 +573,7 @@ class RTSProtocolViewModel: ObservableObject {
             }
 
             showSuccessMessage("Phase completed: \(updatedPhase.phaseName)")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Completed phase: \(phaseId)")
-            #endif
+            logger.log("[RTSProtocolVM] Completed phase: \(phaseId)", level: .success)
         } catch {
             handleError(error, context: "completing phase")
         }
@@ -664,10 +627,7 @@ class RTSProtocolViewModel: ObservableObject {
             self.currentPhase = phases.first { $0.id == nextPhase.id }
 
             showSuccessMessage("Advanced to \(nextPhase.phaseName)")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Advanced from phase \(currentPhase.phaseNumber) to \(nextPhase.phaseNumber)")
-            #endif
+            logger.log("[RTSProtocolVM] Advanced from phase \(currentPhase.phaseNumber) to \(nextPhase.phaseNumber)", level: .success)
         } catch {
             handleError(error, context: "advancing phase")
         }
@@ -704,10 +664,7 @@ class RTSProtocolViewModel: ObservableObject {
             clearances.insert(clearance, at: 0)
 
             showSuccessMessage("Phase clearance created")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Created phase clearance: \(clearance.id)")
-            #endif
+            logger.log("[RTSProtocolVM] Created phase clearance: \(clearance.id)", level: .success)
 
             isSaving = false
             return clearance
@@ -749,10 +706,7 @@ class RTSProtocolViewModel: ObservableObject {
             clearances.insert(clearance, at: 0)
 
             showSuccessMessage("Final clearance created - requires signatures")
-
-            #if DEBUG
-            print("[RTSProtocolVM] Created final clearance: \(clearance.id)")
-            #endif
+            logger.log("[RTSProtocolVM] Created final clearance: \(clearance.id)", level: .success)
 
             isSaving = false
             return clearance
@@ -777,10 +731,7 @@ class RTSProtocolViewModel: ObservableObject {
         latestReadiness = nil
         resetForm()
         clearMessages()
-
-        #if DEBUG
-        print("[RTSProtocolVM] Reset complete")
-        #endif
+        logger.log("[RTSProtocolVM] Reset complete", level: .diagnostic)
     }
 
     /// Reset the protocol creation form
@@ -804,7 +755,7 @@ class RTSProtocolViewModel: ObservableObject {
 
     /// Handle an error by logging and setting error message
     private func handleError(_ error: Error, context: String) {
-        DebugLogger.shared.error("RTSProtocolViewModel", "\(context): \(error.localizedDescription)")
+        logger.log("[RTSProtocolVM] \(context): \(error.localizedDescription)", level: .error)
         errorMessage = error.localizedDescription
     }
 

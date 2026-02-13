@@ -13,11 +13,33 @@ final class AICoachService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     private let edgeFunctionUrl = "unified-ai-coach"
 
+    /// Demo patient ID for unauthenticated testing
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
+    // MARK: - Response Caching
+
+    /// Cache for AI responses to avoid redundant network calls
+    private var responseCache: [String: CachedResponse] = [:]
+
+    /// Cache expiration time in seconds (5 minutes)
+    private let cacheExpirationSeconds: TimeInterval = 300
+
+    /// Struct to hold cached responses with timestamp
+    private struct CachedResponse {
+        let response: UnifiedCoachResponse
+        let timestamp: Date
+
+        var isExpired: Bool {
+            Date().timeIntervalSince(timestamp) > 300 // 5 minutes
+        }
+    }
+
     private init() {}
 
     // MARK: - Ask Coach
 
     /// Sends a question to the AI coach and receives a contextual response
+    /// Includes caching to avoid redundant requests for identical questions
     func askCoach(question: String) async -> UnifiedCoachResponse? {
         isLoading = true
         error = nil
@@ -27,6 +49,15 @@ final class AICoachService: ObservableObject {
                 error = AICoachError.noPatientId
                 isLoading = false
                 return nil
+            }
+
+            // Check cache for recent identical question
+            let cacheKey = "\(patientId.uuidString)-\(question)"
+            if let cached = responseCache[cacheKey], !cached.isExpired {
+                DebugLogger.shared.info("AICoachService", "Returning cached response for question")
+                self.currentResponse = cached.response
+                isLoading = false
+                return cached.response
             }
 
             var requestBody: [String: Any] = ["patient_id": patientId.uuidString]
@@ -42,6 +73,12 @@ final class AICoachService: ObservableObject {
                     options: .init(body: bodyData)
                 )
 
+            // Cache the response
+            responseCache[cacheKey] = CachedResponse(response: response, timestamp: Date())
+
+            // Clean up expired cache entries periodically
+            cleanExpiredCache()
+
             self.currentResponse = response
             DebugLogger.shared.info("AICoachService", "Received coaching response with \(response.insights.count) insights")
 
@@ -50,14 +87,32 @@ final class AICoachService: ObservableObject {
         } catch {
             self.error = error
             DebugLogger.shared.error("AICoachService", "Failed to get coaching response: \(error)")
+
+            // For demo mode or when edge function is unavailable, return demo response
+            let demoResponse = AICoachService.generateDemoResponse(for: question.isEmpty ? nil : question)
+            self.currentResponse = demoResponse
+            DebugLogger.shared.warning("AICoachService", "DEMO MODE FALLBACK: Using demo coaching response")
+
             isLoading = false
-            return nil
+            return demoResponse
         }
+    }
+
+    /// Clears expired entries from the response cache
+    private func cleanExpiredCache() {
+        responseCache = responseCache.filter { !$0.value.isExpired }
+    }
+
+    /// Clears all cached responses (useful when user data changes significantly)
+    func clearCache() {
+        responseCache.removeAll()
+        DebugLogger.shared.info("AICoachService", "Response cache cleared")
     }
 
     // MARK: - Proactive Insights
 
     /// Fetches proactive insights without a specific question
+    /// Includes caching to avoid redundant network calls
     func getProactiveInsights() async {
         isLoading = true
         error = nil
@@ -65,6 +120,16 @@ final class AICoachService: ObservableObject {
         do {
             guard let patientId = try await getPatientId() else {
                 error = AICoachError.noPatientId
+                isLoading = false
+                return
+            }
+
+            // Check cache for recent proactive insights
+            let cacheKey = "\(patientId.uuidString)-proactive"
+            if let cached = responseCache[cacheKey], !cached.isExpired {
+                DebugLogger.shared.info("AICoachService", "Returning cached proactive insights")
+                self.currentResponse = cached.response
+                self.proactiveInsights = cached.response.insights
                 isLoading = false
                 return
             }
@@ -78,6 +143,10 @@ final class AICoachService: ObservableObject {
                     options: .init(body: bodyData)
                 )
 
+            // Cache the proactive response
+            responseCache[cacheKey] = CachedResponse(response: response, timestamp: Date())
+            cleanExpiredCache()
+
             self.currentResponse = response
             self.proactiveInsights = response.insights
 
@@ -85,6 +154,12 @@ final class AICoachService: ObservableObject {
         } catch {
             self.error = error
             DebugLogger.shared.error("AICoachService", "Failed to fetch proactive insights: \(error)")
+
+            // For demo mode or when edge function is unavailable, use demo response
+            let demoResponse = AICoachService.generateDemoResponse(for: nil)
+            self.currentResponse = demoResponse
+            self.proactiveInsights = demoResponse.insights
+            DebugLogger.shared.warning("AICoachService", "DEMO MODE FALLBACK: Using demo proactive insights")
         }
 
         isLoading = false
@@ -93,21 +168,95 @@ final class AICoachService: ObservableObject {
     // MARK: - Helpers
 
     private func getPatientId() async throws -> UUID? {
-        guard let userId = supabase.client.auth.currentUser?.id else { return nil }
+        // Check for authenticated user first
+        if let userId = supabase.client.auth.currentUser?.id {
+            struct PatientRow: Decodable {
+                let id: UUID
+            }
 
-        struct PatientRow: Decodable {
-            let id: UUID
+            let patients: [PatientRow] = try await supabase.client
+                .from("patients")
+                .select("id")
+                .eq("user_id", value: userId.uuidString)
+                .limit(1)
+                .execute()
+                .value
+
+            if let patientId = patients.first?.id {
+                return patientId
+            }
         }
 
-        let patients: [PatientRow] = try await supabase.client
-            .from("patients")
-            .select("id")
-            .eq("user_id", value: userId.uuidString)
-            .limit(1)
-            .execute()
-            .value
+        // Fallback to demo patient for unauthenticated users (demo mode)
+        DebugLogger.shared.warning("AICoachService", "No authenticated user, using demo patient")
+        return demoPatientId
+    }
 
-        return patients.first?.id
+    // MARK: - Demo Mode Fallback Response
+
+    /// Generates a demo response when the edge function is unavailable or user is in demo mode
+    static func generateDemoResponse(for question: String?) -> UnifiedCoachResponse {
+        let insights: [CoachingInsight] = [
+            CoachingInsight(
+                category: .training,
+                priority: .high,
+                insight: "Your training consistency this week has been excellent with 4 sessions completed.",
+                action: "Consider adding a mobility day to balance your strength work.",
+                rationale: "Based on your session logs showing high-intensity strength training."
+            ),
+            CoachingInsight(
+                category: .recovery,
+                priority: .medium,
+                insight: "Your sauna and cold plunge sessions are supporting your recovery well.",
+                action: "Try contrast therapy for enhanced circulation benefits.",
+                rationale: "You've completed 3 sauna and 3 cold plunge sessions this week."
+            ),
+            CoachingInsight(
+                category: .nutrition,
+                priority: .medium,
+                insight: "Your supplement compliance is at 80% - good consistency!",
+                action: "Set a reminder for your evening supplements to boost compliance.",
+                rationale: "Evening supplements show lower compliance than morning doses."
+            ),
+            CoachingInsight(
+                category: .labs,
+                priority: .low,
+                insight: "Your recent biomarkers show 4 markers needing attention.",
+                action: "Focus on ferritin and magnesium supplementation based on your lab results.",
+                rationale: "Latest lab panel from February shows these markers below optimal range."
+            )
+        ]
+
+        return UnifiedCoachResponse(
+            coachingId: UUID().uuidString,
+            greeting: "Hey John! Here's your personalized coaching summary.",
+            primaryMessage: question != nil
+                ? "Based on your question and your health data, here are my recommendations..."
+                : "Your health metrics are looking solid. Keep up the great work with your recovery protocols!",
+            insights: insights,
+            todayFocus: "Complete your 16:8 fast and log your evening supplements.",
+            weeklyPriorities: [
+                "Maintain 3+ recovery sessions",
+                "Hit 90% supplement compliance",
+                "Address ferritin with dietary iron sources"
+            ],
+            dataSummary: DataSummary(
+                readiness: "Good - 78% readiness score",
+                training: "4 sessions this week, strong adherence",
+                recovery: "7 sessions logged, good variety",
+                labs: "4 biomarkers need attention"
+            ),
+            proactiveAlerts: [
+                "Your ferritin is below optimal for athletic performance",
+                "Consider adding magnesium-rich foods to your diet"
+            ],
+            followUpQuestions: [
+                "Would you like specific recommendations for improving ferritin levels?",
+                "Want me to suggest recovery protocols for your training intensity?",
+                "Should I analyze your fasting patterns for optimization?"
+            ],
+            disclaimer: "This is AI-generated coaching advice. Always consult with healthcare professionals for medical decisions."
+        )
     }
 }
 

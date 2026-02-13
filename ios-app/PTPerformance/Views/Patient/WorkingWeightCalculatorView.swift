@@ -139,9 +139,9 @@ struct WorkingWeightCalculatorView: View {
         }
 
         return [
-            (1, "50%",  roundToPlate(oneRM * 0.50), 10),
-            (2, "65%",  roundToPlate(oneRM * 0.65), 5),
-            (3, "80%",  roundToPlate(oneRM * 0.80), 3),
+            (1, "50%", roundToPlate(oneRM * 0.50), 10),
+            (2, "65%", roundToPlate(oneRM * 0.65), 5),
+            (3, "80%", roundToPlate(oneRM * 0.80), 3),
             (4, "Work", workingWeight, 0)  // 0 reps signals "working set"
         ]
     }

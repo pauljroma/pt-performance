@@ -175,7 +175,7 @@ struct TherapistTabView: View {
                 .accessibilityHint(TherapistTab.settings.accessibilityHint)
         }
         .tint(.accentColor)  // Consistent tint color across light/dark mode
-        .onChange(of: selectedTab) { oldTab, newTab in
+        .onChange(of: selectedTab) { _, newTab in
             // Subtle haptic feedback for tab switching
             HapticFeedback.tabSwitch()
 

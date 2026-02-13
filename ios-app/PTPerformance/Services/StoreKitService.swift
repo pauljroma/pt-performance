@@ -164,13 +164,11 @@ class StoreKitService: ObservableObject {
         updateListenerTask = listenForTransactions()
 
         Task {
-            await updateSubscriptionStatus()
-            await checkBaseballPackOwnership()
+            async let status: Void = updateSubscriptionStatus()
+            async let baseball: Void = checkBaseballPackOwnership()
+            async let sync: Void = syncSubscriptionToBackend()
+            _ = await (status, baseball, sync)
             logger.info("StoreKit", "Initial subscription status: \(subscriptionStatus)")
-
-            // Sync subscription status to backend on app launch
-            // This ensures cross-device subscription status is up to date
-            await syncSubscriptionToBackend()
         }
     }
 

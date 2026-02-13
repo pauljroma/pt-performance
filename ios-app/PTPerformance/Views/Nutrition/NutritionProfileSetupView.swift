@@ -374,7 +374,7 @@ private struct MacroPreviewPill: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(color.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

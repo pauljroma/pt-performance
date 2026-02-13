@@ -59,7 +59,7 @@ struct SessionSummaryView: View {
                             .multilineTextAlignment(.center)
                             .padding()
                             .background(Color.blue.opacity(0.1))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                             .padding(.horizontal)
                             .padding(.top, 8)
                     }
@@ -118,7 +118,7 @@ struct SessionSummaryView: View {
                             .padding()
                             .background(Color.blue)
                             .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
@@ -277,7 +277,7 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -297,7 +297,7 @@ struct MetricCard: View {
                 .foregroundColor(color)
                 .frame(width: 60, height: 60)
                 .background(color.opacity(0.1))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
             // Content
             VStack(alignment: .leading, spacing: 4) {
@@ -322,7 +322,7 @@ struct MetricCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.separator), lineWidth: 1)

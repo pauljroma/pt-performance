@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 struct SupplementsView: View {
@@ -91,7 +92,7 @@ struct SupplementsView: View {
                     endPoint: .trailing
                 )
             )
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("AI Supplement Stack")
@@ -116,7 +117,7 @@ struct SupplementsView: View {
                         .fill(Color.gray.opacity(0.3))
 
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(viewModel.completionRate == 1 ? Color.green : Color.blue)
+                        .fill(viewModel.completionRate == 1 ? Color(.systemGreen) : Color.modusCyan)
                         .frame(width: geometry.size.width * viewModel.completionRate)
                 }
             }
@@ -133,8 +134,8 @@ struct SupplementsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(12)
+                .background(Color(.systemGreen).opacity(0.1))
+                .cornerRadius(CornerRadius.md)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("All supplements taken today")
             } else if viewModel.todaySchedule.isEmpty {
@@ -155,7 +156,7 @@ struct SupplementsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var myStackSection: some View {
@@ -248,15 +249,15 @@ struct SupplementRow: View {
                         .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.2))
-                        .cornerRadius(4)
+                        .background(Color.modusCyan.opacity(0.2))
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .accessibilityHidden(true)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")

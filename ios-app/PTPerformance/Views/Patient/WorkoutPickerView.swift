@@ -133,7 +133,7 @@ struct WorkoutPickerView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 8)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
         }
 
         HStack {
@@ -339,7 +339,7 @@ struct WorkoutPickerView: View {
                 )
             )
             .foregroundColor(.white)
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.lg)
         }
         .disabled(isLoading)
         .padding(.horizontal)
@@ -400,7 +400,7 @@ struct WorkoutPickerView: View {
             }
         }
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 
@@ -497,7 +497,7 @@ private struct DurationChip: View {
                 .frame(maxWidth: .infinity)
                 .background(isSelected ? Color.orange : Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
         }
     }
 }
@@ -520,7 +520,7 @@ private struct PresetButton: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
         }
         .foregroundColor(.primary)
     }
@@ -561,7 +561,7 @@ private struct CategoryToggle: View {
             }
             .padding(12)
             .background(isOn ? Color.orange.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .foregroundColor(.primary)
     }
@@ -590,7 +590,7 @@ private struct WorkoutRecommendationCard: View {
                             .padding(.vertical, 4)
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
-                            .cornerRadius(6)
+                            .cornerRadius(CornerRadius.sm)
                     }
                 }
 
@@ -621,7 +621,7 @@ private struct WorkoutRecommendationCard: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.lg)
             .adaptiveShadow(Shadow.subtle)
         }
     }
@@ -773,7 +773,7 @@ private struct ModeToggleButton: View {
                 : LinearGradient(colors: [.clear], startPoint: .leading, endPoint: .trailing)
             )
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
         }
     }
 }
@@ -800,7 +800,7 @@ private struct AIContextBanner: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(band.color.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 Spacer()
@@ -836,7 +836,7 @@ private struct AIContextBanner: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -868,7 +868,7 @@ private struct AIWorkoutRecommendationCard: View {
                     .padding(.vertical, 4)
                     .background(matchScoreColor.opacity(0.2))
                     .foregroundColor(matchScoreColor)
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 // AI Reasoning
@@ -914,7 +914,7 @@ private struct AIWorkoutRecommendationCard: View {
                     endPoint: .trailing
                 )
             )
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.lg)
             .adaptiveShadow(Shadow.subtle)
         }
     }

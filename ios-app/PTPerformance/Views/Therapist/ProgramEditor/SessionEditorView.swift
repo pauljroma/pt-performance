@@ -227,7 +227,7 @@ struct SessionExerciseRow: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         SessionEditorDetailView(
             viewModel: ProgramEditorViewModel(
                 patientId: UUID(),

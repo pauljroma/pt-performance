@@ -227,7 +227,7 @@ struct KPIDashboardView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(Color.green.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Trend Charts Section
@@ -246,7 +246,7 @@ struct KPIDashboardView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color(.tertiarySystemGroupedBackground))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             // PT WAU Trend
@@ -282,7 +282,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Last Updated Footer
@@ -368,7 +368,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func overallStatusBadge(dashboard: KPIDashboard) -> some View {
@@ -394,7 +394,7 @@ struct KPIDashboardView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(statusColor(status).opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private func statusIndicator(title: String, status: KPIStatus, value: String, target: String) -> some View {
@@ -462,7 +462,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Athlete Metrics Section
@@ -510,7 +510,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - AI Metrics Section
@@ -576,7 +576,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Safety Section
@@ -625,7 +625,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Safety Incidents Section
@@ -652,7 +652,7 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Helper Views
@@ -703,9 +703,9 @@ struct KPIDashboardView: View {
         }
         .padding()
         .background(statusColor(status).opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: CornerRadius.sm)
                 .stroke(statusColor(status).opacity(0.3), lineWidth: 1)
         )
     }
@@ -961,7 +961,7 @@ struct KPIExportSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(12)
                                 .background(Color(.tertiarySystemGroupedBackground))
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                         }
                         .frame(height: 200)
                     }

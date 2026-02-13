@@ -250,17 +250,17 @@ struct ProgramBuilderFormView: View {
 struct PhaseRowView: View {
     let phase: ProgramPhase
     let constraints: TherapyProtocol.ProtocolConstraints?
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(phase.name)
                 .font(.subheadline)
                 .fontWeight(.medium)
-            
+
             Text("\(phase.durationWeeks) weeks • \(phase.sessions.count) sessions")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             if let constraints = constraints, !phase.meetsConstraints(constraints) {
                 Label("Doesn't meet protocol requirements", systemImage: "exclamationmark.triangle")
                     .font(.caption2)
@@ -278,7 +278,7 @@ struct ProgramPhase: Identifiable, Hashable {
     var durationWeeks: Int
     var sessions: [Session]
     var order: Int
-    
+
     init(id: UUID = UUID(), name: String, durationWeeks: Int, sessions: [Session] = [], order: Int) {
         self.id = id
         self.name = name
@@ -286,12 +286,12 @@ struct ProgramPhase: Identifiable, Hashable {
         self.sessions = sessions
         self.order = order
     }
-    
+
     func meetsConstraints(_ constraints: TherapyProtocol.ProtocolConstraints) -> Bool {
         // Basic validation - can be expanded
         return durationWeeks > 0
     }
-    
+
     struct Session: Identifiable, Hashable {
         let id: UUID
         var name: String

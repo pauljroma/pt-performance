@@ -65,6 +65,8 @@ struct TemplateLibraryView: View {
                     Button(action: { showingCreateSheet = true }) {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Create template")
+                    .accessibilityHint("Opens the form to create a new workout template")
                 }
             }
             .sheet(isPresented: $showingCreateSheet) {
@@ -73,10 +75,8 @@ struct TemplateLibraryView: View {
             .sheet(item: $selectedTemplate) { template in
                 TemplateDetailView(template: template)
             }
-            .onAppear {
-                Task {
-                    await loadTemplates()
-                }
+            .task {
+                await loadTemplates()
             }
         }
     }
@@ -94,15 +94,20 @@ struct TemplateLibraryView: View {
                     .textFieldStyle(PlainTextFieldStyle())
 
                 if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
+                    Button(action: {
+                        HapticFeedback.light()
+                        searchText = ""
+                    }) {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("Clear search")
+                    .accessibilityHint("Clears the current search text")
                 }
             }
             .padding(10)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .padding(.horizontal)
 
             // Filter chips
@@ -287,7 +292,7 @@ struct TemplateCard: View {
                     .foregroundColor(categoryColor)
                     .frame(width: 44, height: 44)
                     .background(categoryColor.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(template.name)
@@ -342,7 +347,7 @@ struct TemplateCard: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(6)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -366,7 +371,7 @@ struct TemplateCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -395,7 +400,7 @@ struct CategoryBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(color.opacity(0.15))
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xs)
     }
 
     private var color: Color {
@@ -426,7 +431,7 @@ struct DifficultyBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(color.opacity(0.15))
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 
     private var color: Color {
@@ -452,7 +457,7 @@ struct PopularBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(Color.yellow.opacity(0.15))
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 }
 

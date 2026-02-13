@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  NextAchievementCard.swift
 //  PTPerformance

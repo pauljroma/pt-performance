@@ -1,0 +1,42 @@
+# SwiftLint Configuration for PTPerformance
+# Focus on critical safety issues, disable style-only rules
+
+disabled_rules:
+  - identifier_name           # Snake_case is intentional for DB columns
+  - type_body_length          # Large ViewModels are acceptable
+  - file_length               # Complex features need long files
+  - function_body_length      # Some functions are necessarily long
+  - line_length               # Long lines acceptable for readability
+  - large_tuple               # Tuples used for parallel async returns
+  - function_parameter_count  # Some initializers need many params
+  - nesting                   # Nested types for organization
+  - cyclomatic_complexity     # Complex validation functions
+  - trailing_newline          # Editor preference
+  - implicit_optional_initialization # Swift idiom
+  - redundant_discardable_let # Minor style
+  - statement_position        # Style preference
+  - inclusive_language        # handleMasterToggle is fine
+  - redundant_string_enum_value # Explicit enum values for clarity with Codable
+  - multiple_closures_with_trailing_closure # SwiftUI idiom
+  - for_where                 # Style preference
+  - todo                      # TODOs are allowed during development
+  - unused_enumerated         # Minor optimization
+  - non_optional_string_data_conversion # Using Data(string.utf8) is fine
+  - unused_optional_binding   # Sometimes needed for clarity
+  - type_name                 # Short type names acceptable
+  - orphaned_doc_comment      # Comments are fine
+  - superfluous_disable_command # Allow disable comments
+  - force_unwrapping          # Allow in previews and sample data
+
+# Keep these rules enabled for safety:
+# - force_cast
+# - force_try (disabled below to reduce noise)
+# - shorthand_operator
+
+excluded:
+  - Tests
+  - PTPerformanceTests
+  - PTPerformanceUITests
+  - PTPerformanceWidgets
+  - Pods
+  - .build

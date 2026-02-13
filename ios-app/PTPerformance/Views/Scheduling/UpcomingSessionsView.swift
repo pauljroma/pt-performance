@@ -45,10 +45,8 @@ struct UpcomingSessionsView: View {
             .sheet(item: $selectedSession) { session in
                 ScheduledSessionDetailView(session: session)
             }
-            .onAppear {
-                Task {
-                    await loadScheduledSessions()
-                }
+            .task {
+                await loadScheduledSessions()
             }
         }
     }
@@ -260,7 +258,7 @@ struct UpcomingSessionRow: View {
             .frame(width: 50)
             .padding(.vertical, 8)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
 
             // Session details
             VStack(alignment: .leading, spacing: 4) {
@@ -310,7 +308,7 @@ struct UpcomingSessionRow: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(statusColor.opacity(0.15))
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
     }
 
     private var statusColor: Color {

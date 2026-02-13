@@ -575,7 +575,7 @@ struct ReadinessCheckInView: View {
             }
             .padding()
             .background(viewModel.liveScoreCategory.color.opacity(0.1))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Live readiness score preview: \(viewModel.liveScoreFormatted), \(viewModel.liveScoreCategory.displayName)")
             .accessibilityHint("Score updates automatically as you adjust the sliders")

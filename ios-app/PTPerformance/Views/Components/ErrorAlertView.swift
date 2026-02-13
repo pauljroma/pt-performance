@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ErrorAlertView.swift
 //  PTPerformance
@@ -168,8 +169,8 @@ struct InlineErrorView: View {
     @State private var isRetrying = false
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(spacing: Spacing.sm) {
+            HStack(spacing: Spacing.xs) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
 
@@ -205,7 +206,7 @@ struct InlineErrorView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 }
@@ -222,7 +223,7 @@ struct EmptyStateErrorView: View {
                 .font(.system(size: 60))
                 .foregroundColor(error != nil ? .orange : .gray)
 
-            VStack(spacing: 8) {
+            VStack(spacing: Spacing.xs) {
                 Text(error?.errorDescription ?? title)
                     .font(.headline)
 

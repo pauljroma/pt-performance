@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  SOAPPlanSuggestionView.swift
 //  PTPerformance
@@ -168,7 +169,7 @@ struct SOAPPlanSuggestionView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Suggestions based on \(contextDescription)")
     }
@@ -228,25 +229,24 @@ struct SOAPPlanSuggestionView: View {
 
     private var loadingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color(.label).opacity(0.3)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.2)
-                    .tint(.white)
 
                 Text("Generating suggestions...")
                     .font(.subheadline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
 
                 Text("Analyzing your note content")
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.secondary)
             }
             .padding(24)
             .background(.ultraThinMaterial)
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .accessibilityLabel("Loading AI suggestions")
     }
@@ -325,7 +325,7 @@ struct SOAPPlanSuggestionView: View {
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityLabel("Disclaimer: AI suggestions are clinical decision support tools. Always verify against professional judgment.")
     }
 
@@ -399,7 +399,7 @@ private struct SuggestionCard: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(categoryColor.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
 
                 Spacer()
 
@@ -457,14 +457,14 @@ private struct SuggestionCard: View {
                 .padding(.vertical, 10)
                 .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
             .accessibilityLabel("Insert suggestion into plan")
             .accessibilityHint("Adds this suggestion to your treatment plan")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .contain)
     }
 
@@ -534,7 +534,7 @@ private struct PlanCategoryChip: View {
             .padding(.vertical, 6)
             .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title) filter")

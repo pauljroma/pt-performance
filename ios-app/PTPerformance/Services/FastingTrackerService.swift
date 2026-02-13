@@ -69,8 +69,8 @@ final class FastingTrackerService: ObservableObject {
                 return
             }
 
-            // Fetch history
-            let logs: [FastingLog] = try await supabase.client
+            // Fetch history using DBFastingLog for safe decoding
+            let dbLogs: [DBFastingLog] = try await supabase.client
                 .from("fasting_logs")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
@@ -79,6 +79,8 @@ final class FastingTrackerService: ObservableObject {
                 .execute()
                 .value
 
+            // Convert to app's FastingLog model
+            let logs = dbLogs.map { $0.toFastingLog() }
             self.fastingHistory = logs
             self.currentFast = logs.first(where: { $0.isActive })
 
@@ -123,25 +125,19 @@ final class FastingTrackerService: ObservableObject {
         let targetHours = type?.targetHours ?? (currentProtocol == .custom ? customFastingHours : currentProtocol.fastingHours)
 
         let now = Date()
-        let plannedEndAt = Calendar.current.date(byAdding: .hour, value: targetHours, to: now)
 
         let fast = FastingLog(
             id: UUID(),
             patientId: patientId,
-            fastingType: fastingType,
+            protocolType: fastingType.rawValue,
             startedAt: now,
             endedAt: nil,
-            plannedEndAt: plannedEndAt,
-            targetHours: targetHours,
+            plannedHours: targetHours,
             actualHours: nil,
-            wasBrokenEarly: nil,
-            breakReason: nil,
-            moodStart: nil,
-            moodEnd: nil,
-            hungerLevel: nil,
-            energyLevel: nil,
+            completed: false,
             notes: nil,
-            createdAt: now
+            createdAt: now,
+            updatedAt: nil
         )
 
         DebugLogger.shared.info("FastingTrackerService", "Inserting fast record for patient: \(patientId), type: \(fastingType.displayName)")
@@ -164,7 +160,7 @@ final class FastingTrackerService: ObservableObject {
         DebugLogger.shared.success("FastingTrackerService", "Started \(fastingType.displayName) fast successfully")
     }
 
-    func endFast(energyLevel: Int? = nil, notes: String? = nil, moodEnd: Int? = nil, hungerLevel: Int? = nil) async throws {
+    func endFast(notes: String? = nil) async throws {
         guard let fast = currentFast else {
             DebugLogger.shared.warning("FastingTrackerService", "Cannot end fast: no active fast")
             throw FastingError.noActiveFast
@@ -172,27 +168,21 @@ final class FastingTrackerService: ObservableObject {
 
         let endTime = Date()
         let actualHours = endTime.timeIntervalSince(fast.startedAt) / 3600
-        let wasBrokenEarly = actualHours < Double(fast.targetHours)
+        let completed = actualHours >= Double(fast.plannedHours) * 0.9 // 90% is considered complete
 
-        DebugLogger.shared.info("FastingTrackerService", "Ending fast: \(String(format: "%.1f", actualHours)) hours, target: \(fast.targetHours) hours")
+        DebugLogger.shared.info("FastingTrackerService", "Ending fast: \(String(format: "%.1f", actualHours)) hours, target: \(fast.plannedHours) hours")
 
         struct FastingUpdate: Encodable {
             let ended_at: String
             let actual_hours: Double
-            let was_broken_early: Bool
-            let energy_level: Int?
-            let mood_end: Int?
-            let hunger_level: Int?
+            let completed: Bool
             let notes: String?
         }
 
         let update = FastingUpdate(
             ended_at: ISO8601DateFormatter().string(from: endTime),
             actual_hours: actualHours,
-            was_broken_early: wasBrokenEarly,
-            energy_level: energyLevel,
-            mood_end: moodEnd,
-            hunger_level: hungerLevel,
+            completed: completed,
             notes: notes
         )
 

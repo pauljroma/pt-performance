@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  SetNewPasswordView.swift
 //  PTPerformance
@@ -71,7 +72,7 @@ struct SetNewPasswordView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "lock.rotation")
                         .font(.largeTitle)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.bottom, 8)
 

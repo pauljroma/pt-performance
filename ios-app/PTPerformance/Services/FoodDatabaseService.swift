@@ -243,9 +243,7 @@ class FoodDatabaseService {
 
     /// Fetch popular system foods
     func fetchPopularFoods(limit: Int = 20) async throws -> [FoodSearchResult] {
-        #if DEBUG
-        print("🍎 [FOOD DB] Fetching popular foods, limit: \(limit)")
-        #endif
+        DebugLogger.shared.log("[FoodDatabaseService] Fetching popular foods, limit: \(limit)", level: .diagnostic)
 
         do {
             let response = try await supabase.client
@@ -257,18 +255,14 @@ class FoodDatabaseService {
                 .limit(limit)
                 .execute()
 
-            #if DEBUG
             if let json = String(data: response.data, encoding: .utf8) {
-                print("🍎 [FOOD DB] Popular foods response: \(json.prefix(500))")
+                DebugLogger.shared.log("[FoodDatabaseService] Popular foods response: \(json.prefix(500))", level: .diagnostic)
             }
-            #endif
 
             let decoder = JSONDecoder()
             let results = try decoder.decode([FoodSearchResult].self, from: response.data)
 
-            #if DEBUG
-            print("🍎 [FOOD DB] ✓ Fetched \(results.count) popular foods")
-            #endif
+            DebugLogger.shared.log("[FoodDatabaseService] Fetched \(results.count) popular foods", level: .success)
 
             return results
         } catch {

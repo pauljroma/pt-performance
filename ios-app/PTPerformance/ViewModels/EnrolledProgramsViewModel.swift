@@ -25,8 +25,7 @@ class EnrolledProgramsViewModel: ObservableObject {
 
     // MARK: - Initialization
 
-    @MainActor
-    init(service: ProgramLibraryService = ProgramLibraryService(), supabase: PTSupabaseClient = .shared) {
+    init(service: ProgramLibraryService = .init(), supabase: PTSupabaseClient = .shared) {
         self.service = service
         self.supabase = supabase
     }
@@ -46,45 +45,33 @@ class EnrolledProgramsViewModel: ObservableObject {
     // MARK: - Data Fetching
 
     /// Load enrolled programs for the current user (active status only)
-    /// Build 448: Enhanced logging to debug enrollment visibility issue
     func loadEnrolledPrograms() async {
+        let logger = DebugLogger.shared
+
         guard let patientId = supabase.userId else {
-            DebugLogger.shared.log("❌ [EnrolledPrograms] No patient ID available", level: .warning)
-            #if DEBUG
-            print("❌ [EnrolledPrograms] supabase.userId is nil!")
-            #endif
+            logger.log("[EnrolledPrograms] No patient ID available", level: .warning)
             return
         }
 
-        #if DEBUG
-        print("📱 [EnrolledPrograms] Loading for patientId: \(patientId)")
-        DebugLogger.shared.log("📱 [EnrolledPrograms] Loading for patientId: \(patientId)", level: .diagnostic)
-        #endif
+        logger.log("[EnrolledPrograms] Loading for patientId: \(patientId)", level: .diagnostic)
 
         isLoading = true
         errorMessage = nil
 
         do {
             // Fetch active enrollments with program details
-            // Build 447+: Uses RPC get_my_enrolled_programs() internally
             enrolledPrograms = try await service.getEnrolledProgramsWithDetails(
                 patientId: patientId,
                 status: "active"
             )
 
-            #if DEBUG
-            print("✅ [EnrolledPrograms] Loaded \(enrolledPrograms.count) programs")
+            logger.log("[EnrolledPrograms] Loaded \(enrolledPrograms.count) programs", level: .success)
             for program in enrolledPrograms {
-                print("   - \(program.program.title) (\(program.enrollment.status))")
+                logger.log("  - \(program.program.title) (\(program.enrollment.status))", level: .diagnostic)
             }
-            #endif
-            DebugLogger.shared.log("✅ [EnrolledPrograms] Loaded \(enrolledPrograms.count) programs", level: .success)
             isLoading = false
         } catch {
-            #if DEBUG
-            print("❌ [EnrolledPrograms] Error: \(error)")
-            #endif
-            DebugLogger.shared.log("❌ [EnrolledPrograms] Failed: \(error.localizedDescription)", level: .error)
+            logger.log("[EnrolledPrograms] Failed: \(error.localizedDescription)", level: .error)
             errorMessage = "Unable to load your programs"
             isLoading = false
         }

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// ACP-903: Recovery Session Timer View
@@ -497,7 +498,7 @@ struct RecoverySessionTimerView: View {
 // MARK: - Recovery Timer Manager
 
 @MainActor
-class RecoveryTimerManager: ObservableObject {
+final class RecoveryTimerManager: ObservableObject {
     @Published var elapsedSeconds: Int = 0
     @Published var isPaused: Bool = false
     @Published var countdownMode: Bool = true
@@ -508,6 +509,7 @@ class RecoveryTimerManager: ObservableObject {
     private var timer: Timer?
     private var targetDuration: Int = 0
     private var sessionType: RecoverySessionType = .traditionalSauna
+    private var isActive: Bool = false
 
     // Contrast therapy configuration
     private let hotPhaseDuration: Int = 180 // 3 minutes
@@ -516,6 +518,12 @@ class RecoveryTimerManager: ObservableObject {
 
     // Haptic feedback intervals (in seconds)
     private let hapticIntervals: Set<Int> = [60, 120, 180, 300, 600]
+
+    deinit {
+        isActive = false
+        timer?.invalidate()
+        timer = nil
+    }
 
     var displaySeconds: Int {
         if countdownMode {
@@ -546,9 +554,11 @@ class RecoveryTimerManager: ObservableObject {
 
     func start() {
         timer?.invalidate()
+        isActive = true
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.tick()
+            Task { @MainActor [weak self] in
+                guard let self, self.isActive else { return }
+                self.tick()
             }
         }
     }
@@ -566,6 +576,7 @@ class RecoveryTimerManager: ObservableObject {
     }
 
     func stop() {
+        isActive = false
         timer?.invalidate()
         timer = nil
     }

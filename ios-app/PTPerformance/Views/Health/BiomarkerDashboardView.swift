@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  BiomarkerDashboardView.swift
 //  PTPerformance
@@ -8,6 +9,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct BiomarkerDashboardView: View {
     @StateObject private var viewModel = BiomarkerDashboardViewModel()
@@ -15,11 +17,16 @@ struct BiomarkerDashboardView: View {
     @State private var showingProgramAdjustment = false
     @State private var showingGlossary = false
 
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+
     var body: some View {
         NavigationStack {
             Group {
                 if viewModel.isLoading {
                     loadingView
+                } else if let error = viewModel.error {
+                    errorState(error)
                 } else if viewModel.biomarkerSummaries.isEmpty {
                     emptyState
                 } else {
@@ -86,15 +93,45 @@ struct BiomarkerDashboardView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Biomarkers", systemImage: "chart.bar.doc.horizontal")
+            Label("No Biomarkers", systemImage: "chart.line.uptrend.xyaxis")
                 .foregroundColor(.modusDeepTeal)
         } description: {
-            Text("Upload your lab results to see your biomarker dashboard with trends and insights.")
+            Text("Upload lab results to see your biomarker trends and get personalized recommendations.")
         } actions: {
-            NavigationLink {
-                LabResultsView()
+            VStack(spacing: Spacing.sm) {
+                NavigationLink {
+                    LabPDFUploadView()
+                } label: {
+                    Label("Upload Lab Results", systemImage: "doc.viewfinder")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.modusCyan)
+
+                NavigationLink {
+                    LabResultsView()
+                } label: {
+                    Label("View Lab Results", systemImage: "list.bullet")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    // MARK: - Error State
+
+    private func errorState(_ error: String) -> some View {
+        ContentUnavailableView {
+            Label("Unable to Load", systemImage: "exclamationmark.triangle")
+                .foregroundColor(.orange)
+        } description: {
+            Text(error)
+        } actions: {
+            Button {
+                Task {
+                    await viewModel.refreshDashboard()
+                }
             } label: {
-                Label("View Lab Results", systemImage: "cross.case.fill")
+                Label("Try Again", systemImage: "arrow.clockwise")
             }
             .buttonStyle(.borderedProminent)
             .tint(.modusCyan)
@@ -286,7 +323,8 @@ struct BiomarkerDashboardView: View {
                     isSelected: viewModel.selectedCategory == nil,
                     count: viewModel.biomarkerSummaries.count
                 ) {
-                    withAnimation {
+                    selectionFeedback.selectionChanged()
+                    withAnimation(.easeInOut(duration: 0.25)) {
                         viewModel.selectedCategory = nil
                     }
                 }
@@ -301,7 +339,8 @@ struct BiomarkerDashboardView: View {
                         count: count,
                         systemStatus: status?.status
                     ) {
-                        withAnimation {
+                        selectionFeedback.selectionChanged()
+                        withAnimation(.easeInOut(duration: 0.25)) {
                             viewModel.selectedCategory = category
                         }
                     }
@@ -344,6 +383,8 @@ struct TrainingImpactCalloutCard: View {
     let impact: TrainingImpact
     let onDismiss: () -> Void
     let onActionTap: () -> Void
+
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
@@ -391,7 +432,10 @@ struct TrainingImpactCalloutCard: View {
 
             // Action button (if available)
             if let actionTitle = impact.actionButtonTitle {
-                Button(action: onActionTap) {
+                Button(action: {
+                    impactFeedback.impactOccurred()
+                    onActionTap()
+                }) {
                     Text(actionTitle)
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -442,7 +486,7 @@ struct StatusCountCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(count) \(label) biomarkers")
     }
@@ -480,14 +524,14 @@ struct CategoryFilterChip: View {
                     .font(.caption2)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(isSelected ? Color.white.opacity(0.3) : Color.secondary.opacity(0.2))
-                    .cornerRadius(8)
+                    .background(isSelected ? Color(.label).opacity(0.2) : Color.secondary.opacity(0.2))
+                    .cornerRadius(CornerRadius.sm)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .accessibilityLabel("\(title), \(count) biomarkers")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -528,7 +572,7 @@ struct CategoryHeaderEnhanced: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
                     .background(Color(.tertiarySystemGroupedBackground))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             // Training relevance explanation
@@ -563,8 +607,13 @@ struct BiomarkerRowEnhanced: View {
     let biomarker: BiomarkerSummary
     let onTap: () -> Void
 
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            impactFeedback.impactOccurred()
+            onTap()
+        }) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 HStack(spacing: 12) {
                     // Status indicator
@@ -631,7 +680,7 @@ struct BiomarkerRowEnhanced: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -680,8 +729,13 @@ struct BiomarkerRowCompact: View {
     let biomarker: BiomarkerSummary
     let onTap: () -> Void
 
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            impactFeedback.impactOccurred()
+            onTap()
+        }) {
             HStack(spacing: 12) {
                 Image(systemName: biomarker.status.iconName)
                     .font(.subheadline)
@@ -705,7 +759,7 @@ struct BiomarkerRowCompact: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

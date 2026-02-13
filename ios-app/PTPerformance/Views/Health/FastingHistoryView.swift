@@ -8,24 +8,41 @@ struct FastingHistoryView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: Spacing.lg) {
-                    // Period Selector
-                    periodSelector
+            Group {
+                if viewModel.isLoading && viewModel.fastingLogs.isEmpty {
+                    // Loading state - show skeleton
+                    ScrollView {
+                        VStack(spacing: Spacing.lg) {
+                            periodSelector
+                            loadingSkeletonView
+                        }
+                        .padding()
+                    }
+                } else if let error = viewModel.error {
+                    // Error state with retry
+                    errorView(error: error)
+                } else {
+                    // Content
+                    ScrollView {
+                        VStack(spacing: Spacing.lg) {
+                            // Period Selector
+                            periodSelector
 
-                    // Calendar View
-                    calendarSection
+                            // Calendar View
+                            calendarSection
 
-                    // Stats Overview
-                    statsOverview
+                            // Stats Overview
+                            statsOverview
 
-                    // Streak History
-                    streakSection
+                            // Streak History
+                            streakSection
 
-                    // Detailed History List
-                    historyListSection
+                            // Detailed History List
+                            historyListSection
+                        }
+                        .padding()
+                    }
                 }
-                .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Fasting History")
@@ -37,6 +54,82 @@ struct FastingHistoryView: View {
                 await viewModel.loadHistory()
             }
         }
+    }
+
+    // MARK: - Loading Skeleton
+
+    private var loadingSkeletonView: some View {
+        VStack(spacing: Spacing.lg) {
+            // Calendar skeleton
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .frame(height: 320)
+                .shimmer(isAnimating: true)
+
+            // Stats skeleton
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.md) {
+                ForEach(0..<4, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .frame(height: 100)
+                        .shimmer(isAnimating: true)
+                }
+            }
+
+            // Streak skeleton
+            HStack(spacing: Spacing.md) {
+                ForEach(0..<3, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .frame(height: 120)
+                        .shimmer(isAnimating: true)
+                }
+            }
+        }
+    }
+
+    // MARK: - Error View
+
+    private func errorView(error: String) -> some View {
+        VStack(spacing: Spacing.lg) {
+            Spacer()
+
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+
+            Text("Unable to Load History")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+
+            Text(error)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button {
+                Task {
+                    await viewModel.loadHistory()
+                }
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Try Again")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, Spacing.xl)
+                .padding(.vertical, Spacing.md)
+                .background(Color.modusCyan)
+                .cornerRadius(CornerRadius.lg)
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Period Selector

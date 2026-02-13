@@ -148,9 +148,13 @@ class WorkoutPickerViewModel: ObservableObject {
 
     // MARK: - Load Templates
 
+    /// Track whether initial template load is in progress
+    @Published var isLoadingTemplates: Bool = false
+
     func loadTemplatesIfNeeded() async {
         guard allTemplates.isEmpty else { return }
 
+        isLoadingTemplates = true
         logger.log("QuickPick: Loading all templates...", level: .diagnostic)
 
         do {
@@ -160,6 +164,8 @@ class WorkoutPickerViewModel: ObservableObject {
             logger.log("QuickPick: Failed to load templates: \(error.localizedDescription)", level: .error)
             errorMessage = "We couldn't load workout options. Please check your connection and try again."
         }
+
+        isLoadingTemplates = false
     }
 
     // MARK: - Find Workouts

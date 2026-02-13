@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  PatientPickerSheet.swift
 //  PTPerformance
@@ -38,6 +39,8 @@ struct PatientPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityLabel("Cancel")
+                        .accessibilityHint("Closes patient picker without selecting")
                 }
             }
             .task {
@@ -59,6 +62,8 @@ struct PatientPickerSheet: View {
                 } label: {
                     PatientRow(patient: patient)
                 }
+                .accessibilityLabel("Select \(patient.fullName)")
+                .accessibilityHint(patient.hasHighSeverityFlags ? "Patient has high severity flags" : "Double tap to select this patient")
             }
         }
     }
@@ -66,7 +71,7 @@ struct PatientPickerSheet: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: Spacing.lg - 4) {
             ProgressView()
                 .scaleEffect(1.5)
 
@@ -75,12 +80,14 @@ struct PatientPickerSheet: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Loading patients")
     }
 
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.md) {
             Image(systemName: "person.2.slash")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
@@ -92,9 +99,11 @@ struct PatientPickerSheet: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+                .padding(.horizontal, Spacing.xl + Spacing.xs)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No patients found. Add patients to your caseload to get started.")
     }
 
     // MARK: - Filtered Patients
@@ -115,7 +124,7 @@ private struct PatientRow: View {
     let patient: Patient
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Avatar
             Circle()
                 .fill(Color.accentColor.opacity(0.2))
@@ -127,7 +136,7 @@ private struct PatientRow: View {
                 )
 
             // Patient info
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                 Text(patient.fullName)
                     .font(.body)
                     .foregroundColor(.primary)

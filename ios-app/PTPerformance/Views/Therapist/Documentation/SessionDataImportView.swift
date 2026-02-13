@@ -181,7 +181,7 @@ struct SessionDataImportView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Sessions Section
@@ -236,11 +236,11 @@ struct SessionDataImportView: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Preview of import text with \(selectedExercises.count) exercises")
     }
@@ -394,7 +394,7 @@ private struct SessionSelectionCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
@@ -490,7 +490,7 @@ private struct MetricBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(color.opacity(0.1))
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 }
 

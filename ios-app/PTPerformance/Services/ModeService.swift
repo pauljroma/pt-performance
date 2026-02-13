@@ -18,6 +18,7 @@ class ModeService: ObservableObject {
     @Published var isLoading = false
 
     private let supabase = PTSupabaseClient.shared
+    private let debugLogger = DebugLogger.shared
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
@@ -31,12 +32,14 @@ class ModeService: ObservableObject {
             .store(in: &cancellables)
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     /// Load current patient's mode from database
     func loadPatientMode() async {
         guard let userId = supabase.userId else {
-            #if DEBUG
-            print("⚠️ No user ID, cannot load mode")
-            #endif
+            debugLogger.log("[ModeService] No user ID, cannot load mode", level: .warning)
             return
         }
 
@@ -44,7 +47,7 @@ class ModeService: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Query patient mode using user_id (not id)
+            // Query patient mode using user_id
             let response = try await supabase.client
                 .from("patients")
                 .select("id, mode, mode_changed_at, mode_changed_by")
@@ -61,13 +64,9 @@ class ModeService: ObservableObject {
             // Load features for this mode
             await loadModeFeatures(for: patientMode.mode)
 
-            #if DEBUG
-            print("✅ Loaded patient mode: \(patientMode.mode.displayName)")
-            #endif
+            debugLogger.log("[ModeService] Loaded patient mode: \(patientMode.mode.displayName)", level: .success)
         } catch {
-            #if DEBUG
-            print("❌ Failed to load patient mode: \(error)")
-            #endif
+            debugLogger.log("[ModeService] Failed to load patient mode: \(error)", level: .error)
             // Default to rehab mode on error
             currentMode = .rehab
             await loadModeFeatures(for: .rehab)
@@ -88,13 +87,9 @@ class ModeService: ObservableObject {
             let features = try decoder.decode([ModeFeature].self, from: response.data)
             modeFeatures = features
 
-            #if DEBUG
-            print("✅ Loaded \(features.count) features for \(mode.displayName)")
-            #endif
+            debugLogger.log("[ModeService] Loaded \(features.count) features for \(mode.displayName)", level: .success)
         } catch {
-            #if DEBUG
-            print("❌ Failed to load mode features: \(error)")
-            #endif
+            debugLogger.log("[ModeService] Failed to load mode features: \(error)", level: .error)
             modeFeatures = []
         }
     }
@@ -124,15 +119,11 @@ class ModeService: ObservableObject {
 
             let history = try decoder.decode([ModeHistoryEntry].self, from: response.data)
 
-            #if DEBUG
-            print("✅ Loaded \(history.count) mode history entries")
-            #endif
+            debugLogger.log("[ModeService] Loaded \(history.count) mode history entries", level: .success)
 
             return history
         } catch {
-            #if DEBUG
-            print("❌ Failed to load mode history: \(error)")
-            #endif
+            debugLogger.log("[ModeService] Failed to load mode history: \(error)", level: .error)
             return []
         }
     }
@@ -161,8 +152,6 @@ class ModeService: ObservableObject {
         // Reload mode after change
         await loadPatientMode()
 
-        #if DEBUG
-        print("✅ Changed patient mode to \(newMode.displayName)")
-        #endif
+        debugLogger.log("[ModeService] Changed patient mode to \(newMode.displayName)", level: .success)
     }
 }

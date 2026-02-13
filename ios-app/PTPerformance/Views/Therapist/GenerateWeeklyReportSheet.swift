@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  GenerateWeeklyReportSheet.swift
 //  PTPerformance
@@ -201,7 +202,7 @@ struct GenerateWeeklyReportSheet: View {
 
     private var generatingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.4)
+            Color(.label).opacity(0.4)
                 .ignoresSafeArea()
 
             VStack(spacing: Spacing.md) {
@@ -210,7 +211,7 @@ struct GenerateWeeklyReportSheet: View {
 
                 Text(viewModel.currentStep.isEmpty ? "Generating report..." : viewModel.currentStep)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
 
                 if viewModel.generationProgress > 0 {
                     ProgressView(value: viewModel.generationProgress)
@@ -258,7 +259,7 @@ struct GenerateWeeklyReportSheet: View {
 #if DEBUG
 struct GenerateWeeklyReportSheet_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             GenerateWeeklyReportSheet(
                 patient: Patient.samplePatients[0],
                 onDismiss: {}

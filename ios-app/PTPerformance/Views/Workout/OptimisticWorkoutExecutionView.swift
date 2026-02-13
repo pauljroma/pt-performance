@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  OptimisticWorkoutExecutionView.swift
 //  PTPerformance
@@ -107,12 +108,12 @@ struct OptimisticWorkoutExecutionView: View {
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 8)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
-                        .fill(Color.green)
+                        .fill(Color(.systemGreen))
                         .frame(width: geometry.size.width * viewModel.progressPercentage, height: 8)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                         .animation(.easeInOut(duration: 0.2), value: viewModel.progressPercentage)
                 }
             }
@@ -132,7 +133,7 @@ struct OptimisticWorkoutExecutionView: View {
 
                 Text("\(viewModel.workoutState.completedCount) completed")
                     .font(.subheadline)
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(.systemGreen))
             }
             .padding(.horizontal)
         }
@@ -188,7 +189,7 @@ struct OptimisticWorkoutExecutionView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func setsSection(exercise: Exercise, state: ExerciseUIState) -> some View {
@@ -264,7 +265,7 @@ struct OptimisticWorkoutExecutionView: View {
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
 
             // Pain slider
             VStack(alignment: .leading, spacing: 8) {
@@ -300,7 +301,7 @@ struct OptimisticWorkoutExecutionView: View {
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -396,7 +397,7 @@ struct WorkoutCompletionSummary: View {
                 // Success icon
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 80))
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(.systemGreen))
                     .accessibilityHidden(true)
 
                 Text("Workout Complete!")
@@ -419,13 +420,13 @@ struct WorkoutCompletionSummary: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
                 // Sync status
                 if PendingChangesQueue.shared.hasPendingChanges {
                     HStack {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color(.systemBlue))
                         Text("Syncing workout data...")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -433,7 +434,7 @@ struct WorkoutCompletionSummary: View {
                 } else {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(Color(.systemGreen))
                         Text("All data saved")
                             .font(.subheadline)
                             .foregroundColor(.secondary)

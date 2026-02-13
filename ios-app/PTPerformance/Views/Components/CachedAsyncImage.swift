@@ -26,11 +26,11 @@ struct ExerciseThumbnailImage: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
             } else {
                 exercisePlaceholder
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                     .onAppear {
                         loadImageIfNeeded()
                     }
@@ -147,7 +147,7 @@ struct CachedAsyncImageComponents_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 20) {
             // Exercise thumbnail examples
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 ExerciseThumbnailImage(
                     thumbnailUrl: nil,
                     exerciseName: "Back Squat"
@@ -163,7 +163,7 @@ struct CachedAsyncImageComponents_Previews: PreviewProvider {
             Divider()
 
             // Profile avatar examples
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 ProfileAvatarImage(
                     profileImageUrl: nil,
                     firstName: "John",

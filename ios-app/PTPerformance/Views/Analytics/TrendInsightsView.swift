@@ -258,7 +258,7 @@ struct InsightDetailCard: View {
         }
         .padding()
         .background(insight.severity.color.opacity(0.08))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .onTapGesture {
             if insight.actionable {
                 withAnimation(.spring(response: 0.3)) {
@@ -291,7 +291,7 @@ private struct TrendRecommendationCard: View {
         }
         .padding()
         .background(Color.blue.opacity(0.08))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -338,7 +338,7 @@ struct InsightsSummaryCard: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .task {
             await viewModel.loadInsights(for: patientId)
         }
@@ -501,7 +501,7 @@ struct PatternRecognitionCard: View {
         }
         .padding()
         .background(pattern.color.opacity(0.08))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

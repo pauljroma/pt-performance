@@ -307,12 +307,7 @@ class ProtocolBuilderViewModel: ObservableObject {
         )
 
         // Log for debugging
-        #if DEBUG
-        print("Protocol Assignment KPI:")
-        print("  Duration: \(formattedAssignmentTime)")
-        print("  Met <60s target: \(metTarget)")
-        print("  Tasks: \(customization.includedTaskCount)")
-        #endif
+        DebugLogger.shared.log("[ProtocolBuilder] Assignment KPI: Duration=\(formattedAssignmentTime), Met<60s=\(kpiData.metTarget), Tasks=\(customization.includedTaskCount)", level: .diagnostic)
 
         // TODO: Send to analytics service
     }

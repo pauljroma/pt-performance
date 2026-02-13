@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  DebugLogView.swift
 //  PTPerformance
@@ -56,7 +57,7 @@ struct DebugLogView: View {
                 // Search bar
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
+                        .foregroundColor(Color(.secondaryLabel))
                         .accessibilityHidden(true)
                     TextField("Search logs...", text: $searchText)
                         .textFieldStyle(.plain)
@@ -64,7 +65,7 @@ struct DebugLogView: View {
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color(.secondaryLabel))
                         }
                         .accessibilityLabel("Clear search")
                         .accessibilityHint("Clears the search text")
@@ -166,7 +167,7 @@ struct DebugLogView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "tray")
                                 .font(.system(size: 48))
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color(.secondaryLabel))
                                 .accessibilityHidden(true)
                             Text(searchText.isEmpty ? "No logs yet" : "No matching logs")
                                 .foregroundColor(.secondary)
@@ -216,7 +217,7 @@ struct DebugLogView: View {
                     Text("Clear All")
                 }
                 .font(.caption)
-                .foregroundColor(.red)
+                .foregroundColor(DesignTokens.statusError)
             }
             .accessibilityLabel("Clear All")
             .accessibilityHint("Removes all log messages")
@@ -229,7 +230,7 @@ struct DebugLogView: View {
                     Text("Copy All")
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(DesignTokens.statusInfo)
             }
             .accessibilityLabel("Copy All")
             .accessibilityHint("Copies all log messages to clipboard")
@@ -262,17 +263,17 @@ struct DebugLogView: View {
 
     private func colorForLevel(_ level: LoggingService.LogLevel) -> Color {
         switch level {
-        case .diagnostic: return .primary
-        case .success: return .green
-        case .error: return .red
-        case .warning: return .orange
+        case .diagnostic: return Color(.label)
+        case .success: return DesignTokens.statusSuccess
+        case .error: return DesignTokens.statusError
+        case .warning: return DesignTokens.statusWarning
         }
     }
 
     private func backgroundColorForLevel(_ level: LoggingService.LogLevel) -> Color {
         switch level {
-        case .error: return Color.red.opacity(0.05)
-        case .warning: return Color.orange.opacity(0.05)
+        case .error: return DesignTokens.statusError.opacity(0.1)
+        case .warning: return DesignTokens.statusWarning.opacity(0.1)
         default: return Color.clear
         }
     }

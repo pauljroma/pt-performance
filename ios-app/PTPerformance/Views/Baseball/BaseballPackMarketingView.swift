@@ -271,7 +271,7 @@ struct BaseballPackMarketingView: View {
                 )
             )
             .foregroundColor(.white)
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.lg)
         }
         .disabled(isPurchasing || storeKit.baseballPackProduct == nil)
     }

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  PasswordResetView.swift
 //  PTPerformance
@@ -116,7 +117,7 @@ struct PasswordResetView: View {
                             }
                             Text("Reset My Password")
                                 .font(.body)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             Spacer()
                         }
                     }
@@ -155,7 +156,7 @@ struct PasswordResetView: View {
                     Button("Send Another Link") {
                         showConfirmation = false
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
             }
 
@@ -223,9 +224,7 @@ struct PasswordResetView: View {
                 }
                 isLoading = false
 
-                #if DEBUG
-                print("❌ Magic link error: \(error)")
-                #endif
+                DebugLogger.shared.log("[PasswordReset] Magic link error: \(error)", level: .error)
             }
         }
     }
@@ -257,9 +256,7 @@ struct PasswordResetView: View {
                 }
                 isLoading = false
 
-                #if DEBUG
-                print("❌ Password reset error: \(error)")
-                #endif
+                DebugLogger.shared.log("[PasswordReset] Password reset error: \(error)", level: .error)
             }
         }
     }

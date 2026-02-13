@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  VideoSettingsView.swift
 //  PTPerformance
@@ -33,7 +34,7 @@ struct VideoSettingsView: View {
                 if let quality = preferencesService.preferences?.preferredQuality {
                     HStack {
                         Image(systemName: qualityIcon(for: quality))
-                            .foregroundColor(.blue)
+                            .foregroundColor(DesignTokens.statusInfo)
                             .frame(width: 24)
                             .accessibilityHidden(true)
                         Text(quality.description)
@@ -55,7 +56,7 @@ struct VideoSettingsView: View {
                 Toggle(isOn: autoPlayBinding) {
                     HStack {
                         Image(systemName: "play.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
                             .frame(width: 24)
                             .accessibilityHidden(true)
                         Text("Auto-play Videos")
@@ -92,7 +93,7 @@ struct VideoSettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "speedometer")
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
                             .frame(width: 24)
                             .accessibilityHidden(true)
                         Text("Playback Speed")
@@ -111,7 +112,7 @@ struct VideoSettingsView: View {
             Section {
                 HStack {
                     Image(systemName: "arrow.up.arrow.down.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(DesignTokens.statusInfo)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     Text("Estimated per 5-min video")
@@ -170,7 +171,7 @@ struct VideoSettingsView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
                 .shadow(radius: 2)
                 .padding(.top, 8)
             }

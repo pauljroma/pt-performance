@@ -559,7 +559,7 @@ struct SectionToggleRow: View {
 #if DEBUG
 struct ReportBuilderView_Previews: PreviewProvider {
     static var previews: some View {
-        ReportBuilderView(patient: Patient.samplePatients[0])
+        ReportBuilderView(patient: Patient.samplePatients.first!)
             .environmentObject(AppState())
     }
 }

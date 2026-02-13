@@ -72,9 +72,7 @@ class ModeSwitchingViewModel: ObservableObject {
             let lastName = data?["last_name"] as? String ?? ""
             patientName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
 
-            #if DEBUG
-            print("✅ Loaded patient mode: \(currentMode.displayName)")
-            #endif
+            DebugLogger.shared.log("[ModeSwitching] Loaded patient mode: \(currentMode.displayName)", level: .success)
         } catch {
             DebugLogger.shared.error("ModeSwitchingViewModel", "Failed to load patient mode: \(error.localizedDescription)")
             errorMessage = "We couldn't load the patient's current mode. Please try again."
@@ -109,9 +107,7 @@ class ModeSwitchingViewModel: ObservableObject {
             // Reset reason field
             reasonForChange = ""
 
-            #if DEBUG
-            print("✅ Mode changed successfully to \(selectedMode.displayName)")
-            #endif
+            DebugLogger.shared.log("[ModeSwitching] Mode changed successfully to \(selectedMode.displayName)", level: .success)
         } catch {
             DebugLogger.shared.error("ModeSwitchingViewModel", "Failed to change mode: \(error.localizedDescription)")
             errorMessage = error.localizedDescription

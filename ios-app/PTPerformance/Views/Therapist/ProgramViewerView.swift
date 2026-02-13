@@ -113,7 +113,7 @@ struct ProgramHeaderView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(program.resolvedProgramType.color.opacity(0.15))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
 
             HStack {
                 Label("Target: \(program.targetLevel)", systemImage: "target")
@@ -257,7 +257,7 @@ struct ExerciseRowCompact: View {
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Exercise \(exercise.orderIndex + 1): \(exercise.exerciseName), \(exercise.sets) sets of \(exercise.reps) reps\(exercise.load.map { ", \(Int($0)) \(exercise.loadUnit ?? "lbs")" } ?? "")\(exercise.restPeriod.map { ", \($0) seconds rest" } ?? "")")
     }
@@ -268,7 +268,7 @@ struct ExerciseRowCompact: View {
 #if DEBUG
 struct ProgramViewerView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             ProgramViewerView(patientId: "patient-1")
         }
     }

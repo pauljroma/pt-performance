@@ -161,7 +161,7 @@ struct ShoulderROMEntry: View {
                                     .foregroundColor(.white)
                             )
                     }
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
 
                     // Reference
                     HStack {

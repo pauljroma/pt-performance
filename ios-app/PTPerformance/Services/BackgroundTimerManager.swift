@@ -72,7 +72,7 @@ class BackgroundTimerManager: ObservableObject {
                 self.hasPermission = granted
             }
 
-            DebugLogger.shared.info("DEBUG", 
+            DebugLogger.shared.info("DEBUG",
                 "Notification permission \(granted ? "granted" : "denied")",
             )
 
@@ -96,7 +96,7 @@ class BackgroundTimerManager: ObservableObject {
         // Clear existing notifications
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "Scheduling notifications for \(template.name) - \(template.rounds) rounds",
         )
 
@@ -172,7 +172,7 @@ class BackgroundTimerManager: ObservableObject {
 
         try await UNUserNotificationCenter.current().add(completeRequest)
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "Scheduled \((template.rounds * 2) + 1) notifications",
         )
     }
@@ -263,7 +263,7 @@ class BackgroundTimerManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "timer_state")
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "Cleared timer state and notifications",
         )
     }
@@ -276,13 +276,13 @@ class BackgroundTimerManager: ObservableObject {
         guard let template = timerService.activeTemplate,
               let session = timerService.activeSession,
               timerService.state == .running else {
-            DebugLogger.shared.info("DEBUG", 
+            DebugLogger.shared.info("DEBUG",
                 "No active timer to persist",
             )
             return
         }
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "App entering background with active timer",
         )
 
@@ -325,14 +325,14 @@ class BackgroundTimerManager: ObservableObject {
             return
         }
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "App entering foreground - restoring timer",
         )
 
         // Calculate elapsed time while backgrounded
         let backgroundElapsed = Date().timeIntervalSince(savedState.startTime)
 
-        DebugLogger.shared.info("DEBUG", 
+        DebugLogger.shared.info("DEBUG",
             "Background elapsed: \(Int(backgroundElapsed))s",
         )
 

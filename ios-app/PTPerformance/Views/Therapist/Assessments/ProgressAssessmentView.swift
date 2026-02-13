@@ -375,7 +375,7 @@ struct ProgressAssessmentView: View {
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal)
             }
@@ -517,7 +517,7 @@ struct ProgressAssessmentView: View {
                         .frame(minHeight: 120)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                         .padding(.horizontal)
 
                     Text("Document progress toward each treatment goal.")
@@ -548,7 +548,7 @@ struct ProgressAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
@@ -569,7 +569,7 @@ struct ProgressAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
@@ -590,7 +590,7 @@ struct ProgressAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
@@ -611,7 +611,7 @@ struct ProgressAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(

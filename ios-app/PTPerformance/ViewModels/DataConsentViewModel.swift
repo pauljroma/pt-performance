@@ -83,9 +83,7 @@ class DataConsentViewModel: ObservableObject {
 
         isLoading = false
 
-        #if DEBUG
-        print("[DataConsentViewModel] Loaded \(consents.count) consents")
-        #endif
+        DebugLogger.shared.log("[DataConsentViewModel] Loaded \(consents.count) consents", level: .success)
     }
 
     /// Loads the consent audit log
@@ -101,9 +99,7 @@ class DataConsentViewModel: ObservableObject {
 
         isLoadingAuditLog = false
 
-        #if DEBUG
-        print("[DataConsentViewModel] Loaded \(auditLog.count) audit entries")
-        #endif
+        DebugLogger.shared.log("[DataConsentViewModel] Loaded \(auditLog.count) audit entries", level: .success)
     }
 
     // MARK: - Consent Management
@@ -141,10 +137,7 @@ class DataConsentViewModel: ObservableObject {
 
         } catch {
             self.error = AppError.from(error)
-
-            #if DEBUG
-            print("[DataConsentViewModel] Error toggling consent: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[DataConsentViewModel] Error toggling consent: \(error.localizedDescription)", level: .error)
         }
 
         // Clear toggling state
@@ -214,15 +207,10 @@ class DataConsentViewModel: ObservableObject {
             successMessage = "All data access revoked"
             showingSuccessAlert = true
 
-            #if DEBUG
-            print("[DataConsentViewModel] Revoked all consents")
-            #endif
+            DebugLogger.shared.log("[DataConsentViewModel] Revoked all consents", level: .success)
         } catch {
             self.error = AppError.from(error)
-
-            #if DEBUG
-            print("[DataConsentViewModel] Error revoking all: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[DataConsentViewModel] Error revoking all: \(error.localizedDescription)", level: .error)
         }
 
         isSaving = false

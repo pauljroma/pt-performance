@@ -36,6 +36,9 @@ final class HealthHubViewModel: ObservableObject {
     @Published private(set) var totalBiomarkers: Int = 0
     @Published private(set) var lastLabDate: Date?
 
+    /// Whether user has uploaded lab results
+    @Published private(set) var hasLabResults: Bool = false
+
     /// AI Insight
     @Published private(set) var dailyInsight: String = "Loading your personalized insight..."
     @Published private(set) var insightIcon: String = "sparkles"
@@ -44,15 +47,25 @@ final class HealthHubViewModel: ObservableObject {
     @Published private(set) var isLoading: Bool = false
     @Published private(set) var error: Error?
 
-    // MARK: - Services
+    // MARK: - Services (using shared instances to prevent duplication)
 
     private let recoveryService = RecoveryTrackingService.shared
     private let fastingService = FastingTrackerService.shared
     private let supplementService = SupplementService.shared
-    private let biomarkerViewModel = BiomarkerDashboardViewModel()
+
+    // Lazy-loaded biomarker view model to prevent unnecessary initialization
+    private lazy var biomarkerViewModel: BiomarkerDashboardViewModel = {
+        BiomarkerDashboardViewModel()
+    }()
 
     private var cancellables = Set<AnyCancellable>()
     private var timerCancellable: AnyCancellable?
+
+    /// Flag to track if timer updates are paused (e.g., when view is not visible)
+    private var isTimerPaused: Bool = false
+
+    /// Flag to prevent redundant data fetching during tab switches
+    private var hasLoadedInitialData: Bool = false
 
     // MARK: - Initialization
 
@@ -63,7 +76,13 @@ final class HealthHubViewModel: ObservableObject {
     // MARK: - Data Loading
 
     /// Load all health hub data
+    /// Uses hasLoadedInitialData flag to prevent redundant fetching on tab switches
     func loadData() async {
+        // Skip if we've already loaded and this isn't a forced refresh
+        guard !hasLoadedInitialData || isLoading == false else {
+            return
+        }
+
         isLoading = true
         error = nil
 
@@ -78,12 +97,31 @@ final class HealthHubViewModel: ObservableObject {
         // Generate insight after all data is loaded
         await generateDailyInsight()
 
+        hasLoadedInitialData = true
         isLoading = false
     }
 
-    /// Refresh all data
+    /// Refresh all data (forces reload regardless of cache)
     func refresh() async {
+        hasLoadedInitialData = false
         await loadData()
+    }
+
+    // MARK: - Timer Control
+
+    /// Pause timer updates when the view is not visible
+    /// Prevents unnecessary CPU usage and battery drain
+    func pauseTimerUpdates() {
+        isTimerPaused = true
+        stopFastingTimer()
+    }
+
+    /// Resume timer updates when the view becomes visible again
+    func resumeTimerUpdates() {
+        isTimerPaused = false
+        if isFasting {
+            startFastingTimer()
+        }
     }
 
     // MARK: - Recovery Data
@@ -122,6 +160,9 @@ final class HealthHubViewModel: ObservableObject {
     }
 
     private func startFastingTimer() {
+        // Don't start timer if paused (view not visible)
+        guard !isTimerPaused else { return }
+
         stopFastingTimer()
 
         timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
@@ -178,6 +219,7 @@ final class HealthHubViewModel: ObservableObject {
         self.totalBiomarkers = biomarkerViewModel.biomarkerSummaries.count
         self.biomarkersNeedingAttention = biomarkerViewModel.concerningBiomarkers.count
         self.lastLabDate = biomarkerViewModel.lastLabDate
+        self.hasLabResults = biomarkerViewModel.biomarkerSummaries.count > 0
     }
 
     // MARK: - AI Insight Generation
@@ -358,6 +400,8 @@ final class HealthHubViewModel: ObservableObject {
 
     deinit {
         timerCancellable?.cancel()
+        timerCancellable = nil
+        cancellables.removeAll()
     }
 }
 
@@ -365,7 +409,7 @@ final class HealthHubViewModel: ObservableObject {
 
 /// Represents a single item in the Today's Snapshot section
 struct HealthSnapshotItem: Identifiable {
-    let id = UUID()
+    var id: String { "\(title)-\(value)" }
     let title: String
     let value: String
     let icon: String
@@ -393,7 +437,7 @@ struct HealthSnapshotItem: Identifiable {
 
 /// Represents a quick action button in the Health Hub
 struct HealthQuickAction: Identifiable {
-    let id = UUID()
+    var id: String { "\(title)-\(destination)" }
     let title: String
     let icon: String
     let iconColor: Color

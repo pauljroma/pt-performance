@@ -137,6 +137,10 @@ final class RiskEscalationService: ObservableObject {
         self.debugLogger = debugLogger
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Fetch Active Escalations
 
     /// Fetch all active escalations for a therapist.
@@ -782,9 +786,7 @@ final class RiskEscalationService: ObservableObject {
 
         // This would call the push notification service
         // For now, just log it
-        #if DEBUG
-        print("[RiskEscalation] Would send push: \(escalation.escalationType.displayName) - \(escalation.message)")
-        #endif
+        DebugLogger.shared.log("[RiskEscalation] Would send push: \(escalation.escalationType.displayName) - \(escalation.message)", level: .diagnostic)
     }
 }
 

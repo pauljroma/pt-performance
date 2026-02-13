@@ -390,7 +390,6 @@ struct AddPatientPlaceholderView: View {
     }
 }
 
-
 // MARK: - Preview
 
 #if DEBUG

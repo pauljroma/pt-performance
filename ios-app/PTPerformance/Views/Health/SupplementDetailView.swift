@@ -1,25 +1,24 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Supplement Detail View - View supplement details and add to routine
 struct SupplementDetailView: View {
-    @StateObject private var viewModel = SupplementViewModel()
+    @StateObject private var viewModel = SupplementDetailViewModel()
     @Environment(\.dismiss) private var dismiss
 
     let supplementId: UUID
-
-    @State private var showingAddSheet = false
 
     init(supplementId: UUID) {
         self.supplementId = supplementId
     }
 
-    private var supplement: CatalogSupplement? {
-        viewModel.catalog.first { $0.id == supplementId }
-    }
+    @State private var isAddingToRoutine = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
 
     var body: some View {
         ScrollView {
-            if let supplement = supplement {
+            if let supplement = viewModel.supplement {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
                     // Header
                     headerSection(supplement)
@@ -33,20 +32,58 @@ struct SupplementDetailView: View {
                     // Timing
                     timingSection(supplement)
 
-                    // Add to Routine Button
-                    addToRoutineButton(supplement)
+                    // Add/Remove from Routine Button
+                    if viewModel.isInRoutine {
+                        removeFromRoutineButton(supplement)
+                    } else {
+                        addToRoutineButton(supplement)
+                    }
                 }
                 .padding()
+            } else if viewModel.isLoading {
+                VStack(spacing: Spacing.md) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("Loading supplement details...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityLabel("Loading supplement details")
             } else {
-                ProgressView("Loading...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 40))
+                        .foregroundColor(.orange)
+                        .accessibilityHidden(true)
+
+                    Text("Supplement Not Found")
+                        .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
+
+                    Text("This supplement may have been removed from the catalog.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Go Back") { dismiss() }
+                        .buttonStyle(.bordered)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityElement(children: .combine)
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle(supplement?.name ?? "Supplement")
+        .navigationTitle(viewModel.supplement?.name ?? "Supplement")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            await viewModel.loadCatalog()
+            await viewModel.loadSupplement(supplementId)
+        }
+        .alert("Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
         }
     }
 
@@ -76,10 +113,13 @@ struct SupplementDetailView: View {
                     .font(.title2)
                     .foregroundColor(.modusCyan)
             }
+            .accessibilityHidden(true)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(supplement.name)\(supplement.brand.map { ", by \($0)" } ?? ""), \(supplement.category.displayName) supplement")
     }
 
     private func benefitsSection(_ supplement: CatalogSupplement) -> some View {
@@ -87,17 +127,21 @@ struct SupplementDetailView: View {
             Text("Benefits")
                 .font(.headline)
                 .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
 
             ForEach(supplement.benefits, id: \.self) { benefit in
                 HStack(alignment: .top, spacing: Spacing.sm) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.modusTealAccent)
                         .font(.caption)
+                        .accessibilityHidden(true)
 
                     Text(benefit)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(benefit)
             }
         }
         .padding()
@@ -110,6 +154,7 @@ struct SupplementDetailView: View {
             Text("Recommended Dosage")
                 .font(.headline)
                 .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
 
             Text(supplement.dosageRange)
                 .font(.body)
@@ -118,6 +163,8 @@ struct SupplementDetailView: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Recommended dosage: \(supplement.dosageRange)")
     }
 
     private func timingSection(_ supplement: CatalogSupplement) -> some View {
@@ -125,6 +172,7 @@ struct SupplementDetailView: View {
             Text("Best Time to Take")
                 .font(.headline)
                 .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
 
             HStack {
                 ForEach(supplement.timing) { timing in
@@ -135,29 +183,87 @@ struct SupplementDetailView: View {
                         .background(Color.modusCyan.opacity(0.15))
                         .foregroundColor(.modusCyan)
                         .cornerRadius(CornerRadius.sm)
+                        .accessibilityLabel(timing.displayName)
                 }
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Best time to take: \(supplement.timing.map { $0.displayName }.joined(separator: ", "))")
     }
 
     private func addToRoutineButton(_ supplement: CatalogSupplement) -> some View {
         Button {
+            isAddingToRoutine = true
+            HapticFeedback.medium()
             Task {
-                await viewModel.addToRoutine(supplement)
-                dismiss()
+                await viewModel.addToRoutine(
+                    dosage: supplement.dosageRange,
+                    timing: supplement.timing.first ?? .morning,
+                    withFood: supplement.timing.contains(.withMeal),
+                    notes: nil
+                )
+
+                if let error = viewModel.error {
+                    isAddingToRoutine = false
+                    errorMessage = error
+                    showingError = true
+                    HapticFeedback.error()
+                } else {
+                    isAddingToRoutine = false
+                    HapticFeedback.success()
+                }
             }
         } label: {
-            Text("Add to My Routine")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.modusCyan)
-                .cornerRadius(CornerRadius.lg)
+            HStack {
+                if isAddingToRoutine {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                } else {
+                    Text("Add to My Routine")
+                        .font(.headline)
+                }
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 44)
+            .padding()
+            .background(
+                isAddingToRoutine
+                    ? Color.modusCyan.opacity(0.7)
+                    : Color.modusCyan
+            )
+            .cornerRadius(CornerRadius.lg)
         }
+        .disabled(isAddingToRoutine)
+        .accessibilityLabel("Add \(supplement.name) to my routine")
+        .accessibilityHint(isAddingToRoutine ? "Adding supplement, please wait" : "Double tap to add this supplement to your daily routine")
+    }
+
+    private func removeFromRoutineButton(_ supplement: CatalogSupplement) -> some View {
+        Button {
+            Task {
+                await viewModel.removeFromRoutine()
+                HapticFeedback.success()
+            }
+        } label: {
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                Text("In My Routine")
+                    .font(.headline)
+            }
+            .foregroundColor(.modusTealAccent)
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 44)
+            .padding()
+            .background(Color.modusTealAccent.opacity(0.15))
+            .cornerRadius(CornerRadius.lg)
+        }
+        .accessibilityLabel("\(supplement.name) is in your routine")
+        .accessibilityHint("Double tap to remove from your routine")
     }
 }
 

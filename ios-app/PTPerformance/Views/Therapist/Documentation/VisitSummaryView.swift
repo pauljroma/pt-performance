@@ -121,7 +121,7 @@ struct VisitSummaryView: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(viewModel.isCompleted ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
 
             // Session type
@@ -149,7 +149,7 @@ struct VisitSummaryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Metrics Overview
@@ -192,7 +192,7 @@ struct VisitSummaryView: View {
         }
         .frame(height: 90)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Exercises Section
@@ -224,7 +224,7 @@ struct VisitSummaryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Pain & RPE Section
@@ -277,7 +277,7 @@ struct VisitSummaryView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(rpeColor(item.rpe).opacity(0.2))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                 }
             }
@@ -293,12 +293,12 @@ struct VisitSummaryView: View {
                 }
                 .padding()
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var painColor: Color {
@@ -340,7 +340,7 @@ struct VisitSummaryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Export Button
@@ -360,7 +360,7 @@ struct VisitSummaryView: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color.blue)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(viewModel.isExporting)
         .overlay {
@@ -458,7 +458,7 @@ struct ExerciseSummaryRow: View {
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -473,7 +473,7 @@ struct PainIndicator: View {
                 Rectangle()
                     .fill(index < Int(level) ? painColor(for: index) : Color.gray.opacity(0.3))
                     .frame(width: 6, height: 20)
-                    .cornerRadius(2)
+                    .cornerRadius(CornerRadius.xs)
             }
         }
     }
@@ -517,7 +517,7 @@ struct ClinicalNoteRow: View {
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -655,8 +655,8 @@ class VisitSummaryViewModel: ObservableObject {
     func generatePDF() async throws -> URL {
         // Create PDF document
         let pdfMetaData = [
-            kCGPDFContextCreator: "PT Performance",
-            kCGPDFContextAuthor: "PT Performance App",
+            kCGPDFContextCreator: "Modus",
+            kCGPDFContextAuthor: "Modus App",
             kCGPDFContextTitle: "Visit Summary - \(patientName)"
         ]
 
@@ -853,12 +853,12 @@ enum SessionType: String {
 #if DEBUG
 struct VisitSummaryView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             VisitSummaryView(sessionId: UUID(), patientId: "patient-1")
         }
         .preferredColorScheme(.light)
 
-        NavigationView {
+        NavigationStack {
             VisitSummaryView(sessionId: UUID(), patientId: "patient-1")
         }
         .preferredColorScheme(.dark)

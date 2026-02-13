@@ -138,14 +138,16 @@ struct ExerciseProgressView: View {
     private var exerciseList: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.md) {
-                // BUILD 340: Big Lifts Scorecard at the top
+                // BUILD 340: Big Lifts Scorecard at the top - Strength mode feature (PR tracking)
                 if !bigLiftsExercises.isEmpty && searchText.isEmpty {
                     bigLiftsSection
+                        .visibleIf(.prTracking)
                 }
 
                 // Section divider
                 if !bigLiftsExercises.isEmpty && searchText.isEmpty {
                     sectionDivider
+                        .visibleIf(.prTracking)
                 }
 
                 // All Exercise Progress header
@@ -215,7 +217,7 @@ struct ExerciseProgressView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                     }
                 }
@@ -806,13 +808,13 @@ struct ExerciseProgressLoadingView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.sm)
                     .background(Color(.systemBackground))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var skeletonExerciseRow: some View {
@@ -848,10 +850,9 @@ struct ExerciseProgressLoadingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
-
 
 // MARK: - Preview
 

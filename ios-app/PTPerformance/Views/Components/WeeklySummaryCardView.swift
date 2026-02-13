@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  WeeklySummaryCardView.swift
 //  PTPerformance
@@ -54,12 +55,12 @@ struct WeeklySummaryCardView: View {
                 showFullSummary = true
             }
         } label: {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.sm) {
                 // Header
                 HStack {
-                    HStack(spacing: 8) {
+                    HStack(spacing: Spacing.xs) {
                         Image(systemName: "chart.bar.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("This Week")
                             .font(.subheadline.bold())
                             .foregroundColor(.primary)
@@ -67,7 +68,7 @@ struct WeeklySummaryCardView: View {
 
                     Spacer()
 
-                    HStack(spacing: 4) {
+                    HStack(spacing: Spacing.xxs) {
                         Image(systemName: summary.performanceCategory.emoji)
                             .font(.system(size: 12))
                             .foregroundColor(summary.performanceCategory.color)
@@ -78,7 +79,7 @@ struct WeeklySummaryCardView: View {
                 }
 
                 // Quick stats row
-                HStack(spacing: 16) {
+                HStack(spacing: Spacing.md) {
                     // Workouts
                     quickStat(
                         icon: "figure.run",
@@ -126,18 +127,18 @@ struct WeeklySummaryCardView: View {
 
                         Text("View Details")
                             .font(.caption.bold())
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
 
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                     .padding(.top, 4)
                 }
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .fill(Color(.secondarySystemBackground))
             )
         }
@@ -145,8 +146,8 @@ struct WeeklySummaryCardView: View {
     }
 
     private func quickStat(icon: String, value: String, label: String, color: Color) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 4) {
+        VStack(spacing: Spacing.xxs) {
+            HStack(spacing: Spacing.xxs) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
                     .foregroundColor(color)
@@ -175,7 +176,7 @@ struct WeeklySummaryCardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemBackground))
         )
     }
@@ -199,7 +200,7 @@ struct WeeklySummaryCardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemBackground))
         )
     }
@@ -212,7 +213,7 @@ struct WeeklySummaryCardView: View {
         } label: {
             HStack {
                 Image(systemName: "chart.bar.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("View Your Weekly Summary")
                     .font(.subheadline.bold())
                     .foregroundColor(.primary)
@@ -223,7 +224,7 @@ struct WeeklySummaryCardView: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .fill(Color(.secondarySystemBackground))
             )
         }
@@ -274,7 +275,7 @@ struct WeeklySummaryInlineCard: View {
                 showFullSummary = true
             }
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 if isLoading {
                     ProgressView()
                         .scaleEffect(0.8)
@@ -301,7 +302,7 @@ struct WeeklySummaryInlineCard: View {
 
                     Text("View")
                         .font(.caption.bold())
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 } else {
                     Text("View Weekly Summary")
                         .font(.subheadline)
@@ -316,7 +317,7 @@ struct WeeklySummaryInlineCard: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: CornerRadius.sm + 2)
                     .fill(Color(.tertiarySystemBackground))
             )
         }
@@ -347,7 +348,7 @@ struct WeeklySummaryInlineCard: View {
 // MARK: - Preview
 
 #Preview("Card") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         WeeklySummaryCardView(patientId: UUID())
         WeeklySummaryInlineCard(patientId: UUID())
     }

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  NotificationSettingsView.swift
 //  PTPerformance
@@ -89,15 +90,15 @@ struct NotificationSettingsView: View {
         .task {
             await loadData()
         }
-        .onChange(of: smartTimingEnabled) { _, newValue in
+        .onChange(of: smartTimingEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
-        .onChange(of: streakAlertsEnabled) { _, newValue in
+        .onChange(of: streakAlertsEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
-        .onChange(of: weeklySummaryEnabled) { _, newValue in
+        .onChange(of: weeklySummaryEnabled) { _, _ in
             HapticFeedback.toggle()
             saveSettings()
         }
@@ -122,7 +123,7 @@ struct NotificationSettingsView: View {
         Section {
             HStack {
                 Image(systemName: hasPermission ? "bell.badge.fill" : "bell.slash.fill")
-                    .foregroundColor(hasPermission ? .green : .red)
+                    .foregroundColor(hasPermission ? DesignTokens.statusSuccess : DesignTokens.statusError)
                     .font(.title2)
                     .frame(width: 32)
                     .accessibilityHidden(true)
@@ -314,7 +315,7 @@ struct NotificationSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "doc.text.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.statusInfo)
                 Text("Prescription Notifications")
             }
         } footer: {
@@ -384,7 +385,7 @@ struct NotificationSettingsView: View {
                 .frame(width: 36, height: 36)
                 .background(confidenceColor(pattern.confidenceScore).opacity(0.15))
                 .foregroundColor(confidenceColor(pattern.confidenceScore))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
@@ -410,7 +411,7 @@ struct NotificationSettingsView: View {
                         .padding(.vertical, 2)
                         .background(confidenceColor(pattern.confidenceScore).opacity(0.1))
                         .foregroundColor(confidenceColor(pattern.confidenceScore))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
         }
@@ -617,12 +618,12 @@ struct NotificationSettingsView: View {
     }
 
     private func confidenceColor(_ confidence: Double?) -> Color {
-        guard let confidence = confidence else { return .gray }
+        guard let confidence = confidence else { return Color(.secondaryLabel) }
         switch confidence {
-        case 0..<0.3: return .orange
-        case 0.3..<0.6: return .yellow
-        case 0.6..<0.8: return .green
-        default: return .blue
+        case 0..<0.3: return DesignTokens.statusWarning
+        case 0.3..<0.6: return DesignTokens.statusWarning.opacity(0.8)
+        case 0.6..<0.8: return DesignTokens.statusSuccess
+        default: return DesignTokens.statusInfo
         }
     }
 }

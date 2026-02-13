@@ -262,9 +262,9 @@ extension Color {
     var isLight: Bool {
         guard let components = UIColor(self).cgColor.components else { return true }
 
-        let red = components[0]
-        let green = components.count > 1 ? components[1] : components[0]
-        let blue = components.count > 2 ? components[2] : components[0]
+        guard let red = components.first else { return true }
+        let green = components.count > 1 ? components[1] : red
+        let blue = components.count > 2 ? components[2] : red
 
         // Calculate relative luminance using sRGB formula
         let luminance = 0.299 * red + 0.587 * green + 0.114 * blue

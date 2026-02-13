@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  SyncStatusIndicator.swift
 //  PTPerformance
@@ -25,23 +26,35 @@ struct SyncStatusIndicator: View {
             } label: {
                 statusBadge
             }
+            .accessibilityLabel(accessibilityLabel)
+            .accessibilityHint("Shows sync status details")
             .sheet(isPresented: $showDetails) {
                 SyncStatusDetailView()
             }
         }
     }
 
+    private var accessibilityLabel: String {
+        if pendingQueue.isSyncing {
+            return "Syncing changes"
+        } else if pendingQueue.hasFailedChanges {
+            return "Sync issue detected"
+        } else {
+            return "\(pendingQueue.pendingCount) changes pending sync"
+        }
+    }
+
     private var statusBadge: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Spacing.xs - 2) {
             statusIcon
             statusText
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs - 2)
         .background(backgroundColor)
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .stroke(borderColor, lineWidth: 1)
         )
     }
@@ -57,7 +70,7 @@ struct SyncStatusIndicator: View {
                     .font(.caption)
             } else {
                 Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .font(.caption)
                     .rotationEffect(.degrees(isAnimating ? 360 : 0))
                     .onAppear {
@@ -88,23 +101,23 @@ struct SyncStatusIndicator: View {
 
     private var backgroundColor: Color {
         if pendingQueue.hasFailedChanges {
-            return Color.orange.opacity(0.1)
+            return Color(.systemOrange).opacity(0.15)
         }
-        return Color.blue.opacity(0.1)
+        return Color.modusCyan.opacity(0.15)
     }
 
     private var borderColor: Color {
         if pendingQueue.hasFailedChanges {
-            return Color.orange.opacity(0.3)
+            return Color(.systemOrange).opacity(0.3)
         }
-        return Color.blue.opacity(0.3)
+        return Color.modusCyan.opacity(0.3)
     }
 
     private var textColor: Color {
         if pendingQueue.hasFailedChanges {
-            return .orange
+            return Color(.systemOrange)
         }
-        return .blue
+        return .modusCyan
     }
 }
 
@@ -209,6 +222,8 @@ struct SyncStatusDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityLabel("Done")
+                    .accessibilityHint("Closes sync status details")
                 }
             }
         }
@@ -254,7 +269,7 @@ struct SyncStatusDetailView: View {
                     .foregroundColor(.orange)
             } else if pendingQueue.hasPendingChanges {
                 Image(systemName: "arrow.triangle.2.circlepath")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             } else {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
@@ -271,7 +286,7 @@ struct SyncStatusDetailView: View {
     private func changeTypeRow(type: PendingChangeType, count: Int) -> some View {
         HStack {
             Image(systemName: iconForType(type))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 24)
 
             Text(labelForType(type))
@@ -333,9 +348,9 @@ struct CompactSyncBadge: View {
 
     private var badgeColor: Color {
         if pendingQueue.hasFailedChanges {
-            return .orange
+            return Color(.systemOrange)
         }
-        return .blue
+        return .modusCyan
     }
 }
 

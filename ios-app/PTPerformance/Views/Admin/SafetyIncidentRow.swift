@@ -61,7 +61,7 @@ struct SafetyIncidentRow: View {
             }
             .padding()
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(severityBorderColor, lineWidth: incident.isHighSeverity ? 2 : 1)
@@ -87,7 +87,7 @@ struct SafetyIncidentRow: View {
         .frame(width: 60)
         .padding(.vertical, 8)
         .background(severityColor.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Status Badge
@@ -104,7 +104,7 @@ struct SafetyIncidentRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(statusColor.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Escalation Badge
@@ -121,7 +121,7 @@ struct SafetyIncidentRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.purple.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Quick Actions
@@ -263,7 +263,7 @@ struct CompactSafetyIncidentRow: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -369,9 +369,9 @@ struct SafetyIncidentCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(severityColor.opacity(incident.isHighSeverity ? 0.5 : 0.2), lineWidth: incident.isHighSeverity ? 2 : 1)
         )
     }
@@ -397,7 +397,7 @@ struct SafetyIncidentCard: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(statusColor.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var statusColor: Color {

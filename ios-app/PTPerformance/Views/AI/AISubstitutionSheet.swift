@@ -91,7 +91,7 @@ struct AISubstitutionSheet: View {
                             .padding()
                             .background(Color.green)
                             .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                         .disabled(isApplying)
                         .padding(.horizontal)
@@ -161,7 +161,7 @@ struct AISubstitutionSheet: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(substitutionService.isLoading)
                     .padding()
@@ -252,7 +252,7 @@ struct ReasonButton: View {
             }
             .padding()
             .background(reason == value ? Color.blue.opacity(0.1) : Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(reason == value ? Color.blue : Color.clear, lineWidth: 2)
@@ -353,12 +353,12 @@ struct SubstitutionCard: View {
                 .padding(.vertical, 10)
                 .background(Color.blue.opacity(0.1))
                 .foregroundColor(.blue)
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .sheet(isPresented: $showingDetail) {
             ExerciseDetailSheet(substitution: substitution)
         }

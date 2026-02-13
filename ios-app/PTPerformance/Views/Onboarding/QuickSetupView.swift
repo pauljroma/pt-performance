@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  QuickSetupView.swift
 //  PTPerformance
@@ -84,7 +85,7 @@ struct QuickSetupView: View {
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                     }
 
@@ -109,7 +110,7 @@ struct QuickSetupView: View {
                         .frame(height: 50)
                         .frame(maxWidth: .infinity)
                         .background(viewModel.canContinue ? Color.modusCyan : Color.gray)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(!viewModel.canContinue || viewModel.isLoading)
                 }
@@ -152,12 +153,12 @@ struct QuickSetupProgressView: View {
                     Rectangle()
                         .fill(Color(.systemGray5))
                         .frame(height: 4)
-                        .cornerRadius(2)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
                         .fill(Color.modusCyan)
                         .frame(width: geometry.size.width * progress, height: 4)
-                        .cornerRadius(2)
+                        .cornerRadius(CornerRadius.xs)
                         .animation(.easeInOut(duration: 0.3), value: progress)
                 }
             }
@@ -286,7 +287,7 @@ struct ModeCard: View {
                     .foregroundColor(isSelected ? .white : .modusCyan)
                     .frame(width: 60, height: 60)
                     .background(isSelected ? Color.modusCyan : Color.modusCyan.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                 // Text
                 VStack(alignment: .leading, spacing: 4) {
@@ -315,7 +316,7 @@ struct ModeCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
@@ -387,7 +388,7 @@ struct GoalCard: View {
                     .foregroundColor(isSelected ? .white : goal.color)
                     .frame(width: 48, height: 48)
                     .background(isSelected ? goal.color : goal.color.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Text
                 VStack(alignment: .leading, spacing: 2) {
@@ -409,7 +410,7 @@ struct GoalCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2)
@@ -565,7 +566,7 @@ struct ReadinessSlider: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -608,7 +609,7 @@ struct TherapistLinkStepView: View {
                         .multilineTextAlignment(.center)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                         .autocapitalization(.allCharacters)
                         .disableAutocorrection(true)
 

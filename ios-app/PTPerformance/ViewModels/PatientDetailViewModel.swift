@@ -39,15 +39,14 @@ class PatientDetailViewModel: ObservableObject {
         adherenceError = nil
         recentSessionsError = nil
 
-        #if DEBUG
-        print("📊 [PatientDetail] Starting data fetch for patient: \(patientId)")
-        #endif
+        DebugLogger.shared.log("[PatientDetail] Starting data fetch for patient: \(patientId)", level: .diagnostic)
 
-        // Fetch each section independently - failures are isolated
-        await fetchFlagsSection(patientId: patientId)
-        await fetchPainTrendSection(patientId: patientId)
-        await fetchAdherenceSection(patientId: patientId)
-        await fetchRecentSessionsSection(patientId: patientId)
+        // Fetch each section in parallel - failures are isolated
+        async let flags: Void = fetchFlagsSection(patientId: patientId)
+        async let pain: Void = fetchPainTrendSection(patientId: patientId)
+        async let adherence: Void = fetchAdherenceSection(patientId: patientId)
+        async let sessions: Void = fetchRecentSessionsSection(patientId: patientId)
+        _ = await (flags, pain, adherence, sessions)
 
         // Check if all sections failed
         let allFailed = flagsError != nil && painTrendError != nil && adherenceError != nil && recentSessionsError != nil
@@ -56,9 +55,7 @@ class PatientDetailViewModel: ObservableObject {
         }
 
         isLoading = false
-        #if DEBUG
-        print("✅ [PatientDetail] Data fetch complete")
-        #endif
+        DebugLogger.shared.log("[PatientDetail] Data fetch complete", level: .success)
     }
 
     // MARK: - Individual Section Fetchers
@@ -66,9 +63,7 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchFlagsSection(patientId: String) async {
         do {
             flags = try await fetchFlags(patientId: patientId)
-            #if DEBUG
-            print("✅ [PatientDetail] Loaded \(flags.count) flags")
-            #endif
+            DebugLogger.shared.log("[PatientDetail] Loaded \(flags.count) flags", level: .success)
         } catch {
             DebugLogger.shared.error("PatientDetailViewModel", "Flags error: \(error.localizedDescription)")
             flagsError = "Unable to load flags"
@@ -79,9 +74,7 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchPainTrendSection(patientId: String) async {
         do {
             painTrend = try await analyticsService.fetchPainTrend(patientId: patientId, days: 14)
-            #if DEBUG
-            print("✅ [PatientDetail] Loaded pain trend (\(painTrend.count) points)")
-            #endif
+            DebugLogger.shared.log("[PatientDetail] Loaded pain trend (\(painTrend.count) points)", level: .success)
         } catch {
             DebugLogger.shared.error("PatientDetailViewModel", "Pain trend error: \(error.localizedDescription)")
             painTrendError = "Unable to load pain trend"
@@ -92,9 +85,7 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchAdherenceSection(patientId: String) async {
         do {
             adherence = try await analyticsService.fetchAdherence(patientId: patientId, days: 30)
-            #if DEBUG
-            print("✅ [PatientDetail] Loaded adherence data")
-            #endif
+            DebugLogger.shared.log("[PatientDetail] Loaded adherence data", level: .success)
         } catch {
             DebugLogger.shared.error("PatientDetailViewModel", "Adherence error: \(error.localizedDescription)")
             adherenceError = "Unable to load adherence"
@@ -105,9 +96,7 @@ class PatientDetailViewModel: ObservableObject {
     private func fetchRecentSessionsSection(patientId: String) async {
         do {
             recentSessions = try await analyticsService.fetchRecentSessions(patientId: patientId, limit: 5)
-            #if DEBUG
-            print("✅ [PatientDetail] Loaded \(recentSessions.count) recent sessions")
-            #endif
+            DebugLogger.shared.log("[PatientDetail] Loaded \(recentSessions.count) recent sessions", level: .success)
         } catch {
             DebugLogger.shared.error("PatientDetailViewModel", "Recent sessions error: \(error.localizedDescription)")
             recentSessionsError = "Unable to load recent sessions"

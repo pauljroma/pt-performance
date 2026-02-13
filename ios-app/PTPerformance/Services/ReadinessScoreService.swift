@@ -489,7 +489,7 @@ final class ReadinessScoreService: ObservableObject {
             }
         } catch {
             // Silently handle - biomarkers are optional
-            DebugLogger.shared.debug("ReadinessScoreService", "No biomarker data available")
+            DebugLogger.shared.log("ReadinessScoreService", "No biomarker data available")
         }
 
         return nil
@@ -684,7 +684,7 @@ final class ReadinessScoreService: ObservableObject {
                 .execute()
         } catch {
             // Silently handle - persistence is nice to have
-            DebugLogger.shared.debug("ReadinessScoreService", "Could not persist score: \(error.localizedDescription)")
+            DebugLogger.shared.log("ReadinessScoreService", "Could not persist score: \(error.localizedDescription)")
         }
     }
 
@@ -739,7 +739,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.debug("ReadinessScoreService", "No sleep check-in data")
+            DebugLogger.shared.log("ReadinessScoreService", "No sleep check-in data")
         }
 
         return nil
@@ -776,7 +776,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.debug("ReadinessScoreService", "No stress check-in data")
+            DebugLogger.shared.log("ReadinessScoreService", "No stress check-in data")
         }
 
         return nil
@@ -813,7 +813,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.debug("ReadinessScoreService", "No soreness check-in data")
+            DebugLogger.shared.log("ReadinessScoreService", "No soreness check-in data")
         }
 
         return nil

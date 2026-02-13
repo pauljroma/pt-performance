@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ProgramWorkoutScheduleView.swift
 //  PTPerformance
@@ -179,7 +180,7 @@ struct ProgramWorkoutScheduleView: View {
             .foregroundColor(.secondary)
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -252,7 +253,7 @@ private struct WeekSection: View {
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(Color.blue)
-                                    .cornerRadius(4)
+                                    .cornerRadius(CornerRadius.xs)
                             }
                         }
 
@@ -271,7 +272,7 @@ private struct WeekSection: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
             }
             .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(week.workoutCount) \(week.workoutCount == 1 ? "workout" : "workouts")")
             .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand") week details")
@@ -344,7 +345,7 @@ private struct WorkoutCard: View {
                 .foregroundColor(categoryColor)
                 .frame(width: 44, height: 44)
                 .background(categoryColor.opacity(0.15))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
                 .accessibilityHidden(true)
 
             // Workout Info
@@ -378,7 +379,7 @@ private struct WorkoutCard: View {
         }
         .padding(12)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -484,7 +485,7 @@ struct WorkoutStartSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
-                    .cornerRadius(14)
+                    .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(workout.name) workout")
                 .accessibilityHint("Begins the workout session")
@@ -670,7 +671,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
 
                 // Start button
@@ -691,7 +692,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
-                    .cornerRadius(14)
+                    .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(template.name) workout")
                 .accessibilityHint("Begins the workout session with \(template.exerciseCount) exercises")
@@ -915,7 +916,7 @@ private struct PhaseSection: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .buttonStyle(.plain)
 
@@ -991,7 +992,7 @@ private struct SessionCard: View {
             }
             .padding(12)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
 
             // Exercises
             if showExercises {
@@ -1051,7 +1052,7 @@ private struct PhaseExerciseRow: View {
         }
         .padding(10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -1120,7 +1121,7 @@ struct PhaseSessionStartSheet: View {
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                             }
                             if session.exercises.count > 5 {
                                 Text("+ \(session.exercises.count - 5) more")
@@ -1149,7 +1150,7 @@ struct PhaseSessionStartSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.blue)
-                    .cornerRadius(14)
+                    .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(session.session.name) workout")
                 .accessibilityHint("Begins the workout session with \(session.exercises.count) exercises")

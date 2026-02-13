@@ -105,12 +105,14 @@ struct StreakCardView: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .fill(Color(.secondarySystemGroupedBackground))
                     .adaptiveShadow(Shadow.subtle)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Current streak \(viewModel.currentStreak) days, \(viewModel.motivationalMessage)")
         .task {
             await viewModel.loadData()
         }
@@ -131,12 +133,13 @@ struct StreakIndicator: View {
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+        .accessibilityLabel("Streak \(currentStreak) days\(isAtRisk ? ", at risk" : "")")
     }
 }
 

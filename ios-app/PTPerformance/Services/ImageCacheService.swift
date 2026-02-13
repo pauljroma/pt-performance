@@ -37,9 +37,7 @@ class ImageCacheService: ObservableObject {
             cacheDirectory = cachesDirectory.appendingPathComponent("ImageCache", isDirectory: true)
         } else {
             // Fallback to temp directory - this should never happen on iOS but handles edge cases gracefully
-            #if DEBUG
-            print("ImageCacheService: Unable to access caches directory, using temp directory")
-            #endif
+            DebugLogger.shared.log("[ImageCacheService] Unable to access caches directory, using temp directory", level: .warning)
             cacheDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("ImageCache", isDirectory: true)
         }
 
@@ -62,6 +60,11 @@ class ImageCacheService: ObservableObject {
         Task(priority: .utility) { [weak self] in
             await self?.cleanupOldCache()
         }
+    }
+
+    deinit {
+        // Remove observer to prevent memory leak
+        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Public API
@@ -305,7 +308,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         do {
             image = try await ImageCacheService.shared.loadImage(from: url)
         } catch {
-            print("Failed to load image: \(error)")
+            DebugLogger.shared.log("[CachedAsyncImage] Failed to load image: \(error.localizedDescription)", level: .warning)
         }
 
         isLoading = false

@@ -551,7 +551,7 @@ struct ArmCareCategoryChip: View {
             .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title) category")

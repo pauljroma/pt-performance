@@ -46,7 +46,7 @@ struct VisualWorkoutGrid: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Empty State
@@ -243,7 +243,7 @@ struct CompactWorkoutGrid: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(phase.name.isEmpty ? "Phase \(phaseNumber)" : phase.name), \(phase.durationWeeks) weeks, \(phase.workoutAssignments.count) workouts, \(String(format: "%.1f", workoutsPerWeek)) per week average")
     }
@@ -411,12 +411,12 @@ struct VisualWorkoutGrid_Previews: PreviewProvider {
                 CompactWorkoutGrid(phases: samplePhases)
                     .padding()
                     .background(Color(.systemBackground))
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
 
                 WeekSummaryGrid(phases: samplePhases)
                     .padding()
                     .background(Color(.systemBackground))
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
             }
             .padding()
         }

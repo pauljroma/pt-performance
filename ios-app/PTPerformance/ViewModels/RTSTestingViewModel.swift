@@ -226,13 +226,12 @@ class RTSTestingViewModel: ObservableObject {
     // MARK: - Initialization
 
     init() {
-        #if DEBUG
-        print("[RTSTestingVM] Initialized")
-        #endif
+        DebugLogger.shared.log("[RTSTestingVM] Initialized", level: .diagnostic)
     }
 
     deinit {
         messageClearTask?.cancel()
+        cancellables.removeAll()
     }
 
     // MARK: - Data Loading
@@ -246,9 +245,7 @@ class RTSTestingViewModel: ObservableObject {
         do {
             criteria = try await service.fetchCriteria(phaseId: phaseId)
 
-            #if DEBUG
-            print("[RTSTestingVM] Loaded \(criteria.count) criteria for phase")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Loaded \(criteria.count) criteria for phase", level: .success)
         } catch {
             handleError(error, context: "loading criteria")
         }
@@ -278,9 +275,7 @@ class RTSTestingViewModel: ObservableObject {
             criteria = fetchedCriteria
             testResults = latestResults
 
-            #if DEBUG
-            print("[RTSTestingVM] Loaded \(criteria.count) criteria with \(latestResults.count) results")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Loaded \(criteria.count) criteria with \(latestResults.count) results", level: .success)
         } catch {
             handleError(error, context: "loading criteria and results")
         }
@@ -304,9 +299,7 @@ class RTSTestingViewModel: ObservableObject {
                 criteria[index].latestResult = testResults[criteria[index].id]
             }
 
-            #if DEBUG
-            print("[RTSTestingVM] Loaded \(results.count) test results")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Loaded \(results.count) test results", level: .success)
         } catch {
             DebugLogger.shared.error("RTSTestingViewModel", "Failed to load test results: \(error.localizedDescription)")
         }
@@ -322,9 +315,7 @@ class RTSTestingViewModel: ObservableObject {
         do {
             advancements = try await service.fetchAdvancements(protocolId: protocolId)
 
-            #if DEBUG
-            print("[RTSTestingVM] Loaded \(advancements.count) advancements")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Loaded \(advancements.count) advancements", level: .success)
         } catch {
             DebugLogger.shared.error("RTSTestingViewModel", "Failed to load advancements: \(error.localizedDescription)")
         }
@@ -375,9 +366,7 @@ class RTSTestingViewModel: ObservableObject {
             let passedText = result.passed ? "PASSED" : "NOT PASSED"
             showSuccessMessage("Test recorded: \(passedText)")
 
-            #if DEBUG
-            print("[RTSTestingVM] Recorded test for criterion \(criterionId): \(value) \(unit), passed: \(result.passed)")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Recorded test for criterion \(criterionId): \(value) \(unit), passed: \(result.passed)", level: .success)
 
             // Clear the form
             testValue = ""
@@ -461,9 +450,7 @@ class RTSTestingViewModel: ObservableObject {
 
             showSuccessMessage("Readiness score recorded: \(score.overallPercentage)")
 
-            #if DEBUG
-            print("[RTSTestingVM] Recorded readiness score: \(score.id), overall: \(score.overallScore)")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Recorded readiness score: \(score.id), overall: \(score.overallScore)", level: .success)
 
             // Reset form
             resetReadinessForm()
@@ -492,9 +479,7 @@ class RTSTestingViewModel: ObservableObject {
         )
         riskFactors.append(factor)
 
-        #if DEBUG
-        print("[RTSTestingVM] Added risk factor: \(name) (\(severity.rawValue))")
-        #endif
+        DebugLogger.shared.log("[RTSTestingVM] Added risk factor: \(name) (\(severity.rawValue))", level: .diagnostic)
     }
 
     /// Remove a risk factor from the assessment
@@ -502,9 +487,7 @@ class RTSTestingViewModel: ObservableObject {
     func removeRiskFactor(_ factor: RTSRiskFactor) {
         riskFactors.removeAll { $0.id == factor.id }
 
-        #if DEBUG
-        print("[RTSTestingVM] Removed risk factor: \(factor.name)")
-        #endif
+        DebugLogger.shared.log("[RTSTestingVM] Removed risk factor: \(factor.name)", level: .diagnostic)
     }
 
     /// Clear all risk factors
@@ -579,9 +562,7 @@ class RTSTestingViewModel: ObservableObject {
             advancements.insert(advancement, at: 0)
             showSuccessMessage("Phase advancement approved")
 
-            #if DEBUG
-            print("[RTSTestingVM] Recorded advancement: \(advancement.id)")
-            #endif
+            DebugLogger.shared.log("[RTSTestingVM] Recorded advancement: \(advancement.id)", level: .success)
 
             isSaving = false
             return true
@@ -605,9 +586,7 @@ class RTSTestingViewModel: ObservableObject {
         resetReadinessForm()
         clearMessages()
 
-        #if DEBUG
-        print("[RTSTestingVM] Reset complete")
-        #endif
+        DebugLogger.shared.log("[RTSTestingVM] Reset complete", level: .diagnostic)
     }
 
     /// Reset the readiness assessment form

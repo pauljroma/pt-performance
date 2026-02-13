@@ -422,9 +422,7 @@ class TherapistPatientSetupViewModel: ObservableObject {
                     .insert(goalInsert)
                     .execute()
             } catch {
-                #if DEBUG
-                print("⚠️ Failed to create goal: \(error)")
-                #endif
+                DebugLogger.shared.log("[TherapistPatientSetup] Failed to create goal: \(error)", level: .warning)
             }
         }
 
@@ -448,9 +446,7 @@ class TherapistPatientSetupViewModel: ObservableObject {
                     .insert(customGoal)
                     .execute()
             } catch {
-                #if DEBUG
-                print("⚠️ Failed to create custom goal: \(error)")
-                #endif
+                DebugLogger.shared.log("[TherapistPatientSetup] Failed to create custom goal: \(error)", level: .warning)
             }
         }
     }
@@ -490,9 +486,7 @@ class TherapistPatientSetupViewModel: ObservableObject {
                 .insert(noteInsert)
                 .execute()
         } catch {
-            #if DEBUG
-            print("⚠️ Failed to create therapist notes: \(error)")
-            #endif
+            DebugLogger.shared.log("[TherapistPatientSetup] Failed to create therapist notes: \(error)", level: .warning)
         }
     }
 
@@ -501,9 +495,7 @@ class TherapistPatientSetupViewModel: ObservableObject {
         let code = generateSecureCode()
 
         guard let expirationDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) else {
-            #if DEBUG
-            print("Failed to calculate expiration date for linking code")
-            #endif
+            DebugLogger.shared.log("[TherapistPatientSetup] Failed to calculate expiration date for linking code", level: .error)
             return
         }
 
@@ -521,9 +513,7 @@ class TherapistPatientSetupViewModel: ObservableObject {
 
             self.linkingCode = code
         } catch {
-            #if DEBUG
-            print("⚠️ Failed to generate linking code: \(error)")
-            #endif
+            DebugLogger.shared.log("[TherapistPatientSetup] Failed to generate linking code: \(error)", level: .warning)
             // Still show success, code can be generated later
         }
     }

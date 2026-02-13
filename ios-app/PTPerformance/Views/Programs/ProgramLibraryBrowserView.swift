@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ProgramLibraryBrowserView.swift
 //  PTPerformance
@@ -107,7 +108,7 @@ struct ProgramLibraryBrowserView: View {
         .overlay {
             if viewModel.isDuplicating {
                 ZStack {
-                    Color.black.opacity(0.3)
+                    Color(.label).opacity(0.3)
                         .ignoresSafeArea()
                     VStack(spacing: 16) {
                         ProgressView()
@@ -118,7 +119,7 @@ struct ProgramLibraryBrowserView: View {
                     }
                     .padding(24)
                     .background(Color(.systemBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                     .shadow(radius: 10)
                 }
             }
@@ -155,7 +156,7 @@ struct ProgramLibraryBrowserView: View {
         }
         .padding(10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
         .padding(.top, 8)
     }
@@ -377,7 +378,7 @@ private struct ProgramFilterChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .accessibilityLabel("\(title) filter")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
@@ -419,7 +420,7 @@ private struct BaseballCategoryChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? Color.orange : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
             .overlay(
                 // Premium indicator border
                 RoundedRectangle(cornerRadius: 20)
@@ -510,7 +511,7 @@ struct ProgramLibraryCard: View {
         }
         .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .clipped()
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
@@ -580,7 +581,7 @@ struct ProgramCategoryBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(categoryColor.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var categoryIcon: String {
@@ -628,7 +629,7 @@ struct ProgramDifficultyBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(difficultyColor.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var difficultyIcon: String {
@@ -726,7 +727,7 @@ struct ProgramPreviewSheet: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.yellow.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
 
@@ -800,7 +801,7 @@ struct ProgramPreviewSheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Equipment Section
@@ -817,7 +818,7 @@ struct ProgramPreviewSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -838,7 +839,7 @@ struct ProgramPreviewSheet: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -861,7 +862,7 @@ struct ProgramPreviewSheet: View {
                 .padding(.vertical, 16)
                 .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .accessibilityLabel("Enroll in \(program.title)")
             .accessibilityHint("Starts this program and adds workouts to your schedule")

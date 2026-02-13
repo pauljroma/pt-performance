@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  PrivacyNoticeView.swift
 //  PTPerformance
@@ -52,7 +53,7 @@ struct PrivacyNoticeView: View {
         VStack(alignment: .leading, spacing: 12) {
             Image(systemName: "hand.raised.fill")
                 .font(.system(size: 50))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text("Your Privacy Matters")
                 .font(.title)
@@ -124,9 +125,9 @@ struct PrivacyNoticeView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
             }
             .disabled(isAccepting)
 
@@ -141,7 +142,7 @@ struct PrivacyNoticeView: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 4) {

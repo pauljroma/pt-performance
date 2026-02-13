@@ -74,7 +74,7 @@ struct ExerciseProgressRow: View {
                             .padding(.vertical, 4)
                             .background(trendColor.opacity(0.2))
                             .foregroundColor(trendColor)
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                     }
 
                     // Expand indicator
@@ -98,7 +98,7 @@ struct ExerciseProgressRow: View {
             }
         }
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var trendColor: Color {

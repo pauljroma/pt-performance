@@ -135,7 +135,7 @@ struct BaseballProgramDetailView: View {
                 }
             }
             .frame(height: 140)
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
 
             // Title and badges
             VStack(alignment: .leading, spacing: 12) {
@@ -156,7 +156,7 @@ struct BaseballProgramDetailView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(program.categoryEnum.color.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
 
                     // Position badge
                     if program.positionUIEnum != .all {
@@ -171,7 +171,7 @@ struct BaseballProgramDetailView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(baseballNavy.opacity(0.15))
-                        .cornerRadius(6)
+                        .cornerRadius(CornerRadius.sm)
                     }
 
                     // Season badge
@@ -186,7 +186,7 @@ struct BaseballProgramDetailView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(program.seasonUIEnum.color.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 if program.featured {
@@ -294,7 +294,7 @@ struct BaseballProgramDetailView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -376,7 +376,7 @@ struct BaseballProgramDetailView: View {
                     )
                 )
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(isEnrolling)
             .padding()
@@ -603,7 +603,7 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

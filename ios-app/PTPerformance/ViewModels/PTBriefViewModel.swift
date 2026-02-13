@@ -303,6 +303,10 @@ final class PTBriefViewModel: ObservableObject {
         self.analyticsService = analyticsService ?? AnalyticsService(supabase: PTSupabaseClient.shared)
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Public Methods
 
     /// Load the complete brief for an athlete
@@ -367,9 +371,7 @@ final class PTBriefViewModel: ObservableObject {
         }
 
         // TODO: Persist approval to backend
-        #if DEBUG
-        print("[PTBrief] Plan approved with \(suggestedActions.filter { $0.status == .approved }.count) actions")
-        #endif
+        DebugLogger.shared.log("[PTBrief] Plan approved with \(suggestedActions.filter { $0.status == .approved }.count) actions", level: .success)
     }
 
     /// Open the protocol builder for plan adjustment
@@ -397,9 +399,7 @@ final class PTBriefViewModel: ObservableObject {
     /// Acknowledge a critical risk
     func acknowledgeRisk(_ risk: PTBriefRiskAlert) {
         // In production, this would record the acknowledgment
-        #if DEBUG
-        print("[PTBrief] Risk acknowledged: \(risk.title)")
-        #endif
+        DebugLogger.shared.log("[PTBrief] Risk acknowledged: \(risk.title)", level: .diagnostic)
         HapticFeedback.medium()
     }
 
@@ -541,8 +541,8 @@ final class PTBriefViewModel: ObservableObject {
             return []
         }
 
-        let current = checkIns[0]
-        let previous = checkIns[1]
+        guard let current = checkIns.first,
+              let previous = checkIns.dropFirst().first else { return [] }
 
         var deltas: [PTBriefDelta] = []
 
@@ -737,8 +737,8 @@ final class PTBriefViewModel: ObservableObject {
         let scores = entries.compactMap { $0.readinessScore }
         guard scores.count >= 2 else { return .stable }
 
-        let latestScore = scores[0]
-        let previousScore = scores[1]
+        guard let latestScore = scores.first,
+              let previousScore = scores.dropFirst().first else { return .stable }
         let difference = latestScore - previousScore
 
         if difference > 5 {

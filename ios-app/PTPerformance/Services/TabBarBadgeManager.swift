@@ -58,6 +58,10 @@ final class TabBarBadgeManager: ObservableObject {
         setupNotificationObservers()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Public Methods
 
     /// Sets the badge count for a specific tab

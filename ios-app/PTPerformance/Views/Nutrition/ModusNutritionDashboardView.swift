@@ -131,7 +131,7 @@ struct ModusNutritionDashboardView: View {
                     .padding()
                     .background(Color.green)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal, 32)
         }
@@ -180,7 +180,7 @@ struct ModusNutritionDashboardView: View {
                                 .padding(.vertical, 4)
                                 .background(viewModel.athleteGuidelines?.themeColor.opacity(0.2) ?? Color.blue.opacity(0.2))
                                 .foregroundColor(viewModel.athleteGuidelines?.themeColor ?? .blue)
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
 
                             Text(profile.goal.displayName)
                                 .font(.caption)
@@ -189,7 +189,7 @@ struct ModusNutritionDashboardView: View {
                                 .padding(.vertical, 4)
                                 .background(profile.goal.color.opacity(0.2))
                                 .foregroundColor(profile.goal.color)
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                     Text("Daily Target: \(viewModel.targetCalories) cal")
@@ -229,7 +229,7 @@ struct ModusNutritionDashboardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -284,7 +284,7 @@ struct ModusNutritionDashboardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -337,7 +337,7 @@ struct ModusNutritionDashboardView: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Quick Log Section
@@ -388,7 +388,7 @@ struct ModusNutritionDashboardView: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(.plain)
@@ -422,7 +422,7 @@ struct ModusNutritionDashboardView: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(.plain)
@@ -448,7 +448,7 @@ private struct MacroTargetPill: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(color.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -656,7 +656,7 @@ struct MealTimingGuideView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color.purple.opacity(0.1))
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
 
                     // Timing cards
                     ForEach(mealTimings) { timing in
@@ -721,7 +721,7 @@ struct MealTimingCard: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }

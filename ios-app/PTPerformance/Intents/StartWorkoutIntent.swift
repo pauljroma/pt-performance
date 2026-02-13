@@ -24,7 +24,7 @@ struct StartWorkoutIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog & OpensIntent {
         // Log the Siri intent action
-        print("[StartWorkoutIntent] Starting workout via Siri")
+        DebugLogger.shared.log("[StartWorkoutIntent] Starting workout via Siri", level: .diagnostic)
 
         // Check if user has an active session flag
         // Note: We use UserDefaults here because SecureStore is not available in App Intents context

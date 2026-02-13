@@ -279,7 +279,7 @@ struct TrendAnalysisView: View {
                                 .foregroundColor(.green)
                                 .padding(2)
                                 .background(Color.green.opacity(0.1))
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
                 }
                 .chartYScale(domain: calculateYDomain(for: analysis))
@@ -309,7 +309,7 @@ struct TrendAnalysisView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -339,7 +339,7 @@ struct TrendAnalysisView: View {
         }
         .padding()
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Period Highlights
@@ -404,7 +404,7 @@ struct TrendAnalysisView: View {
             .padding()
             .background(Color(.secondarySystemBackground))
             .foregroundColor(.primary)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .sheet(isPresented: $viewModel.showExportSheet) {
             if let exportData = viewModel.exportData {
@@ -531,7 +531,7 @@ private struct MetricChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? metric.color : Color(.secondarySystemBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .accessibilityLabel(metric.displayName)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -590,7 +590,7 @@ private struct PeriodCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value) \(unit) on \(date.formatted(date: .abbreviated, time: .omitted))")
     }
@@ -613,7 +613,7 @@ private struct InsightRow: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Insight: \(insight)")
     }

@@ -380,9 +380,8 @@ struct UpdateSessionInput: Codable {
     }
 }
 
-
 #Preview {
-    NavigationView {
+    NavigationStack {
         EditSessionView(
             viewModel: ProgramEditorViewModel(
                 patientId: UUID(),

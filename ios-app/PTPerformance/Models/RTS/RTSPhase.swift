@@ -173,7 +173,7 @@ struct RTSPhaseInput: Codable {
         guard let number = phaseNumber, number > 0 else {
             throw RTSPhaseError.invalidInput("Valid phase number is required")
         }
-        guard phaseName != nil && !phaseName!.isEmpty else {
+        guard let phaseName = phaseName, !phaseName.isEmpty else {
             throw RTSPhaseError.invalidInput("Phase name is required")
         }
         guard activityLevel != nil else {

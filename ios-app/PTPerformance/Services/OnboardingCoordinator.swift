@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Manages the onboarding flow state and persistence
+@MainActor
 final class OnboardingCoordinator: ObservableObject {
     static let shared = OnboardingCoordinator()
 

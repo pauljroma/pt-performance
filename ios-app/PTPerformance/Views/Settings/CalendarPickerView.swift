@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  CalendarPickerView.swift
 //  PTPerformance
@@ -169,7 +170,7 @@ struct CalendarPickerView: View {
 
                 if selectedCalendarId == calendar.id {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(DesignTokens.statusInfo)
                         .fontWeight(.semibold)
                         .accessibilityHidden(true)
                 }
@@ -208,7 +209,7 @@ struct CalendarPickerView: View {
 
                 if selectedCalendarIds.contains(calendar.id) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(DesignTokens.statusInfo)
                         .accessibilityHidden(true)
                 } else {
                     Image(systemName: "circle")
@@ -271,7 +272,7 @@ struct CalendarRowView: View {
 
                 if isSelected {
                     Image(systemName: "checkmark")
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(DesignTokens.statusInfo)
                         .fontWeight(.semibold)
                         .accessibilityHidden(true)
                 }

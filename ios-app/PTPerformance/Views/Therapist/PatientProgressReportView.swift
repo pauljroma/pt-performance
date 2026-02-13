@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  PatientProgressReportView.swift
 //  PTPerformance
@@ -8,6 +9,23 @@
 
 import SwiftUI
 import Charts
+
+// MARK: - Static Formatters
+
+private enum ReportFormatters {
+    static let mediumDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
+
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+}
 
 // MARK: - Date Range Options
 
@@ -275,10 +293,7 @@ class PatientProgressReportViewModel: ObservableObject {
     }
 
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: date)
+        ReportFormatters.mediumDate.string(from: date)
     }
 
     private func formatVolume(_ volume: Double) -> String {
@@ -751,7 +766,7 @@ struct TrendBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(trendColor.opacity(0.15))
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 
     private var trendIcon: String {
@@ -782,7 +797,7 @@ struct MilestoneRow: View {
                 .foregroundColor(milestone.color)
                 .frame(width: 32, height: 32)
                 .background(milestone.color.opacity(0.15))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(milestone.title)
@@ -805,9 +820,7 @@ struct MilestoneRow: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        ReportFormatters.shortDate.string(from: date)
     }
 }
 
@@ -842,9 +855,7 @@ struct NoteRow: View {
     }
 
     private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        ReportFormatters.shortDate.string(from: date)
     }
 }
 
@@ -866,7 +877,7 @@ struct ShareSheet: UIViewControllerRepresentable {
 #if DEBUG
 struct PatientProgressReportView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             PatientProgressReportView(patient: Patient(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
                 therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,

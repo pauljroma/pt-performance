@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  X2NotificationSettingsView.swift
 //  PTPerformance
@@ -154,13 +155,13 @@ struct X2NotificationSettingsView: View {
     private var permissionColor: Color {
         switch viewModel.authorizationStatus {
         case .authorized, .provisional:
-            return .green
+            return DesignTokens.statusSuccess
         case .denied:
-            return .red
+            return DesignTokens.statusError
         case .notDetermined, .ephemeral:
-            return .orange
+            return DesignTokens.statusWarning
         @unknown default:
-            return .gray
+            return Color(.secondaryLabel)
         }
     }
 
@@ -217,7 +218,7 @@ struct X2NotificationSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "checkmark.message.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.statusInfo)
                 Text("Daily Check-In")
             }
         }
@@ -240,7 +241,7 @@ struct X2NotificationSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "checklist")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                 Text("Task Notifications")
             }
         } footer: {
@@ -256,7 +257,7 @@ struct X2NotificationSettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Image(systemName: "flame.fill")
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
                             .frame(width: 20)
                         Text("Streak Milestones")
                     }
@@ -305,7 +306,7 @@ struct X2NotificationSettingsView: View {
         } header: {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.red)
+                    .foregroundColor(DesignTokens.statusError)
                 Text("Therapist Alerts")
             }
         } footer: {
@@ -324,12 +325,12 @@ struct X2NotificationSettingsView: View {
             } label: {
                 HStack {
                     Image(systemName: "bell.and.waveform")
-                        .foregroundColor(.blue)
+                        .foregroundColor(DesignTokens.statusInfo)
                     Text("Send Test Notification")
                     Spacer()
                     if viewModel.testNotificationSent {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
                     }
                 }
             }

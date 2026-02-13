@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Stat for top supplement tracking
 struct SupplementStat: Identifiable {
-    let id = UUID()
+    var id: String { "\(supplement.id)-\(count)" }
     let supplement: RoutineSupplement
     let count: Int
 }
@@ -17,8 +17,12 @@ final class SupplementHistoryViewModel: ObservableObject {
     @Published var recentLogs: [SupplementLogEntry] = []
     @Published var isLoading = false
     @Published var error: String?
+    @Published var hasNoHistory = false
 
     private let service = SupplementService.shared
+
+    /// Compliance threshold for considering a day "complete" (80%)
+    private let complianceThreshold = 0.8
 
     // MARK: - Computed Properties
 
@@ -77,6 +81,7 @@ final class SupplementHistoryViewModel: ObservableObject {
     func loadHistory(for month: Date = Date()) async {
         isLoading = true
         error = nil
+        hasNoHistory = false
 
         do {
             let calendar = Calendar.current
@@ -86,26 +91,57 @@ final class SupplementHistoryViewModel: ObservableObject {
                 return
             }
 
+            // Fetch routines to determine planned supplements per day
+            await service.fetchRoutines()
+            let routines = service.routines.filter { $0.isActive }
+
             // Fetch logs for the month
             let logs = try await service.fetchLogHistory(days: 60)
             recentLogs = logs
 
+            // Check if there's any history at all
+            hasNoHistory = logs.isEmpty && routines.isEmpty
+
             // Group by day
             var newDayData: [Date: SupplementDayData] = [:]
+            let today = calendar.startOfDay(for: Date())
+
             for day in 1...range.count {
                 if let date = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) {
+                    let dayStart = calendar.startOfDay(for: date)
+
+                    // Don't create data for future dates
+                    if dayStart > today {
+                        continue
+                    }
+
                     let dayLogs = logs.filter { calendar.isDate($0.takenAt, inSameDayAs: date) }
                     let taken = dayLogs.filter { !$0.skipped }.count
-                    let planned = max(taken, 5) // Estimate planned
-                    let rate = planned > 0 ? Double(taken) / Double(planned) : 0
 
-                    newDayData[date] = SupplementDayData(
-                        date: date,
-                        logs: dayLogs,
-                        complianceRate: rate,
-                        totalPlanned: planned,
-                        totalTaken: taken
-                    )
+                    // Calculate planned count based on active routines for this day
+                    let planned = calculatePlannedCount(for: date, routines: routines, calendar: calendar)
+
+                    // Calculate compliance rate
+                    let rate: Double
+                    if planned > 0 {
+                        rate = min(Double(taken) / Double(planned), 1.0) // Cap at 100%
+                    } else if taken > 0 {
+                        // User logged supplements but has no routines - count as complete
+                        rate = 1.0
+                    } else {
+                        rate = 0.0
+                    }
+
+                    // Only add day data if there were logs or planned supplements
+                    if !dayLogs.isEmpty || planned > 0 {
+                        newDayData[dayStart] = SupplementDayData(
+                            date: dayStart,
+                            logs: dayLogs,
+                            complianceRate: rate,
+                            totalPlanned: planned,
+                            totalTaken: taken
+                        )
+                    }
                 }
             }
             dayData = newDayData
@@ -120,42 +156,121 @@ final class SupplementHistoryViewModel: ObservableObject {
         isLoading = false
     }
 
+    /// Calculates the number of planned supplements for a given date based on routines
+    private func calculatePlannedCount(for date: Date, routines: [SupplementRoutine], calendar: Calendar) -> Int {
+        let weekday = calendar.component(.weekday, from: date) - 1 // Convert to 0-indexed (Sunday = 0)
+
+        var count = 0
+
+        for routine in routines {
+            // Skip routines that started after this date
+            if routine.startDate > date {
+                continue
+            }
+
+            // Skip routines that ended before this date
+            if let endDate = routine.endDate, endDate < date {
+                continue
+            }
+
+            // Check if this routine is scheduled for this day based on frequency
+            let isScheduled: Bool
+            switch routine.frequency {
+            case .daily:
+                isScheduled = true
+            case .twiceDaily:
+                isScheduled = true
+                count += 1 // Add extra dose for twice daily
+            case .threeTimesDaily:
+                isScheduled = true
+                count += 2 // Add extra doses for three times daily
+            case .weekly:
+                // Assume weekly means once per week, on the first day
+                isScheduled = weekday == 0
+            case .trainingDaysOnly:
+                // For training days, assume weekdays (Mon-Fri) are training days
+                isScheduled = weekday >= 1 && weekday <= 5
+            case .asNeeded:
+                // As needed supplements don't count toward planned
+                isScheduled = false
+            }
+
+            if isScheduled {
+                count += 1
+            }
+        }
+
+        return count
+    }
+
     private func calculateStreaks() {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
-        // Get sorted dates with > 80% compliance
+        // Get sorted dates with compliance >= threshold (80%)
+        // Only consider days that had planned supplements
         let completeDates = dayData.values
-            .filter { $0.complianceRate >= 0.8 }
+            .filter { $0.complianceRate >= complianceThreshold && $0.totalPlanned > 0 }
             .map { calendar.startOfDay(for: $0.date) }
             .sorted()
 
         totalCompleteDays = completeDates.count
 
-        // Current streak (count back from today)
+        // Guard against empty data
+        guard !completeDates.isEmpty else {
+            currentStreak = 0
+            bestStreak = 0
+            return
+        }
+
+        // Current streak (count back from today or yesterday)
+        // Allow for the current day to not be complete yet
         var current = 0
         var checkDate = today
+
+        // If today doesn't have data yet or isn't complete, start from yesterday
+        if !completeDates.contains(checkDate) {
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
+                currentStreak = 0
+                bestStreak = calculateBestStreak(from: completeDates, calendar: calendar)
+                return
+            }
+            checkDate = yesterday
+        }
+
+        // Count consecutive days backward
         while completeDates.contains(checkDate) {
             current += 1
-            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else {
+                break
+            }
+            checkDate = previousDay
         }
         currentStreak = current
 
-        // Best streak
-        var best = 0
-        var tempStreak = 0
-        var lastDate: Date?
-        for date in completeDates {
-            if let last = lastDate,
-               let dayAfter = calendar.date(byAdding: .day, value: 1, to: last),
-               calendar.isDate(date, inSameDayAs: dayAfter) {
+        // Calculate best streak
+        bestStreak = calculateBestStreak(from: completeDates, calendar: calendar)
+    }
+
+    /// Calculates the longest streak from a sorted array of dates
+    private func calculateBestStreak(from dates: [Date], calendar: Calendar) -> Int {
+        guard !dates.isEmpty else { return 0 }
+
+        var best = 1
+        var tempStreak = 1
+        var lastDate = dates[0]
+
+        for date in dates.dropFirst() {
+            if let expectedNextDay = calendar.date(byAdding: .day, value: 1, to: lastDate),
+               calendar.isDate(date, inSameDayAs: expectedNextDay) {
                 tempStreak += 1
+                best = max(best, tempStreak)
             } else {
                 tempStreak = 1
             }
-            best = max(best, tempStreak)
             lastDate = date
         }
-        bestStreak = best
+
+        return best
     }
 }

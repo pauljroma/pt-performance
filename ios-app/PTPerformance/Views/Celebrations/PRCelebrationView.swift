@@ -340,7 +340,7 @@ struct PRBadgeView: View {
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
                             .background(Color.green)
-                            .cornerRadius(2)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 

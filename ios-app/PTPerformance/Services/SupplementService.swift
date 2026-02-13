@@ -44,57 +44,71 @@ final class SupplementService: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     private let edgeFunctionUrl = "ai-supplement-recommendation"
 
+    /// Demo patient UUID for unauthenticated users
+    private let demoPatientId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
+    /// Maximum retry attempts for transient network failures
+    private let maxRetryAttempts = 3
+
+    /// Delay between retry attempts (in seconds)
+    private let retryDelaySeconds: UInt64 = 1
+
     private init() {}
 
     // MARK: - Fetch Catalog & Stacks
 
-    /// Fetches the supplement catalog from the database
+    /// Fetches the supplement catalog from the database with retry logic
     func fetchCatalog() async {
         isLoadingCatalog = true
         error = nil
 
         do {
-            let results: [CatalogSupplement] = try await supabase.client
-                .from("supplements")
-                .select()
-                .eq("is_verified", value: true)
-                .order("name")
-                .execute()
-                .value
+            // Use DBSupplement which matches actual database schema
+            let results: [DBSupplement] = try await withRetry {
+                try await self.supabase.client
+                    .from("supplements")
+                    .select()
+                    .order("name")
+                    .execute()
+                    .value
+            }
 
-            self.catalog = results
+            // Convert to app's CatalogSupplement model
+            self.catalog = results.map { $0.toCatalogSupplement() }
             DebugLogger.shared.info("SupplementService", "Fetched \(results.count) catalog supplements")
         } catch {
             // Fallback to demo data
             self.catalog = CatalogSupplement.demoSupplements
-            DebugLogger.shared.warning("SupplementService", "Using demo catalog: \(error.localizedDescription)")
+            DebugLogger.shared.warning("SupplementService", "DEMO MODE FALLBACK: Using demo catalog due to error: \(error.localizedDescription)")
         }
 
         isLoadingCatalog = false
     }
 
-    /// Fetches pre-built supplement stacks
+    /// Fetches pre-built supplement stacks with retry logic
     func fetchStacks() async {
         do {
-            let results: [SupplementStack] = try await supabase.client
-                .from("supplement_stacks")
-                .select("*, items:supplement_stack_items(*)")
-                .order("name")
-                .execute()
-                .value
+            let results: [SupplementStack] = try await withRetry {
+                try await self.supabase.client
+                    .from("supplement_stacks")
+                    .select("*, items:supplement_stack_items(*)")
+                    .order("name")
+                    .execute()
+                    .value
+            }
 
             self.stacks = results
             DebugLogger.shared.info("SupplementService", "Fetched \(results.count) supplement stacks")
         } catch {
             // Fallback to demo stacks
             self.stacks = SupplementStack.demoStacks
-            DebugLogger.shared.warning("SupplementService", "Using demo stacks: \(error.localizedDescription)")
+            DebugLogger.shared.warning("SupplementService", "DEMO MODE FALLBACK: Using demo stacks due to error: \(error.localizedDescription)")
         }
     }
 
     // MARK: - User Routine Management
 
-    /// Fetches the user's supplement routine
+    /// Fetches the user's supplement routine with retry logic
     func fetchRoutines() async {
         isLoading = true
         error = nil
@@ -104,22 +118,26 @@ final class SupplementService: ObservableObject {
                 // Use demo data for unauthenticated users
                 self.routines = SupplementRoutine.demoRoutines
                 generateTodayDoses()
+                DebugLogger.shared.warning("SupplementService", "DEMO MODE FALLBACK: No patient ID, using demo routines")
                 isLoading = false
                 return
             }
 
-            // Note: Only select columns that exist in the supplements table
-            // The 'brand' column may not exist in all database versions
-            let results: [SupplementRoutine] = try await supabase.client
-                .from("patient_supplement_routines")
-                .select("*, supplement:supplements(id, name, category)")
-                .eq("patient_id", value: patientId.uuidString)
-                .eq("is_active", value: true)
-                .order("timing")
-                .execute()
-                .value
+            // Use DBSupplementStack which matches actual database schema
+            // Table is patient_supplement_stacks for reading routines
+            let results: [DBSupplementStack] = try await withRetry {
+                try await self.supabase.client
+                    .from("patient_supplement_stacks")
+                    .select("*, supplement:supplements(id, name, category, description, evidence_rating, dosage_info, timing_recommendation, interactions)")
+                    .eq("patient_id", value: patientId.uuidString)
+                    .eq("is_active", value: true)
+                    .order("timing")
+                    .execute()
+                    .value
+            }
 
-            self.routines = results
+            // Convert to app's SupplementRoutine model
+            self.routines = results.map { $0.toRoutine() }
 
             // Generate today's schedule
             generateTodayDoses()
@@ -133,7 +151,7 @@ final class SupplementService: ObservableObject {
             // Fallback to demo routines
             self.routines = SupplementRoutine.demoRoutines
             generateTodayDoses()
-            DebugLogger.shared.warning("SupplementService", "Using demo routines: \(error.localizedDescription)")
+            DebugLogger.shared.warning("SupplementService", "DEMO MODE FALLBACK: Using demo routines due to error: \(error.localizedDescription)")
         }
 
         isLoading = false
@@ -194,8 +212,9 @@ final class SupplementService: ObservableObject {
             start_date: dateFormatter.string(from: Date())
         )
 
+        // Write to patient_supplement_stacks (same table we read from in fetchRoutines)
         try await supabase.client
-            .from("patient_supplement_routines")
+            .from("patient_supplement_stacks")
             .insert(insert)
             .execute()
 
@@ -233,8 +252,9 @@ final class SupplementService: ObservableObject {
             end_date: ISO8601DateFormatter().string(from: Date())
         )
 
+        // Update patient_supplement_stacks (same table we read from in fetchRoutines)
         try await supabase.client
-            .from("patient_supplement_routines")
+            .from("patient_supplement_stacks")
             .update(update)
             .eq("id", value: routineId.uuidString)
             .execute()
@@ -298,8 +318,9 @@ final class SupplementService: ObservableObject {
         // Only update if at least one field is non-nil
         guard dosage != nil || timing != nil || frequency != nil || notes != nil else { return }
 
+        // Update patient_supplement_stacks (same table we read from in fetchRoutines)
         try await supabase.client
-            .from("patient_supplement_routines")
+            .from("patient_supplement_stacks")
             .update(update)
             .eq("id", value: routineId.uuidString)
             .execute()
@@ -310,28 +331,27 @@ final class SupplementService: ObservableObject {
     // MARK: - Logging Supplements
 
     /// Logs that a supplement was taken
+    /// Supports demo mode - logs will be stored locally when using demo patient
     func logSupplement(
         dose: TodaySupplementDose,
         perceivedEffect: PerceivedEffect? = nil,
         sideEffects: [String]? = nil,
         notes: String? = nil
     ) async throws {
-        guard let patientId = try await getPatientId() else {
-            throw SupplementServiceError.noPatientId
-        }
+        let patientId = try await getPatientId() ?? demoPatientId
+        let isDemoMode = patientId == demoPatientId
 
-        // Database schema (patient_supplement_logs):
-        // id, patient_id, supplement_id, dose_amount, dose_unit, taken_at, timing, with_food, notes
-        // NO: supplement_name, dosage, routine_id, skipped, perceived_effect, side_effects
+        // Database schema (supplement_logs):
+        // id, patient_id, supplement_id, dosage, dosage_unit, logged_at, timing, notes
+        // Match DBSupplementLog model for consistency
         struct LogInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let dose_amount: Double
-            let dose_unit: String
-            let taken_at: String
+            let dosage: Double
+            let dosage_unit: String
+            let logged_at: String
             let timing: String
-            let with_food: Bool
             let notes: String?
         }
 
@@ -339,7 +359,7 @@ final class SupplementService: ObservableObject {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime]
 
-        // Parse dosage to get dose_amount and dose_unit
+        // Parse dosage to get amount and unit
         let (doseAmount, doseUnit) = parseDosage(dose.dosage)
 
         // Combine notes with perceived effect and side effects if present
@@ -355,18 +375,31 @@ final class SupplementService: ObservableObject {
             id: logId,
             patient_id: patientId,
             supplement_id: dose.supplementId,
-            dose_amount: doseAmount,
-            dose_unit: doseUnit,
-            taken_at: dateFormatter.string(from: Date()),
+            dosage: doseAmount,
+            dosage_unit: doseUnit,
+            logged_at: dateFormatter.string(from: Date()),
             timing: dose.timing.rawValue,
-            with_food: dose.withFood,
             notes: combinedNotes.isEmpty ? nil : combinedNotes
         )
 
-        try await supabase.client
-            .from("patient_supplement_logs")
-            .insert(insert)
-            .execute()
+        // Write to supplement_logs (same table we read from)
+        // For demo mode, attempt the write but don't fail if it errors
+        if isDemoMode {
+            DebugLogger.shared.warning("SupplementService", "Demo mode: logging supplement locally for patient \(patientId)")
+            do {
+                try await supabase.client
+                    .from("supplement_logs")
+                    .insert(insert)
+                    .execute()
+            } catch {
+                DebugLogger.shared.warning("SupplementService", "Demo mode: database write skipped - \(error.localizedDescription)")
+            }
+        } else {
+            try await supabase.client
+                .from("supplement_logs")
+                .insert(insert)
+                .execute()
+        }
 
         // Update local state
         if let index = todayDoses.firstIndex(where: { $0.id == dose.id }) {
@@ -375,32 +408,31 @@ final class SupplementService: ObservableObject {
             todayDoses[index].logId = logId
         }
 
-        DebugLogger.shared.success("SupplementService", "Logged \(dose.supplementName)")
+        DebugLogger.shared.success("SupplementService", "Logged \(dose.supplementName)\(isDemoMode ? " (demo mode)" : "")")
 
         // Recalculate compliance
         await calculateTodayCompliance()
     }
 
     /// Marks a supplement as skipped
-    /// Note: Database schema doesn't have a "skipped" field, so we log with dose_amount = 0
+    /// Note: Database schema doesn't have a "skipped" field, so we log with dosage = 0
     /// and include skip reason in notes
+    /// Supports demo mode - logs will be stored locally when using demo patient
     func skipSupplement(dose: TodaySupplementDose, reason: String?) async throws {
-        guard let patientId = try await getPatientId() else {
-            throw SupplementServiceError.noPatientId
-        }
+        let patientId = try await getPatientId() ?? demoPatientId
+        let isDemoMode = patientId == demoPatientId
 
-        // Database schema (patient_supplement_logs):
-        // id, patient_id, supplement_id, dose_amount, dose_unit, taken_at, timing, with_food, notes
-        // NO: skipped, skip_reason columns - use notes field and dose_amount = 0 to indicate skip
+        // Database schema (supplement_logs):
+        // id, patient_id, supplement_id, dosage, dosage_unit, logged_at, timing, notes
+        // Use dosage = 0 and notes to indicate skip
         struct LogInsert: Encodable {
             let id: UUID
             let patient_id: UUID
             let supplement_id: UUID
-            let dose_amount: Double
-            let dose_unit: String
-            let taken_at: String
+            let dosage: Double
+            let dosage_unit: String
+            let logged_at: String
             let timing: String
-            let with_food: Bool
             let notes: String?
         }
 
@@ -422,18 +454,31 @@ final class SupplementService: ObservableObject {
             id: UUID(),
             patient_id: patientId,
             supplement_id: dose.supplementId,
-            dose_amount: 0, // 0 indicates skipped
-            dose_unit: doseUnit,
-            taken_at: dateFormatter.string(from: Date()),
+            dosage: 0, // 0 indicates skipped
+            dosage_unit: doseUnit,
+            logged_at: dateFormatter.string(from: Date()),
             timing: dose.timing.rawValue,
-            with_food: dose.withFood,
             notes: skipNote
         )
 
-        try await supabase.client
-            .from("patient_supplement_logs")
-            .insert(insert)
-            .execute()
+        // Write to supplement_logs (same table we read from)
+        // For demo mode, attempt the write but don't fail if it errors
+        if isDemoMode {
+            DebugLogger.shared.warning("SupplementService", "Demo mode: skipping supplement locally for patient \(patientId)")
+            do {
+                try await supabase.client
+                    .from("supplement_logs")
+                    .insert(insert)
+                    .execute()
+            } catch {
+                DebugLogger.shared.warning("SupplementService", "Demo mode: database write skipped - \(error.localizedDescription)")
+            }
+        } else {
+            try await supabase.client
+                .from("supplement_logs")
+                .insert(insert)
+                .execute()
+        }
 
         // Update local state
         if let index = todayDoses.firstIndex(where: { $0.id == dose.id }) {
@@ -441,18 +486,36 @@ final class SupplementService: ObservableObject {
             todayDoses[index].takenAt = Date()
         }
 
-        DebugLogger.shared.info("SupplementService", "Skipped \(dose.supplementName)")
+        DebugLogger.shared.info("SupplementService", "Skipped \(dose.supplementName)\(isDemoMode ? " (demo mode)" : "")")
 
         await calculateTodayCompliance()
     }
 
     /// Undoes a logged supplement
+    /// Supports demo mode - will update local state even if database delete fails
     func undoLog(_ logId: UUID) async throws {
-        try await supabase.client
-            .from("patient_supplement_logs")
-            .delete()
-            .eq("id", value: logId.uuidString)
-            .execute()
+        let patientId = try await getPatientId() ?? demoPatientId
+        let isDemoMode = patientId == demoPatientId
+
+        // For demo mode, attempt the delete but don't fail if it errors
+        if isDemoMode {
+            DebugLogger.shared.warning("SupplementService", "Demo mode: undoing log locally for patient \(patientId)")
+            do {
+                try await supabase.client
+                    .from("supplement_logs")
+                    .delete()
+                    .eq("id", value: logId.uuidString)
+                    .execute()
+            } catch {
+                DebugLogger.shared.warning("SupplementService", "Demo mode: database delete skipped - \(error.localizedDescription)")
+            }
+        } else {
+            try await supabase.client
+                .from("supplement_logs")
+                .delete()
+                .eq("id", value: logId.uuidString)
+                .execute()
+        }
 
         // Update local state
         if let index = todayDoses.firstIndex(where: { $0.logId == logId }) {
@@ -461,7 +524,7 @@ final class SupplementService: ObservableObject {
             todayDoses[index].logId = nil
         }
 
-        DebugLogger.shared.info("SupplementService", "Undid log \(logId)")
+        DebugLogger.shared.info("SupplementService", "Undid log \(logId)\(isDemoMode ? " (demo mode)" : "")")
 
         await calculateTodayCompliance()
     }
@@ -482,14 +545,19 @@ final class SupplementService: ObservableObject {
             let dateFormatter = ISO8601DateFormatter()
             dateFormatter.formatOptions = [.withInternetDateTime]
 
-            let logs: [SupplementLogEntry] = try await supabase.client
-                .from("patient_supplement_logs")
+            // Use DBSupplementLog which matches actual database schema
+            // Table is supplement_logs with logged_at (not taken_at)
+            let dbLogs: [DBSupplementLog] = try await supabase.client
+                .from("supplement_logs")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
-                .gte("taken_at", value: dateFormatter.string(from: startOfDay))
-                .lt("taken_at", value: dateFormatter.string(from: endOfDay))
+                .gte("logged_at", value: dateFormatter.string(from: startOfDay))
+                .lt("logged_at", value: dateFormatter.string(from: endOfDay))
                 .execute()
                 .value
+
+            // Convert to app's SupplementLogEntry model
+            let logs = dbLogs.map { $0.toLogEntry() }
 
             // Mark doses as taken based on logs
             for log in logs where !log.skipped {
@@ -519,16 +587,17 @@ final class SupplementService: ObservableObject {
             let dateFormatter = ISO8601DateFormatter()
             dateFormatter.formatOptions = [.withInternetDateTime]
 
-            let logs: [SupplementLogEntry] = try await supabase.client
-                .from("patient_supplement_logs")
+            // Use DBSupplementLog which matches actual database schema
+            let dbLogs: [DBSupplementLog] = try await supabase.client
+                .from("supplement_logs")
                 .select()
                 .eq("patient_id", value: patientId.uuidString)
-                .gte("taken_at", value: dateFormatter.string(from: startDate))
-                .order("taken_at", ascending: false)
+                .gte("logged_at", value: dateFormatter.string(from: startDate))
+                .order("logged_at", ascending: false)
                 .execute()
                 .value
 
-            return logs
+            return dbLogs.map { $0.toLogEntry() }
         } catch {
             DebugLogger.shared.error("SupplementService", "Failed to fetch log history: \(error)")
             return []
@@ -537,7 +606,7 @@ final class SupplementService: ObservableObject {
 
     // MARK: - Compliance Analytics
 
-    /// Calculates today's compliance metrics
+    /// Calculates today's compliance metrics including multi-day streak
     func calculateTodayCompliance() async {
         let taken = todayDoses.filter { $0.isTaken && $0.logId != nil }.count
         let planned = todayDoses.count
@@ -545,12 +614,14 @@ final class SupplementService: ObservableObject {
 
         let rate = planned > 0 ? Double(taken) / Double(planned) : 0
 
-        // Calculate streak (simplified - would need historical data for accurate streak)
-        let streak = taken == planned ? 1 : 0
+        // Calculate multi-day streak by checking historical compliance
+        let streak = await calculateStreak(todayCompliant: taken == planned && planned > 0)
+
+        let patientId = (try? await getPatientId()) ?? demoPatientId
 
         todayCompliance = SupplementCompliance(
             id: UUID(),
-            patientId: UUID(),
+            patientId: patientId,
             date: Date(),
             plannedCount: planned,
             takenCount: taken,
@@ -558,6 +629,61 @@ final class SupplementService: ObservableObject {
             complianceRate: rate,
             streakDays: streak
         )
+    }
+
+    /// Calculates the current compliance streak by checking historical data
+    /// - Parameter todayCompliant: Whether today's supplements were all taken
+    /// - Returns: Number of consecutive days with 100% compliance
+    private func calculateStreak(todayCompliant: Bool) async -> Int {
+        // If today isn't compliant yet, streak is 0
+        guard todayCompliant else { return 0 }
+
+        // Start with 1 for today
+        var streak = 1
+
+        do {
+            guard let patientId = try await getPatientId() else {
+                // Demo mode: return 1 if today is compliant
+                return 1
+            }
+
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+
+            // Fetch historical compliance records going back 30 days
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+
+            guard let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: today) else {
+                return streak
+            }
+
+            let historicalCompliance: [SupplementCompliance] = try await supabase.client
+                .from("supplement_compliance")
+                .select()
+                .eq("patient_id", value: patientId.uuidString)
+                .gte("date", value: dateFormatter.string(from: thirtyDaysAgo))
+                .lt("date", value: dateFormatter.string(from: today)) // Exclude today
+                .order("date", ascending: false) // Most recent first
+                .execute()
+                .value
+
+            // Count consecutive days with 100% compliance going backwards from yesterday
+            for compliance in historicalCompliance {
+                // Check if compliance rate is 100% (or close to it due to floating point)
+                if compliance.complianceRate >= 0.999 {
+                    streak += 1
+                } else {
+                    // Streak broken
+                    break
+                }
+            }
+        } catch {
+            DebugLogger.shared.warning("SupplementService", "Failed to fetch historical compliance for streak calculation: \(error.localizedDescription)")
+            // Return 1 for today if we can't fetch history
+        }
+
+        return streak
     }
 
     /// Fetches weekly compliance data
@@ -767,7 +893,7 @@ final class SupplementService: ObservableObject {
         )
 
         try await supabase.client
-            .from("patient_supplement_logs")
+            .from("supplement_logs")
             .insert(log)
             .execute()
 
@@ -993,8 +1119,73 @@ final class SupplementService: ObservableObject {
         }
 
         // Fallback to demo patient for unauthenticated users (demo mode)
-        DebugLogger.shared.warning("SupplementService", "No authenticated user, using demo patient")
-        return UUID(uuidString: "00000000-0000-0000-0000-000000000001")
+        DebugLogger.shared.warning("SupplementService", "No authenticated user, returning nil (caller should use demoPatientId)")
+        return nil
+    }
+
+    // MARK: - Retry Logic
+
+    /// Executes an async operation with retry logic for transient network failures
+    /// - Parameters:
+    ///   - operation: The async operation to execute
+    /// - Returns: The result of the operation
+    /// - Throws: The last error if all retries fail
+    private func withRetry<T>(_ operation: @escaping () async throws -> T) async throws -> T {
+        var lastError: Error?
+
+        for attempt in 1...maxRetryAttempts {
+            do {
+                return try await operation()
+            } catch {
+                lastError = error
+
+                // Check if this is a transient/network error worth retrying
+                let shouldRetry = isTransientError(error)
+
+                if shouldRetry && attempt < maxRetryAttempts {
+                    DebugLogger.shared.warning("SupplementService", "Transient error on attempt \(attempt)/\(maxRetryAttempts), retrying in \(retryDelaySeconds)s: \(error.localizedDescription)")
+                    try? await Task.sleep(nanoseconds: retryDelaySeconds * 1_000_000_000)
+                } else if !shouldRetry {
+                    // Non-transient error, don't retry
+                    throw error
+                }
+            }
+        }
+
+        // All retries exhausted
+        DebugLogger.shared.error("SupplementService", "All \(maxRetryAttempts) retry attempts failed")
+        throw lastError ?? SupplementServiceError.networkError(NSError(domain: "SupplementService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown error after retries"]))
+    }
+
+    /// Determines if an error is transient and worth retrying
+    private func isTransientError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+
+        // Check for common transient error codes
+        let transientCodes = [
+            NSURLErrorTimedOut,
+            NSURLErrorCannotFindHost,
+            NSURLErrorCannotConnectToHost,
+            NSURLErrorNetworkConnectionLost,
+            NSURLErrorDNSLookupFailed,
+            NSURLErrorNotConnectedToInternet,
+            NSURLErrorSecureConnectionFailed,
+            -1001, // Timeout
+            -1009, // No internet
+            503,   // Service unavailable
+            502,   // Bad gateway
+            504    // Gateway timeout
+        ]
+
+        if transientCodes.contains(nsError.code) {
+            return true
+        }
+
+        // Check the error description for common transient patterns
+        let description = error.localizedDescription.lowercased()
+        let transientPatterns = ["timeout", "timed out", "connection", "network", "unavailable", "try again"]
+
+        return transientPatterns.contains { description.contains($0) }
     }
 }
 

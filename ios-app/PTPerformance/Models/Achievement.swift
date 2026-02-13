@@ -476,11 +476,12 @@ enum AchievementCatalog {
 
 /// Event representing an achievement unlock
 struct AchievementUnlockEvent: Identifiable, Equatable {
-    let id = UUID()
     let achievement: AchievementDefinition
     let unlockedAt: Date
     let previousValue: Int?
     let newValue: Int
+
+    var id: String { "\(achievement.id)-\(unlockedAt.timeIntervalSince1970)" }
 
     init(achievement: AchievementDefinition, unlockedAt: Date = Date(), previousValue: Int? = nil, newValue: Int) {
         self.achievement = achievement

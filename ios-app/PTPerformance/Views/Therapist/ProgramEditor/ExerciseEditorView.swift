@@ -168,7 +168,7 @@ struct UpdateExerciseInput: Codable {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         ExerciseEditorView(
             viewModel: ProgramEditorViewModel(
                 patientId: UUID(),

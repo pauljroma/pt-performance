@@ -678,7 +678,7 @@ struct ProgramWorkoutExecutionView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .accessibilityElement(children: .contain)
     }
@@ -695,7 +695,7 @@ struct ProgramWorkoutExecutionView: View {
         .padding(.vertical, 6)
         .background(Color.blue.opacity(0.1))
         .foregroundColor(.blue)
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var feedbackSection: some View {
@@ -924,12 +924,12 @@ private struct ExerciseListRow: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.blue)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .padding(12)
             .background(isCurrent ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isCurrent ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 2)

@@ -89,7 +89,7 @@ struct CategoryBadge: View {
         .padding(.vertical, 4)
         .background(categoryColor.opacity(0.15))
         .foregroundColor(categoryColor)
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var categoryColor: Color {
@@ -130,7 +130,7 @@ struct TemplatePreviewSheet: View {
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Duration info
                     HStack(spacing: 20) {
@@ -209,7 +209,7 @@ struct InfoCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -226,7 +226,7 @@ struct TaskPreviewRow: View {
                 .foregroundColor(taskTypeColor)
                 .frame(width: 32, height: 32)
                 .background(taskTypeColor.opacity(0.15))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(task.title)
@@ -260,7 +260,7 @@ struct TaskPreviewRow: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var taskTypeColor: Color {

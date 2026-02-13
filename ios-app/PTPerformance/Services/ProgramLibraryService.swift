@@ -456,8 +456,9 @@ class ProgramLibraryService: ObservableObject {
         }
 
         do {
+            // Pass patient_id to RPC for demo mode support
             let response = try await supabase.client
-                .rpc("get_my_enrolled_programs")
+                .rpc("get_my_enrolled_programs", params: ["p_patient_id": patientId])
                 .execute()
 
             if let jsonString = String(data: response.data, encoding: .utf8) {

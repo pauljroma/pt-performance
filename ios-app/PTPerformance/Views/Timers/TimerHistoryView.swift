@@ -163,7 +163,7 @@ struct TimerHistoryView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -198,7 +198,7 @@ struct TimerHistoryView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -236,7 +236,7 @@ struct TimerHistoryView: View {
                             .foregroundColor(timerTypeColor(template.type))
                             .frame(width: 40, height: 40)
                             .background(timerTypeColor(template.type).opacity(0.1))
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                             .accessibilityHidden(true)
                     } else {
                         Image(systemName: "timer")
@@ -244,7 +244,7 @@ struct TimerHistoryView: View {
                             .foregroundColor(.gray)
                             .frame(width: 40, height: 40)
                             .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                             .accessibilityHidden(true)
                     }
 
@@ -288,7 +288,7 @@ struct TimerHistoryView: View {
                 }
                 .padding()
                 .background(Color(.systemBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .buttonStyle(PlainButtonStyle())
             .accessibilityElement(children: .combine)
@@ -404,7 +404,7 @@ struct TimerHistoryView: View {
                         .padding(.vertical, 8)
                         .background(Color.blue.opacity(0.1))
                         .foregroundColor(.blue)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel("Repeat this workout")
 
@@ -425,7 +425,7 @@ struct TimerHistoryView: View {
                         .padding(.vertical, 8)
                         .background(Color.gray.opacity(0.1))
                         .foregroundColor(.secondary)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel("Share session summary")
             }
@@ -433,7 +433,7 @@ struct TimerHistoryView: View {
             .padding(.bottom, 8)
         }
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Empty State
@@ -634,7 +634,7 @@ private struct StatCell: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(color.opacity(0.05))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

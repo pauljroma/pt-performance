@@ -16,6 +16,7 @@ import Supabase
 /// ## Deload Triggers
 /// A deload is scheduled when 2 or more different trigger types occur
 /// within a 7-day window.
+@MainActor
 class ProgressionService: ObservableObject {
     private let supabase: PTSupabaseClient
     private let logger = DebugLogger.shared

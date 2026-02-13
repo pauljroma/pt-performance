@@ -136,10 +136,8 @@ struct ValidationHelpers {
 
         // Check for reasonable decimal places (max 2)
         let components = trimmed.split(separator: ".")
-        if components.count == 2 {
-            if components[1].count > 2 {
-                return .invalid("Weight can have at most 2 decimal places")
-            }
+        if components.count > 1, components[1].count > 2 {
+            return .invalid("Weight can have at most 2 decimal places")
         }
 
         return .valid

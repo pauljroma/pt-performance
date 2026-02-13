@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 import AppIntents
 
@@ -207,7 +208,7 @@ struct SiriTipsView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .padding(.horizontal)
         }
     }
@@ -228,7 +229,7 @@ struct SiriTipsView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .padding(.horizontal)
         }
     }
@@ -252,10 +253,10 @@ struct ShortcutCard: View {
                 HStack {
                     Image(systemName: icon)
                         .font(.title2)
-                        .foregroundColor(.white)
+                        .foregroundColor(DesignTokens.buttonTextOnAccent)
                         .frame(width: 44, height: 44)
                         .background(iconColor)
-                        .cornerRadius(10)
+                        .cornerRadius(CornerRadius.sm)
                         .accessibilityHidden(true)
 
                     Text(title)
@@ -303,7 +304,7 @@ struct ShortcutCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -316,9 +317,9 @@ struct SetupStepRow: View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(number)")
                 .font(.caption.bold())
-                .foregroundColor(.white)
+                .foregroundColor(DesignTokens.buttonTextOnAccent)
                 .frame(width: 24, height: 24)
-                .background(Color.blue)
+                .background(DesignTokens.statusInfo)
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
@@ -345,7 +346,7 @@ struct TipRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundColor(.blue)
+                .foregroundColor(DesignTokens.statusInfo)
                 .frame(width: 24)
                 .accessibilityHidden(true)
 
@@ -420,7 +421,7 @@ struct CompactSiriTipCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Use Siri Shortcuts")

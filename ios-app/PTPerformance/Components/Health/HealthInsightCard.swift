@@ -83,7 +83,6 @@ enum HealthInsightCategory: String, Codable {
 
 /// Model for a health insight
 struct HealthHubInsight: Identifiable {
-    let id = UUID()
     let type: HealthInsightType
     let category: HealthInsightCategory
     let title: String
@@ -91,6 +90,8 @@ struct HealthHubInsight: Identifiable {
     let actionText: String?
     let action: (() -> Void)?
     let timestamp: Date
+
+    var id: String { "\(category.rawValue)-\(title)-\(timestamp.timeIntervalSince1970)" }
 
     init(
         type: HealthInsightType,
@@ -118,20 +119,22 @@ struct HealthInsightCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var isExpanded = false
+    @State private var hasAppeared = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header
             HStack(spacing: Spacing.sm) {
-                // Type indicator
+                // Type indicator with pulse for critical
                 ZStack {
                     Circle()
-                        .fill(insight.type.color.opacity(0.15))
+                        .fill(insight.type.color.opacity(colorScheme == .dark ? 0.25 : 0.15))
                         .frame(width: 36, height: 36)
 
                     Image(systemName: insight.type.icon)
                         .font(.body)
                         .foregroundColor(insight.type.color)
+                        .symbolEffect(.pulse, options: .repeating, value: insight.type == .critical)
                 }
                 .accessibilityHidden(true)
 
@@ -141,6 +144,7 @@ struct HealthInsightCard: View {
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(insight.type.color)
+                            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
 
                         Text("AI Insight")
                             .font(.caption2)
@@ -148,7 +152,7 @@ struct HealthInsightCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
 
                     Text(insight.title)
@@ -156,13 +160,17 @@ struct HealthInsightCard: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                         .lineLimit(isExpanded ? nil : 1)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
 
                 Spacer()
 
-                // Dismiss button
+                // Dismiss button with haptic
                 if let onDismiss = onDismiss {
-                    Button(action: onDismiss) {
+                    Button(action: {
+                        HapticFeedback.light()
+                        onDismiss()
+                    }) {
                         Image(systemName: "xmark")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -170,7 +178,9 @@ struct HealthInsightCard: View {
                             .background(Color(.tertiarySystemGroupedBackground))
                             .clipShape(Circle())
                     }
+                    .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel("Dismiss insight")
+                    .accessibilityHint("Double tap to dismiss this insight")
                 }
             }
 
@@ -180,27 +190,35 @@ struct HealthInsightCard: View {
                 .foregroundColor(.secondary)
                 .lineLimit(isExpanded ? nil : 2)
                 .fixedSize(horizontal: false, vertical: isExpanded)
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
 
-            // Expand/collapse for long messages
+            // Expand/collapse for long messages with haptic
             if insight.message.count > 100 {
                 Button {
                     withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
                         isExpanded.toggle()
                     }
+                    HapticFeedback.selectionChanged()
                 } label: {
-                    Text(isExpanded ? "Show less" : "Read more")
-                        .font(.caption)
-                        .foregroundColor(.modusCyan)
+                    HStack(spacing: 2) {
+                        Text(isExpanded ? "Show less" : "Read more")
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption2)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
                 }
+                .frame(minHeight: 44)
+                .accessibilityLabel(isExpanded ? "Show less content" : "Read more content")
             }
 
-            // Action button
+            // Action button with medium haptic for emphasis
             if let actionText = insight.actionText, let action = insight.action {
                 Divider()
                     .padding(.vertical, Spacing.xxs)
 
                 Button(action: {
-                    HapticFeedback.light()
+                    HapticFeedback.medium()
                     action()
                 }) {
                     HStack(spacing: Spacing.xs) {
@@ -210,10 +228,13 @@ struct HealthInsightCard: View {
 
                         Image(systemName: "arrow.right")
                             .font(.caption)
+                            .accessibilityHidden(true)
                     }
                     .foregroundColor(insight.type.color)
                 }
+                .frame(minHeight: 44)
                 .accessibilityLabel(actionText)
+                .accessibilityHint("Double tap to \(actionText.lowercased())")
             }
 
             // Timestamp
@@ -230,11 +251,29 @@ struct HealthInsightCard: View {
                 .fill(Color(.secondarySystemGroupedBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.lg)
-                        .stroke(insight.type.color.opacity(0.3), lineWidth: 1)
+                        .stroke(
+                            insight.type == .critical || insight.type == .warning
+                                ? insight.type.color.opacity(colorScheme == .dark ? 0.5 : 0.4)
+                                : insight.type.color.opacity(colorScheme == .dark ? 0.4 : 0.3),
+                            lineWidth: insight.type == .critical ? 2 : 1
+                        )
                 )
         )
+        // Reveal animation
+        .opacity(hasAppeared ? 1 : 0)
+        .offset(y: hasAppeared ? 0 : 20)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.4)) {
+                hasAppeared = true
+            }
+            // Haptic feedback for critical/warning insights
+            if insight.type == .critical {
+                HapticFeedback.warning()
+            }
+        }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(insight.type.accessibilityLabel): \(insight.title)")
+        .accessibilityLabel("\(insight.type.accessibilityLabel): \(insight.title). \(insight.message)")
+        .accessibilityIdentifier("healthInsightCard")
     }
 }
 
@@ -242,6 +281,8 @@ struct HealthInsightCard: View {
 struct HealthInsightRow: View {
     let insight: HealthHubInsight
     let onTap: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: {
@@ -263,11 +304,13 @@ struct HealthInsightRow: View {
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .lineLimit(1)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
 
                     Text(insight.message)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
 
                 Spacer()
@@ -278,7 +321,7 @@ struct HealthInsightRow: View {
                     .foregroundColor(insight.type.color)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(insight.type.color.opacity(0.1))
+                    .background(insight.type.color.opacity(colorScheme == .dark ? 0.2 : 0.1))
                     .cornerRadius(CornerRadius.xs)
 
                 Image(systemName: "chevron.right")
@@ -287,12 +330,14 @@ struct HealthInsightRow: View {
                     .accessibilityHidden(true)
             }
             .padding()
+            .frame(minHeight: 44) // Minimum touch target
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(insight.type.accessibilityLabel): \(insight.title)")
-        .accessibilityHint("Tap to view details")
+        .accessibilityLabel("\(insight.type.accessibilityLabel): \(insight.title), \(insight.category.displayName)")
+        .accessibilityHint("Double tap to view details")
+        .accessibilityIdentifier("healthInsightRow_\(insight.title.replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

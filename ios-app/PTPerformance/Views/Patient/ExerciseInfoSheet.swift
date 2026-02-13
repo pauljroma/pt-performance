@@ -137,12 +137,12 @@ struct ExerciseTemplateInfoSheet: View {
             .frame(height: 200)
             .frame(maxWidth: .infinity)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         } else if let videoUrl = template.videoUrl {
             // Legacy single video fallback
             VideoPlayerView(videoUrl: videoUrl)
                 .frame(height: 250)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
                 .adaptiveShadow(Shadow.medium)
         } else {
             ZStack {
@@ -203,7 +203,7 @@ struct ExerciseTemplateInfoSheet: View {
                                     .foregroundColor(.primary)
                                     .frame(width: 70, height: 50)
                                     .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(8)
+                                    .cornerRadius(CornerRadius.sm)
                                     .overlay(
                                         Group {
                                             if ExerciseVideoService.shared.isVideoCached(video) {
@@ -242,7 +242,7 @@ struct ExerciseTemplateInfoSheet: View {
                     .padding(.vertical, 5)
                     .background(Color.blue.opacity(0.1))
                     .foregroundColor(.blue)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             if let bodyRegion = template.bodyRegion {
@@ -253,7 +253,7 @@ struct ExerciseTemplateInfoSheet: View {
                     .padding(.vertical, 5)
                     .background(Color.purple.opacity(0.1))
                     .foregroundColor(.purple)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
         }
     }
@@ -279,7 +279,7 @@ struct ExerciseTemplateInfoSheet: View {
         }
         .padding(16)
         .background(Color(uiColor: .systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -330,7 +330,7 @@ struct ExerciseTemplateInfoSheet: View {
         }
         .padding(16)
         .background(Color.orange.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
@@ -355,7 +355,7 @@ struct ExerciseTemplateInfoSheet: View {
         }
         .padding(16)
         .background(Color.red.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.red.opacity(0.3), lineWidth: 1)

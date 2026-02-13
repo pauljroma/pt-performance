@@ -281,7 +281,7 @@ struct PTPerformanceApp: App {
                 .onOpenURL { url in
                     handleDeepLink(url)
                 }
-                .onChange(of: scenePhase) { oldPhase, newPhase in
+                .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         // Refresh widget data when app becomes active
                         Task {
@@ -371,15 +371,17 @@ struct PTPerformanceApp: App {
                     await MainActor.run {
                         PTSupabaseClient.shared.currentSession = session
                         PTSupabaseClient.shared.currentUser = session.user
-                        appState.userId = session.user.id.uuidString
-                        appState.isAuthenticated = true
                     }
 
                     await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
+
+                    // Batch update auth state to avoid cascading view redraws
                     await MainActor.run {
-                        if let role = PTSupabaseClient.shared.userRole {
-                            appState.userRole = role
-                        }
+                        appState.updateAuthState(
+                            authenticated: true,
+                            role: PTSupabaseClient.shared.userRole,
+                            userId: session.user.id.uuidString
+                        )
                     }
 
                     DebugLogger.shared.success("PTPerformanceApp", "Magic link login successful for user: \(session.user.id)")
@@ -406,15 +408,17 @@ struct PTPerformanceApp: App {
                 await MainActor.run {
                     PTSupabaseClient.shared.currentSession = session
                     PTSupabaseClient.shared.currentUser = session.user
-                    appState.userId = session.user.id.uuidString
-                    appState.isAuthenticated = true
                 }
 
                 await PTSupabaseClient.shared.fetchUserRole(userId: session.user.id.uuidString)
+
+                // Batch update auth state to avoid cascading view redraws
                 await MainActor.run {
-                    if let role = PTSupabaseClient.shared.userRole {
-                        appState.userRole = role
-                    }
+                    appState.updateAuthState(
+                        authenticated: true,
+                        role: PTSupabaseClient.shared.userRole,
+                        userId: session.user.id.uuidString
+                    )
                 }
             } catch {
                 DebugLogger.shared.error("PTPerformanceApp", "Failed to handle auth deep link: \(error.localizedDescription)")
@@ -433,27 +437,22 @@ struct PTPerformanceApp: App {
         WidgetCenter.shared.reloadAllTimelines()
 
         // Log refresh for debugging
-        #if DEBUG
-        print("[PTPerformanceApp] Refreshed widget timelines on app active")
-        #endif
+        DebugLogger.shared.log("[PTPerformanceApp] Refreshed widget timelines on app active", level: .diagnostic)
     }
 }
 
 final class AppState: ObservableObject {
-    @Published var isAuthenticated = false {
-        didSet {
-            updateUserContext()
-        }
-    }
-    @Published var userRole: UserRole? = nil {
-        didSet {
-            updateUserContext()
-        }
-    }
-    @Published var userId: String? = nil {
-        didSet {
-            updateUserContext()
-        }
+    @Published var isAuthenticated = false
+    @Published var userRole: UserRole? = nil
+    @Published var userId: String? = nil
+
+    /// Batch update authentication state to avoid cascading updateUserContext() calls
+    /// Call this instead of setting properties individually when updating auth state
+    func updateAuthState(authenticated: Bool, role: UserRole?, userId: String?) {
+        self.isAuthenticated = authenticated
+        self.userRole = role
+        self.userId = userId
+        updateUserContext()
     }
 
     /// Pending deep link destination from widget tap or URL scheme

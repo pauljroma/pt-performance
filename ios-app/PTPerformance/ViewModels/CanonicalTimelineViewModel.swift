@@ -80,6 +80,10 @@ final class CanonicalTimelineViewModel: ObservableObject {
         setupBindings()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Private Methods
 
     private func setupBindings() {

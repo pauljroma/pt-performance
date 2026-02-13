@@ -168,10 +168,11 @@ struct SubscriptionView: View {
                                     )
                                 )
                                 .foregroundColor(.white)
-                                .cornerRadius(14)
+                                .cornerRadius(CornerRadius.md)
                             }
                             .disabled(isPurchasing)
                             .padding(.horizontal)
+                            .accessibilityLabel("Subscribe to \(product.displayName)")
                         }
                     }
 
@@ -186,6 +187,7 @@ struct SubscriptionView: View {
 
                     // MARK: - Restore Purchases
                     Button {
+                        HapticFeedback.light()
                         Task {
                             await storeKit.restorePurchases()
                         }
@@ -194,6 +196,7 @@ struct SubscriptionView: View {
                             .font(.subheadline)
                             .foregroundColor(.blue)
                     }
+                    .accessibilityLabel("Restore previous purchases")
 
                     // MARK: - Legal Text
                     Text("Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period. Your Apple ID account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions in your App Store account settings.")
@@ -328,7 +331,7 @@ private struct PricingCard: View {
                                     endPoint: .trailing
                                 )
                             )
-                            .cornerRadius(6)
+                            .cornerRadius(CornerRadius.sm)
                     }
                 }
 

@@ -242,10 +242,10 @@ struct SOAPNote: Codable, Identifiable {
         var filled = 0
         let total = 4
 
-        if subjective != nil && !subjective!.isEmpty { filled += 1 }
-        if objective != nil && !objective!.isEmpty { filled += 1 }
-        if assessment != nil && !assessment!.isEmpty { filled += 1 }
-        if plan != nil && !plan!.isEmpty { filled += 1 }
+        if let subjective = subjective, !subjective.isEmpty { filled += 1 }
+        if let objective = objective, !objective.isEmpty { filled += 1 }
+        if let assessment = assessment, !assessment.isEmpty { filled += 1 }
+        if let plan = plan, !plan.isEmpty { filled += 1 }
 
         return Double(filled) / Double(total) * 100
     }
@@ -382,9 +382,10 @@ struct CommonCPTCodes {
     ]
 
     struct CPTCode: Identifiable {
-        let id = UUID()
         let code: String
         let description: String
+
+        var id: String { code }
     }
 }
 

@@ -149,7 +149,7 @@ struct ProgramDetailSheet: View {
                         }
                         .padding()
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                         .padding(.horizontal)
                     }
 
@@ -176,7 +176,7 @@ struct ProgramDetailSheet: View {
                             .padding()
                             .frame(maxWidth: .infinity)
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         } else if phases.isEmpty {
                             if program.programId == nil {
                                 Text("Workouts will appear here once your therapist customizes this program for you.")
@@ -185,7 +185,7 @@ struct ProgramDetailSheet: View {
                                     .padding()
                                     .frame(maxWidth: .infinity)
                                     .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(12)
+                                    .cornerRadius(CornerRadius.md)
                             } else {
                                 Text("Phase information will be available once you start the program.")
                                     .font(.subheadline)
@@ -193,7 +193,7 @@ struct ProgramDetailSheet: View {
                                     .padding()
                                     .frame(maxWidth: .infinity)
                                     .background(Color(.secondarySystemGroupedBackground))
-                                    .cornerRadius(12)
+                                    .cornerRadius(CornerRadius.md)
                             }
                         } else {
                             VStack(spacing: 10) {
@@ -269,7 +269,7 @@ struct ProgramDetailSheet: View {
                             )
                         )
                         .foregroundColor(.white)
-                        .cornerRadius(14)
+                        .cornerRadius(CornerRadius.lg)
                     }
                     .disabled(isEnrolling)
                     .accessibilityLabel(isEnrolling ? "Enrolling in program" : (program.programId == nil ? "Save \(program.title) template" : "Start \(program.title)"))
@@ -382,7 +382,7 @@ private struct InfoPill: View {
         .padding(.vertical, 8)
         .background(color.opacity(0.15))
         .foregroundColor(color)
-        .cornerRadius(20)
+        .cornerRadius(CornerRadius.xl)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(text)
     }
@@ -406,7 +406,7 @@ private struct EquipmentItem: View {
         }
         .padding(10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(name), required equipment")
     }
@@ -421,7 +421,7 @@ private struct ProgramTagChip: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
     }
 }
 
@@ -478,7 +478,7 @@ private struct PhasePreviewCard: View {
         }
         .padding(12)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Phase \(phase.phaseNumber): \(phase.phaseName), \(phase.formattedWeekRange), \(phase.workoutCount) \(phase.workoutCount == 1 ? "workout" : "workouts")")
     }

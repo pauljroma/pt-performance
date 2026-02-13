@@ -26,10 +26,10 @@ struct HelpArticleView: View {
                             .fontWeight(.semibold)
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xxs)
                     .background(categoryColor)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
 
                     // Title
                     Text(article.title)
@@ -53,10 +53,12 @@ struct HelpArticleView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
+                    HapticFeedback.light()
                     showShareSheet = true
                 } label: {
                     Image(systemName: "square.and.arrow.up")
                 }
+                .accessibilityLabel("Share article")
             }
         }
         .sheet(isPresented: $showShareSheet) {

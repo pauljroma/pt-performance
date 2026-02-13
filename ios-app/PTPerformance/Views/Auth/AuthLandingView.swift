@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AuthLandingView.swift
 //  PTPerformance
@@ -27,7 +28,7 @@ struct AuthLandingView: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [.blue, .cyan],
+                                    colors: [.modusCyan, .modusTealAccent],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -70,7 +71,7 @@ struct AuthLandingView: View {
                         .padding()
                         .background(Color(.label))
                         .foregroundColor(Color(.systemBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(isLoading)
                     .accessibilityIdentifier("signInWithAppleButton")
@@ -90,9 +91,9 @@ struct AuthLandingView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .disabled(isLoading)
                     .accessibilityIdentifier("continueWithEmailButton")
@@ -114,7 +115,7 @@ struct AuthLandingView: View {
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .foregroundColor(.primary)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color(.separator), lineWidth: 1)
@@ -175,7 +176,7 @@ struct AuthLandingView: View {
                             .padding(.vertical, 12)
                             .background(Color.green.opacity(0.15))
                             .foregroundColor(.green)
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                         }
                         .accessibilityLabel("Demo Patient")
                         .accessibilityHint("Sign in as a demo patient user for testing")
@@ -195,7 +196,7 @@ struct AuthLandingView: View {
                             .padding(.vertical, 12)
                             .background(Color.purple.opacity(0.15))
                             .foregroundColor(.purple)
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                         }
                         .accessibilityLabel("Demo Therapist")
                         .accessibilityHint("Sign in as a demo therapist user for testing")

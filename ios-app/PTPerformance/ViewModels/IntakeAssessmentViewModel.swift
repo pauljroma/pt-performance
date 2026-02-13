@@ -175,6 +175,7 @@ class IntakeAssessmentViewModel: ObservableObject {
 
     deinit {
         autoSaveTimer?.invalidate()
+        cancellables.removeAll()
     }
 
     // MARK: - Setup
@@ -476,10 +477,7 @@ class IntakeAssessmentViewModel: ObservableObject {
             currentAssessment = updated
             lastAutoSaveDate = Date()
             successMessage = "Draft saved"
-
-            #if DEBUG
-            print("[IntakeAssessmentVM] Draft saved: \(updated.id)")
-            #endif
+            DebugLogger.shared.log("[IntakeAssessmentVM] Draft saved: \(updated.id)", level: .success)
         } catch {
             errorMessage = "Failed to save draft: \(error.localizedDescription)"
             DebugLogger.shared.error("IntakeAssessmentViewModel", "Save draft error: \(error)")
@@ -488,17 +486,16 @@ class IntakeAssessmentViewModel: ObservableObject {
         isSaving = false
     }
 
-    /// Auto-save draft (silent, no UI updates for success)
+    /// Auto-save draft (silent, no UI updates for success but logs errors)
     private func autoSaveDraft() async {
         guard currentAssessment != nil, !isSaving else { return }
 
         do {
             await saveDraft()
         } catch {
-            // Silent failure for auto-save
-            #if DEBUG
-            print("[IntakeAssessmentVM] Auto-save failed: \(error)")
-            #endif
+            // Log auto-save failures for debugging (always, not just DEBUG)
+            DebugLogger.shared.log("Auto-save failed: \(error.localizedDescription)", level: .warning)
+            // Don't set errorMessage - auto-save failures shouldn't interrupt user
         }
     }
 

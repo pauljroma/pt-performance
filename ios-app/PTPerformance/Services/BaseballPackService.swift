@@ -745,61 +745,74 @@ extension BaseballPackService {
             let phases = try decoder.decode([BaseballProgramPhaseDetail].self, from: phasesResponse.data)
             logger.diagnostic("Fetched \(phases.count) phases")
 
-            // Build structure with sessions and exercises
-            var phasesWithSessions: [BaseballProgramStructure.PhaseWithSessions] = []
+            // Fetch ALL sessions for ALL phases in ONE query (batched to avoid N+1)
+            let phaseIds = phases.map { $0.id.uuidString }
 
-            for phase in phases {
-                // Fetch sessions for this phase
-                let sessionsResponse = try await supabase.client
-                    .from("sessions")
-                    .select()
-                    .eq("phase_id", value: phase.id.uuidString)
+            let allSessionsResponse = try await supabase.client
+                .from("sessions")
+                .select()
+                .in("phase_id", values: phaseIds)
+                .order("sequence", ascending: true)
+                .execute()
+
+            let allSessions = try decoder.decode([BaseballSessionDetail].self, from: allSessionsResponse.data)
+            logger.diagnostic("Fetched \(allSessions.count) sessions total for \(phases.count) phases (1 query)")
+
+            // Fetch ALL exercises for ALL sessions in ONE query (batched to avoid N+1)
+            let sessionIds = allSessions.map { $0.id.uuidString }
+            var allExercises: [BaseballSessionExercise] = []
+
+            if !sessionIds.isEmpty {
+                let allExercisesResponse = try await supabase.client
+                    .from("session_exercises")
+                    .select("""
+                        id,
+                        session_id,
+                        exercise_template_id,
+                        sequence,
+                        block_number,
+                        block_label,
+                        target_sets,
+                        target_reps,
+                        notes,
+                        exercise_templates (
+                            id,
+                            name,
+                            category,
+                            body_region,
+                            equipment_type,
+                            difficulty_level,
+                            technique_cues,
+                            common_mistakes,
+                            safety_notes
+                        )
+                    """)
+                    .in("session_id", values: sessionIds)
                     .order("sequence", ascending: true)
                     .execute()
 
-                let sessions = try decoder.decode([BaseballSessionDetail].self, from: sessionsResponse.data)
-                logger.diagnostic("Phase '\(phase.name)' has \(sessions.count) sessions")
+                allExercises = try decoder.decode([BaseballSessionExercise].self, from: allExercisesResponse.data)
+                logger.diagnostic("Fetched \(allExercises.count) exercises total for \(allSessions.count) sessions (1 query)")
+            }
 
-                var sessionsWithExercises: [BaseballProgramStructure.SessionWithExercises] = []
+            // Group sessions by phase_id and exercises by session_id in memory
+            let sessionsByPhase = Dictionary(grouping: allSessions) { $0.phaseId }
+            let exercisesBySession = Dictionary(grouping: allExercises) { $0.sessionId }
 
-                for session in sessions {
-                    // Fetch exercises with template details
-                    let exercisesResponse = try await supabase.client
-                        .from("session_exercises")
-                        .select("""
-                            id,
-                            session_id,
-                            exercise_template_id,
-                            sequence,
-                            block_number,
-                            block_label,
-                            target_sets,
-                            target_reps,
-                            notes,
-                            exercise_templates (
-                                id,
-                                name,
-                                category,
-                                body_region,
-                                equipment_type,
-                                difficulty_level,
-                                technique_cues,
-                                common_mistakes,
-                                safety_notes
-                            )
-                        """)
-                        .eq("session_id", value: session.id.uuidString)
-                        .order("sequence", ascending: true)
-                        .execute()
+            // Build structure from grouped data
+            var phasesWithSessions: [BaseballProgramStructure.PhaseWithSessions] = []
 
-                    let exercises = try decoder.decode([BaseballSessionExercise].self, from: exercisesResponse.data)
-                    logger.diagnostic("Session '\(session.name)' has \(exercises.count) exercises")
+            for phase in phases {
+                let phaseSessions = sessionsByPhase[phase.id] ?? []
+                logger.diagnostic("Phase '\(phase.name)' has \(phaseSessions.count) sessions")
 
-                    sessionsWithExercises.append(
-                        BaseballProgramStructure.SessionWithExercises(
-                            session: session,
-                            exercises: exercises
-                        )
+                let sessionsWithExercises: [BaseballProgramStructure.SessionWithExercises] = phaseSessions.map { session in
+                    let sessionExercises = exercisesBySession[session.id] ?? []
+                    logger.diagnostic("Session '\(session.name)' has \(sessionExercises.count) exercises")
+
+                    return BaseballProgramStructure.SessionWithExercises(
+                        session: session,
+                        exercises: sessionExercises
                     )
                 }
 

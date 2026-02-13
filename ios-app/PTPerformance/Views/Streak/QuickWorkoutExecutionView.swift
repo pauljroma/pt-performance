@@ -120,6 +120,8 @@ struct QuickWorkoutExecutionView: View {
                         .background(Color.white.opacity(0.2))
                         .clipShape(Circle())
                 }
+                .accessibilityLabel("Cancel workout")
+                .accessibilityHint("Shows confirmation to cancel the current workout")
 
                 Spacer()
 
@@ -145,7 +147,7 @@ struct QuickWorkoutExecutionView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(Color.white)
-                    .cornerRadius(20)
+                    .cornerRadius(CornerRadius.xl)
                 } else {
                     Button {
                         showCompleteConfirmation = true
@@ -265,6 +267,8 @@ struct QuickWorkoutExecutionView: View {
                         .background(workoutTypeColor)
                         .clipShape(Circle())
                 }
+                .accessibilityLabel(isTimerRunning ? "Pause timer" : "Start timer")
+                .accessibilityHint(isTimerRunning ? "Pauses the exercise timer" : "Starts the exercise timer")
 
                 Button {
                     timeRemaining = duration
@@ -276,6 +280,8 @@ struct QuickWorkoutExecutionView: View {
                         .background(Color(.tertiarySystemGroupedBackground))
                         .clipShape(Circle())
                 }
+                .accessibilityLabel("Reset timer")
+                .accessibilityHint("Resets the timer to the original duration")
             }
         }
         .onAppear {
@@ -333,7 +339,7 @@ struct QuickWorkoutExecutionView: View {
             .padding(.horizontal, 32)
             .padding(.vertical, 16)
             .background(completedExercises.contains(exercise.id) ? workoutTypeColor : Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(30)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 
@@ -371,7 +377,7 @@ struct QuickWorkoutExecutionView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(workoutTypeColor)
-                    .cornerRadius(14)
+                    .cornerRadius(CornerRadius.lg)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 32)

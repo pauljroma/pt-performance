@@ -188,9 +188,7 @@ class PTSupabaseClient: ObservableObject {
                 // Clear hasActiveSession flag when no session exists
                 UserDefaults.standard.set(false, forKey: "hasActiveSession")
             }
-            #if DEBUG
-            print("No existing session: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[SupabaseClient] No existing session: \(error.localizedDescription)", level: .diagnostic)
         }
     }
 
@@ -246,9 +244,7 @@ class PTSupabaseClient: ObservableObject {
     func fetchUserRole(userId: String) async {
         // Get user email from auth session
         guard let userEmail = currentUser?.email else {
-            #if DEBUG
-            print("❌ No user email available")
-            #endif
+            DebugLogger.shared.log("[SupabaseClient] No user email available", level: .warning)
             return
         }
 
@@ -261,14 +257,12 @@ class PTSupabaseClient: ObservableObject {
                 .execute()
                 .value
 
-            if !patientByAuthId.isEmpty {
+            if let patient = patientByAuthId.first {
                 await MainActor.run {
                     self.userRole = .patient
-                    self.userId = patientByAuthId[0].id.uuidString
+                    self.userId = patient.id.uuidString
                 }
-                #if DEBUG
-                print("✅ Found patient by user_id: \(patientByAuthId[0].first_name) \(patientByAuthId[0].last_name)")
-                #endif
+                DebugLogger.shared.log("[SupabaseClient] Found patient by user_id: \(patient.first_name) \(patient.last_name)", level: .success)
                 return
             }
 
@@ -280,14 +274,12 @@ class PTSupabaseClient: ObservableObject {
                 .execute()
                 .value
 
-            if !therapistByAuthId.isEmpty {
+            if let therapist = therapistByAuthId.first {
                 await MainActor.run {
                     self.userRole = .therapist
-                    self.userId = therapistByAuthId[0].id.uuidString
+                    self.userId = therapist.id.uuidString
                 }
-                #if DEBUG
-                print("✅ Found therapist by user_id: \(therapistByAuthId[0].first_name) \(therapistByAuthId[0].last_name)")
-                #endif
+                DebugLogger.shared.log("[SupabaseClient] Found therapist by user_id: \(therapist.first_name) \(therapist.last_name)", level: .success)
                 return
             }
 
@@ -299,14 +291,12 @@ class PTSupabaseClient: ObservableObject {
                 .execute()
                 .value
 
-            if !patientByEmail.isEmpty {
+            if let patient = patientByEmail.first {
                 await MainActor.run {
                     self.userRole = .patient
-                    self.userId = patientByEmail[0].id.uuidString
+                    self.userId = patient.id.uuidString
                 }
-                #if DEBUG
-                print("✅ Found patient by email (legacy): \(patientByEmail[0].first_name) \(patientByEmail[0].last_name)")
-                #endif
+                DebugLogger.shared.log("[SupabaseClient] Found patient by email (legacy): \(patient.first_name) \(patient.last_name)", level: .success)
                 return
             }
 
@@ -317,24 +307,18 @@ class PTSupabaseClient: ObservableObject {
                 .execute()
                 .value
 
-            if !therapistByEmail.isEmpty {
+            if let therapist = therapistByEmail.first {
                 await MainActor.run {
                     self.userRole = .therapist
-                    self.userId = therapistByEmail[0].id.uuidString
+                    self.userId = therapist.id.uuidString
                 }
-                #if DEBUG
-                print("✅ Found therapist by email (legacy): \(therapistByEmail[0].first_name) \(therapistByEmail[0].last_name)")
-                #endif
+                DebugLogger.shared.log("[SupabaseClient] Found therapist by email (legacy): \(therapist.first_name) \(therapist.last_name)", level: .success)
                 return
             }
 
-            #if DEBUG
-            print("⚠️ User not found in patients or therapists table for userId: \(userId), email: \(userEmail)")
-            #endif
+            DebugLogger.shared.log("[SupabaseClient] User not found in patients or therapists table for userId: \(userId), email: \(userEmail)", level: .warning)
         } catch {
-            #if DEBUG
-            print("❌ Error fetching user role: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[SupabaseClient] Error fetching user role: \(error.localizedDescription)", level: .error)
         }
     }
 
@@ -379,9 +363,7 @@ class PTSupabaseClient: ObservableObject {
                 self.userRole = .patient
                 self.userId = userId
             }
-            #if DEBUG
-            print("[Auth] User registered, awaiting email confirmation")
-            #endif
+            DebugLogger.shared.log("[SupabaseClient] User registered, awaiting email confirmation", level: .success)
         }
     }
 

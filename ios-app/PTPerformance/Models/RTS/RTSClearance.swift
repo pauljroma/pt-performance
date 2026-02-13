@@ -286,10 +286,10 @@ struct RTSClearanceInput: Codable {
         guard clearanceLevel != nil else {
             throw RTSClearanceError.invalidInput("Clearance level is required")
         }
-        guard assessmentSummary != nil && !assessmentSummary!.isEmpty else {
+        guard let assessmentSummary = assessmentSummary, !assessmentSummary.isEmpty else {
             throw RTSClearanceError.invalidInput("Assessment summary is required")
         }
-        guard recommendations != nil && !recommendations!.isEmpty else {
+        guard let recommendations = recommendations, !recommendations.isEmpty else {
             throw RTSClearanceError.invalidInput("Recommendations are required")
         }
     }

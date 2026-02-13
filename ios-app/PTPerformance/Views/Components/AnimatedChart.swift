@@ -127,7 +127,7 @@ struct AnimatedProgressRing: View {
 
             // Center label
             if showLabel {
-                VStack(spacing: 2) {
+                VStack(spacing: Spacing.xxs - 2) {
                     Text("\(Int(progress * 100))%")
                         .font(.system(
                             size: labelFontSize ?? (size * 0.22),
@@ -382,12 +382,12 @@ struct AnimatedChartBar: View {
 struct AnimatedChart_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView {
-            VStack(spacing: 40) {
+            VStack(spacing: Spacing.xl + Spacing.xs) {
                 // Progress Ring Examples
                 Text("Animated Progress Rings")
                     .font(.headline)
 
-                HStack(spacing: 20) {
+                HStack(spacing: Spacing.lg - Spacing.xxs) {
                     AnimatedProgressRing(
                         progress: 0.75,
                         color: .blue,
@@ -417,7 +417,7 @@ struct AnimatedChart_Previews: PreviewProvider {
                 Text("Animated Bar Chart")
                     .font(.headline)
 
-                HStack(alignment: .bottom, spacing: 8) {
+                HStack(alignment: .bottom, spacing: Spacing.xs) {
                     ForEach(0..<7, id: \.self) { index in
                         AnimatedChartBar(
                             value: CGFloat.random(in: 30...100),
@@ -430,7 +430,7 @@ struct AnimatedChart_Previews: PreviewProvider {
                 .frame(height: 160)
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
                 Divider()
 
@@ -452,7 +452,7 @@ struct AnimatedChart_Previews: PreviewProvider {
                 .animatedLineDrawing(duration: 1.0)
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
                 Spacer()
             }

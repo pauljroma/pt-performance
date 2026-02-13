@@ -49,6 +49,8 @@ struct TaskRow: View {
                             .foregroundColor(.modusTealAccent)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Mark as complete")
+                    .accessibilityHint("Double tap to mark this task as completed")
                 }
 
                 Image(systemName: "chevron.right")
@@ -60,6 +62,7 @@ struct TaskRow: View {
             .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
     }
 }
 

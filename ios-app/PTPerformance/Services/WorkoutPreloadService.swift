@@ -51,6 +51,10 @@ final class WorkoutPreloadService: ObservableObject {
         logger.log("[WorkoutPreloadService] Initialized", level: .diagnostic)
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Setup
 
     /// Setup observers for app lifecycle events

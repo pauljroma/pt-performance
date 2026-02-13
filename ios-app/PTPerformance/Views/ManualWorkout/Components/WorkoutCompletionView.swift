@@ -54,7 +54,7 @@ struct WorkoutCompletionView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
                 // Done Button
                 Button {
@@ -66,7 +66,7 @@ struct WorkoutCompletionView: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                 }
                 .padding(.top, 16)
                 .accessibilityLabel("Done")

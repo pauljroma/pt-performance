@@ -112,10 +112,8 @@ class ArmCareAssessmentService: ObservableObject {
         try input.validate()
 
         do {
-            #if DEBUG
-            print("Submitting arm care assessment via RPC for patient: \(patientId.uuidString), date: \(dateString)")
-            print("Scores: shoulder=\(input.shoulderScore ?? 0), elbow=\(input.elbowScore ?? 0), overall=\(input.overallScore ?? 0)")
-            #endif
+            DebugLogger.shared.log("[ArmCareAssessmentService] Submitting assessment for patient: \(patientId.uuidString), date: \(dateString)", level: .diagnostic)
+            DebugLogger.shared.log("[ArmCareAssessmentService] Scores: shoulder=\(input.shoulderScore ?? 0), elbow=\(input.elbowScore ?? 0), overall=\(input.overallScore ?? 0)", level: .diagnostic)
 
             // Use SECURITY DEFINER RPC function to bypass RLS
             let params = UpsertArmCareAssessmentParams(
@@ -138,9 +136,7 @@ class ArmCareAssessmentService: ObservableObject {
             let decoder = createDecoder()
             let assessment = try decoder.decode(ArmCareAssessment.self, from: response.data)
 
-            #if DEBUG
-            print("Arm care assessment saved: traffic_light=\(assessment.trafficLight.rawValue)")
-            #endif
+            DebugLogger.shared.log("[ArmCareAssessmentService] Assessment saved: traffic_light=\(assessment.trafficLight.rawValue)", level: .success)
 
             return assessment
         } catch {

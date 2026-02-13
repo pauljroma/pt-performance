@@ -471,7 +471,7 @@ struct LearningFilterChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .buttonStyle(PlainButtonStyle())
     }

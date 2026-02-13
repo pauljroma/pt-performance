@@ -13,17 +13,25 @@ struct SupplementHistoryView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                // Streak Card
-                streakCard
+                if viewModel.isLoading {
+                    ProgressView("Loading history...")
+                        .frame(maxWidth: .infinity, minHeight: 200)
+                        .accessibilityLabel("Loading supplement history")
+                } else if viewModel.hasNoHistory {
+                    emptyHistoryView
+                } else {
+                    // Streak Card
+                    streakCard
 
-                // Calendar View
-                calendarSection
+                    // Calendar View
+                    calendarSection
 
-                // Selected Day Details
-                selectedDaySection
+                    // Selected Day Details
+                    selectedDaySection
 
-                // Monthly Summary
-                monthlySummarySection
+                    // Monthly Summary
+                    monthlySummarySection
+                }
             }
             .padding()
         }
@@ -37,6 +45,8 @@ struct SupplementHistoryView: View {
                     Image(systemName: "calendar")
                         .foregroundColor(.modusCyan)
                 }
+                .accessibilityLabel("Select date")
+                .accessibilityHint("Opens a date picker to navigate to a specific month")
             }
         }
         .sheet(isPresented: $showingDatePicker) {
@@ -56,6 +66,49 @@ struct SupplementHistoryView: View {
                 await viewModel.loadHistory(for: newMonth)
             }
         }
+        .alert("Error Loading History", isPresented: .init(
+            get: { viewModel.error != nil },
+            set: { if !$0 { viewModel.error = nil } }
+        )) {
+            Button("Dismiss") { viewModel.error = nil }
+            Button("Retry") {
+                Task {
+                    await viewModel.loadHistory(for: selectedMonth)
+                }
+            }
+        } message: {
+            Text(viewModel.error ?? "An unknown error occurred while loading your supplement history.")
+        }
+    }
+
+    // MARK: - Empty History View
+
+    private var emptyHistoryView: some View {
+        VStack(spacing: Spacing.lg) {
+            Spacer()
+
+            Image(systemName: "pills.circle")
+                .font(.system(size: 64))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            VStack(spacing: Spacing.sm) {
+                Text("No Supplement History")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.modusDeepTeal)
+
+                Text("Start tracking your supplements to see your compliance history and streaks here.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Spacing.lg)
+            }
+
+            Spacer()
+        }
+        .frame(minHeight: 300)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No supplement history. Start tracking your supplements to see your compliance history and streaks here.")
     }
 
     // MARK: - Streak Card
@@ -185,6 +238,8 @@ struct SupplementHistoryView: View {
                 selectedDate: $selectedDate,
                 dayData: viewModel.calendarDayData
             )
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Calendar grid showing supplement compliance for \(selectedMonth.formatted(.dateTime.month(.wide).year()))")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -226,15 +281,25 @@ struct SupplementHistoryView: View {
             Image(systemName: "pills")
                 .font(.system(size: 32))
                 .foregroundColor(.secondary.opacity(0.5))
+                .accessibilityHidden(true)
 
             Text("No supplements logged")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+
+            if Calendar.current.isDateInToday(selectedDate) {
+                Text("Log your supplements from the dashboard to track your progress")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No supplements logged for \(selectedDate.formatted(date: .abbreviated, time: .omitted))")
     }
 
     // MARK: - Monthly Summary Section
@@ -296,6 +361,8 @@ struct SupplementHistoryView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(stat.supplement.name), taken \(stat.count) times")
                     }
                 }
                 .padding()
@@ -347,7 +414,7 @@ private struct SupplementCalendarGrid: View {
 
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
-            ForEach(Array(days.enumerated()), id: \.offset) { index, date in
+            ForEach(Array(days.enumerated()), id: \.offset) { _, date in
                 if let date = date {
                     SupplementCalendarDayCell(
                         date: date,
@@ -470,6 +537,21 @@ private struct SupplementComplianceBadge: View {
         }
     }
 
+    private var accessibilityDescription: String {
+        let percentage = Int(compliance * 100)
+        if percentage >= 100 {
+            return "Fully completed, \(percentage) percent"
+        } else if percentage >= 80 {
+            return "Almost complete, \(percentage) percent"
+        } else if percentage >= 50 {
+            return "Partially complete, \(percentage) percent"
+        } else if percentage > 0 {
+            return "Low compliance, \(percentage) percent"
+        } else {
+            return "No supplements taken"
+        }
+    }
+
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
@@ -483,6 +565,8 @@ private struct SupplementComplianceBadge: View {
         .background(color.opacity(0.15))
         .foregroundColor(color)
         .cornerRadius(CornerRadius.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
     }
 }
 
@@ -490,6 +574,17 @@ private struct SupplementComplianceBadge: View {
 
 private struct SupplementHistoryLogRow: View {
     let log: SupplementLogEntry
+
+    private var accessibilityDescription: String {
+        var description = log.supplementName
+        description += ", \(log.dosage)"
+        description += ", taken at \(log.takenAt.formatted(date: .omitted, time: .shortened))"
+        description += ", \(log.timing.displayName)"
+        if log.skipped {
+            description += ", skipped"
+        }
+        return description
+    }
 
     var body: some View {
         HStack(spacing: Spacing.sm) {
@@ -534,6 +629,8 @@ private struct SupplementHistoryLogRow: View {
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
     }
 }
 

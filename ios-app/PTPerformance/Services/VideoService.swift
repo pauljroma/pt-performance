@@ -38,6 +38,14 @@ class VideoService {
     // MARK: - Properties
 
     private let cache = URLCache.shared
+
+    /// Configured URLSession with explicit timeouts for video downloads
+    private lazy var urlSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30  // 30 seconds for initial response
+        config.timeoutIntervalForResource = 300  // 5 minutes for entire download
+        return URLSession(configuration: config)
+    }()
     private let errorLogger = ErrorLogger.shared
     private let fileManager = FileManager.default
     private let cacheDirectory: URL
@@ -67,8 +75,8 @@ class VideoService {
         // Skip if already cached
         guard !fileManager.fileExists(atPath: cachedURL.path) else { return }
 
-        // Download video data
-        let (data, response) = try await URLSession.shared.data(from: url)
+        // Download video data with configured timeout
+        let (data, response) = try await urlSession.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {

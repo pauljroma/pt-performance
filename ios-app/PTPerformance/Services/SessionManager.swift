@@ -10,6 +10,7 @@ import Combine
 
 /// Manages user session timeout and auto-logout
 /// HIPAA Technical Safeguard: Automatic Logoff (§164.312(a)(2)(iii))
+
 final class SessionManager: ObservableObject {
 
     // MARK: - Properties
@@ -35,10 +36,17 @@ final class SessionManager: ObservableObject {
     /// Notification observers
     private var cancellables = Set<AnyCancellable>()
 
+    /// Logger for session events
+    private let debugLogger = DebugLogger.shared
+
     // MARK: - Initialization
 
     private init() {
         setupNotificationObservers()
+    }
+
+    deinit {
+        cancellables.removeAll()
     }
 
     // MARK: - Public Methods
@@ -51,9 +59,7 @@ final class SessionManager: ObservableObject {
         resetActivity()
         startTimer()
 
-        #if DEBUG
-        print("[SessionManager] Session monitoring started (timeout: \(Self.sessionTimeout / 60) minutes)")
-        #endif
+        debugLogger.log("[SessionManager] Session monitoring started (timeout: \(Int(Self.sessionTimeout / 60)) minutes)", level: .success)
     }
 
     /// Stop monitoring (e.g., when user logs out)
@@ -61,9 +67,7 @@ final class SessionManager: ObservableObject {
         isMonitoring = false
         stopTimer()
 
-        #if DEBUG
-        print("[SessionManager] Session monitoring stopped")
-        #endif
+        debugLogger.log("[SessionManager] Session monitoring stopped", level: .diagnostic)
     }
 
     /// Record user activity (call on any user interaction)
@@ -126,10 +130,8 @@ final class SessionManager: ObservableObject {
             // Session expired
             triggerLogout(reason: "Session expired after \(Int(Self.sessionTimeout / 60)) minutes of inactivity")
         } else {
-            #if DEBUG
             let remainingTime = Self.sessionTimeout - elapsedTime
-            print("[SessionManager] Session valid - \(Int(remainingTime / 60)) minutes remaining")
-            #endif
+            debugLogger.log("[SessionManager] Session valid - \(Int(remainingTime / 60)) minutes remaining", level: .diagnostic)
         }
     }
 
@@ -141,15 +143,11 @@ final class SessionManager: ObservableObject {
     private func handleBackgrounding() {
         // Record when app went to background
         // Session continues counting even in background
-        #if DEBUG
-        print("[SessionManager] App backgrounded - session timeout continues")
-        #endif
+        debugLogger.log("[SessionManager] App backgrounded - session timeout continues", level: .diagnostic)
     }
 
     private func triggerLogout(reason: String) {
-        #if DEBUG
-        print("[SessionManager] ⚠️ Triggering logout: \(reason)")
-        #endif
+        debugLogger.log("[SessionManager] Triggering logout: \(reason)", level: .warning)
 
         stopMonitoring()
 

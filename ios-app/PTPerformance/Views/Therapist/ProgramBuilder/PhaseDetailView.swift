@@ -119,7 +119,7 @@ struct PhaseDetailView: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         PhaseDetailView(
             phase: .constant(
                 ProgramPhase(

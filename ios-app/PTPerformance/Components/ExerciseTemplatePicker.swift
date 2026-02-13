@@ -69,7 +69,7 @@ struct ExerciseTemplatePicker: View {
                                                 ? .white
                                                 : .primary
                                         )
-                                        .cornerRadius(20)
+                                        .cornerRadius(CornerRadius.xl)
                                 }
                             }
                         }

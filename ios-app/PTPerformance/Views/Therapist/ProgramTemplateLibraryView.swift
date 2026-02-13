@@ -301,7 +301,7 @@ struct ProgramSaveTemplateSheet: View {
                 }
 
                 Section {
-                    ForEach(Array(phases.enumerated()), id: \.element.id) { index, phase in
+                    ForEach(Array(phases.enumerated()), id: \.element.id) { _, phase in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(phase.name)
                                 .font(.subheadline)

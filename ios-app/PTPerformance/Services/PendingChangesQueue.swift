@@ -570,17 +570,15 @@ class PendingChangesQueue: ObservableObject {
 
     /// Print queue status to console
     func printStatus() {
-        #if DEBUG
         let stats = statistics()
-        print("""
+        DebugLogger.shared.log("""
             === Pending Changes Queue ===
             \(stats.summary)
             Total: \(stats.totalCount)
             By Type: \(stats.byType)
             By Priority: \(stats.byPriority)
             ==============================
-            """)
-        #endif
+            """, level: .diagnostic)
     }
 }
 

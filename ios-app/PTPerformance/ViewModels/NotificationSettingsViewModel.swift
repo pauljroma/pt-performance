@@ -82,6 +82,9 @@ final class NotificationSettingsViewModel: ObservableObject {
     /// Whether to show error alert
     @Published var showError: Bool = false
 
+    /// Track active task for cancellation on deinit
+    private var activeTask: Task<Void, Never>?
+
     /// Success message for test notification
     @Published var testNotificationSent: Bool = false
 
@@ -110,6 +113,10 @@ final class NotificationSettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    deinit {
+        activeTask?.cancel()
     }
 
     // MARK: - Public Methods
@@ -260,12 +267,15 @@ final class NotificationSettingsViewModel: ObservableObject {
 
     /// Handle master toggle change
     private func handleMasterToggleChange() {
+        // Cancel any previous task
+        activeTask?.cancel()
+
         if isEnabled {
-            Task {
+            activeTask = Task {
                 await requestPermissionIfNeeded()
             }
         } else {
-            Task {
+            activeTask = Task {
                 // Cancel all local notifications when disabled
                 await notificationManager.cancelAllScheduled()
             }

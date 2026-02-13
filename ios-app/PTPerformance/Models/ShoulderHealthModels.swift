@@ -349,10 +349,11 @@ enum AlertSeverity: String, Codable {
 // MARK: - Trend Data
 
 struct ShoulderTrendPoint: Identifiable {
-    let id = UUID()
     let date: Date
     let value: Double
     let label: String
+
+    var id: String { "\(date.timeIntervalSince1970)-\(value)-\(label)" }
 }
 
 struct ShoulderTrendData {

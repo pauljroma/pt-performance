@@ -66,6 +66,16 @@ class AdaptiveTrainingService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        // 0. Check if we already have ANY modification for today (pending, accepted, or declined)
+        // This prevents generating new modifications after one has been accepted/declined
+        let hasModificationToday = try await hasModificationForToday(patientId: patientId)
+        if hasModificationToday {
+            DebugLogger.shared.info("ADAPTIVE", "Modification already exists for today - skipping generation")
+            // Return existing pending one if available, otherwise nil
+            let existingPending = try await fetchPendingModifications(for: patientId)
+            return existingPending.first { Calendar.current.isDateInToday($0.scheduledDate) }
+        }
+
         // 1. Fetch today's readiness data
         guard let readiness = try await readinessService.getTodayReadiness(for: patientId) else {
             DebugLogger.shared.info("ADAPTIVE", "No readiness data for today - skipping modification check")
@@ -144,6 +154,36 @@ class AdaptiveTrainingService: ObservableObject {
 
         pendingModifications = modifications
         return modifications
+    }
+
+    /// Check if ANY modification exists for today (regardless of status: pending, accepted, declined)
+    /// This prevents generating duplicate modifications after one has been acted upon
+    /// - Parameter patientId: Patient UUID
+    /// - Returns: True if any modification exists for today
+    private func hasModificationForToday(patientId: UUID) async throws -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let todayString = dateFormatter.string(from: Date())
+
+        // Query ALL modifications for today (not just pending)
+        let response = try await client.client
+            .from("workout_modifications")
+            .select("id")
+            .eq("patient_id", value: patientId.uuidString)
+            .eq("scheduled_date", value: todayString)
+            .limit(1)
+            .execute()
+
+        // Check if we got any results
+        struct IdOnly: Decodable { let id: UUID }
+        let results = try? JSONDecoder().decode([IdOnly].self, from: response.data)
+        let exists = (results?.count ?? 0) > 0
+
+        if exists {
+            DebugLogger.shared.info("ADAPTIVE", "Found existing modification for today (any status) - will not generate new one")
+        }
+
+        return exists
     }
 
     /// Flexible decoder that handles both DATE (yyyy-MM-dd) and TIMESTAMPTZ formats

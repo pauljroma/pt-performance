@@ -382,7 +382,7 @@ private struct ComparisonExportView: View {
                 .cornerRadius(8)
             }
 
-            Text("PTPerformance")
+            Text("Modus")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }

@@ -45,6 +45,12 @@ class TrendAnalysisViewModel: ObservableObject {
         self.patientId = patientId
     }
 
+    deinit {
+        // Cancel any in-progress load task to prevent memory leaks
+        loadTask?.cancel()
+        loadTask = nil
+    }
+
     // MARK: - Public Methods
 
     /// Load analysis for current selections

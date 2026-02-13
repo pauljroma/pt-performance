@@ -206,7 +206,7 @@ struct RTSProtocolInput: Codable {
         guard sportId != nil else {
             throw RTSProtocolError.invalidInput("Sport ID is required")
         }
-        guard injuryType != nil && !injuryType!.isEmpty else {
+        guard let injuryType = injuryType, !injuryType.isEmpty else {
             throw RTSProtocolError.invalidInput("Injury type is required")
         }
         guard injuryDate != nil else {

@@ -215,7 +215,7 @@ struct BulkProgramAssignmentSheet: View {
                     .padding(.vertical, 14)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal)
             .padding(.bottom, 24)

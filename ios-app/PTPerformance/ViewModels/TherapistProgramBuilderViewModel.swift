@@ -67,16 +67,18 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     enum BuilderStep: Int, CaseIterable {
         case start = 0
-        case templatePicker = 1
-        case patient = 2
-        case basics = 3
-        case phases = 4
-        case workouts = 5
-        case preview = 6
+        case quickBuildPicker = 1
+        case templatePicker = 2
+        case patient = 3
+        case basics = 4
+        case phases = 5
+        case workouts = 6
+        case preview = 7
 
         var displayName: String {
             switch self {
             case .start: return "Start"
+            case .quickBuildPicker: return "Quick Build"
             case .templatePicker: return "Template"
             case .patient: return "Patient"
             case .basics: return "Basics"
@@ -150,11 +152,22 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     @Published var templateSearchText: String = ""
     @Published var isLoadingTemplates: Bool = false
 
+    // MARK: - Published Properties - Quick Build Template Selection
+
+    @Published var selectedQuickBuildTemplate: QuickBuildTemplate?
+
     // MARK: - Published Properties - State
 
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+    @Published var templateLoadFailed: Bool = false
+    @Published var showUnsavedChangesAlert: Bool = false
+
+    /// Tracks if user has made changes that would be lost on navigation
+    var hasUnsavedChanges: Bool {
+        !phases.isEmpty || !programName.isEmpty || selectedPatient != nil
+    }
 
     // MARK: - Private Properties
 
@@ -196,6 +209,9 @@ class TherapistProgramBuilderViewModel: ObservableObject {
         case .start:
             // Always can proceed from start (mode is pre-selected)
             return true
+        case .quickBuildPicker:
+            // Quick build selection - always can proceed (template is pre-selected)
+            return selectedQuickBuildTemplate != nil
         case .templatePicker:
             // Must select a template when in fromTemplate mode
             return selectedTemplate != nil
@@ -223,10 +239,25 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     func nextStep() {
         var nextRawValue = currentStep.rawValue + 1
 
-        // Skip templatePicker step unless in fromTemplate mode
-        if currentStep == .start && creationMode != .fromTemplate {
+        // Handle conditional step navigation based on creation mode
+        if currentStep == .start {
+            switch creationMode {
+            case .quickBuild:
+                nextRawValue = BuilderStep.quickBuildPicker.rawValue
+            case .fromTemplate:
+                nextRawValue = BuilderStep.templatePicker.rawValue
+            case .custom:
+                nextRawValue = BuilderStep.patient.rawValue
+            }
+        } else if currentStep == .quickBuildPicker || currentStep == .templatePicker {
+            // After picking a template (quick or from library), go to patient
+            // Clear search text when leaving template picker
+            templateSearchText = ""
             nextRawValue = BuilderStep.patient.rawValue
         }
+
+        // Clear error message when advancing
+        errorMessage = nil
 
         guard let nextIndex = BuilderStep(rawValue: nextRawValue) else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -238,14 +269,38 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     func previousStep() {
         var prevRawValue = currentStep.rawValue - 1
 
-        // Skip templatePicker step when going back unless in fromTemplate mode
-        if currentStep == .patient && creationMode != .fromTemplate {
+        // Handle conditional step navigation when going back
+        if currentStep == .patient {
+            switch creationMode {
+            case .quickBuild:
+                prevRawValue = BuilderStep.quickBuildPicker.rawValue
+            case .fromTemplate:
+                prevRawValue = BuilderStep.templatePicker.rawValue
+            case .custom:
+                prevRawValue = BuilderStep.start.rawValue
+            }
+        } else if currentStep == .quickBuildPicker || currentStep == .templatePicker {
             prevRawValue = BuilderStep.start.rawValue
         }
+
+        // Clear error message when going back
+        errorMessage = nil
 
         guard let prevIndex = BuilderStep(rawValue: prevRawValue) else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
             currentStep = prevIndex
+        }
+    }
+
+    /// Check if navigating back would lose significant work
+    func wouldLoseWorkGoingBack() -> Bool {
+        switch currentStep {
+        case .phases:
+            return !phases.isEmpty
+        case .workouts:
+            return phases.contains { !$0.workoutAssignments.isEmpty }
+        default:
+            return false
         }
     }
 
@@ -273,6 +328,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
         phases = []
         availableTemplates = []
         selectedTemplate = nil
+        selectedQuickBuildTemplate = nil
         templateSearchText = ""
         errorMessage = nil
         successMessage = nil
@@ -281,11 +337,20 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     // MARK: - Equipment Management
 
+    /// Maximum length for equipment items
+    private let maxEquipmentLength = 50
+
     func addEquipmentFromInput() {
         let items = equipmentInput
             .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && !equipmentRequired.contains($0) }
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { item in
+                !item.isEmpty &&
+                item.count <= maxEquipmentLength &&
+                !equipmentRequired.contains(item) &&
+                item.rangeOfCharacter(from: CharacterSet.alphanumerics.union(.whitespaces).inverted) == nil
+            }
+            .prefix(10) // Limit to 10 items at once
 
         equipmentRequired.append(contentsOf: items)
         equipmentInput = ""
@@ -297,11 +362,20 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     // MARK: - Tag Management
 
+    /// Maximum length for tag items
+    private let maxTagLength = 30
+
     func addTagsFromInput() {
         let items = tagsInput
             .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty && !tags.contains($0) }
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { item in
+                !item.isEmpty &&
+                item.count <= maxTagLength &&
+                !tags.contains(item) &&
+                item.rangeOfCharacter(from: CharacterSet.alphanumerics.union(.whitespaces).inverted) == nil
+            }
+            .prefix(10) // Limit to 10 items at once
 
         tags.append(contentsOf: items)
         tagsInput = ""
@@ -312,6 +386,9 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     }
 
     // MARK: - Phase Management
+
+    /// Maximum phase name length
+    private let maxPhaseNameLength = 100
 
     func addPhase() {
         let newSequence = phases.count + 1
@@ -326,8 +403,34 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
     func updatePhase(_ phase: TherapistPhaseData) {
         if let index = phases.firstIndex(where: { $0.id == phase.id }) {
-            phases[index] = phase
+            // Validate and sanitize phase name
+            var updatedPhase = phase
+            let trimmedName = phase.name.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // If name is empty or whitespace, use default
+            if trimmedName.isEmpty {
+                updatedPhase.name = "Phase \(phase.sequence)"
+            } else if trimmedName.count > maxPhaseNameLength {
+                // Truncate if too long
+                updatedPhase.name = String(trimmedName.prefix(maxPhaseNameLength))
+            } else {
+                updatedPhase.name = trimmedName
+            }
+
+            phases[index] = updatedPhase
         }
+    }
+
+    /// Validate a phase name
+    func validatePhaseName(_ name: String) -> (isValid: Bool, message: String?) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return (false, "Phase name cannot be empty")
+        }
+        if trimmed.count > maxPhaseNameLength {
+            return (false, "Phase name must be \(maxPhaseNameLength) characters or less")
+        }
+        return (true, nil)
     }
 
     func deletePhase(at index: Int) {
@@ -366,10 +469,12 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     }
 
     /// Load available program templates from the program_library table
-    func loadTemplates() async {
-        guard availableTemplates.isEmpty else { return } // Skip if already loaded
+    func loadTemplates(forceReload: Bool = false) async {
+        guard availableTemplates.isEmpty || forceReload else { return } // Skip if already loaded
 
         isLoadingTemplates = true
+        templateLoadFailed = false
+        errorMessage = nil
         logger.log("Loading program templates from library...", level: .diagnostic)
 
         do {
@@ -377,15 +482,22 @@ class TherapistProgramBuilderViewModel: ObservableObject {
             await MainActor.run {
                 self.availableTemplates = templates
                 self.isLoadingTemplates = false
+                self.templateLoadFailed = false
             }
             logger.log("Loaded \(templates.count) program templates", level: .success)
         } catch {
             logger.log("Failed to load templates: \(error.localizedDescription)", level: .error)
             await MainActor.run {
                 self.isLoadingTemplates = false
-                self.errorMessage = "Failed to load program templates. Please try again."
+                self.templateLoadFailed = true
+                self.errorMessage = "Unable to load templates. Check your connection and try again."
             }
         }
+    }
+
+    /// Retry loading templates after failure
+    func retryLoadTemplates() async {
+        await loadTemplates(forceReload: true)
     }
 
     /// Apply a selected template to pre-fill the wizard state
@@ -445,9 +557,15 @@ class TherapistProgramBuilderViewModel: ObservableObject {
             await MainActor.run {
                 self.isLoading = false
                 // Template metadata is already applied, just couldn't load phases
-                self.errorMessage = "Could not load template phases. You can add phases manually."
+                // Show a more actionable error with clear next steps
+                self.errorMessage = "Template basics loaded, but phases couldn't be fetched. You can continue and add phases manually, or go back to try a different template."
             }
         }
+    }
+
+    /// Check if template application is in a partial state (metadata loaded but no phases)
+    var isTemplatePartiallyApplied: Bool {
+        selectedTemplate != nil && phases.isEmpty && !programName.isEmpty
     }
 
     /// Helper to fetch workout template names for assignments
@@ -509,6 +627,39 @@ class TherapistProgramBuilderViewModel: ObservableObject {
     func clearTemplateSelection() {
         selectedTemplate = nil
         // Don't clear the pre-filled data - user might want to keep it
+    }
+
+    // MARK: - Quick Build Template Application
+
+    /// Apply a QuickBuildTemplate to pre-fill the wizard state
+    /// This is used for the "Quick Build" creation mode with pre-built templates
+    func applyQuickBuildTemplate(_ template: QuickBuildTemplate) {
+        logger.log("Applying quick build template: \(template.name)", level: .diagnostic)
+
+        // Handle custom template (blank slate)
+        if template.isCustom {
+            // Reset to defaults for custom program
+            programName = ""
+            description = ""
+            category = ProgramCategory.strength.rawValue
+            difficultyLevel = DifficultyLevel.intermediate.rawValue
+            durationWeeks = 4
+            phases = []
+            logger.log("Applied custom template - blank slate ready", level: .success)
+            return
+        }
+
+        // Pre-fill basic program metadata from the template
+        programName = template.name
+        description = template.description
+        category = template.categoryForViewModel
+        difficultyLevel = template.difficultyLevel
+        durationWeeks = template.durationWeeks
+
+        // Convert PhaseTemplates to TherapistPhaseData
+        phases = template.toTherapistPhases()
+
+        logger.log("Applied quick build template with \(phases.count) phases", level: .success)
     }
 
     // MARK: - CRUD Operations
@@ -635,6 +786,9 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
         logger.log("Publishing program to library: \(programName)", level: .diagnostic)
 
+        // Track if we created a new program in this call (for rollback)
+        var newlyCreatedProgramId: UUID?
+
         do {
             // First create/save the program if not already created
             let programId: UUID
@@ -642,6 +796,7 @@ class TherapistProgramBuilderViewModel: ObservableObject {
                 programId = existingId
             } else {
                 programId = try await createProgram()
+                newlyCreatedProgramId = programId // Mark for potential rollback
             }
 
             // Create the program_library entry
@@ -673,16 +828,54 @@ class TherapistProgramBuilderViewModel: ObservableObject {
 
             // Auto-assign to patient if one was selected
             if let patient = selectedPatient {
-                try await assignProgramToPatient(libraryEntryId: libraryEntry.id, patient: patient)
-                successMessage = "Program published and assigned to \(patient.fullName)!"
+                // Patient assignment failure should not fail the whole publish
+                do {
+                    try await assignProgramToPatient(libraryEntryId: libraryEntry.id, patient: patient)
+                    successMessage = "Program published and assigned to \(patient.fullName)!"
+                } catch {
+                    logger.log("Failed to auto-assign to patient: \(error)", level: .warning)
+                    successMessage = "Program published! (Patient assignment failed - you can assign manually)"
+                }
             } else {
                 successMessage = "Program '\(programName)' published to library!"
             }
 
         } catch {
             logger.log("Failed to publish to library: \(error)", level: .error)
+
+            // If we created a new program but library entry failed, try to clean up
+            if let orphanedId = newlyCreatedProgramId {
+                logger.log("Attempting to clean up orphaned program \(orphanedId)", level: .diagnostic)
+                await cleanupOrphanedProgram(programId: orphanedId)
+                createdProgramId = nil // Reset so next attempt creates fresh
+            }
+
             errorMessage = "Unable to publish your program. Please try again."
             throw error
+        }
+    }
+
+    /// Attempts to delete an orphaned program created during a failed publish
+    private func cleanupOrphanedProgram(programId: UUID) async {
+        do {
+            // Delete phases first (cascade should handle assignments)
+            try await supabase.client
+                .from("phases")
+                .delete()
+                .eq("program_id", value: programId.uuidString)
+                .execute()
+
+            // Delete the program
+            try await supabase.client
+                .from("programs")
+                .delete()
+                .eq("id", value: programId.uuidString)
+                .execute()
+
+            logger.log("Cleaned up orphaned program \(programId)", level: .success)
+        } catch {
+            // Cleanup failed - not critical, just log it
+            logger.log("Failed to clean up orphaned program: \(error)", level: .warning)
         }
     }
 

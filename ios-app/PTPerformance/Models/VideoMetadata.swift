@@ -175,9 +175,10 @@ struct VideoMetadata: Codable, Identifiable, Equatable {
     /// Parsed aspect ratio as a tuple (width, height)
     var aspectRatioComponents: (width: Int, height: Int)? {
         let parts = aspectRatio.split(separator: ":")
-        guard parts.count == 2,
-              let width = Int(parts[0]),
-              let height = Int(parts[1]) else {
+        guard let widthStr = parts.first,
+              let heightStr = parts.dropFirst().first,
+              let width = Int(widthStr),
+              let height = Int(heightStr) else {
             return nil
         }
         return (width, height)

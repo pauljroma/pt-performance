@@ -81,10 +81,7 @@ class TodaySessionViewModel: ObservableObject {
             if let cached = PreloadedWorkoutCache.shared.getCachedData(for: patientId) {
                 self.session = cached.session
                 self.exercises = cached.exercises
-                logger.log("⚡ Using preloaded cache - zero loading state!", level: .success)
-                #if DEBUG
-                print("⚡ [TodaySession] Cache hit! Session: \(cached.session?.name ?? "nil"), \(cached.exercises.count) exercises")
-                #endif
+                logger.log("⚡ Cache hit! Session: \(cached.session?.name ?? "nil"), \(cached.exercises.count) exercises", level: .success)
                 // Still fetch in background to ensure freshness
                 isLoading = false
                 await fetchTodaysCompletedWorkouts()
@@ -99,10 +96,7 @@ class TodaySessionViewModel: ObservableObject {
             // No cache - show loading state and fetch
             isLoading = true
 
-            #if DEBUG
             logger.log("📱 Starting fetchTodaySession for patient: \(patientId)")
-            print("📱 [TodaySession] Starting fetch for patient: \(patientId)")
-            #endif
 
             do {
                 // Check for cancellation before network call
@@ -110,18 +104,12 @@ class TodaySessionViewModel: ObservableObject {
 
                 // Fetch directly from Supabase (backend API not deployed yet)
                 logger.log("📱 Fetching from Supabase...")
-                #if DEBUG
-                print("📱 [TodaySession] Fetching from Supabase...")
-                #endif
                 try await fetchFromSupabase(patientId: patientId)
 
                 // Check for cancellation after network call
                 try Task.checkCancellation()
 
                 logger.log("✅ Supabase fetch succeeded", level: .success)
-                #if DEBUG
-                print("✅ [TodaySession] Supabase fetch succeeded")
-                #endif
 
                 // Cache session data for offline use (ACP-600)
                 let cachedData = CachedTodaySession(session: self.session, exercises: self.exercises)
@@ -145,12 +133,7 @@ class TodaySessionViewModel: ObservableObject {
                 logger.log("⏹️ fetchTodaySession cancelled (superseded by new request)", level: .warning)
                 return
             } catch let error {
-                logger.log("❌ Supabase fetch failed", level: .error)
-                logger.log("   Error: \(error.localizedDescription)", level: .error)
-                #if DEBUG
-                print("❌ [TodaySession] Supabase fetch failed")
-                print("   Error: \(error.localizedDescription)")
-                #endif
+                logger.log("❌ Supabase fetch failed: \(error.localizedDescription)", level: .error)
 
                 // Serve cached data when offline (ACP-600)
                 if supabase.isOffline,
@@ -160,10 +143,7 @@ class TodaySessionViewModel: ObservableObject {
                    ) {
                     self.session = cached.session
                     self.exercises = cached.exercises
-                    logger.log("📦 Serving cached session data (offline mode)", level: .success)
-                    #if DEBUG
-                    print("📦 [TodaySession] Serving cached data - session: \(cached.session?.name ?? "nil"), exercises: \(cached.exercises.count)")
-                    #endif
+                    logger.log("📦 Serving cached session data (offline mode) - session: \(cached.session?.name ?? "nil"), exercises: \(cached.exercises.count)", level: .success)
                     // Don't set errorMessage - OfflineBanner handles offline indication
                 } else {
                     errorMessage = """
@@ -189,43 +169,26 @@ class TodaySessionViewModel: ObservableObject {
         /*
         do {
             // Option 1: Call backend /today-session endpoint
-            logger.log("📱 Trying backend API...")
-            #if DEBUG
-            print("📱 [TodaySession] Trying backend API...")
-            #endif
+            logger.log("[TodaySession] Trying backend API...", level: .diagnostic)
             let response = try await fetchFromBackend(patientId: patientId)
 
             self.session = response.session
             self.exercises = response.exercises
-            logger.log("✅ Backend API succeeded - session: \(response.session?.name ?? "nil")", level: .success)
-            #if DEBUG
-            print("✅ [TodaySession] Backend API succeeded")
-            #endif
+            logger.log("[TodaySession] Backend API succeeded - session: \(response.session?.name ?? "nil")", level: .success)
             isLoading = false
         } catch let backendError {
             // Fallback to direct Supabase query if backend unavailable
-            logger.log("⚠️ Backend failed, trying Supabase...", level: .warning)
-            logger.log("   Backend error: \(backendError.localizedDescription)", level: .warning)
-            #if DEBUG
-            print("⚠️ [TodaySession] Backend failed (\(backendError.localizedDescription)), trying Supabase...")
-            #endif
+            logger.log("[TodaySession] Backend failed, trying Supabase...", level: .warning)
+            logger.log("  Backend error: \(backendError.localizedDescription)", level: .warning)
 
             do {
                 try await fetchFromSupabase(patientId: patientId)
-                logger.log("✅ Supabase fallback succeeded", level: .success)
-                #if DEBUG
-                print("✅ [TodaySession] Supabase fallback succeeded")
-                #endif
+                logger.log("[TodaySession] Supabase fallback succeeded", level: .success)
                 isLoading = false
             } catch let supabaseError {
-                logger.log("❌ BOTH backend AND Supabase FAILED", level: .error)
-                logger.log("   Backend error: \(backendError.localizedDescription)", level: .error)
-                logger.log("   Supabase error: \(supabaseError.localizedDescription)", level: .error)
-                #if DEBUG
-                print("❌ [TodaySession] Both backend and Supabase failed")
-                print("   Backend error: \(backendError.localizedDescription)")
-                print("   Supabase error: \(supabaseError.localizedDescription)")
-                #endif
+                logger.log("[TodaySession] BOTH backend AND Supabase FAILED", level: .error)
+                logger.log("  Backend error: \(backendError.localizedDescription)", level: .error)
+                logger.log("  Supabase error: \(supabaseError.localizedDescription)", level: .error)
 
                 errorMessage = """
                 We couldn't load your workout for today.
@@ -245,39 +208,28 @@ class TodaySessionViewModel: ObservableObject {
 
     /// Fetch from backend API (/today-session/:patientId)
     private func fetchFromBackend(patientId: String) async throws -> TodaySessionResponse {
+        let logger = DebugLogger.shared
         let backendURL = Config.backendURL
-        #if DEBUG
-        print("📱 [TodaySession] Backend URL: \(backendURL)")
-        #endif
+        logger.log("📱 Backend URL: \(backendURL)")
 
         guard let url = URL(string: "\(backendURL)/today-session/\(patientId)") else {
-            #if DEBUG
-            print("❌ [TodaySession] Invalid backend URL: \(backendURL)")
-            #endif
+            logger.log("❌ Invalid backend URL: \(backendURL)", level: .error)
             throw URLError(.badURL)
         }
 
-        #if DEBUG
-        print("📱 [TodaySession] Calling: \(url.absoluteString)")
-        #endif
+        logger.log("📱 Calling: \(url.absoluteString)")
         let (data, response) = try await URLSession.shared.data(from: url)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            #if DEBUG
-            print("❌ [TodaySession] No HTTP response")
-            #endif
+            logger.log("❌ No HTTP response", level: .error)
             throw URLError(.badServerResponse)
         }
 
-        #if DEBUG
-        print("📱 [TodaySession] Backend response status: \(httpResponse.statusCode)")
-        #endif
+        logger.log("📱 Backend response status: \(httpResponse.statusCode)")
 
         guard httpResponse.statusCode == 200 else {
             if let responseString = String(data: data, encoding: .utf8) {
-                #if DEBUG
-                print("❌ [TodaySession] Backend error response: \(responseString)")
-                #endif
+                logger.log("❌ Backend error response: \(responseString)", level: .error)
             }
             throw URLError(.badServerResponse)
         }
@@ -294,9 +246,6 @@ class TodaySessionViewModel: ObservableObject {
         // First check scheduled_sessions for today
         let today = ISO8601DateFormatter().string(from: Date()).prefix(10) // YYYY-MM-DD
         logger.log("📱 Checking scheduled_sessions for today: \(today)")
-        #if DEBUG
-        print("📱 [TodaySession] Checking scheduled_sessions for today: \(today)")
-        #endif
 
         // Try to find a scheduled session for today first
         var sessionId: String? = nil
@@ -331,16 +280,10 @@ class TodaySessionViewModel: ObservableObject {
                 if let id = scheduled.session_id {
                     sessionId = id
                     logger.log("✅ Found scheduled session for today: \(id)", level: .success)
-                    #if DEBUG
-                    print("✅ [TodaySession] Found scheduled session for today: \(id)")
-                    #endif
                 } else if scheduled.enrollment_id != nil, let templateId = scheduled.workout_template_id {
                     // Build 451: Handle enrollment-based workouts (workout_template_id based)
                     logger.log("📱 Found enrollment-based workout: \(scheduled.workout_name ?? "Unknown")")
                     logger.log("📱 Template ID: \(templateId)")
-                    #if DEBUG
-                    print("📱 [TodaySession] Found enrollment workout with template: \(templateId)")
-                    #endif
 
                     // Fetch the template-based workout
                     if let workoutSession = try await fetchTemplateBasedWorkout(
@@ -382,9 +325,6 @@ class TodaySessionViewModel: ObservableObject {
                 }
 
                 logger.log("✅ Found scheduled session: \(session.name) (ID: \(session.id))", level: .success)
-                #if DEBUG
-                print("✅ [TodaySession] Found scheduled session: \(session.name)")
-                #endif
                 self.session = session
 
                 // Fetch exercises for this session
@@ -399,9 +339,6 @@ class TodaySessionViewModel: ObservableObject {
         // Fallback: Query sessions via program chain
         logger.log("📱 No scheduled session, falling back to program-based lookup")
         logger.log("📱 Query filters: phases.programs.patient_id=\(patientId), status=active")
-        #if DEBUG
-        print("📱 [TodaySession] Falling back to program-based lookup")
-        #endif
 
         // Query sessions via correct relationship chain: sessions -> phases -> programs
         // Use the first active session from the patient's active program
@@ -439,16 +376,10 @@ class TodaySessionViewModel: ObservableObject {
             let sessionsResponse = try decoder.decode([Session].self, from: response.data)
 
             logger.log("📱 Supabase returned \(sessionsResponse.count) sessions")
-            #if DEBUG
-            print("📱 [TodaySession] Supabase returned \(sessionsResponse.count) sessions")
-            #endif
 
         // If no direct program found, try enrolled programs via RPC
         guard let session = sessionsResponse.first else {
             logger.log("📱 No direct program found, trying enrolled programs via RPC...", level: .warning)
-            #if DEBUG
-            print("📱 [TodaySession] No direct program, trying RPC get_today_enrolled_session...")
-            #endif
 
             // Build 444: Call RPC to get session via enrollment
             if let enrolledSession = try await fetchEnrolledProgramSession(patientId: patientId) {
@@ -462,9 +393,6 @@ class TodaySessionViewModel: ObservableObject {
             logger.log("   1. Patient has no active program", level: .warning)
             logger.log("   2. Patient has no active enrollments", level: .warning)
             logger.log("   3. Enrolled programs have no sessions", level: .warning)
-            #if DEBUG
-            print("⚠️ [TodaySession] No sessions found via direct program or enrollment")
-            #endif
             // No active sessions found
             self.session = nil
             self.exercises = []
@@ -472,9 +400,6 @@ class TodaySessionViewModel: ObservableObject {
         }
 
         logger.log("✅ Found session: \(session.name) (ID: \(session.id))", level: .success)
-        #if DEBUG
-        print("✅ [TodaySession] Found session: \(session.name) (ID: \(session.id))")
-        #endif
         self.session = session
 
         // Fetch exercises for this session using helper
@@ -720,9 +645,6 @@ class TodaySessionViewModel: ObservableObject {
         let exercisesResponse = try decoder.decode([Exercise].self, from: response.data)
 
         logger.log("✅ Found \(exercisesResponse.count) exercises", level: .success)
-        #if DEBUG
-        print("✅ [TodaySession] Found \(exercisesResponse.count) exercises")
-        #endif
         self.exercises = exercisesResponse
     }
 

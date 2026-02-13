@@ -275,7 +275,7 @@ final class CitationService: ObservableObject {
 
 /// A group of citations from the same source type
 struct CitationGroup: Identifiable {
-    let id = UUID()
+    var id: String { "\(sourceType)" }
     let sourceType: CitationSourceType
     let citations: [EvidenceCitation]
 

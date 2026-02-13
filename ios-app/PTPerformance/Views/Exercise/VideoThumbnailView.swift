@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  VideoThumbnailView.swift
 //  PTPerformance
@@ -124,7 +125,7 @@ struct VideoThumbnailView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.green.opacity(0.8))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                 }
 
                 Spacer()
@@ -138,7 +139,7 @@ struct VideoThumbnailView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.blue.opacity(0.8))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .padding(8)
@@ -168,7 +169,7 @@ struct VideoThumbnailView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.black.opacity(0.6))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .padding(8)
@@ -352,7 +353,7 @@ struct PrimaryVideoCardView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(Color.blue)
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
                         .padding()
                     }
@@ -369,7 +370,7 @@ struct PrimaryVideoCardView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
                                     .background(Color.green.opacity(0.9))
-                                    .cornerRadius(4)
+                                    .cornerRadius(CornerRadius.xs)
                             }
                             Spacer()
                         }

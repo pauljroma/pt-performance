@@ -220,7 +220,7 @@ struct BodyCompGoalProgressCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -287,7 +287,7 @@ struct CompactGoalProgressCard: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

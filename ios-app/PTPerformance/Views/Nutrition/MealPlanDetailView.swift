@@ -124,7 +124,7 @@ struct MealPlanDetailView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -197,7 +197,7 @@ struct MealPlanDetailView: View {
                     .padding(.vertical, 10)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
             }
         }
         .frame(maxWidth: .infinity)
@@ -338,12 +338,12 @@ struct DaySelectorButton: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
             .frame(width: 50, height: 55)
             .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
             .foregroundColor(isSelected ? .blue : .primary)
         }
         .buttonStyle(.plain)
@@ -375,7 +375,7 @@ struct MealTypeSection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -430,6 +430,6 @@ struct MealItemCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }

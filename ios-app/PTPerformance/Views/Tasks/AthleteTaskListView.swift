@@ -16,6 +16,38 @@ struct AthleteTaskListView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
+                // Loading state
+                if viewModel.isLoading {
+                    ProgressView("Loading tasks...")
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xxl)
+                }
+
+                // Error state
+                if let error = viewModel.error {
+                    VStack(spacing: Spacing.md) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 48))
+                            .foregroundColor(.orange)
+
+                        Text("Unable to Load Tasks")
+                            .font(.headline)
+
+                        Text(error.localizedDescription)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        Button("Try Again") {
+                            Task { await viewModel.loadTasks() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xxl)
+                    .padding(.horizontal, Spacing.lg)
+                }
+
                 // Today's Tasks Section
                 if !viewModel.todayTasks.isEmpty {
                     TaskSection(

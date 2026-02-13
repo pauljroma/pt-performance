@@ -420,7 +420,7 @@ struct ProgressVisualizationCard: View {
 
                             // Week markers
                             HStack(spacing: 0) {
-                                ForEach(1..<program.durationWeeks, id: \.self) { week in
+                                ForEach(1..<program.durationWeeks, id: \.self) { _ in
                                     Spacer()
                                     Rectangle()
                                         .fill(Color(.systemGray3))
@@ -813,7 +813,7 @@ struct AdherenceMetricsCard: View {
                             Rectangle()
                                 .fill(Color(.systemGray4))
                         }
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                     }
                     .frame(height: 12)
 
@@ -900,7 +900,7 @@ private struct AdherenceLegendItem: View {
 #if DEBUG
 struct PatientProgramProgressView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             PatientProgramProgressView(patient: Patient(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
                 therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,

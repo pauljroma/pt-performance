@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  DataConsentView.swift
 //  PTPerformance
@@ -113,7 +114,7 @@ struct DataConsentView: View {
                 .fontWeight(.bold)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Choose which external sources can share data with PTPerformance. You can change these settings at any time.")
+            Text("Choose which external sources can share data with Modus. You can change these settings at any time.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -303,10 +304,10 @@ struct DataConsentView: View {
                     Text("Revoke All Access")
                 }
                 .font(.headline)
-                .foregroundColor(.red)
+                .foregroundColor(DesignTokens.statusError)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.red.opacity(0.1))
+                .background(DesignTokens.statusError.opacity(0.1))
                 .cornerRadius(CornerRadius.md)
             }
             .disabled(viewModel.isSaving)
@@ -421,7 +422,7 @@ struct ConsentAuditLogView: View {
             actionIcon(for: entry.action)
                 .frame(width: 32, height: 32)
                 .background(actionBackgroundColor(for: entry.action))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             // Content
             VStack(alignment: .leading, spacing: 2) {
@@ -465,22 +466,22 @@ struct ConsentAuditLogView: View {
     private func actionIconColor(for action: ConsentAction) -> Color {
         switch action {
         case .granted:
-            return .green
+            return DesignTokens.statusSuccess
         case .revoked:
-            return .red
+            return DesignTokens.statusError
         case .created:
-            return .blue
+            return DesignTokens.statusInfo
         }
     }
 
     private func actionBackgroundColor(for action: ConsentAction) -> Color {
         switch action {
         case .granted:
-            return .green.opacity(0.15)
+            return DesignTokens.statusSuccess.opacity(0.15)
         case .revoked:
-            return .red.opacity(0.15)
+            return DesignTokens.statusError.opacity(0.15)
         case .created:
-            return .blue.opacity(0.15)
+            return DesignTokens.statusInfo.opacity(0.15)
         }
     }
 

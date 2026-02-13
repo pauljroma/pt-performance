@@ -52,6 +52,10 @@ final class X2CommandCenterViewModel: ObservableObject {
         setupObservers()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Public Methods
 
     /// Load all command center data

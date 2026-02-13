@@ -432,7 +432,7 @@ private struct EquipmentChip: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .contain)
     }
 }
@@ -459,7 +459,7 @@ private struct TagChipRemovable: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .contain)
     }
 }

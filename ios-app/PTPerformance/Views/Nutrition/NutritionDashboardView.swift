@@ -296,7 +296,7 @@ struct NutritionDashboardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -332,7 +332,7 @@ struct NutritionDashboardView: View {
             }
             .padding()
             .background(Color.blue.opacity(0.1))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("AI Meal Suggestion")
@@ -417,7 +417,7 @@ struct NutritionDashboardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -745,7 +745,7 @@ struct QuickLogButton: View {
             }
             .frame(width: 80, height: 70)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Log \(mealType.displayName)")

@@ -10,12 +10,13 @@ import SwiftUI
 
 /// Quick action item model for the grid
 struct QuickAction: Identifiable {
-    let id = UUID()
     let title: String
     let icon: String
     let color: Color
     let gradient: [Color]
     let action: QuickActionType
+
+    var id: String { "\(title)-\(icon)" }
 
     enum QuickActionType {
         case startFast
@@ -124,6 +125,7 @@ struct HealthQuickActionButton: View {
     let onTap: () -> Void
 
     @State private var isPressed = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Button(action: onTap) {
@@ -139,10 +141,12 @@ struct HealthQuickActionButton: View {
                         )
                         .frame(width: 50, height: 50)
                         .shadow(
-                            color: action.color.opacity(0.3),
-                            radius: 4,
+                            color: colorScheme == .dark
+                                ? action.color.opacity(0.2)
+                                : action.color.opacity(0.3),
+                            radius: colorScheme == .dark ? 2 : 4,
                             x: 0,
-                            y: 2
+                            y: colorScheme == .dark ? 1 : 2
                         )
 
                     Image(systemName: action.icon)
@@ -158,8 +162,10 @@ struct HealthQuickActionButton: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.8)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
             .frame(maxWidth: .infinity)
+            .frame(minHeight: 44) // Minimum touch target
             .padding(.vertical, Spacing.md)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
@@ -180,7 +186,8 @@ struct HealthQuickActionButton: View {
                 }
         )
         .accessibilityLabel(action.title)
-        .accessibilityHint("Tap to \(accessibilityHint(for: action.action))")
+        .accessibilityHint("Double tap to \(accessibilityHint(for: action.action))")
+        .accessibilityIdentifier("quickAction_\(action.title.replacingOccurrences(of: " ", with: "_"))")
     }
 
     private func accessibilityHint(for type: QuickAction.QuickActionType) -> String {
@@ -226,25 +233,32 @@ private struct CompactQuickActionButton: View {
     let action: QuickAction
     let onTap: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: action.icon)
                     .font(.subheadline)
                     .foregroundColor(action.color)
+                    .accessibilityHidden(true)
 
                 Text(action.title)
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background(action.color.opacity(0.1))
+            .frame(minHeight: 44) // Minimum touch target
+            .background(action.color.opacity(colorScheme == .dark ? 0.2 : 0.1))
             .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(action.title)
+        .accessibilityHint("Double tap to \(action.title.lowercased())")
+        .accessibilityIdentifier("compactQuickAction_\(action.title.replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

@@ -8,7 +8,10 @@ struct FilterChip: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticFeedback.light()
+            action()
+        }) {
             HStack(spacing: 4) {
                 if let icon {
                     Image(systemName: icon)
@@ -25,5 +28,8 @@ struct FilterChip: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityHint("Tap to \(isSelected ? "deselect" : "select") this filter")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

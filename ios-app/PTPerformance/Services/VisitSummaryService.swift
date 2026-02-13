@@ -907,13 +907,11 @@ final class VisitSummaryService: ObservableObject {
     // MARK: - Logging
 
     private func logSummaryGeneration(sessionId: UUID, success: Bool, error: Error? = nil) {
-        #if DEBUG
         var message = "[VisitSummaryService] Summary generation: success=\(success)"
         if let error = error {
             message += ", error=\(error.localizedDescription)"
         }
-        print(message)
-        #endif
+        DebugLogger.shared.log(message, level: success ? .success : .error)
 
         AnalyticsTracker.shared.track(
             event: "visit_summary_generated",
@@ -924,13 +922,11 @@ final class VisitSummaryService: ObservableObject {
     }
 
     private func logApproval(summaryId: UUID, success: Bool, error: Error? = nil) {
-        #if DEBUG
         var message = "[VisitSummaryService] Summary approval: success=\(success)"
         if let error = error {
             message += ", error=\(error.localizedDescription)"
         }
-        print(message)
-        #endif
+        DebugLogger.shared.log(message, level: success ? .success : .error)
 
         AnalyticsTracker.shared.track(
             event: "visit_summary_approved",
@@ -941,13 +937,11 @@ final class VisitSummaryService: ObservableObject {
     }
 
     private func logExport(summaryId: UUID, success: Bool, error: Error? = nil) {
-        #if DEBUG
         var message = "[VisitSummaryService] Summary export: success=\(success)"
         if let error = error {
             message += ", error=\(error.localizedDescription)"
         }
-        print(message)
-        #endif
+        DebugLogger.shared.log(message, level: success ? .success : .error)
 
         AnalyticsTracker.shared.track(
             event: "visit_summary_exported",

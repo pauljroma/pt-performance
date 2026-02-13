@@ -441,7 +441,7 @@ extension JaegerBandService {
 
 /// Data point for soreness tracking
 struct SorenessDataPoint: Identifiable {
-    let id = UUID()
+    var id: String { "\(date.timeIntervalSince1970)-\(before)-\(after)" }
     let date: Date
     let before: Int
     let after: Int

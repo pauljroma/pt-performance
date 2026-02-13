@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ExerciseVideoPlayerView.swift
 //  PTPerformance
@@ -81,6 +82,8 @@ struct ExerciseVideoPlayerView: View {
             startControlsTimer()
         }
         .onDisappear {
+            controlsTimer?.invalidate()
+            controlsTimer = nil
             logVideoView()
             controller.pause()
         }
@@ -249,7 +252,7 @@ struct ExerciseVideoPlayerView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(showAngleSelector ? Color.blue : Color.white.opacity(0.2))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                 }
 
@@ -270,7 +273,7 @@ struct ExerciseVideoPlayerView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(showSpeedSelector ? Color.blue : Color.white.opacity(0.2))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 // Loop toggle

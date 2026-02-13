@@ -139,7 +139,7 @@ struct MemoryEfficientList<Data: RandomAccessCollection, ID: Hashable, Content: 
 
     var body: some View {
         LazyVStack(spacing: 0) {
-            ForEach(Array(data.enumerated()), id: \.element.id) { index, item in
+            ForEach(Array(data.enumerated()), id: \.element.id) { _, item in
                 content(item)
                     .id(item.id)
                     .lazyLoad()
@@ -232,9 +232,7 @@ struct RenderMetricsModifier: ViewModifier {
                 let timeSinceLastRender = now.timeIntervalSince(lastRenderTime)
                 lastRenderTime = now
 
-                #if DEBUG
-                print("🔄 [\(viewName)] Render #\(renderCount) | Time since last: \(String(format: "%.2f", timeSinceLastRender * 1000))ms")
-                #endif
+                DebugLogger.shared.log("[ViewPerformance] \(viewName) Render #\(renderCount) | Time since last: \(String(format: "%.2f", timeSinceLastRender * 1000))ms", level: .diagnostic)
             }
     }
 }

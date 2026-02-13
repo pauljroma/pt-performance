@@ -20,6 +20,13 @@ struct TodaySessionView: View {
     @State private var todayArmCare: ArmCareAssessment?
     @State private var isLoadingArmCare = false
 
+    // ACP-MODE: Mode-specific dashboard navigation
+    @ObservedObject private var modeService = ModeService.shared
+    @State private var showRehabDashboard = false
+    @State private var showStrengthDashboard = false
+    @State private var showPerformanceDashboard = false
+    @StateObject private var modeStatusVM = ModeStatusCardViewModel()
+
     // Recovery Intelligence state
     @State private var workoutAdaptation: WorkoutAdaptation?
     @State private var isLoadingAdaptation = false
@@ -65,6 +72,10 @@ struct TodaySessionView: View {
 
     // Unified workout execution
     @State private var showUnifiedWorkoutExecution = false
+
+    // Error handling state
+    @State private var errorMessage: String?
+    @State private var showErrorAlert = false
 
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
@@ -165,6 +176,50 @@ struct TodaySessionView: View {
                 }
             }
         }
+        // ACP-MODE: Mode-specific dashboard sheets
+        .springSheet(isPresented: $showRehabDashboard) {
+            NavigationStack {
+                RehabModeDashboardView()
+                    .environmentObject(appState)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showRehabDashboard = false
+                            }
+                        }
+                    }
+            }
+        }
+        .springSheet(isPresented: $showStrengthDashboard) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    StrengthModeDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                        .environmentObject(appState)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") {
+                                    showStrengthDashboard = false
+                                }
+                            }
+                        }
+                }
+            }
+        }
+        .springSheet(isPresented: $showPerformanceDashboard) {
+            if let patientId = appState.userId {
+                NavigationStack {
+                    PerformanceModeDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                        .environmentObject(appState)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") {
+                                    showPerformanceDashboard = false
+                                }
+                            }
+                        }
+                }
+            }
+        }
         // Manual Workout Sheets
         .springSheet(isPresented: $showTemplateLibrary) {
             if let patientId = appState.userId {
@@ -261,6 +316,8 @@ struct TodaySessionView: View {
             if let userId = appState.userId,
                let patientId = UUID(uuidString: userId) {
                 adaptiveWorkoutVM.configure(patientId: patientId)
+                // ACP-MODE: Load mode-specific status data
+                await modeStatusVM.loadData(for: patientId)
             }
 
             // Only fetch on initial load; onComplete callbacks handle refresh after workouts
@@ -306,6 +363,14 @@ struct TodaySessionView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text(adaptiveWorkoutVM.successMessage)
+        }
+        // Error alert for mode integration operations
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) {
+                errorMessage = nil
+            }
+        } message: {
+            Text(errorMessage ?? "An unexpected error occurred.")
         }
     }
 
@@ -429,6 +494,10 @@ struct TodaySessionView: View {
                     .scaleOnScroll(scrollOffset: scrollOffset, minScale: 0.98)
                     .staggeredAnimation(index: 0)
 
+                // ACP-MODE: Mode-specific status card with dashboard navigation
+                modeStatusCard
+                    .staggeredAnimation(index: 1)
+
                 // Enrolled Programs Section (only shows if user has enrolled programs)
                 if enrolledProgramsViewModel.hasEnrolledPrograms {
                     TodayEnrolledProgramsSection(
@@ -439,7 +508,7 @@ struct TodaySessionView: View {
                         progressPercentage: { enrolledProgramsViewModel.progressPercentage(for: $0) },
                         daysRemainingDisplay: { enrolledProgramsViewModel.daysRemainingDisplay(for: $0) }
                     )
-                    .staggeredAnimation(index: 1)
+                    .staggeredAnimation(index: 2)
                 }
 
                 // Today's completed workouts counter
@@ -448,7 +517,7 @@ struct TodaySessionView: View {
                         completedCount: viewModel.completedTodayCount,
                         completedWorkouts: viewModel.todaysCompletedWorkouts
                     )
-                    .staggeredAnimation(index: 2)
+                    .staggeredAnimation(index: 3)
                 }
 
                 // Readiness Section
@@ -458,7 +527,7 @@ struct TodaySessionView: View {
                     onCheckIn: { showReadinessCheckIn = true },
                     onShowDashboard: { showReadinessDashboard = true }
                 )
-                .staggeredAnimation(index: 3)
+                .staggeredAnimation(index: 4)
 
                 // ACP-522: Arm Care Section (for baseball/throwing athletes)
                 ArmCareStatusCard(
@@ -467,7 +536,7 @@ struct TodaySessionView: View {
                     onCheckIn: { showArmCareAssessment = true },
                     onShowDetails: { showArmCareAssessment = true }
                 )
-                .staggeredAnimation(index: 4)
+                .staggeredAnimation(index: 5)
 
                 // Adaptive Training: Workout Modification Suggestion
                 if adaptiveWorkoutVM.hasTodayModification, let modification = adaptiveWorkoutVM.todayModification {
@@ -478,7 +547,7 @@ struct TodaySessionView: View {
                             showModificationSheet = true
                         }
                     )
-                    .staggeredAnimation(index: 5)
+                    .staggeredAnimation(index: 6)
                 } else if adaptiveWorkoutVM.isLoading {
                     // Loading placeholder for modification check
                     HStack(spacing: 12) {
@@ -491,7 +560,7 @@ struct TodaySessionView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.secondarySystemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .staggeredAnimation(index: 5)
+                    .staggeredAnimation(index: 6)
                 }
 
                 // Recovery Intelligence: Readiness-Based Workout Recommendation
@@ -507,10 +576,10 @@ struct TodaySessionView: View {
                             }
                         }
                     )
-                    .staggeredAnimation(index: 6)
+                    .staggeredAnimation(index: 7)
                 } else if isLoadingAdaptation {
                     ReadinessWorkoutRecommendationCard.loadingPlaceholder
-                        .staggeredAnimation(index: 6)
+                        .staggeredAnimation(index: 7)
                 }
 
                 // Prescribed Workouts from Therapist
@@ -527,7 +596,7 @@ struct TodaySessionView: View {
                             // Could navigate to a full prescription list view if needed
                         }
                     )
-                    .staggeredAnimation(index: 7)
+                    .staggeredAnimation(index: 8)
                 }
 
                 // Session Card with Start Workout
@@ -539,7 +608,7 @@ struct TodaySessionView: View {
                             onCreateCustomWorkout: { showWorkoutCreator = true },
                             onViewSummary: { completedSession = viewModel.session }
                         )
-                        .staggeredAnimation(index: 8)
+                        .staggeredAnimation(index: 9)
                     } else {
                         TodayWorkoutCard(
                             session: session,
@@ -550,7 +619,7 @@ struct TodaySessionView: View {
                                 selectedExercise = exercise
                             }
                         )
-                        .staggeredAnimation(index: 8)
+                        .staggeredAnimation(index: 9)
                     }
                 }
 
@@ -560,7 +629,71 @@ struct TodaySessionView: View {
         }
     }
 
+    // MARK: - ACP-MODE: Mode Status Card
 
+    /// Mode-specific status card that displays relevant metrics and navigates to full dashboard
+    @ViewBuilder
+    private var modeStatusCard: some View {
+        switch modeService.currentMode {
+        case .rehab:
+            RehabModeStatusCard(
+                todayPainScore: modeStatusVM.todayPainScore,
+                previousPainScore: modeStatusVM.previousPainScore,
+                activePainRegions: modeStatusVM.activePainRegions,
+                hasActiveAlerts: modeStatusVM.hasActiveAlerts,
+                alertCount: modeStatusVM.alertCount,
+                deloadUrgency: modeStatusVM.deloadUrgency,
+                onLogPain: {
+                    HapticFeedback.light()
+                    showRehabDashboard = true
+                },
+                onViewAlerts: {
+                    HapticFeedback.light()
+                    showRehabDashboard = true
+                },
+                onViewDashboard: {
+                    HapticFeedback.light()
+                    showRehabDashboard = true
+                }
+            )
+
+        case .strength:
+            if let patientId = appState.userId {
+                StrengthModeStatusCard(
+                    estimatedTotal: modeStatusVM.estimatedTotal,
+                    topLifts: modeStatusVM.topLifts,
+                    recentPRs: modeStatusVM.recentPRs,
+                    volumeTrend: modeStatusVM.volumeTrend,
+                    currentStreak: modeStatusVM.strengthStreak,
+                    unit: "lbs",
+                    onTapCard: {
+                        HapticFeedback.light()
+                        showStrengthDashboard = true
+                    },
+                    onViewPRs: {
+                        HapticFeedback.light()
+                        showStrengthDashboard = true
+                    }
+                )
+            }
+
+        case .performance:
+            if let patientId = appState.userId {
+                PerformanceModeStatusCard(
+                    patientId: patientId,
+                    statusData: modeStatusVM.performanceStatusData,
+                    onTapCard: {
+                        HapticFeedback.light()
+                        showPerformanceDashboard = true
+                    },
+                    onCheckIn: {
+                        HapticFeedback.light()
+                        showReadinessCheckIn = true
+                    }
+                )
+            }
+        }
+    }
 
     // MARK: - Start Workout Section with Running Clock
 
@@ -692,6 +825,10 @@ struct TodaySessionView: View {
             VStack(spacing: 20) {
                 // Daily Check-in Prompt Card - always show for better discoverability
                 CheckInPromptCard()
+                    .padding(.horizontal)
+
+                // ACP-MODE: Mode-specific status card with dashboard navigation
+                modeStatusCard
                     .padding(.horizontal)
 
                 // Show completed workouts even when no prescribed session
@@ -869,9 +1006,21 @@ struct TodaySessionView: View {
     // MARK: - Starting Prescribed Workouts
 
     private func startPrescribedWorkout(_ prescription: WorkoutPrescription) async {
-        guard let userId = appState.userId,
-              let patientUUID = UUID(uuidString: userId) else {
-            DebugLogger.shared.log("Invalid patient ID for prescribed workout", level: .error)
+        guard let userId = appState.userId else {
+            DebugLogger.shared.log("No user ID available for prescribed workout", level: .error)
+            await MainActor.run {
+                errorMessage = "Unable to start workout: You must be signed in."
+                showErrorAlert = true
+            }
+            return
+        }
+
+        guard let patientUUID = UUID(uuidString: userId) else {
+            DebugLogger.shared.log("Invalid patient ID format for prescribed workout: \(userId)", level: .error)
+            await MainActor.run {
+                errorMessage = "Unable to start workout: Invalid user ID format. Please sign out and sign back in."
+                showErrorAlert = true
+            }
             return
         }
 
@@ -942,69 +1091,101 @@ struct TodaySessionView: View {
     ) async throws {
         let logger = DebugLogger.shared
 
-        // Fetch the template based on type
-        if templateType == "system" {
-            let templates = try await service.fetchSystemTemplates()
-            guard let template = templates.first(where: { $0.id == templateId }) else {
-                logger.log("System template not found: \(templateId)", level: .warning)
-                return
-            }
-
-            // Add exercises from template blocks
-            var sequence = 0
-            for block in template.blocks {
-                for exercise in block.exercises {
-                    let input = AddManualSessionExerciseInput(
-                        manualSessionId: sessionId,
-                        exerciseTemplateId: nil,
-                        exerciseName: exercise.name,
-                        blockName: block.name,
-                        sequence: sequence,
-                        targetSets: exercise.sets,
-                        targetReps: exercise.reps,
-                        targetLoad: nil,
-                        loadUnit: nil,
-                        restPeriodSeconds: nil,
-                        notes: exercise.notes
-                    )
-                    _ = try await service.addExercise(to: sessionId, exercise: input)
-                    sequence += 1
+        do {
+            // Fetch the template based on type
+            if templateType == "system" {
+                let templates = try await service.fetchSystemTemplates()
+                guard let template = templates.first(where: { $0.id == templateId }) else {
+                    logger.log("System template not found: \(templateId)", level: .warning)
+                    await MainActor.run {
+                        errorMessage = "Workout template not found. The workout may have been deleted."
+                        showErrorAlert = true
+                    }
+                    return
                 }
-            }
-            logger.log("Added \(sequence) exercises from system template", level: .success)
-        } else {
-            // Patient template
-            guard let patientId = appState.userId,
-                  let patientUUID = UUID(uuidString: patientId) else { return }
 
-            let templates = try await service.fetchPatientTemplates(patientId: patientUUID)
-            guard let template = templates.first(where: { $0.id == templateId }) else {
-                logger.log("Patient template not found: \(templateId)", level: .warning)
-                return
-            }
-
-            // Add exercises from template blocks
-            var sequence = 0
-            for block in template.blocks {
-                for exercise in block.exercises {
-                    let input = AddManualSessionExerciseInput(
-                        manualSessionId: sessionId,
-                        exerciseTemplateId: nil,
-                        exerciseName: exercise.name,
-                        blockName: block.name,
-                        sequence: sequence,
-                        targetSets: exercise.sets,
-                        targetReps: exercise.reps,
-                        targetLoad: nil,
-                        loadUnit: nil,
-                        restPeriodSeconds: nil,
-                        notes: exercise.notes
-                    )
-                    _ = try await service.addExercise(to: sessionId, exercise: input)
-                    sequence += 1
+                // Add exercises from template blocks
+                var sequence = 0
+                for block in template.blocks {
+                    for exercise in block.exercises {
+                        let input = AddManualSessionExerciseInput(
+                            manualSessionId: sessionId,
+                            exerciseTemplateId: nil,
+                            exerciseName: exercise.name,
+                            blockName: block.name,
+                            sequence: sequence,
+                            targetSets: exercise.sets,
+                            targetReps: exercise.reps,
+                            targetLoad: nil,
+                            loadUnit: nil,
+                            restPeriodSeconds: nil,
+                            notes: exercise.notes
+                        )
+                        _ = try await service.addExercise(to: sessionId, exercise: input)
+                        sequence += 1
+                    }
                 }
+                logger.log("Added \(sequence) exercises from system template", level: .success)
+            } else {
+                // Patient template
+                guard let patientId = appState.userId else {
+                    logger.log("No patient ID available for loading template", level: .error)
+                    await MainActor.run {
+                        errorMessage = "Unable to load workout: You must be signed in."
+                        showErrorAlert = true
+                    }
+                    return
+                }
+
+                guard let patientUUID = UUID(uuidString: patientId) else {
+                    logger.log("Invalid patient ID format: \(patientId)", level: .error)
+                    await MainActor.run {
+                        errorMessage = "Unable to load workout: Invalid user ID format. Please sign out and sign back in."
+                        showErrorAlert = true
+                    }
+                    return
+                }
+
+                let templates = try await service.fetchPatientTemplates(patientId: patientUUID)
+                guard let template = templates.first(where: { $0.id == templateId }) else {
+                    logger.log("Patient template not found: \(templateId)", level: .warning)
+                    await MainActor.run {
+                        errorMessage = "Workout template not found. The workout may have been deleted."
+                        showErrorAlert = true
+                    }
+                    return
+                }
+
+                // Add exercises from template blocks
+                var sequence = 0
+                for block in template.blocks {
+                    for exercise in block.exercises {
+                        let input = AddManualSessionExerciseInput(
+                            manualSessionId: sessionId,
+                            exerciseTemplateId: nil,
+                            exerciseName: exercise.name,
+                            blockName: block.name,
+                            sequence: sequence,
+                            targetSets: exercise.sets,
+                            targetReps: exercise.reps,
+                            targetLoad: nil,
+                            loadUnit: nil,
+                            restPeriodSeconds: nil,
+                            notes: exercise.notes
+                        )
+                        _ = try await service.addExercise(to: sessionId, exercise: input)
+                        sequence += 1
+                    }
+                }
+                logger.log("Added \(sequence) exercises from patient template", level: .success)
             }
-            logger.log("Added \(sequence) exercises from patient template", level: .success)
+        } catch {
+            logger.log("Failed to load exercises from template: \(error.localizedDescription)", level: .error)
+            await MainActor.run {
+                errorMessage = "Failed to load workout exercises: \(error.localizedDescription)"
+                showErrorAlert = true
+            }
+            throw error
         }
     }
 

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ExerciseTechniqueView.swift
 //  PTPerformance
@@ -49,13 +50,13 @@ struct ExerciseTechniqueView: View {
                     if let videoUrl = exercise.exercise_templates?.videoUrl, !videoUrl.isEmpty {
                         VideoPlayerView(videoUrl: videoUrl)
                             .frame(height: 250)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                             .padding(.horizontal)
                     } else {
                         // Fallback placeholder if no video
                         VideoPlaceholderView(exerciseName: exercise.exercise_name ?? "Exercise")
                             .frame(height: 250)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                             .padding(.horizontal)
                     }
 
@@ -282,7 +283,7 @@ struct TechniqueGroupBoxStyle: GroupBoxStyle {
                 .padding(16)
         }
         .background(accentColor.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(accentColor.opacity(0.2), lineWidth: 1)

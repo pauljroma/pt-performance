@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AccountDeletionView.swift
 //  PTPerformance
@@ -55,7 +56,7 @@ struct AccountDeletionView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("Warning", systemImage: "exclamationmark.triangle.fill")
                     .font(.headline)
-                    .foregroundColor(.red)
+                    .foregroundColor(DesignTokens.statusError)
                     .accessibilityLabel("Warning")
 
                 Text("Deleting your account will:")
@@ -71,7 +72,7 @@ struct AccountDeletionView: View {
 
                 Text("This action cannot be undone after the 30-day grace period.")
                     .font(.subheadline)
-                    .foregroundColor(.red)
+                    .foregroundColor(DesignTokens.statusError)
                     .fontWeight(.medium)
                     .padding(.top, 8)
 
@@ -101,7 +102,7 @@ struct AccountDeletionView: View {
             if !viewModel.confirmationText.isEmpty && viewModel.confirmationText != "DELETE" {
                 Text("Must type 'DELETE' exactly")
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(DesignTokens.statusError)
             }
         }
     }
@@ -124,8 +125,8 @@ struct AccountDeletionView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .foregroundColor(.white)
-            .listRowBackground(viewModel.isFormValid ? Color.red : Color.gray)
+            .foregroundColor(DesignTokens.buttonTextOnAccent)
+            .listRowBackground(viewModel.isFormValid ? DesignTokens.statusError : Color(.secondaryLabel))
             .disabled(!viewModel.isFormValid || viewModel.isDeleting)
             .accessibilityLabel(viewModel.isDeleting ? "Deleting account" : "Delete My Account")
             .accessibilityHint(viewModel.isFormValid ? "Permanently deletes your account after confirmation" : "Complete password and confirmation fields to enable")

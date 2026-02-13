@@ -16,6 +16,12 @@ final class FastingHistoryViewModel: ObservableObject {
     @Published private(set) var bestStreak: Int = 0
     @Published private(set) var monthlyStreak: Int = 0
 
+    // Pagination
+    @Published private(set) var hasMoreData = true
+    @Published private(set) var isLoadingMore = false
+    private var currentPage = 0
+    private let pageSize = 30
+
     // MARK: - Private Properties
 
     private let service = FastingTrackerService.shared
@@ -25,6 +31,10 @@ final class FastingHistoryViewModel: ObservableObject {
 
     init() {
         setupBindings()
+    }
+
+    deinit {
+        cancellables.removeAll()
     }
 
     private func setupBindings() {
@@ -48,16 +58,51 @@ final class FastingHistoryViewModel: ObservableObject {
     // MARK: - Public Methods
 
     func loadHistory() async {
+        error = nil
+        currentPage = 0
+        hasMoreData = true
+
         await service.fetchFastingData()
         calculateMonthlyStreak()
+
+        // Check if service has an error
+        if let serviceError = service.error {
+            self.error = serviceError.localizedDescription
+        }
+    }
+
+    func loadMoreIfNeeded(currentItem: FastingLog) async {
+        // Check if we should load more (when reaching near the end of the list)
+        guard hasMoreData, !isLoadingMore else { return }
+
+        let thresholdIndex = fastingLogs.index(fastingLogs.endIndex, offsetBy: -5, limitedBy: fastingLogs.startIndex) ?? fastingLogs.startIndex
+        guard let currentIndex = fastingLogs.firstIndex(where: { $0.id == currentItem.id }),
+              currentIndex >= thresholdIndex else {
+            return
+        }
+
+        isLoadingMore = true
+        currentPage += 1
+
+        // In a full implementation, this would fetch the next page from the service
+        // For now, the service fetches all data at once, so we just mark as no more data
+        // This structure is in place for future pagination implementation
+
+        isLoadingMore = false
+        // hasMoreData = newData.count >= pageSize
     }
 
     func deleteFast(_ fast: FastingLog) async {
         do {
             try await service.deleteFast(fast)
+            error = nil
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    func clearError() {
+        error = nil
     }
 
     // MARK: - Calendar Data

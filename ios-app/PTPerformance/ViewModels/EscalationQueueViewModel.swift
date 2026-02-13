@@ -95,6 +95,10 @@ class EscalationQueueViewModel: ObservableObject {
         setupBindings()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Setup
 
     private func setupBindings() {

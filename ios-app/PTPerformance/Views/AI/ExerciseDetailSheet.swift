@@ -68,7 +68,7 @@ struct ExerciseDetailSheet: View {
                 // Real video player
                 VideoPlayerView(videoUrl: videoUrl)
                     .frame(height: 250)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                     .adaptiveShadow(Shadow.medium)
             } else {
                 // Placeholder when video not available
@@ -127,7 +127,7 @@ struct ExerciseDetailSheet: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 // Confidence badge
@@ -142,12 +142,12 @@ struct ExerciseDetailSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding(16)
         .background(Color(uiColor: .systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -191,7 +191,7 @@ struct ExerciseDetailSheet: View {
         }
         .padding(16)
         .background(Color(uiColor: .systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -248,7 +248,7 @@ struct ExerciseDetailSheet: View {
                                 .padding(.vertical, 6)
                                 .background(Color.blue.opacity(0.1))
                                 .foregroundColor(.blue)
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -274,7 +274,7 @@ struct ExerciseDetailSheet: View {
                                 .padding(.vertical, 6)
                                 .background(Color.green.opacity(0.1))
                                 .foregroundColor(.green)
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -282,7 +282,7 @@ struct ExerciseDetailSheet: View {
         }
         .padding(16)
         .background(Color(uiColor: .systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -304,9 +304,9 @@ struct ExerciseDetailSheet: View {
         }
         .padding(16)
         .background(Color.orange.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
         )
     }
@@ -329,9 +329,9 @@ struct ExerciseDetailSheet: View {
         }
         .padding(16)
         .background(Color.red.opacity(0.05))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color.red.opacity(0.3), lineWidth: 1)
         )
     }

@@ -98,7 +98,7 @@ struct ReportPreviewView: View {
                 .foregroundColor(report.configuration.reportType.color)
                 .frame(width: 44, height: 44)
                 .background(report.configuration.reportType.color.opacity(0.15))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(report.configuration.reportType.displayName)
@@ -240,11 +240,9 @@ struct ReportPreviewView: View {
         printInfo.outputType = .general
         printController.printInfo = printInfo
 
-        printController.present(animated: true) { _, completed, error in
+        printController.present(animated: true) { _, _, error in
             if let error = error {
-                #if DEBUG
-                print("[ReportPreviewView] Print error: \(error.localizedDescription)")
-                #endif
+                DebugLogger.shared.log("[ReportPreviewView] Print error: \(error.localizedDescription)", level: .error)
             }
         }
     }
@@ -472,7 +470,7 @@ struct RecentReportRow: View {
                     .foregroundColor(report.configuration.reportType.color)
                     .frame(width: 32, height: 32)
                     .background(report.configuration.reportType.color.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(report.configuration.reportType.displayName)
@@ -560,7 +558,7 @@ struct ReportPreviewView_Previews: PreviewProvider {
 
         ReportPreviewView(
             report: sampleReport,
-            patient: Patient.samplePatients[0],
+            patient: Patient.samplePatients.first!,
             therapistEmail: "therapist@clinic.com"
         )
     }

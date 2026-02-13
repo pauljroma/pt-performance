@@ -1,17 +1,15 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Supplement Catalog View - Browse supplements with evidence ratings
 struct SupplementCatalogView: View {
-    @StateObject private var viewModel = SupplementViewModel()
+    @StateObject private var viewModel = SupplementCatalogViewModel()
     @Environment(\.colorScheme) private var colorScheme
-
-    @State private var searchText = ""
-    @State private var selectedCategory: SupplementCatalogCategory?
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.isLoadingCatalog && viewModel.catalog.isEmpty {
+                if viewModel.isLoading && viewModel.catalog.isEmpty {
                     ProgressView("Loading catalog...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.catalog.isEmpty {
@@ -21,29 +19,16 @@ struct SupplementCatalogView: View {
                 }
             }
             .navigationTitle("Supplement Catalog")
-            .searchable(text: $searchText, prompt: "Search supplements")
+            .searchable(text: $viewModel.searchText, prompt: "Search supplements")
             .task {
-                await viewModel.loadCatalog()
+                await viewModel.loadData()
+            }
+            .alert("Error", isPresented: .constant(viewModel.error != nil)) {
+                Button("OK") { viewModel.error = nil }
+            } message: {
+                Text(viewModel.error ?? "")
             }
         }
-    }
-
-    private var filteredCatalog: [CatalogSupplement] {
-        var results = viewModel.catalog
-
-        if !searchText.isEmpty {
-            let searchLower = searchText.lowercased()
-            results = results.filter {
-                $0.name.lowercased().contains(searchLower) ||
-                ($0.brand?.lowercased().contains(searchLower) ?? false)
-            }
-        }
-
-        if let category = selectedCategory {
-            results = results.filter { $0.category == category }
-        }
-
-        return results
     }
 
     private var catalogList: some View {
@@ -53,10 +38,10 @@ struct SupplementCatalogView: View {
                 categoryFilterSection
 
                 // Supplements List - show filtered empty state if no matches
-                if filteredCatalog.isEmpty && (!searchText.isEmpty || selectedCategory != nil) {
+                if viewModel.filteredCatalog.isEmpty && (!viewModel.searchText.isEmpty || viewModel.selectedCategory != nil) {
                     filteredEmptyView
                 } else {
-                    ForEach(filteredCatalog) { supplement in
+                    ForEach(viewModel.filteredCatalog) { supplement in
                         CatalogSupplementCard(supplement: supplement) {
                             Task {
                                 await viewModel.addToRoutine(supplement)
@@ -74,15 +59,15 @@ struct SupplementCatalogView: View {
         ContentUnavailableView {
             Label("No Supplements Found", systemImage: "magnifyingglass")
         } description: {
-            if !searchText.isEmpty {
-                Text("No supplements match '\(searchText)'. Try different keywords or clear your search.")
-            } else if let category = selectedCategory {
+            if !viewModel.searchText.isEmpty {
+                Text("No supplements match '\(viewModel.searchText)'. Try different keywords or clear your search.")
+            } else if let category = viewModel.selectedCategory {
                 Text("No supplements in the \(category.displayName) category yet.")
             }
         } actions: {
             Button("Clear Filters") {
-                searchText = ""
-                selectedCategory = nil
+                viewModel.searchText = ""
+                viewModel.selectedCategory = nil
             }
             .buttonStyle(.bordered)
         }
@@ -95,18 +80,18 @@ struct SupplementCatalogView: View {
                 FilterChip(
                     label: "All",
                     color: .modusCyan,
-                    isSelected: selectedCategory == nil
+                    isSelected: viewModel.selectedCategory == nil
                 ) {
-                    selectedCategory = nil
+                    viewModel.selectedCategory = nil
                 }
 
                 ForEach(SupplementCatalogCategory.allCases) { category in
                     FilterChip(
                         label: category.displayName,
                         color: .modusCyan,
-                        isSelected: selectedCategory == category
+                        isSelected: viewModel.selectedCategory == category
                     ) {
-                        selectedCategory = category
+                        viewModel.selectedCategory = category
                     }
                 }
             }
@@ -122,7 +107,7 @@ struct SupplementCatalogView: View {
         } actions: {
             Button {
                 Task {
-                    await viewModel.loadCatalog()
+                    await viewModel.loadData()
                 }
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
@@ -180,14 +165,19 @@ private struct CatalogSupplementCard: View {
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
+                    .frame(minHeight: 44)
                     .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
             }
+            .accessibilityLabel("Add \(supplement.name) to routine")
+            .accessibilityHint("Double tap to add this supplement to your daily routine")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(supplement.name)\(supplement.brand.map { ", \($0)" } ?? ""), \(supplement.category.displayName). Recommended: \(supplement.dosageRange)")
     }
 }
 

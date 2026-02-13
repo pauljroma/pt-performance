@@ -238,9 +238,7 @@ class ResponseTimeMonitor {
 
         logger.warning("\(message)")
 
-        #if DEBUG
-        print("[ResponseTimeMonitor] " + message)
-        #endif
+        DebugLogger.shared.log("[ResponseTimeMonitor] " + message, level: .warning)
 
         // Log to error tracking in production builds
         ErrorLogger.shared.logWarning("Response time violation: \(measurement.type.rawValue) took \(Int(measurement.durationMs))ms (target: \(Int(measurement.type.targetResponseMs))ms)")
@@ -382,9 +380,7 @@ class ResponseTimeMonitor {
 
     /// Print current statistics to console (debug builds only)
     func printStats() {
-        #if DEBUG
-        print(generateReport())
-        #endif
+        DebugLogger.shared.log(generateReport(), level: .diagnostic)
     }
 
     /// Get recent violations for debugging
@@ -444,7 +440,7 @@ func assertResponseTime(_ type: InteractionType, file: StaticString = #file, lin
     let duration = Date().timeIntervalSince(start) * 1000
 
     if duration > type.targetResponseMs {
-        print("[ResponseTime] Assertion failed at \(file):\(line): \(type.rawValue) took \(String(format: "%.2f", duration))ms (target: \(type.targetResponseMs)ms)")
+        DebugLogger.shared.log("[ResponseTime] Assertion failed at \(file):\(line): \(type.rawValue) took \(String(format: "%.2f", duration))ms (target: \(type.targetResponseMs)ms)", level: .warning)
     }
 }
 
@@ -455,7 +451,7 @@ func assertResponseTimeAsync(_ type: InteractionType, file: StaticString = #file
     let duration = Date().timeIntervalSince(start) * 1000
 
     if duration > type.targetResponseMs {
-        print("[ResponseTime] Assertion failed at \(file):\(line): \(type.rawValue) took \(String(format: "%.2f", duration))ms (target: \(type.targetResponseMs)ms)")
+        DebugLogger.shared.log("[ResponseTime] Assertion failed at \(file):\(line): \(type.rawValue) took \(String(format: "%.2f", duration))ms (target: \(type.targetResponseMs)ms)", level: .warning)
     }
 }
 #endif

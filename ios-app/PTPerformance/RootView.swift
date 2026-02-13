@@ -140,9 +140,7 @@ struct RootView: View {
             }
         } catch {
             // No valid session — show login screen immediately
-            #if DEBUG
-            print("No existing session: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[RootView] No existing session: \(error.localizedDescription)", level: .diagnostic)
             await MainActor.run {
                 isCheckingSession = false
             }

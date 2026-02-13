@@ -303,7 +303,7 @@ struct SessionRowView: View {
 // CreateSessionInput is defined in ProgramBuilderViewModel.swift and shared across the app
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         EditPhaseView(
             viewModel: ProgramEditorViewModel(
                 patientId: UUID(),

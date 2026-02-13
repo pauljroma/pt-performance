@@ -43,11 +43,12 @@ struct PremiumLockedView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
+                        .padding(.horizontal, Spacing.xl)
                 }
 
                 // MARK: - Unlock Button
                 Button {
+                    HapticFeedback.light()
                     showSubscription = true
                 } label: {
                     HStack {
@@ -65,12 +66,14 @@ struct PremiumLockedView: View {
                         )
                     )
                     .foregroundColor(.white)
-                    .cornerRadius(14)
+                    .cornerRadius(CornerRadius.md)
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
+                .accessibilityLabel("Unlock \(feature) with Premium subscription")
 
                 // MARK: - Restore Purchases
                 Button {
+                    HapticFeedback.light()
                     Task {
                         await storeKit.restorePurchases()
                     }
@@ -79,6 +82,7 @@ struct PremiumLockedView: View {
                         .font(.subheadline)
                         .foregroundColor(.blue)
                 }
+                .accessibilityLabel("Restore previous purchases")
 
                 Spacer()
             }

@@ -347,25 +347,20 @@ final class FastingService: ObservableObject {
         }
 
         let now = Date()
-        let plannedEndAt = Calendar.current.date(byAdding: .hour, value: targetHours ?? type.targetHours, to: now)
+        let hours = targetHours ?? type.targetHours
 
         let fast = FastingLog(
             id: UUID(),
             patientId: patientId,
-            fastingType: type,
+            protocolType: type.rawValue,
             startedAt: now,
             endedAt: nil,
-            plannedEndAt: plannedEndAt,
-            targetHours: targetHours ?? type.targetHours,
+            plannedHours: hours,
             actualHours: nil,
-            wasBrokenEarly: nil,
-            breakReason: nil,
-            moodStart: nil,
-            moodEnd: nil,
-            hungerLevel: nil,
-            energyLevel: nil,
+            completed: false,
             notes: nil,
-            createdAt: now
+            createdAt: now,
+            updatedAt: nil
         )
 
         DebugLogger.shared.info("FastingService", "Inserting fast record for patient: \(patientId), type: \(type.displayName)")
@@ -416,16 +411,14 @@ final class FastingService: ObservableObject {
         struct FastingUpdate: Encodable {
             let ended_at: String
             let actual_hours: Double
-            let was_broken_early: Bool
-            let energy_level: Int?
+            let completed: Bool
             let notes: String?
         }
 
         let update = FastingUpdate(
             ended_at: ISO8601DateFormatter().string(from: endTime),
             actual_hours: actualHours,
-            was_broken_early: wasBrokenEarly,
-            energy_level: energyLevel,
+            completed: wasCompleted,
             notes: notes
         )
 
@@ -826,7 +819,7 @@ final class FastingService: ObservableObject {
                 "Cognitive function may be impaired - focus on safety",
                 "Muscle protein breakdown elevated - not ideal for muscle building"
             ]
-            electrolyteRecs = electrolyteRecs + ["If symptoms occur, break fast immediately with salted food"]
+            electrolyteRecs += ["If symptoms occur, break fast immediately with salted food"]
             alternativeSuggestion = "Consider: 20-30 minute walk, gentle yoga/mobility, or break your fast 2-3 hours before training."
         } else if hours >= 24 {
             workoutAllowed = false

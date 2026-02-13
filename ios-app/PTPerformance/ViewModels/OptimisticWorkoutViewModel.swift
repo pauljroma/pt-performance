@@ -13,6 +13,7 @@ import Combine
 
 /// Represents the optimistic UI state for a workout session
 /// Changes are reflected immediately without waiting for server
+@MainActor
 class OptimisticWorkoutState: ObservableObject {
     // MARK: - Published State (Immediate Updates)
 
@@ -55,6 +56,7 @@ class OptimisticWorkoutState: ObservableObject {
 }
 
 /// UI state for a single exercise
+@MainActor
 class ExerciseUIState: ObservableObject, Identifiable {
     let id: UUID
     let exerciseId: UUID
@@ -208,6 +210,10 @@ class OptimisticWorkoutViewModel: ObservableObject {
 
         initializeExerciseStates()
         setupSyncObservers()
+    }
+
+    deinit {
+        cancellables.removeAll()
     }
 
     private func initializeExerciseStates() {

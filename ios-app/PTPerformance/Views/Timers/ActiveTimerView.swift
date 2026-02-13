@@ -126,7 +126,7 @@ struct ActiveTimerView: View {
         VStack(spacing: 12) {
             // Linear progress bar
             ProgressView(value: viewModel.roundProgress)
-                .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                .progressViewStyle(LinearProgressViewStyle(tint: Color(.label)))
                 .scaleEffect(y: 3) // Make progress bar thicker
                 .padding(.horizontal, 40)
 
@@ -134,7 +134,7 @@ struct ActiveTimerView: View {
                 // Round status
                 Text(viewModel.roundStatusText)
                     .font(.headline)
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(Color(.label).opacity(0.9))
 
                 Spacer()
 
@@ -144,7 +144,7 @@ struct ActiveTimerView: View {
                 }) {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 32))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color(.label))
                 }
                 .accessibilityLabel("Stop timer")
             }
@@ -159,20 +159,20 @@ struct ActiveTimerView: View {
             // Phase indicator
             Text(viewModel.phaseDisplayName)
                 .font(.system(size: 48, weight: .heavy, design: .rounded))
-                .foregroundColor(.white)
-                .shadow(color: .black.opacity(0.3), radius: 10)
+                .foregroundColor(Color(.label))
+                .shadow(color: Color(.systemBackground).opacity(0.3), radius: 10)
                 .accessibilityAddTraits(.isHeader)
 
             // Huge countdown timer with circular progress ring
             ZStack {
                 // Circular progress ring
                 Circle()
-                    .stroke(Color.white.opacity(0.2), lineWidth: 20)
+                    .stroke(Color(.label).opacity(0.2), lineWidth: 20)
                     .frame(width: 320, height: 320)
 
                 Circle()
                     .trim(from: 0, to: phaseProgress)
-                    .stroke(Color.white, lineWidth: 20)
+                    .stroke(Color(.label), lineWidth: 20)
                     .frame(width: 320, height: 320)
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 0.1), value: phaseProgress)
@@ -180,8 +180,8 @@ struct ActiveTimerView: View {
                 // Timer text (80% of screen)
                 Text(viewModel.formattedTimeRemaining)
                     .font(.system(size: 96, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.5), radius: 10)
+                    .foregroundColor(Color(.label))
+                    .shadow(color: Color(.systemBackground).opacity(0.5), radius: 10)
                     .scaleEffect(isLastThreeSeconds ? pulseScale : 1.0)
                     .animation(
                         isLastThreeSeconds
@@ -196,7 +196,7 @@ struct ActiveTimerView: View {
             // Template name
             Text(viewModel.templateName)
                 .font(.title2)
-                .foregroundColor(.white.opacity(0.8))
+                .foregroundColor(Color(.label).opacity(0.8))
                 .accessibilityLabel("Template: \(viewModel.templateName)")
         }
     }
@@ -219,8 +219,8 @@ struct ActiveTimerView: View {
             }) {
                 Image(systemName: viewModel.canPause ? "pause.circle.fill" : "play.circle.fill")
                     .font(.system(size: 100))
-                    .foregroundColor(.white)
-                    .shadow(color: .black.opacity(0.3), radius: 10)
+                    .foregroundColor(Color(.label))
+                    .shadow(color: Color(.systemBackground).opacity(0.3), radius: 10)
             }
             .accessibilityLabel(viewModel.canPause ? "Pause timer" : "Resume timer")
 
@@ -234,7 +234,7 @@ struct ActiveTimerView: View {
                     Text(audioEnabled ? "Audio On" : "Audio Off")
                         .font(.headline)
                 }
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Color(.label).opacity(0.7))
             }
             .accessibilityLabel("Toggle audio cues")
             .accessibilityValue(audioEnabled ? "On" : "Off")
@@ -242,7 +242,7 @@ struct ActiveTimerView: View {
             // Total elapsed time
             Text("Total: \(viewModel.formattedTotalElapsed)")
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(Color(.label).opacity(0.5))
                 .accessibilityLabel("Total elapsed time: \(viewModel.formattedTotalElapsed)")
         }
     }
@@ -259,13 +259,13 @@ struct ActiveTimerView: View {
                 // Success icon
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 120))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(.label))
                     .accessibilityHidden(true)
 
                 // Title
                 Text("Workout Complete!")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(.label))
                     .accessibilityAddTraits(.isHeader)
 
                 // Stats
@@ -289,8 +289,8 @@ struct ActiveTimerView: View {
                         .foregroundColor(.green)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 20)
-                        .background(Color.white)
-                        .cornerRadius(16)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(CornerRadius.lg)
                         .padding(.horizontal, 40)
                 }
                 .padding(.bottom, 40)
@@ -304,11 +304,11 @@ struct ActiveTimerView: View {
         HStack {
             Text(label)
                 .font(.title3)
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(Color(.label).opacity(0.9))
             Spacer()
             Text(value)
                 .font(.title3.bold())
-                .foregroundColor(.white)
+                .foregroundColor(Color(.label))
         }
         .padding(.vertical, 8)
     }

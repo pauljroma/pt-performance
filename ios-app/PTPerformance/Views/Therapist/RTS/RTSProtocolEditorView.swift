@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  RTSProtocolEditorView.swift
 //  PTPerformance
@@ -507,20 +508,19 @@ struct RTSProtocolEditorView: View {
 
     private var savingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color(.label).opacity(0.3)
                 .ignoresSafeArea()
 
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.white)
 
                 Text(isEditMode ? "Updating..." : "Creating...")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             .padding(Spacing.xl)
-            .background(Color(.systemGray).opacity(0.9))
+            .background(Color(.systemBackground))
             .cornerRadius(CornerRadius.lg)
         }
     }

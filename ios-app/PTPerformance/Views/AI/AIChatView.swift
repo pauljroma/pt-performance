@@ -156,7 +156,7 @@ struct AIChatView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Color.white.opacity(0.2))
-                        .cornerRadius(6)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
 
@@ -206,7 +206,7 @@ struct AIChatView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 
@@ -274,7 +274,7 @@ struct ChatBubble: View {
                     .padding(12)
                     .background(message.role == "user" ? Color.blue : Color(.secondarySystemBackground))
                     .foregroundColor(message.role == "user" ? .white : .primary)
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
 
                 Text(timeAgo(message.createdAt))
                     .font(.caption2)

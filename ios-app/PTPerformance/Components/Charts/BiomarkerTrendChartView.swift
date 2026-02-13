@@ -94,7 +94,7 @@ struct BiomarkerTrendChartView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(statusColor(for: latest.status).opacity(0.15))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
 
@@ -111,10 +111,12 @@ struct BiomarkerTrendChartView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .accessibilityElement(children: .ignore)
+        .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("\(biomarkerName) Trend Chart")
         .accessibilityValue(accessibilitySummary)
+        .accessibilityHint("Shows \(dataPoints.count) historical data points over time")
+        .accessibilityIdentifier("biomarkerTrendChart_\(biomarkerName.replacingOccurrences(of: " ", with: "_"))")
     }
 
     // MARK: - Chart
@@ -208,7 +210,7 @@ struct BiomarkerTrendChartView: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { value in
+            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                 AxisGridLine()
                 AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                     .font(.caption)
@@ -248,6 +250,8 @@ struct BiomarkerTrendChartView: View {
             legendItem(color: .red, text: "Concern")
         }
         .font(.caption2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Chart legend: Green indicates optimal range, Yellow indicates normal range, Red indicates concern")
     }
 
     private func legendItem(color: Color, text: String) -> some View {
@@ -255,6 +259,7 @@ struct BiomarkerTrendChartView: View {
             Circle()
                 .fill(color)
                 .frame(width: 8, height: 8)
+                .accessibilityHidden(true)
             Text(text)
                 .foregroundColor(.secondary)
         }

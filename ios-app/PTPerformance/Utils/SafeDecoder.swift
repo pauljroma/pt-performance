@@ -321,9 +321,7 @@ extension SafeDecodable {
         do {
             return try Self(from: decoder)
         } catch {
-            #if DEBUG
-            print("[SafeDecoder] Failed to decode \(Self.self), using default. Error: \(error)")
-            #endif
+            DebugLogger.shared.log("[SafeDecoder] Failed to decode \(Self.self), using default. Error: \(error)", level: .warning)
             return Self.defaultInstance
         }
     }

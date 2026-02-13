@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  OfflineBanner.swift
 //  PTPerformance
@@ -23,7 +24,7 @@ struct OfflineBanner: View {
     var body: some View {
         if shouldShowBanner {
             VStack(spacing: 0) {
-                HStack(spacing: 12) {
+                HStack(spacing: Spacing.sm) {
                     // Icon - different based on state
                     if supabase.isOffline {
                         Image(systemName: "wifi.slash")
@@ -86,16 +87,18 @@ struct OfflineBanner: View {
                             Text(supabase.isOffline ? "Retry" : "Sync Now")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
+                                .padding(.horizontal, Spacing.sm)
+                                .padding(.vertical, Spacing.xs - 2)
                                 .background(Color.white.opacity(0.2))
-                                .cornerRadius(6)
+                                .cornerRadius(CornerRadius.xs + 2)
                         }
                     }
                     .disabled(isCheckingConnection || offlineQueue.isSyncing)
+                    .accessibilityLabel(supabase.isOffline ? "Retry connection" : "Sync pending changes now")
+                    .accessibilityHint(supabase.isOffline ? "Attempts to reconnect to the server" : "Syncs all pending changes immediately")
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
                 .background(bannerColor)
             }
             .transition(.move(edge: .top).combined(with: .opacity))
@@ -106,11 +109,11 @@ struct OfflineBanner: View {
     /// Banner color based on state
     private var bannerColor: Color {
         if supabase.isOffline {
-            return .orange
+            return Color(.systemOrange)
         } else if offlineQueue.lastSyncError != nil {
-            return .red
+            return Color(.systemRed)
         } else {
-            return .blue
+            return .modusCyan
         }
     }
 
@@ -163,7 +166,7 @@ struct PendingSyncIndicator: View {
 
     var body: some View {
         if offlineQueue.pendingCount > 0 {
-            HStack(spacing: 4) {
+            HStack(spacing: Spacing.xxs) {
                 if offlineQueue.isSyncing {
                     ProgressView()
                         .scaleEffect(0.6)
@@ -177,11 +180,12 @@ struct PendingSyncIndicator: View {
                     .fontWeight(.semibold)
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(offlineQueue.isSyncing ? Color.blue : Color.orange)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
+            .background(offlineQueue.isSyncing ? Color.modusCyan : Color(.systemOrange))
             .clipShape(Capsule())
             .accessibilityLabel("\(offlineQueue.pendingCount) items pending sync")
+            .accessibilityHint(offlineQueue.isSyncing ? "Currently syncing" : "Waiting to sync")
         }
     }
 }

@@ -229,7 +229,7 @@ struct SiriIntentHandler: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: scenePhase) { oldPhase, newPhase in
+            .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
                     siriService.checkForPendingIntents()
                 }

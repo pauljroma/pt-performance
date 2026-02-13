@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  TodayHubView.swift
 //  PTPerformance
@@ -7,6 +8,7 @@
 //  ACP-836: Added Streak Tracking integration
 //  ACP-501: One-Tap Start Today's Workout integration
 //  ACP-522: Added Arm Care Assessment integration
+//  ACP-MODE: Added mode-specific dashboard navigation
 //  Primary tab combining Today's workout, Quick Pick access, Timers, Readiness prompts, Streaks, and Arm Care
 //
 
@@ -21,6 +23,7 @@ struct TodayHubView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var supabase: PTSupabaseClient
     @EnvironmentObject var storeKit: StoreKitService
+    @ObservedObject private var modeService = ModeService.shared
 
     // MARK: - State
 
@@ -31,6 +34,14 @@ struct TodayHubView: View {
     @State private var showArmCareAssessment = false  // ACP-522: Arm Care Assessment
     @State private var showDailyCheckIn = false       // X2Index: Daily Check-in
     @StateObject private var streakViewModel = StreakIndicatorViewModel()
+
+    // ACP-MODE: Mode-specific dashboard navigation state
+    @State private var showRehabDashboard = false
+    @State private var showStrengthDashboard = false
+    @State private var showPerformanceDashboard = false
+
+    // ACP-MODE: Mode-specific status card data
+    @StateObject private var modeStatusViewModel = ModeStatusCardViewModel()
 
     // ACP-501: Quick Start state
     @StateObject private var quickStartService = QuickStartService.shared
@@ -97,6 +108,54 @@ struct TodayHubView: View {
                         ReadinessCheckInView(patientId: patientId)
                     }
                 }
+                // ACP-MODE: Rehab Mode Dashboard sheet
+                .sheetWithHaptic(isPresented: $showRehabDashboard) {
+                    NavigationStack {
+                        RehabModeDashboardView()
+                            .environmentObject(appState)
+                            .toolbar {
+                                ToolbarItem(placement: .navigationBarTrailing) {
+                                    Button("Done") {
+                                        showRehabDashboard = false
+                                    }
+                                }
+                            }
+                    }
+                }
+                // ACP-MODE: Strength Mode Dashboard sheet
+                .sheetWithHaptic(isPresented: $showStrengthDashboard) {
+                    if let patientIdString = supabase.userId,
+                       let patientId = UUID(uuidString: patientIdString) {
+                        NavigationStack {
+                            StrengthModeDashboardView(patientId: patientId)
+                                .environmentObject(appState)
+                                .toolbar {
+                                    ToolbarItem(placement: .navigationBarTrailing) {
+                                        Button("Done") {
+                                            showStrengthDashboard = false
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+                // ACP-MODE: Performance Mode Dashboard sheet
+                .sheetWithHaptic(isPresented: $showPerformanceDashboard) {
+                    if let patientIdString = supabase.userId,
+                       let patientId = UUID(uuidString: patientIdString) {
+                        NavigationStack {
+                            PerformanceModeDashboardView(patientId: patientId)
+                                .environmentObject(appState)
+                                .toolbar {
+                                    ToolbarItem(placement: .navigationBarTrailing) {
+                                        Button("Done") {
+                                            showPerformanceDashboard = false
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
                 // ACP-501: Quick Start Workout Full Screen Cover
                 .fullScreenCoverWithHaptic(isPresented: $showQuickStartWorkout) {
                     if let session = quickStartSession,
@@ -137,6 +196,8 @@ struct TodayHubView: View {
                     if let patientIdString = supabase.userId,
                        let patientId = UUID(uuidString: patientIdString) {
                         await streakViewModel.loadData(for: patientId)
+                        // ACP-MODE: Load mode-specific status card data
+                        await modeStatusViewModel.loadData(for: patientId)
                     }
 
                     // ACP-501: Pre-load quick start data for faster response
@@ -263,13 +324,14 @@ struct TodayHubView: View {
 
             Divider()
 
-            // ACP-522: Arm Care Assessment menu item
+            // ACP-522: Arm Care Assessment menu item - Rehab mode feature
             Button(action: {
                 HapticFeedback.light()
                 showArmCareAssessment = true
             }) {
                 Label("Arm Care Check", systemImage: "figure.baseball")
             }
+            .visibleIf(.romExercises)
         } label: {
             Image(systemName: "ellipsis.circle")
                 .font(.system(size: 18))
@@ -300,6 +362,8 @@ class StreakIndicatorViewModel: ObservableObject {
         }
     }
 }
+
+// NOTE: ModeStatusCardViewModel is defined in ViewModels/ModeStatusCardViewModel.swift
 
 // MARK: - ACP-501: Quick Start Notification
 

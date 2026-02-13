@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Protocol picker for selecting fasting schedule (ACP-1001)
@@ -141,7 +142,7 @@ private struct ProtocolCard: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.modusTealAccent)
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
                     }
 

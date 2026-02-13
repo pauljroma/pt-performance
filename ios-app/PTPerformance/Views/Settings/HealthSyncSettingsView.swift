@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  HealthSyncSettingsView.swift
 //  PTPerformance
@@ -38,7 +39,7 @@ struct HealthSyncSettingsView: View {
         }
         .navigationTitle("Health Sync")
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: config) { oldValue, newValue in
+        .onChange(of: config) { _, newValue in
             newValue.save()
             healthKitService.syncConfig = newValue
         }
@@ -58,7 +59,7 @@ struct HealthSyncSettingsView: View {
         Section {
             HStack {
                 Image(systemName: healthKitService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundColor(healthKitService.isAuthorized ? .green : .red)
+                    .foregroundColor(healthKitService.isAuthorized ? DesignTokens.statusSuccess : DesignTokens.statusError)
                     .font(.title2)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
@@ -92,9 +93,9 @@ struct HealthSyncSettingsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.red)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .background(DesignTokens.statusError)
+                    .foregroundColor(DesignTokens.buttonTextOnAccent)
+                    .cornerRadius(CornerRadius.sm)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Connect Apple Health")
@@ -119,7 +120,7 @@ struct HealthSyncSettingsView: View {
                     }
                 } icon: {
                     Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                 }
             }
             .accessibilityLabel("Export Workouts")
@@ -137,7 +138,7 @@ struct HealthSyncSettingsView: View {
                         }
                     } icon: {
                         Image(systemName: "bolt.circle.fill")
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
                     }
                 }
                 .accessibilityLabel("Auto-Export")
@@ -182,7 +183,7 @@ struct HealthSyncSettingsView: View {
                     Text("Resting Heart Rate")
                 } icon: {
                     Image(systemName: "heart.fill")
-                        .foregroundColor(.red)
+                        .foregroundColor(DesignTokens.statusError)
                 }
             }
             .accessibilityLabel("Resting Heart Rate")
@@ -193,7 +194,7 @@ struct HealthSyncSettingsView: View {
                     Text("Active Energy")
                 } icon: {
                     Image(systemName: "flame.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(DesignTokens.statusWarning)
                 }
             }
             .accessibilityLabel("Active Energy")
@@ -204,7 +205,7 @@ struct HealthSyncSettingsView: View {
                     Text("Exercise Minutes")
                 } icon: {
                     Image(systemName: "figure.run")
-                        .foregroundColor(.green)
+                        .foregroundColor(DesignTokens.statusSuccess)
                 }
             }
             .accessibilityLabel("Exercise Minutes")
@@ -215,7 +216,7 @@ struct HealthSyncSettingsView: View {
                     Text("Step Count")
                 } icon: {
                     Image(systemName: "figure.walk")
-                        .foregroundColor(.blue)
+                        .foregroundColor(DesignTokens.statusInfo)
                 }
             }
             .accessibilityLabel("Step Count")
@@ -247,7 +248,7 @@ struct HealthSyncSettingsView: View {
                     }
                 } icon: {
                     Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(DesignTokens.statusInfo)
                 }
             }
             .accessibilityLabel("Background Sync")
@@ -284,7 +285,7 @@ struct HealthSyncSettingsView: View {
             // Last Import
             HStack {
                 Image(systemName: "arrow.down.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(DesignTokens.statusInfo)
                     .frame(width: 28)
                 Text("Last Import")
                 Spacer()
@@ -300,7 +301,7 @@ struct HealthSyncSettingsView: View {
             // Last Export
             HStack {
                 Image(systemName: "arrow.up.circle")
-                    .foregroundColor(.green)
+                    .foregroundColor(DesignTokens.statusSuccess)
                     .frame(width: 28)
                 Text("Last Export")
                 Spacer()
@@ -316,7 +317,7 @@ struct HealthSyncSettingsView: View {
             // Exported Workouts Count
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                     .frame(width: 28)
                 Text("Workouts Exported")
                 Spacer()

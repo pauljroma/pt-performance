@@ -146,7 +146,7 @@ struct ProgramStatusBadge: View {
             .padding(.vertical, 4)
             .background(backgroundColor)
             .foregroundColor(.white)
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Status: \(status.capitalized)")
     }
 

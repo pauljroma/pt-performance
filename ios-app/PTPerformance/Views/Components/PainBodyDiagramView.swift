@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  PainBodyDiagramView.swift
 //  PTPerformance
@@ -262,7 +263,7 @@ struct PainBodyDiagramView: View {
             Spacer()
 
             // Front/Back toggle
-            HStack(spacing: 4) {
+            HStack(spacing: Spacing.xxs) {
                 Button {
                     withAnimation(.spring(response: 0.3)) {
                         showingFront = true
@@ -271,14 +272,17 @@ struct PainBodyDiagramView: View {
                     Text("Front")
                         .font(.caption.weight(.medium))
                         .foregroundColor(showingFront ? .white : .primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xs - 2)
                         .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(showingFront ? Color.blue : Color.clear)
+                            RoundedRectangle(cornerRadius: CornerRadius.xs + 2)
+                                .fill(showingFront ? Color.modusCyan : Color.clear)
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Front view")
+                .accessibilityHint("Shows front of body diagram")
+                .accessibilityAddTraits(showingFront ? .isSelected : [])
 
                 Button {
                     withAnimation(.spring(response: 0.3)) {
@@ -288,18 +292,21 @@ struct PainBodyDiagramView: View {
                     Text("Back")
                         .font(.caption.weight(.medium))
                         .foregroundColor(!showingFront ? .white : .primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xs - 2)
                         .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(!showingFront ? Color.blue : Color.clear)
+                            RoundedRectangle(cornerRadius: CornerRadius.xs + 2)
+                                .fill(!showingFront ? Color.modusCyan : Color.clear)
                         )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Back view")
+                .accessibilityHint("Shows back of body diagram")
+                .accessibilityAddTraits(!showingFront ? .isSelected : [])
             }
-            .padding(4)
+            .padding(Spacing.xxs)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: CornerRadius.sm)
                     .fill(Color(.tertiarySystemBackground))
             )
         }
@@ -396,7 +403,7 @@ struct PainBodyDiagramView: View {
     // MARK: - Selected Locations Section
 
     private var selectedLocationsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack {
                 Text("Selected Locations")
                     .font(.subheadline.weight(.semibold))
@@ -414,13 +421,15 @@ struct PainBodyDiagramView: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
+                    .accessibilityLabel("Clear all pain locations")
+                    .accessibilityHint("Removes all selected pain locations from the diagram")
                 }
             }
 
             if painLocations.isEmpty {
                 HStack {
                     Spacer()
-                    VStack(spacing: 8) {
+                    VStack(spacing: Spacing.xs) {
                         Image(systemName: "hand.tap")
                             .font(.system(size: 24))
                             .foregroundColor(.secondary)
@@ -430,10 +439,10 @@ struct PainBodyDiagramView: View {
                     }
                     Spacer()
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.md)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: Spacing.xs) {
                         ForEach(painLocations) { location in
                             painLocationChip(location)
                         }
@@ -447,7 +456,7 @@ struct PainBodyDiagramView: View {
     // MARK: - Pain Location Chip
 
     private func painLocationChip(_ location: PainLocation) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Spacing.xs - 2) {
             Circle()
                 .fill(location.intensityColor)
                 .frame(width: 12, height: 12)
@@ -469,11 +478,13 @@ struct PainBodyDiagramView: View {
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Remove \(location.region.displayName)")
+            .accessibilityHint("Removes this pain location from the selection")
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, Spacing.xs + 2)
+        .padding(.vertical, Spacing.xs - 2)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemBackground))
         )
         .onTapGesture {
@@ -487,10 +498,10 @@ struct PainBodyDiagramView: View {
 
     private var intensityEditorSheet: some View {
         NavigationStack {
-            VStack(spacing: 24) {
+            VStack(spacing: Spacing.lg) {
                 // Region header
                 if let location = editingLocation {
-                    VStack(spacing: 8) {
+                    VStack(spacing: Spacing.xs) {
                         Image(systemName: location.region.iconName)
                             .font(.system(size: 40))
                             .foregroundColor(intensityColorFor(tempIntensity))
@@ -502,7 +513,7 @@ struct PainBodyDiagramView: View {
                 }
 
                 // Intensity display
-                VStack(spacing: 12) {
+                VStack(spacing: Spacing.sm) {
                     Text("\(tempIntensity)")
                         .font(.system(size: 72, weight: .bold, design: .rounded))
                         .foregroundColor(intensityColorFor(tempIntensity))
@@ -513,7 +524,7 @@ struct PainBodyDiagramView: View {
                 }
 
                 // Intensity slider
-                VStack(spacing: 8) {
+                VStack(spacing: Spacing.xs) {
                     Slider(value: Binding(
                         get: { Double(tempIntensity) },
                         set: { tempIntensity = Int($0) }
@@ -546,7 +557,7 @@ struct PainBodyDiagramView: View {
                 Spacer()
 
                 // Action buttons
-                HStack(spacing: 16) {
+                HStack(spacing: Spacing.md) {
                     Button {
                         if let location = editingLocation {
                             withAnimation {
@@ -561,8 +572,10 @@ struct PainBodyDiagramView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.red.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
+                    .accessibilityLabel("Remove pain location")
+                    .accessibilityHint("Removes this pain location from the diagram")
 
                     Button {
                         if var location = editingLocation {
@@ -580,9 +593,11 @@ struct PainBodyDiagramView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .background(Color.modusCyan)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
+                    .accessibilityLabel("Save pain intensity")
+                    .accessibilityHint("Saves the pain intensity level for this location")
                 }
                 .padding()
             }
@@ -593,6 +608,8 @@ struct PainBodyDiagramView: View {
                     Button("Cancel") {
                         showingIntensityEditor = false
                     }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Closes the intensity editor without saving")
                 }
             }
         }
@@ -601,12 +618,12 @@ struct PainBodyDiagramView: View {
     // MARK: - Intensity Scale Reference
 
     private var intensityScaleReference: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Pain Scale Reference")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            VStack(spacing: 4) {
+            VStack(spacing: Spacing.xxs) {
                 ForEach([
                     (0, "No Pain", Color.green),
                     (1, "Minimal", Color.green.opacity(0.7)),
@@ -632,7 +649,7 @@ struct PainBodyDiagramView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.secondarySystemBackground))
         )
         .padding(.horizontal)

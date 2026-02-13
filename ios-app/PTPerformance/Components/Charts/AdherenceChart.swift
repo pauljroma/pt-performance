@@ -94,7 +94,7 @@ struct WeeklyAdherenceChart: View {
         .frame(height: height + 40)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Weekly adherence chart")
     }
@@ -209,7 +209,7 @@ struct AdherenceCompactCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Adherence: \(adherence.completedSessions) of \(adherence.totalSessions) sessions completed, \(Int(adherence.adherencePercentage)) percent completion rate")
     }

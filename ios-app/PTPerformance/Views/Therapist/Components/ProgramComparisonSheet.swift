@@ -144,7 +144,7 @@ struct ProgramComparisonSheet: View {
                         y: .value("Value", value)
                     )
                     .foregroundStyle(programColor(for: index))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                     .annotation(position: .top) {
                         VStack(spacing: 2) {
                             if comparison.isWinner(program, for: metric) {
@@ -460,7 +460,7 @@ private struct WinnerBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.yellow.opacity(0.2))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

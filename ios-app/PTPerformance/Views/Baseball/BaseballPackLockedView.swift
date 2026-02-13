@@ -79,7 +79,7 @@ struct BaseballPackLockedView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Feature Row
@@ -119,7 +119,7 @@ struct BaseballPackLockedView: View {
                 .padding()
                 .background(Color.orange)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
 
             // Restore purchases button
@@ -167,12 +167,12 @@ struct BaseballPackLockedBanner: View {
                     .padding(.vertical, 6)
                     .background(Color.orange)
                     .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -191,7 +191,7 @@ struct BaseballPremiumBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.orange)
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 }
 

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ActiveProgramDetailView.swift
 //  PTPerformance
@@ -150,7 +151,7 @@ struct ActiveProgramDetailView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(enrollment.enrollment.enrollmentStatus.color.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
                 .accessibilityLabel("Status: \(enrollment.enrollment.enrollmentStatus.displayName)")
 
                 Spacer()
@@ -291,7 +292,7 @@ struct ActiveProgramDetailView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
         .background(color.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
     }
@@ -310,7 +311,7 @@ struct ActiveProgramDetailView: View {
                     .foregroundColor(.blue)
                     .frame(width: 44, height: 44)
                     .background(Color.blue.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
                     .accessibilityHidden(true)
 
                 // Content
@@ -378,7 +379,7 @@ struct ActiveProgramDetailView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color(.tertiarySystemGroupedBackground))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -398,7 +399,6 @@ struct ActiveProgramDetailView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
-
 
     // MARK: - Loading View
 
@@ -421,7 +421,6 @@ struct ActiveProgramDetailView: View {
     private var emptyProgramView: some View {
         ProgramEmptyStateView.programTemplate()
     }
-
 
     // MARK: - Phase-Based Content
 
@@ -491,7 +490,7 @@ struct ActiveProgramDetailView: View {
                         .foregroundColor(.red)
                         .frame(width: 44, height: 44)
                         .background(Color.red.opacity(0.1))
-                        .cornerRadius(10)
+                        .cornerRadius(CornerRadius.sm)
                         .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -520,7 +519,7 @@ struct ActiveProgramDetailView: View {
                 }
                 .padding(12)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(isProcessing)
             .accessibilityLabel("Leave program")
@@ -572,7 +571,7 @@ private struct PhaseTimelineCard: View {
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
                         .background(Color.blue)
-                        .cornerRadius(3)
+                        .cornerRadius(CornerRadius.xs)
                 }
 
                 if isCompleted {
@@ -601,7 +600,7 @@ private struct PhaseTimelineCard: View {
         .padding(10)
         .frame(width: 120)
         .background(isCurrentPhase ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .stroke(isCurrentPhase ? Color.blue : Color.clear, lineWidth: 2)
@@ -666,7 +665,7 @@ private struct ProgramPhaseSection: View {
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(Color.blue)
-                                    .cornerRadius(4)
+                                    .cornerRadius(CornerRadius.xs)
                             }
                         }
 
@@ -683,7 +682,7 @@ private struct ProgramPhaseSection: View {
                 }
                 .padding()
                 .background(isCurrentPhase ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Phase: \(phaseWithSessions.phase.name)\(isCurrentPhase ? ", current phase" : ""), \(phaseWithSessions.sessions.count) sessions")
@@ -750,7 +749,7 @@ private struct ProgramSessionCard: View {
                         .foregroundColor(.secondary)
                         .frame(width: 32, height: 32)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(showExercises ? "Collapse exercises" : "Expand exercises")
@@ -771,7 +770,7 @@ private struct ProgramSessionCard: View {
             }
             .padding(12)
             .background(Color(.systemBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .adaptiveShadow(Shadow.subtle)
 
             // Exercises list
@@ -802,7 +801,7 @@ private struct ProgramSessionCard: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(6)
+                        .cornerRadius(CornerRadius.sm)
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("Exercise \(exercise.sequence): \(exercise.exerciseTemplate?.name ?? "Exercise")\(exercise.targetSets.flatMap { sets in exercise.targetReps.map { reps in ", \(sets) sets of \(reps) reps" } } ?? "")")
                     }
@@ -862,7 +861,7 @@ private struct ProgramWeekSection: View {
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(Color.blue)
-                                    .cornerRadius(4)
+                                    .cornerRadius(CornerRadius.xs)
                             }
 
                             // Week completion badge
@@ -878,7 +877,7 @@ private struct ProgramWeekSection: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.green.opacity(0.15))
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                             }
                         }
 
@@ -896,7 +895,7 @@ private struct ProgramWeekSection: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(10)
+                .cornerRadius(CornerRadius.sm)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(completedCount) of \(week.workoutCount) workouts completed")
@@ -967,14 +966,14 @@ private struct ProgramWorkoutCard: View {
                     .foregroundColor(isCompleted ? .gray : categoryColor)
                     .frame(width: 40, height: 40)
                     .background((isCompleted ? Color.gray : categoryColor).opacity(0.15))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Completion checkmark
                 if isCompleted {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption)
                         .foregroundColor(.green)
-                        .background(Color.white)
+                        .background(Color(.systemBackground))
                         .clipShape(Circle())
                         .offset(x: 4, y: 4)
                         .accessibilityHidden(true)
@@ -998,7 +997,7 @@ private struct ProgramWorkoutCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.green.opacity(0.15))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 
@@ -1025,7 +1024,7 @@ private struct ProgramWorkoutCard: View {
         }
         .padding(12)
         .background(Color(.systemBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(workout.name)\(isCompleted ? ", completed" : "")\(workout.durationMinutes.map { ", \($0) minutes" } ?? "")")

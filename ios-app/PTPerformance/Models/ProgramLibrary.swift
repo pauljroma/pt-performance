@@ -261,9 +261,15 @@ enum ProgramCategory: String, Codable, CaseIterable {
     case recovery
     case sport
     case baseball
+    case rehab
+    case performance
 
     var displayName: String {
-        rawValue.capitalized
+        switch self {
+        case .rehab: return "Rehab"
+        case .performance: return "Performance"
+        default: return rawValue.capitalized
+        }
     }
 
     var icon: String {
@@ -275,6 +281,8 @@ enum ProgramCategory: String, Codable, CaseIterable {
         case .recovery: return "bed.double.fill"
         case .sport: return "sportscourt.fill"
         case .baseball: return "baseball.fill"
+        case .rehab: return "cross.case.fill"
+        case .performance: return "figure.run"
         }
     }
 
@@ -293,6 +301,8 @@ enum ProgramCategory: String, Codable, CaseIterable {
         case .recovery: return .teal
         case .sport: return .orange
         case .baseball: return .orange
+        case .rehab: return .blue
+        case .performance: return .orange
         }
     }
 }

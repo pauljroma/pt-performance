@@ -52,9 +52,9 @@ struct ExerciseCompactRow: View {
             }
         }
         .background(backgroundColor)
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(borderColor, lineWidth: isCompleted ? 2 : 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -180,6 +180,7 @@ struct ExerciseCompactRow: View {
     @ViewBuilder
     private func prescribedMetric(icon: String, value: String, field: EditingField) -> some View {
         Button(action: {
+            HapticFeedback.light()
             if isExpanded {
                 editingField = field
             }
@@ -254,7 +255,7 @@ struct ExerciseCompactRow: View {
             }
             .padding()
             .background(Color.green.opacity(0.1))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel("Quick complete with prescribed values")
@@ -287,7 +288,7 @@ struct ExerciseCompactRow: View {
             }
             .padding()
             .background(Color.purple.opacity(0.1))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel("Suggest exercise substitute")
@@ -443,7 +444,7 @@ struct ExerciseCompactRow: View {
             .padding()
             .background(Color.blue)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(isSaving)
         .buttonStyle(PlainButtonStyle())

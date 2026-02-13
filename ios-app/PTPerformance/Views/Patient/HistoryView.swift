@@ -36,10 +36,11 @@ struct HistoryView: View {
                             .staggeredAnimation(index: 0)
                     }
 
-                    // Pain trend chart
+                    // Pain trend chart - visible in Rehab mode
                     if !viewModel.painTrend.isEmpty {
                         PainTrendSection(dataPoints: viewModel.painTrend)
                             .staggeredAnimation(index: 1)
+                            .visibleIf(.painTracking)
                     } else if viewModel.summaryStats != nil {
                         EmptyDataSection(
                             title: "No Pain Data Yet",
@@ -47,6 +48,7 @@ struct HistoryView: View {
                             icon: "chart.line.uptrend.xyaxis"
                         )
                         .staggeredAnimation(index: 1)
+                        .visibleIf(.painTracking)
                     }
 
                     // Adherence card
@@ -171,7 +173,7 @@ private struct SummaryCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
     }
@@ -222,7 +224,7 @@ struct PainTrendSection: View {
             .frame(height: 200)
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .accessibilityLabel(chartAccessibilityLabel)
             .accessibilityHint("Shows pain levels over the last 14 days")
 
@@ -311,7 +313,7 @@ struct AdherenceSection: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -396,7 +398,7 @@ struct SessionRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Session \(session.sessionNumber), \(session.sessionDate.formatted(date: .abbreviated, time: .omitted)), \(session.completed == true ? "completed" : "pending")")
     }
@@ -453,7 +455,7 @@ struct RecentWorkoutsSection: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                     }
                 }
@@ -550,7 +552,7 @@ struct WorkoutHistoryRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(workoutAccessibilityLabel)
@@ -650,7 +652,7 @@ struct SessionSourceBadge: View {
         .padding(.vertical, 2)
         .background(backgroundColor.opacity(0.2))
         .foregroundColor(backgroundColor)
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
         .accessibilityLabel("\(source.displayName) workout")
         .accessibilityHint("Indicates how this workout was initiated")
     }
@@ -739,7 +741,7 @@ struct EmptyDataSection: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -807,7 +809,7 @@ struct SkeletonSummaryCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .onAppear {
             withAnimation(
                 Animation.linear(duration: 1.5)
@@ -845,7 +847,7 @@ struct SkeletonAdherenceCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .onAppear {
             withAnimation(
@@ -884,7 +886,7 @@ struct SkeletonSessionRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .onAppear {
             withAnimation(
                 Animation.linear(duration: 1.5)
@@ -902,7 +904,7 @@ struct SkeletonSessionRow: View {
 struct HistoryView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            NavigationView {
+            NavigationStack {
                 HistoryView(patientId: "patient-1")
             }
             .previewDisplayName("History View")

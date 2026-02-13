@@ -73,7 +73,7 @@ struct ProgramHeatmapChart: View {
                 Rectangle()
                     .fill(colorForValue(value))
                     .frame(width: 12, height: 12)
-                    .cornerRadius(2)
+                    .cornerRadius(CornerRadius.xs)
             }
 
             Text("Low")
@@ -387,7 +387,7 @@ struct DropoffFunnelChart: View {
                 selectedPhase?.id == phase.id ?
                     Color.blue.opacity(0.1) : Color.clear
             )
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xs)
         }
         .buttonStyle(PlainButtonStyle())
     }

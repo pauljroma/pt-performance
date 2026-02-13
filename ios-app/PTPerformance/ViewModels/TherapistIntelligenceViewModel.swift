@@ -161,6 +161,10 @@ final class TherapistIntelligenceViewModel: ObservableObject {
     private let supabase = PTSupabaseClient.shared
     private var cancellables = Set<AnyCancellable>()
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Computed Properties
 
     var totalActivePatients: Int {

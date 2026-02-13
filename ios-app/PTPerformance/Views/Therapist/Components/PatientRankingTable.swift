@@ -372,7 +372,7 @@ struct CompactRankingRow: View {
                     .foregroundColor(.white)
                     .frame(width: 20, height: 20)
                     .background(entry.rank <= 3 ? Color.blue : Color.gray)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
 
                 // Name
                 Text(entry.patientName)

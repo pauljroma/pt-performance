@@ -578,7 +578,7 @@ struct ArmCareAssessmentView: View {
             .padding()
             .background(viewModel.currentTrafficLight.color)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(viewModel.isLoading)
     }

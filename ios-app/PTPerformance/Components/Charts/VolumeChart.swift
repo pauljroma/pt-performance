@@ -82,7 +82,7 @@ struct VolumeChart: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Volume Trend Chart")
@@ -165,7 +165,7 @@ struct VolumeChart: View {
                             .font(.caption2)
                             .padding(4)
                             .background(Color.gray.opacity(0.2))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.gray)
                     }
             }

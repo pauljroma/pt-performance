@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  IntakeAssessmentView.swift
 //  PTPerformance
@@ -236,7 +237,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 80)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.subjectiveError {
                         Text(error)
                             .font(.caption)
@@ -252,7 +253,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
 
                 // Past Medical History
@@ -263,7 +264,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 80)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -288,7 +289,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 120)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.objectiveError {
                         Text(error)
                             .font(.caption)
@@ -603,7 +604,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
 
                 // Treatment Plan
@@ -614,7 +615,7 @@ struct IntakeAssessmentView: View {
                         .frame(minHeight: 100)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.assessmentError {
                         Text(error)
                             .font(.caption)
@@ -662,7 +663,7 @@ struct IntakeAssessmentView: View {
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
                 .foregroundColor(.primary)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canSaveDraft)
 
@@ -678,7 +679,7 @@ struct IntakeAssessmentView: View {
                 .padding()
                 .background(viewModel.canSubmit ? Color.blue : Color.gray)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canSubmit)
 
@@ -695,7 +696,7 @@ struct IntakeAssessmentView: View {
                     .padding()
                     .background(Color.green)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
             }
         }
@@ -706,7 +707,7 @@ struct IntakeAssessmentView: View {
 
     private var savingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color(.label).opacity(0.3)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
@@ -802,7 +803,7 @@ private struct CollapsibleSection<Content: View>: View {
                 .background(Color(.secondarySystemGroupedBackground))
             }
         }
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

@@ -184,7 +184,7 @@ struct FoodLibraryView: View {
                             .padding(.vertical, 6)
                             .background(selectedCategory == nil ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(selectedCategory == nil ? .white : .primary)
-                            .cornerRadius(16)
+                            .cornerRadius(CornerRadius.lg)
                     }
 
                     ForEach(FoodCategory.allCases, id: \.self) { category in
@@ -198,7 +198,7 @@ struct FoodLibraryView: View {
                                 .padding(.vertical, 6)
                                 .background(selectedCategory == category ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(selectedCategory == category ? .white : .primary)
-                                .cornerRadius(16)
+                                .cornerRadius(CornerRadius.lg)
                         }
                     }
                 }
@@ -246,7 +246,7 @@ struct FoodLibraryView: View {
         }
         .sheet(isPresented: $showAddCustomFood) {
             NavigationStack {
-                AddCustomFoodView { food in
+                AddCustomFoodView { _ in
                     // Refresh user foods
                     Task {
                         await loadUserFoods()

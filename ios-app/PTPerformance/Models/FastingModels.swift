@@ -19,7 +19,7 @@ struct FastingProtocol: Identifiable, Codable, Hashable {
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case fastingType = "fasting_type"
+        case fastingType = "protocol_type"
         case fastingHours = "fasting_hours"
         case eatingHours = "eating_hours"
         case description

@@ -106,7 +106,7 @@ struct BodyCompositionTimelineView: View {
                                 : Color(.tertiarySystemGroupedBackground)
                         )
                         .foregroundColor(selectedPeriod == period ? .accentColor : .primary)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -169,7 +169,7 @@ struct BodyCompositionTimelineView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks { value in
+                    AxisMarks { _ in
                         AxisGridLine()
                         AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                             .font(.caption)
@@ -180,7 +180,7 @@ struct BodyCompositionTimelineView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -207,7 +207,7 @@ struct BodyCompositionTimelineView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Entries Section
@@ -258,7 +258,7 @@ struct BodyCompositionTimelineView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)
     }
 

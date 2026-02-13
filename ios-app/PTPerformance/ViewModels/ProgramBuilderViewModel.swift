@@ -52,7 +52,7 @@ class ProgramBuilderViewModel: ObservableObject {
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
-    
+
     var isValid: Bool {
         do {
             try validateProgram()
@@ -127,7 +127,7 @@ class ProgramBuilderViewModel: ObservableObject {
             throw ProgramBuilderError.totalDurationTooLong
         }
     }
-    
+
     var canAddPhase: Bool {
         guard let therapyProtocol = selectedProtocol else { return true }
         return phases.count < therapyProtocol.constraints.maxPhases
@@ -138,7 +138,7 @@ class ProgramBuilderViewModel: ObservableObject {
         let allowed = selectedProgramType.allowedProtocolCategories
         return availableProtocols.filter { allowed.contains($0.category) }
     }
-    
+
     func loadProtocols() async {
         isLoadingProtocols = true
         createError = nil
@@ -150,7 +150,7 @@ class ProgramBuilderViewModel: ObservableObject {
         availableProtocols = TherapyProtocol.sampleProtocols
         isLoadingProtocols = false
     }
-    
+
     func loadProtocolPhases(_ therapyProtocol: TherapyProtocol) {
         // Load phases from protocol
         phases = therapyProtocol.phases.map { protocolPhase in
@@ -162,7 +162,7 @@ class ProgramBuilderViewModel: ObservableObject {
             )
         }
     }
-    
+
     func addPhase() {
         let newPhase = ProgramPhase(
             name: "Phase \(phases.count + 1)",
@@ -172,21 +172,21 @@ class ProgramBuilderViewModel: ObservableObject {
         )
         phases.append(newPhase)
     }
-    
+
     func deletePhase(at offsets: IndexSet) {
         // Only allow deletion if not using protocol with fixed phases
         guard selectedProtocol == nil || selectedProtocol?.constraints.canModifyDuration == true else {
             return
         }
-        
+
         phases.remove(atOffsets: offsets)
-        
+
         // Reorder remaining phases
         for (index, _) in phases.enumerated() {
             phases[index].order = index + 1
         }
     }
-    
+
     func createProgram(patientId: String?, targetLevel: String = "Intermediate") async throws -> String {
         let logger = DebugLogger.shared
 

@@ -33,7 +33,7 @@ struct LogExerciseIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         // Log the Siri intent action
-        print("[LogExerciseIntent] Logging exercise via Siri: \(sets) sets of \(reps)")
+        DebugLogger.shared.log("[LogExerciseIntent] Logging exercise via Siri: \(sets) sets of \(reps)", level: .diagnostic)
 
         // Validate inputs
         guard sets > 0, sets <= 20 else {
@@ -100,7 +100,7 @@ struct QuickLogIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        print("[QuickLogIntent] Quick logging \(reps) reps via Siri")
+        DebugLogger.shared.log("[QuickLogIntent] Quick logging \(reps) reps via Siri", level: .diagnostic)
 
         guard reps > 0, reps <= 100 else {
             return .result(dialog: "Please specify between 1 and 100 reps.")

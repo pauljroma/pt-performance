@@ -127,7 +127,7 @@ struct SafetyIncidentDetailSheet: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(statusColor.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
 
                 // Time since creation
                 Text(incident.ageString)

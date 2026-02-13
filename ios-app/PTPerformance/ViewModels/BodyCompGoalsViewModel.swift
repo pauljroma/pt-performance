@@ -140,18 +140,23 @@ class BodyCompGoalsViewModel: ObservableObject {
         error = nil
 
         do {
-            // Try to load progress from the view first (includes current measurements)
-            if let progress = try await service.fetchCurrentGoalProgress(patientId: patientUUID) {
+            // Fetch all data in parallel using async let
+            async let progressTask = service.fetchCurrentGoalProgress(patientId: patientUUID)
+            async let goalsTask = service.fetchCurrentGoal(patientId: patientUUID)
+            async let allGoalsTask = service.fetchGoals(patientId: patientUUID)
+
+            let (progress, goals, fetchedAllGoals) = try await (progressTask, goalsTask, allGoalsTask)
+
+            // Process progress data
+            if let progress = progress {
                 currentProgress = progress
                 latestWeight = progress.currentWeight
                 latestBodyFat = progress.currentBodyFat
                 latestMuscleMass = progress.currentMuscleMass
-
-                // Also fetch the full goal record
-                currentGoals = try await service.fetchCurrentGoal(patientId: patientUUID)
+                currentGoals = goals
             } else {
-                // No progress view data, fetch goal directly
-                currentGoals = try await service.fetchCurrentGoal(patientId: patientUUID)
+                // No progress view data
+                currentGoals = goals
                 currentProgress = nil
 
                 // Load latest measurements separately
@@ -159,11 +164,11 @@ class BodyCompGoalsViewModel: ObservableObject {
             }
 
             // Load all goals history
-            allGoals = try await service.fetchGoals(patientId: patientUUID)
+            allGoals = fetchedAllGoals
 
             // Check if goal was achieved
-            if let goals = currentGoals, goals.status == .active {
-                let achieved = await checkGoalAchievement(goal: goals)
+            if let currentGoal = currentGoals, currentGoal.status == .active {
+                let achieved = await checkGoalAchievement(goal: currentGoal)
                 if achieved {
                     showingGoalAchievedAlert = true
                 }
@@ -261,9 +266,7 @@ class BodyCompGoalsViewModel: ObservableObject {
             // Reload all data
             await loadData()
 
-            #if DEBUG
-            print("[BodyCompGoals] Goals saved successfully")
-            #endif
+            DebugLogger.shared.log("[BodyCompGoals] Goals saved successfully", level: .success)
         } catch {
             self.error = AppError.from(error)
             ErrorLogger.shared.logError(error, context: "Save Body Comp Goals")
@@ -431,9 +434,7 @@ class BodyCompGoalsViewModel: ObservableObject {
                 currentGoals = try await service.fetchCurrentGoal(patientId: patientUUID)
                 currentProgress = try await service.fetchCurrentGoalProgress(patientId: patientUUID)
 
-                #if DEBUG
-                print("[BodyCompGoals] Goal automatically marked as achieved!")
-                #endif
+                DebugLogger.shared.log("[BodyCompGoals] Goal automatically marked as achieved!", level: .success)
             } catch {
                 DebugLogger.shared.warning("BodyCompGoalsViewModel", "Error auto-marking goal as achieved: \(error.localizedDescription)")
             }

@@ -31,7 +31,6 @@ struct TrendDataPoint: Identifiable {
 
 /// ROM progress summary for a specific joint/movement
 struct ROMProgressItem: Identifiable {
-    let id = UUID()
     let joint: String
     let movement: String
     let side: Side
@@ -39,6 +38,8 @@ struct ROMProgressItem: Identifiable {
     let currentDegrees: Int
     let normalRange: ClosedRange<Int>
     let measurements: [TrendDataPoint]
+
+    var id: String { "\(joint)-\(movement)-\(side.rawValue)" }
 
     var change: Int {
         currentDegrees - initialDegrees
@@ -66,11 +67,12 @@ struct ROMProgressItem: Identifiable {
 
 /// Pain progress summary
 struct PainProgressItem: Identifiable {
-    let id = UUID()
     let painType: String // "rest", "activity", "worst"
     let initialScore: Int
     let currentScore: Int
     let measurements: [TrendDataPoint]
+
+    var id: String { painType }
 
     var change: Int {
         currentScore - initialScore
@@ -98,12 +100,13 @@ struct PainProgressItem: Identifiable {
 
 /// Outcome measure progress summary
 struct OutcomeProgressItem: Identifiable {
-    let id = UUID()
     let measureType: OutcomeMeasureType
     let initialScore: Double
     let currentScore: Double
     let mcidThreshold: Double
     let measurements: [TrendDataPoint]
+
+    var id: String { measureType.rawValue }
 
     var change: Double {
         currentScore - initialScore
@@ -281,6 +284,10 @@ class AssessmentProgressViewModel: ObservableObject {
         setupObservers()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Setup
 
     private func setupObservers() {
@@ -383,10 +390,7 @@ class AssessmentProgressViewModel: ObservableObject {
             }
 
             romProgress = progressItems.sorted { $0.displayTitle < $1.displayTitle }
-
-            #if DEBUG
-            print("[AssessmentProgressVM] Loaded \(romProgress.count) ROM progress items")
-            #endif
+            DebugLogger.shared.log("[AssessmentProgressVM] Loaded \(romProgress.count) ROM progress items", level: .diagnostic)
         } catch {
             romError = "Unable to load ROM progress"
             DebugLogger.shared.error("AssessmentProgressViewModel", "ROM progress error: \(error)")
@@ -464,10 +468,7 @@ class AssessmentProgressViewModel: ObservableObject {
             }
 
             painProgress = progressItems
-
-            #if DEBUG
-            print("[AssessmentProgressVM] Loaded \(painProgress.count) pain progress items")
-            #endif
+            DebugLogger.shared.log("[AssessmentProgressVM] Loaded \(painProgress.count) pain progress items", level: .diagnostic)
         } catch {
             painError = "Unable to load pain progress"
             DebugLogger.shared.error("AssessmentProgressViewModel", "Pain progress error: \(error)")
@@ -484,41 +485,49 @@ class AssessmentProgressViewModel: ObservableObject {
             // Fetch progress from outcome service
             let progress = try await outcomeService.fetchPatientProgress(patientId: patientId)
 
-            var progressItems: [OutcomeProgressItem] = []
+            // Fetch all trend data in parallel using TaskGroup
+            let progressItems: [OutcomeProgressItem] = try await withThrowingTaskGroup(of: OutcomeProgressItem.self) { group in
+                for summary in progress.measures {
+                    group.addTask {
+                        // Fetch trend data for this measure type
+                        let trend = try await self.outcomeService.fetchMeasureTrend(
+                            patientId: patientId,
+                            measureType: summary.measureType,
+                            limit: 10
+                        )
 
-            for summary in progress.measures {
-                // Fetch trend data for this measure type
-                let trend = try await outcomeService.fetchMeasureTrend(
-                    patientId: patientId,
-                    measureType: summary.measureType,
-                    limit: 10
-                )
+                        let trendPoints = trend.measurements.map {
+                            TrendDataPoint(date: $0.date, value: $0.score, label: nil)
+                        }
 
-                let trendPoints = trend.measurements.map {
-                    TrendDataPoint(date: $0.date, value: $0.score, label: nil)
+                        return OutcomeProgressItem(
+                            measureType: summary.measureType,
+                            initialScore: summary.previousScore ?? summary.latestScore,
+                            currentScore: summary.latestScore,
+                            mcidThreshold: summary.measureType.mcidThreshold,
+                            measurements: trendPoints
+                        )
+                    }
                 }
 
-                let item = OutcomeProgressItem(
-                    measureType: summary.measureType,
-                    initialScore: summary.previousScore ?? summary.latestScore,
-                    currentScore: summary.latestScore,
-                    mcidThreshold: summary.measureType.mcidThreshold,
-                    measurements: trendPoints
-                )
-
-                progressItems.append(item)
-                outcomeTrends[summary.measureType] = trendPoints
+                var items: [OutcomeProgressItem] = []
+                for try await item in group {
+                    items.append(item)
+                }
+                return items
             }
 
             outcomeProgress = progressItems
 
+            // Update outcomeTrends dictionary
+            for item in progressItems {
+                outcomeTrends[item.measureType] = item.measurements
+            }
+
             // Update MCID count
             progressSummary.mcidAchievements = progress.mcidAchievementCount
             progressSummary.totalOutcomeMeasures = progress.measures.count
-
-            #if DEBUG
-            print("[AssessmentProgressVM] Loaded \(outcomeProgress.count) outcome progress items")
-            #endif
+            DebugLogger.shared.log("[AssessmentProgressVM] Loaded \(outcomeProgress.count) outcome progress items", level: .diagnostic)
         } catch {
             outcomesError = "Unable to load outcome measures"
             DebugLogger.shared.error("AssessmentProgressViewModel", "Outcome progress error: \(error)")

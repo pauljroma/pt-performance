@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AchievementsDashboardView.swift
 //  PTPerformance
@@ -107,9 +108,9 @@ struct AchievementsDashboardView: View {
                     .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .fill(selectedTab == tab ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                            .fill(selectedTab == tab ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
                     )
-                    .foregroundColor(selectedTab == tab ? .white : .primary)
+                    .foregroundColor(selectedTab == tab ? Color(.systemBackground) : .primary)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(tab.displayName) tab")

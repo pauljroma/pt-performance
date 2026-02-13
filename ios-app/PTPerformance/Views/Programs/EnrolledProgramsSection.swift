@@ -155,7 +155,7 @@ struct EnrolledProgramCard: View {
         .padding(12)
         .frame(width: 160, height: 150)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -287,7 +287,7 @@ struct EnrolledProgramDetailSheet: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(enrollment.enrollment.enrollmentStatus.color.opacity(0.15))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
             }
 
             if let author = enrollment.program.author {
@@ -363,7 +363,7 @@ struct EnrolledProgramDetailSheet: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -383,7 +383,7 @@ struct EnrolledProgramDetailSheet: View {
                         .foregroundColor(.blue)
                         .frame(width: 44, height: 44)
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(10)
+                        .cornerRadius(CornerRadius.sm)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(LocalizedStrings.Programs.viewWeeklyWorkouts)
@@ -404,7 +404,7 @@ struct EnrolledProgramDetailSheet: View {
                 }
                 .padding(12)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
         }
     }
@@ -450,7 +450,7 @@ struct EnrolledProgramDetailSheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Equipment Section
@@ -478,7 +478,7 @@ struct EnrolledProgramDetailSheet: View {
                     }
                     .padding(8)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                     .id(equipment)
                 }
             }
@@ -515,7 +515,7 @@ struct EnrolledProgramDetailSheet: View {
                         .foregroundColor(.red)
                         .frame(width: 44, height: 44)
                         .background(Color.red.opacity(0.1))
-                        .cornerRadius(10)
+                        .cornerRadius(CornerRadius.sm)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Leave Program")
@@ -541,7 +541,7 @@ struct EnrolledProgramDetailSheet: View {
                 }
                 .padding(12)
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(isProcessing)
             .accessibilityLabel("Leave program")

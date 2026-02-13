@@ -626,7 +626,7 @@ private struct PatientProgressCard: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(patient.enrollmentStatus.color.opacity(0.15))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
 
                 Image(systemName: "chevron.right")
                     .font(.caption)

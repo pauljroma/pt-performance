@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Main Supplement Dashboard View
@@ -59,6 +60,8 @@ struct SupplementDashboardView: View {
                 SupplementLogView(
                     preselectedSupplement: nil,
                     onSave: { log in
+                        // Dismiss sheet before starting async save operation
+                        showingQuickLog = false
                         Task {
                             await viewModel.saveLog(log)
                         }
@@ -82,6 +85,19 @@ struct SupplementDashboardView: View {
             }
             .refreshable {
                 await viewModel.loadData()
+            }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("Dismiss") { viewModel.dismissError() }
+                if viewModel.canRetryLastAction {
+                    Button("Retry") { viewModel.retryLastAction() }
+                }
+            } message: {
+                Text(viewModel.errorMessage)
+            }
+            .alert("Streak Milestone!", isPresented: $viewModel.showStreakCelebration) {
+                Button("Awesome!") { viewModel.dismissStreakCelebration() }
+            } message: {
+                Text(viewModel.streakCelebrationMessage)
             }
         }
     }
@@ -176,6 +192,7 @@ struct SupplementDashboardView: View {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "flame.fill")
                     .foregroundColor(.orange)
+                    .accessibilityHidden(true)
                 Text("\(viewModel.currentStreak) day streak")
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -186,10 +203,14 @@ struct SupplementDashboardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Current streak: \(viewModel.currentStreak) days. Best streak: \(viewModel.bestStreak) days")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Today's supplement progress")
     }
 
     // MARK: - Today's Stack Section (Time-Grouped)
@@ -302,6 +323,12 @@ struct SupplementDashboardView: View {
                     .font(.caption)
                     .foregroundColor(.modusCyan)
 
+                if viewModel.isGeneratingRecommendations {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .padding(.leading, Spacing.xs)
+                }
+
                 Spacer()
 
                 Button {
@@ -310,43 +337,60 @@ struct SupplementDashboardView: View {
                     Image(systemName: "chevron.down.circle")
                         .foregroundColor(.modusCyan)
                 }
+                .accessibilityLabel("Change fitness goal")
+                .accessibilityHint("Opens goal selection sheet")
             }
+            .accessibilityElement(children: .combine)
 
-            // Essential Recommendations (Strong Evidence)
-            if !viewModel.essentialRecommendations.isEmpty {
-                RecommendationGroupView(
-                    title: "ESSENTIAL",
-                    subtitle: "Strong Evidence",
-                    recommendations: Array(viewModel.essentialRecommendations.prefix(3)),
-                    onAddToStack: { recommendation in
-                        Task {
-                            await viewModel.addRecommendationToStack(recommendation)
+            // Show loading overlay when generating recommendations
+            if viewModel.isGeneratingRecommendations {
+                VStack(spacing: Spacing.sm) {
+                    ProgressView()
+                    Text("Updating recommendations...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.lg)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(CornerRadius.md)
+            } else {
+                // Essential Recommendations (Strong Evidence)
+                if !viewModel.essentialRecommendations.isEmpty {
+                    RecommendationGroupView(
+                        title: "ESSENTIAL",
+                        subtitle: "Strong Evidence",
+                        recommendations: Array(viewModel.essentialRecommendations.prefix(3)),
+                        onAddToStack: { recommendation in
+                            Task {
+                                await viewModel.addRecommendationToStack(recommendation)
+                            }
                         }
-                    }
-                )
-            }
+                    )
+                }
 
-            // Helpful Recommendations (Moderate Evidence)
-            if !viewModel.helpfulRecommendations.isEmpty {
-                RecommendationGroupView(
-                    title: "HELPFUL",
-                    subtitle: "Moderate Evidence",
-                    recommendations: Array(viewModel.helpfulRecommendations.prefix(2)),
-                    onAddToStack: { recommendation in
-                        Task {
-                            await viewModel.addRecommendationToStack(recommendation)
+                // Helpful Recommendations (Moderate Evidence)
+                if !viewModel.helpfulRecommendations.isEmpty {
+                    RecommendationGroupView(
+                        title: "HELPFUL",
+                        subtitle: "Moderate Evidence",
+                        recommendations: Array(viewModel.helpfulRecommendations.prefix(2)),
+                        onAddToStack: { recommendation in
+                            Task {
+                                await viewModel.addRecommendationToStack(recommendation)
+                            }
                         }
-                    }
-                )
-            }
+                    )
+                }
 
-            // Empty state if no recommendations
-            if viewModel.recommendations.isEmpty {
-                Text("No specific recommendations for this goal yet.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, Spacing.md)
+                // Empty state if no recommendations
+                if viewModel.recommendations.isEmpty {
+                    Text("No specific recommendations for this goal yet.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, Spacing.md)
+                }
             }
         }
     }
@@ -459,6 +503,10 @@ private struct TimingGroupCard: View {
     let onTapItem: (SupplementChecklistItem) -> Void
     let onLogAll: () -> Void
 
+    private var completedItemsCount: Int {
+        items.filter { $0.isTaken }.count
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Group Header
@@ -484,6 +532,8 @@ private struct TimingGroupCard: View {
                         .font(.caption)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(group.displayName) supplements, \(group.subtitle), \(completedItemsCount) of \(items.count) taken\(isComplete ? ", all complete" : "")")
 
             // Supplement Items
             VStack(spacing: 0) {
@@ -561,33 +611,37 @@ private struct SwipeableSupplementRow: View {
 
             // Main Content
             HStack(spacing: Spacing.sm) {
-                // Checkbox
+                // Checkbox with smooth animation
                 Button(action: onToggle) {
                     ZStack {
                         Circle()
                             .stroke(item.isTaken ? Color.modusTealAccent : Color.gray.opacity(0.3), lineWidth: 2)
                             .frame(width: 24, height: 24)
 
-                        if item.isTaken {
-                            Circle()
-                                .fill(Color.modusTealAccent)
-                                .frame(width: 24, height: 24)
+                        Circle()
+                            .fill(Color.modusTealAccent)
+                            .frame(width: 24, height: 24)
+                            .scaleEffect(item.isTaken ? 1.0 : 0.0)
 
-                            Image(systemName: "checkmark")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
+                        Image(systemName: "checkmark")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .scaleEffect(item.isTaken ? 1.0 : 0.0)
+                            .opacity(item.isTaken ? 1.0 : 0.0)
 
                         if isLogging {
                             ProgressView()
-                                .scaleEffect(0.7)
+                                .scaleEffect(0.6)
+                                .tint(.modusCyan)
                         }
                     }
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: item.isTaken)
                 }
                 .buttonStyle(.plain)
                 .disabled(isLogging)
                 .accessibilityLabel(item.isTaken ? "Mark \(item.supplement.name) as not taken" : "Mark \(item.supplement.name) as taken")
+                .accessibilityHint(item.isTaken ? "Double tap to undo logging this supplement" : "Double tap to log this supplement as taken")
 
                 // Supplement Info
                 Button(action: onTap) {
@@ -614,6 +668,8 @@ private struct SwipeableSupplementRow: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("\(item.supplement.name), \(item.dosage), \(item.isTaken ? "taken" : "not yet taken")")
+                .accessibilityHint("Double tap to open logging options")
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
@@ -701,6 +757,7 @@ private struct RecommendationRowView: View {
             Image(systemName: recommendation.isInStack ? "checkmark.circle.fill" : "circle")
                 .foregroundColor(recommendation.isInStack ? .modusTealAccent : .gray)
                 .font(.subheadline)
+                .accessibilityHidden(true)
 
             // Supplement Info
             VStack(alignment: .leading, spacing: 2) {
@@ -724,9 +781,14 @@ private struct RecommendationRowView: View {
                         .font(.title3)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Add \(recommendation.supplementName) to your stack")
+                .accessibilityHint("Double tap to add this supplement to your daily routine")
             }
         }
         .padding(.vertical, Spacing.xs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(recommendation.supplementName), \(recommendation.benefit), \(recommendation.evidenceGrade.displayName) evidence\(recommendation.isInStack ? ", already in your stack" : "")")
+        .accessibilityHint(recommendation.isInStack ? "" : "Double tap to add to your stack")
     }
 }
 
@@ -752,6 +814,7 @@ private struct SupplementStackItemView: View {
                     .font(.body)
                     .foregroundColor(.modusCyan)
             }
+            .accessibilityHidden(true)
 
             Text(supplement.displayName)
                 .font(.caption2)
@@ -763,6 +826,8 @@ private struct SupplementStackItemView: View {
         .padding(.vertical, Spacing.sm)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(supplement.displayName), \(supplement.category.rawValue) supplement")
     }
 }
 
@@ -818,6 +883,10 @@ struct SupplementDetailWithEvidenceView: View {
     let supplement: CatalogSupplement
     @Environment(\.dismiss) private var dismiss
     @State private var isAddingToStack = false
+    @State private var addError: String?
+    @State private var showAddError = false
+
+    private let service = SupplementService.shared
 
     private var evidenceGrade: EvidenceGrade {
         EvidenceGrade.from(supplement.evidenceRating)
@@ -969,11 +1038,25 @@ struct SupplementDetailWithEvidenceView: View {
     private var addToStackButton: some View {
         Button {
             isAddingToStack = true
-            HapticFeedback.success()
-            // Add to stack logic would go here
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                isAddingToStack = false
-                dismiss()
+            Task {
+                do {
+                    try await service.addToRoutine(
+                        supplementId: supplement.id,
+                        supplementName: supplement.name,
+                        brand: supplement.brand,
+                        category: supplement.category,
+                        dosage: supplement.dosageRange,
+                        timing: supplement.timing.first ?? .morning
+                    )
+                    HapticFeedback.success()
+                    isAddingToStack = false
+                    dismiss()
+                } catch {
+                    isAddingToStack = false
+                    addError = error.localizedDescription
+                    showAddError = true
+                    HapticFeedback.error()
+                }
             }
         } label: {
             HStack {
@@ -998,6 +1081,11 @@ struct SupplementDetailWithEvidenceView: View {
             .cornerRadius(CornerRadius.lg)
         }
         .disabled(isAddingToStack)
+        .alert("Error", isPresented: $showAddError) {
+            Button("OK") { }
+        } message: {
+            Text(addError ?? "Failed to add supplement")
+        }
     }
 }
 

@@ -531,9 +531,7 @@ class SOAPNoteService: ObservableObject {
             lastAutoSaveDate = Date()
             pendingDraft = nil
 
-            #if DEBUG
-            print("[SOAPNoteService] Auto-saved draft: \(draft.id)")
-            #endif
+            DebugLogger.shared.log("[SOAPNoteService] Auto-saved draft: \(draft.id)", level: .diagnostic)
         } catch {
             errorLogger.logError(
                 error,

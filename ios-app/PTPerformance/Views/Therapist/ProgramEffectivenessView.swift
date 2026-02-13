@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ProgramEffectivenessView.swift
 //  PTPerformance
@@ -378,7 +379,7 @@ struct ProgramEffectivenessView: View {
                         y: .value("Count", count)
                     )
                     .foregroundStyle(rating.color)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                 }
             }
             .frame(height: 200)
@@ -826,7 +827,7 @@ private struct ProgramMetricsCard: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(program.resolvedProgramType.color.opacity(0.15))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                     }
 
                     Spacer()
@@ -887,7 +888,7 @@ struct EffectivenessScoreBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(rating.color.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -929,7 +930,7 @@ private struct SelectedComparisonChip: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color.blue)
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 }
 

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  IntervalBlockView.swift
 //  PTPerformance
@@ -24,7 +25,7 @@ struct IntervalBlockCard: View {
                         .foregroundColor(iconColor)
                         .frame(width: 40, height: 40)
                         .background(iconColor.opacity(0.15))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(block.name)
@@ -42,11 +43,11 @@ struct IntervalBlockCard: View {
                     if block.isCompleted {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.green)
+                            .foregroundColor(Color(.systemGreen))
                     } else {
                         Image(systemName: "play.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color(.systemBlue))
                     }
                 }
 
@@ -91,7 +92,7 @@ struct IntervalBlockCard: View {
                         }
                     }
                     .font(.caption)
-                    .foregroundColor(.green)
+                    .foregroundColor(Color(.systemGreen))
                 }
             }
             .padding()
@@ -126,30 +127,30 @@ struct IntervalBlockCard: View {
 
     private var iconColor: Color {
         if block.isCompleted {
-            return .green
+            return Color(.systemGreen)
         }
         switch block.blockType {
         case "mobility":
-            return .blue
+            return Color(.systemBlue)
         case "endurance":
-            return .orange
+            return Color(.systemOrange)
         case "recovery":
-            return .purple
+            return Color(.systemPurple)
         default:
-            return .gray
+            return Color(.systemGray)
         }
     }
 
     private var backgroundColor: Color {
         if block.isCompleted {
-            return Color.green.opacity(0.05)
+            return Color(.systemGreen).opacity(0.08)
         }
         return Color(.systemBackground)
     }
 
     private var borderColor: Color {
         if block.isCompleted {
-            return .green.opacity(0.3)
+            return Color(.systemGreen).opacity(0.3)
         }
         return Color(.separator)
     }
@@ -171,9 +172,9 @@ struct ExercisePill: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.blue.opacity(0.1))
-        .foregroundColor(.blue)
-        .cornerRadius(12)
+        .background(Color(.systemBlue).opacity(0.15))
+        .foregroundColor(Color(.systemBlue))
+        .cornerRadius(CornerRadius.md)
     }
 }
 

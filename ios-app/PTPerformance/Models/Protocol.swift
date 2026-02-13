@@ -16,7 +16,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
     let phases: [ProtocolPhase]
     let constraints: ProtocolConstraints
     let createdAt: Date
-    
+
     enum ProtocolCategory: String, Codable {
         case postSurgical = "post_surgical"
         case returnToSport = "return_to_sport"
@@ -26,7 +26,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         case performance = "performance"
         case lifestyle = "lifestyle"
     }
-    
+
     struct ProtocolPhase: Codable, Hashable {
         let id: UUID
         let name: String
@@ -38,7 +38,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         let restrictions: [String]
         let progressionCriteria: [String]
     }
-    
+
     struct ProtocolConstraints: Codable, Hashable {
         let minPhases: Int
         let maxPhases: Int
@@ -86,10 +86,12 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
 
             // Decode rpeRange as array and convert to ClosedRange
             let rangeArray = try container.decode([Int].self, forKey: .rpeRange)
-            guard rangeArray.count == 2 else {
+            guard rangeArray.count == 2,
+                  let first = rangeArray.first,
+                  let last = rangeArray.last else {
                 throw DecodingError.dataCorruptedError(forKey: .rpeRange, in: container, debugDescription: "rpeRange must have exactly 2 elements")
             }
-            rpeRange = rangeArray[0]...rangeArray[1]
+            rpeRange = first...last
         }
 
         func encode(to encoder: Encoder) throws {
@@ -104,7 +106,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
             try container.encode([rpeRange.lowerBound, rpeRange.upperBound], forKey: .rpeRange)
         }
     }
-    
+
     // Sample protocols for testing
     static let throwingOnRamp = TherapyProtocol(
         id: UUID(),
@@ -170,7 +172,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         ),
         createdAt: Date()
     )
-    
+
     static let shoulderRehab = TherapyProtocol(
         id: UUID(),
         name: "Post-Op Shoulder Rehab",
@@ -235,7 +237,7 @@ struct TherapyProtocol: Identifiable, Codable, Hashable {
         ),
         createdAt: Date()
     )
-    
+
     static let strengthFoundation = TherapyProtocol(
         id: UUID(),
         name: "General Strength Foundation",
@@ -1257,9 +1259,10 @@ struct AssignedTask: Codable, Identifiable {
     var formattedDueTime: String? {
         guard let dueTime = dueTime else { return nil }
         let components = dueTime.split(separator: ":")
-        guard components.count >= 2,
-              let hour = Int(components[0]),
-              let minute = Int(components[1]) else {
+        guard let hourStr = components.first,
+              let minuteStr = components.dropFirst().first,
+              let hour = Int(hourStr),
+              let minute = Int(minuteStr) else {
             return dueTime
         }
 

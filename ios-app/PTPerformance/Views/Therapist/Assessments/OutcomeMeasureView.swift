@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  OutcomeMeasureView.swift
 //  PTPerformance
@@ -286,7 +287,7 @@ struct OutcomeMeasureView: View {
                     Image(systemName: "chevron.left")
                         .frame(width: 50, height: 50)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(25)
+                        .cornerRadius(CornerRadius.xl)
                 }
                 .disabled(viewModel.currentQuestionIndex == 0)
 
@@ -302,7 +303,7 @@ struct OutcomeMeasureView: View {
                     .padding()
                     .background(viewModel.canSubmit ? Color.blue : Color.gray)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(!viewModel.canSubmit)
 
@@ -313,7 +314,7 @@ struct OutcomeMeasureView: View {
                     Image(systemName: "chevron.right")
                         .frame(width: 50, height: 50)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(25)
+                        .cornerRadius(CornerRadius.xl)
                 }
                 .disabled(viewModel.currentQuestionIndex >= viewModel.questions.count - 1)
             }
@@ -346,7 +347,7 @@ struct OutcomeMeasureView: View {
 
     private var successOverlay: some View {
         ZStack {
-            Color.black.opacity(0.4)
+            Color(.label).opacity(0.4)
                 .ignoresSafeArea()
 
             VStack(spacing: 24) {

@@ -8,6 +8,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - Biomarker Glossary View
 
@@ -171,8 +172,13 @@ private struct GlossaryCategoryChip: View {
     let count: Int
     let action: () -> Void
 
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            selectionFeedback.selectionChanged()
+            action()
+        }) {
             HStack(spacing: 6) {
                 if let icon = icon {
                     Image(systemName: icon)
@@ -187,13 +193,13 @@ private struct GlossaryCategoryChip: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(isSelected ? Color.white.opacity(0.3) : Color.secondary.opacity(0.2))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .accessibilityLabel("\(title), \(count) biomarkers")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -225,7 +231,7 @@ private struct GlossarySectionHeader: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 2)
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
         }
         .padding(.vertical, Spacing.xs)
         .padding(.horizontal, 4)
@@ -366,7 +372,7 @@ struct BiomarkerEducationDetailView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color(.tertiarySystemGroupedBackground))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             // Biomarker name

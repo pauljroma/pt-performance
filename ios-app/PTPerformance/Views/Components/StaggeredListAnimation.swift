@@ -184,7 +184,7 @@ struct StaggeredListAnimation_Previews: PreviewProvider {
                             }
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                     }
                 }

@@ -183,7 +183,7 @@ struct BodyCompGoalsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Goal Progress Cards
@@ -305,7 +305,7 @@ struct BodyCompGoalsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Weekly Rate Section
@@ -339,7 +339,7 @@ struct BodyCompGoalsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Goal History Section
@@ -359,7 +359,7 @@ struct BodyCompGoalsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Celebration Overlay
@@ -399,7 +399,7 @@ struct BodyCompGoalsView: View {
                         .padding(.horizontal, 32)
                         .padding(.vertical, 12)
                         .background(Color.white)
-                        .cornerRadius(25)
+                        .cornerRadius(CornerRadius.xl)
                 }
                 .padding(.top)
             }
@@ -494,7 +494,7 @@ private struct GoalHistoryRow: View {
                 .padding(.vertical, 4)
                 .background(goal.status.color.opacity(0.2))
                 .foregroundColor(goal.status.color)
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             // Delete button
             Button(role: .destructive, action: onDelete) {

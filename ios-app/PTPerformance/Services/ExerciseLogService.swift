@@ -3,6 +3,7 @@ import Supabase
 
 /// Service for submitting exercise logs to Supabase
 /// Supports offline queueing when network is unavailable
+
 class ExerciseLogService: ObservableObject {
     private let supabase: PTSupabaseClient
 

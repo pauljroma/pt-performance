@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Main onboarding view with page navigation
@@ -92,7 +93,7 @@ struct OnboardingView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                             .background(Color.modusCyan)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                             .padding(.horizontal, 40)
                     }
                     .padding(.bottom, 40)

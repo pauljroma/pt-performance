@@ -125,14 +125,14 @@ struct ProtocolBuilderView: View {
     private var categoryFilterView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                FilterChip(
+                ProtocolFilterChip(
                     title: "All",
                     isSelected: selectedCategory == nil,
                     action: { selectedCategory = nil }
                 )
 
                 ForEach(ProtocolTemplate.ProtocolCategory.allCases, id: \.self) { category in
-                    FilterChip(
+                    ProtocolFilterChip(
                         title: category.displayName,
                         iconName: category.iconName,
                         isSelected: selectedCategory == category,
@@ -273,7 +273,7 @@ struct ProtocolBuilderView: View {
 
 // MARK: - Filter Chip
 
-struct FilterChip: View {
+private struct ProtocolFilterChip: View {
     let title: String
     var iconName: String? = nil
     let isSelected: Bool
@@ -293,7 +293,7 @@ struct FilterChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? Color.accentColor : Color(.systemGray5))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 }

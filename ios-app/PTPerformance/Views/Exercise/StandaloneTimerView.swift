@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  StandaloneTimerView.swift
 //  PTPerformance
@@ -162,7 +163,7 @@ struct TimerTemplateCard: View {
                     .foregroundColor(template.color)
                     .frame(width: 50, height: 50)
                     .background(template.color.opacity(0.15))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Content
                 VStack(alignment: .leading, spacing: 6) {
@@ -216,7 +217,7 @@ struct StandaloneIntervalTimerWrapper: View {
             intervalBlock: template.toSessionBlock(),
             onComplete: { duration, rpe in
                 // For standalone timers, just dismiss (no saving to database)
-                print("✅ Timer completed: \(duration)s, RPE: \(rpe)")
+                DebugLogger.shared.log("[StandaloneTimer] Timer completed: \(duration)s, RPE: \(rpe)", level: .success)
                 dismiss()
             }
         )

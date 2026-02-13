@@ -105,15 +105,11 @@ class PatientGoalsViewModel: ObservableObject {
 
             goals = fetchedGoals
 
-            #if DEBUG
-            print("[PatientGoals] Loaded \(fetchedGoals.count) goals for patient \(patientId)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Loaded \(fetchedGoals.count) goals for patient \(patientId)", level: .success)
         } catch let catchError {
             error = AppError.from(catchError)
             ErrorLogger.shared.logError(catchError, context: "Load Patient Goals")
-            #if DEBUG
-            print("[PatientGoals] Error loading goals: \(catchError.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Error loading goals: \(catchError.localizedDescription)", level: .error)
         }
 
         isLoading = false
@@ -174,15 +170,11 @@ class PatientGoalsViewModel: ObservableObject {
             // Reload goals to include the new one
             await loadGoals(patientId: patientId)
 
-            #if DEBUG
-            print("[PatientGoals] Goal created: \(trimmedTitle)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Goal created: \(trimmedTitle)", level: .success)
         } catch let catchError {
             error = AppError.from(catchError)
             ErrorLogger.shared.logError(catchError, context: "Save Patient Goal")
-            #if DEBUG
-            print("[PatientGoals] Error saving goal: \(catchError.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Error saving goal: \(catchError.localizedDescription)", level: .error)
         }
 
         isSaving = false
@@ -211,9 +203,7 @@ class PatientGoalsViewModel: ObservableObject {
                 await loadGoals(patientId: patientUUID)
             }
 
-            #if DEBUG
-            print("[PatientGoals] Progress updated for goal \(goalId): \(newValue)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Progress updated for goal \(goalId): \(newValue)", level: .success)
         } catch let catchError {
             error = AppError.from(catchError)
             ErrorLogger.shared.logError(catchError, context: "Update Goal Progress")
@@ -251,9 +241,7 @@ class PatientGoalsViewModel: ObservableObject {
                 await loadGoals(patientId: patientUUID)
             }
 
-            #if DEBUG
-            print("[PatientGoals] Status updated for goal \(goalId): \(status.rawValue)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Status updated for goal \(goalId): \(status.rawValue)", level: .success)
         } catch let catchError {
             error = AppError.from(catchError)
             ErrorLogger.shared.logError(catchError, context: "Update Goal Status")
@@ -279,9 +267,7 @@ class PatientGoalsViewModel: ObservableObject {
             // Remove from local array
             goals.removeAll { $0.id == goalId }
 
-            #if DEBUG
-            print("[PatientGoals] Goal deleted: \(goalId)")
-            #endif
+            DebugLogger.shared.log("[PatientGoals] Goal deleted: \(goalId)", level: .success)
         } catch let catchError {
             error = AppError.from(catchError)
             ErrorLogger.shared.logError(catchError, context: "Delete Patient Goal")

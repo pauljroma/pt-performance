@@ -174,9 +174,12 @@ final class AppleSignInService: NSObject, ObservableObject {
     /// Generates a cryptographically secure random nonce string
     /// - Parameter length: The length of the nonce (default 32)
     /// - Returns: A random string suitable for use as a nonce
-    /// - Throws: AppleSignInError.nonceGenerationFailed if SecRandomCopyBytes fails
+    /// - Throws: AppleSignInError.nonceGenerationFailed if SecRandomCopyBytes fails or length is invalid
     private func randomNonceString(length: Int = 32) throws -> String {
-        precondition(length > 0)
+        guard length > 0 else {
+            assertionFailure("Nonce length must be greater than 0")
+            throw AppleSignInError.nonceGenerationFailed(errSecParam)
+        }
         var randomBytes = [UInt8](repeating: 0, count: length)
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
         if errorCode != errSecSuccess {

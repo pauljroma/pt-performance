@@ -593,9 +593,7 @@ struct AlertDetailSheet_Previews: PreviewProvider {
     static var previews: some View {
         AlertDetailSheet(
             exception: sampleException,
-            onAction: { action in
-                print("Action: \(action)")
-            }
+            onAction: { _ in }
         )
     }
 }

@@ -80,7 +80,7 @@ struct MetricTrendCard: View {
                     Rectangle()
                         .fill(Color.gray.opacity(0.1))
                         .frame(height: 40)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
 
                 // Value and change
@@ -110,12 +110,12 @@ struct MetricTrendCard: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(trendColor.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
             .padding()
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

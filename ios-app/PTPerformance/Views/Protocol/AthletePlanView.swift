@@ -154,7 +154,7 @@ struct AthletePlanView: View {
             .padding(.vertical, 8)
             .background(statusColor(for: plan.status).opacity(0.15))
             .foregroundColor(statusColor(for: plan.status))
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
 
             // Date range
             HStack {
@@ -183,7 +183,7 @@ struct AthletePlanView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -244,7 +244,7 @@ struct AthletePlanView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - All Tasks Section
@@ -303,7 +303,7 @@ struct AthletePlanView: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -333,7 +333,7 @@ struct AthletePlanView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.accentColor)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal, 40)
         }
@@ -379,7 +379,7 @@ struct AthletePlanView: View {
 
 // MARK: - Stat Card
 
-struct StatCard: View {
+private struct StatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -402,7 +402,7 @@ struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -451,7 +451,7 @@ struct TaskRowView: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
     }

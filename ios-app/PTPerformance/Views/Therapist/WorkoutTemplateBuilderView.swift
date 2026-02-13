@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  WorkoutTemplateBuilderView.swift
 //  PTPerformance
@@ -323,21 +324,20 @@ struct WorkoutTemplateBuilderView: View {
 
     private var savingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color(.label).opacity(0.3)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.white)
 
                 Text("Saving Template...")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             .padding(32)
             .background(Color(.systemBackground).opacity(0.95))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .shadow(radius: 10)
         }
         .accessibilityElement(children: .combine)
@@ -591,7 +591,7 @@ private struct ExerciseSuggestionsView: View {
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Color.blue.opacity(0.1))
-                                        .cornerRadius(4)
+                                        .cornerRadius(CornerRadius.xs)
                                 }
                                 if let bodyRegion = template.bodyRegion {
                                     Text(bodyRegion.capitalized)
@@ -600,7 +600,7 @@ private struct ExerciseSuggestionsView: View {
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Color.purple.opacity(0.1))
-                                        .cornerRadius(4)
+                                        .cornerRadius(CornerRadius.xs)
                                 }
                             }
                         }
@@ -628,7 +628,7 @@ private struct ExerciseSuggestionsView: View {
             }
         }
         .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .stroke(Color(uiColor: .separator), lineWidth: 0.5)
@@ -650,7 +650,7 @@ private struct EquipmentTag: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color.blue.opacity(0.1))
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Equipment: \(text)")
     }
 }
@@ -668,7 +668,7 @@ private struct TagBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(Color.purple.opacity(0.1))
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Tag: \(text)")
     }
 }

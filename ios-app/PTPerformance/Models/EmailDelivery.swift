@@ -259,11 +259,12 @@ struct EmailDeliveryRecord: Codable {
 
 /// Pre-defined email templates for common scenarios
 struct EmailTemplate: Identifiable {
-    let id = UUID()
     let name: String
     let subject: String
     let body: String
     let icon: String
+
+    var id: String { name }
 
     static let progressReport = EmailTemplate(
         name: "Progress Update",

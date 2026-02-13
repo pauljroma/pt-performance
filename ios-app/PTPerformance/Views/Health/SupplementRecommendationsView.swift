@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 struct SupplementRecommendationsView: View {
@@ -92,7 +93,7 @@ struct SupplementRecommendationsView: View {
                     .padding()
                     .background(viewModel.selectedGoals.isEmpty ? Color.gray : Color.modusCyan)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(viewModel.selectedGoals.isEmpty)
                 .padding(.horizontal)
@@ -179,7 +180,7 @@ struct SupplementRecommendationsView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.gray.opacity(0.2))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
 
@@ -218,7 +219,7 @@ struct SupplementRecommendationsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .accessibilityElement(children: .contain)
     }
 
@@ -256,7 +257,7 @@ struct SupplementRecommendationsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func recommendationsSection(_ recommendations: [AISupplementRecommendation]) -> some View {
@@ -331,7 +332,7 @@ struct SupplementRecommendationsView: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Interaction warnings: \(warnings.joined(separator: ". "))")
     }
@@ -354,7 +355,7 @@ struct SupplementRecommendationsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Estimated daily cost: \(cost)")
     }
@@ -375,8 +376,8 @@ struct SupplementRecommendationsView: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(12)
+        .background(Color.modusCyan.opacity(0.1))
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Error View
@@ -432,7 +433,7 @@ struct GoalSelectionCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
@@ -511,7 +512,7 @@ struct SupplementRecommendationCard: View {
                                 .padding(.vertical, 4)
                                 .background(Color.modusCyan.opacity(0.2))
                                 .foregroundColor(.modusCyan)
-                                .cornerRadius(6)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -576,7 +577,7 @@ struct SupplementRecommendationCard: View {
                         .padding(.vertical, 6)
                         .background(Color.modusCyan)
                         .foregroundColor(.white)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("Buy \(recommendation.name) from Momentous")
                 }
@@ -593,14 +594,14 @@ struct SupplementRecommendationCard: View {
                     .padding(.vertical, 6)
                     .background(Color.modusLightTeal)
                     .foregroundColor(.modusCyan)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel("Add \(recommendation.name) to your supplement stack")
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

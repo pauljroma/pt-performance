@@ -161,9 +161,7 @@ class TimerHistoryViewModel: ObservableObject {
         } catch {
             errorMessage = "We couldn't load your timer history. Please check your connection and try again."
             showError = true
-            #if DEBUG
-            print("❌ Error loading timer history: \(error)")
-            #endif
+            DebugLogger.shared.log("[TimerHistory] Error loading timer history: \(error)", level: .error)
         }
 
         isLoading = false
@@ -177,9 +175,7 @@ class TimerHistoryViewModel: ObservableObject {
         let templateIds = Set(sessions.compactMap { $0.templateId })
 
         guard !templateIds.isEmpty else {
-            #if DEBUG
-            print("ℹ️ No templates to load")
-            #endif
+            DebugLogger.shared.log("[TimerHistory] No templates to load", level: .diagnostic)
             return
         }
 
@@ -192,9 +188,7 @@ class TimerHistoryViewModel: ObservableObject {
                 uniqueKeysWithValues: allTemplates.map { ($0.id, $0) }
             )
 
-            #if DEBUG
-            print("✅ Loaded \(templates.count) templates")
-            #endif
+            DebugLogger.shared.log("[TimerHistory] Loaded \(templates.count) templates", level: .success)
         } catch {
             DebugLogger.shared.warning("TimerHistoryViewModel", "Failed to load templates: \(error.localizedDescription)")
             // Continue without templates - not critical for display
@@ -249,9 +243,7 @@ class TimerHistoryViewModel: ObservableObject {
             totalRounds: totalRounds
         )
 
-        #if DEBUG
-        print("📊 Weekly Stats: \(totalSessions) sessions, \(completedSessions) completed, \(totalMinutes) min, \(totalRounds) rounds")
-        #endif
+        DebugLogger.shared.log("[TimerHistory] Weekly Stats: \(totalSessions) sessions, \(completedSessions) completed, \(totalMinutes) min, \(totalRounds) rounds", level: .diagnostic)
     }
 
     // MARK: - Session Details

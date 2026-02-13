@@ -2,28 +2,38 @@
 //  BigLiftsScorecard.swift
 //  PTPerformance
 //
-//  Displays big lift (SBD + optional accessories) progress in a card-based scorecard
-//  Shows current max, estimated 1RM, PRs, and improvement trends
+//  Big Lifts Scorecard view displaying compound exercise PRs and estimated totals
+//  BUILD 340: Integrated with strength mode dashboard
 //
 
 import SwiftUI
 
-// MARK: - Big Lifts Scorecard
-
-/// Main scorecard view displaying big lifts progress
-/// Shows each lift as a card with current max, estimated 1RM, PRs, and trends
+/// Big Lifts Scorecard - Displays compound exercise personal records
+/// Shows SBD total, individual lift PRs, and progress trends
 struct BigLiftsScorecard: View {
-    let patientId: String
+    // MARK: - Properties
+
+    let patientId: String?
+
+    // MARK: - State
 
     @StateObject private var viewModel = BigLiftsViewModel()
-    @AppStorage("preferredWeightUnit") private var preferredWeightUnit: String = "lbs"
+    @State private var showExerciseDetail: String?
+    @State private var showAllLifts = false
+
+    // MARK: - Initialization
+
+    init(patientId: String? = nil) {
+        self.patientId = patientId
+    }
+
+    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            // Section Header
-            sectionHeader
+            // Header
+            headerSection
 
-            // Content
             if viewModel.isLoading {
                 loadingView
             } else if let error = viewModel.errorMessage {
@@ -31,106 +41,60 @@ struct BigLiftsScorecard: View {
             } else if viewModel.isEmpty {
                 emptyStateView
             } else {
-                liftsContent
+                // SBD Total
+                sbdTotalSection
+
+                // Lifts grid
+                liftsGridSection
+
+                // Stats row
+                statsRow
             }
         }
         .task {
-            guard let uuid = UUID(uuidString: patientId) else { return }
-            await viewModel.fetchData(for: uuid)
+            await loadData()
+        }
+        .sheetWithHaptic(isPresented: $showAllLifts) {
+            AllLiftsSheet(lifts: viewModel.bigLifts, onSelectLift: { lift in
+                showExerciseDetail = lift.exerciseName
+            })
         }
     }
 
-    // MARK: - Section Header
+    // MARK: - Header Section
 
-    private var sectionHeader: some View {
+    private var headerSection: some View {
         HStack {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Big Lifts")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .accessibilityAddTraits(.isHeader)
+            Image(systemName: "figure.strengthtraining.traditional")
+                .font(.title2)
+                .foregroundColor(.orange)
+                .accessibilityHidden(true)
 
-                if !viewModel.isEmpty && viewModel.estimatedTotal > 0 {
-                    Text("Est. Total: \(Int(viewModel.estimatedTotal)) \(preferredWeightUnit)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-            }
+            Text("Big Lifts")
+                .font(.headline)
+                .foregroundColor(.modusDeepTeal)
 
             Spacer()
 
-            if !viewModel.isEmpty {
-                summaryBadges
-            }
-        }
-        .padding(.horizontal, Spacing.md)
-    }
-
-    // MARK: - Summary Badges
-
-    private var summaryBadges: some View {
-        HStack(spacing: Spacing.sm) {
-            if viewModel.totalPRCount > 0 {
-                HStack(spacing: Spacing.xxs) {
-                    Image(systemName: "trophy.fill")
-                        .foregroundColor(.yellow)
-                        .accessibilityHidden(true)
-                    Text("\(viewModel.totalPRCount)")
-                        .fontWeight(.semibold)
+            if !viewModel.bigLifts.isEmpty {
+                Button("See All") {
+                    HapticFeedback.light()
+                    showAllLifts = true
                 }
                 .font(.caption)
-                .padding(.horizontal, Spacing.xs)
-                .padding(.vertical, Spacing.xxs)
-                .background(Color.yellow.opacity(0.15))
-                .cornerRadius(CornerRadius.xs)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(viewModel.totalPRCount) personal records")
+                .foregroundColor(.modusCyan)
             }
-
-            if viewModel.improvingCount > 0 {
-                HStack(spacing: Spacing.xxs) {
-                    Image(systemName: "arrow.up.right")
-                        .foregroundColor(.green)
-                        .accessibilityHidden(true)
-                    Text("\(viewModel.improvingCount)")
-                        .fontWeight(.semibold)
-                }
-                .font(.caption)
-                .padding(.horizontal, Spacing.xs)
-                .padding(.vertical, Spacing.xxs)
-                .background(Color.green.opacity(0.15))
-                .cornerRadius(CornerRadius.xs)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(viewModel.improvingCount) lifts improving")
-            }
-        }
-    }
-
-    // MARK: - Lifts Content
-
-    private var liftsContent: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.md) {
-                ForEach(viewModel.bigLifts) { lift in
-                    BigLiftCard(lift: lift, iconName: viewModel.iconName(for: lift.exerciseName))
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.xs)
         }
     }
 
     // MARK: - Loading View
 
     private var loadingView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.md) {
-                ForEach(0..<3, id: \.self) { _ in
-                    BigLiftCardSkeleton()
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.xs)
+        HStack {
+            Spacer()
+            ProgressView()
+                .padding()
+            Spacer()
         }
     }
 
@@ -138,13 +102,9 @@ struct BigLiftsScorecard: View {
 
     private func errorView(message: String) -> some View {
         VStack(spacing: Spacing.sm) {
-            Image(systemName: "exclamationmark.triangle")
+            Image(systemName: "exclamationmark.triangle.fill")
                 .font(.title2)
                 .foregroundColor(.orange)
-
-            Text("Unable to load lifts")
-                .font(.subheadline)
-                .fontWeight(.medium)
 
             Text(message)
                 .font(.caption)
@@ -152,393 +112,298 @@ struct BigLiftsScorecard: View {
                 .multilineTextAlignment(.center)
 
             Button("Retry") {
-                Task {
-                    await viewModel.retryFetch()
-                }
+                HapticFeedback.light()
+                Task { await viewModel.retryFetch() }
             }
             .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(.blue)
+            .foregroundColor(.modusCyan)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+
+    // MARK: - Empty State View
+
+    private var emptyStateView: some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "dumbbell.fill")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
+
+            Text("No Big Lifts Yet")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+
+            Text("Log bench press, squat, or deadlift to see your PRs here")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
-        .padding(.horizontal, Spacing.md)
     }
 
-    // MARK: - Empty State
+    // MARK: - SBD Total Section
 
-    private var emptyStateView: some View {
-        VStack(spacing: Spacing.md) {
-            Image(systemName: "dumbbell")
-                .font(.system(size: 40))
-                .foregroundColor(.secondary)
-
-            VStack(spacing: Spacing.xxs) {
-                Text("No Big Lifts Yet")
-                    .font(.headline)
-
-                Text("Log Bench Press, Squat, or Deadlift to see your progress here")
+    private var sbdTotalSection: some View {
+        HStack(spacing: Spacing.md) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Est. Total (SBD)")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(Spacing.xl)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(CornerRadius.md)
-        .padding(.horizontal, Spacing.md)
-    }
-}
 
-// MARK: - Big Lift Card
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(String(format: "%.0f", viewModel.estimatedTotal))
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .monospacedDigit()
 
-/// Individual card displaying a single big lift's stats
-struct BigLiftCard: View {
-    let lift: BigLiftSummary
-    let iconName: String
-
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Header with icon and name
-            cardHeader
-
-            // Current max (large, prominent)
-            currentMaxDisplay
-
-            // Estimated 1RM
-            estimated1rmDisplay
-
-            Divider()
-
-            // PR and trend info
-            bottomStats
-        }
-        .padding(Spacing.md)
-        .frame(width: 160)
-        .background(Color(.systemBackground))
-        .cornerRadius(CornerRadius.md)
-        .shadow(
-            color: Shadow.medium.color(for: colorScheme),
-            radius: Shadow.medium.radius,
-            x: Shadow.medium.x,
-            y: Shadow.medium.y
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityDescription)
-    }
-
-    private var accessibilityDescription: String {
-        var description = "\(lift.exerciseName), current max \(lift.formattedMaxWeight), estimated 1RM \(lift.formattedEstimated1rm)"
-        if lift.prCount > 0 {
-            description += ", \(lift.prCount) personal records"
-        }
-        if let improvement = lift.formattedImprovement {
-            description += ", \(lift.isImproving ? "improved" : "decreased") \(improvement)"
-        }
-        if lift.hasRecentPR {
-            description += ", recent PR achieved"
-        }
-        return description
-    }
-
-    // MARK: - Card Header
-
-    private var cardHeader: some View {
-        HStack(spacing: Spacing.xs) {
-            Image(systemName: iconName)
-                .font(.caption)
-                .foregroundColor(.blue)
-                .frame(width: 20, height: 20)
-
-            Text(lift.exerciseName)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .lineLimit(1)
-
-            Spacer()
-
-            // Recent PR badge
-            if lift.hasRecentPR {
-                Image(systemName: "trophy.fill")
-                    .font(.caption2)
-                    .foregroundColor(.yellow)
-            }
-        }
-    }
-
-    // MARK: - Current Max Display
-
-    private var currentMaxDisplay: some View {
-        VStack(alignment: .leading, spacing: Spacing.xxs) {
-            Text("Current Max")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-
-            Text(lift.formattedMaxWeight)
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-        }
-    }
-
-    // MARK: - Estimated 1RM Display
-
-    private var estimated1rmDisplay: some View {
-        HStack {
-            Text("Est. 1RM")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-
-            Spacer()
-
-            Text(lift.formattedEstimated1rm)
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-    }
-
-    // MARK: - Bottom Stats
-
-    private var bottomStats: some View {
-        HStack {
-            // Last PR info
-            if lift.prCount > 0 {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 2) {
-                        Image(systemName: "trophy")
-                            .font(.caption2)
-                        Text("\(lift.prCount) PRs")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(.secondary)
-
-                    if let days = lift.daysSinceLastPR {
-                        Text("\(days)d ago")
-                            .font(.caption2)
-                            .foregroundColor(lift.hasRecentPR ? .yellow : .secondary)
-                    }
+                    Text("lbs")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
             }
 
             Spacer()
 
-            // Improvement trend
-            if let improvement = lift.formattedImprovement {
-                trendBadge(improvement: improvement, isImproving: lift.isImproving)
+            // PR count badge
+            if viewModel.totalPRCount > 0 {
+                VStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "trophy.fill")
+                            .foregroundColor(.yellow)
+                        Text("\(viewModel.totalPRCount)")
+                            .fontWeight(.bold)
+                    }
+                    .font(.subheadline)
+
+                    Text("Total PRs")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
         }
-    }
-
-    // MARK: - Trend Badge
-
-    private func trendBadge(improvement: String, isImproving: Bool) -> some View {
-        HStack(spacing: 2) {
-            Image(systemName: isImproving ? "arrow.up.right" : "arrow.down.right")
-                .font(.caption2)
-
-            Text(improvement)
-                .font(.caption)
-                .fontWeight(.medium)
-        }
-        .foregroundColor(isImproving ? .green : .red)
-        .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, 2)
+        .padding()
         .background(
-            (isImproving ? Color.green : Color.red).opacity(0.15)
+            LinearGradient(
+                colors: [Color.orange.opacity(0.15), Color.orange.opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         )
-        .cornerRadius(CornerRadius.xs)
+        .cornerRadius(CornerRadius.md)
     }
-}
 
-// MARK: - Big Lift Card Skeleton
+    // MARK: - Lifts Grid Section
 
-/// Loading skeleton for the big lift card
-struct BigLiftCardSkeleton: View {
-    @State private var isAnimating = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Header skeleton
-            HStack(spacing: Spacing.xs) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 20, height: 20)
-
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 80, height: 14)
-
-                Spacer()
+    private var liftsGridSection: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: Spacing.sm),
+            GridItem(.flexible(), spacing: Spacing.sm)
+        ], spacing: Spacing.sm) {
+            ForEach(viewModel.bigLifts.prefix(4)) { lift in
+                liftCard(lift)
             }
+        }
+    }
 
-            // Max weight skeleton
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 60, height: 10)
+    private func liftCard(_ lift: BigLiftSummary) -> some View {
+        Button(action: {
+            HapticFeedback.light()
+            showExerciseDetail = lift.exerciseName
+        }) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                HStack {
+                    Text(shortLiftName(lift.exerciseName))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
 
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 100, height: 28)
-            }
+                    Spacer()
 
-            // Est 1RM skeleton
-            HStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 50, height: 10)
+                    if lift.hasRecentPR {
+                        Image(systemName: "trophy.fill")
+                            .font(.caption2)
+                            .foregroundColor(.yellow)
+                    }
+                }
 
                 Spacer()
 
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 60, height: 14)
+                Text(lift.formattedMaxWeight)
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .monospacedDigit()
+
+                if let improvement = lift.formattedImprovement {
+                    HStack(spacing: 2) {
+                        Image(systemName: lift.isImproving ? "arrow.up.right" : "arrow.down.right")
+                            .font(.caption2)
+                        Text(improvement)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(lift.isImproving ? .green : .red)
+                }
             }
+            .padding(Spacing.sm)
+            .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.sm)
+            .adaptiveShadow(Shadow.subtle)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(lift.exerciseName), \(lift.formattedMaxWeight)")
+        .accessibilityHint("Tap to view exercise history")
+    }
+
+    // MARK: - Stats Row
+
+    private var statsRow: some View {
+        HStack(spacing: Spacing.lg) {
+            statItem(
+                icon: "chart.line.uptrend.xyaxis",
+                value: "\(viewModel.improvingCount)",
+                label: "Improving"
+            )
 
             Divider()
+                .frame(height: 30)
 
-            // Bottom stats skeleton
-            HStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 40, height: 24)
+            statItem(
+                icon: "flame.fill",
+                value: "\(viewModel.bigLifts.count)",
+                label: "Tracked"
+            )
 
-                Spacer()
+            if let avgImprovement = viewModel.averageImprovement {
+                Divider()
+                    .frame(height: 30)
 
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 50, height: 20)
+                statItem(
+                    icon: "percent",
+                    value: String(format: "%.1f%%", avgImprovement),
+                    label: "Avg Gain"
+                )
             }
         }
-        .padding(Spacing.md)
-        .frame(width: 160)
+        .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
-        .shimmer(isAnimating: isAnimating)
-        .onAppear {
-            withAnimation(
-                Animation.linear(duration: 1.5)
-                    .repeatForever(autoreverses: false)
-            ) {
-                isAnimating = true
+    }
+
+    private func statItem(icon: String, value: String, label: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.modusCyan)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func loadData() async {
+        guard let patientIdString = patientId ?? PTSupabaseClient.shared.userId,
+              let uuid = UUID(uuidString: patientIdString) else {
+            return
+        }
+        await viewModel.fetchData(for: uuid)
+    }
+
+    private func shortLiftName(_ name: String) -> String {
+        switch name {
+        case "Bench Press": return "Bench"
+        case "Back Squat", "Squat": return "Squat"
+        case "Deadlift": return "Deadlift"
+        case "Overhead Press": return "OHP"
+        case "Barbell Row": return "Row"
+        default: return String(name.prefix(8))
         }
     }
 }
 
-// MARK: - Shimmer Modifier
+// MARK: - All Lifts Sheet
 
-extension View {
-    func shimmer(isAnimating: Bool) -> some View {
-        self.modifier(ShimmerModifier(isAnimating: isAnimating))
-    }
-}
-
-struct ShimmerModifier: ViewModifier {
-    let isAnimating: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .redacted(reason: .placeholder)
-            .opacity(isAnimating ? 0.6 : 1.0)
-            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isAnimating)
-    }
-}
-
-// MARK: - Alternative Grid Layout
-
-/// Grid-based layout for bigger screens or full-page view
-struct BigLiftsScorecardGrid: View {
-    let patientId: String
-
-    @StateObject private var viewModel = BigLiftsViewModel()
-
-    private let columns = [
-        GridItem(.flexible(), spacing: Spacing.md),
-        GridItem(.flexible(), spacing: Spacing.md)
-    ]
+private struct AllLiftsSheet: View {
+    let lifts: [BigLiftSummary]
+    let onSelectLift: (BigLiftSummary) -> Void
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            if viewModel.isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if viewModel.isEmpty {
-                EmptyStateView(
-                    title: "No Big Lifts Yet",
-                    message: "Log exercises like Bench Press, Squat, or Deadlift to track your strength progress",
-                    icon: "dumbbell.fill",
-                    iconColor: .secondary
-                )
-            } else {
-                ScrollView {
-                    // Summary Header
-                    if viewModel.estimatedTotal > 0 {
-                        totalSummaryHeader
-                    }
+        NavigationStack {
+            List(lifts) { lift in
+                Button(action: {
+                    onSelectLift(lift)
+                    dismiss()
+                }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(lift.exerciseName)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
 
-                    // Grid of lift cards
-                    LazyVGrid(columns: columns, spacing: Spacing.md) {
-                        ForEach(viewModel.bigLifts) { lift in
-                            BigLiftCard(lift: lift, iconName: viewModel.iconName(for: lift.exerciseName))
+                                if lift.hasRecentPR {
+                                    Image(systemName: "trophy.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                            }
+
+                            if let days = lift.daysSinceLastPerformed {
+                                Text(days == 0 ? "Performed today" : "\(days) days ago")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Spacer()
+
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text(lift.formattedMaxWeight)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+
+                            if let improvement = lift.formattedImprovement {
+                                Text(improvement)
+                                    .font(.caption)
+                                    .foregroundColor(lift.isImproving ? .green : .red)
+                            }
                         }
                     }
-                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .navigationTitle("All Big Lifts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
         }
-        .task {
-            guard let uuid = UUID(uuidString: patientId) else { return }
-            await viewModel.fetchData(for: uuid)
-        }
-        .refreshable {
-            guard let uuid = UUID(uuidString: patientId) else { return }
-            await viewModel.refresh(for: uuid)
-        }
-    }
-
-    private var totalSummaryHeader: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text("Estimated Total")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Text("\(Int(viewModel.estimatedTotal)) lbs")
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Estimated total: \(Int(viewModel.estimatedTotal)) pounds")
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: Spacing.xxs) {
-                Text("Total PRs")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                HStack(spacing: Spacing.xxs) {
-                    Image(systemName: "trophy.fill")
-                        .foregroundColor(.yellow)
-                        .accessibilityHidden(true)
-                    Text("\(viewModel.totalPRCount)")
-                        .fontWeight(.bold)
-                }
-                .font(.title3)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Total personal records: \(viewModel.totalPRCount)")
-        }
-        .padding(Spacing.md)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(CornerRadius.md)
-        .padding(.horizontal, Spacing.md)
     }
 }
 
@@ -547,60 +412,13 @@ struct BigLiftsScorecardGrid: View {
 #if DEBUG
 struct BigLiftsScorecard_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            // Horizontal scroll preview
-            VStack {
-                BigLiftsScorecard(patientId: "preview-patient-1")
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                BigLiftsScorecard()
             }
-            .previewDisplayName("Horizontal Scroll")
-
-            // Grid layout preview
-            NavigationStack {
-                BigLiftsScorecardGrid(patientId: "preview-patient-1")
-                    .navigationTitle("Big Lifts")
-            }
-            .previewDisplayName("Grid Layout")
-
-            // Individual card preview
-            ScrollView(.horizontal) {
-                HStack(spacing: Spacing.md) {
-                    BigLiftCard(
-                        lift: BigLiftSummary.sample,
-                        iconName: "figure.strengthtraining.traditional"
-                    )
-
-                    BigLiftCard(
-                        lift: BigLiftSummary.sampleArray[1],
-                        iconName: "figure.strengthtraining.functional"
-                    )
-
-                    BigLiftCard(
-                        lift: BigLiftSummary.sampleArray[2],
-                        iconName: "figure.cross.training"
-                    )
-                }
-                .padding()
-            }
-            .previewDisplayName("Individual Cards")
-
-            // Loading state
-            ScrollView(.horizontal) {
-                HStack(spacing: Spacing.md) {
-                    BigLiftCardSkeleton()
-                    BigLiftCardSkeleton()
-                    BigLiftCardSkeleton()
-                }
-                .padding()
-            }
-            .previewDisplayName("Loading Skeleton")
-
-            // Dark mode
-            VStack {
-                BigLiftsScorecard(patientId: "preview-patient-1")
-            }
-            .preferredColorScheme(.dark)
-            .previewDisplayName("Dark Mode")
+            .padding()
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 #endif

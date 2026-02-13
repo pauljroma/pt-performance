@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ROMInputCard.swift
 //  PTPerformance
@@ -63,7 +64,7 @@ struct ROMInputCard: View {
                     .padding(.horizontal)
 
                 // Content sections
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: Spacing.md) {
                     jointMovementSection
                     sideSelector
                     degreeInputSection
@@ -83,7 +84,7 @@ struct ROMInputCard: View {
             }
         }
         .background(cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .adaptiveCardShadow(radius: 6, y: 3)
         .animation(.spring(response: 0.3), value: isExpanded)
         .accessibilityElement(children: .contain)
@@ -98,7 +99,7 @@ struct ROMInputCard: View {
                 isExpanded.toggle()
             }
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Icon with status color
                 ZStack {
                     Circle()
@@ -116,7 +117,7 @@ struct ROMInputCard: View {
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    HStack(spacing: 4) {
+                    HStack(spacing: Spacing.xxs) {
                         Text(measurement.formattedMeasurement)
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(statusColor)
@@ -151,12 +152,12 @@ struct ROMInputCard: View {
     // MARK: - Joint and Movement Section
 
     private var jointMovementSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Joint & Movement")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Joint picker
                 Menu {
                     ForEach(JointType.allCases) { joint in
@@ -183,7 +184,7 @@ struct ROMInputCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color(.tertiarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
                 .frame(maxWidth: .infinity)
 
@@ -209,7 +210,7 @@ struct ROMInputCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color(.tertiarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -219,12 +220,12 @@ struct ROMInputCard: View {
     // MARK: - Side Selector
 
     private var sideSelector: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Side")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.xs) {
                 ForEach(Side.allCases) { side in
                     Button {
                         selectedSide = side
@@ -236,8 +237,8 @@ struct ROMInputCard: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(selectedSide == side ? Color.blue : Color(.tertiarySystemBackground))
+                                RoundedRectangle(cornerRadius: CornerRadius.sm)
+                                    .fill(selectedSide == side ? Color.modusCyan : Color(.tertiarySystemBackground))
                             )
                     }
                     .buttonStyle(.plain)
@@ -251,14 +252,14 @@ struct ROMInputCard: View {
     // MARK: - Degree Input Section
 
     private var degreeInputSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Measured Degrees")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 // Stepper with display
-                HStack(spacing: 12) {
+                HStack(spacing: Spacing.sm) {
                     Button {
                         if degrees > 0 {
                             degrees -= 5
@@ -323,7 +324,7 @@ struct ROMInputCard: View {
     // MARK: - Normal Range Display
 
     private var normalRangeDisplay: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Normal Range Comparison")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
@@ -409,7 +410,7 @@ struct ROMInputCard: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 10)
+            RoundedRectangle(cornerRadius: CornerRadius.sm + 2)
                 .fill(painWithMovement ? Color.orange.opacity(0.1) : Color(.tertiarySystemBackground))
         )
         .accessibilityLabel("Pain with movement toggle, currently \(painWithMovement ? "on" : "off")")
@@ -418,7 +419,7 @@ struct ROMInputCard: View {
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Delete button (if handler provided)
             if let onDelete = onDelete {
                 Button {
@@ -433,7 +434,7 @@ struct ROMInputCard: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(Color.red.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
                 }
                 .accessibilityLabel("Delete measurement")
             }
@@ -454,8 +455,8 @@ struct ROMInputCard: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .background(Color.modusCyan)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
                 }
                 .accessibilityLabel("Save measurement")
             }
@@ -466,10 +467,10 @@ struct ROMInputCard: View {
     // MARK: - Helper Views
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: CornerRadius.lg)
             .fill(Color(.systemBackground))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .stroke(statusColor.opacity(0.2), lineWidth: 1)
             )
     }
@@ -527,7 +528,7 @@ struct ROMInputCardCompact: View {
         Button {
             onTap?()
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Status indicator
                 Circle()
                     .fill(measurement.statusColor)
@@ -539,7 +540,7 @@ struct ROMInputCardCompact: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.primary)
 
-                    HStack(spacing: 4) {
+                    HStack(spacing: Spacing.xxs) {
                         Text(measurement.formattedMeasurement)
                             .font(.caption.weight(.semibold))
                             .foregroundColor(measurement.statusColor)
@@ -566,7 +567,7 @@ struct ROMInputCardCompact: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: CornerRadius.sm + 2)
                     .fill(Color(.secondarySystemBackground))
             )
         }
@@ -604,7 +605,7 @@ struct ROMInputCardCompact: View {
 }
 
 #Preview("Compact ROM Card") {
-    VStack(spacing: 12) {
+    VStack(spacing: Spacing.sm) {
         ROMInputCardCompact(
             measurement: ROMeasurement.sample,
             onTap: { print("Tapped") }

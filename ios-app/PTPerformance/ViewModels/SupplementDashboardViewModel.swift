@@ -257,10 +257,81 @@ final class SupplementDashboardViewModel: ObservableObject {
     /// User's primary goal
     @Published var userGoal: UserGoal = .buildStrength
 
+    /// Loading state for recommendation generation
+    @Published var isGeneratingRecommendations = false
+
     /// Swipe-to-log state
     @Published var isLoggingItem: UUID?
 
+    /// Error handling with retry support
+    @Published var showError = false
+    @Published var errorMessage = ""
+    @Published var canRetryLastAction = false
+    private var lastFailedAction: (() async -> Void)?
+
+    /// Streak celebration
+    @Published var showStreakCelebration = false
+    @Published var streakCelebrationMessage = ""
+    private var previousStreak = 0
+
+    /// Streak milestones that trigger celebrations
+    private let streakMilestones = [7, 14, 21, 30, 60, 90, 100, 180, 365]
+
     private let service = SupplementService.shared
+
+    /// Track active tasks for cancellation on deinit
+    private var activeTasks: [Task<Void, Never>] = []
+
+    // MARK: - Dosage Parsing
+
+    /// Parses a dosage string like "500mg", "500-750mg", "2g", "1000mcg" into a Dosage struct.
+    /// For ranges, extracts the first number. Also extracts the unit from the string.
+    private func parseDosage(_ dosageString: String) -> Dosage {
+        let lowercased = dosageString.lowercased()
+
+        // Determine unit from string (check longer units first to avoid false matches)
+        let unit: DosageUnit
+        if lowercased.contains("mcg") || lowercased.contains("µg") {
+            unit = .mcg
+        } else if lowercased.contains("mg") {
+            unit = .mg
+        } else if lowercased.contains("g") {
+            unit = .g
+        } else if lowercased.contains("iu") {
+            unit = .iu
+        } else if lowercased.contains("ml") {
+            unit = .ml
+        } else if lowercased.contains("scoop") {
+            unit = .scoop
+        } else if lowercased.contains("capsule") || lowercased.contains("cap") {
+            unit = .capsule
+        } else if lowercased.contains("tablet") || lowercased.contains("tab") {
+            unit = .tablet
+        } else {
+            unit = .mg // default
+        }
+
+        // Extract the first number (handles ranges like "500-750")
+        // Match digits optionally followed by a decimal point and more digits
+        let pattern = "([0-9]+\\.?[0-9]*)"
+        if let regex = try? NSRegularExpression(pattern: pattern),
+           let match = regex.firstMatch(in: dosageString, range: NSRange(dosageString.startIndex..., in: dosageString)),
+           let range = Range(match.range(at: 1), in: dosageString) {
+            let numberString = String(dosageString[range])
+            if let amount = Double(numberString) {
+                return Dosage(amount: amount, unit: unit)
+            }
+        }
+
+        return Dosage(amount: 0, unit: unit)
+    }
+
+    deinit {
+        // Cancel all active tasks to prevent memory leaks
+        for task in activeTasks {
+            task.cancel()
+        }
+    }
 
     // MARK: - Computed Properties
 
@@ -330,7 +401,7 @@ final class SupplementDashboardViewModel: ObservableObject {
                     name: dose.supplementName,
                     brand: dose.brand,
                     category: dose.category,
-                    dosage: Dosage(amount: Double(dose.dosage.filter { $0.isNumber || $0 == "." }) ?? 0, unit: .mg),
+                    dosage: parseDosage(dose.dosage),
                     timing: dose.timing,
                     days: nil,
                     withFood: dose.withFood,
@@ -355,7 +426,7 @@ final class SupplementDashboardViewModel: ObservableObject {
                 name: supplement.name,
                 brand: supplement.brand,
                 category: supplement.category,
-                dosage: Dosage(amount: Double(routine.dosage.filter { $0.isNumber || $0 == "." }) ?? 0, unit: .mg),
+                dosage: parseDosage(routine.dosage),
                 timing: routine.timing,
                 days: nil,
                 withFood: routine.withFood,
@@ -365,6 +436,9 @@ final class SupplementDashboardViewModel: ObservableObject {
 
         // Generate goal-based recommendations
         await generateRecommendations()
+
+        // Initialize streak tracking for celebration detection
+        previousStreak = currentStreak
 
         if let serviceError = service.error {
             error = serviceError.localizedDescription
@@ -395,6 +469,9 @@ final class SupplementDashboardViewModel: ObservableObject {
 
     /// Generates goal-based recommendations
     private func generateRecommendations() async {
+        isGeneratingRecommendations = true
+        defer { isGeneratingRecommendations = false }
+
         // Fetch catalog for recommendations
         await service.fetchCatalog()
 
@@ -523,35 +600,135 @@ final class SupplementDashboardViewModel: ObservableObject {
         return ""
     }
 
+    // MARK: - Error Handling
+
+    /// Dismisses the current error alert
+    func dismissError() {
+        showError = false
+        errorMessage = ""
+        canRetryLastAction = false
+        lastFailedAction = nil
+    }
+
+    /// Retries the last failed action
+    func retryLastAction() {
+        guard let action = lastFailedAction else { return }
+        showError = false
+
+        let task = Task { [weak self] in
+            await action()
+            self?.lastFailedAction = nil
+            self?.canRetryLastAction = false
+        }
+        activeTasks.append(task)
+    }
+
+    /// Sets an error with optional retry capability
+    private func setError(_ message: String, retryAction: (() async -> Void)? = nil) {
+        errorMessage = message
+        showError = true
+        if let action = retryAction {
+            canRetryLastAction = true
+            lastFailedAction = action
+        } else {
+            canRetryLastAction = false
+            lastFailedAction = nil
+        }
+    }
+
+    // MARK: - Streak Celebration
+
+    /// Dismisses the streak celebration alert
+    func dismissStreakCelebration() {
+        showStreakCelebration = false
+        streakCelebrationMessage = ""
+    }
+
+    /// Checks if the current streak has reached a milestone
+    private func checkStreakMilestone() {
+        let newStreak = currentStreak
+        if newStreak > previousStreak {
+            if streakMilestones.contains(newStreak) {
+                streakCelebrationMessage = "You've reached a \(newStreak)-day supplement streak! Keep up the great work!"
+                showStreakCelebration = true
+                HapticFeedback.success()
+            }
+        }
+        previousStreak = newStreak
+    }
+
     // MARK: - Actions
 
     func toggleItem(_ item: SupplementChecklistItem) {
-        guard let index = todayChecklist.firstIndex(where: { $0.id == item.id }) else { return }
+        guard todayChecklist.contains(where: { $0.id == item.id }) else { return }
 
         isLoggingItem = item.id
 
-        Task { [weak self] in
+        // Optimistic UI update
+        let originalState = item.isTaken
+        updateItemState(item.id, isTaken: !originalState)
+
+        let task = Task { [weak self] in
             guard let self else { return }
+            defer { self.cleanupTask() }
+
             if let dose = service.todayDoses.first(where: { $0.id == item.id }) {
-                if item.isTaken {
+                if originalState {
+                    // Undoing - was taken, now marking as not taken
                     if let logId = item.logId {
                         do {
                             try await service.undoLog(logId)
+                            isLoggingItem = nil
+                            await loadData()
                         } catch {
-                            self.error = error.localizedDescription
+                            // Revert optimistic update
+                            updateItemState(item.id, isTaken: originalState)
+                            isLoggingItem = nil
+                            setError("Failed to undo: \(error.localizedDescription)") { [weak self] in
+                                self?.toggleItem(item)
+                            }
+                            HapticFeedback.error()
                         }
                     }
                 } else {
+                    // Logging - was not taken, now marking as taken
                     do {
                         try await service.logSupplement(dose: dose)
+                        isLoggingItem = nil
+                        await loadData()
+                        checkStreakMilestone()
                     } catch {
-                        self.error = error.localizedDescription
+                        // Revert optimistic update
+                        updateItemState(item.id, isTaken: originalState)
+                        isLoggingItem = nil
+                        setError("Failed to log supplement: \(error.localizedDescription)") { [weak self] in
+                            self?.toggleItem(item)
+                        }
+                        HapticFeedback.error()
                     }
                 }
-                await loadData()
             }
-            isLoggingItem = nil
         }
+        activeTasks.append(task)
+    }
+
+    /// Updates the state of a checklist item optimistically
+    private func updateItemState(_ itemId: UUID, isTaken: Bool) {
+        if let index = todayChecklist.firstIndex(where: { $0.id == itemId }) {
+            todayChecklist[index].isTaken = isTaken
+            if !isTaken {
+                todayChecklist[index].takenAt = nil
+                todayChecklist[index].logId = nil
+            } else {
+                todayChecklist[index].takenAt = Date()
+            }
+        }
+        buildGroupedChecklist()
+    }
+
+    /// Removes completed tasks from tracking array
+    private func cleanupTask() {
+        activeTasks.removeAll { $0.isCancelled }
     }
 
     /// Logs a single supplement via swipe gesture
@@ -561,36 +738,73 @@ final class SupplementDashboardViewModel: ObservableObject {
         isLoggingItem = item.id
         HapticFeedback.success()
 
-        Task { [weak self] in
+        // Optimistic UI update
+        updateItemState(item.id, isTaken: true)
+
+        let task = Task { [weak self] in
             guard let self else { return }
+            defer { self.cleanupTask() }
+
             if let dose = service.todayDoses.first(where: { $0.id == item.id }) {
                 do {
                     try await service.logSupplement(dose: dose)
+                    isLoggingItem = nil
+                    await loadData()
+                    checkStreakMilestone()
                 } catch {
-                    self.error = error.localizedDescription
+                    // Revert optimistic update
+                    updateItemState(item.id, isTaken: false)
+                    isLoggingItem = nil
+                    setError("Failed to log supplement: \(error.localizedDescription)") { [weak self] in
+                        self?.logSupplementViaSwipe(item)
+                    }
                     HapticFeedback.error()
                 }
-                await loadData()
             }
-            isLoggingItem = nil
         }
+        activeTasks.append(task)
     }
 
     func markAllAsTaken() {
-        Task { [weak self] in
+        let untakenDoses = service.todayDoses.filter { !$0.isTaken }
+        guard !untakenDoses.isEmpty else { return }
+
+        // Optimistic UI update for all items
+        for dose in untakenDoses {
+            updateItemState(dose.id, isTaken: true)
+        }
+        HapticFeedback.success()
+
+        let task = Task { [weak self] in
             guard let self else { return }
-            for dose in service.todayDoses where !dose.isTaken {
+            defer { self.cleanupTask() }
+
+            var errors: [String] = []
+            var failedIds: [UUID] = []
+            for dose in untakenDoses {
                 do {
                     try await service.logSupplement(dose: dose)
                 } catch {
-                    self.error = error.localizedDescription
+                    errors.append("\(dose.supplementName): \(error.localizedDescription)")
+                    failedIds.append(dose.id)
                 }
+            }
+            if !errors.isEmpty {
+                // Revert failed items
+                for id in failedIds {
+                    updateItemState(id, isTaken: false)
+                }
+                setError("Failed to log \(errors.count) supplement(s)")
+                HapticFeedback.error()
+            } else {
+                checkStreakMilestone()
             }
             await loadData()
         }
+        activeTasks.append(task)
     }
 
-    /// Logs all supplements in a specific timing group
+    /// Logs all supplements in a specific timing group with optimistic UI updates
     func logAllInGroup(_ group: SupplementTimingGroup) {
         let items = groupedChecklist[group] ?? []
         let unloggedItems = items.filter { !$0.isTaken }
@@ -599,27 +813,53 @@ final class SupplementDashboardViewModel: ObservableObject {
 
         HapticFeedback.success()
 
-        Task { [weak self] in
+        // Optimistic UI update for all items in the group
+        for item in unloggedItems {
+            updateItemState(item.id, isTaken: true)
+        }
+
+        let task = Task { [weak self] in
             guard let self else { return }
+            defer { self.cleanupTask() }
+
+            var failedItems: [SupplementChecklistItem] = []
+
+            // Log each item sequentially (MainActor-safe)
             for item in unloggedItems {
                 if let dose = service.todayDoses.first(where: { $0.id == item.id }) {
                     do {
                         try await service.logSupplement(dose: dose)
                     } catch {
-                        self.error = error.localizedDescription
+                        failedItems.append(item)
                     }
+                } else {
+                    failedItems.append(item)
                 }
             }
+
+            if !failedItems.isEmpty {
+                // Revert failed items only
+                for item in failedItems {
+                    updateItemState(item.id, isTaken: false)
+                }
+                setError("Failed to log \(failedItems.count) of \(unloggedItems.count) supplements")
+                HapticFeedback.error()
+            } else {
+                checkStreakMilestone()
+            }
+
             await loadData()
         }
+        activeTasks.append(task)
     }
 
     /// Updates the user's primary goal and regenerates recommendations
     func updateGoal(_ goal: UserGoal) {
         userGoal = goal
-        Task {
+        let task = Task {
             await generateRecommendations()
         }
+        activeTasks.append(task)
     }
 
     /// Adds a recommended supplement to the user's stack

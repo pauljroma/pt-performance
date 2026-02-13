@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AlertBannerView.swift
 //  PTPerformance
@@ -297,7 +298,7 @@ struct AlertToast: View {
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.lg)
                         .fill(Color(.systemBackground))
-                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        .shadow(color: Color(.label).opacity(0.2), radius: 10, x: 0, y: 5)
                 )
                 .padding(.horizontal)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -501,20 +502,20 @@ struct AlertBannerView_Previews: PreviewProvider {
         VStack(spacing: Spacing.lg) {
             AlertBannerView(
                 exception: sampleException,
-                onTap: { print("Tapped") },
-                onDismiss: { print("Dismissed") }
+                onTap: { },
+                onDismiss: { }
             )
 
             CompactAlertBanner(
                 title: "Pain Alert",
                 message: "Mike Williams reported high pain",
                 severity: .critical,
-                onTap: { print("Compact tapped") }
+                onTap: { }
             )
 
             MultipleAlertsBanner(
                 exceptions: [sampleException, sampleException, sampleException],
-                onViewAll: { print("View all") }
+                onViewAll: { }
             )
         }
         .padding()

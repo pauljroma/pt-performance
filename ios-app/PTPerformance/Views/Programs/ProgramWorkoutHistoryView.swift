@@ -212,7 +212,7 @@ struct ProgramWorkoutHistoryView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -314,7 +314,7 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(color.opacity(0.1))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
     }
@@ -394,7 +394,7 @@ private struct WorkoutHistoryCard: View {
         }
         .padding(12)
         .background(Color(.systemBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
@@ -527,7 +527,7 @@ private struct ProgramWorkoutDetailSheet: View {
         .padding(.vertical, 6)
         .background(color.opacity(0.15))
         .foregroundColor(color)
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func painColor(_ pain: Double) -> Color {
@@ -606,7 +606,7 @@ private struct ExerciseDetailRow: View {
         }
         .padding(10)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

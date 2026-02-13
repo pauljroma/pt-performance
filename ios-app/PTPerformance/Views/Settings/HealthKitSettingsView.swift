@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  HealthKitSettingsView.swift
 //  PTPerformance
@@ -18,7 +19,7 @@ struct HealthKitSettingsView: View {
             Section {
                 HStack {
                     Image(systemName: healthKitService.isAuthorized ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .foregroundColor(healthKitService.isAuthorized ? .green : .red)
+                        .foregroundColor(healthKitService.isAuthorized ? DesignTokens.statusSuccess : DesignTokens.statusError)
                         .font(.title2)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {
@@ -52,9 +53,9 @@ struct HealthKitSettingsView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .background(DesignTokens.statusError)
+                        .foregroundColor(DesignTokens.buttonTextOnAccent)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Connect Apple Health")
@@ -89,7 +90,7 @@ struct HealthKitSettingsView: View {
                     // Resting Heart Rate
                     HStack {
                         Image(systemName: "heart.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(DesignTokens.statusError)
                             .frame(width: 28)
                             .accessibilityHidden(true)
                         Text("Resting HR")
@@ -127,7 +128,7 @@ struct HealthKitSettingsView: View {
                     // ACP-827: Exported Workouts
                     HStack {
                         Image(systemName: "arrow.up.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(DesignTokens.statusSuccess)
                             .frame(width: 28)
                             .accessibilityHidden(true)
                         Text("Workouts Exported")
@@ -141,7 +142,7 @@ struct HealthKitSettingsView: View {
                     // Last Sync
                     HStack {
                         Image(systemName: "arrow.clockwise")
-                            .foregroundColor(.blue)
+                            .foregroundColor(DesignTokens.statusInfo)
                             .frame(width: 28)
                             .accessibilityHidden(true)
                         Text("Last Synced")
@@ -182,7 +183,7 @@ struct HealthKitSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "gearshape.2")
-                                .foregroundColor(.gray)
+                                .foregroundColor(Color(.secondaryLabel))
                                 .frame(width: 28)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Sync Settings")
@@ -226,7 +227,7 @@ struct HealthKitSettingsView: View {
             } header: {
                 Text("Bidirectional Sync")
             } footer: {
-                Text("PTPerformance imports your health data to personalize recovery, and exports completed workouts to Apple Health.")
+                Text("Modus imports your health data to personalize recovery, and exports completed workouts to Apple Health.")
             }
 
             // How It's Used Section
@@ -286,7 +287,7 @@ private struct DataTypeChip: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityLabel(text)
     }
 }
@@ -301,7 +302,7 @@ private struct FeatureRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundColor(.blue)
+                .foregroundColor(DesignTokens.statusInfo)
                 .frame(width: 24)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {

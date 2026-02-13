@@ -54,7 +54,7 @@ struct HealthSyncStatusView: View {
             }
         }
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
     }
 
@@ -178,6 +178,7 @@ struct HealthSyncStatusView: View {
         HStack(spacing: 12) {
             if healthKitService.isAuthorized {
                 Button {
+                    HapticFeedback.light()
                     Task {
                         _ = try? await healthKitService.syncTodayData()
                     }
@@ -189,14 +190,16 @@ struct HealthSyncStatusView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, Spacing.xs)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
                 .disabled(healthKitService.isLoading)
+                .accessibilityLabel("Sync health data now")
             } else {
                 Button {
+                    HapticFeedback.light()
                     Task {
                         _ = try? await healthKitService.requestAuthorization()
                     }
@@ -208,11 +211,12 @@ struct HealthSyncStatusView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, Spacing.xs)
                     .background(Color.red)
                     .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
+                .accessibilityLabel("Connect to Apple Health")
             }
         }
     }
@@ -256,9 +260,9 @@ private struct DataTile: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -304,10 +308,10 @@ struct HealthSyncBanner: View {
                     .scaleEffect(0.7)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var statusColor: Color {

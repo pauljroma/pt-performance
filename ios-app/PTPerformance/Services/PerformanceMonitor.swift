@@ -443,11 +443,7 @@ class PerformanceMonitor {
 
     /// Print performance summary to console
     func printPerformanceSummary() {
-        #if DEBUG
-        print(getPerformanceSummary())
-        #else
-        logger.debug("\(self.getPerformanceSummary())")
-        #endif
+        DebugLogger.shared.log(getPerformanceSummary(), level: .diagnostic)
     }
 
     // MARK: - ACP-955: Enhanced Monitoring

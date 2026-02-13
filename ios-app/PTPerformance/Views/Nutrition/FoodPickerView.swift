@@ -212,7 +212,7 @@ struct FoodCategoryChip: View {
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
         }
     }
 }

@@ -95,14 +95,14 @@ private struct ProtocolSelectionView: View {
                         Picker("Soreness", selection: $viewModel.armSorenessBefore) {
                             Text("None").tag(Optional<Int>.none)
                             ForEach(1...10, id: \.self) { level in
-                                Text("\(level)").tag(Optional<Int>.some(level))
+                                Text("\(level)").tag(Int?.some(level))
                             }
                         }
                         .pickerStyle(.menu)
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal)
 
@@ -119,7 +119,7 @@ private struct ProtocolSelectionView: View {
                     .padding()
                     .background(Color.orange)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 20)
@@ -144,7 +144,7 @@ private struct ProtocolOptionCard: View {
                     .foregroundColor(isSelected ? .white : .orange)
                     .frame(width: 44, height: 44)
                     .background(isSelected ? Color.orange : Color.orange.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Info
                 VStack(alignment: .leading, spacing: 4) {
@@ -256,12 +256,12 @@ private struct ProgressHeaderView: View {
                     Rectangle()
                         .fill(Color(.tertiarySystemGroupedBackground))
                         .frame(height: 8)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
                         .fill(Color.orange)
                         .frame(width: geometry.size.width * viewModel.progressPercentage, height: 8)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                         .animation(.easeInOut(duration: 0.3), value: viewModel.progressPercentage)
                 }
             }
@@ -336,7 +336,7 @@ private struct ExerciseDetailCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }
@@ -353,7 +353,7 @@ private struct JaegerVideoThumbnailView: View {
                 Rectangle()
                     .fill(Color(.tertiarySystemGroupedBackground))
                     .aspectRatio(16/9, contentMode: .fit)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                 Image(systemName: "play.circle.fill")
                     .font(.system(size: 50))
@@ -371,7 +371,7 @@ private struct JaegerVideoThumbnailView: View {
                             .padding(.vertical, 6)
                             .background(Color.black.opacity(0.7))
                             .foregroundColor(.white)
-                            .cornerRadius(6)
+                            .cornerRadius(CornerRadius.sm)
                             .padding(8)
                     }
                 }
@@ -427,7 +427,7 @@ private struct ExercisePlaceholderView: View {
                     endPoint: .bottomTrailing
                 ))
                 .aspectRatio(16/9, contentMode: .fit)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
 
             VStack(spacing: 8) {
                 Image(systemName: iconForCategory(category))
@@ -482,7 +482,7 @@ private struct TimerSection: View {
                         .foregroundColor(.secondary)
                         .frame(width: 44, height: 44)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(22)
+                        .cornerRadius(CornerRadius.xl)
                 }
                 .accessibilityLabel("Reset timer")
                 .accessibilityHint("Double tap to reset timer to \(totalSeconds) seconds")
@@ -493,7 +493,7 @@ private struct TimerSection: View {
                         .foregroundColor(.white)
                         .frame(width: 64, height: 64)
                         .background(Color.orange)
-                        .cornerRadius(32)
+                        .cornerRadius(CornerRadius.xl)
                 }
                 .accessibilityLabel(isRunning ? "Pause timer" : "Start timer")
                 .accessibilityHint(isRunning ? "Double tap to pause the timer" : "Double tap to start the timer")
@@ -501,7 +501,7 @@ private struct TimerSection: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func timeString(from seconds: Int) -> String {
@@ -543,7 +543,7 @@ private struct CoachingCuesSection: View {
                             .foregroundColor(.white)
                             .frame(width: 24, height: 24)
                             .background(Color.orange)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
 
                         Text(cue)
                             .font(.body)
@@ -554,7 +554,7 @@ private struct CoachingCuesSection: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -588,7 +588,7 @@ private struct CommonMistakesSection: View {
         }
         .padding()
         .background(Color.red.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -614,13 +614,13 @@ private struct TargetMusclesSection: View {
                         .padding(.vertical, 6)
                         .background(Color.blue.opacity(0.1))
                         .foregroundColor(.blue)
-                        .cornerRadius(16)
+                        .cornerRadius(CornerRadius.lg)
                 }
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -685,7 +685,7 @@ private struct NavigationButtonsView: View {
                 .padding()
                 .background(Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(.primary)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canGoPrevious)
             .opacity(viewModel.canGoPrevious ? 1 : 0.5)
@@ -718,7 +718,7 @@ private struct NavigationButtonsView: View {
                 .padding()
                 .background(Color.orange)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .accessibilityLabel(viewModel.isLastExercise ? "Complete routine" : "Next exercise")
             .accessibilityHint(viewModel.isLastExercise ? "Double tap to complete the routine" : "Double tap to go to the next exercise")
@@ -764,7 +764,7 @@ private struct SessionCompleteView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
 
                 // Post-Routine Soreness
                 VStack(alignment: .leading, spacing: 12) {
@@ -780,7 +780,7 @@ private struct SessionCompleteView: View {
                         Picker("Soreness", selection: $viewModel.armSorenessAfter) {
                             Text("None").tag(Optional<Int>.none)
                             ForEach(1...10, id: \.self) { level in
-                                Text("\(level)").tag(Optional<Int>.some(level))
+                                Text("\(level)").tag(Int?.some(level))
                             }
                         }
                         .pickerStyle(.menu)
@@ -788,7 +788,7 @@ private struct SessionCompleteView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
 
                 // Notes
                 VStack(alignment: .leading, spacing: 12) {
@@ -801,7 +801,7 @@ private struct SessionCompleteView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
 
                 // Save Button
                 Button(action: {
@@ -824,7 +824,7 @@ private struct SessionCompleteView: View {
                     .padding()
                     .background(Color.orange)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(viewModel.isSaving)
                 .padding(.horizontal)

@@ -157,7 +157,7 @@ struct ScheduleSessionView: View {
                                 .padding(.vertical, 6)
                                 .background(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? Color.blue : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? .white : .primary)
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -231,7 +231,7 @@ struct ScheduleSessionView: View {
             calendar.date(byAdding: .hour, value: 9, to: baseDate),  // 9:00 AM
             calendar.date(byAdding: .hour, value: 12, to: baseDate), // 12:00 PM
             calendar.date(byAdding: .hour, value: 17, to: baseDate), // 5:00 PM
-            calendar.date(byAdding: .hour, value: 18, to: baseDate), // 6:00 PM
+            calendar.date(byAdding: .hour, value: 18, to: baseDate) // 6:00 PM
         ].compactMap { $0 }
     }
 

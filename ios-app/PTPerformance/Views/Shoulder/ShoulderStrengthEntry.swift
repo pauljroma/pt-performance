@@ -352,7 +352,7 @@ struct ShoulderStrengthEntry: View {
                         .frame(width: geometry.size.width * 0.45)
                 }
                 .frame(height: 24)
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
 
                 // Current value indicator
                 let normalizedRatio = min(max(erIrRatio, 0), 100)

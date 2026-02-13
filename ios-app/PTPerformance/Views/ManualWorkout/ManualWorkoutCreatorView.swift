@@ -127,7 +127,7 @@ class ManualWorkoutCreatorViewModel: ObservableObject {
         for blockType in WorkoutBlockType.allCases {
             guard let exercises = blocks[blockType], !exercises.isEmpty else { continue }
 
-            let blockExercises = exercises.enumerated().map { index, exercise in
+            let blockExercises = exercises.enumerated().map { _, exercise in
                 BlockExercise(
                     id: UUID(),
                     name: exercise.name,
@@ -415,7 +415,7 @@ struct ManualWorkoutCreatorView: View {
                 .fontWeight(.semibold)
                 .padding()
                 .background(Color(.systemBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
                 .accessibilityLabel("Workout name")
                 .accessibilityHint("Enter a name for your workout")
         }
@@ -442,7 +442,7 @@ struct ManualWorkoutCreatorView: View {
             .padding(.vertical, 16)
             .background(viewModel.canStartWorkout ? Color.blue : Color.gray)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(!viewModel.canStartWorkout || viewModel.isStartingWorkout)
         .accessibilityLabel("Start Workout")
@@ -472,7 +472,7 @@ struct BlockSection: View {
                         .foregroundColor(blockType.color)
                         .frame(width: 32, height: 32)
                         .background(blockType.color.opacity(0.15))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
 
                     // Block Name
                     VStack(alignment: .leading, spacing: 2) {
@@ -542,7 +542,7 @@ struct BlockSection: View {
                 .background(Color(.systemBackground))
             }
         }
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }

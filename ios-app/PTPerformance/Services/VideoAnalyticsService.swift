@@ -168,9 +168,7 @@ class VideoAnalyticsService: ObservableObject {
                 .insert(insertData)
                 .execute()
 
-            #if DEBUG
-            print("[VideoAnalytics] Logged watch event: \(event.exerciseTemplateId), duration: \(event.watchDurationSeconds)s, completed: \(event.completed)")
-            #endif
+            DebugLogger.shared.log("[VideoAnalytics] Logged watch event: \(event.exerciseTemplateId), duration: \(event.watchDurationSeconds)s, completed: \(event.completed)", level: .diagnostic)
         } catch {
             errorLogger.logError(
                 error,
@@ -235,9 +233,7 @@ class VideoAnalyticsService: ObservableObject {
                 .eq("id", value: historyId.uuidString)
                 .execute()
 
-            #if DEBUG
-            print("[VideoAnalytics] Updated watch event \(historyId): duration=\(duration)s, completed=\(completed)")
-            #endif
+            DebugLogger.shared.log("[VideoAnalytics] Updated watch event \(historyId): duration=\(duration)s, completed=\(completed)", level: .diagnostic)
         } catch {
             errorLogger.logError(
                 error,

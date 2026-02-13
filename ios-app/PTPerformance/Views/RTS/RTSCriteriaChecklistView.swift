@@ -259,7 +259,7 @@ struct RTSCriterionRow: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.red)
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
                     }
 

@@ -65,7 +65,7 @@ struct KPITrendChart: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.8)) {
                 isAnimating = true
@@ -115,7 +115,7 @@ struct KPITrendChart: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background((trend == .stable ? Color.gray : (isPositive ? Color.green : Color.red)).opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Chart View
@@ -174,7 +174,7 @@ struct KPITrendChart: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.green.opacity(0.1))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
             }
         }
@@ -270,7 +270,7 @@ struct KPITrendChart: View {
         }
         .padding(10)
         .background(trendColor.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 
@@ -487,7 +487,7 @@ struct MultiMetricTrendChart: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -530,7 +530,7 @@ struct KPITrendChart_Previews: PreviewProvider {
                 CompactTrendChart(data: sampleData, trendColor: .green, showPoints: true)
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
             .padding()
         }

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ExerciseVideoDemoView.swift
 //  PTPerformance
@@ -134,7 +135,7 @@ struct ExerciseVideoDemoView: View {
         .frame(height: 200)
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 
@@ -158,7 +159,7 @@ struct ExerciseVideoDemoView: View {
         .frame(height: 200)
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
 

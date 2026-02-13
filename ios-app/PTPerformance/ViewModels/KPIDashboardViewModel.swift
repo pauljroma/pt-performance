@@ -264,27 +264,12 @@ final class KPIDashboardViewModel: ObservableObject {
 
 /// Alert for KPI guardrail breaches
 struct KPIAlert: Identifiable, Sendable {
-    let id: UUID
+    var id: String { "\(guardrail)-\(currentValue)-\(targetValue)" }
     let guardrail: String
     let currentValue: String
     let targetValue: String
     let severity: KPIStatus
     let message: String
-
-    init(
-        guardrail: String,
-        currentValue: String,
-        targetValue: String,
-        severity: KPIStatus,
-        message: String
-    ) {
-        self.id = UUID()
-        self.guardrail = guardrail
-        self.currentValue = currentValue
-        self.targetValue = targetValue
-        self.severity = severity
-        self.message = message
-    }
 }
 
 // MARK: - ViewModel Extensions

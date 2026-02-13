@@ -251,7 +251,7 @@ struct CompactCitationCard: View {
                     .foregroundColor(.white)
                     .frame(width: 18, height: 18)
                     .background(citation.confidence.color)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
 
                 // Timestamp
                 Text(citation.relativeTimeDescription)
@@ -355,7 +355,7 @@ struct InlineCitationBadge: View {
             .padding(.horizontal, 4)
             .padding(.vertical, 2)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(4)
+            .cornerRadius(CornerRadius.xs)
         }
         .buttonStyle(.plain)
     }

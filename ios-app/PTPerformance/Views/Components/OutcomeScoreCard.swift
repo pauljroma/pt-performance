@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  OutcomeScoreCard.swift
 //  PTPerformance
@@ -34,9 +35,9 @@ struct OutcomeScoreCard: View {
                     .padding(.horizontal)
 
                 // Main content
-                VStack(spacing: 16) {
+                VStack(spacing: Spacing.md) {
                     // Score gauge and change indicator
-                    HStack(alignment: .center, spacing: 24) {
+                    HStack(alignment: .center, spacing: Spacing.lg) {
                         scoreGauge
                         changeFromBaselineSection
                     }
@@ -46,7 +47,7 @@ struct OutcomeScoreCard: View {
                         Divider()
 
                         // Severity and MCID indicators
-                        HStack(spacing: 16) {
+                        HStack(spacing: Spacing.md) {
                             severityIndicator
                             Spacer()
                             mcidIndicator
@@ -56,7 +57,7 @@ struct OutcomeScoreCard: View {
                 .padding()
             }
             .background(cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
             .adaptiveCardShadow(radius: 6, y: 3)
         }
         .buttonStyle(.plain)
@@ -67,7 +68,7 @@ struct OutcomeScoreCard: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Measure type icon
             ZStack {
                 Circle()
@@ -153,7 +154,7 @@ struct OutcomeScoreCard: View {
     // MARK: - Change From Baseline Section
 
     private var changeFromBaselineSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             // Change value
             if let change = outcomeMeasure.changeFromPrevious {
                 VStack(alignment: .leading, spacing: 4) {
@@ -217,7 +218,7 @@ struct OutcomeScoreCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.xs) {
                 // Severity color bar
                 RoundedRectangle(cornerRadius: 2)
                     .fill(outcomeMeasure.severityLevel.color)
@@ -287,10 +288,10 @@ struct OutcomeScoreCard: View {
     // MARK: - Helper Views
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: CornerRadius.lg)
             .fill(Color(.systemBackground))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .stroke(outcomeMeasure.measureType.color.opacity(0.2), lineWidth: 1)
             )
     }
@@ -392,7 +393,7 @@ struct OutcomeScoreCardCompact: View {
         Button {
             onTap?()
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Score circle
                 ZStack {
                     Circle()
@@ -449,11 +450,13 @@ struct OutcomeScoreCardCompact: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemBackground))
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(outcomeMeasure.measureType.rawValue) score: \(outcomeMeasure.formattedScore)")
+        .accessibilityHint("Double tap to view details")
     }
 
     private var scoreProgress: Double {
@@ -534,7 +537,7 @@ struct OutcomeScoreBadge: View {
 }
 
 #Preview("Compact Cards") {
-    VStack(spacing: 12) {
+    VStack(spacing: Spacing.sm) {
         OutcomeScoreCardCompact(
             outcomeMeasure: OutcomeMeasure.sample,
             onTap: { print("Tapped") }
@@ -549,7 +552,7 @@ struct OutcomeScoreBadge: View {
 }
 
 #Preview("Score Badges") {
-    HStack(spacing: 8) {
+    HStack(spacing: Spacing.xs) {
         OutcomeScoreBadge(measureType: .LEFS, score: 68, meetsMcid: true)
         OutcomeScoreBadge(measureType: .DASH, score: 35, meetsMcid: false)
         OutcomeScoreBadge(measureType: .NPRS, score: 4, meetsMcid: false)

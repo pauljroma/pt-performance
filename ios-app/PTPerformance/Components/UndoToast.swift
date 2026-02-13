@@ -63,12 +63,15 @@ struct UndoToastView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.2))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
             }
             .disabled(isUndoing)
 
             // Dismiss button
-            Button(action: onDismiss) {
+            Button(action: {
+                HapticFeedback.light()
+                onDismiss()
+            }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white.opacity(0.7))
@@ -93,7 +96,7 @@ struct UndoToastView: View {
                             .animation(.linear(duration: expirationSeconds), value: progress)
                     }
                 }
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
         )
         .shadow(color: Color.black.opacity(0.2), radius: 8, x: 0, y: 4)

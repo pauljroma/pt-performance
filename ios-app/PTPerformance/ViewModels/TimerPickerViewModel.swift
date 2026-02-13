@@ -16,6 +16,20 @@ class TimerPickerViewModel: ObservableObject {
     private let timerService: IntervalTimerService
     private let patientId: UUID
 
+    // MARK: - Cache
+
+    /// Cache duration in seconds (5 minutes)
+    private static let cacheDuration: TimeInterval = 300
+
+    /// Last fetch time for cache invalidation
+    private var lastFetchTime: Date?
+
+    /// Whether cache is still valid
+    private var isCacheValid: Bool {
+        guard let lastFetch = lastFetchTime else { return false }
+        return Date().timeIntervalSince(lastFetch) < Self.cacheDuration
+    }
+
     // MARK: - Data State
 
     /// All timer presets loaded from database
@@ -100,8 +114,15 @@ class TimerPickerViewModel: ObservableObject {
 
     // MARK: - Load Presets
 
-    /// Load all timer presets from database
+    /// Load all timer presets from database (with caching)
     func loadPresets() async {
+        // Return cached data if still valid
+        if isCacheValid && !allPresets.isEmpty {
+            DebugLogger.shared.info("TIMER_SCREEN", "Using cached presets (\(allPresets.count) presets)")
+            applyFilters()
+            return
+        }
+
         isLoading = true
         showError = false
 
@@ -114,6 +135,7 @@ class TimerPickerViewModel: ObservableObject {
 
         do {
             allPresets = try await timerService.fetchPresets()
+            lastFetchTime = Date()
             applyFilters()
 
             DebugLogger.shared.success("TIMER_SCREEN", """
@@ -153,13 +175,11 @@ class TimerPickerViewModel: ObservableObject {
         selectedCategory = category
         applyFilters()
 
-        #if DEBUG
         if let category = category {
-            print("📁 Filtered to category: \(category.displayName)")
+            DebugLogger.shared.log("[TimerPicker] Filtered to category: \(category.displayName)", level: .diagnostic)
         } else {
-            print("📁 Cleared category filter")
+            DebugLogger.shared.log("[TimerPicker] Cleared category filter", level: .diagnostic)
         }
-        #endif
     }
 
     /// Toggle category selection (select if different, clear if same)
@@ -235,9 +255,7 @@ class TimerPickerViewModel: ObservableObject {
 
         filteredPresets = results
 
-        #if DEBUG
-        print("🔍 Filtered: \(filteredPresets.count) results (category: \(selectedCategory?.rawValue ?? "all"), search: '\(searchText)')")
-        #endif
+        DebugLogger.shared.log("[TimerPicker] Filtered: \(filteredPresets.count) results (category: \(selectedCategory?.rawValue ?? "all"), search: '\(searchText)')", level: .diagnostic)
     }
 
     // MARK: - Preset Selection
@@ -246,9 +264,7 @@ class TimerPickerViewModel: ObservableObject {
     func selectPreset(_ preset: TimerPreset) {
         selectedPreset = preset
 
-        #if DEBUG
-        print("✅ Selected preset: \(preset.name)")
-        #endif
+        DebugLogger.shared.log("[TimerPicker] Selected preset: \(preset.name)", level: .diagnostic)
     }
 
     /// Show preset detail
@@ -277,9 +293,7 @@ class TimerPickerViewModel: ObservableObject {
             // Navigate to active timer
             showActiveTimer = true
 
-            #if DEBUG
-            print("▶️ Started timer: \(preset.name)")
-            #endif
+            DebugLogger.shared.log("[TimerPicker] Started timer: \(preset.name)", level: .success)
 
         } catch {
             errorMessage = "Unable to start this timer. Please try again."
@@ -311,17 +325,20 @@ class TimerPickerViewModel: ObservableObject {
     /// Show custom timer builder
     func showCustomTimerBuilder() {
         showCustomBuilder = true
-
-        #if DEBUG
-        print("🔨 Opening custom timer builder")
-        #endif
+        DebugLogger.shared.log("[TimerPicker] Opening custom timer builder", level: .diagnostic)
     }
 
     // MARK: - Refresh
 
-    /// Refresh presets from database
+    /// Refresh presets from database (bypasses cache)
     func refresh() async {
+        lastFetchTime = nil  // Invalidate cache to force fresh fetch
         await loadPresets()
+    }
+
+    /// Invalidate the cache to force a refresh on next load
+    func invalidateCache() {
+        lastFetchTime = nil
     }
 
     // MARK: - Sorting

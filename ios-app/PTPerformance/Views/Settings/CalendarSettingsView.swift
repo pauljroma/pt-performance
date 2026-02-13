@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  CalendarSettingsView.swift
 //  PTPerformance
@@ -141,7 +142,7 @@ struct CalendarSettingsView: View {
     }
 
     private var permissionColor: Color {
-        calendarService.hasCalendarAccess ? .green : .orange
+        calendarService.hasCalendarAccess ? DesignTokens.statusSuccess : DesignTokens.statusWarning
     }
 
     private var permissionTitle: String {
@@ -328,7 +329,7 @@ struct CalendarSettingsView: View {
             if let result = calendarService.lastSyncResult, result.hasErrors {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(DesignTokens.statusWarning)
                         .accessibilityHidden(true)
                     Text("Some events failed to sync")
                         .font(.caption)

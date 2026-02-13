@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  WorkoutModificationCard.swift
 //  PTPerformance
@@ -62,7 +63,7 @@ struct WorkoutModificationCard: View {
             actionButtons
         }
         .background(cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .adaptiveCardShadow(radius: 8, y: 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Workout modification suggestion")
@@ -71,7 +72,7 @@ struct WorkoutModificationCard: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Icon
             ZStack {
                 Circle()
@@ -84,12 +85,12 @@ struct WorkoutModificationCard: View {
             }
 
             // Title and trigger
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                 Text("Suggested Adjustment")
                     .font(.headline)
                     .foregroundColor(.primary)
 
-                HStack(spacing: 4) {
+                HStack(spacing: Spacing.xxs) {
                     Text(modification.trigger.displayName)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -115,11 +116,12 @@ struct WorkoutModificationCard: View {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
-                    .padding(8)
+                    .padding(Spacing.xs)
                     .background(Color(.secondarySystemBackground))
                     .clipShape(Circle())
             }
             .accessibilityLabel(isExpanded ? "Collapse details" : "Expand details")
+            .accessibilityHint(isExpanded ? "Hides modification details" : "Shows modification details")
         }
         .padding()
     }
@@ -127,14 +129,14 @@ struct WorkoutModificationCard: View {
     // MARK: - Suggestion Section
 
     private var suggestionSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             // Primary suggestion
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: Spacing.sm) {
                 Image(systemName: "lightbulb.fill")
                     .foregroundColor(.yellow)
                     .font(.system(size: 16))
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(modification.primaryDisplayText)
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.primary)
@@ -148,7 +150,7 @@ struct WorkoutModificationCard: View {
 
             // Session name if available
             if let sessionName = modification.sessionName {
-                HStack(spacing: 8) {
+                HStack(spacing: Spacing.xs) {
                     Image(systemName: "calendar")
                         .foregroundColor(.secondary)
                         .font(.system(size: 12))
@@ -165,20 +167,20 @@ struct WorkoutModificationCard: View {
     // MARK: - Explanation Section
 
     private var explanationSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             if let explanation = modification.detailedExplanation {
                 Text(explanation)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .padding()
                     .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
             }
 
             // Trigger explanation
-            HStack(alignment: .top, spacing: 8) {
+            HStack(alignment: .top, spacing: Spacing.xs) {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .font(.system(size: 14))
 
                 Text(modification.trigger.description)
@@ -192,7 +194,7 @@ struct WorkoutModificationCard: View {
     // MARK: - Exercise Changes Section
 
     private func exerciseChangesSection(_ changes: [ExerciseModificationDetail]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Exercise Changes")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
@@ -209,10 +211,10 @@ struct WorkoutModificationCard: View {
                         .font(.caption)
                         .foregroundColor(changeColor(for: change))
                 }
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
+                .padding(.vertical, Spacing.xxs)
+                .padding(.horizontal, Spacing.xs)
                 .background(Color(.tertiarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xs))
             }
 
             if changes.count > 3 {
@@ -226,7 +228,7 @@ struct WorkoutModificationCard: View {
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Decline button
             Button {
                 performAction(onDecline)
@@ -238,12 +240,13 @@ struct WorkoutModificationCard: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.sm)
                 .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
             }
             .disabled(isProcessing)
             .accessibilityLabel("Decline modification and train at full intensity")
+            .accessibilityHint("Ignores the suggested adjustment and trains at full intensity")
 
             // Modify button (optional)
             if let onModify = onModify {
@@ -257,12 +260,13 @@ struct WorkoutModificationCard: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundColor(.primary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color(.tertiarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
                 }
                 .disabled(isProcessing)
                 .accessibilityLabel("Customize the modification")
+                .accessibilityHint("Opens options to customize the suggested adjustment")
             }
 
             // Accept button
@@ -281,12 +285,13 @@ struct WorkoutModificationCard: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.sm)
                 .background(acceptButtonColor)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
             }
             .disabled(isProcessing)
             .accessibilityLabel("Accept the suggested modification")
+            .accessibilityHint("Applies the suggested workout adjustment")
         }
         .padding()
     }
@@ -294,10 +299,10 @@ struct WorkoutModificationCard: View {
     // MARK: - Helper Views
 
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: CornerRadius.lg)
             .fill(Color(.systemBackground))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .stroke(triggerColor.opacity(0.3), lineWidth: 1)
             )
     }
@@ -311,7 +316,7 @@ struct WorkoutModificationCard: View {
         case .skipWorkout, .triggerDeload:
             return .red
         case .insertRecoveryDay:
-            return .blue
+            return .modusCyan
         case .workoutDelay:
             return .orange
         default:
@@ -324,7 +329,7 @@ struct WorkoutModificationCard: View {
         case .loadAdjustment where (modification.loadAdjustmentPercentage ?? 0) > 0:
             return .green
         default:
-            return .blue
+            return .modusCyan
         }
     }
 
@@ -363,7 +368,7 @@ struct WorkoutModificationCardCompact: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Icon
                 Image(systemName: modification.modificationType.icon)
                     .font(.system(size: 16, weight: .medium))
@@ -373,7 +378,7 @@ struct WorkoutModificationCardCompact: View {
                     .clipShape(Circle())
 
                 // Content
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                     Text("Adjustment Suggested")
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.primary)
@@ -392,11 +397,11 @@ struct WorkoutModificationCardCompact: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Workout adjustment suggested: \(modification.primaryDisplayText)")
-        .accessibilityHint("Tap to view details and respond")
+        .accessibilityHint("Double tap to view details and respond")
     }
 
     private var iconColor: Color {

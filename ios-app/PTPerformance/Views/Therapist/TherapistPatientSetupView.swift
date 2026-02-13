@@ -78,7 +78,7 @@ struct TherapistPatientSetupView: View {
                                 .frame(height: 50)
                                 .frame(maxWidth: .infinity)
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                                .cornerRadius(CornerRadius.md)
                             }
                         }
 
@@ -103,7 +103,7 @@ struct TherapistPatientSetupView: View {
                             .frame(height: 50)
                             .frame(maxWidth: .infinity)
                             .background(viewModel.canContinue ? Color.modusCyan : Color.gray)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                         }
                         .disabled(!viewModel.canContinue || viewModel.isLoading)
                     }
@@ -148,12 +148,12 @@ struct PatientSetupProgressView: View {
                     Rectangle()
                         .fill(Color(.systemGray5))
                         .frame(height: 4)
-                        .cornerRadius(2)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
                         .fill(Color.modusCyan)
                         .frame(width: geometry.size.width * progress, height: 4)
-                        .cornerRadius(2)
+                        .cornerRadius(CornerRadius.xs)
                         .animation(.easeInOut(duration: 0.3), value: progress)
                 }
             }
@@ -196,7 +196,7 @@ struct BasicInfoStepView: View {
                                 .textContentType(.givenName)
                                 .padding()
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(10)
+                                .cornerRadius(CornerRadius.sm)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
@@ -207,7 +207,7 @@ struct BasicInfoStepView: View {
                                 .textContentType(.familyName)
                                 .padding()
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(10)
+                                .cornerRadius(CornerRadius.sm)
                         }
                     }
 
@@ -222,7 +222,7 @@ struct BasicInfoStepView: View {
                             .autocapitalization(.none)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
 
                     // Sport picker
@@ -246,7 +246,7 @@ struct BasicInfoStepView: View {
                             }
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                         }
                     }
 
@@ -258,7 +258,7 @@ struct BasicInfoStepView: View {
                         TextField("e.g., Pitcher, Point Guard", text: $viewModel.position)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
 
                     // Injury type
@@ -269,7 +269,7 @@ struct BasicInfoStepView: View {
                         TextField("e.g., UCL Reconstruction, ACL Tear", text: $viewModel.injuryType)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
 
                     // Target level picker
@@ -293,7 +293,7 @@ struct BasicInfoStepView: View {
                             }
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                         }
                     }
                 }
@@ -352,7 +352,7 @@ struct TherapistModeCard: View {
                     .foregroundColor(isSelected ? .white : .modusCyan)
                     .frame(width: 60, height: 60)
                     .background(isSelected ? Color.modusCyan : Color.modusCyan.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(mode.displayName)
@@ -375,7 +375,7 @@ struct TherapistModeCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
@@ -445,7 +445,7 @@ struct TherapistGoalSelectionView: View {
                         }
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
 
                     if showCustomGoal {
@@ -453,12 +453,12 @@ struct TherapistGoalSelectionView: View {
                             TextField("Custom goal title", text: $customGoalTitle)
                                 .padding()
                                 .background(Color(.tertiarySystemGroupedBackground))
-                                .cornerRadius(10)
+                                .cornerRadius(CornerRadius.sm)
 
                             TextField("Description (optional)", text: $customGoalDescription)
                                 .padding()
                                 .background(Color(.tertiarySystemGroupedBackground))
-                                .cornerRadius(10)
+                                .cornerRadius(CornerRadius.sm)
                         }
                         .padding(.horizontal, 4)
                     }
@@ -488,7 +488,7 @@ struct TherapistGoalCard: View {
                     .foregroundColor(isSelected ? .white : goal.color)
                     .frame(width: 48, height: 48)
                     .background(isSelected ? goal.color : goal.color.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(goal.title)
@@ -509,7 +509,7 @@ struct TherapistGoalCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2)
@@ -553,7 +553,7 @@ struct TrainingContextStepView: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Session duration stepper
                     HStack {
@@ -570,7 +570,7 @@ struct TrainingContextStepView: View {
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Training notes
                     VStack(alignment: .leading, spacing: 4) {
@@ -583,11 +583,11 @@ struct TrainingContextStepView: View {
                             .frame(minHeight: 80)
                             .padding(8)
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Restrictions
                     VStack(alignment: .leading, spacing: 4) {
@@ -604,11 +604,11 @@ struct TrainingContextStepView: View {
                             .frame(minHeight: 60)
                             .padding(8)
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                     // Precautions
                     VStack(alignment: .leading, spacing: 4) {
@@ -625,11 +625,11 @@ struct TrainingContextStepView: View {
                             .frame(minHeight: 60)
                             .padding(8)
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(10)
+                            .cornerRadius(CornerRadius.sm)
                     }
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal, 20)
 
@@ -737,7 +737,7 @@ struct ReviewSection<Content: View>: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -789,7 +789,7 @@ struct PatientCreatedStepView: View {
                         .foregroundColor(.modusCyan)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
 
                     Button(action: {
                         viewModel.copyLinkingCode()
@@ -823,7 +823,7 @@ struct PatientCreatedStepView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .padding(.horizontal, 20)
 
             Spacer()

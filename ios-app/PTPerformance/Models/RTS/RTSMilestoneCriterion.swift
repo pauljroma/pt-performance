@@ -344,7 +344,7 @@ struct RTSTestResultInput: Codable {
         guard value != nil else {
             throw RTSCriterionError.invalidInput("Value is required")
         }
-        guard unit != nil && !unit!.isEmpty else {
+        guard let unit = unit, !unit.isEmpty else {
             throw RTSCriterionError.invalidInput("Unit is required")
         }
     }

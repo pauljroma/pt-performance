@@ -4,27 +4,27 @@ import Foundation
 /// Provides categorization and recommendations based on readiness scores
 struct ReadinessScoreHelper {
     let score: Double
-    
+
     /// Initialize with a score
     init(score: Double) {
         self.score = score
     }
-    
+
     /// Get the readiness category for this score
     var category: ReadinessCategory {
         return ReadinessCategory.category(for: score)
     }
-    
+
     /// Get the color name for this score
     var colorName: String {
         return category.colorName
     }
-    
+
     /// Get the recommendation for this score
     var recommendation: String {
         return category.recommendation
     }
-    
+
     /// Get the formatted score text
     var scoreText: String {
         return String(format: "%.1f", score)
@@ -42,9 +42,9 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
     case moderate = "Moderate"
     case low = "Low"
     case poor = "Poor"
-    
+
     // MARK: - Score Classification
-    
+
     /// Determine the readiness category for a given score
     /// - Parameter score: Readiness score (0-100)
     /// - Returns: The appropriate readiness category
@@ -62,9 +62,9 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return .poor
         }
     }
-    
+
     // MARK: - Display Properties
-    
+
     /// Color name associated with this category
     var colorName: String {
         switch self {
@@ -80,12 +80,12 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return "red"
         }
     }
-    
+
     /// Display name for this category
     var displayName: String {
         return rawValue
     }
-    
+
     /// Training recommendation for this category
     var recommendation: String {
         switch self {
@@ -101,7 +101,7 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return "Rest recommended, avoid intense training"
         }
     }
-    
+
     /// Detailed description of the score range
     var scoreRange: String {
         switch self {
@@ -117,14 +117,14 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return "0-44"
         }
     }
-    
+
     /// Full description with range and recommendation
     var fullDescription: String {
         return "\(displayName) (\(scoreRange)): \(recommendation)"
     }
-    
+
     // MARK: - Training Modifications
-    
+
     /// Suggested volume adjustment percentage
     var volumeAdjustment: Double {
         switch self {
@@ -140,7 +140,7 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return -0.50    // -50% or rest
         }
     }
-    
+
     /// Suggested intensity adjustment percentage
     var intensityAdjustment: Double {
         switch self {
@@ -156,12 +156,12 @@ enum ReadinessCategory: String, Codable, CaseIterable, Sendable {
             return -0.40    // -40% or rest
         }
     }
-    
+
     /// Whether training should be modified
     var shouldModifyTraining: Bool {
         return self != .elite && self != .high
     }
-    
+
     /// Whether rest is recommended
     var recommendsRest: Bool {
         return self == .poor
@@ -175,7 +175,7 @@ extension ReadinessCategory {
     static var allOrdered: [ReadinessCategory] {
         return [.elite, .high, .moderate, .low, .poor]
     }
-    
+
     /// Sample category
     static var sample: ReadinessCategory {
         return .high
@@ -191,7 +191,7 @@ extension ReadinessScoreHelper {
         ReadinessScoreHelper(score: 50.0),  // Low
         ReadinessScoreHelper(score: 35.0)   // Poor
     ]
-    
+
     /// Sample score helper
     static var sample: ReadinessScoreHelper {
         return samples[1]  // High category

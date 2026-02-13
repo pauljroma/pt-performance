@@ -31,6 +31,10 @@ final class ReadinessScoreViewModel: ObservableObject {
         setupBindings()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     private func setupBindings() {
         // Sync with service state
         service.$currentScore

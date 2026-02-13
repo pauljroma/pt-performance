@@ -106,6 +106,7 @@ struct WorkoutCompletionPayload: Codable {
 // MARK: - Optimistic State Publisher
 
 /// Observable state for a single exercise during workout execution
+@MainActor
 class OptimisticExerciseState: ObservableObject, Identifiable {
     let id: UUID
     let sessionExerciseId: UUID
@@ -561,7 +562,6 @@ class OptimisticUpdateManager: ObservableObject {
         case .setCompletion:
             // Set completions are aggregated into exercise completion, no direct API call needed
             _ = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
-            break
 
         case .exerciseCompletion:
             let payload = try JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload)
@@ -625,24 +625,35 @@ class OptimisticUpdateManager: ObservableObject {
 
     /// Handle a failed update by rolling back UI state
     private func handleFailedUpdate(_ update: PendingOptimisticUpdate) {
+        let logger = DebugLogger.shared
+
         switch update.type {
         case .exerciseCompletion:
-            if let payload = try? JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload),
-               let snapshot = stateSnapshots[payload.sessionExerciseId],
-               let state = exerciseStates[payload.sessionExerciseId] {
-                state.restore(from: snapshot)
-                state.syncStatus = .failed
-                exerciseStateChanged.send(payload.sessionExerciseId)
-                DebugLogger.shared.log("🔄 Rolled back exercise state for \(payload.sessionExerciseId)", level: .warning)
+            do {
+                let payload = try JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload)
+                if let snapshot = stateSnapshots[payload.sessionExerciseId],
+                   let state = exerciseStates[payload.sessionExerciseId] {
+                    state.restore(from: snapshot)
+                    state.syncStatus = .failed
+                    exerciseStateChanged.send(payload.sessionExerciseId)
+                    logger.log("[OptimisticUpdate] Rolled back exercise state for \(payload.sessionExerciseId)", level: .warning)
+                }
+            } catch {
+                logger.log("[OptimisticUpdate] Failed to decode exercise completion payload for rollback: \(error.localizedDescription)", level: .error)
             }
 
         case .setCompletion:
-            if let payload = try? JSONDecoder().decode(SetCompletionPayload.self, from: update.payload),
-               let snapshot = stateSnapshots[payload.sessionExerciseId],
-               let state = exerciseStates[payload.sessionExerciseId] {
-                state.restore(from: snapshot)
-                state.syncStatus = .failed
-                exerciseStateChanged.send(payload.sessionExerciseId)
+            do {
+                let payload = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
+                if let snapshot = stateSnapshots[payload.sessionExerciseId],
+                   let state = exerciseStates[payload.sessionExerciseId] {
+                    state.restore(from: snapshot)
+                    state.syncStatus = .failed
+                    exerciseStateChanged.send(payload.sessionExerciseId)
+                    logger.log("[OptimisticUpdate] Rolled back set state for \(payload.sessionExerciseId)", level: .warning)
+                }
+            } catch {
+                logger.log("[OptimisticUpdate] Failed to decode set completion payload for rollback: \(error.localizedDescription)", level: .error)
             }
 
         default:
@@ -652,16 +663,26 @@ class OptimisticUpdateManager: ObservableObject {
 
     /// Update exercise sync status based on update type
     private func updateExerciseSyncStatus(for update: PendingOptimisticUpdate, status: OptimisticExerciseState.SyncStatus) {
+        let logger = DebugLogger.shared
+
         switch update.type {
         case .exerciseCompletion:
-            if let payload = try? JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload),
-               let state = exerciseStates[payload.sessionExerciseId] {
-                state.syncStatus = status
+            do {
+                let payload = try JSONDecoder().decode(ExerciseCompletionPayload.self, from: update.payload)
+                if let state = exerciseStates[payload.sessionExerciseId] {
+                    state.syncStatus = status
+                }
+            } catch {
+                logger.log("[OptimisticUpdate] Failed to decode exercise payload for status update: \(error.localizedDescription)", level: .warning)
             }
         case .setCompletion:
-            if let payload = try? JSONDecoder().decode(SetCompletionPayload.self, from: update.payload),
-               let state = exerciseStates[payload.sessionExerciseId] {
-                state.syncStatus = status
+            do {
+                let payload = try JSONDecoder().decode(SetCompletionPayload.self, from: update.payload)
+                if let state = exerciseStates[payload.sessionExerciseId] {
+                    state.syncStatus = status
+                }
+            } catch {
+                logger.log("[OptimisticUpdate] Failed to decode set payload for status update: \(error.localizedDescription)", level: .warning)
             }
         default:
             break

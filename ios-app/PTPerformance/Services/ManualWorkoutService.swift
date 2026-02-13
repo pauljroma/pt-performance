@@ -231,6 +231,7 @@ struct StartWorkoutUpdate: Encodable {
 // MARK: - Service
 
 /// Service for managing manual workout templates and sessions
+
 class ManualWorkoutService: ObservableObject {
     private let supabase: PTSupabaseClient
 

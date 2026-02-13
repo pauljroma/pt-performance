@@ -379,11 +379,29 @@ struct BiomarkerSummary: Identifiable, Equatable {
 final class BiomarkerDashboardViewModel: ObservableObject {
     // MARK: - Published Properties
 
-    @Published var biomarkerSummaries: [BiomarkerSummary] = []
+    @Published var biomarkerSummaries: [BiomarkerSummary] = [] {
+        didSet {
+            // Invalidate caches when data changes
+            cachedFilteredBiomarkers = nil
+            cachedGroupedBiomarkers = nil
+        }
+    }
     @Published var isLoading = false
     @Published var error: String?
-    @Published var selectedCategory: BiomarkerCategory?
-    @Published var searchText = ""
+    @Published var selectedCategory: BiomarkerCategory? {
+        didSet {
+            // Invalidate cached filtered results when category changes
+            cachedFilteredBiomarkers = nil
+            cachedGroupedBiomarkers = nil
+        }
+    }
+    @Published var searchText = "" {
+        didSet {
+            // Invalidate cached filtered results when search text changes
+            cachedFilteredBiomarkers = nil
+            cachedGroupedBiomarkers = nil
+        }
+    }
 
     // Training Impact State
     @Published var trainingImpacts: [TrainingImpact] = []
@@ -399,11 +417,22 @@ final class BiomarkerDashboardViewModel: ObservableObject {
     private let labService = LabResultService.shared
     private var hasLoadedInitialData = false
 
+    // Performance: Cache expensive computed properties
+    private var cachedFilteredBiomarkers: [BiomarkerSummary]?
+    private var cachedGroupedBiomarkers: [BiomarkerCategory: [BiomarkerSummary]]?
+
     // MARK: - Computed Properties
 
     /// Biomarkers grouped by category
+    /// Uses caching to avoid redundant grouping operations
     var groupedBiomarkers: [BiomarkerCategory: [BiomarkerSummary]] {
-        Dictionary(grouping: filteredBiomarkers, by: { $0.category })
+        if let cached = cachedGroupedBiomarkers {
+            return cached
+        }
+
+        let grouped = Dictionary(grouping: filteredBiomarkers, by: { $0.category })
+        cachedGroupedBiomarkers = grouped
+        return grouped
     }
 
     /// Categories with biomarkers, sorted
@@ -413,7 +442,12 @@ final class BiomarkerDashboardViewModel: ObservableObject {
     }
 
     /// Filtered biomarkers based on search and category
+    /// Uses caching to avoid redundant filtering operations
     var filteredBiomarkers: [BiomarkerSummary] {
+        if let cached = cachedFilteredBiomarkers {
+            return cached
+        }
+
         var result = biomarkerSummaries
 
         if let category = selectedCategory {
@@ -421,12 +455,14 @@ final class BiomarkerDashboardViewModel: ObservableObject {
         }
 
         if !searchText.isEmpty {
+            let lowercasedSearch = searchText.lowercased()
             result = result.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText) ||
-                $0.displayName.localizedCaseInsensitiveContains(searchText)
+                $0.name.lowercased().contains(lowercasedSearch) ||
+                $0.displayName.lowercased().contains(lowercasedSearch)
             }
         }
 
+        cachedFilteredBiomarkers = result
         return result
     }
 

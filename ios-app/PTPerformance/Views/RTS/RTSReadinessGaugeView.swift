@@ -191,7 +191,7 @@ struct RTSReadinessGaugeView: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(factor.severity.color.opacity(0.15))
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
                         }
 
                         if let notes = factor.notes {

@@ -438,13 +438,13 @@ struct PatientExceptionCard_Previews: PreviewProvider {
             VStack(spacing: Spacing.lg) {
                 PatientExceptionCard(
                     exception: sampleException,
-                    onTap: { print("Tapped") },
-                    onNavigate: { print("Navigate") }
+                    onTap: { },
+                    onNavigate: { }
                 )
 
                 CompactExceptionRow(
                     exception: sampleException,
-                    onTap: { print("Compact tapped") }
+                    onTap: { }
                 )
                 .padding()
                 .background(Color(.systemBackground))

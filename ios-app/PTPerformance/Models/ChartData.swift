@@ -12,10 +12,11 @@ import Foundation
 
 /// Data point for volume chart (total weight lifted over time)
 struct VolumeDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let date: Date
     let totalVolume: Double // Total weight in pounds
     let sessionCount: Int
+
+    var id: String { "\(date.timeIntervalSince1970)-\(totalVolume)" }
 
     var volumeInKg: Double {
         totalVolume * 0.453592
@@ -48,12 +49,13 @@ struct VolumeChartData {
 
 /// Data point for strength progression chart
 struct StrengthDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let date: Date
     let exerciseName: String
     let weight: Double
     let reps: Int
     let estimatedOneRepMax: Double
+
+    var id: String { "\(date.timeIntervalSince1970)-\(exerciseName)-\(weight)" }
 
     var formattedWeight: String {
         String(format: "%.1f lbs", weight)
@@ -87,12 +89,13 @@ struct StrengthChartData {
 
 /// Data point for workout consistency chart
 struct ConsistencyDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let weekStart: Date
     let weekEnd: Date
     let scheduledSessions: Int
     let completedSessions: Int
     let completionRate: Double
+
+    var id: String { "\(weekStart.timeIntervalSince1970)-\(weekEnd.timeIntervalSince1970)" }
 
     var weekLabel: String {
         let formatter = DateFormatter()
@@ -128,13 +131,14 @@ struct ConsistencyChartData {
 
 /// Personal record achievement
 struct PersonalRecord: Identifiable, Hashable {
-    let id = UUID()
     let exerciseId: String
     let exerciseName: String
     let recordType: RecordType
     let value: Double
     let achievedDate: Date
     let previousRecord: Double?
+
+    var id: String { "\(exerciseId)-\(recordType.rawValue)-\(achievedDate.timeIntervalSince1970)" }
 
     enum RecordType: String, Codable {
         case maxWeight = "max_weight"
@@ -214,23 +218,25 @@ struct ExerciseTrend: Identifiable {
 
 /// Individual data point for exercise trend
 struct ExerciseDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let date: Date
     let weight: Double
     let reps: Int
     let sets: Int
     let volume: Double
+
+    var id: String { "\(date.timeIntervalSince1970)-\(weight)-\(reps)-\(sets)" }
 }
 
 // MARK: - Body Metrics (Optional)
 
 /// Body measurement data point
 struct BodyMetricDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let date: Date
     let metricType: BodyMetricType
     let value: Double
     let unit: String
+
+    var id: String { "\(date.timeIntervalSince1970)-\(metricType.rawValue)-\(value)" }
 
     enum BodyMetricType: String, Codable, CaseIterable {
         case weight

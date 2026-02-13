@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AchievementLeaderboardView.swift
 //  PTPerformance
@@ -260,7 +261,7 @@ struct AchievementLeaderboardView: View {
                 FilterChip(
                     label: filter.displayName,
                     icon: filter.icon,
-                    color: .blue,
+                    color: .accentColor,
                     isSelected: viewModel.selectedFilter == filter
                 ) {
                     HapticFeedback.selectionChanged()
@@ -287,7 +288,9 @@ struct AchievementLeaderboardView: View {
             }
 
             // First place
-            podiumSpot(entry: viewModel.entries[0], height: 100, medalColor: .yellow)
+            if let firstEntry = viewModel.entries.first {
+                podiumSpot(entry: firstEntry, height: 100, medalColor: .yellow)
+            }
 
             // Third place
             if viewModel.entries.count > 2 {

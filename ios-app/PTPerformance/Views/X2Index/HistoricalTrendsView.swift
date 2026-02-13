@@ -292,7 +292,7 @@ struct HistoricalTrendsView: View {
         }
         .chartYScale(domain: viewModel.yAxisRange)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { value in
+            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                 AxisGridLine()
                 AxisValueLabel(format: .dateTime.month().day())
             }
@@ -417,7 +417,7 @@ struct HistoricalTrendBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(trend.color.opacity(0.1))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

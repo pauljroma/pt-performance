@@ -91,7 +91,7 @@ struct AISafetyAlert: View {
         }
         .padding()
         .background(backgroundColor)
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(iconColor, lineWidth: 2)

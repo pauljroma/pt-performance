@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ProgramStateViews.swift
 //  PTPerformance
@@ -49,21 +50,20 @@ struct ProgramLoadingOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color(.label).opacity(0.3)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.white)
 
                 Text(message)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             .padding(32)
             .background(Color(.systemBackground).opacity(0.95))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .shadow(radius: 10)
         }
         .accessibilityElement(children: .combine)
@@ -378,7 +378,7 @@ struct ProgramInlineError: View {
         }
         .padding()
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error. \(message)")
     }

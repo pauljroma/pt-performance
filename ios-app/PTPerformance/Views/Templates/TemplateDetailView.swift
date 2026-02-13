@@ -70,10 +70,8 @@ struct TemplateDetailView: View {
             .sheet(isPresented: $showingAssignSheet) {
                 AssignTemplateSheet(template: template)
             }
-            .onAppear {
-                Task {
-                    await loadTemplateDetails()
-                }
+            .task {
+                await loadTemplateDetails()
             }
         }
     }
@@ -93,7 +91,7 @@ struct TemplateDetailView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.blue.opacity(0.15))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
 
                 if template.isPopular {
@@ -108,7 +106,7 @@ struct TemplateDetailView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Color.yellow.opacity(0.15))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                 }
 
                 Spacer()
@@ -167,7 +165,7 @@ struct TemplateDetailView: View {
         }
         .frame(height: 80)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Description Section
@@ -198,7 +196,7 @@ struct TemplateDetailView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                     }
                 }
             }
@@ -358,7 +356,7 @@ struct PhaseDetailCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -436,12 +434,12 @@ struct SessionDetailRow: View {
                 }
                 .padding(8)
                 .background(Color.blue.opacity(0.05))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

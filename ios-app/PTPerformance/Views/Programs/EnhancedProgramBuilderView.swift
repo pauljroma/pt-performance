@@ -16,6 +16,9 @@ struct EnhancedProgramBuilderView: View {
     @State private var editingPhaseIndex: Int?
     @State private var showPatientPicker = false
     @State private var showPublishConfirmation = false
+    @State private var showDiscardChangesAlert = false
+    @State private var showUnsavedWorkAlert = false
+    @State private var pendingBackNavigation = false
 
     var body: some View {
         NavigationStack {
@@ -25,8 +28,8 @@ struct EnhancedProgramBuilderView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Progress indicator (hide on start, templatePicker, and preview)
-                    if viewModel.currentStep != .start && viewModel.currentStep != .templatePicker && viewModel.currentStep != .preview {
+                    // Progress indicator (hide on start, quickBuildPicker, templatePicker, and preview)
+                    if viewModel.currentStep != .start && viewModel.currentStep != .quickBuildPicker && viewModel.currentStep != .templatePicker && viewModel.currentStep != .preview {
                         BuilderProgressIndicator(currentStep: viewModel.currentStep)
                             .padding(.top, 8)
                             .padding(.horizontal)
@@ -38,6 +41,9 @@ struct EnhancedProgramBuilderView: View {
                             selectedMode: $viewModel.creationMode
                         )
                         .tag(TherapistProgramBuilderViewModel.BuilderStep.start)
+
+                        QuickBuildPickerStepView(viewModel: viewModel)
+                            .tag(TherapistProgramBuilderViewModel.BuilderStep.quickBuildPicker)
 
                         TemplatePickerStepView(viewModel: viewModel)
                             .tag(TherapistProgramBuilderViewModel.BuilderStep.templatePicker)
@@ -86,13 +92,36 @@ struct EnhancedProgramBuilderView: View {
                     // Navigation buttons
                     navigationButtons
                 }
+
+                // Loading overlay for async operations
+                if viewModel.isLoading {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .overlay(
+                            VStack(spacing: 16) {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .scaleEffect(1.2)
+                                    .tint(.white)
+
+                                Text("Loading...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white)
+                            }
+                            .padding(24)
+                            .background(Color(.systemGray3).opacity(0.9))
+                            .cornerRadius(CornerRadius.lg)
+                        )
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
+                }
             }
             .navigationTitle(stepTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        dismiss()
+                        handleCancel()
                     }
                 }
             }
@@ -120,6 +149,45 @@ struct EnhancedProgramBuilderView: View {
             } message: {
                 Text("This will make the program available for patients to browse and enroll. You can edit or unpublish it later.")
             }
+            .alert("Discard Changes?", isPresented: $showDiscardChangesAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Discard", role: .destructive) {
+                    dismiss()
+                }
+            } message: {
+                Text("You have unsaved changes. Are you sure you want to discard your program?")
+            }
+            .alert("Go Back?", isPresented: $showUnsavedWorkAlert) {
+                Button("Cancel", role: .cancel) {
+                    pendingBackNavigation = false
+                }
+                Button("Go Back", role: .destructive) {
+                    pendingBackNavigation = false
+                    viewModel.previousStep()
+                }
+            } message: {
+                Text("Going back may lose some of your work on this step. Continue?")
+            }
+        }
+    }
+
+    // MARK: - Cancel with Confirmation
+
+    private func handleCancel() {
+        if viewModel.hasUnsavedChanges {
+            showDiscardChangesAlert = true
+        } else {
+            dismiss()
+        }
+    }
+
+    // MARK: - Back with Confirmation
+
+    private func handleBack() {
+        if viewModel.wouldLoseWorkGoingBack() {
+            showUnsavedWorkAlert = true
+        } else {
+            viewModel.previousStep()
         }
     }
 
@@ -129,6 +197,8 @@ struct EnhancedProgramBuilderView: View {
         switch viewModel.currentStep {
         case .start:
             return "Create Program"
+        case .quickBuildPicker:
+            return "Quick Build"
         case .templatePicker:
             return "Choose Template"
         case .patient:
@@ -151,7 +221,7 @@ struct EnhancedProgramBuilderView: View {
             // Back button
             if viewModel.currentStep != .start {
                 Button(action: {
-                    viewModel.previousStep()
+                    handleBack()
                 }) {
                     HStack {
                         Image(systemName: "chevron.left")
@@ -162,7 +232,7 @@ struct EnhancedProgramBuilderView: View {
                     .frame(height: 50)
                     .frame(maxWidth: .infinity)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("Go back to previous step")
             }
@@ -191,7 +261,7 @@ struct EnhancedProgramBuilderView: View {
                 .frame(height: 50)
                 .frame(maxWidth: .infinity)
                 .background(viewModel.canProceed ? Color.accentColor : Color.gray)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canProceed || viewModel.isLoading)
             .accessibilityLabel(viewModel.currentStep == .preview ? "Publish program" : "Continue to next step")
@@ -205,6 +275,8 @@ struct EnhancedProgramBuilderView: View {
         switch viewModel.currentStep {
         case .start:
             return "Get Started"
+        case .quickBuildPicker:
+            return "Use Template"
         case .templatePicker:
             return "Use Template"
         case .preview:
@@ -297,7 +369,7 @@ private struct CreationModeCard: View {
                     .foregroundColor(isSelected ? .white : .accentColor)
                     .frame(width: 56, height: 56)
                     .background(isSelected ? Color.accentColor : Color.accentColor.opacity(0.1))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
 
                 // Text
                 VStack(alignment: .leading, spacing: 4) {
@@ -322,7 +394,7 @@ private struct CreationModeCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
@@ -330,6 +402,174 @@ private struct CreationModeCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(mode.title). \(mode.description)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+// MARK: - Quick Build Picker Step View
+
+private struct QuickBuildPickerStepView: View {
+    @ObservedObject var viewModel: TherapistProgramBuilderViewModel
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 60))
+                        .foregroundColor(.accentColor)
+                        .padding(.bottom, 8)
+                        .accessibilityHidden(true)
+
+                    Text("Quick Build Templates")
+                        .font(.system(size: 28, weight: .bold))
+                        .accessibilityAddTraits(.isHeader)
+
+                    Text("Choose a pre-built template to get started quickly")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .padding(.top, 24)
+
+                // Template cards grid
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 200), spacing: 16)], spacing: 16) {
+                    ForEach(QuickBuildTemplate.templates) { template in
+                        QuickBuildTemplateSelectionCard(
+                            template: template,
+                            isSelected: viewModel.selectedQuickBuildTemplate?.id == template.id,
+                            onTap: {
+                                viewModel.applyQuickBuildTemplate(template)
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+
+                Spacer(minLength: 40)
+            }
+        }
+    }
+}
+
+// MARK: - Quick Build Template Selection Card
+
+private struct QuickBuildTemplateSelectionCard: View {
+    let template: QuickBuildTemplate
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    private var typeColor: Color {
+        switch template.type {
+        case "rehab": return .blue
+        case "performance": return .orange
+        case "strength": return .green
+        case "custom": return .purple
+        default: return .gray
+        }
+    }
+
+    private var difficultyColor: Color {
+        switch template.difficultyLevel {
+        case "beginner": return .green
+        case "intermediate": return .orange
+        case "advanced": return .red
+        default: return .gray
+        }
+    }
+
+    private var difficultyIcon: String {
+        switch template.difficultyLevel {
+        case "beginner": return "1.circle.fill"
+        case "intermediate": return "2.circle.fill"
+        case "advanced": return "3.circle.fill"
+        default: return "circle.fill"
+        }
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Icon and type badge
+                HStack {
+                    ZStack {
+                        Circle()
+                            .fill(isSelected ? typeColor : typeColor.opacity(0.15))
+                            .frame(width: 44, height: 44)
+
+                        Image(systemName: template.icon)
+                            .font(.system(size: 20))
+                            .foregroundColor(isSelected ? .white : typeColor)
+                    }
+
+                    Spacer()
+
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.accentColor)
+                    }
+                }
+
+                // Title
+                Text(template.name)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // Description
+                Text(template.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
+
+                Spacer(minLength: 0)
+
+                // Template details
+                if template.type != "custom" {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
+                            Label("\(template.durationWeeks)W", systemImage: "calendar")
+                                .font(.caption2)
+                            Label("\(template.phases.count) phases", systemImage: "list.bullet")
+                                .font(.caption2)
+                        }
+                        .foregroundColor(.secondary)
+
+                        HStack(spacing: 8) {
+                            Label("\(template.workoutsPerWeek)x/week", systemImage: "figure.strengthtraining.traditional")
+                                .font(.caption2)
+                            Label(template.difficultyLevel.capitalized, systemImage: difficultyIcon)
+                                .font(.caption2)
+                                .foregroundColor(difficultyColor)
+                        }
+                        .foregroundColor(.secondary)
+                    }
+                } else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles")
+                            .font(.caption2)
+                        Text("Blank slate")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.purple)
+                }
+            }
+            .padding(16)
+            .frame(minHeight: 180)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.lg)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(template.name). \(template.description)")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
@@ -380,7 +620,7 @@ private struct TemplatePickerStepView: View {
             }
             .padding(12)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .padding(.horizontal, 20)
             .padding(.bottom, 12)
 
@@ -388,6 +628,42 @@ private struct TemplatePickerStepView: View {
             if viewModel.isLoadingTemplates {
                 Spacer()
                 ProgramLoadingView("Loading templates...")
+                Spacer()
+            } else if viewModel.templateLoadFailed {
+                // Error state with retry button
+                Spacer()
+                VStack(spacing: 16) {
+                    Image(systemName: "wifi.exclamationmark")
+                        .font(.system(size: 48))
+                        .foregroundColor(.orange)
+
+                    Text("Unable to Load Templates")
+                        .font(.headline)
+
+                    Text("Check your internet connection and try again.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+
+                    Button {
+                        Task {
+                            await viewModel.retryLoadTemplates()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Try Again")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .cornerRadius(CornerRadius.sm)
+                    }
+                    .accessibilityLabel("Retry loading templates")
+                }
                 Spacer()
             } else if viewModel.filteredTemplates.isEmpty {
                 Spacer()
@@ -435,7 +711,7 @@ private struct ProgramTemplateCard: View {
                     .foregroundColor(isSelected ? .white : .accentColor)
                     .frame(width: 50, height: 50)
                     .background(isSelected ? Color.accentColor : Color.accentColor.opacity(0.1))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
 
                 // Template info
                 VStack(alignment: .leading, spacing: 4) {
@@ -452,7 +728,7 @@ private struct ProgramTemplateCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color(.systemGray5))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
 
                         // Difficulty badge
                         Text(template.difficultyLevel.capitalized)
@@ -461,7 +737,7 @@ private struct ProgramTemplateCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(template.difficultyColor.opacity(0.1))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
 
                         // Duration
                         Text(template.formattedDuration)
@@ -488,7 +764,7 @@ private struct ProgramTemplateCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
@@ -548,7 +824,7 @@ private struct PatientStepView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor.opacity(0.1))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
 
                     // Skip option
@@ -614,7 +890,7 @@ private struct SelectedPatientCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.accentColor, lineWidth: 2)
@@ -660,7 +936,7 @@ private struct BasicsStepView: View {
                             .frame(minHeight: 80)
                             .padding(8)
                             .background(Color(.systemBackground))
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                             .accessibilityLabel("Program description")
                             .accessibilityHint("Optional description of the program goals")
                     }
@@ -726,7 +1002,7 @@ private struct FormField<Content: View>: View {
             content
                 .padding()
                 .background(Color(.secondarySystemGroupedBackground))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -789,7 +1065,7 @@ private struct PhasesStepView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor.opacity(0.1))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                     .accessibilityLabel("Add phase")
                     .accessibilityHint("Creates a new phase for your program")
@@ -817,7 +1093,7 @@ private struct EmptyPhasesCard: View {
         ProgramEmptyStateView.noPhases()
             .padding(.vertical, 8)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
     }
 }
 
@@ -883,7 +1159,7 @@ private struct PhaseCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .contain)
@@ -924,7 +1200,7 @@ private struct WorkoutsStepView: View {
                         iconColor: .orange
                     )
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(16)
+                    .cornerRadius(CornerRadius.lg)
                     .padding(.horizontal, 20)
                 } else {
                     VStack(spacing: 12) {
@@ -1018,7 +1294,7 @@ private struct PhaseWorkoutCard: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(16)
+            .cornerRadius(CornerRadius.lg)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(phaseName), \(phase.workoutAssignments.count) workouts")
@@ -1109,7 +1385,7 @@ private struct PreviewStepView: View {
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.orange.opacity(0.1))
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -1137,7 +1413,7 @@ private struct SummaryCard<Content: View>: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 }
 

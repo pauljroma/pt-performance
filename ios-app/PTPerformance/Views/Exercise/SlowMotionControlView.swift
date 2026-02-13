@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  SlowMotionControlView.swift
 //  PTPerformance
@@ -66,7 +67,7 @@ struct SlowMotionControlView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color.blue.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Speed Button
@@ -210,7 +211,7 @@ struct CompactSpeedControlView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(Color.white.opacity(0.2))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
     }
 
@@ -280,7 +281,7 @@ struct SpeedSliderView: View {
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
                             .background(speed == preset ? speedColor.opacity(0.3) : Color.clear)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                     .buttonStyle(.plain)
                 }
@@ -288,7 +289,7 @@ struct SpeedSliderView: View {
         }
         .padding()
         .background(Color.black.opacity(0.3))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var speedColor: Color {

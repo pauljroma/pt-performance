@@ -249,9 +249,7 @@ class CustomTimerBuilderViewModel: ObservableObject {
                     isPublic: makePublic
                 )
 
-                #if DEBUG
-                print("Template saved to database: \(template.id)")
-                #endif
+                DebugLogger.shared.log("[CustomTimerBuilder] Template saved to database: \(template.id)", level: .success)
             } else {
                 // Create temporary template (not saved to database)
                 template = IntervalTemplate(
@@ -268,17 +266,13 @@ class CustomTimerBuilderViewModel: ObservableObject {
                     updatedAt: Date()
                 )
 
-                #if DEBUG
-                print("Temporary template created: \(template.id)")
-                #endif
+                DebugLogger.shared.log("[CustomTimerBuilder] Temporary template created: \(template.id)", level: .diagnostic)
             }
 
             // Start timer with template
             try await timerService.startTimer(template: template, patientId: patientId)
 
-            #if DEBUG
-            print("Timer started with template: \(template.name)")
-            #endif
+            DebugLogger.shared.log("[CustomTimerBuilder] Timer started with template: \(template.name)", level: .success)
 
             isCreating = false
             return template

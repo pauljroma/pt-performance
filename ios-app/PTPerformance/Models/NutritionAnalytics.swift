@@ -120,10 +120,11 @@ struct NutritionDashboardData {
 
 /// Data point for nutrition charts
 struct NutritionChartPoint: Identifiable {
-    let id = UUID()
     let date: Date
     let value: Double
     let label: String
+
+    var id: String { "\(date.timeIntervalSince1970)-\(value)-\(label)" }
 
     init(date: Date, value: Double, label: String = "") {
         self.date = date
@@ -134,11 +135,12 @@ struct NutritionChartPoint: Identifiable {
 
 /// Macro breakdown for pie chart
 struct MacroChartData: Identifiable {
-    let id = UUID()
     let macro: MacroType
     let grams: Double
     let calories: Double
     let percent: Double
+
+    var id: String { "\(macro.rawValue)-\(grams)-\(percent)" }
 
     var color: String {
         macro.color
@@ -179,11 +181,12 @@ enum MacroType: String, CaseIterable {
 
 /// Nutrition insight for recommendations
 struct NutritionInsight: Identifiable {
-    let id = UUID()
     let type: InsightType
     let title: String
     let message: String
     let priority: Int // 1 = high, 2 = medium, 3 = low
+
+    var id: String { "\(title)-\(priority)" }
 
     enum InsightType {
         case warning

@@ -35,7 +35,7 @@ struct ProgressStatCard: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.sm)
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
     }
@@ -97,7 +97,7 @@ struct SummaryStatsRow: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Exercise summary: Average weight \(String(format: "%.1f", averageWeight)) \(displayUnit), Total volume \(formatVolume(totalVolume)), \(sessionCount) sessions")
     }
@@ -158,7 +158,7 @@ struct ProgressSummaryHeader: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

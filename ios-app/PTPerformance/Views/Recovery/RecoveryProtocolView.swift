@@ -818,7 +818,7 @@ struct AlternativeWorkoutDetailSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.blue)
-                            .cornerRadius(12)
+                            .cornerRadius(CornerRadius.md)
                     }
                 }
                 .padding()

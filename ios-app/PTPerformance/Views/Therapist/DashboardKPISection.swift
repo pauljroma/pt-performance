@@ -315,7 +315,7 @@ struct KPICard: View {
         .frame(width: 140)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
     }
 }
@@ -342,7 +342,7 @@ struct KPITrendBadge: View {
         .background(
             (isPositive ? Color.green : Color.red).opacity(0.15)
         )
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -371,7 +371,7 @@ struct QuickActionButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(color.gradient)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .shadow(color: color.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
@@ -424,7 +424,7 @@ struct SchedulePreviewRow: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -451,7 +451,7 @@ struct StatusBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(backgroundColor)
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
     }
 
     private var textColor: Color {
@@ -473,20 +473,27 @@ struct StatusBadge: View {
 extension TherapistSessionItem {
     /// Sample data for previews
     static var sampleForKPI: TherapistSessionItem {
-        TherapistSessionItem(
+        guard let firstPatient = Patient.samplePatients.first else {
+            fatalError("samplePatients must not be empty")
+        }
+        return TherapistSessionItem(
             session: .sample,
-            patient: Patient.samplePatients[0]
+            patient: firstPatient
         )
     }
 
     /// Sample list for previews
     static var sampleListForKPI: [TherapistSessionItem] {
         let patients = Patient.samplePatients
+        guard let firstPatient = patients.first else {
+            return []
+        }
+        let secondPatient = patients.dropFirst().first ?? firstPatient
         return [
             TherapistSessionItem(
                 session: ScheduledSession.__createDirectly(
                     id: UUID(),
-                    patientId: patients[0].id,
+                    patientId: firstPatient.id,
                     sessionId: UUID(),
                     scheduledDate: Date(),
                     scheduledTime: Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date(),
@@ -497,12 +504,12 @@ extension TherapistSessionItem {
                     createdAt: Date(),
                     updatedAt: Date()
                 ),
-                patient: patients[0]
+                patient: firstPatient
             ),
             TherapistSessionItem(
                 session: ScheduledSession.__createDirectly(
                     id: UUID(),
-                    patientId: patients.count > 1 ? patients[1].id : patients[0].id,
+                    patientId: secondPatient.id,
                     sessionId: UUID(),
                     scheduledDate: Date(),
                     scheduledTime: Calendar.current.date(bySettingHour: 11, minute: 30, second: 0, of: Date()) ?? Date(),
@@ -513,12 +520,12 @@ extension TherapistSessionItem {
                     createdAt: Date(),
                     updatedAt: Date()
                 ),
-                patient: patients.count > 1 ? patients[1] : patients[0]
+                patient: secondPatient
             ),
             TherapistSessionItem(
                 session: ScheduledSession.__createDirectly(
                     id: UUID(),
-                    patientId: patients[0].id,
+                    patientId: firstPatient.id,
                     sessionId: UUID(),
                     scheduledDate: Date(),
                     scheduledTime: Calendar.current.date(bySettingHour: 14, minute: 0, second: 0, of: Date()) ?? Date(),
@@ -529,7 +536,7 @@ extension TherapistSessionItem {
                     createdAt: Date(),
                     updatedAt: Date()
                 ),
-                patient: patients[0]
+                patient: firstPatient
             )
         ]
     }

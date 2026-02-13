@@ -842,7 +842,7 @@ struct TemplatePreviewSheet: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.blue.opacity(0.15))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.sm)
                 }
             }
         }
@@ -907,7 +907,7 @@ struct TemplatePreviewSheet: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
     }
@@ -926,7 +926,7 @@ struct TemplatePreviewSheet: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
             } else {
                 ForEach(template.blocks) { block in
                     BlockPreviewCard(block: block)
@@ -951,7 +951,7 @@ struct TemplatePreviewSheet: View {
                 .padding(.vertical, 16)
                 .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .padding()
             .accessibilityLabel("Start workout")
@@ -975,7 +975,7 @@ struct BlockPreviewCard: View {
                     .foregroundColor(block.color)
                     .frame(width: 32, height: 32)
                     .background(block.color.opacity(0.15))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(block.displayName)
@@ -1026,7 +1026,7 @@ struct BlockPreviewCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(block.displayName) block, \(block.exerciseCount) exercises")
     }

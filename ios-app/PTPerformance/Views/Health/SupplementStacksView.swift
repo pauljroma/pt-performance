@@ -1,9 +1,13 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Supplement Stacks View - Browse and add pre-built supplement stacks
 struct SupplementStacksView: View {
-    @StateObject private var viewModel = SupplementViewModel()
+    @StateObject private var viewModel = SupplementStacksViewModel()
     @Environment(\.colorScheme) private var colorScheme
+
+    @State private var showAddSuccess = false
+    @State private var addedStackName = ""
 
     var body: some View {
         NavigationStack {
@@ -19,7 +23,17 @@ struct SupplementStacksView: View {
             }
             .navigationTitle("Supplement Stacks")
             .task {
-                await viewModel.loadStacks()
+                await viewModel.loadData()
+            }
+            .alert("Error", isPresented: .constant(viewModel.error != nil)) {
+                Button("OK") { viewModel.error = nil }
+            } message: {
+                Text(viewModel.error ?? "")
+            }
+            .alert("Stack Added", isPresented: $showAddSuccess) {
+                Button("OK") { }
+            } message: {
+                Text("\(addedStackName) has been added to your routine.")
             }
         }
     }
@@ -31,6 +45,11 @@ struct SupplementStacksView: View {
                     StackCard(stack: stack) {
                         Task {
                             await viewModel.addStackToRoutine(stack)
+                            if viewModel.error == nil {
+                                addedStackName = stack.name
+                                showAddSuccess = true
+                                HapticFeedback.success()
+                            }
                         }
                     }
                 }
@@ -45,12 +64,18 @@ struct SupplementStacksView: View {
             Image(systemName: "square.stack.3d.up")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
 
             Text("No stacks available")
                 .font(.headline)
                 .foregroundColor(.secondary)
+
+            Text("Pre-built supplement stacks will appear here.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -119,15 +144,20 @@ private struct StackCard: View {
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
+                    .frame(minHeight: 44)
                     .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
             }
+            .accessibilityLabel("Add \(stack.name) stack to routine")
+            .accessibilityHint("Double tap to add all \(stack.items.count) supplements in this stack")
             .padding(.top, Spacing.xs)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(stack.name) stack, \(stack.items.count) supplements")
     }
 }
 

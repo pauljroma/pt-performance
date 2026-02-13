@@ -84,50 +84,60 @@ class ProgramViewModel: ObservableObject {
             phases = try decoder.decode([Phase].self, from: phasesResponse.data)
             logger.log("✅ Decoded \(phases.count) phases", level: .success)
 
-            // 3. Fetch sessions for all phases
-            for phase in phases {
-                logger.log("🏋️ Step 3: Fetching sessions for phase: \(phase.name)")
-                let sessionsResponse = try await supabase.client
-                    .from("sessions")
-                    .select()
-                    .eq("phase_id", value: phase.id)
-                    .order("session_number", ascending: true)
-                    .execute()
+            // 3. Fetch sessions for all phases in parallel using async let
+            logger.log("🏋️ Step 3: Fetching sessions for all phases in parallel")
+            try await withThrowingTaskGroup(of: (String, [ProgramSession]).self) { group in
+                for phase in phases {
+                    group.addTask {
+                        let sessionsResponse = try await self.supabase.client
+                            .from("sessions")
+                            .select()
+                            .eq("phase_id", value: phase.id)
+                            .order("session_number", ascending: true)
+                            .execute()
 
-                logger.log("🏋️ Sessions response size: \(sessionsResponse.data.count) bytes")
-
-                let sessions = try decoder.decode([ProgramSession].self, from: sessionsResponse.data)
-                sessionsByPhase[phase.id.uuidString] = sessions
-                logger.log("✅ Decoded \(sessions.count) sessions for phase: \(phase.name)", level: .success)
-
-                // 4. Fetch exercises for each session
-                for session in sessions {
-                    logger.log("🏋️ Step 4: Fetching exercises for session \(session.sessionNumber ?? 0)")
-                    let exercisesResponse = try await supabase.client
-                        .from("session_exercises")
-                        .select("""
-                            id,
-                            session_id,
-                            exercise_templates!inner(exercise_name),
-                            prescribed_sets,
-                            prescribed_reps,
-                            prescribed_load,
-                            load_unit,
-                            rest_period_seconds,
-                            order_index
-                        """)
-                        .eq("session_id", value: session.id)
-                        .order("order_index", ascending: true)
-                        .execute()
-
-                    logger.log("🏋️ Exercises response size: \(exercisesResponse.data.count) bytes")
-                    if let jsonString = String(data: exercisesResponse.data, encoding: .utf8) {
-                        logger.log("🏋️ Exercises JSON: \(jsonString.prefix(300))")
+                        let sessions = try decoder.decode([ProgramSession].self, from: sessionsResponse.data)
+                        return (phase.id.uuidString, sessions)
                     }
+                }
 
-                    let exercises = try decoder.decode([ProgramExercise].self, from: exercisesResponse.data)
-                    exercisesBySession[session.id.uuidString] = exercises
-                    logger.log("✅ Decoded \(exercises.count) exercises for session \(session.sessionNumber ?? 0)", level: .success)
+                for try await (phaseId, sessions) in group {
+                    sessionsByPhase[phaseId] = sessions
+                    logger.log("✅ Decoded \(sessions.count) sessions for phase: \(phaseId)", level: .success)
+                }
+            }
+
+            // 4. Fetch exercises for all sessions in parallel
+            logger.log("🏋️ Step 4: Fetching exercises for all sessions in parallel")
+            let allSessions = sessionsByPhase.values.flatMap { $0 }
+            try await withThrowingTaskGroup(of: (String, [ProgramExercise]).self) { group in
+                for session in allSessions {
+                    group.addTask {
+                        let exercisesResponse = try await self.supabase.client
+                            .from("session_exercises")
+                            .select("""
+                                id,
+                                session_id,
+                                exercise_templates!inner(exercise_name),
+                                prescribed_sets,
+                                prescribed_reps,
+                                prescribed_load,
+                                load_unit,
+                                rest_period_seconds,
+                                order_index
+                            """)
+                            .eq("session_id", value: session.id)
+                            .order("order_index", ascending: true)
+                            .execute()
+
+                        let exercises = try decoder.decode([ProgramExercise].self, from: exercisesResponse.data)
+                        return (session.id.uuidString, exercises)
+                    }
+                }
+
+                for try await (sessionId, exercises) in group {
+                    exercisesBySession[sessionId] = exercises
+                    logger.log("✅ Decoded \(exercises.count) exercises for session: \(sessionId)", level: .success)
                 }
             }
 

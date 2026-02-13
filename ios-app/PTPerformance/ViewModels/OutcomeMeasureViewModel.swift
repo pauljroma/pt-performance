@@ -20,9 +20,10 @@ struct QuestionItem: Identifiable {
     var selectedValue: Int?
 
     struct QuestionOption: Identifiable {
-        let id = UUID()
         let value: Int
         let label: String
+
+        var id: String { "\(value)-\(label)" }
     }
 }
 
@@ -148,6 +149,10 @@ class OutcomeMeasureViewModel: ObservableObject {
     init(outcomeService: OutcomeMeasureService = .shared) {
         self.outcomeService = outcomeService
         setupObservers()
+    }
+
+    deinit {
+        cancellables.removeAll()
     }
 
     // MARK: - Setup
@@ -292,9 +297,7 @@ class OutcomeMeasureViewModel: ObservableObject {
                 previousScore = nil
             }
         } catch {
-            #if DEBUG
-            print("[OutcomeMeasureVM] Failed to fetch previous measure: \(error)")
-            #endif
+            DebugLogger.shared.log("[OutcomeMeasureVM] Failed to fetch previous measure: \(error)", level: .error)
         }
     }
 
@@ -345,10 +348,7 @@ class OutcomeMeasureViewModel: ObservableObject {
             )
 
             successMessage = "Outcome measure submitted successfully"
-
-            #if DEBUG
-            print("[OutcomeMeasureVM] Submitted measure: \(measure.id), Score: \(measure.normalizedScore ?? 0)")
-            #endif
+            DebugLogger.shared.log("[OutcomeMeasureVM] Submitted measure: \(measure.id), Score: \(measure.normalizedScore ?? 0)", level: .success)
         } catch {
             errorMessage = "Failed to submit: \(error.localizedDescription)"
             DebugLogger.shared.error("OutcomeMeasureViewModel", "Submit error: \(error)")

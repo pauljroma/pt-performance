@@ -37,16 +37,16 @@ struct StreakAlertView: View {
             // Action buttons
             actionButtons
         }
-        .padding(20)
+        .padding(Spacing.lg)
         .background(backgroundGradient)
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .stroke(borderColor, lineWidth: 2)
         )
         .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
         .sheet(isPresented: $showQuickWorkoutPicker) {
-            QuickWorkoutPickerView { workout in
+            QuickWorkoutPickerView { _ in
                 showQuickWorkoutPicker = false
                 onStartWorkout()
             }
@@ -75,12 +75,14 @@ struct StreakAlertView: View {
             Spacer()
 
             Button {
+                HapticFeedback.light()
                 onDismiss()
             } label: {
                 Image(systemName: "xmark.circle.fill")
                     .font(.title2)
                     .foregroundColor(.secondary)
             }
+            .accessibilityLabel("Dismiss alert")
         }
     }
 
@@ -97,9 +99,9 @@ struct StreakAlertView: View {
                     .foregroundColor(.secondary)
             }
             .frame(width: 80)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(streakStatus.protectionMessage)
@@ -134,6 +136,7 @@ struct StreakAlertView: View {
 
     private func quickOptionButton(minutes: Int, type: QuickWorkoutType) -> some View {
         Button {
+            HapticFeedback.light()
             showQuickWorkoutPicker = true
         } label: {
             VStack(spacing: 4) {
@@ -145,17 +148,19 @@ struct StreakAlertView: View {
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, Spacing.xs)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(minutes) minute \(type.iconName) workout")
     }
 
     private var actionButtons: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Spacing.xs) {
             // Primary action - Start Quick Workout
             Button {
+                HapticFeedback.light()
                 showQuickWorkoutPicker = true
             } label: {
                 HStack {
@@ -165,36 +170,41 @@ struct StreakAlertView: View {
                 .font(.headline)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, Spacing.sm)
                 .background(primaryButtonGradient)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
+            .accessibilityLabel("Start Quick Workout")
 
             // Secondary actions
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 Button {
+                    HapticFeedback.light()
                     onRemindLater()
                 } label: {
                     Text("Remind Later")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, Spacing.xs)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
+                .accessibilityLabel("Remind me later")
 
                 Button {
+                    HapticFeedback.light()
                     onDismiss()
                 } label: {
                     Text("Skip Today")
                         .font(.subheadline)
                         .foregroundColor(.red.opacity(0.8))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, Spacing.xs)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
+                .accessibilityLabel("Skip today")
             }
         }
     }
@@ -286,15 +296,17 @@ struct StreakAlertBanner: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color.orange.opacity(0.15))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(Color.orange.opacity(0.3), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Streak at risk alert")
+        .accessibilityHint("Tap to see quick workout options")
     }
 }
 
@@ -323,13 +335,14 @@ struct StreakProtectedBadge: View {
 
             Spacer()
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color.green.opacity(0.15))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color.green.opacity(0.3), lineWidth: 1)
         )
+        .accessibilityLabel("Streak protected, \(streakCount)-day streak continues")
     }
 }
 

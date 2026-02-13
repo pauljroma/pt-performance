@@ -147,9 +147,10 @@ enum EffectivenessRating: String, CaseIterable {
 
 /// Side-by-side comparison of multiple programs
 struct ProgramComparison: Identifiable {
-    let id = UUID()
     let programs: [ProgramMetrics]
     let comparisonDate: Date
+
+    var id: String { "\(comparisonDate.timeIntervalSince1970)-\(programs.map { $0.id.uuidString }.joined(separator: "-"))" }
 
     /// Get the best program for a specific metric
     func bestProgram(for metric: ComparisonMetric) -> ProgramMetrics? {
@@ -341,10 +342,11 @@ struct OutcomeDistribution: Identifiable, Codable, Hashable {
 
 /// Chart data point for outcomes
 struct OutcomeChartData: Identifiable {
-    let id = UUID()
     let category: OutcomeCategory
     let count: Int
     let color: Color
+
+    var id: String { "\(category.rawValue)-\(count)" }
 }
 
 /// Outcome categories
@@ -377,12 +379,13 @@ enum OutcomeCategory: String, CaseIterable {
 
 /// Data point for heatmap visualization
 struct HeatmapDataPoint: Identifiable, Hashable {
-    let id = UUID()
     let phaseNumber: Int
     let phaseName: String
     let metricType: HeatmapMetricType
     let value: Double
     let patientCount: Int
+
+    var id: String { "\(phaseNumber)-\(metricType.rawValue)-\(value)" }
 
     /// Normalized value (0-1) for color intensity
     var normalizedValue: Double {

@@ -187,7 +187,7 @@ class ProgramEditorViewModel: ObservableObject {
             }
         }
     }
-    
+
     func loadData() async {
         isLoading = true
         error = nil
@@ -265,7 +265,7 @@ class ProgramEditorViewModel: ObservableObject {
             self.error = userFriendlyError
         }
     }
-    
+
     func loadPatientHistory(for exercise: Exercise) async {
         logger.log("📥 Loading patient history for \(exercise.exercise_name ?? "exercise")", level: .diagnostic)
 
@@ -288,9 +288,8 @@ class ProgramEditorViewModel: ObservableObject {
                 // Find the best set (highest weight × reps combination)
                 var bestEstimate: Double = 0
                 for log in logs {
-                    if let weight = log.actualLoad, !log.actualReps.isEmpty {
+                    if let weight = log.actualLoad, let reps = log.actualReps.first {
                         // Use the first set's reps for simplicity
-                        let reps = log.actualReps[0]
                         let estimate = RMCalculator.average(weight: weight, reps: reps)
                         bestEstimate = max(bestEstimate, estimate)
                     }
@@ -316,7 +315,7 @@ class ProgramEditorViewModel: ObservableObject {
             updateRecommendedWeight()
         }
     }
-    
+
     func updateRecommendedWeight() {
         guard let rm = estimatedRM else { return }
 
@@ -333,7 +332,7 @@ class ProgramEditorViewModel: ObservableObject {
             recommendedWeight = rm * WeightPercentages.enduranceRange
         }
     }
-    
+
     func saveExercise() async throws {
         // Prevent double-submission
         guard !isSubmitting else {
@@ -493,54 +492,72 @@ class ProgramEditorViewModel: ObservableObject {
                 throw ProgramEditorError.phasesLoadFailed
             }
 
-            // Step 3: Load sessions for each phase
-            for phase in phases {
-                logger.log("📥 Step 3: Fetching sessions for phase: \(phase.name)", level: .diagnostic)
+            // Step 3: Load ALL sessions for ALL phases in ONE query (batched to avoid N+1)
+            logger.log("📥 Step 3: Fetching all sessions for all phases (batched query)", level: .diagnostic)
 
+            let phaseIds = phases.map { $0.id }
+            var allSessions: [ProgramSession] = []
+
+            if !phaseIds.isEmpty {
                 do {
                     let sessionsResponse = try await supabase.client
                         .from("sessions")
                         .select()
-                        .eq("phase_id", value: phase.id)
+                        .in("phase_id", values: phaseIds)
                         .order("session_number", ascending: true)
                         .execute()
 
-                    let sessions = try decoder.decode([ProgramSession].self, from: sessionsResponse.data)
-                    logger.log("✅ Loaded \(sessions.count) sessions for phase: \(phase.name)", level: .success)
-
-                    // Step 4: Load exercises for each session
-                    for session in sessions {
-                        logger.log("📥 Step 4: Fetching exercises for session \(session.sessionNumber ?? 0)", level: .diagnostic)
-
-                        do {
-                            let exercisesResponse = try await supabase.client
-                                .from("session_exercises")
-                                .select("""
-                                    id,
-                                    session_id,
-                                    exercise_template_id,
-                                    prescribed_sets,
-                                    prescribed_reps,
-                                    prescribed_load,
-                                    load_unit,
-                                    rest_period_seconds,
-                                    notes,
-                                    sequence
-                                """)
-                                .eq("session_id", value: session.id)
-                                .order("sequence", ascending: true)
-                                .execute()
-
-                            let exercises = try decoder.decode([SessionExercise].self, from: exercisesResponse.data)
-                            logger.log("✅ Loaded \(exercises.count) exercises for session \(session.sessionNumber ?? 0)", level: .success)
-                        } catch {
-                            logger.log("⚠️ Failed to load exercises for session \(session.sessionNumber ?? 0): \(error)", level: .diagnostic)
-                            // Continue loading other sessions even if one fails
-                        }
-                    }
+                    allSessions = try decoder.decode([ProgramSession].self, from: sessionsResponse.data)
+                    logger.log("✅ Loaded \(allSessions.count) sessions total for \(phases.count) phases (1 query)", level: .success)
                 } catch {
-                    logger.log("⚠️ Failed to load sessions for phase \(phase.name): \(error)", level: .diagnostic)
-                    // Continue loading other phases even if one fails
+                    logger.log("⚠️ Failed to load sessions: \(error)", level: .diagnostic)
+                }
+            }
+
+            // Step 4: Load ALL exercises for ALL sessions in ONE query (batched to avoid N+1)
+            logger.log("📥 Step 4: Fetching all exercises for all sessions (batched query)", level: .diagnostic)
+
+            let sessionIds = allSessions.map { $0.id }
+            var allExercises: [SessionExercise] = []
+
+            if !sessionIds.isEmpty {
+                do {
+                    let exercisesResponse = try await supabase.client
+                        .from("session_exercises")
+                        .select("""
+                            id,
+                            session_id,
+                            exercise_template_id,
+                            prescribed_sets,
+                            prescribed_reps,
+                            prescribed_load,
+                            load_unit,
+                            rest_period_seconds,
+                            notes,
+                            sequence
+                        """)
+                        .in("session_id", values: sessionIds)
+                        .order("sequence", ascending: true)
+                        .execute()
+
+                    allExercises = try decoder.decode([SessionExercise].self, from: exercisesResponse.data)
+                    logger.log("✅ Loaded \(allExercises.count) exercises total for \(allSessions.count) sessions (1 query)", level: .success)
+                } catch {
+                    logger.log("⚠️ Failed to load exercises: \(error)", level: .diagnostic)
+                }
+            }
+
+            // Group sessions by phase_id and exercises by session_id in memory
+            let sessionsByPhase = Dictionary(grouping: allSessions) { $0.phaseId }
+            let exercisesBySession = Dictionary(grouping: allExercises) { $0.sessionId }
+
+            // Log the grouped results for diagnostic purposes
+            for phase in phases {
+                let phaseSessions = sessionsByPhase[phase.id] ?? []
+                logger.log("📊 Phase '\(phase.name)': \(phaseSessions.count) sessions", level: .diagnostic)
+                for session in phaseSessions {
+                    let sessionExercises = exercisesBySession[session.id.uuidString] ?? []
+                    logger.log("  📊 Session \(session.sessionNumber ?? 0): \(sessionExercises.count) exercises", level: .diagnostic)
                 }
             }
 

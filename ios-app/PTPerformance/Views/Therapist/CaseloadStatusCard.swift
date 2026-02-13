@@ -117,8 +117,11 @@ struct CaseloadStatusCard: View {
     }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 12) {
+        Button(action: {
+            HapticFeedback.light()
+            onTap()
+        }) {
+            VStack(spacing: Spacing.sm) {
                 // Patient initials with status color
                 initialsCircle
 
@@ -140,13 +143,13 @@ struct CaseloadStatusCard: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .frame(maxWidth: .infinity)
             .background(cardBackgroundColor)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.subtle)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(status.color.opacity(0.3), lineWidth: 2)
             )
         }
@@ -189,10 +192,10 @@ struct CaseloadStatusCard: View {
                 .fontWeight(.semibold)
                 .foregroundColor(status.color)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(status.color.opacity(0.15))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var adherenceBar: some View {
@@ -246,10 +249,10 @@ struct CaseloadStatusLegend: View {
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Status legend: Green for good, yellow for attention needed, red for critical")
     }
@@ -287,10 +290,10 @@ struct CaseloadStatusSummary: View {
 
             statusCountView(count: redCount, status: .critical)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(greenCount) patients good, \(yellowCount) need attention, \(redCount) critical")
     }

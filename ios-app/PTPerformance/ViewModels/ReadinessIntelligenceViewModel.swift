@@ -36,24 +36,27 @@ class ReadinessIntelligenceViewModel: ObservableObject {
     // MARK: - Data Models
 
     struct DailyReadinessDataPoint: Identifiable {
-        let id = UUID()
         let date: Date
         let score: Double
         let band: ReadinessBand
+
+        var id: String { "\(date.timeIntervalSince1970)-\(score)" }
     }
 
     struct HRVDataPoint: Identifiable {
-        let id = UUID()
         let date: Date
         let value: Double
         let baseline: Double?
+
+        var id: String { "\(date.timeIntervalSince1970)-\(value)" }
     }
 
     struct SleepDataPoint: Identifiable {
-        let id = UUID()
         let date: Date
         let hours: Double
         let efficiency: Double?
+
+        var id: String { "\(date.timeIntervalSince1970)-\(hours)" }
     }
 
     // MARK: - Dependencies

@@ -98,7 +98,7 @@ struct QuickWorkoutPickerView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var durationPicker: some View {
@@ -118,6 +118,7 @@ struct QuickWorkoutPickerView: View {
 
     private func durationButton(_ duration: QuickWorkoutDuration) -> some View {
         Button {
+            HapticFeedback.light()
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedDuration = duration
                 selectedWorkout = nil // Reset selection when duration changes
@@ -132,16 +133,18 @@ struct QuickWorkoutPickerView: View {
                     .fontWeight(.medium)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(selectedDuration == duration ? Color.orange : Color(.systemBackground))
             .foregroundColor(selectedDuration == duration ? .white : .primary)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(selectedDuration == duration ? Color.orange : Color(.systemGray4), lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(duration.rawValue) minute duration")
+        .accessibilityAddTraits(selectedDuration == duration ? [.isSelected] : [])
     }
 
     private var workoutOptions: some View {
@@ -174,18 +177,19 @@ struct QuickWorkoutPickerView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 30)
+        .padding(.vertical, Spacing.xl)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func workoutCard(_ workout: QuickWorkout) -> some View {
         Button {
+            HapticFeedback.light()
             withAnimation(.easeInOut(duration: 0.2)) {
                 selectedWorkout = workout
             }
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Icon
                 ZStack {
                     Circle()
@@ -227,9 +231,9 @@ struct QuickWorkoutPickerView: View {
             }
             .padding()
             .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(
                         selectedWorkout?.id == workout.id ? Color.orange : Color.clear,
                         lineWidth: 2
@@ -237,6 +241,8 @@ struct QuickWorkoutPickerView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(workout.name), \(workout.durationMinutes) minutes, \(workout.exerciseCount) exercises")
+        .accessibilityAddTraits(selectedWorkout?.id == workout.id ? [.isSelected] : [])
     }
 
     private var startButton: some View {
@@ -251,7 +257,7 @@ struct QuickWorkoutPickerView: View {
             .font(.headline)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(
                 LinearGradient(
                     colors: [.orange, .orange.opacity(0.8)],
@@ -259,9 +265,10 @@ struct QuickWorkoutPickerView: View {
                     endPoint: .trailing
                 )
             )
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.md)
         }
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
+        .accessibilityLabel("Start \(selectedWorkout?.name ?? "workout")")
     }
 
     // MARK: - Helper Methods
@@ -358,7 +365,7 @@ struct QuickWorkoutDetailSheet: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var exerciseList: some View {
@@ -394,7 +401,7 @@ struct QuickWorkoutDetailSheet: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var startButton: some View {
@@ -409,10 +416,11 @@ struct QuickWorkoutDetailSheet: View {
             .font(.headline)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(workoutTypeColor)
-            .cornerRadius(14)
+            .cornerRadius(CornerRadius.md)
         }
+        .accessibilityLabel("Start \(workout.name)")
     }
 
     private var workoutTypeColor: Color {

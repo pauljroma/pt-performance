@@ -17,6 +17,7 @@ final class RecoveryTrackingViewModel: ObservableObject {
     @Published var recentSessions: [RecoverySession] = []
     @Published var isLoading: Bool = false
     @Published var error: String?
+    @Published var healthKitPermissionNeeded: Bool = false
 
     // Sheet/Navigation State
     @Published var showingLogSheet: Bool = false
@@ -167,35 +168,35 @@ final class RecoveryTrackingViewModel: ObservableObject {
         isLoading = true
         error = nil
 
-        do {
-            // Fetch recent sessions
-            await recoveryService.fetchSessions(days: 30)
-            recentSessions = recoveryService.sessions
+        // Fetch recent sessions
+        await recoveryService.fetchSessions(days: 30)
+        recentSessions = recoveryService.sessions
 
-            // Calculate streak data
-            await calculateStreakData()
-
-            // Check if recovered today
-            hasRecoveredToday = recentSessions.contains { session in
-                Calendar.current.isDateInToday(session.loggedAt)
-            }
-
-            // Calculate recovery status and score
-            await calculateRecoveryStatus()
-
-            // Generate training recommendation
-            generateTrainingRecommendation()
-
-            // Calculate weekly trend
-            calculateWeeklyTrend()
-
-            // Check for low recovery alert
-            checkLowRecoveryAlert()
-
-        } catch {
-            self.error = error.localizedDescription
-            DebugLogger.shared.error("RecoveryTrackingViewModel", "Failed to load data: \(error)")
+        // Check for service errors
+        if let serviceError = recoveryService.error {
+            self.error = "Unable to load recovery data. Please try again."
+            DebugLogger.shared.error("RecoveryTrackingViewModel", "Failed to load data: \(serviceError)")
         }
+
+        // Calculate streak data
+        await calculateStreakData()
+
+        // Check if recovered today
+        hasRecoveredToday = recentSessions.contains { session in
+            Calendar.current.isDateInToday(session.loggedAt)
+        }
+
+        // Calculate recovery status and score
+        await calculateRecoveryStatus()
+
+        // Generate training recommendation
+        generateTrainingRecommendation()
+
+        // Calculate weekly trend
+        calculateWeeklyTrend()
+
+        // Check for low recovery alert
+        checkLowRecoveryAlert()
 
         isLoading = false
     }
@@ -248,13 +249,50 @@ final class RecoveryTrackingViewModel: ObservableObject {
     }
 
     private func calculateRecoveryStatus() async {
-        // Fetch health data for recovery score calculation
-        // In production, this would pull from HealthKit
+        // Fetch health data from HealthKit for recovery score calculation
+        let healthKitService = HealthKitService.shared
 
-        // Simulated values for demo - in production these come from HealthKit
-        sleepHours = 7.2
-        hrvValue = 58
-        sorenessLevel = .low
+        // Check if HealthKit is authorized
+        let isAuthorized = healthKitService.isAuthorized || healthKitService.checkAuthorizationStatus()
+
+        if !isAuthorized {
+            healthKitPermissionNeeded = true
+        }
+
+        // Try to fetch actual HealthKit data
+        do {
+            // Fetch sleep data
+            if let sleepData = try await healthKitService.fetchSleepData(for: Date()) {
+                sleepHours = sleepData.totalHours
+                healthKitPermissionNeeded = false
+            } else {
+                // Fallback to default if no data
+                sleepHours = 7.0
+            }
+
+            // Fetch HRV data
+            if let hrv = try await healthKitService.fetchHRV(for: Date()) {
+                hrvValue = Int(hrv)
+                healthKitPermissionNeeded = false
+            } else {
+                // Fallback to default if no data
+                hrvValue = 50
+            }
+        } catch HealthKitError.notAuthorized {
+            // HealthKit not authorized - prompt user
+            healthKitPermissionNeeded = true
+            DebugLogger.shared.log("[RecoveryTrackingViewModel] HealthKit not authorized", level: .warning)
+            sleepHours = 7.0
+            hrvValue = 50
+        } catch {
+            // HealthKit not available - use sensible defaults
+            DebugLogger.shared.log("[RecoveryTrackingViewModel] HealthKit data unavailable: \(error.localizedDescription)", level: .warning)
+            sleepHours = 7.0
+            hrvValue = 50
+        }
+
+        // Soreness is user-reported, defaults to none if not set
+        // In future, this could be persisted from user input
 
         // Calculate composite recovery score
         let sleepScore = min(100, (sleepHours / 8.0) * 100)
@@ -270,10 +308,12 @@ final class RecoveryTrackingViewModel: ObservableObject {
 
         // Weighted average: Sleep 40%, HRV 35%, Soreness 25%
         let score = (sleepScore * 0.40) + (hrvScore * 0.35) + (sorenessScore * 0.25)
-        recoveryScore = Int(score)
 
-        // Determine status
-        recoveryStatus = RecoveryStatus.from(score: recoveryScore)
+        // Animate score changes for smooth UI transition
+        withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
+            recoveryScore = Int(score)
+            recoveryStatus = RecoveryStatus.from(score: recoveryScore)
+        }
     }
 
     private func generateTrainingRecommendation() {
@@ -355,9 +395,9 @@ final class RecoveryTrackingViewModel: ObservableObject {
             startQuickLog(for: protocolType)
         } else {
             // For methods without a timer (stretching, compression, sleep), just log
-            Task {
+            Task { [weak self] in
                 // In production, would save to backend
-                await loadData()
+                await self?.loadData()
             }
         }
     }
@@ -793,7 +833,7 @@ struct TrainingRecommendation {
 // MARK: - Daily Recovery Trend
 
 struct DailyRecoveryTrend: Identifiable {
-    let id = UUID()
+    var id: String { "\(date.timeIntervalSince1970)-\(score)" }
     let date: Date
     let dayName: String
     let score: Int

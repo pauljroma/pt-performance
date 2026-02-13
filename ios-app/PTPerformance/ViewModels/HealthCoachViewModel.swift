@@ -43,6 +43,11 @@ final class HealthCoachViewModel: ObservableObject {
         }
     }
 
+    /// Retry loading data after an error
+    func retryLoad() async {
+        await loadData()
+    }
+
     func calculateScore() async {
         isLoading = true
         error = nil
@@ -68,6 +73,7 @@ final class HealthCoachViewModel: ObservableObject {
             category: nil
         )
         messages.append(userMessage)
+        HapticFeedback.light() // Feedback for message sent
 
         let query = inputMessage
         inputMessage = ""
@@ -76,6 +82,7 @@ final class HealthCoachViewModel: ObservableObject {
 
         let response = await service.sendMessage(query)
         messages.append(response)
+        HapticFeedback.success() // Feedback for response received
     }
 
     func askQuickQuestion(_ question: String) async {

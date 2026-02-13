@@ -143,7 +143,7 @@ struct WeeklySummaryCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
     }
 
@@ -297,7 +297,7 @@ private struct ComparisonBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(badgeColor.opacity(0.15))
-        .cornerRadius(4)
+        .cornerRadius(CornerRadius.xs)
     }
 }
 
@@ -344,7 +344,7 @@ struct CompactWeeklySummaryCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 

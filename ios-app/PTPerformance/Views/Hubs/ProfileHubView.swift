@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ProfileHubView.swift
 //  PTPerformance
@@ -386,7 +387,7 @@ struct ProfileHubView: View {
                     .padding(.vertical, 4)
                     .background(modeThemeColor.opacity(0.15))
                     .foregroundColor(modeThemeColor)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                     .accessibilityHidden(true)
             }
             .padding(.vertical, 4)
@@ -401,7 +402,7 @@ struct ProfileHubView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .padding(.vertical, 2)
@@ -607,7 +608,7 @@ struct ProfileHubView: View {
                             .padding(.vertical, 2)
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                             .accessibilityHidden(true)
                     }
                 }
@@ -731,7 +732,7 @@ struct ProfileHubView: View {
                 .padding(.vertical, 2)
                 .background(Color.yellow.opacity(0.2))
                 .foregroundColor(.orange)
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
                 .accessibilityHidden(true)
         }
     }

@@ -9,6 +9,7 @@ import Foundation
 import Supabase
 
 /// Loads and caches learning articles from Supabase content_library table
+@MainActor
 class LearningContentLoader: ObservableObject {
     static let shared = LearningContentLoader()
 
@@ -63,16 +64,12 @@ class LearningContentLoader: ObservableObject {
             // Map to app models
             articles = response.compactMap { mapToLearningArticle($0) }
 
-            #if DEBUG
-            print("✅ Loaded \(articles.count) learning articles from Supabase")
-            #endif
+            DebugLogger.shared.log("[LearningContentLoader] Loaded \(articles.count) learning articles from Supabase", level: .success)
 
         } catch {
             self.error = "Failed to load learning articles: \(error.localizedDescription)"
-            #if DEBUG
-            print("❌ Error loading learning articles: \(error.localizedDescription)")
-            print("❌ Full error: \(error)")
-            #endif
+            DebugLogger.shared.log("[LearningContentLoader] Error loading learning articles: \(error.localizedDescription)", level: .error)
+            DebugLogger.shared.log("[LearningContentLoader] Full error: \(error)", level: .error)
 
             // Load sample articles as fallback
             loadSampleArticles()
@@ -92,17 +89,13 @@ class LearningContentLoader: ObservableObject {
     private func mapToLearningArticle(_ item: SupabaseContentItem) -> LearningArticle? {
         // Extract markdown content from JSONB content field
         guard let content = item.content.markdown else {
-            #if DEBUG
-            print("⚠️ Could not extract markdown content for article '\(item.title)'")
-            #endif
+            DebugLogger.shared.log("[LearningContentLoader] Could not extract markdown content for article '\(item.title)'", level: .warning)
             return nil
         }
 
         // Map database category to enum
         guard let category = LearningCategory.fromDatabaseString(item.category) else {
-            #if DEBUG
-            print("⚠️ Unknown category '\(item.category)' for article '\(item.title)'")
-            #endif
+            DebugLogger.shared.log("[LearningContentLoader] Unknown category '\(item.category)' for article '\(item.title)'", level: .warning)
             return nil
         }
 
@@ -260,8 +253,6 @@ class LearningContentLoader: ObservableObject {
             )
         ]
 
-        #if DEBUG
-        print("⚠️ Using sample learning articles (database unavailable)")
-        #endif
+        DebugLogger.shared.log("[LearningContentLoader] Using sample learning articles (database unavailable)", level: .warning)
     }
 }

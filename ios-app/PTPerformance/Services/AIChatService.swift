@@ -40,6 +40,7 @@ struct ChatMessage: Identifiable, Codable {
 /// let response = try await chatService.sendMessage("How should I warm up?")
 /// print(response.content)
 /// ```
+@MainActor
 class AIChatService: ObservableObject {
 
     /// Shared singleton instance

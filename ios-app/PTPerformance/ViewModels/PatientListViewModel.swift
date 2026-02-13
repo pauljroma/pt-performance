@@ -58,6 +58,30 @@ class PatientListViewModel: ObservableObject {
         }
     }
 
+    /// Whether the patient list is empty (after loading)
+    var isEmpty: Bool {
+        !isLoading && patients.isEmpty
+    }
+
+    /// Whether search returned no results
+    var isSearchEmpty: Bool {
+        !searchText.isEmpty && filteredPatients.isEmpty
+    }
+
+    /// Empty state message for UI display
+    var emptyStateMessage: String {
+        if errorMessage != nil {
+            return errorMessage ?? "Unable to load patients."
+        }
+        if isSearchEmpty {
+            return "No patients match '\(searchText)'. Try a different search term."
+        }
+        if isEmpty {
+            return "You don't have any patients yet. Add a patient to get started."
+        }
+        return ""
+    }
+
     func applyFilters() {
         // Filters are computed via filteredPatients
     }

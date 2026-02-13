@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "compression-service": {
+      "type": "stdio",
+      "command": "/Users/expo/Code/expo/.venv/bin/python",
+      "args": ["/Users/expo/Code/expo/mcp_servers/compression_service_mcp.py"],
+      "env": {}
+    },
+    "openai-reasoning": {
+      "type": "stdio",
+      "command": "/Users/expo/Code/expo/.venv/bin/python",
+      "args": ["/Users/expo/Code/expo/mcp_servers/openai_reasoning_mcp.py"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+      }
+    },
+    "documentation-control": {
+      "type": "stdio",
+      "command": "/Users/expo/Code/expo/.venv/bin/python",
+      "args": ["/Users/expo/Code/expo/mcp_servers/documentation_control_mcp.py"],
+      "env": {}
+    },
+    "quality-metrics": {
+      "type": "stdio",
+      "command": "/Users/expo/Code/expo/.venv/bin/python",
+      "args": ["/Users/expo/Code/expo/mcp_servers/quality_metrics_mcp.py"],
+      "env": {}
+    },
+    "git-operations": {
+      "type": "stdio",
+      "command": "/Users/expo/Code/expo/.venv/bin/python",
+      "args": ["/Users/expo/Code/expo/mcp_servers/git_operations_mcp.py"],
+      "env": {}
+    }
+  }
+}

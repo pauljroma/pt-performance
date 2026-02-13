@@ -292,7 +292,7 @@ struct EditorPhaseRowView: View {
 }
 
 #Preview {
-    NavigationView {
+    NavigationStack {
         ProgramEditorView(
             programId: UUID().uuidString,
             patientId: UUID()

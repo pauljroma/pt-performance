@@ -116,7 +116,7 @@ struct NutritionGoalView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Goal Type
@@ -186,7 +186,7 @@ struct NutritionGoalView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Macro Section
@@ -228,7 +228,7 @@ struct NutritionGoalView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Macro Balance Indicator
@@ -252,7 +252,7 @@ struct NutritionGoalView: View {
         }
         .padding()
         .background(viewModel.macrosBalanced ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Additional Targets
@@ -300,7 +300,7 @@ struct NutritionGoalView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Notes
@@ -346,7 +346,7 @@ private struct GoalPresetCard: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
             )
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
     }

@@ -90,11 +90,11 @@ struct FastingWorkoutRecommendationView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 6)
                 .background(intensityColor.opacity(0.15))
-                .cornerRadius(20)
+                .cornerRadius(CornerRadius.xl)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var gaugeProgress: CGFloat {
@@ -155,7 +155,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func workoutTypeChip(_ type: String) -> some View {
@@ -169,7 +169,7 @@ struct FastingWorkoutRecommendationView: View {
         .padding(.vertical, 8)
         .background(Color.modusCyan.opacity(0.15))
         .foregroundColor(.modusCyan)
-        .cornerRadius(20)
+        .cornerRadius(CornerRadius.xl)
     }
 
     private func iconForWorkoutType(_ type: String) -> String {
@@ -209,7 +209,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func warningSeverity(for warning: String) -> WarningSeverity {
@@ -274,7 +274,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Electrolytes
@@ -302,7 +302,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Performance Notes
@@ -330,7 +330,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Alternative Suggestion
@@ -351,7 +351,7 @@ struct FastingWorkoutRecommendationView: View {
         }
         .padding()
         .background(Color.yellow.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 }
 
@@ -393,7 +393,7 @@ struct WarningCard: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(severity.color.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -485,7 +485,7 @@ struct FastingWorkoutRecommendationCompactView: View {
                                 .padding(.vertical, 4)
                                 .background(Color.modusCyan.opacity(0.15))
                                 .foregroundColor(.modusCyan)
-                                .cornerRadius(12)
+                                .cornerRadius(CornerRadius.md)
                         }
                     }
                 }
@@ -493,7 +493,7 @@ struct FastingWorkoutRecommendationCompactView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private var intensityColor: Color {

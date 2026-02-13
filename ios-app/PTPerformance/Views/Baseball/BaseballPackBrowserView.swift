@@ -265,7 +265,7 @@ struct BaseballPackBrowserView: View {
                             .padding(.vertical, 8)
                             .background(Color.red.opacity(0.15))
                             .foregroundColor(.red)
-                            .cornerRadius(20)
+                            .cornerRadius(CornerRadius.xl)
                         }
                     }
                 }
@@ -297,16 +297,19 @@ struct BaseballPackBrowserView: View {
 
             if !viewModel.searchText.isEmpty {
                 Button {
+                    HapticFeedback.light()
                     viewModel.searchText = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
+                .accessibilityHint("Clears the current search text")
             }
         }
         .padding(10)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(10)
+        .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
         .padding(.top, 8)
     }
@@ -337,7 +340,7 @@ struct BaseballPackBrowserView: View {
             .padding(.vertical, 8)
             .background(viewModel.selectedCategory != .all ? viewModel.selectedCategory.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedCategory != .all ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 
@@ -367,7 +370,7 @@ struct BaseballPackBrowserView: View {
             .padding(.vertical, 8)
             .background(viewModel.selectedPosition != .all ? baseballNavy : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedPosition != .all ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 
@@ -397,7 +400,7 @@ struct BaseballPackBrowserView: View {
             .padding(.vertical, 8)
             .background(viewModel.selectedSeason != .all ? viewModel.selectedSeason.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedSeason != .all ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
     }
 
@@ -517,7 +520,7 @@ struct BaseballProgramCard: View {
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                             .background(baseballRed)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                             .padding(8)
                         }
                         Spacer()
@@ -539,7 +542,7 @@ struct BaseballProgramCard: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color(.tertiarySystemGroupedBackground))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 
@@ -578,14 +581,14 @@ struct BaseballProgramCard: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(program.difficultyColor.opacity(0.15))
-                        .cornerRadius(6)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
             .padding(12)
         }
         .frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
@@ -608,7 +611,7 @@ private struct BaseballCategoryBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(category.color.opacity(0.15))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

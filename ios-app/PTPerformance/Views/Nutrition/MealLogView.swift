@@ -78,7 +78,15 @@ struct MealLogView: View {
             }
         }
         .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) { }
+            Button("Try Again") {
+                Task {
+                    if await viewModel.saveMealLog() {
+                        onSaved()
+                        dismiss()
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { }
         } message: {
             Text(viewModel.error ?? "An error occurred")
         }
@@ -91,6 +99,7 @@ struct MealLogView: View {
             HStack(spacing: 12) {
                 ForEach(MealType.allCases, id: \.self) { type in
                     Button {
+                        HapticFeedback.light()
                         viewModel.mealType = type
                     } label: {
                         HStack(spacing: 6) {
@@ -102,7 +111,7 @@ struct MealLogView: View {
                         .padding(.vertical, 8)
                         .background(viewModel.mealType == type ? Color.blue : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(viewModel.mealType == type ? .white : .primary)
-                        .cornerRadius(20)
+                        .cornerRadius(CornerRadius.xl)
                     }
                 }
             }
@@ -127,12 +136,15 @@ struct MealLogView: View {
 
             if !viewModel.searchText.isEmpty {
                 Button {
+                    HapticFeedback.light()
                     viewModel.searchText = ""
                     viewModel.searchResults = []
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
+                .accessibilityHint("Clears the current search text")
             }
 
             Button {
@@ -141,6 +153,8 @@ struct MealLogView: View {
                 Image(systemName: "plus.circle.fill")
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Add custom food")
+            .accessibilityHint("Opens the form to add a new custom food item")
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -170,7 +184,7 @@ struct MealLogView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Search Results
@@ -266,7 +280,7 @@ struct MealLogView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(8)
+                            .cornerRadius(CornerRadius.sm)
                         }
                         .buttonStyle(.plain)
                     }
@@ -314,7 +328,7 @@ struct MealLogView: View {
                     .padding(.vertical, 12)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(viewModel.isSaving || !viewModel.canSave)
             }
@@ -349,11 +363,15 @@ struct SelectedFoodRow: View {
                 Image(systemName: "pencil.circle")
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Edit food")
+            .accessibilityHint("Edit serving size for this food item")
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.red)
             }
+            .accessibilityLabel("Remove food")
+            .accessibilityHint("Removes this food item from the meal")
         }
         .padding(.vertical, 8)
     }
@@ -397,6 +415,8 @@ struct FoodSearchRow: View {
                     .font(.title2)
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Add food")
+            .accessibilityHint("Adds this food to your meal")
         }
         .padding(.vertical, 8)
     }

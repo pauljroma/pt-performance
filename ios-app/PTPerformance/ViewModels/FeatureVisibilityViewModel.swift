@@ -33,13 +33,15 @@ class FeatureVisibilityViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     /// Update visible features based on current mode
     private func updateVisibleFeatures() {
         visibleFeatures = Set(modeService.modeFeatures.map { $0.featureKey })
 
-        #if DEBUG
-        print("✅ Visible features updated: \(visibleFeatures.count) for \(currentMode.displayName)")
-        #endif
+        DebugLogger.shared.log("[FeatureVisibility] Visible features updated: \(visibleFeatures.count) for \(currentMode.displayName)", level: .diagnostic)
     }
 
     /// Check if a feature is visible
@@ -112,10 +114,11 @@ class FeatureVisibilityViewModel: ObservableObject {
 /// Tab bar item definition
 @MainActor
 struct TabBarItem: Identifiable {
-    let id = UUID()
     let title: String
     let icon: String
     let featureKey: FeatureKey?  // nil = always visible
+
+    var id: String { "\(title)-\(icon)" }
 
     var isVisible: Bool {
         guard let featureKey = featureKey else { return true }
@@ -125,10 +128,11 @@ struct TabBarItem: Identifiable {
 
 /// History section definition
 struct HistorySection: Identifiable {
-    let id = UUID()
     let title: String
     let icon: String
     let featureKey: FeatureKey?  // nil = always visible
+
+    var id: String { "\(title)-\(icon)" }
 }
 
 /// SwiftUI View extension for conditional feature visibility

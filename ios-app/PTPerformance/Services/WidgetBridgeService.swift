@@ -56,9 +56,7 @@ final class WidgetBridgeService {
     /// Fetches all widget data in parallel and updates SharedDataStore.
     func refreshAllWidgetData() async {
         guard let patientId = currentPatientId else {
-            #if DEBUG
-            print("[WidgetBridge] No patient ID available, skipping widget refresh")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] No patient ID available, skipping widget refresh", level: .diagnostic)
             return
         }
 
@@ -85,9 +83,7 @@ final class WidgetBridgeService {
             weekTrend: weekTrendResult
         )
 
-        #if DEBUG
-        print("[WidgetBridge] All widget data refreshed successfully")
-        #endif
+        DebugLogger.shared.log("[WidgetBridge] All widget data refreshed successfully", level: .success)
     }
 
     /// Refresh readiness widget data.
@@ -150,9 +146,7 @@ final class WidgetBridgeService {
     func clearWidgetData() {
         sharedDataStore.clearAllData()
 
-        #if DEBUG
-        print("[WidgetBridge] Widget data cleared")
-        #endif
+        DebugLogger.shared.log("[WidgetBridge] Widget data cleared", level: .diagnostic)
     }
 
     // MARK: - Private Helpers
@@ -168,22 +162,24 @@ final class WidgetBridgeService {
     /// Fetch and convert readiness data to widget model.
     private func fetchReadinessData(for patientId: UUID) async -> WidgetReadiness? {
         do {
+            // Fetch today's readiness and recent readiness in parallel
+            async let todayTask = readinessService.getTodayReadiness(for: patientId)
+            async let recentTask = readinessService.fetchRecentReadiness(for: patientId, limit: 1)
+
             // Try to get today's readiness first
-            if let todayReadiness = try await readinessService.getTodayReadiness(for: patientId) {
+            if let todayReadiness = try await todayTask {
                 return convertToWidgetReadiness(todayReadiness)
             }
 
             // If no readiness today, try to get the most recent one
-            let recentReadiness = try await readinessService.fetchRecentReadiness(for: patientId, limit: 1)
-            if let latest = recentReadiness.first {
+            let recent = try await recentTask
+            if let latest = recent.first {
                 return convertToWidgetReadiness(latest)
             }
 
             return nil
         } catch {
-            #if DEBUG
-            print("[WidgetBridge] Error fetching readiness: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] Error fetching readiness: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -239,9 +235,7 @@ final class WidgetBridgeService {
 
             return convertToWidgetWorkout(primarySession)
         } catch {
-            #if DEBUG
-            print("[WidgetBridge] Error fetching workout: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] Error fetching workout: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -339,9 +333,7 @@ final class WidgetBridgeService {
                 lastUpdated: Date()
             )
         } catch {
-            #if DEBUG
-            print("[WidgetBridge] Error fetching adherence: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] Error fetching adherence: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -350,14 +342,18 @@ final class WidgetBridgeService {
     /// ACP-836: Uses StreakTrackingService for accurate streak data from database
     private func fetchStreakData(for patientId: UUID) async -> WidgetStreak? {
         do {
-            // Use StreakTrackingService for accurate streak data
+            // Fetch streak and sessions in parallel
             let streakService = StreakTrackingService.shared
-            if let combinedStreak = try await streakService.getCombinedStreak(for: patientId) {
+            async let streakTask = streakService.getCombinedStreak(for: patientId)
+            async let sessionsTask = schedulingService.fetchScheduledSessions(for: patientId)
+
+            // Use StreakTrackingService for accurate streak data
+            if let combinedStreak = try await streakTask {
                 return streakService.createWidgetStreak(from: combinedStreak)
             }
 
             // Fallback to calculated streak from sessions if no streak record exists
-            let allSessions = try await schedulingService.fetchScheduledSessions(for: patientId)
+            let allSessions = try await sessionsTask
             let completedSessions = allSessions
                 .filter { $0.status == .completed }
                 .sorted { $0.scheduledDate > $1.scheduledDate }
@@ -388,9 +384,7 @@ final class WidgetBridgeService {
                 lastUpdated: Date()
             )
         } catch {
-            #if DEBUG
-            print("[WidgetBridge] Error fetching streak: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] Error fetching streak: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -470,9 +464,7 @@ final class WidgetBridgeService {
 
             return recentReadiness.map { convertToWidgetReadiness($0) }
         } catch {
-            #if DEBUG
-            print("[WidgetBridge] Error fetching week trend: \(error.localizedDescription)")
-            #endif
+            DebugLogger.shared.log("[WidgetBridge] Error fetching week trend: \(error.localizedDescription)", level: .error)
             return nil
         }
     }
@@ -492,9 +484,7 @@ extension WidgetBridgeService {
         if let lastRefresh = lastRefresh {
             let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
             if timeSinceRefresh < refreshThreshold {
-                #if DEBUG
-                print("[WidgetBridge] Skipping refresh, last refresh was \(Int(timeSinceRefresh))s ago")
-                #endif
+                DebugLogger.shared.log("[WidgetBridge] Skipping refresh, last refresh was \(Int(timeSinceRefresh))s ago", level: .diagnostic)
                 return
             }
         }

@@ -45,6 +45,10 @@ final class WeeklyReportViewModel: ObservableObject {
         observeServiceUpdates()
     }
 
+    deinit {
+        cancellables.removeAll()
+    }
+
     // MARK: - Service Observation
 
     private func observeServiceUpdates() {

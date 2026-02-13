@@ -168,7 +168,7 @@ struct DailyCheckInView: View {
                 }
                 .padding()
                 .background(Color.orange.opacity(0.1))
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
 
             // Already checked in indicator
@@ -197,7 +197,7 @@ struct DailyCheckInView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color.accentColor)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 32)
@@ -392,7 +392,7 @@ struct DailyCheckInView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.gray.opacity(0.2))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
             }
             .padding(.top, 16)
 
@@ -445,7 +445,7 @@ struct DailyCheckInView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.gray.opacity(0.2))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
             }
             .padding(.top, 16)
 
@@ -461,9 +461,9 @@ struct DailyCheckInView: View {
                     .frame(minHeight: 120)
                     .padding(8)
                     .background(Color(.secondarySystemBackground))
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                     )
 
@@ -620,7 +620,7 @@ struct DailyCheckInView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 12)
                 .background(viewModel.canProceed ? Color.accentColor : Color.gray)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canProceed)
         }
@@ -689,7 +689,7 @@ struct DailyCheckInView: View {
                 }
                 .padding()
                 .background(Color(.secondarySystemBackground))
-                .cornerRadius(16)
+                .cornerRadius(CornerRadius.lg)
                 .padding(.horizontal)
 
                 // Readiness preview
@@ -712,7 +712,7 @@ struct DailyCheckInView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(viewModel.canSubmit ? Color.green : Color.gray)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .disabled(!viewModel.canSubmit)
                 .padding(.horizontal, 32)
@@ -763,7 +763,7 @@ struct DailyCheckInView: View {
                     .padding(.horizontal, 32)
                     .padding(.vertical, 12)
                     .background(Color.accentColor)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
 
             Button {

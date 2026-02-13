@@ -8,21 +8,21 @@ import SwiftUI
 struct ProtocolSelector: View {
     @Binding var selectedProtocol: TherapyProtocol?
     let protocols: [TherapyProtocol]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Select Protocol")
                 .font(.headline)
-            
+
             Picker("Protocol", selection: $selectedProtocol) {
                 Text("None (Custom Program)").tag(nil as TherapyProtocol?)
-                
+
                 ForEach(protocols) { therapyProtocol in
                     Text(therapyProtocol.name).tag(therapyProtocol as TherapyProtocol?)
                 }
             }
             .pickerStyle(.menu)
-            
+
             if let therapyProtocol = selectedProtocol {
                 ProtocolInfoCard(therapyProtocol: therapyProtocol)
             }
@@ -65,6 +65,6 @@ struct ProtocolInfoCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }

@@ -13,7 +13,7 @@ struct CheckReadinessIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        print("[CheckReadinessIntent] Checking readiness via Siri")
+        DebugLogger.shared.log("[CheckReadinessIntent] Checking readiness via Siri", level: .diagnostic)
 
         // Try to get cached readiness score from UserDefaults (set by WidgetBridgeService)
         let defaults = UserDefaults(suiteName: "group.com.getmodus.app") ?? UserDefaults.standard
@@ -85,7 +85,7 @@ struct LogReadinessIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        print("[LogReadinessIntent] Logging readiness via Siri")
+        DebugLogger.shared.log("[LogReadinessIntent] Logging readiness via Siri", level: .diagnostic)
 
         // Validate inputs
         guard sleepHours >= 0, sleepHours <= 24 else {

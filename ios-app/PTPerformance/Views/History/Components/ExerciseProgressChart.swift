@@ -59,7 +59,7 @@ struct ExerciseProgressChart: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .onAppear {
             if reduceMotion {
                 isAnimated = true
@@ -114,7 +114,7 @@ struct ChartLoadingPlaceholder: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -171,7 +171,7 @@ struct PersonalRecordBadge: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
         )
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(prAccessibilityLabel)
     }
@@ -210,7 +210,7 @@ struct RecentHistorySection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     @ViewBuilder

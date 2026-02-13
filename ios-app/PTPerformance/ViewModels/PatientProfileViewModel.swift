@@ -50,9 +50,7 @@ class PatientProfileViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        #if DEBUG
-        print("📊 [PatientProfile] Loading profile for patient: \(patientId)")
-        #endif
+        DebugLogger.shared.log("[PatientProfile] Loading profile for patient: \(patientId)", level: .diagnostic)
 
         do {
             let response = try await supabase.client
@@ -78,9 +76,7 @@ class PatientProfileViewModel: ObservableObject {
             // Populate form fields
             populateFields(from: profile)
 
-            #if DEBUG
-            print("✅ [PatientProfile] Profile loaded successfully")
-            #endif
+            DebugLogger.shared.log("[PatientProfile] Profile loaded successfully", level: .success)
 
         } catch {
             DebugLogger.shared.error("PatientProfileViewModel", "Error loading profile: \(error.localizedDescription)")
@@ -203,9 +199,7 @@ class PatientProfileViewModel: ObservableObject {
         errorMessage = nil
         successMessage = nil
 
-        #if DEBUG
-        print("💾 [PatientProfile] Saving profile for patient: \(patientId)")
-        #endif
+        DebugLogger.shared.log("[PatientProfile] Saving profile for patient: \(patientId)", level: .diagnostic)
 
         do {
             // Calculate date of birth from age if age was changed
@@ -288,9 +282,7 @@ class PatientProfileViewModel: ObservableObject {
                 .eq("id", value: patientId)
                 .execute()
 
-            #if DEBUG
-            print("✅ [PatientProfile] Profile saved successfully")
-            #endif
+            DebugLogger.shared.log("[PatientProfile] Profile saved successfully", level: .success)
             successMessage = "Profile updated successfully"
             showingSuccessAlert = true
 

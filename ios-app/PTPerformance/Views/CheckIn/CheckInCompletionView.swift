@@ -242,7 +242,7 @@ struct CheckInCompletionView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(readinessColor)
-                .cornerRadius(12)
+                .cornerRadius(CornerRadius.md)
             }
             .accessibilityLabel("View your training plan")
             .accessibilityHint("Opens today's workout based on your readiness")

@@ -30,9 +30,7 @@ actor BodyCompGoalsService {
             .execute()
             .value
 
-        #if DEBUG
-        print("[BodyCompGoals] Fetched \(goals.count) goals for patient \(patientId)")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Fetched \(goals.count) goals for patient \(patientId)", level: .diagnostic)
 
         return goals
     }
@@ -82,9 +80,7 @@ actor BodyCompGoalsService {
             .execute()
             .value
 
-        #if DEBUG
-        print("[BodyCompGoals] Fetched progress for \(progress.count) active goals")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Fetched progress for \(progress.count) active goals", level: .diagnostic)
 
         return progress
     }
@@ -120,9 +116,7 @@ actor BodyCompGoalsService {
             throw AppError.saveFailed
         }
 
-        #if DEBUG
-        print("[BodyCompGoals] Created goal: \(createdGoal.id)")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Created goal: \(createdGoal.id)", level: .success)
 
         return createdGoal
     }
@@ -140,9 +134,7 @@ actor BodyCompGoalsService {
             .eq("id", value: goalId.uuidString)
             .execute()
 
-        #if DEBUG
-        print("[BodyCompGoals] Updated goal: \(goalId)")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Updated goal: \(goalId)", level: .success)
     }
 
     /// Update the status of a goal
@@ -159,9 +151,7 @@ actor BodyCompGoalsService {
             .eq("id", value: goalId.uuidString)
             .execute()
 
-        #if DEBUG
-        print("[BodyCompGoals] Updated goal \(goalId) status to \(status.rawValue)")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Updated goal \(goalId) status to \(status.rawValue)", level: .success)
     }
 
     /// Mark a goal as achieved
@@ -186,9 +176,7 @@ actor BodyCompGoalsService {
             .eq("id", value: goalId.uuidString)
             .execute()
 
-        #if DEBUG
-        print("[BodyCompGoals] Deleted goal: \(goalId)")
-        #endif
+        DebugLogger.shared.log("[BodyCompGoals] Deleted goal: \(goalId)", level: .success)
     }
 
     // MARK: - Goal Achievement Check

@@ -244,64 +244,87 @@ final class RecoveryService: ObservableObject {
 
     // MARK: - Private Analysis Methods
 
-    /// Fetch HealthKit data for correlation analysis
+    /// Fetch HealthKit data for correlation analysis using concurrent batch requests
     private func fetchHealthDataForAnalysis(days: Int) async throws -> [HealthDataPoint] {
-        var dataPoints: [HealthDataPoint] = []
         let calendar = Calendar.current
         let today = Date()
 
-        for dayOffset in 0..<days {
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
-                continue
-            }
-
-            // Fetch HRV
-            if let hrv = try? await healthKitService.fetchHRV(for: date), hrv > 0 {
-                dataPoints.append(HealthDataPoint(date: date, metric: .hrv, value: hrv))
-            }
-
-            // Fetch sleep data
-            if let sleepData = try? await healthKitService.fetchSleepData(for: date) {
-                dataPoints.append(HealthDataPoint(
-                    date: date,
-                    metric: .sleepDuration,
-                    value: Double(sleepData.totalMinutes) / 60.0
-                ))
-
-                if let deepMinutes = sleepData.deepMinutes {
-                    dataPoints.append(HealthDataPoint(
-                        date: date,
-                        metric: .deepSleep,
-                        value: Double(deepMinutes)
-                    ))
-                }
-
-                if let remMinutes = sleepData.remMinutes {
-                    dataPoints.append(HealthDataPoint(
-                        date: date,
-                        metric: .remSleep,
-                        value: Double(remMinutes)
-                    ))
-                }
-
-                // Sleep quality/efficiency
-                let efficiency = sleepData.sleepEfficiency
-                if efficiency > 0 {
-                    dataPoints.append(HealthDataPoint(
-                        date: date,
-                        metric: .sleepQuality,
-                        value: efficiency
-                    ))
-                }
-            }
-
-            // Fetch resting heart rate
-            if let rhr = try? await healthKitService.fetchRestingHeartRate(for: date), rhr > 0 {
-                dataPoints.append(HealthDataPoint(date: date, metric: .restingHeartRate, value: rhr))
-            }
+        // Generate all dates we need to fetch
+        let dates: [Date] = (0..<days).compactMap { dayOffset in
+            calendar.date(byAdding: .day, value: -dayOffset, to: today)
         }
 
-        return dataPoints
+        // Fetch all data concurrently using TaskGroup for better performance
+        return await withTaskGroup(of: [HealthDataPoint].self) { group in
+            for date in dates {
+                group.addTask { [healthKitService] in
+                    var points: [HealthDataPoint] = []
+
+                    // Fetch HRV, sleep, and RHR concurrently for each day
+                    async let hrvTask = try? healthKitService.fetchHRV(for: date)
+                    async let sleepTask = try? healthKitService.fetchSleepData(for: date)
+                    async let rhrTask = try? healthKitService.fetchRestingHeartRate(for: date)
+
+                    let hrv = await hrvTask
+                    let sleepData = await sleepTask
+                    let rhr = await rhrTask
+
+                    // Process HRV
+                    if let hrvValue = hrv, hrvValue > 0 {
+                        points.append(HealthDataPoint(date: date, metric: .hrv, value: hrvValue))
+                    }
+
+                    // Process sleep data
+                    if let sleep = sleepData {
+                        points.append(HealthDataPoint(
+                            date: date,
+                            metric: .sleepDuration,
+                            value: Double(sleep.totalMinutes) / 60.0
+                        ))
+
+                        if let deepMinutes = sleep.deepMinutes {
+                            points.append(HealthDataPoint(
+                                date: date,
+                                metric: .deepSleep,
+                                value: Double(deepMinutes)
+                            ))
+                        }
+
+                        if let remMinutes = sleep.remMinutes {
+                            points.append(HealthDataPoint(
+                                date: date,
+                                metric: .remSleep,
+                                value: Double(remMinutes)
+                            ))
+                        }
+
+                        // Sleep quality/efficiency
+                        let efficiency = sleep.sleepEfficiency
+                        if efficiency > 0 {
+                            points.append(HealthDataPoint(
+                                date: date,
+                                metric: .sleepQuality,
+                                value: efficiency
+                            ))
+                        }
+                    }
+
+                    // Process resting heart rate
+                    if let rhrValue = rhr, rhrValue > 0 {
+                        points.append(HealthDataPoint(date: date, metric: .restingHeartRate, value: rhrValue))
+                    }
+
+                    return points
+                }
+            }
+
+            // Collect all results
+            var allDataPoints: [HealthDataPoint] = []
+            for await points in group {
+                allDataPoints.append(contentsOf: points)
+            }
+            return allDataPoints
+        }
     }
 
     /// Calculate correlations between recovery protocols and health metrics

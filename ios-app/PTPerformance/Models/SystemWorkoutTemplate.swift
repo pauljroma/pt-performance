@@ -12,10 +12,6 @@ import Foundation
 /// Wrapper for exercises JSONB structure: {"blocks": [...]}
 struct WorkoutExercises: Codable {
     let blocks: [DatabaseBlock]
-
-    init(blocks: [DatabaseBlock]) {
-        self.blocks = blocks
-    }
 }
 
 // MARK: - System Workout Template

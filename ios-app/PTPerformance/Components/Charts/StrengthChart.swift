@@ -89,7 +89,7 @@ struct StrengthChart: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Strength Progression Chart")
@@ -172,7 +172,7 @@ struct StrengthChart: View {
                             .font(.caption2)
                             .padding(4)
                             .background(Color.orange.opacity(0.2))
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.orange)
                     }
             }
@@ -260,7 +260,7 @@ struct StrengthChartSection: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -287,7 +287,7 @@ struct StrengthChartSection: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -310,7 +310,7 @@ struct StrengthChartSection: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }

@@ -105,7 +105,7 @@ struct HelpView: View {
                     HStack(spacing: 12) {
                         ForEach(0..<5, id: \.self) { _ in
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.gray.opacity(0.3))
+                                .fill(skeletonColor)
                                 .frame(width: 80, height: 32)
                         }
                     }
@@ -115,14 +115,14 @@ struct HelpView: View {
             }
 
             // Skeleton for article sections
-            ForEach(0..<3, id: \.self) { sectionIndex in
+            ForEach(0..<3, id: \.self) { _ in
                 Section {
                     ForEach(0..<3, id: \.self) { _ in
                         HelpArticleSkeletonRow()
                     }
                 } header: {
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(skeletonColor)
                         .frame(width: 100, height: 12)
                 }
             }
@@ -139,7 +139,7 @@ struct HelpView: View {
                 }
             } header: {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 80, height: 12)
             }
         }
@@ -386,24 +386,26 @@ struct ArticleRowView: View {
 
 // MARK: - Skeleton Views
 
+private let skeletonColor = Color.gray.opacity(0.3)
+
 struct HelpArticleSkeletonRow: View {
     @State private var isAnimating = false
 
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Color.gray.opacity(0.3))
+                .fill(skeletonColor)
                 .frame(width: 24, height: 24)
                 .shimmer(isAnimating: isAnimating)
 
             VStack(alignment: .leading, spacing: 6) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 180, height: 14)
                     .shimmer(isAnimating: isAnimating)
 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 120, height: 10)
                     .shimmer(isAnimating: isAnimating)
             }
@@ -428,31 +430,31 @@ struct HelpSearchResultSkeletonRow: View {
             // Category badge skeleton
             HStack(spacing: 4) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 14, height: 14)
                     .shimmer(isAnimating: isAnimating)
 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 60, height: 10)
                     .shimmer(isAnimating: isAnimating)
             }
 
             // Title skeleton
             RoundedRectangle(cornerRadius: 4)
-                .fill(Color.gray.opacity(0.3))
+                .fill(skeletonColor)
                 .frame(width: 200, height: 16)
                 .shimmer(isAnimating: isAnimating)
 
             // Content preview skeleton
             VStack(alignment: .leading, spacing: 4) {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(height: 10)
                     .shimmer(isAnimating: isAnimating)
 
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.gray.opacity(0.3))
+                    .fill(skeletonColor)
                     .frame(width: 180, height: 10)
                     .shimmer(isAnimating: isAnimating)
             }

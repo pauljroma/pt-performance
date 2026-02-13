@@ -249,7 +249,6 @@ class NutritionGoalViewModel: ObservableObject {
 // MARK: - Goal Presets
 
 struct GoalPreset: Identifiable {
-    let id = UUID()
     let name: String
     let description: String
     let calories: Int
@@ -257,6 +256,8 @@ struct GoalPreset: Identifiable {
     let carbs: Double
     let fat: Double
     let fiber: Double
+
+    var id: String { "\(name)-\(calories)" }
 
     static let presets: [GoalPreset] = [
         GoalPreset(

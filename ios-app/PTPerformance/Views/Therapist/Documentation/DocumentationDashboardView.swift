@@ -144,7 +144,7 @@ struct DocumentationDashboardView: View {
         }
         .padding()
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Quick Actions Section
@@ -244,7 +244,7 @@ struct DocumentationDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Recent Notes Widget
@@ -280,7 +280,7 @@ struct DocumentationDashboardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Statistics Section
@@ -327,11 +327,11 @@ struct DocumentationDashboardView: View {
             }
             .frame(height: 80)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Navigation
@@ -363,7 +363,7 @@ private struct DocQuickActionButton: View {
             }
             .frame(width: 90, height: 80)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
     }
@@ -387,7 +387,7 @@ struct EmptyWidgetView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -429,7 +429,7 @@ struct DraftNoteRow: View {
             }
             .padding()
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -481,7 +481,7 @@ struct RecentNoteRow: View {
                     .foregroundColor(note.typeColor)
                     .frame(width: 32, height: 32)
                     .background(note.typeColor.opacity(0.1))
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(note.patientName)
@@ -507,7 +507,7 @@ struct RecentNoteRow: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.orange.opacity(0.15))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
 
                 Image(systemName: "chevron.right")
@@ -516,7 +516,7 @@ struct RecentNoteRow: View {
             }
             .padding()
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -1029,12 +1029,12 @@ struct PatientIdOnly: Codable {
 #if DEBUG
 struct DocumentationDashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             DocumentationDashboardView()
         }
         .preferredColorScheme(.light)
 
-        NavigationView {
+        NavigationStack {
             DocumentationDashboardView()
         }
         .preferredColorScheme(.dark)

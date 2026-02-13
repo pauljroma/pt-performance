@@ -243,7 +243,7 @@ struct TimerPickerView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Create Custom Timer")
@@ -280,7 +280,7 @@ struct TimerPickerView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
@@ -301,7 +301,7 @@ struct TimerPickerView: View {
             .padding()
             .background(Color.accentColor)
             .foregroundColor(.white)
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.prominent)
         }
         .padding(.horizontal)
@@ -406,7 +406,7 @@ struct TimerPickerView: View {
 
     // BUILD 280: Use actual CustomTimerBuilderView instead of placeholder
     private var customBuilderSheet: some View {
-        CustomTimerBuilderView(patientId: patientId) { template in
+        CustomTimerBuilderView(patientId: patientId) { _ in
             // Timer was created - close the sheet and optionally start the timer
             showCustomBuilder = false
             // Refresh presets to show the new custom timer
@@ -540,7 +540,7 @@ private struct CategoryChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
+            .cornerRadius(CornerRadius.xl)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(category?.displayName ?? "All") category, \(count) timers")
@@ -620,7 +620,7 @@ private struct PresetCard: View {
                     .padding(.vertical, 4)
                     .background(difficultyColor.opacity(0.2))
                     .foregroundColor(difficultyColor)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
 
                 Spacer()
             }
@@ -699,7 +699,7 @@ private struct PresetPreview: View {
                 .foregroundColor(.accentColor)
                 .frame(width: 44, height: 44)
                 .background(Color.accentColor.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(CornerRadius.sm)
 
             // Info
             VStack(alignment: .leading, spacing: 4) {
@@ -723,7 +723,7 @@ private struct PresetPreview: View {
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

@@ -80,7 +80,7 @@ struct PatientDetailView: View {
                             PainTrendChart(dataPoints: viewModel.painTrend, height: 180)
                                 .padding()
                                 .background(Color(.secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                                .cornerRadius(CornerRadius.md)
                         }
                     }
 
@@ -294,9 +294,7 @@ struct PatientDetailView: View {
                 showReportBuilder = true
             } catch {
                 // Error is handled by the service
-                #if DEBUG
-                print("[PatientDetailView] Quick report generation failed: \(error.localizedDescription)")
-                #endif
+                DebugLogger.shared.log("[PatientDetailView] Quick report generation failed: \(error.localizedDescription)", level: .error)
             }
         }
     }
@@ -351,7 +349,7 @@ struct PatientHeaderCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -378,7 +376,7 @@ struct HighSeverityAlert: View {
         }
         .padding()
         .background(Color.red.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.red, lineWidth: 2)
@@ -410,7 +408,7 @@ struct FlagSummaryCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -440,7 +438,7 @@ struct FlagRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private var severityIcon: String {
@@ -479,7 +477,7 @@ struct SectionErrorBanner: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -585,7 +583,7 @@ struct ActionButton: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -595,7 +593,7 @@ struct ActionButton: View {
 #if DEBUG
 struct PatientDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             PatientDetailView(patient: Patient(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
                 therapistId: UUID(uuidString: "00000000-0000-0000-0000-000000000100")!,

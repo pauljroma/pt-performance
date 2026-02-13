@@ -52,7 +52,7 @@ struct ExerciseLogDetail: Identifiable, Codable, Hashable, Sendable {
         if actualReps.isEmpty { return "0" }
         let unique = Set(actualReps)
         if unique.count == 1 {
-            return "\(actualReps[0])"
+            return actualReps.first.map { "\($0)" } ?? "0"
         }
         return actualReps.map { String($0) }.joined(separator: "/")
     }

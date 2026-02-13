@@ -9,6 +9,7 @@ import Foundation
 import Supabase
 
 /// Loads and caches help articles from Supabase help_articles table
+@MainActor
 class HelpContentLoader: ObservableObject {
     static let shared = HelpContentLoader()
 
@@ -55,16 +56,11 @@ class HelpContentLoader: ObservableObject {
             // Map to app models
             articles = response.compactMap { mapContentItemFromDB($0) }
 
-            #if DEBUG
-            print("✅ Loaded \(articles.count) help articles from Supabase content_items table")
-            #endif
+            DebugLogger.shared.log("[HelpContentLoader] Loaded \(articles.count) help articles from Supabase", level: .success)
 
         } catch {
             self.error = "Failed to load help articles: \(error.localizedDescription)"
-            #if DEBUG
-            print("❌ Error loading help articles: \(error.localizedDescription)")
-            print("❌ Full error: \(error)")
-            #endif
+            DebugLogger.shared.log("[HelpContentLoader] Error loading help articles: \(error.localizedDescription)", level: .error)
 
             // Load sample articles as fallback
             loadSampleArticles()
@@ -84,9 +80,7 @@ class HelpContentLoader: ObservableObject {
     private func mapContentItemFromDB(_ item: SupabaseContentItem) -> HelpArticle? {
         // Convert string ID to UUID
         guard let articleId = UUID(uuidString: item.id) else {
-            #if DEBUG
-            print("⚠️ Skipping article with invalid UUID: \(item.id)")
-            #endif
+            DebugLogger.shared.log("[HelpContentLoader] Skipping article with invalid UUID: \(item.id)", level: .warning)
             return nil
         }
 
@@ -127,9 +121,7 @@ class HelpContentLoader: ObservableObject {
             articles = jsonArticles.compactMap { jsonArticle in
                 // Convert string ID to UUID
                 guard let articleId = UUID(uuidString: jsonArticle.id) else {
-                    #if DEBUG
-                    print("⚠️ Skipping article with invalid UUID: \(jsonArticle.id)")
-                    #endif
+                    DebugLogger.shared.log("[HelpContentLoader] Skipping article with invalid UUID: \(jsonArticle.id)", level: .warning)
                     return nil
                 }
 
@@ -156,9 +148,7 @@ class HelpContentLoader: ObservableObject {
                 )
             }
 
-            #if DEBUG
-            print("✅ Loaded \(articles.count) help articles from local JSON file")
-            #endif
+            DebugLogger.shared.log("[HelpContentLoader] Loaded \(articles.count) help articles from local JSON file", level: .success)
             return
         }
 
@@ -281,9 +271,7 @@ class HelpContentLoader: ObservableObject {
             )
         ]
 
-        #if DEBUG
-        print("⚠️ Using hardcoded sample articles (JSON file and database unavailable)")
-        #endif
+        DebugLogger.shared.log("[HelpContentLoader] Using hardcoded sample articles (JSON file and database unavailable)", level: .warning)
     }
 }
 

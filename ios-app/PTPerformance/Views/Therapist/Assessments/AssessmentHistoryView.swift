@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  AssessmentHistoryView.swift
 //  PTPerformance
@@ -206,13 +207,13 @@ struct AssessmentHistoryView: View {
                 }
                 .chartYScale(domain: 0...10)
                 .chartYAxis {
-                    AxisMarks(position: .leading, values: [0, 2, 4, 6, 8, 10]) { value in
+                    AxisMarks(position: .leading, values: [0, 2, 4, 6, 8, 10]) { _ in
                         AxisValueLabel()
                         AxisGridLine()
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: .automatic(desiredCount: 5)) { value in
+                    AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                         AxisValueLabel(format: .dateTime.month().day())
                     }
                 }

@@ -293,7 +293,7 @@ struct TherapistReportingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Recent Activity Section
@@ -310,7 +310,7 @@ struct TherapistReportingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Needs Attention Section
@@ -327,7 +327,7 @@ struct TherapistReportingView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Empty State
@@ -397,7 +397,7 @@ struct ReportSummaryCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(color.gradient)
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -550,7 +550,7 @@ struct NeedsAttentionRow: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(color)
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.sm)
     }
 
     private func isInactive(_ patient: Patient) -> Bool {

@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  BiomarkerDetailView.swift
 //  PTPerformance
@@ -8,6 +9,7 @@
 
 import SwiftUI
 import Charts
+import UIKit
 
 struct BiomarkerDetailView: View {
     let biomarker: BiomarkerSummary
@@ -16,6 +18,8 @@ struct BiomarkerDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var showReferenceInfo = false
+
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
 
     var body: some View {
         NavigationStack {
@@ -202,7 +206,8 @@ struct BiomarkerDetailView: View {
     private var referenceRangesCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Button {
-                withAnimation {
+                impactFeedback.impactOccurred()
+                withAnimation(.easeInOut(duration: 0.25)) {
                     showReferenceInfo.toggle()
                 }
             } label: {
@@ -277,7 +282,7 @@ struct BiomarkerDetailView: View {
             ZStack(alignment: .leading) {
                 // Background track
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.red.opacity(0.2))
+                    .fill(Color(.systemRed).opacity(0.2))
                     .frame(height: 8)
 
                 // Normal range
@@ -343,7 +348,7 @@ struct BiomarkerDetailView: View {
                     .padding(.vertical, 4)
                     .background(Color.modusCyan.opacity(0.2))
                     .foregroundColor(.modusCyan)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
             }
 
             Text("Personalized insights about your \(biomarker.displayName) levels, including recommendations based on your health goals and training data.")

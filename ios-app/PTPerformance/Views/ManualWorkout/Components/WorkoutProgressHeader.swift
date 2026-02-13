@@ -52,7 +52,7 @@ struct WorkoutProgressHeader: View {
                         .foregroundColor(.secondary)
                         .padding(8)
                         .background(Color(.tertiarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel(isTimerVisible ? "Hide timer" : "Show timer")
 
@@ -92,7 +92,7 @@ struct WorkoutProgressHeader: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Workout progress: \(completedCount) of \(totalExercises) exercises completed, elapsed time \(elapsedTimeDisplay)")

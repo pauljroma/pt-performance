@@ -98,7 +98,7 @@ struct VideoPlayerView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
                                 .background(Color.white.opacity(0.2))
-                                .cornerRadius(8)
+                                .cornerRadius(CornerRadius.sm)
                             }
 
                             // Loop toggle
@@ -379,5 +379,5 @@ class VideoPlayerController: ObservableObject {
 #Preview {
     VideoPlayerView(videoUrl: "https://example.com/video.mp4")
         .frame(height: 250)
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
 }

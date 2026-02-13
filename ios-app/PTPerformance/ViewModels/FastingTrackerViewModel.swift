@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import UIKit
 
 // MARK: - Fasting Zone
 
@@ -204,6 +205,14 @@ final class FastingTrackerViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
+    // Celebration state
+    @Published private(set) var showCelebration = false
+    @Published private(set) var justReachedGoal = false
+
+    // Background handling
+    private var backgroundDate: Date?
+    private var wasGoalReachedBeforeBackground = false
+
     // MARK: - Private Properties
 
     private let service = FastingTrackerService.shared
@@ -215,6 +224,56 @@ final class FastingTrackerViewModel: ObservableObject {
     init() {
         setupTimerUpdates()
         setupServiceBindings()
+        setupBackgroundHandling()
+    }
+
+    deinit {
+        // Cancel timer subscription to prevent memory leaks
+        timerCancellable?.cancel()
+        timerCancellable = nil
+        // Cancel all Combine subscriptions
+        cancellables.removeAll()
+        // Remove background observers
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // MARK: - Background Handling
+
+    private func setupBackgroundHandling() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleEnterBackground()
+        }
+
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleReturnFromBackground()
+        }
+    }
+
+    private func handleEnterBackground() {
+        backgroundDate = Date()
+        wasGoalReachedBeforeBackground = goalReached
+    }
+
+    private func handleReturnFromBackground() {
+        guard currentFast != nil else { return }
+
+        // Immediately update timer state to reflect elapsed time while in background
+        updateTimerState()
+
+        // Check if goal was reached while in background
+        if goalReached && !wasGoalReachedBeforeBackground {
+            triggerGoalReachedCelebration()
+        }
+
+        backgroundDate = nil
     }
 
     private func setupTimerUpdates() {
@@ -255,21 +314,66 @@ final class FastingTrackerViewModel: ObservableObject {
 
     private func updateTimerState() {
         guard let fast = currentFast else {
-            elapsedSeconds = 0
-            targetSeconds = 0
-            currentZone = .burningSugar
-            nextZone = .fatBurning
-            timeToNextZone = 0
+            // Only update if values changed to avoid unnecessary redraws
+            if elapsedSeconds != 0 || targetSeconds != 0 {
+                elapsedSeconds = 0
+                targetSeconds = 0
+                currentZone = .burningSugar
+                nextZone = .fatBurning
+                timeToNextZone = 0
+                justReachedGoal = false
+            }
             return
         }
 
-        elapsedSeconds = Date().timeIntervalSince(fast.startedAt)
-        targetSeconds = Double(fast.targetHours) * 3600
+        let previouslyReachedGoal = goalReached
+        let newElapsedSeconds = Date().timeIntervalSince(fast.startedAt)
+        let newTargetSeconds = Double(fast.targetHours) * 3600
+
+        // Only update elapsed seconds (triggers redraw) every second
+        // Floor to seconds to avoid sub-second updates causing excessive redraws
+        let flooredNewElapsed = floor(newElapsedSeconds)
+        if floor(elapsedSeconds) != flooredNewElapsed {
+            elapsedSeconds = newElapsedSeconds
+        }
+
+        // Target rarely changes, only update if different
+        if targetSeconds != newTargetSeconds {
+            targetSeconds = newTargetSeconds
+        }
 
         // Update zone tracking
-        let hours = elapsedSeconds / 3600
-        currentZone = FastingZone.fromHours(hours)
+        let hours = newElapsedSeconds / 3600
+        let newZone = FastingZone.fromHours(hours)
+        if currentZone != newZone {
+            currentZone = newZone
+        }
         updateNextZone(currentHours: hours)
+
+        // Check if goal was just reached this update
+        if goalReached && !previouslyReachedGoal {
+            triggerGoalReachedCelebration()
+        }
+    }
+
+    private func triggerGoalReachedCelebration() {
+        justReachedGoal = true
+        showCelebration = true
+        HapticFeedback.success()
+
+        // Auto-dismiss celebration after 3 seconds
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            withAnimation(.easeOut(duration: 0.3)) {
+                showCelebration = false
+            }
+        }
+    }
+
+    func dismissCelebration() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            showCelebration = false
+        }
     }
 
     private func updateNextZone(currentHours: Double) {
@@ -331,15 +435,12 @@ final class FastingTrackerViewModel: ObservableObject {
         await startFast()
     }
 
-    func endFast(energyLevel: Int, notes: String?, moodEnd: Int? = nil, hungerLevel: Int? = nil) async {
+    func endFast(energyLevel: Int? = nil, notes: String? = nil, moodEnd: Int? = nil, hungerLevel: Int? = nil) async {
+        // Note: energyLevel, moodEnd, hungerLevel are no longer stored in the database
+        // but we keep the parameters for backward compatibility with the UI
         error = nil
         do {
-            try await service.endFast(
-                energyLevel: energyLevel,
-                notes: notes,
-                moodEnd: moodEnd,
-                hungerLevel: hungerLevel
-            )
+            try await service.endFast(notes: notes)
             HapticFeedback.success()
         } catch let fastingError as FastingError {
             ErrorLogger.shared.logError(fastingError, context: "FastingTrackerViewModel.endFast", metadata: [
@@ -379,7 +480,12 @@ final class FastingTrackerViewModel: ObservableObject {
         customFastingHours = newTargetHours
         // Note: In a full implementation, this would update the database record
         targetSeconds = Double(newTargetHours) * 3600
-        HapticFeedback.medium()
+
+        // Reset goal reached state since we extended the target
+        justReachedGoal = false
+        showCelebration = false
+
+        HapticFeedback.success()
     }
 
     // MARK: - Training Sync

@@ -109,7 +109,7 @@ struct MealPlanView: View {
                         .padding(.vertical, 4)
                         .background(Color.blue.opacity(0.1))
                         .foregroundColor(.blue)
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
 
@@ -128,7 +128,7 @@ struct MealPlanView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -156,7 +156,7 @@ struct MealPlanView: View {
                     .padding(.vertical, 10)
                     .background(Color.blue)
                     .foregroundColor(.white)
-                    .cornerRadius(10)
+                    .cornerRadius(CornerRadius.sm)
             }
         }
         .padding()
@@ -183,7 +183,7 @@ struct MealPlanView: View {
                         }
                         .frame(width: 44, height: 50)
                         .background(selectedDay == day ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(8)
+                        .cornerRadius(CornerRadius.sm)
                     }
                     .buttonStyle(.plain)
                 }
@@ -225,7 +225,7 @@ struct MealPlanView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -381,7 +381,7 @@ struct MealPlanRowWithActivate: View {
                             .padding(.vertical, 2)
                             .background(Color.green.opacity(0.2))
                             .foregroundColor(.green)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
                     }
                 }
 
@@ -412,7 +412,7 @@ struct MealPlanRowWithActivate: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -456,7 +456,7 @@ struct MealPlanItemRow: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

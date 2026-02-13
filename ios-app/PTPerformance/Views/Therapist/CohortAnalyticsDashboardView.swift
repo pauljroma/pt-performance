@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  CohortAnalyticsDashboardView.swift
 //  PTPerformance
@@ -457,7 +458,7 @@ struct CohortAnalyticsDashboardView: View {
                         y: .value("Patients", bucket.patientCount)
                     )
                     .foregroundStyle(barColor(for: bucket.rangeStart))
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                 }
                 .frame(height: 200)
                 .chartXAxisLabel("Adherence Range")
@@ -477,7 +478,7 @@ struct CohortAnalyticsDashboardView: View {
                                     width: 40,
                                     height: max(20, CGFloat(bucket.patientCount) / CGFloat(distribution.totalPatients) * 150)
                                 )
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
 
                             Text(bucket.label)
                                 .font(.caption2)

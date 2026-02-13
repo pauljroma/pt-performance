@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 import PDFKit
 
@@ -22,6 +23,8 @@ struct ExportButton: View {
             Label("Export", systemImage: "square.and.arrow.up")
         }
         .disabled(sessions.isEmpty || isExporting)
+        .accessibilityLabel("Export workout history")
+        .accessibilityHint(sessions.isEmpty ? "No sessions available to export" : "Opens export format options")
         .confirmationDialog(
             "Export Workout History",
             isPresented: $showingExportOptions,
@@ -48,7 +51,7 @@ struct ExportButton: View {
                 exportingOverlay
             }
         }
-        .alert("Export Error", isPresented: $showingError, presenting: exportError) { error in
+        .alert("Export Error", isPresented: $showingError, presenting: exportError) { _ in
             Button("OK") {
                 exportError = nil
             }
@@ -67,7 +70,7 @@ struct ExportButton: View {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
 
-            VStack(spacing: 16) {
+            VStack(spacing: Spacing.md) {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .scaleEffect(1.5)
@@ -78,7 +81,7 @@ struct ExportButton: View {
             }
             .padding(24)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.systemGray))
             )
         }

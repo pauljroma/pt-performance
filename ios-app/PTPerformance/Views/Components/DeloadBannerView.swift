@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
 
 /// Banner shown on home screen when a deload is recommended
@@ -14,7 +15,7 @@ struct DeloadBannerView: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Urgency icon
                 ZStack {
                     Circle()
@@ -27,7 +28,7 @@ struct DeloadBannerView: View {
                 }
 
                 // Title and subtitle
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                     Text(urgency.title)
                         .font(.headline)
                         .foregroundColor(.primary)
@@ -47,12 +48,12 @@ struct DeloadBannerView: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemGroupedBackground))
                     .adaptiveShadow(Shadow.subtle)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(urgency.color.opacity(0.3), lineWidth: 1)
             )
         }
@@ -110,14 +111,14 @@ struct DismissibleDeloadBannerView: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Urgency icon
             Image(systemName: urgency.icon)
                 .font(.title2)
                 .foregroundColor(iconColor)
 
             // Title and subtitle
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                 Text(urgency.title)
                     .font(.headline)
                     .foregroundColor(primaryTextColor)
@@ -152,11 +153,11 @@ struct DismissibleDeloadBannerView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(backgroundColor)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(urgency.color.opacity(0.3), lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
@@ -174,7 +175,7 @@ struct CompactDeloadBanner: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.xs) {
                 Image(systemName: urgency.icon)
                     .font(.system(size: 14, weight: .medium))
 
@@ -214,7 +215,7 @@ struct AnimatedDeloadBanner: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Urgency icon with optional pulse animation
                 ZStack {
                     if shouldAnimate {
@@ -235,7 +236,7 @@ struct AnimatedDeloadBanner: View {
                 }
 
                 // Title and subtitle
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Spacing.xxs - 2) {
                     Text(urgency.title)
                         .font(.headline)
                         .foregroundColor(.primary)
@@ -249,7 +250,7 @@ struct AnimatedDeloadBanner: View {
                 Spacer()
 
                 // Action text with chevron
-                HStack(spacing: 4) {
+                HStack(spacing: Spacing.xxs) {
                     Text("View")
                         .font(.subheadline.weight(.medium))
                     Image(systemName: "chevron.right")
@@ -259,12 +260,12 @@ struct AnimatedDeloadBanner: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemGroupedBackground))
                     .shadow(color: urgency.color.opacity(0.2), radius: 8, x: 0, y: 4)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(urgency.color.opacity(0.4), lineWidth: 2)
             )
         }
@@ -289,7 +290,7 @@ struct AnimatedDeloadBanner: View {
 // MARK: - Previews
 
 #Preview("Deload Banner - Required") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         DeloadBannerView(urgency: .required) {
             print("Tapped required")
         }
@@ -306,7 +307,7 @@ struct AnimatedDeloadBanner: View {
 }
 
 #Preview("Compact Deload Banner") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         CompactDeloadBanner(urgency: .required) {
             print("Tapped")
         }
@@ -323,7 +324,7 @@ struct AnimatedDeloadBanner: View {
 }
 
 #Preview("Animated Deload Banner") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         AnimatedDeloadBanner(urgency: .required) {
             print("Tapped required")
         }
@@ -336,7 +337,7 @@ struct AnimatedDeloadBanner: View {
 }
 
 #Preview("Dismissible Deload Banner") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         DismissibleDeloadBannerView(
             urgency: .required,
             onTap: { print("Tapped required") },
@@ -359,7 +360,7 @@ struct AnimatedDeloadBanner: View {
 }
 
 #Preview("Dark Mode") {
-    VStack(spacing: 16) {
+    VStack(spacing: Spacing.md) {
         DeloadBannerView(urgency: .recommended) {
             print("Tapped")
         }

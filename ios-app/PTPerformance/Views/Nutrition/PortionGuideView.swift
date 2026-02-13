@@ -69,7 +69,7 @@ struct PortionGuideView: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Portion Cards Section
@@ -167,7 +167,7 @@ struct PortionGuideView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -221,7 +221,7 @@ struct PortionGuideCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(portion.handMeasure) equals \(portion.foodType). \(portion.approximateAmount). Examples: \(portion.examples.joined(separator: ", "))")
@@ -276,7 +276,7 @@ struct MealTemplateCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -379,7 +379,7 @@ struct CompactPortionGuide: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

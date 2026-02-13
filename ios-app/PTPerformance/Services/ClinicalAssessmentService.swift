@@ -40,6 +40,7 @@ class ClinicalAssessmentService: ObservableObject {
     // MARK: - Properties
 
     nonisolated(unsafe) private let client: PTSupabaseClient
+    private let errorLogger: ErrorLogger = .shared
     @Published var isLoading = false
     @Published var error: Error?
     @Published var currentAssessment: ClinicalAssessment?
@@ -85,9 +86,7 @@ class ClinicalAssessmentService: ObservableObject {
         try input.validate()
 
         do {
-            #if DEBUG
-            print("Creating clinical assessment for patient: \(patientId.uuidString), type: \(assessmentType.rawValue)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Creating assessment for patient: \(patientId.uuidString), type: \(assessmentType.rawValue)", level: .diagnostic)
 
             let response = try await client.client
                 .from("clinical_assessments")
@@ -99,13 +98,12 @@ class ClinicalAssessmentService: ObservableObject {
             let decoder = createDecoder()
             let assessment = try decoder.decode(ClinicalAssessment.self, from: response.data)
 
-            #if DEBUG
-            print("Clinical assessment created: \(assessment.id)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Assessment created: \(assessment.id)", level: .success)
 
             currentAssessment = assessment
             return assessment
         } catch {
+            errorLogger.logError(error, context: "ClinicalAssessmentService.createAssessment")
             DebugLogger.shared.error("ClinicalAssessmentService", "Error creating clinical assessment: \(error.localizedDescription)")
             self.error = error
             throw ClinicalAssessmentError.saveFailed
@@ -226,9 +224,7 @@ class ClinicalAssessmentService: ObservableObject {
         }
 
         do {
-            #if DEBUG
-            print("Updating clinical assessment: \(assessment.id)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Updating assessment: \(assessment.id)", level: .diagnostic)
 
             // Create update payload
             var updateData: [String: AnyEncodable] = [
@@ -289,15 +285,14 @@ class ClinicalAssessmentService: ObservableObject {
             let decoder = createDecoder()
             let updatedAssessment = try decoder.decode(ClinicalAssessment.self, from: response.data)
 
-            #if DEBUG
-            print("Clinical assessment updated: \(updatedAssessment.id)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Assessment updated: \(updatedAssessment.id)", level: .success)
 
             currentAssessment = updatedAssessment
             return updatedAssessment
         } catch let assessmentError as ClinicalAssessmentError {
             throw assessmentError
         } catch {
+            errorLogger.logError(error, context: "ClinicalAssessmentService.updateAssessment")
             DebugLogger.shared.error("ClinicalAssessmentService", "Error updating clinical assessment: \(error.localizedDescription)")
             self.error = error
             throw ClinicalAssessmentError.saveFailed
@@ -559,13 +554,12 @@ class ClinicalAssessmentService: ObservableObject {
             let decoder = createDecoder()
             let signedAssessment = try decoder.decode(ClinicalAssessment.self, from: response.data)
 
-            #if DEBUG
-            print("Clinical assessment signed: \(signedAssessment.id)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Assessment signed: \(signedAssessment.id)", level: .success)
 
             currentAssessment = signedAssessment
             return signedAssessment
         } catch {
+            errorLogger.logError(error, context: "ClinicalAssessmentService.signAssessment")
             DebugLogger.shared.error("ClinicalAssessmentService", "Error signing clinical assessment: \(error.localizedDescription)")
             self.error = error
             throw ClinicalAssessmentError.saveFailed
@@ -596,14 +590,13 @@ class ClinicalAssessmentService: ObservableObject {
                 .eq("id", value: assessmentId.uuidString)
                 .execute()
 
-            #if DEBUG
-            print("Clinical assessment deleted: \(assessmentId)")
-            #endif
+            DebugLogger.shared.log("[ClinicalAssessmentService] Assessment deleted: \(assessmentId)", level: .success)
 
             if currentAssessment?.id == assessmentId {
                 currentAssessment = nil
             }
         } catch {
+            errorLogger.logError(error, context: "ClinicalAssessmentService.deleteAssessment")
             DebugLogger.shared.error("ClinicalAssessmentService", "Error deleting clinical assessment: \(error.localizedDescription)")
             self.error = error
             throw error

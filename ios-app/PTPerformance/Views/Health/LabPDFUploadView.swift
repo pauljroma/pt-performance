@@ -1,4 +1,6 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 // ============================================================================
@@ -124,7 +126,7 @@ struct LabPDFUploadView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(Color.modusCyan)
-                    .cornerRadius(12)
+                    .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 32)
@@ -224,7 +226,7 @@ struct LabPDFUploadView: View {
                     .padding(.vertical, 6)
                     .background(Color.modusLightTeal)
                     .foregroundColor(.modusDeepTeal)
-                    .cornerRadius(8)
+                    .cornerRadius(CornerRadius.sm)
                 }
 
                 Spacer()
@@ -364,15 +366,21 @@ struct BiomarkerEditRow: View {
     @State private var isEditing = false
     @State private var editedValue: String = ""
 
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+
     var body: some View {
         HStack(spacing: 12) {
             // Selection toggle
             Button {
-                biomarker.isSelected.toggle()
+                selectionFeedback.selectionChanged()
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    biomarker.isSelected.toggle()
+                }
             } label: {
                 Image(systemName: biomarker.isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundColor(biomarker.isSelected ? .modusCyan : .secondary)
+                    .scaleEffect(biomarker.isSelected ? 1.0 : 0.9)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(biomarker.isSelected ? "Selected" : "Not selected")
@@ -507,6 +515,8 @@ final class LabPDFUploadViewModel: ObservableObject {
     @Published var isSaving = false
 
     private let labResultService = LabResultService.shared
+    private let hapticFeedback = UIImpactFeedbackGenerator(style: .medium)
+    private let notificationFeedback = UINotificationFeedbackGenerator()
 
     // MARK: - Computed Properties
 
@@ -561,12 +571,16 @@ final class LabPDFUploadViewModel: ObservableObject {
     func uploadPDF(_ pdfData: Data) async {
         state = .uploading
         uploadProgress = 0
+        hapticFeedback.prepare()
 
-        // Track upload progress
-        let progressTask = Task {
+        // Track upload progress using weak self to prevent retain cycles
+        let progressTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s
-                uploadProgress = labResultService.uploadProgress
+                guard let self = self else { return }
+                await MainActor.run {
+                    self.uploadProgress = self.labResultService.uploadProgress
+                }
             }
         }
 
@@ -589,11 +603,17 @@ final class LabPDFUploadViewModel: ObservableObject {
             state = .reviewing
             DebugLogger.shared.info("LabPDFUpload", "State is now: \(state)")
 
+            // Success haptic feedback
+            notificationFeedback.notificationOccurred(.success)
+
         } catch {
             progressTask.cancel()
             DebugLogger.shared.error("LabPDFUpload", "Upload failed: \(error.localizedDescription)")
             state = .initial
             showError(error.localizedDescription)
+
+            // Error haptic feedback
+            notificationFeedback.notificationOccurred(.error)
         }
     }
 
@@ -602,6 +622,7 @@ final class LabPDFUploadViewModel: ObservableObject {
 
         state = .saving
         isSaving = true
+        notificationFeedback.prepare()
 
         do {
             _ = try await labResultService.saveParsedLabResult(
@@ -613,10 +634,16 @@ final class LabPDFUploadViewModel: ObservableObject {
             isSaving = false
             showingSaveSuccess = true
 
+            // Success haptic feedback
+            notificationFeedback.notificationOccurred(.success)
+
         } catch {
             isSaving = false
             state = .reviewing
             showError(error.localizedDescription)
+
+            // Error haptic feedback
+            notificationFeedback.notificationOccurred(.error)
         }
     }
 
@@ -630,6 +657,9 @@ final class LabPDFUploadViewModel: ObservableObject {
             return updated
         }
         parsedResult = result
+
+        // Selection haptic feedback
+        hapticFeedback.impactOccurred()
     }
 
     func updateBiomarker(_ biomarker: ParsedBiomarker) {

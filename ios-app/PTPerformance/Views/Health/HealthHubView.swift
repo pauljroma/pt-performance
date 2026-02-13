@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  HealthHubView.swift
 //  PTPerformance
@@ -8,23 +9,43 @@
 
 import SwiftUI
 
+// MARK: - Health Hub Navigation Destination
+
+/// Centralized navigation destinations for Health Hub
+/// Consolidates all navigation state into a single enum
+enum HealthHubNavigationDestination: Hashable {
+    case fastingTracker
+    case supplementDashboard
+    case recoveryTracking
+    case biomarkerDashboard
+    case labResults
+    case aiCoach
+    case labUpload
+    case aiHealthCoach
+}
+
 /// Health Hub View - The central dashboard for all health features
 /// Aggregates data from Recovery, Fasting, Supplements, and Biomarkers
 struct HealthHubView: View {
     @EnvironmentObject var storeKit: StoreKitService
     @StateObject private var viewModel = HealthHubViewModel()
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dismiss) private var dismiss
 
-    // Navigation state for quick actions
+    // Consolidated navigation path for deep linking support
+    @State private var navigationPath = NavigationPath()
+
+    // Legacy navigation state for quick actions (kept for backward compatibility with sheets)
     @State private var showFastingTracker = false
     @State private var showSupplementDashboard = false
     @State private var showRecoveryTracking = false
     @State private var showBiomarkerDashboard = false
     @State private var showLabResults = false
     @State private var showAICoach = false
+    @State private var showLabUpload = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             if storeKit.isPremium {
                 premiumContent
             } else {
@@ -42,6 +63,11 @@ struct HealthHubView: View {
                 // Header with greeting
                 headerSection
 
+                // Lab Upload CTA (shown only when no lab results exist)
+                if !viewModel.hasLabResults {
+                    labUploadCTACard
+                }
+
                 // Today's Health Snapshot Card (using new component)
                 healthSnapshotSection
 
@@ -56,15 +82,29 @@ struct HealthHubView: View {
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.interactively) // Keyboard dismissal on scroll
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Health Hub")
+        .navigationBarTitleDisplayMode(.large)
         .refreshableWithHaptic {
             await viewModel.refresh()
         }
         .task {
             await viewModel.loadData()
         }
-        // Navigation destinations for quick actions
+        .onDisappear {
+            // Clean up timer when view disappears to prevent memory leaks
+            viewModel.pauseTimerUpdates()
+        }
+        .onAppear {
+            // Resume timer updates when view reappears
+            viewModel.resumeTimerUpdates()
+        }
+        // Type-safe navigation destinations for deep linking
+        .navigationDestination(for: HealthHubNavigationDestination.self) { destination in
+            destinationView(for: destination)
+        }
+        // Legacy navigation destinations for backward compatibility
         .navigationDestination(isPresented: $showFastingTracker) {
             FastingTrackerView()
         }
@@ -83,6 +123,41 @@ struct HealthHubView: View {
         .navigationDestination(isPresented: $showAICoach) {
             UnifiedAICoachView()
         }
+        .navigationDestination(isPresented: $showLabUpload) {
+            LabPDFUploadView()
+        }
+    }
+
+    // MARK: - Navigation Destination Builder
+
+    @ViewBuilder
+    private func destinationView(for destination: HealthHubNavigationDestination) -> some View {
+        switch destination {
+        case .fastingTracker:
+            FastingTrackerView()
+        case .supplementDashboard:
+            SupplementDashboardView()
+        case .recoveryTracking:
+            RecoveryTrackingView()
+        case .biomarkerDashboard:
+            BiomarkerDashboardView()
+        case .labResults:
+            LabResultsView()
+        case .aiCoach:
+            UnifiedAICoachView()
+        case .labUpload:
+            LabPDFUploadView()
+        case .aiHealthCoach:
+            AIHealthCoachView()
+        }
+    }
+
+    // MARK: - Deep Linking Support
+
+    /// Navigate to a specific destination programmatically
+    /// Useful for deep linking and cross-feature navigation
+    func navigate(to destination: HealthHubNavigationDestination) {
+        navigationPath.append(destination)
     }
 
     // MARK: - Header Section
@@ -94,10 +169,12 @@ struct HealthHubView: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.modusDeepTeal)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
 
                 Text(Date().formatted(date: .complete, time: .omitted))
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             }
 
             Spacer()
@@ -123,14 +200,17 @@ struct HealthHubView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.modusDeepTeal)
                     }
+                    .accessibilityHidden(true)
 
                     Text("Score")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .frame(minWidth: 44, minHeight: 44) // Minimum touch target
             }
             .accessibilityLabel("Health score \(viewModel.recoveryScore) percent")
-            .accessibilityHint("Tap to view detailed health insights")
+            .accessibilityHint("Double tap to view detailed health insights")
+            .accessibilityIdentifier("healthScoreBadge")
         }
         .accessibilityElement(children: .contain)
     }
@@ -143,6 +223,58 @@ struct HealthHubView: View {
         case 17..<21: return "Good Evening"
         default: return "Good Night"
         }
+    }
+
+    // MARK: - Lab Upload CTA Card
+
+    private var labUploadCTACard: some View {
+        VStack(spacing: Spacing.md) {
+            HStack(spacing: Spacing.md) {
+                Image(systemName: "doc.text.viewfinder")
+                    .font(.system(size: 32))
+                    .foregroundColor(.modusCyan)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Upload Your Lab Results")
+                        .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
+
+                    Text("Get AI-powered insights from your blood work")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            Button {
+                showLabUpload = true
+            } label: {
+                Text("Upload PDF")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 44) // Minimum touch target
+                    .padding(.vertical, Spacing.sm)
+                    .background(
+                        LinearGradient(
+                            colors: [.modusCyan, .modusTealAccent],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(CornerRadius.md)
+            }
+            .accessibilityLabel("Upload PDF")
+            .accessibilityHint("Double tap to upload your lab results PDF")
+            .accessibilityIdentifier("labUploadButton")
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: - Health Snapshot Section (Using New Component)
@@ -187,12 +319,12 @@ struct HealthHubView: View {
         guard viewModel.isFasting else { return nil }
         // Parse elapsed time from "HH:MM" format
         let components = viewModel.fastingElapsedTime.split(separator: ":")
-        if components.count == 2,
-           let hours = Double(components[0]),
-           let minutes = Double(components[1]) {
-            return hours + (minutes / 60.0)
+        guard components.count >= 2,
+              let hours = Double(components[0]),
+              let minutes = Double(components[1]) else {
+            return nil
         }
-        return nil
+        return hours + (minutes / 60.0)
     }
 
     private var fastingTargetHours: Int? {
@@ -740,7 +872,7 @@ private struct DetailedViewRow<Destination: View>: View {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(iconColor)
-                    .frame(width: 40)
+                    .frame(width: 40, height: 40)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -748,10 +880,12 @@ private struct DetailedViewRow<Destination: View>: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
 
                     Text(subtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 }
 
                 Spacer()
@@ -762,9 +896,11 @@ private struct DetailedViewRow<Destination: View>: View {
                     .accessibilityHidden(true)
             }
             .padding()
+            .frame(minHeight: 44) // Minimum touch target
         }
         .accessibilityLabel(title)
-        .accessibilityHint(subtitle)
+        .accessibilityHint("Double tap to open \(subtitle.lowercased())")
+        .accessibilityIdentifier("detailedViewRow_\(title.replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

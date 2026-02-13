@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  ExerciseExplanationView.swift
 //  PTPerformance
@@ -432,7 +433,7 @@ struct ExerciseExplanationView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.orange)
+                .foregroundColor(Color(.systemOrange))
 
             Text("Unable to Load")
                 .font(.headline)
@@ -456,7 +457,7 @@ struct ExerciseExplanationView: View {
                 .font(.subheadline.weight(.semibold))
                 .padding(.horizontal, Spacing.lg)
                 .padding(.vertical, Spacing.sm)
-                .background(Color.blue)
+                .background(Color(.systemBlue))
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.sm)
             }

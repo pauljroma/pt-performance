@@ -23,15 +23,10 @@ struct ModeThemeModifier: ViewModifier {
     }
 
     /// Determine preferred color scheme based on mode
+    /// NOTE: Forcing dark mode globally for all modes
     private func preferredColorScheme(for mode: Mode) -> ColorScheme? {
-        switch mode {
-        case .rehab:
-            return .light  // Medical blue looks best on light
-        case .strength:
-            return .light  // Performance black on light gray
-        case .performance:
-            return .dark  // Elite gold on dark background
-        }
+        // Force dark mode for entire app
+        return .dark
     }
 }
 
@@ -76,7 +71,7 @@ struct ModeButtonStyle: ButtonStyle {
             .background(
                 isPrimary ? theme.primaryColor : Color.clear
             )
-            .cornerRadius(10)
+            .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(theme.primaryColor, lineWidth: isPrimary ? 0 : 2)

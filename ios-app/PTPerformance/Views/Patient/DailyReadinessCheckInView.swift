@@ -210,11 +210,10 @@ struct DailyReadinessCheckInView: View {
             .onAppear {
                 // Initialize preview on appear
                 viewModel.updatePreviewFromInputs()
-
+            }
+            .task {
                 // Fetch today's check-in if it exists
-                Task {
-                    await viewModel.fetchTodayReadiness()
-                }
+                await viewModel.fetchTodayReadiness()
             }
             .alert("Check-in Saved", isPresented: $viewModel.showSuccess) {
                 Button("OK") {

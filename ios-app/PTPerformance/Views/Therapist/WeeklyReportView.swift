@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  WeeklyReportView.swift
 //  PTPerformance
@@ -372,7 +373,7 @@ struct WeeklyReportView: View {
 
     private var exportingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.4)
+            Color(.label).opacity(0.4)
                 .ignoresSafeArea()
 
             VStack(spacing: Spacing.md) {
@@ -380,7 +381,7 @@ struct WeeklyReportView: View {
                     .scaleEffect(1.5)
                 Text("Generating PDF...")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             .padding(Spacing.xl)
             .background(Color(.systemBackground))
@@ -500,7 +501,7 @@ private struct WeeklyReportShareSheet: UIViewControllerRepresentable {
 #if DEBUG
 struct WeeklyReportView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             WeeklyReportView(
                 report: WeeklyReport.sample,
                 patientName: "John Brebbia"

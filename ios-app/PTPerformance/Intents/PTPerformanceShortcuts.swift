@@ -114,7 +114,7 @@ struct ViewProgressIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        print("[ViewProgressIntent] Viewing progress via Siri")
+        DebugLogger.shared.log("[ViewProgressIntent] Viewing progress via Siri", level: .diagnostic)
 
         // Get cached stats from UserDefaults
         let defaults = UserDefaults(suiteName: "group.com.getmodus.app") ?? UserDefaults.standard
@@ -159,7 +159,7 @@ struct StartRestTimerIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        print("[StartRestTimerIntent] Starting \(seconds) second rest timer via Siri")
+        DebugLogger.shared.log("[StartRestTimerIntent] Starting \(seconds) second rest timer via Siri", level: .diagnostic)
 
         // Validate duration
         guard seconds > 0, seconds <= 600 else {

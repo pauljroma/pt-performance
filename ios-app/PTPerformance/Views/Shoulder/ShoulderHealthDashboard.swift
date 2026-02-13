@@ -173,7 +173,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -188,7 +188,7 @@ struct ShoulderHealthDashboard: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(level.color)
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Alerts Section
@@ -209,7 +209,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -252,7 +252,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -313,7 +313,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -414,7 +414,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -443,7 +443,7 @@ struct ShoulderHealthDashboard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -519,7 +519,7 @@ struct ShoulderDiagramView: View {
         }
         .padding(8)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     private func strengthIndicator(strength: StrengthStatus, size: CGSize) -> some View {
@@ -534,7 +534,7 @@ struct ShoulderDiagramView: View {
         }
         .padding(6)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(6)
+        .cornerRadius(CornerRadius.sm)
         .offset(y: 50)
     }
 }
@@ -601,7 +601,7 @@ struct ROMDisplayCard: View {
                 }
                 .padding(8)
                 .background(deficit.severity.color.opacity(0.1))
-                .cornerRadius(6)
+                .cornerRadius(CornerRadius.sm)
             }
         }
     }
@@ -719,7 +719,7 @@ struct ShoulderAlertCard: View {
         }
         .padding()
         .background(alert.severity.color.opacity(0.1))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

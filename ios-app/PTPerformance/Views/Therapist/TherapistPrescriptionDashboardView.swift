@@ -1,3 +1,4 @@
+// DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  TherapistPrescriptionDashboardView.swift
 //  PTPerformance
@@ -312,7 +313,7 @@ struct TherapistPrescriptionDashboardView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(isSelected ? Color.white.opacity(0.3) : Color(.systemGray5))
-                        .cornerRadius(10)
+                        .cornerRadius(CornerRadius.sm)
                 }
             }
             .padding(.horizontal, 14)
