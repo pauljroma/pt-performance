@@ -16,7 +16,7 @@ enum Config {
     // MARK: - App Configuration
 
     static let appVersion = "1.0"
-    static let buildNumber = "88"
+    static let buildNumber = "478"
 
     // MARK: - Subscription Products
     /// Centralized product IDs for security - prevents hardcoding throughout the app
