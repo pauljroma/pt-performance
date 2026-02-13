@@ -193,24 +193,6 @@ struct MySupplementRoutineView: View {
                 }
 
                 Spacer()
-
-                // Quick stats
-                VStack(alignment: .trailing, spacing: Spacing.xxs) {
-                    Text("Est. Cost")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    if let monthlyCost = viewModel.estimatedMonthlyCost {
-                        Text("$\(String(format: "%.0f", monthlyCost))/mo")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.modusCyan)
-                    } else {
-                        Text("--")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
             }
 
             // Timing breakdown

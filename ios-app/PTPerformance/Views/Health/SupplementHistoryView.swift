@@ -179,6 +179,10 @@ struct SupplementHistoryView: View {
 
     // MARK: - Calendar Section
 
+    private var isCurrentMonth: Bool {
+        Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month)
+    }
+
     private var calendarSection: some View {
         VStack(spacing: Spacing.sm) {
             // Month Navigation
@@ -212,11 +216,13 @@ struct SupplementHistoryView: View {
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.title3)
-                        .foregroundColor(.modusCyan)
+                        .foregroundColor(isCurrentMonth ? .modusCyan.opacity(0.3) : .modusCyan)
                 }
-                .disabled(Calendar.current.isDate(selectedMonth, equalTo: Date(), toGranularity: .month))
-                .accessibilityLabel("Next month")
-                .accessibilityHint("Shows supplement history for the next month")
+                .disabled(isCurrentMonth)
+                .accessibilityLabel(isCurrentMonth ? "Next month, disabled" : "Next month")
+                .accessibilityHint(isCurrentMonth
+                    ? "Cannot navigate to future months because there is no supplement data beyond the current month"
+                    : "Shows supplement history for the next month")
             }
             .padding(.horizontal)
 

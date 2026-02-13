@@ -42,35 +42,4 @@ final class SupplementLogViewModel: ObservableObject {
         }
     }
 
-    /// State for delete confirmation dialog
-    @Published var logToDelete: SupplementLogEntry?
-    @Published var showDeleteConfirmation = false
-
-    /// Request deletion with confirmation
-    func requestDelete(_ log: SupplementLogEntry) {
-        logToDelete = log
-        showDeleteConfirmation = true
-    }
-
-    /// Confirm and execute deletion
-    func confirmDelete() async {
-        guard let log = logToDelete else { return }
-
-        do {
-            try await service.undoLog(log.id)
-            DebugLogger.shared.log("Deleted supplement log: \(log.id)", level: .success)
-            await loadData()
-        } catch {
-            DebugLogger.shared.log("Failed to delete supplement log \(log.id): \(error.localizedDescription)", level: .error)
-            self.error = "Failed to delete log. Please try again."
-        }
-
-        logToDelete = nil
-    }
-
-    /// Cancel deletion
-    func cancelDelete() {
-        logToDelete = nil
-        showDeleteConfirmation = false
-    }
 }

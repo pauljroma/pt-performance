@@ -19,12 +19,6 @@ final class MySupplementRoutineViewModel: ObservableObject {
         Set(routineItems.compactMap { $0.timing }).count
     }
 
-    var estimatedMonthlyCost: Double? {
-        // Placeholder - would calculate based on supplement costs
-        guard !routineItems.isEmpty else { return nil }
-        return Double(routineItems.count) * 15.0 // Rough estimate of $15/month per supplement
-    }
-
     // MARK: - Items by Timing
 
     func items(for timing: SupplementTiming) -> [RoutineSupplement] {

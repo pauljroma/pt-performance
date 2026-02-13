@@ -275,7 +275,7 @@ struct QuickTrendOverview: View {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(Color(.secondarySystemBackground))
                         .frame(width: 180, height: 140)
-                        .shimmering()
+                        .shimmer(isAnimating: true)
                 }
             }
             .padding(.horizontal)
@@ -338,46 +338,6 @@ class QuickTrendViewModel: ObservableObject {
         }
 
         analyses = loadedAnalyses
-    }
-}
-
-// MARK: - Shimmer Effect
-
-private struct MetricTrendShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = 0
-
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            Color.white.opacity(0.3),
-                            .clear
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 2)
-                    .offset(x: -geometry.size.width + phase * geometry.size.width * 2)
-                    .animation(
-                        .linear(duration: 1.5)
-                        .repeatForever(autoreverses: false),
-                        value: phase
-                    )
-                }
-            )
-            .mask(content)
-            .onAppear {
-                phase = 1
-            }
-    }
-}
-
-private extension View {
-    func shimmering() -> some View {
-        modifier(MetricTrendShimmerModifier())
     }
 }
 
