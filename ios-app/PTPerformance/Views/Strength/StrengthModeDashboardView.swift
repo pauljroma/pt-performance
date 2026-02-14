@@ -24,6 +24,7 @@ struct StrengthModeDashboardView: View {
 
     @StateObject private var viewModel = StrengthModeDashboardViewModel()
     @State private var showAllPRs = false
+    @State private var showDeepDive = false
 
     // MARK: - Initialization
 
@@ -62,6 +63,9 @@ struct StrengthModeDashboardView: View {
                     if viewModel.hasSuggestions {
                         progressionSuggestionsSection
                     }
+
+                    // ACP-1027: Strength Analytics Deep Dive entry point
+                    strengthAnalyticsDeepDiveButton
 
                     // Streak indicator
                     if viewModel.currentStreak > 0 {
@@ -494,6 +498,55 @@ struct StrengthModeDashboardView: View {
         .padding(Spacing.sm)
         .background(Color.purple.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
+    }
+
+    // MARK: - ACP-1027: Strength Analytics Deep Dive Button
+
+    private var strengthAnalyticsDeepDiveButton: some View {
+        Button {
+            HapticFeedback.light()
+            showDeepDive = true
+        } label: {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .font(.title3)
+                    .foregroundColor(.modusCyan)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Strength Analytics Deep Dive")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.modusDeepTeal)
+
+                    Text("1RM trends, muscle groups, stalled lifts, PR predictions")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+            }
+            .padding()
+            .background(
+                LinearGradient(
+                    colors: [Color.modusCyan.opacity(0.1), Color.modusTealAccent.opacity(0.05)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(CornerRadius.md)
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(Color.modusCyan.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .navigationDestination(isPresented: $showDeepDive) {
+            StrengthAnalyticsDeepDiveView(patientId: patientId.uuidString)
+        }
     }
 
     // MARK: - Streak Section

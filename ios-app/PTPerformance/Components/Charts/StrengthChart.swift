@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Created by Agent 1 - Volume/Strength Trend Charts
+//  ACP-1026: Enhanced with tap-to-select data points and annotation markers
 //  Line chart showing estimated 1RM progression over time
 //
 
@@ -10,13 +11,18 @@ import SwiftUI
 import Charts
 
 /// Reusable strength progression chart component
-/// Features animated line drawing with reduce motion support
+/// Features tap-to-select data point details, annotation markers,
+/// and animated line drawing with reduce motion support
 struct StrengthChart: View {
     @Environment(\.colorScheme) private var colorScheme
     let dataPoints: [StrengthDataPoint]
     let exerciseName: String
     var height: CGFloat = 200
     var showImprovement: Bool = true
+    var annotations: [ChartAnnotation] = []
+
+    @State private var selectedPoint: StrengthDataPoint?
+    @State private var selectedAnnotation: ChartAnnotation?
 
     private var startingMax: Double {
         dataPoints.first?.estimatedOneRepMax ?? 0
@@ -48,6 +54,7 @@ struct StrengthChart: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Strength Progress")
                         .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
                         .accessibilityAddTraits(.isHeader)
 
                     Text(exerciseName)
@@ -62,12 +69,12 @@ struct StrengthChart: View {
                         HStack(spacing: 4) {
                             Image(systemName: improvement >= 0 ? "arrow.up.right" : "arrow.down.right")
                                 .font(.caption)
-                                .foregroundColor(improvement >= 0 ? .green : .red)
+                                .foregroundColor(improvement >= 0 ? .modusTealAccent : .red)
 
                             Text(String(format: "%+.1f%%", improvement))
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
-                                .foregroundColor(improvement >= 0 ? .green : .red)
+                                .foregroundColor(improvement >= 0 ? .modusTealAccent : .red)
                         }
 
                         Text("Est. 1RM: \(String(format: "%.0f", currentMax)) \(WeightUnit.defaultUnit)")
@@ -75,6 +82,11 @@ struct StrengthChart: View {
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+
+            // Selected point tooltip
+            if let selected = selectedPoint {
+                selectedPointTooltip(selected)
             }
 
             if dataPoints.isEmpty {
@@ -92,6 +104,59 @@ struct StrengthChart: View {
         .accessibilityLabel("Strength Progression Chart")
         .accessibilityValue(accessibilitySummary)
     }
+
+    // MARK: - Selected Point Tooltip
+
+    private func selectedPointTooltip(_ point: StrengthDataPoint) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(point.date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(point.formattedOneRepMax)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusTealAccent)
+            }
+
+            Divider()
+                .frame(height: 30)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(point.formattedWeight) x \(point.reps) reps")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if startingMax > 0 {
+                    let delta = ((point.estimatedOneRepMax - startingMax) / startingMax) * 100
+                    Text(String(format: "%+.1f%% from start", delta))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(delta >= 0 ? .modusTealAccent : .red)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    selectedPoint = nil
+                }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(Color.modusLightTeal)
+        .cornerRadius(CornerRadius.sm)
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+
+    // MARK: - Empty State
 
     private var emptyState: some View {
         VStack(spacing: 12) {
@@ -112,6 +177,8 @@ struct StrengthChart: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Chart View
+
     private var chartView: some View {
         Chart {
             ForEach(dataPoints) { point in
@@ -120,7 +187,7 @@ struct StrengthChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Est. 1RM", point.estimatedOneRepMax)
                 )
-                .foregroundStyle(.green.gradient)
+                .foregroundStyle(Color.modusTealAccent.gradient)
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 3))
 
@@ -129,9 +196,9 @@ struct StrengthChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Est. 1RM", point.estimatedOneRepMax)
                 )
-                .foregroundStyle(.green)
+                .foregroundStyle(selectedPoint?.id == point.id ? Color.modusDeepTeal : Color.modusTealAccent)
                 .symbol(.circle)
-                .symbolSize(50)
+                .symbolSize(selectedPoint?.id == point.id ? 100 : 50)
 
                 // Area fill
                 AreaMark(
@@ -140,7 +207,7 @@ struct StrengthChart: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.green.opacity(0.3), .green.opacity(0.05)],
+                        colors: [Color.modusTealAccent.opacity(0.3), Color.modusTealAccent.opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -151,16 +218,43 @@ struct StrengthChart: View {
             // Starting baseline
             if startingMax > 0 {
                 RuleMark(y: .value("Starting", startingMax))
-                    .foregroundStyle(.orange.opacity(0.6))
+                    .foregroundStyle(Color.modusCyan.opacity(0.6))
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
                     .annotation(position: .bottom, alignment: .leading) {
                         Text("Start")
                             .font(.caption2)
                             .padding(4)
-                            .background(Color.orange.opacity(0.2))
+                            .background(Color.modusCyan.opacity(0.2))
                             .cornerRadius(CornerRadius.xs)
-                            .foregroundColor(.orange)
+                            .foregroundColor(.modusCyan)
                     }
+            }
+
+            // Annotation markers
+            ForEach(annotations) { annotation in
+                RuleMark(x: .value("Event", annotation.date, unit: .day))
+                    .foregroundStyle(annotation.category.color.opacity(0.7))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                    .annotation(position: .top, alignment: .center) {
+                        Button {
+                            selectedAnnotation = annotation
+                        } label: {
+                            Image(systemName: annotation.category.icon)
+                                .font(.caption2)
+                                .foregroundColor(annotation.category.color)
+                                .padding(4)
+                                .background(annotation.category.color.opacity(0.15))
+                                .cornerRadius(CornerRadius.xs)
+                        }
+                        .buttonStyle(.plain)
+                    }
+            }
+
+            // Selected point rule mark
+            if let selected = selectedPoint {
+                RuleMark(x: .value("Selected", selected.date, unit: .day))
+                    .foregroundStyle(Color.modusDeepTeal.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
             }
         }
         .chartYScale(domain: calculateYDomain())
@@ -182,8 +276,74 @@ struct StrengthChart: View {
                     .font(.caption)
             }
         }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture { location in
+                        handleChartTap(at: location, proxy: proxy, geometry: geometry)
+                    }
+            }
+        }
         .frame(height: height)
+        .popover(item: $selectedAnnotation) { annotation in
+            annotationPopover(annotation)
+        }
     }
+
+    // MARK: - Chart Tap Handler
+
+    private func handleChartTap(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
+        let xPosition = location.x - geometry[proxy.plotFrame!].origin.x
+        guard let date: Date = proxy.value(atX: xPosition) else { return }
+
+        let closest = dataPoints.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            if selectedPoint?.id == closest?.id {
+                selectedPoint = nil
+            } else {
+                selectedPoint = closest
+                HapticFeedback.light()
+            }
+        }
+    }
+
+    // MARK: - Annotation Popover
+
+    private func annotationPopover(_ annotation: ChartAnnotation) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: annotation.category.icon)
+                    .foregroundColor(annotation.category.color)
+                Text(annotation.title)
+                    .font(.headline)
+            }
+
+            Text(annotation.date, format: .dateTime.month(.wide).day().year())
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            if let note = annotation.note {
+                Text(note)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+            }
+
+            Text(annotation.category.displayName)
+                .font(.caption2)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(annotation.category.color.opacity(0.15))
+                .foregroundColor(annotation.category.color)
+                .cornerRadius(CornerRadius.xs)
+        }
+        .padding()
+        .frame(minWidth: 200)
+    }
+
+    // MARK: - Helpers
 
     private func calculateYDomain() -> ClosedRange<Double> {
         let minValue = dataPoints.map { $0.estimatedOneRepMax }.min() ?? 0
@@ -323,7 +483,8 @@ struct StrengthChart_Previews: PreviewProvider {
 
                 StrengthChart(
                     dataPoints: Array(sampleData.reversed()),
-                    exerciseName: "Squat"
+                    exerciseName: "Squat",
+                    annotations: [.sampleInjury]
                 )
 
                 Text("Strength Chart - Empty State")
@@ -332,16 +493,6 @@ struct StrengthChart_Previews: PreviewProvider {
                 StrengthChart(
                     dataPoints: [],
                     exerciseName: "Bench Press"
-                )
-
-                Text("Strength Chart Section - Loading")
-                    .font(.headline)
-
-                StrengthChartSection(
-                    data: nil,
-                    isLoading: true,
-                    error: nil,
-                    onRetry: {}
                 )
 
                 Spacer()

@@ -80,6 +80,13 @@ enum LocalizedStrings {
         static let weeklyNotifications = "Weekly Notifications"
         static let pastWeeks = "Past Weeks"
         static let adherenceTrend = "Adherence Trend"
+        // ACP-1028: Weekly Summary Personalization
+        static let keyWins = "Key Wins"
+        static let areasToFocus = "Areas to Focus"
+        static let nextWeekPlan = "Next Week Plan"
+        static let weeklyInsight = "Weekly Insight"
+        static let weekOverWeek = "Week over Week"
+        static let personalizedForYou = "Personalized for You"
     }
 
     // MARK: - Empty States

@@ -40,6 +40,7 @@ final class AICoachService: ObservableObject {
 
     /// Sends a question to the AI coach and receives a contextual response
     /// Includes caching to avoid redundant requests for identical questions
+    /// ACP-1023: Now passes client-side context for faster personalization
     func askCoach(question: String) async -> UnifiedCoachResponse? {
         isLoading = true
         error = nil
@@ -63,6 +64,12 @@ final class AICoachService: ObservableObject {
             var requestBody: [String: Any] = ["patient_id": patientId.uuidString]
             if !question.isEmpty {
                 requestBody["question"] = question
+            }
+
+            // ACP-1023: Include client-side context for faster personalization
+            let clientContext = await gatherClientContext()
+            if !clientContext.isEmpty {
+                requestBody["client_context"] = clientContext
             }
 
             let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
@@ -113,6 +120,7 @@ final class AICoachService: ObservableObject {
 
     /// Fetches proactive insights without a specific question
     /// Includes caching to avoid redundant network calls
+    /// ACP-1023: Now passes client-side context for faster personalization
     func getProactiveInsights() async {
         isLoading = true
         error = nil
@@ -134,7 +142,14 @@ final class AICoachService: ObservableObject {
                 return
             }
 
-            let requestBody: [String: Any] = ["patient_id": patientId.uuidString]
+            var requestBody: [String: Any] = ["patient_id": patientId.uuidString]
+
+            // ACP-1023: Include client-side context for faster personalization
+            let clientContext = await gatherClientContext()
+            if !clientContext.isEmpty {
+                requestBody["client_context"] = clientContext
+            }
+
             let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
 
             let response: UnifiedCoachResponse = try await supabase.client.functions
@@ -163,6 +178,75 @@ final class AICoachService: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    // MARK: - Client Context (ACP-1023)
+
+    /// Gathers lightweight client-side context to send with the request
+    /// This helps the edge function personalize faster by avoiding redundant DB queries
+    private func gatherClientContext() async -> [String: Any] {
+        var context: [String: Any] = [:]
+
+        do {
+            // Fetch recent workout names for context
+            struct WorkoutRow: Decodable {
+                let name: String?
+            }
+            let recentWorkouts: [WorkoutRow] = try await supabase.client
+                .from("manual_sessions")
+                .select("name")
+                .eq("completed", value: true)
+                .order("completed_at", ascending: false)
+                .limit(5)
+                .execute()
+                .value
+
+            let workoutNames = recentWorkouts.compactMap { $0.name }
+            if !workoutNames.isEmpty {
+                context["recent_workout_names"] = workoutNames
+            }
+
+            // Fetch latest readiness score
+            struct ReadinessRow: Decodable {
+                let readinessScore: Int?
+                enum CodingKeys: String, CodingKey {
+                    case readinessScore = "readiness_score"
+                }
+            }
+            let readiness: [ReadinessRow] = try await supabase.client
+                .from("daily_readiness")
+                .select("readiness_score")
+                .order("date", ascending: false)
+                .limit(1)
+                .execute()
+                .value
+
+            if let score = readiness.first?.readinessScore {
+                context["current_readiness_score"] = score
+            }
+
+            // Fetch active goal titles
+            struct GoalRow: Decodable {
+                let title: String
+            }
+            let goals: [GoalRow] = try await supabase.client
+                .from("patient_goals")
+                .select("title")
+                .eq("status", value: "active")
+                .limit(5)
+                .execute()
+                .value
+
+            let goalTitles = goals.map { $0.title }
+            if !goalTitles.isEmpty {
+                context["active_goal_titles"] = goalTitles
+            }
+        } catch {
+            DebugLogger.shared.warning("AICoachService", "Failed to gather client context: \(error.localizedDescription)")
+            // Non-fatal: edge function will still fetch context server-side
+        }
+
+        return context
     }
 
     // MARK: - Helpers

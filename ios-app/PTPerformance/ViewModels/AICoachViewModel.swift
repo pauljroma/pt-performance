@@ -30,22 +30,24 @@ final class AICoachViewModel: ObservableObject {
     // MARK: - Initialization
 
     init() {
-        // Add welcome message
+        // ACP-1023: More engaging welcome message
         messages = [
             AICoachMessage(
                 role: .coach,
-                content: "Hi! I'm your AI Performance Coach. I have access to your complete health picture - training, sleep, recovery, labs, and more. Ask me anything, or let me share some personalized insights.",
+                content: "Hi! I'm your AI Performance Coach. I analyze your workouts, sleep, recovery, labs, and goals to give you truly personalized insights. Ask me about your training, exercise form, recovery strategies, or let me share what I'm seeing in your data.",
                 suggestedQuestions: defaultQuestions
             )
         ]
         suggestedQuestions = defaultQuestions
     }
 
+    // ACP-1023: More specific default questions that feel personalized
     private let defaultQuestions: [String] = [
-        "How is my recovery looking?",
-        "What should I focus on today?",
-        "Am I training too hard?",
-        "How can I improve my sleep?"
+        "How is my recovery trending this week?",
+        "Based on my data, what should I focus on today?",
+        "Am I at risk of overtraining based on my recent workouts?",
+        "How can I optimize my sleep based on my patterns?",
+        "What does my readiness score mean for today's training?"
     ]
 
     // MARK: - Public Methods

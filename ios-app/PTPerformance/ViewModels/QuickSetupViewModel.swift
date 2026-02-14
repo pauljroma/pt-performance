@@ -2,7 +2,9 @@
 //  QuickSetupViewModel.swift
 //  PTPerformance
 //
-//  Quick Setup flow for new users - configures mode, goals, and initial data
+//  ACP-1035: Streamlined Quick Setup — Progressive Disclosure
+//  Reduced from 6 steps to 4: Welcome -> Mode -> Goals -> Complete
+//  Readiness check-in and therapist linking are deferred to later in-app
 //
 
 import SwiftUI
@@ -25,25 +27,19 @@ class QuickSetupViewModel: ObservableObject {
     // Goals
     @Published var selectedGoals: Set<QuickGoalTemplate> = []
 
-    // Readiness check-in
-    @Published var sleepHours: Double = 7.0
-    @Published var sorenessLevel: Int = 3
-    @Published var energyLevel: Int = 7
-    @Published var stressLevel: Int = 4
-
-    // Therapist linking
-    @Published var therapistCode: String = ""
-    @Published var hasTherapist = false
-
     // MARK: - Services
 
     private let supabase = PTSupabaseClient.shared
     private let modeService = ModeService.shared
-    private let readinessService = ReadinessService()
-    private let streakService = StreakTrackingService.shared
+    private let onboardingCoordinator = OnboardingCoordinator.shared
 
     // Cached patient ID (fetched from user_id)
     private var cachedPatientId: UUID?
+
+    /// Whether the user arrived via quick-start (skipped onboarding)
+    var quickStarted: Bool {
+        onboardingCoordinator.quickStarted
+    }
 
     // MARK: - Patient ID Helper
 
@@ -143,34 +139,28 @@ class QuickSetupViewModel: ObservableObject {
         return patientId
     }
 
-    // MARK: - Setup Steps
+    // MARK: - Setup Steps (ACP-1035: Reduced)
 
     enum SetupStep: Int, CaseIterable {
         case welcome = 0
         case modeSelection = 1
         case goalSelection = 2
-        case readinessCheckIn = 3
-        case therapistLink = 4
-        case complete = 5
+        case complete = 3
 
         var title: String {
             switch self {
             case .welcome: return "Welcome"
             case .modeSelection: return "Choose Your Mode"
             case .goalSelection: return "Set Your Goals"
-            case .readinessCheckIn: return "How Are You Feeling?"
-            case .therapistLink: return "Connect with Therapist"
             case .complete: return "You're All Set!"
             }
         }
 
         var subtitle: String {
             switch self {
-            case .welcome: return "Let's get you set up in 2 minutes"
+            case .welcome: return "Two quick choices and you're in"
             case .modeSelection: return "This helps us personalize your experience"
             case .goalSelection: return "What do you want to achieve?"
-            case .readinessCheckIn: return "Your daily baseline for training"
-            case .therapistLink: return "Optional: Connect for personalized programs"
             case .complete: return "Your personalized dashboard is ready"
             }
         }
@@ -291,10 +281,6 @@ class QuickSetupViewModel: ObservableObject {
             return true  // Mode has a default
         case .goalSelection:
             return !selectedGoals.isEmpty
-        case .readinessCheckIn:
-            return true  // Has defaults
-        case .therapistLink:
-            return true  // Optional step
         case .complete:
             return true
         }
@@ -304,12 +290,12 @@ class QuickSetupViewModel: ObservableObject {
         switch currentStep {
         case .welcome:
             return "Get Started"
-        case .therapistLink:
-            return hasTherapist || !therapistCode.isEmpty ? "Link & Finish" : "Skip & Finish"
+        case .modeSelection:
+            return "Continue"
+        case .goalSelection:
+            return "Finish Setup"
         case .complete:
             return "Go to Dashboard"
-        default:
-            return "Continue"
         }
     }
 
@@ -334,7 +320,7 @@ class QuickSetupViewModel: ObservableObject {
 
     // MARK: - Actions
 
-    /// Handle continue button tap - saves data and advances
+    /// Handle continue button tap — saves data and advances
     func handleContinue() async {
         error = nil
 
@@ -346,21 +332,35 @@ class QuickSetupViewModel: ObservableObject {
             await saveMode()
 
         case .goalSelection:
-            await saveGoals()
-
-        case .readinessCheckIn:
-            await saveReadiness()
-
-        case .therapistLink:
-            if !therapistCode.isEmpty {
-                await linkTherapist()
-            } else {
-                await finalizeSetup()
-            }
+            await saveGoalsAndFinalize()
 
         case .complete:
             isComplete = true
         }
+    }
+
+    /// ACP-1035: Handle "Skip for Now" — save what we have, skip remaining
+    func handleSkipForNow() async {
+        error = nil
+
+        // If we have a mode selected and we're past mode selection, save it
+        if currentStep.rawValue >= SetupStep.modeSelection.rawValue {
+            // Try to save mode silently
+            await saveModeQuietly()
+        }
+
+        // Mark as complete with deferred flag
+        await finalizeSetup()
+
+        // Jump to complete
+        withAnimation(.easeInOut(duration: 0.3)) {
+            currentStep = .complete
+        }
+
+        ErrorLogger.shared.logUserAction(
+            action: "quick_setup_skipped",
+            properties: ["skipped_at_step": currentStep.rawValue]
+        )
     }
 
     // MARK: - Save Functions
@@ -391,7 +391,25 @@ class QuickSetupViewModel: ObservableObject {
         }
     }
 
-    private func saveGoals() async {
+    /// Save mode without blocking or showing errors (for skip scenarios)
+    private func saveModeQuietly() async {
+        guard let userId = supabase.userId else { return }
+
+        do {
+            try await supabase.client
+                .from("patients")
+                .update(["mode": selectedMode.rawValue])
+                .eq("user_id", value: userId)
+                .execute()
+
+            await modeService.loadPatientMode()
+        } catch {
+            DebugLogger.shared.log("[QuickSetup] Silent mode save failed: \(error.localizedDescription)", level: .warning)
+        }
+    }
+
+    /// ACP-1035: Combined save goals + finalize (no more readiness/therapist steps)
+    private func saveGoalsAndFinalize() async {
         isLoading = true
         defer { isLoading = false }
 
@@ -414,7 +432,7 @@ class QuickSetupViewModel: ObservableObject {
                 )
             }
 
-            // Insert all goals using the Encodable struct directly
+            // Insert all goals
             for goal in goalsToInsert {
                 try await supabase.client
                     .from("patient_goals")
@@ -422,107 +440,10 @@ class QuickSetupViewModel: ObservableObject {
                     .execute()
             }
 
+            await finalizeSetup()
             goToNextStep()
         } catch {
             self.error = "Failed to save goals: \(error.localizedDescription)"
-        }
-    }
-
-    private func saveReadiness() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            // Fetch the actual patient ID from user_id
-            let patientId = try await getPatientId()
-
-            // Submit readiness check-in
-            _ = try await readinessService.submitReadiness(
-                patientId: patientId,
-                date: Date(),
-                sleepHours: sleepHours,
-                sorenessLevel: sorenessLevel,
-                energyLevel: energyLevel,
-                stressLevel: stressLevel,
-                notes: "Initial check-in from Quick Setup"
-            )
-
-            // Initialize streak records
-            await initializeStreaks(patientId: patientId)
-
-            goToNextStep()
-        } catch {
-            self.error = "Failed to save readiness: \(error.localizedDescription)"
-        }
-    }
-
-    /// Encodable struct for streak record initialization
-    private struct StreakRecordInsert: Encodable {
-        let patientId: String
-        let streakType: String
-        let currentStreak: Int
-        let longestStreak: Int
-        let lastActivityDate: String?
-        let streakStartDate: String?
-
-        enum CodingKeys: String, CodingKey {
-            case patientId = "patient_id"
-            case streakType = "streak_type"
-            case currentStreak = "current_streak"
-            case longestStreak = "longest_streak"
-            case lastActivityDate = "last_activity_date"
-            case streakStartDate = "streak_start_date"
-        }
-    }
-
-    private func initializeStreaks(patientId: UUID) async {
-        // Create initial streak records if they don't exist
-        let streakTypes = ["workout", "arm_care", "combined"]
-
-        for streakType in streakTypes {
-            do {
-                let streakInsert = StreakRecordInsert(
-                    patientId: patientId.uuidString,
-                    streakType: streakType,
-                    currentStreak: 0,
-                    longestStreak: 0,
-                    lastActivityDate: nil,
-                    streakStartDate: nil
-                )
-
-                try await supabase.client
-                    .from("streak_records")
-                    .upsert(streakInsert, onConflict: "patient_id,streak_type")
-                    .execute()
-            } catch {
-                // Non-fatal - streaks will be created on first activity
-                DebugLogger.shared.log("[QuickSetup] Could not initialize \(streakType) streak: \(error)", level: .warning)
-            }
-        }
-    }
-
-    private func linkTherapist() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        guard !therapistCode.isEmpty else {
-            await finalizeSetup()
-            return
-        }
-
-        do {
-            // Call link-therapist edge function
-            _ = try await supabase.client.functions.invoke(
-                "link-therapist",
-                options: .init(body: ["action": "link", "code": therapistCode.uppercased()])
-            )
-
-            hasTherapist = true
-            await finalizeSetup()
-        } catch {
-            self.error = "Invalid code or already used. You can link later from Settings."
-            // Still proceed to complete
-            await finalizeSetup()
         }
     }
 
@@ -530,7 +451,8 @@ class QuickSetupViewModel: ObservableObject {
         // Mark setup as complete in user defaults
         UserDefaults.standard.set(true, forKey: "hasCompletedQuickSetup")
 
-        goToNextStep()
+        // ACP-1035: Mark deferred setup as pending (readiness, therapist link)
+        onboardingCoordinator.deferredSetupPending = true
     }
 
     // MARK: - Check if Setup Needed

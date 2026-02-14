@@ -237,6 +237,12 @@ struct HealthInsightCard: View {
                 .accessibilityHint("Double tap to \(actionText.lowercased())")
             }
 
+            // ACP-1025: AI Transparency - feedback buttons
+            InsightFeedbackRow(
+                insightId: insight.id,
+                feedbackType: .healthInsight
+            )
+
             // Timestamp
             HStack {
                 Spacer()
@@ -338,6 +344,103 @@ struct HealthInsightRow: View {
         .accessibilityLabel("\(insight.type.accessibilityLabel): \(insight.title), \(insight.category.displayName)")
         .accessibilityHint("Double tap to view details")
         .accessibilityIdentifier("healthInsightRow_\(insight.title.replacingOccurrences(of: " ", with: "_"))")
+    }
+}
+
+// MARK: - ACP-1025: Inline Feedback Row
+
+/// Compact inline feedback row for AI-generated insights
+/// Shows thumbs up/down buttons for quick user feedback
+struct InsightFeedbackRow: View {
+    let insightId: String
+    let feedbackType: RecommendationFeedbackType
+
+    @State private var feedbackState: InsightFeedbackState = .none
+    @State private var showThanks = false
+    @StateObject private var feedbackStore = RecommendationFeedbackStore.shared
+    @Environment(\.colorScheme) private var colorScheme
+
+    private enum InsightFeedbackState {
+        case none
+        case positive
+        case negative
+    }
+
+    var body: some View {
+        HStack(spacing: Spacing.xs) {
+            Divider()
+                .frame(height: 16)
+
+            Text("Helpful?")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            // Thumbs up
+            Button {
+                toggleFeedback(isPositive: true)
+            } label: {
+                Image(systemName: feedbackState == .positive
+                    ? "hand.thumbsup.fill" : "hand.thumbsup")
+                    .font(.caption)
+                    .foregroundColor(feedbackState == .positive ? .modusTealAccent : .secondary)
+            }
+            .buttonStyle(.plain)
+            .frame(minWidth: 36, minHeight: 36)
+            .accessibilityLabel("Thumbs up - mark as helpful")
+
+            // Thumbs down
+            Button {
+                toggleFeedback(isPositive: false)
+            } label: {
+                Image(systemName: feedbackState == .negative
+                    ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                    .font(.caption)
+                    .foregroundColor(feedbackState == .negative ? .secondary : .secondary.opacity(0.6))
+            }
+            .buttonStyle(.plain)
+            .frame(minWidth: 36, minHeight: 36)
+            .accessibilityLabel("Thumbs down - mark as not helpful")
+
+            if showThanks {
+                Text("Thanks!")
+                    .font(.caption2)
+                    .foregroundColor(.modusTealAccent)
+                    .transition(.opacity)
+            }
+
+            Spacer()
+        }
+        .onAppear {
+            feedbackStore.loadFeedback()
+            if let existing = feedbackStore.getFeedback(for: insightId) {
+                feedbackState = existing.isPositive ? .positive : .negative
+            }
+        }
+    }
+
+    private func toggleFeedback(isPositive: Bool) {
+        let newState: InsightFeedbackState = isPositive ? .positive : .negative
+
+        if feedbackState == newState {
+            feedbackState = .none
+            feedbackStore.removeFeedback(for: insightId)
+            return
+        }
+
+        feedbackState = newState
+        feedbackStore.submitFeedback(
+            recommendationId: insightId,
+            type: feedbackType,
+            isPositive: isPositive
+        )
+        HapticFeedback.light()
+
+        withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
+            showThanks = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation { showThanks = false }
+        }
     }
 }
 

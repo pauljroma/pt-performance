@@ -215,6 +215,284 @@ struct WeeklySummary: Codable, Identifiable {
         return areas
     }
 
+    // MARK: - ACP-1028: Personalized Insights
+
+    /// Generates personalized highlight based on user's training mode
+    func personalizedHighlight(for mode: Mode) -> PersonalizedHighlight {
+        switch mode {
+        case .strength:
+            return strengthHighlight
+        case .rehab:
+            return rehabHighlight
+        case .performance:
+            return performanceHighlight
+        }
+    }
+
+    /// Strength-focused highlight: PRs, max weights, progressive overload
+    private var strengthHighlight: PersonalizedHighlight {
+        let title: String
+        let subtitle: String
+        let icon: String
+
+        if volumeChangePercent >= 10 {
+            title = "Progressive Overload"
+            subtitle = "Volume up \(Int(volumeChangePercent))% -- you're pushing limits"
+            icon = "arrow.up.right.circle.fill"
+        } else if let exercise = topExercise, !exercise.isEmpty {
+            title = "Strength Focus"
+            subtitle = "\(exercise) led your training this week"
+            icon = "dumbbell.fill"
+        } else if volumeChangePercent > 0 {
+            title = "Steady Progress"
+            subtitle = "Volume trending up \(Int(volumeChangePercent))% week over week"
+            icon = "chart.line.uptrend.xyaxis"
+        } else {
+            title = "Recovery Week"
+            subtitle = "Lower volume can support strength adaptation"
+            icon = "bed.double.fill"
+        }
+
+        return PersonalizedHighlight(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            accentColor: .modusCyan,
+            category: .strength
+        )
+    }
+
+    /// Rehab/beginner-focused highlight: consistency, adherence, habit building
+    private var rehabHighlight: PersonalizedHighlight {
+        let title: String
+        let subtitle: String
+        let icon: String
+
+        if workoutsCompleted == workoutsScheduled && workoutsScheduled > 0 {
+            title = "Perfect Consistency"
+            subtitle = "Every session completed -- building a strong foundation"
+            icon = "checkmark.seal.fill"
+        } else if currentStreak >= 7 {
+            title = "Habit Locked In"
+            subtitle = "\(currentStreak)-day streak proves your commitment"
+            icon = "flame.fill"
+        } else if adherencePercentage >= 80 {
+            title = "Strong Adherence"
+            subtitle = "\(Int(adherencePercentage))% adherence keeps recovery on track"
+            icon = "heart.circle.fill"
+        } else if workoutsCompleted > 0 {
+            title = "Showing Up Matters"
+            subtitle = "\(workoutsCompleted) session\(workoutsCompleted == 1 ? "" : "s") completed -- every rep counts"
+            icon = "figure.walk.circle.fill"
+        } else {
+            title = "Fresh Start Ahead"
+            subtitle = "This week is a clean slate for progress"
+            icon = "sunrise.fill"
+        }
+
+        return PersonalizedHighlight(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            accentColor: .modusTealAccent,
+            category: .consistency
+        )
+    }
+
+    /// Performance-focused highlight: volume, load management, training density
+    private var performanceHighlight: PersonalizedHighlight {
+        let title: String
+        let subtitle: String
+        let icon: String
+
+        if totalVolume >= 50_000 && adherencePercentage >= 80 {
+            title = "High Output Week"
+            subtitle = "\(formattedVolume) moved at \(Int(adherencePercentage))% adherence"
+            icon = "bolt.circle.fill"
+        } else if volumeChangePercent >= 5 && adherencePercentage >= 80 {
+            title = "Volume Ramping"
+            subtitle = "Controlled \(Int(volumeChangePercent))% increase with full adherence"
+            icon = "chart.line.uptrend.xyaxis"
+        } else if adherencePercentage >= 90 {
+            title = "Elite Execution"
+            subtitle = "\(Int(adherencePercentage))% program adherence this week"
+            icon = "medal.fill"
+        } else if streakMaintained && currentStreak >= 5 {
+            title = "Training Consistency"
+            subtitle = "\(currentStreak)-day streak supports periodization"
+            icon = "calendar.badge.checkmark"
+        } else {
+            title = "Manage Your Load"
+            subtitle = "Review training density for optimal adaptation"
+            icon = "gauge.with.dots.needle.33percent"
+        }
+
+        return PersonalizedHighlight(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            accentColor: .modusDeepTeal,
+            category: .volume
+        )
+    }
+
+    /// Actionable next-week suggestions based on current data and mode
+    func nextWeekSuggestions(for mode: Mode) -> [NextWeekSuggestion] {
+        var suggestions: [NextWeekSuggestion] = []
+
+        switch mode {
+        case .strength:
+            if volumeChangePercent < 0 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Add one extra set per major lift to restore volume",
+                    icon: "plus.circle.fill",
+                    priority: .high
+                ))
+            }
+            if adherencePercentage < 80 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Hit at least \(workoutsScheduled) sessions for strength gains",
+                    icon: "calendar.badge.plus",
+                    priority: .medium
+                ))
+            }
+            if volumeChangePercent >= 0 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Try increasing weight by 2.5-5 lbs on compound lifts",
+                    icon: "arrow.up.circle.fill",
+                    priority: .low
+                ))
+            }
+
+        case .rehab:
+            if !streakMaintained {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Set a daily reminder to rebuild your workout streak",
+                    icon: "bell.badge.fill",
+                    priority: .high
+                ))
+            }
+            if adherencePercentage < 60 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Aim for \(max(workoutsCompleted + 1, 3)) sessions next week",
+                    icon: "target",
+                    priority: .high
+                ))
+            } else {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Maintain your \(Int(adherencePercentage))% adherence rate",
+                    icon: "checkmark.shield.fill",
+                    priority: .medium
+                ))
+            }
+            suggestions.append(NextWeekSuggestion(
+                text: "Log pain levels to track recovery trends",
+                icon: "waveform.path.ecg",
+                priority: .low
+            ))
+
+        case .performance:
+            if volumeChangePercent > 15 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Consider a deload -- volume jumped \(Int(volumeChangePercent))%",
+                    icon: "arrow.down.circle.fill",
+                    priority: .high
+                ))
+            }
+            if adherencePercentage < 90 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Target 100% adherence for optimal periodization",
+                    icon: "scope",
+                    priority: .medium
+                ))
+            }
+            if totalVolume > 0 {
+                suggestions.append(NextWeekSuggestion(
+                    text: "Review RPE scores to calibrate training intensity",
+                    icon: "gauge.with.dots.needle.50percent",
+                    priority: .low
+                ))
+            }
+        }
+
+        // Cap at 3 suggestions
+        return Array(suggestions.prefix(3))
+    }
+
+    /// Motivational insight based on data patterns
+    func motivationalInsight(for mode: Mode) -> MotivationalInsight {
+        // Check for streaks first -- universal motivator
+        if currentStreak >= 14 {
+            return MotivationalInsight(
+                text: "Two weeks strong. Consistency is the foundation of every transformation.",
+                icon: "flame.fill",
+                category: .streak
+            )
+        }
+
+        if workoutsCompleted == workoutsScheduled && workoutsScheduled >= 4 {
+            return MotivationalInsight(
+                text: "Perfect adherence with \(workoutsScheduled)+ sessions shows you're ready for the next level.",
+                icon: "trophy.fill",
+                category: .perfection
+            )
+        }
+
+        if volumeChangePercent >= 10 {
+            return MotivationalInsight(
+                text: "A \(Int(volumeChangePercent))% volume increase means your body is adapting. Keep the momentum.",
+                icon: "chart.line.uptrend.xyaxis",
+                category: .growth
+            )
+        }
+
+        if currentStreak >= 5 {
+            return MotivationalInsight(
+                text: "\(currentStreak) days in a row. Discipline is doing what needs to be done, even when you don't want to.",
+                icon: "flame.fill",
+                category: .streak
+            )
+        }
+
+        // Mode-specific fallback motivational insights
+        switch mode {
+        case .strength:
+            return MotivationalInsight(
+                text: "Strength isn't built in a day. Each session adds to your foundation.",
+                icon: "dumbbell.fill",
+                category: .encouragement
+            )
+        case .rehab:
+            return MotivationalInsight(
+                text: "Recovery is progress. Every controlled movement brings you closer to full function.",
+                icon: "heart.circle.fill",
+                category: .encouragement
+            )
+        case .performance:
+            return MotivationalInsight(
+                text: "Elite performance comes from elite preparation. Trust the process.",
+                icon: "medal.fill",
+                category: .encouragement
+            )
+        }
+    }
+
+    /// Adherence progress as a value between 0 and 1 for progress rings
+    var adherenceProgress: Double {
+        adherencePercentage / 100.0
+    }
+
+    /// Workout completion progress as a value between 0 and 1
+    var workoutCompletionProgress: Double {
+        guard workoutsScheduled > 0 else { return 0 }
+        return min(Double(workoutsCompleted) / Double(workoutsScheduled), 1.0)
+    }
+
+    /// Streak progress normalized to a 7-day goal (capped at 1.0)
+    var streakProgress: Double {
+        min(Double(currentStreak) / 7.0, 1.0)
+    }
+
     /// Performance category based on overall metrics
     var performanceCategory: PerformanceCategory {
         let score = (adherencePercentage * 0.5) +
@@ -262,6 +540,95 @@ struct WeeklySummary: Codable, Identifiable {
         } else {
             return "chart.line.flattrend.xyaxis"
         }
+    }
+}
+
+// MARK: - ACP-1028: Personalization Support Types
+
+/// Personalized highlight card data for mode-specific summary focus
+struct PersonalizedHighlight {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let accentColor: Color
+    let category: HighlightCategory
+
+    enum HighlightCategory {
+        case strength
+        case consistency
+        case volume
+    }
+}
+
+/// Actionable suggestion for the upcoming week
+struct NextWeekSuggestion: Identifiable {
+    let id = UUID()
+    let text: String
+    let icon: String
+    let priority: Priority
+
+    enum Priority {
+        case high, medium, low
+
+        var color: Color {
+            switch self {
+            case .high: return .modusCyan
+            case .medium: return .modusTealAccent
+            case .low: return .modusLightTeal
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .high: return "Priority"
+            case .medium: return "Suggested"
+            case .low: return "Optional"
+            }
+        }
+    }
+}
+
+/// Motivational insight derived from user data patterns
+struct MotivationalInsight {
+    let text: String
+    let icon: String
+    let category: InsightCategory
+
+    enum InsightCategory {
+        case streak, perfection, growth, encouragement
+    }
+}
+
+// MARK: - Week-over-Week Comparison
+
+/// Comparison metrics between current and previous week
+struct WeekComparison {
+    let workoutsDelta: Int
+    let adherenceDelta: Double
+    let volumeDelta: Double
+    let volumePercentDelta: Double
+    let streakDelta: Int
+
+    /// Creates a comparison from current and previous summaries
+    static func compare(current: WeeklySummary, previous: WeeklySummary) -> WeekComparison {
+        WeekComparison(
+            workoutsDelta: current.workoutsCompleted - previous.workoutsCompleted,
+            adherenceDelta: current.adherencePercentage - previous.adherencePercentage,
+            volumeDelta: current.totalVolume - previous.totalVolume,
+            volumePercentDelta: current.volumeChangePercent,
+            streakDelta: current.currentStreak - previous.currentStreak
+        )
+    }
+
+    /// Creates an empty comparison when no previous data exists
+    static var empty: WeekComparison {
+        WeekComparison(
+            workoutsDelta: 0,
+            adherenceDelta: 0,
+            volumeDelta: 0,
+            volumePercentDelta: 0,
+            streakDelta: 0
+        )
     }
 }
 

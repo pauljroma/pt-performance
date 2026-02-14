@@ -1,6 +1,6 @@
 // ============================================================================
 // Unified AI Coach Edge Function
-// Health Intelligence Platform - Holistic Coaching (ACP-1201)
+// Health Intelligence Platform - Holistic Coaching (ACP-1201, ACP-1023)
 // ============================================================================
 // This is the KEY DIFFERENTIATOR vs Ladder/Volt - a truly integrated AI coach
 // that understands ALL aspects of the patient's health and fitness journey.
@@ -12,11 +12,15 @@
 // - Fasting state and nutrition
 // - Supplement stack
 // - Goals and progress
+// - Injury context and rehab status
 //
 // Returns holistic, contextual coaching that considers the WHOLE person.
+// ACP-1023: Enhanced with personalized context, follow-up suggestions,
+//           structured exercise form explanations, and streaming optimization.
 //
 // Date: 2026-02-02
-// Ticket: ACP-1201 (Critical)
+// Updated: 2026-02-14 (ACP-1023)
+// Ticket: ACP-1201 (Critical), ACP-1023
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -34,12 +38,23 @@ const corsHeaders = {
 interface UnifiedCoachRequest {
   patient_id: string
   question?: string  // Optional - if provided, answer specifically; if not, provide proactive insights
+  // ACP-1023: Client-side context for faster personalization
+  client_context?: {
+    recent_workout_names?: string[]
+    current_readiness_score?: number
+    active_goal_titles?: string[]
+    current_streak_days?: number
+  }
 }
 
 interface PatientContext {
   // Basic info
   patient_id: string
   training_age_days: number
+
+  // Injury & Rehab Context (ACP-1023)
+  injury_type: string | null
+  target_level: string | null
 
   // Goals
   active_goals: PatientGoal[]
@@ -225,10 +240,10 @@ async function gatherPatientContext(
     hrvData,
     programData
   ] = await Promise.all([
-    // 1. Patient basic info
+    // 1. Patient basic info (ACP-1023: now includes injury_type and target_level)
     supabaseClient
       .from('patients')
-      .select('id, created_at')
+      .select('id, created_at, injury_type, target_level')
       .eq('id', patient_id)
       .single(),
 
@@ -340,10 +355,12 @@ async function gatherPatientContext(
       .maybeSingle()
   ])
 
-  // Process patient data
+  // Process patient data (ACP-1023: injury context)
   const trainingAgeDays = patientData.data?.created_at
     ? Math.floor((Date.now() - new Date(patientData.data.created_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0
+  const injuryType = patientData.data?.injury_type || null
+  const targetLevel = patientData.data?.target_level || null
 
   // Process goals
   const activeGoals: PatientGoal[] = (goalsData.data || []).map((g: any) => ({
@@ -485,6 +502,8 @@ async function gatherPatientContext(
   return {
     patient_id,
     training_age_days: trainingAgeDays,
+    injury_type: injuryType,
+    target_level: targetLevel,
     active_goals: activeGoals,
     recent_workouts: recentWorkouts,
     current_program: currentProgram,
@@ -522,7 +541,7 @@ serve(async (req) => {
   }
 
   try {
-    const { patient_id, question } = await req.json() as UnifiedCoachRequest
+    const { patient_id, question, client_context } = await req.json() as UnifiedCoachRequest
 
     // Validate required fields
     if (!patient_id) {
@@ -540,7 +559,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`[unified-ai-coach] Processing request for patient ${patient_id}${question ? ` with question: "${question.substring(0, 50)}..."` : ''}`)
+    console.log(`[unified-ai-coach] Processing request for patient ${patient_id}${question ? ` with question: "${question.substring(0, 50)}..."` : ''}${client_context ? ' (with client context)' : ''}`)
 
     // Initialize Supabase client with service role
     const supabaseClient = createClient(
@@ -561,21 +580,39 @@ serve(async (req) => {
     // ========================================================================
     const systemPrompt = `You are an elite AI health and performance coach - think of yourself as a combination of Dr. Andrew Huberman (science-based optimization), Andy Galpin (exercise physiology), and Peter Attia (longevity medicine).
 
-YOUR UNIQUE VALUE: Unlike basic fitness apps, you have access to the COMPLETE picture of this person's health - their training, sleep, HRV, lab work, fasting, supplements, and goals. Use this holistic view to provide insights that no single-domain app could offer.
+YOUR UNIQUE VALUE: Unlike basic fitness apps, you have access to the COMPLETE picture of this person's health - their training, sleep, HRV, lab work, fasting, supplements, goals, and injury/rehab context. Use this holistic view to provide insights that no single-domain app could offer.
 
 COACHING PHILOSOPHY:
 1. Evidence-based: Ground recommendations in science, cite mechanisms when helpful
-2. Personalized: Use their actual data, not generic advice
+2. Personalized: Use their actual data, not generic advice. Reference specific workout names, scores, and dates.
 3. Prioritized: Focus on the 1-2 highest-impact actions, not overwhelming lists
-4. Empathetic: Acknowledge challenges, celebrate wins
+4. Empathetic: Acknowledge challenges, celebrate wins, recognize effort and consistency
 5. Actionable: Every insight should have a clear next step
+6. Context-aware: If they have an injury, always consider it in recommendations
 
 RESPONSE STYLE:
 - Conversational but knowledgeable
 - Use "you" language, make it personal
-- Be specific with numbers and data
+- Be specific with numbers and data (e.g., "Your readiness has been averaging 72 this week, down from 81 last week")
 - Avoid cliches and generic fitness advice
 - If they asked a question, answer it directly first
+- Keep responses focused: 2-3 concise paragraphs max for the primary message
+- When referencing their data, be specific: "Your 3 workouts this week..." not "Your recent workouts..."
+
+EXERCISE FORM EXPLANATIONS:
+When asked about exercise form or technique, structure your response with these sections:
+1. **Setup**: Starting position, stance, grip, equipment placement
+2. **Execution**: Step-by-step movement cues, tempo, range of motion
+3. **Breathing**: When to inhale/exhale relative to the movement
+4. **Common Mistakes**: Top 2-3 errors and how to fix them
+5. **Feel It Here**: Where they should feel the exercise working
+This structured format helps patients understand and execute exercises safely.
+
+INJURY-AWARE COACHING:
+- If the patient has a documented injury, always consider it in exercise and training recommendations
+- Flag any potential contraindications or modifications needed
+- Celebrate rehab milestones and progress toward return-to-sport
+- Connect training recommendations to their recovery timeline
 
 KEY INTEGRATIONS TO CONSIDER:
 - Low HRV + high training load = overtraining risk
@@ -583,17 +620,29 @@ KEY INTEGRATIONS TO CONSIDER:
 - Flagged biomarkers + symptoms = investigate
 - Fasting + intense training = performance tradeoff
 - Supplement stack + lab results = efficacy check
+- Injury status + training intensity = rehab progression check
+- Readiness trend declining + high fatigue = deload recommendation
 
 PROACTIVE INSIGHTS:
 - Identify concerning patterns before they become problems
 - Suggest optimizations based on data trends
 - Connect dots between different data streams
-- Celebrate consistency and progress`
+- Celebrate consistency and progress
+- Note when readiness or sleep trends are declining over 3+ days
+
+FOLLOW-UP SUGGESTIONS:
+Always generate exactly 3 follow-up questions that:
+- Are highly specific to the user's current data and situation
+- Explore different aspects (e.g., one training, one recovery, one nutrition)
+- Are actionable and conversational (not generic like "Tell me more")
+- Reference their actual metrics or recent activities when possible`
 
     const userPrompt = `${question ? `USER QUESTION: "${question}"\n\n` : ''}COMPLETE PATIENT CONTEXT:
 
 === BASIC INFO ===
 Training Age: ${context.training_age_days} days
+${context.injury_type ? `Injury/Condition: ${context.injury_type}` : 'No documented injury'}
+${context.target_level ? `Target Level: ${context.target_level}` : ''}
 
 === ACTIVE GOALS ===
 ${context.active_goals.length > 0
@@ -667,27 +716,33 @@ TASK: ${question
 Respond with valid JSON ONLY:
 {
   "greeting": "Personalized greeting using time of day and their current state",
-  "primary_message": "${question ? 'Direct answer to their question (2-3 paragraphs)' : 'Most important insight right now (2-3 paragraphs)'}",
+  "primary_message": "${question ? 'Direct answer to their question (2-3 concise paragraphs, reference specific data)' : 'Most important insight right now (2-3 concise paragraphs, reference specific data)'}",
   "insights": [
     {
       "category": "training|recovery|nutrition|sleep|labs|general",
       "priority": "high|medium|low",
-      "insight": "What you noticed in their data",
-      "action": "Specific action to take",
-      "rationale": "Why this matters (science-backed)"
+      "insight": "What you noticed in their data (be specific with numbers)",
+      "action": "Specific action to take today or this week",
+      "rationale": "Why this matters (science-backed, 1-2 sentences)"
     }
   ],
-  "today_focus": "The ONE thing they should focus on today",
+  "today_focus": "The ONE thing they should focus on today (specific and actionable)",
   "weekly_priorities": ["Priority 1", "Priority 2", "Priority 3"],
   "data_summary": {
-    "readiness": "One-line readiness summary",
-    "training": "One-line training summary",
+    "readiness": "One-line readiness summary with score if available",
+    "training": "One-line training summary with workout count",
     "recovery": "One-line recovery summary",
     "labs": "One-line labs summary (or 'No recent data')"
   },
   "proactive_alerts": ["Any concerning patterns or warnings"],
-  "follow_up_questions": ["Question to learn more about the user", "Another helpful question"]
-}`
+  "follow_up_questions": [
+    "Specific follow-up question about their training data",
+    "Specific follow-up question about their recovery or nutrition",
+    "Specific follow-up question about their goals or progress"
+  ]
+}
+
+IMPORTANT: Always include exactly 3 follow_up_questions that are personalized to their data. Never use generic questions.`
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY')
     if (!anthropicApiKey) {
@@ -696,6 +751,8 @@ Respond with valid JSON ONLY:
 
     console.log('[unified-ai-coach] Calling Anthropic Claude API...')
 
+    // ACP-1023: Use system parameter properly (not in user message) for better results
+    // and reduce max_tokens for faster response times
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -705,14 +762,15 @@ Respond with valid JSON ONLY:
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
+        max_tokens: 2048,
+        system: systemPrompt,
         messages: [
           {
             role: 'user',
-            content: `${systemPrompt}\n\n${userPrompt}`
+            content: userPrompt
           }
         ],
-        temperature: 0.5,
+        temperature: 0.4,
       }),
     })
 

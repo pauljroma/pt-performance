@@ -3,18 +3,21 @@
 //  PTPerformance
 //
 //  ACP-836: Streak Tracking Feature
+//  ACP-1029: Streak System Gamification - Growing flame icons, streak freeze indicator
 //  Compact streak card for display on home screen and other views
 //
 
 import SwiftUI
 
 /// Compact streak card showing current streak with navigation to full dashboard
+/// ACP-1029: Enhanced with growing flame icon, streak freeze indicator, and comeback state
 struct StreakCardView: View {
     // MARK: - Properties
 
     let patientId: UUID
 
     @StateObject private var viewModel: StreakCardViewModel
+    @StateObject private var freezeService = StreakFreezeService.shared
     @Environment(\.colorScheme) private var colorScheme
 
     // MARK: - Initialization
@@ -31,28 +34,16 @@ struct StreakCardView: View {
             StreakDashboardView(patientId: patientId)
         } label: {
             HStack(spacing: 16) {
-                // Streak flame
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [viewModel.streakColor.opacity(0.3), viewModel.streakColor.opacity(0.1)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: 56, height: 56)
-
-                    VStack(spacing: 0) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(viewModel.streakColor)
-
+                // ACP-1029: Growing flame icon that upgrades at milestones
+                GrowingFlameIcon(streak: viewModel.currentStreak, size: 18)
+                    .overlay(
+                        // Streak count overlay
                         Text("\(viewModel.currentStreak)")
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
-                    }
-                }
+                            .offset(y: 14)
+                    )
+                    .frame(width: 56, height: 56)
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
@@ -61,6 +52,23 @@ struct StreakCardView: View {
                             .foregroundColor(.primary)
 
                         Spacer()
+
+                        // ACP-1029: Streak freeze indicator
+                        if freezeService.inventory.availableCount > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "shield.checkered")
+                                    .font(.system(size: 10))
+                                Text("\(freezeService.inventory.availableCount)")
+                                    .font(.system(size: 10, weight: .semibold))
+                            }
+                            .foregroundColor(Color.modusTealAccent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                Capsule()
+                                    .fill(Color.modusTealAccent.opacity(0.15))
+                            )
+                        }
 
                         if viewModel.isAtRisk {
                             HStack(spacing: 4) {
@@ -77,7 +85,7 @@ struct StreakCardView: View {
                                 Text("Safe")
                                     .font(.caption)
                             }
-                            .foregroundColor(.green)
+                            .foregroundColor(Color.modusTealAccent)
                         }
                     }
 
@@ -90,7 +98,7 @@ struct StreakCardView: View {
                     if let nextBadge = viewModel.badgeLevel.nextBadge {
                         HStack(spacing: 4) {
                             ProgressView(value: viewModel.progressToNextBadge)
-                                .tint(viewModel.badgeLevel.color)
+                                .tint(Color.modusCyan)
 
                             Text("\(viewModel.daysToNextBadge)d to \(nextBadge.displayName)")
                                 .font(.system(size: 10))
@@ -120,14 +128,14 @@ struct StreakCardView: View {
 }
 
 /// Minimal streak indicator for toolbar or compact spaces
+/// ACP-1029: Enhanced with growing flame icon
 struct StreakIndicator: View {
     let currentStreak: Int
     let isAtRisk: Bool
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "flame.fill")
-                .foregroundColor(isAtRisk ? .orange : .red)
+            GrowingFlameIcon(streak: currentStreak, size: 10)
 
             Text("\(currentStreak)")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -168,8 +176,8 @@ class StreakCardViewModel: ObservableObject {
     var streakColor: Color {
         if currentStreak == 0 { return .gray }
         if currentStreak < 7 { return .orange }
-        if currentStreak < 30 { return .red }
-        return .purple
+        if currentStreak < 30 { return Color.modusCyan }
+        return Color.modusTealAccent
     }
 
     var motivationalMessage: String {
@@ -202,6 +210,14 @@ class StreakCardViewModel: ObservableObject {
                 currentStreak = streak.currentStreak
                 longestStreak = streak.longestStreak
                 isAtRisk = streak.isAtRisk
+
+                // ACP-1029: Check for milestones and freeze rewards
+                StreakFreezeService.shared.checkMilestone(for: currentStreak)
+                StreakFreezeService.shared.checkAndAwardFreezes(for: currentStreak)
+                StreakFreezeService.shared.evaluateComebackState(
+                    currentStreak: currentStreak,
+                    lastActivityDate: streak.lastActivityDate
+                )
             }
         } catch {
             DebugLogger.shared.warning("StreakCardView", "Error loading data: \(error.localizedDescription)")
@@ -224,7 +240,8 @@ class StreakCardViewModel: ObservableObject {
 #Preview("Streak Indicator") {
     HStack {
         StreakIndicator(currentStreak: 7, isAtRisk: false)
-        StreakIndicator(currentStreak: 3, isAtRisk: true)
+        StreakIndicator(currentStreak: 30, isAtRisk: false)
+        StreakIndicator(currentStreak: 100, isAtRisk: false)
         StreakIndicator(currentStreak: 0, isAtRisk: true)
     }
     .padding()

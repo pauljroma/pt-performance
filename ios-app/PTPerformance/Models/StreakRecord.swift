@@ -392,3 +392,329 @@ struct StreakActivityInput: Codable {
         case notes = "p_notes"
     }
 }
+
+// MARK: - ACP-1029: Streak Freeze
+
+/// Represents a streak freeze that can preserve a streak during rest days
+struct StreakFreeze: Codable, Identifiable, Hashable, Equatable {
+    let id: UUID
+    let earnedAt: Date
+    var usedAt: Date?
+    var usedForDate: Date?
+
+    /// Whether this freeze has been used
+    var isUsed: Bool { usedAt != nil }
+
+    /// Whether this freeze is available to use
+    var isAvailable: Bool { !isUsed }
+
+    /// Create a new available freeze
+    init(id: UUID = UUID(), earnedAt: Date = Date(), usedAt: Date? = nil, usedForDate: Date? = nil) {
+        self.id = id
+        self.earnedAt = earnedAt
+        self.usedAt = usedAt
+        self.usedForDate = usedForDate
+    }
+}
+
+/// Manages streak freeze inventory for a user
+struct StreakFreezeInventory: Codable, Hashable, Equatable {
+    var freezes: [StreakFreeze]
+    var maxFreezes: Int
+
+    /// Number of available (unused) freezes
+    var availableCount: Int {
+        freezes.filter { $0.isAvailable }.count
+    }
+
+    /// Number of used freezes
+    var usedCount: Int {
+        freezes.filter { $0.isUsed }.count
+    }
+
+    /// Whether the user can earn more freezes
+    var canEarnMore: Bool {
+        freezes.count < maxFreezes
+    }
+
+    /// Get the next available freeze
+    var nextAvailable: StreakFreeze? {
+        freezes.first { $0.isAvailable }
+    }
+
+    init(freezes: [StreakFreeze] = [], maxFreezes: Int = 3) {
+        self.freezes = freezes
+        self.maxFreezes = maxFreezes
+    }
+
+    /// Use a freeze to protect the streak for a given date
+    mutating func useFreeze(for date: Date) -> Bool {
+        guard let index = freezes.firstIndex(where: { $0.isAvailable }) else { return false }
+        freezes[index].usedAt = Date()
+        freezes[index].usedForDate = date
+        return true
+    }
+
+    /// Award a new freeze (earned through milestones or consistency)
+    mutating func awardFreeze() -> Bool {
+        guard freezes.filter({ $0.isAvailable }).count < maxFreezes else { return false }
+        freezes.append(StreakFreeze())
+        return true
+    }
+}
+
+// MARK: - ACP-1029: Streak Freeze Milestones
+
+/// Defines when streak freezes are earned as rewards
+enum StreakFreezeReward: CaseIterable {
+    case firstWeek       // Earn 1 freeze at 7-day streak
+    case twoWeeks        // Earn 1 freeze at 14-day streak
+    case oneMonth        // Earn 1 freeze at 30-day streak
+    case twoMonths       // Earn 1 freeze at 60-day streak
+    case threeMonths     // Earn 1 freeze at 90-day streak
+    case hundredDays     // Earn 1 freeze at 100-day streak
+
+    var requiredStreak: Int {
+        switch self {
+        case .firstWeek: return 7
+        case .twoWeeks: return 14
+        case .oneMonth: return 30
+        case .twoMonths: return 60
+        case .threeMonths: return 90
+        case .hundredDays: return 100
+        }
+    }
+
+    var freezesAwarded: Int { 1 }
+
+    var displayMessage: String {
+        switch self {
+        case .firstWeek: return "You earned a Streak Shield for reaching 7 days!"
+        case .twoWeeks: return "Two weeks strong! Here's a Streak Shield!"
+        case .oneMonth: return "One month milestone! Enjoy a Streak Shield!"
+        case .twoMonths: return "Two months! You've earned another Streak Shield!"
+        case .threeMonths: return "Three months of excellence! Streak Shield earned!"
+        case .hundredDays: return "100 days! Legendary! Streak Shield is yours!"
+        }
+    }
+
+    /// Check if this reward should be given for a particular streak count
+    static func reward(for streak: Int) -> StreakFreezeReward? {
+        allCases.first { $0.requiredStreak == streak }
+    }
+}
+
+// MARK: - ACP-1029: Comeback Mechanics
+
+/// Represents a comeback state after a streak break
+struct StreakComebackState: Equatable {
+    let previousStreak: Int
+    let daysSinceLastActivity: Int
+    let comebackPhase: ComebackPhase
+
+    /// The motivational message for this comeback state
+    var message: String {
+        comebackPhase.message(previousStreak: previousStreak)
+    }
+
+    /// Reduced daily target during comeback (percentage of normal)
+    var targetMultiplier: Double {
+        comebackPhase.targetMultiplier
+    }
+
+    /// Number of days in the comeback period before returning to normal
+    var comebackDuration: Int {
+        comebackPhase.comebackDuration
+    }
+}
+
+/// Phases of comeback after a streak break
+enum ComebackPhase: Equatable {
+    case fresh          // 1-2 days missed: gentle nudge
+    case shortBreak     // 3-5 days missed: encouraging comeback
+    case extended       // 6-14 days missed: supportive restart
+    case longAbsence    // 15+ days missed: full restart with guidance
+
+    /// Determine the comeback phase based on days since last activity
+    static func phase(for daysMissed: Int) -> ComebackPhase {
+        switch daysMissed {
+        case 1...2: return .fresh
+        case 3...5: return .shortBreak
+        case 6...14: return .extended
+        default: return .longAbsence
+        }
+    }
+
+    /// Motivational message for the comeback
+    func message(previousStreak: Int) -> String {
+        switch self {
+        case .fresh:
+            return "Welcome back! You had a \(previousStreak)-day streak. Let's pick up where you left off!"
+        case .shortBreak:
+            return "Everyone needs a break! Your \(previousStreak)-day streak shows what you're capable of. Let's build a new one!"
+        case .extended:
+            if previousStreak >= 30 {
+                return "You built an amazing \(previousStreak)-day streak before. That discipline is still in you. Start with something small today!"
+            }
+            return "Hey, you're back! That's what matters. Start with a quick session and build from there."
+        case .longAbsence:
+            return "Welcome back to training! No pressure -- start with a light session and we'll ease back in together."
+        }
+    }
+
+    /// Target multiplier during comeback (lower = easier targets)
+    var targetMultiplier: Double {
+        switch self {
+        case .fresh: return 1.0        // Normal targets
+        case .shortBreak: return 0.75  // 75% of normal
+        case .extended: return 0.5     // 50% of normal
+        case .longAbsence: return 0.25 // 25% of normal
+        }
+    }
+
+    /// How many days the reduced targets last
+    var comebackDuration: Int {
+        switch self {
+        case .fresh: return 0      // No reduced period
+        case .shortBreak: return 3 // 3 days of easier targets
+        case .extended: return 5   // 5 days of easier targets
+        case .longAbsence: return 7 // 7 days of easier targets
+        }
+    }
+
+    /// Suggested quick workout duration in minutes
+    var suggestedDuration: Int {
+        switch self {
+        case .fresh: return 15
+        case .shortBreak: return 10
+        case .extended: return 10
+        case .longAbsence: return 5
+        }
+    }
+}
+
+// MARK: - ACP-1029: Streak Flame Level
+
+/// Growing flame icon that upgrades at milestones
+enum StreakFlameLevel: Int, CaseIterable, Comparable {
+    case spark = 0       // 0 days: tiny spark
+    case ember = 3       // 3+ days: small ember
+    case flame = 7       // 7+ days: growing flame
+    case blaze = 14      // 14+ days: strong blaze
+    case inferno = 30    // 30+ days: roaring inferno
+    case wildfire = 60   // 60+ days: wildfire
+    case supernova = 100 // 100+ days: supernova
+
+    static func < (lhs: StreakFlameLevel, rhs: StreakFlameLevel) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+
+    /// Determine flame level for a given streak count
+    static func level(for streak: Int) -> StreakFlameLevel {
+        if streak >= 100 { return .supernova }
+        if streak >= 60 { return .wildfire }
+        if streak >= 30 { return .inferno }
+        if streak >= 14 { return .blaze }
+        if streak >= 7 { return .flame }
+        if streak >= 3 { return .ember }
+        return .spark
+    }
+
+    /// SF Symbol name for the flame icon at this level
+    var iconName: String {
+        switch self {
+        case .spark: return "sparkle"
+        case .ember: return "flame"
+        case .flame: return "flame.fill"
+        case .blaze: return "flame.fill"
+        case .inferno: return "flame.fill"
+        case .wildfire: return "flame.fill"
+        case .supernova: return "flame.circle.fill"
+        }
+    }
+
+    /// The size multiplier for the flame icon
+    var sizeMultiplier: CGFloat {
+        switch self {
+        case .spark: return 0.7
+        case .ember: return 0.85
+        case .flame: return 1.0
+        case .blaze: return 1.15
+        case .inferno: return 1.3
+        case .wildfire: return 1.45
+        case .supernova: return 1.6
+        }
+    }
+
+    /// Display name
+    var displayName: String {
+        switch self {
+        case .spark: return "Spark"
+        case .ember: return "Ember"
+        case .flame: return "Flame"
+        case .blaze: return "Blaze"
+        case .inferno: return "Inferno"
+        case .wildfire: return "Wildfire"
+        case .supernova: return "Supernova"
+        }
+    }
+
+    /// Number of glow rings around the flame
+    var glowRings: Int {
+        switch self {
+        case .spark: return 0
+        case .ember: return 0
+        case .flame: return 1
+        case .blaze: return 1
+        case .inferno: return 2
+        case .wildfire: return 2
+        case .supernova: return 3
+        }
+    }
+
+    /// Whether the flame should animate (pulse)
+    var shouldAnimate: Bool {
+        self >= .flame
+    }
+}
+
+// MARK: - ACP-1029: Calendar Activity Density
+
+/// Activity density level for color-coded calendar visualization
+enum ActivityDensity: Int, Comparable {
+    case none = 0        // No activity
+    case light = 1       // One type of activity (workout or arm care)
+    case moderate = 2    // Both types of activity
+    case high = 3        // Both types + additional notes/sessions
+
+    static func < (lhs: ActivityDensity, rhs: ActivityDensity) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+
+    /// Compute density from a calendar history entry
+    static func density(from entry: CalendarHistoryEntry?) -> ActivityDensity {
+        guard let entry = entry, entry.hasAnyActivity else { return .none }
+
+        var score = 0
+        if entry.workoutCompleted { score += 1 }
+        if entry.armCareCompleted { score += 1 }
+        if entry.notes != nil && !(entry.notes?.isEmpty ?? true) { score += 1 }
+
+        switch score {
+        case 0: return .none
+        case 1: return .light
+        case 2: return .moderate
+        default: return .high
+        }
+    }
+
+    /// Opacity for the density indicator (used with Modus brand colors)
+    var opacity: Double {
+        switch self {
+        case .none: return 0.05
+        case .light: return 0.3
+        case .moderate: return 0.6
+        case .high: return 1.0
+        }
+    }
+}

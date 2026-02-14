@@ -76,6 +76,17 @@ struct DeloadRecommendationView: View {
                 deloadPrescriptionCard(prescription: prescription)
             }
 
+            // ACP-1025: AI Transparency - reasoning and feedback card
+            if viewModel.deloadRecommended {
+                AIRecommendationTransparencyCard(
+                    recommendationId: "deload-\(patientId.uuidString.prefix(8))-\(Date().formatted(.iso8601.year().month().day()))",
+                    recommendationType: .deload,
+                    reasoningSummary: viewModel.deloadReasoningSummary,
+                    drivingFactors: viewModel.deloadDrivingFactors,
+                    confidenceLevel: viewModel.deloadDataConfidence
+                )
+            }
+
             // Contributing factors section
             if !viewModel.contributingFactors.isEmpty {
                 contributingFactorsSection

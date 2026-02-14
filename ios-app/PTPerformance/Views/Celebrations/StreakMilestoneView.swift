@@ -2,8 +2,9 @@
 //  StreakMilestoneView.swift
 //  PTPerformance
 //
-//  Gamification Polish - Milestone Celebrations & Achievements
-//  Celebration animation for reaching streak milestones
+//  ACP-836: Gamification Polish - Milestone Celebrations & Achievements
+//  ACP-1029: Streak System Gamification - Enhanced milestone celebrations
+//  Celebration animation for reaching streak milestones with confetti/animation
 //
 
 import SwiftUI
@@ -11,6 +12,7 @@ import SwiftUI
 // MARK: - Streak Milestone View
 
 /// Full-screen celebration view for reaching streak milestones
+/// ACP-1029: Enhanced with Modus brand colors, growing flame icons, and streak freeze rewards
 struct StreakMilestoneView: View {
     let milestone: StreakMilestone
     let currentStreak: Int
@@ -23,15 +25,21 @@ struct StreakMilestoneView: View {
     @State private var numberOffset: CGFloat = 50
     @State private var messageOpacity: Double = 0
     @State private var buttonOpacity: Double = 0
+    @State private var freezeRewardOpacity: Double = 0
+    @State private var glowRotation: Double = 0
+
+    private var flameLevel: StreakFlameLevel {
+        StreakFlameLevel.level(for: currentStreak)
+    }
 
     var body: some View {
         ZStack {
-            // Background gradient
+            // Background gradient using Modus brand colors
             LinearGradient(
                 colors: [
-                    Color.orange.opacity(0.3),
-                    Color.red.opacity(0.2),
-                    Color.black.opacity(0.9)
+                    Color.modusDeepTeal.opacity(0.9),
+                    Color.modusCyan.opacity(0.4),
+                    Color.black.opacity(0.95)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -47,13 +55,29 @@ struct StreakMilestoneView: View {
             VStack(spacing: Spacing.xl) {
                 Spacer()
 
-                // Animated flame
+                // Animated flame with glow rings
                 ZStack {
-                    // Glow effect
+                    // Outer glow rings based on flame level
+                    ForEach(0..<flameLevel.glowRings, id: \.self) { ring in
+                        Circle()
+                            .stroke(
+                                Color.modusTealAccent.opacity(0.2 - Double(ring) * 0.05),
+                                lineWidth: 2
+                            )
+                            .frame(
+                                width: 160 + CGFloat(ring) * 40,
+                                height: 160 + CGFloat(ring) * 40
+                            )
+                            .scaleEffect(showContent ? 1.1 : 0.5)
+                            .opacity(showContent ? 1 : 0)
+                            .rotationEffect(.degrees(glowRotation + Double(ring) * 30))
+                    }
+
+                    // Inner glow effect
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.orange.opacity(0.6), Color.clear],
+                                colors: [Color.modusCyan.opacity(0.6), Color.clear],
                                 center: .center,
                                 startRadius: 20,
                                 endRadius: 100
@@ -63,18 +87,18 @@ struct StreakMilestoneView: View {
                         .scaleEffect(showContent ? 1.2 : 0.5)
                         .opacity(showContent ? 1 : 0)
 
-                    // Flame icon
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 100))
+                    // Flame icon with dynamic sizing based on milestone
+                    Image(systemName: flameLevel.iconName)
+                        .font(.system(size: 100 * flameLevel.sizeMultiplier))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.yellow, .orange, .red],
+                                colors: milestoneGradientColors,
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
                         .scaleEffect(flameScale)
-                        .shadow(color: .orange.opacity(0.8), radius: 20, x: 0, y: 10)
+                        .shadow(color: Color.modusCyan.opacity(0.8), radius: 20, x: 0, y: 10)
                 }
 
                 // Streak number
@@ -83,12 +107,12 @@ struct StreakMilestoneView: View {
                         .font(.system(size: 80, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.white, .orange],
+                                colors: [.white, Color.modusTealAccent],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
-                        .shadow(color: .orange.opacity(0.5), radius: 10)
+                        .shadow(color: Color.modusCyan.opacity(0.5), radius: 10)
                         .scaleEffect(numberScale)
                         .offset(y: numberOffset)
 
@@ -106,7 +130,7 @@ struct StreakMilestoneView: View {
                     Text(milestone.displayName)
                         .font(.title)
                         .fontWeight(.heavy)
-                        .foregroundColor(.orange)
+                        .foregroundColor(Color.modusTealAccent)
 
                     Text(milestone.celebrationMessage)
                         .font(.title3)
@@ -114,30 +138,76 @@ struct StreakMilestoneView: View {
                         .foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Spacing.xl)
+
+                    // Flame level badge
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: flameLevel.iconName)
+                            .font(.caption)
+                        Text("Flame Level: \(flameLevel.displayName)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(Color.modusCyan)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(
+                        Capsule()
+                            .fill(Color.modusCyan.opacity(0.15))
+                    )
                 }
                 .opacity(messageOpacity)
 
+                // Streak freeze reward notification
+                if StreakFreezeReward.reward(for: currentStreak) != nil {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "shield.checkered")
+                            .font(.title2)
+                            .foregroundColor(Color.modusTealAccent)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Streak Shield Earned!")
+                                .font(.headline)
+                                .foregroundColor(.white)
+
+                            Text("You can use it to protect your streak during a rest day")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .fill(Color.modusTealAccent.opacity(0.2))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: CornerRadius.md)
+                                    .stroke(Color.modusTealAccent.opacity(0.4), lineWidth: 1)
+                            )
+                    )
+                    .padding(.horizontal, Spacing.lg)
+                    .opacity(freezeRewardOpacity)
+                }
+
                 Spacer()
 
-                // Dismiss button
+                // Dismiss button with Modus branding
                 Button(action: {
                     HapticFeedback.light()
                     onDismiss()
                 }) {
                     Text("Keep Going!")
                         .font(.headline)
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .padding(.horizontal, Spacing.xxl)
                         .padding(.vertical, Spacing.md)
                         .background(
                             LinearGradient(
-                                colors: [.yellow, .orange],
+                                colors: [Color.modusCyan, Color.modusTealAccent],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                         .cornerRadius(CornerRadius.lg)
-                        .shadow(color: .orange.opacity(0.5), radius: 10)
+                        .shadow(color: Color.modusCyan.opacity(0.5), radius: 10)
                 }
                 .opacity(buttonOpacity)
                 .padding(.bottom, Spacing.xxl)
@@ -146,6 +216,18 @@ struct StreakMilestoneView: View {
         .onAppear {
             animateIn()
             HapticFeedback.success()
+        }
+    }
+
+    /// Gradient colors based on milestone tier
+    private var milestoneGradientColors: [Color] {
+        switch milestone {
+        case .week, .twoWeeks:
+            return [Color.modusCyan, Color.modusTealAccent]
+        case .month, .twoMonths:
+            return [Color.modusTealAccent, Color.modusCyan, Color.modusTealAccent]
+        case .threeMonths, .hundred:
+            return [.yellow, Color.modusCyan, Color.modusTealAccent]
         }
     }
 
@@ -161,6 +243,11 @@ struct StreakMilestoneView: View {
             showContent = true
         }
 
+        // Glow rotation
+        withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
+            glowRotation = 360
+        }
+
         // Number animation
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.3)) {
             numberScale = 1.0
@@ -172,8 +259,13 @@ struct StreakMilestoneView: View {
             messageOpacity = 1.0
         }
 
+        // Freeze reward fade in
+        withAnimation(.easeIn(duration: 0.4).delay(0.7)) {
+            freezeRewardOpacity = 1.0
+        }
+
         // Button fade in
-        withAnimation(.easeIn(duration: 0.3).delay(0.8)) {
+        withAnimation(.easeIn(duration: 0.3).delay(0.9)) {
             buttonOpacity = 1.0
         }
 
@@ -215,7 +307,10 @@ struct ConfettiView: View {
                 x: CGFloat.random(in: 0...size.width),
                 y: -20,
                 targetY: size.height + 50,
-                color: [Color.red, .orange, .yellow, .green, .blue, .purple, .pink].randomElement()!,
+                color: [
+                    Color.modusCyan, Color.modusTealAccent, Color.modusDeepTeal,
+                    Color.yellow, Color.orange, Color.mint, Color.cyan
+                ].randomElement()!,
                 size: CGFloat.random(in: 8...16),
                 rotation: Double.random(in: 0...360),
                 delay: Double.random(in: 0...0.5)
@@ -284,23 +379,27 @@ struct StreakCelebrationBanner: View {
 
     @State private var isAnimating = false
 
+    private var flameLevel: StreakFlameLevel {
+        StreakFlameLevel.level(for: streak)
+    }
+
     var body: some View {
         Button(action: {
             HapticFeedback.light()
             onTap?()
         }) {
             HStack(spacing: Spacing.md) {
-                // Flame with animation
+                // Flame with animation and dynamic level
                 ZStack {
                     Circle()
-                        .fill(Color.orange.opacity(0.2))
+                        .fill(Color.modusCyan.opacity(0.2))
                         .frame(width: 50, height: 50)
 
-                    Image(systemName: "flame.fill")
-                        .font(.title)
+                    Image(systemName: flameLevel.iconName)
+                        .font(.system(size: 24 * flameLevel.sizeMultiplier))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.yellow, .orange, .red],
+                                colors: [Color.modusCyan, Color.modusTealAccent],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -322,15 +421,15 @@ struct StreakCelebrationBanner: View {
 
                 Image(systemName: "party.popper.fill")
                     .font(.title2)
-                    .foregroundColor(.orange)
+                    .foregroundColor(Color.modusTealAccent)
             }
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .fill(Color.orange.opacity(0.1))
+                    .fill(Color.modusLightTeal)
                     .overlay(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            .stroke(Color.modusTealAccent.opacity(0.3), lineWidth: 1)
                     )
             )
         }
@@ -342,6 +441,266 @@ struct StreakCelebrationBanner: View {
             ) {
                 isAnimating = true
             }
+        }
+    }
+}
+
+// MARK: - ACP-1029: Streak Freeze Used Confirmation
+
+/// Confirmation banner shown after a streak freeze is used
+struct StreakFreezeUsedBanner: View {
+    let remainingFreezes: Int
+
+    @State private var shieldScale: CGFloat = 0.5
+    @State private var contentOpacity: Double = 0
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(Color.modusTealAccent.opacity(0.2))
+                    .frame(width: 50, height: 50)
+
+                Image(systemName: "shield.checkered")
+                    .font(.title2)
+                    .foregroundColor(Color.modusTealAccent)
+                    .scaleEffect(shieldScale)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Streak Shield Activated!")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text("Your streak is protected today. \(remainingFreezes) shield\(remainingFreezes == 1 ? "" : "s") remaining.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title2)
+                .foregroundColor(Color.modusTealAccent)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .fill(Color.modusLightTeal)
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .stroke(Color.modusTealAccent.opacity(0.3), lineWidth: 1)
+                )
+        )
+        .opacity(contentOpacity)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                shieldScale = 1.0
+            }
+            withAnimation(.easeIn(duration: 0.3).delay(0.1)) {
+                contentOpacity = 1.0
+            }
+            HapticFeedback.success()
+        }
+    }
+}
+
+// MARK: - ACP-1029: Comeback Welcome Banner
+
+/// Welcome-back banner with motivational messaging for users returning after a break
+struct ComebackWelcomeBanner: View {
+    let comebackState: StreakComebackState
+    var onStartWorkout: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Header
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: comebackIcon)
+                    .font(.title2)
+                    .foregroundColor(Color.modusCyan)
+
+                Text(comebackTitle)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            }
+
+            // Motivational message
+            Text(comebackState.message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Reduced target indicator
+            if comebackState.comebackPhase != .fresh {
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(Color.modusTealAccent)
+
+                    Text("Reduced targets for \(comebackState.comebackDuration) days to ease you back in")
+                        .font(.caption)
+                        .foregroundColor(Color.modusTealAccent)
+                }
+                .padding(.vertical, Spacing.xxs)
+            }
+
+            // Quick start button
+            if let onStart = onStartWorkout {
+                Button(action: {
+                    HapticFeedback.light()
+                    onStart()
+                }) {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Start \(comebackState.comebackPhase.suggestedDuration)-Min Workout")
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.modusCyan, Color.modusTealAccent],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(CornerRadius.md)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                .fill(Color.modusLightTeal)
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
+                        .stroke(Color.modusCyan.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+
+    private var comebackIcon: String {
+        switch comebackState.comebackPhase {
+        case .fresh: return "hand.wave.fill"
+        case .shortBreak: return "arrow.counterclockwise.circle.fill"
+        case .extended: return "figure.walk.motion"
+        case .longAbsence: return "sun.max.fill"
+        }
+    }
+
+    private var comebackTitle: String {
+        switch comebackState.comebackPhase {
+        case .fresh: return "Welcome Back!"
+        case .shortBreak: return "Good to See You!"
+        case .extended: return "Ready to Restart?"
+        case .longAbsence: return "Fresh Start!"
+        }
+    }
+}
+
+// MARK: - ACP-1029: Growing Flame Icon
+
+/// Animated flame icon that grows and upgrades based on streak level
+struct GrowingFlameIcon: View {
+    let streak: Int
+    let size: CGFloat
+    var showLabel: Bool = false
+
+    @State private var isPulsing = false
+
+    private var flameLevel: StreakFlameLevel {
+        StreakFlameLevel.level(for: streak)
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            ZStack {
+                // Glow rings for higher levels
+                if flameLevel.glowRings > 0 {
+                    ForEach(0..<flameLevel.glowRings, id: \.self) { ring in
+                        Circle()
+                            .stroke(
+                                flameGradient.opacity(0.15 - Double(ring) * 0.04),
+                                lineWidth: 1.5
+                            )
+                            .frame(
+                                width: size * 1.6 + CGFloat(ring) * 12,
+                                height: size * 1.6 + CGFloat(ring) * 12
+                            )
+                            .scaleEffect(isPulsing ? 1.05 : 1.0)
+                    }
+                }
+
+                // Background circle
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                flameColor.opacity(0.3),
+                                flameColor.opacity(0.1)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: size * 1.4, height: size * 1.4)
+
+                // Flame icon
+                Image(systemName: flameLevel.iconName)
+                    .font(.system(size: size * flameLevel.sizeMultiplier))
+                    .foregroundStyle(flameGradient)
+                    .scaleEffect(isPulsing && flameLevel.shouldAnimate ? 1.08 : 1.0)
+                    .shadow(color: flameColor.opacity(0.6), radius: flameLevel >= .inferno ? 8 : 4)
+            }
+
+            if showLabel {
+                Text(flameLevel.displayName)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(flameColor)
+            }
+        }
+        .onAppear {
+            if flameLevel.shouldAnimate {
+                withAnimation(
+                    .easeInOut(duration: 1.2)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    isPulsing = true
+                }
+            }
+        }
+    }
+
+    private var flameColor: Color {
+        switch flameLevel {
+        case .spark: return .gray
+        case .ember: return .orange
+        case .flame: return Color.modusCyan
+        case .blaze: return Color.modusTealAccent
+        case .inferno: return Color.modusCyan
+        case .wildfire: return Color.modusTealAccent
+        case .supernova: return .yellow
+        }
+    }
+
+    private var flameGradient: LinearGradient {
+        switch flameLevel {
+        case .spark:
+            return LinearGradient(colors: [.gray, .gray.opacity(0.7)], startPoint: .top, endPoint: .bottom)
+        case .ember:
+            return LinearGradient(colors: [.orange, .red], startPoint: .top, endPoint: .bottom)
+        case .flame:
+            return LinearGradient(colors: [Color.modusCyan, Color.modusTealAccent], startPoint: .top, endPoint: .bottom)
+        case .blaze:
+            return LinearGradient(colors: [Color.modusTealAccent, Color.modusCyan], startPoint: .top, endPoint: .bottom)
+        case .inferno:
+            return LinearGradient(colors: [.yellow, Color.modusCyan, Color.modusTealAccent], startPoint: .top, endPoint: .bottom)
+        case .wildfire:
+            return LinearGradient(colors: [.yellow, Color.modusTealAccent, Color.modusDeepTeal], startPoint: .top, endPoint: .bottom)
+        case .supernova:
+            return LinearGradient(colors: [.white, .yellow, Color.modusCyan], startPoint: .top, endPoint: .bottom)
         }
     }
 }
@@ -379,6 +738,32 @@ struct StreakMilestoneView_Previews: PreviewProvider {
             )
             .padding()
             .previewDisplayName("Banner")
+
+            StreakFreezeUsedBanner(remainingFreezes: 2)
+                .padding()
+                .previewDisplayName("Freeze Used")
+
+            ComebackWelcomeBanner(
+                comebackState: StreakComebackState(
+                    previousStreak: 15,
+                    daysSinceLastActivity: 4,
+                    comebackPhase: .shortBreak
+                )
+            )
+            .padding()
+            .previewDisplayName("Comeback Banner")
+
+            HStack(spacing: 20) {
+                GrowingFlameIcon(streak: 0, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 3, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 7, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 14, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 30, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 60, size: 18, showLabel: true)
+                GrowingFlameIcon(streak: 100, size: 18, showLabel: true)
+            }
+            .padding()
+            .previewDisplayName("Flame Levels")
         }
     }
 }

@@ -1,14 +1,16 @@
+// ACP-1035: Streamlined Quick Setup — Progressive Disclosure
 // DARK MODE: See ModeThemeModifier.swift for central theme control
 //
 //  QuickSetupView.swift
 //  PTPerformance
 //
-//  Quick Setup flow - configures new users with mode, goals, readiness baseline
+//  Reduced from 6 steps to 4: Welcome -> Mode -> Goals -> Complete
+//  Readiness check-in and therapist link are deferred (progressive disclosure)
 //
 
 import SwiftUI
 
-/// Main Quick Setup container view
+/// Main Quick Setup container view — streamlined for speed
 struct QuickSetupView: View {
     @StateObject private var viewModel = QuickSetupViewModel()
     @Environment(\.dismiss) private var dismiss
@@ -20,11 +22,27 @@ struct QuickSetupView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Progress indicator
+                // Progress indicator (hidden on welcome and complete)
                 if viewModel.currentStep != .welcome && viewModel.currentStep != .complete {
                     QuickSetupProgressView(currentStep: viewModel.currentStep)
                         .padding(.top, 8)
                         .padding(.horizontal)
+                }
+
+                // Skip for Now button in top-right (visible on non-terminal steps)
+                if viewModel.currentStep != .welcome && viewModel.currentStep != .complete {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            Task { await viewModel.handleSkipForNow() }
+                        }) {
+                            Text("Skip for Now")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.modusCyan)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.top, 4)
+                    }
                 }
 
                 // Content
@@ -41,22 +59,11 @@ struct QuickSetupView: View {
                     )
                     .tag(QuickSetupViewModel.SetupStep.goalSelection)
 
-                    ReadinessStepView(
-                        sleepHours: $viewModel.sleepHours,
-                        sorenessLevel: $viewModel.sorenessLevel,
-                        energyLevel: $viewModel.energyLevel,
-                        stressLevel: $viewModel.stressLevel
+                    CompleteStepView(
+                        quickStarted: viewModel.quickStarted,
+                        selectedMode: viewModel.selectedMode
                     )
-                    .tag(QuickSetupViewModel.SetupStep.readinessCheckIn)
-
-                    TherapistLinkStepView(
-                        code: $viewModel.therapistCode,
-                        hasTherapist: viewModel.hasTherapist
-                    )
-                    .tag(QuickSetupViewModel.SetupStep.therapistLink)
-
-                    CompleteStepView()
-                        .tag(QuickSetupViewModel.SetupStep.complete)
+                    .tag(QuickSetupViewModel.SetupStep.complete)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: viewModel.currentStep)
@@ -132,15 +139,14 @@ struct QuickSetupView: View {
 struct QuickSetupProgressView: View {
     let currentStep: QuickSetupViewModel.SetupStep
 
-    private let totalSteps = 4  // Excluding welcome and complete
+    // ACP-1035: Reduced to 2 core steps (mode, goals)
+    private let totalSteps = 2
 
     private var progress: Double {
         switch currentStep {
         case .welcome: return 0
-        case .modeSelection: return 0.25
-        case .goalSelection: return 0.5
-        case .readinessCheckIn: return 0.75
-        case .therapistLink: return 1.0
+        case .modeSelection: return 0.5
+        case .goalSelection: return 1.0
         case .complete: return 1.0
         }
     }
@@ -165,9 +171,18 @@ struct QuickSetupProgressView: View {
             .frame(height: 4)
 
             // Step indicator
-            Text("Step \(currentStep.rawValue) of \(totalSteps)")
+            Text("Step \(stepNumber) of \(totalSteps)")
                 .font(.caption)
                 .foregroundColor(.secondary)
+        }
+    }
+
+    private var stepNumber: Int {
+        switch currentStep {
+        case .welcome: return 0
+        case .modeSelection: return 1
+        case .goalSelection: return 2
+        case .complete: return 2
         }
     }
 }
@@ -180,18 +195,25 @@ struct WelcomeStepView: View {
             Spacer()
 
             // Icon
-            Image(systemName: "sparkles")
-                .font(.system(size: 80))
-                .foregroundColor(.modusCyan)
-                .padding(.bottom, 16)
+            ZStack {
+                Circle()
+                    .fill(Color.modusCyan.opacity(0.1))
+                    .frame(width: 120, height: 120)
+
+                Image(systemName: "sparkles")
+                    .font(.system(size: 56))
+                    .foregroundColor(.modusCyan)
+            }
+            .padding(.bottom, 8)
 
             // Title
-            Text("Start Training Smarter")
+            Text("Let's Personalize")
                 .font(.system(size: 32, weight: .bold))
+                .foregroundColor(.modusDeepTeal)
                 .multilineTextAlignment(.center)
 
-            // Subtitle
-            Text("Let's personalize your experience.\nThis takes about 2 minutes.")
+            // Subtitle — emphasize speed
+            Text("Two quick choices and you're in.\nThis takes about 30 seconds.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -199,11 +221,18 @@ struct WelcomeStepView: View {
 
             Spacer()
 
-            // Features preview
-            VStack(alignment: .leading, spacing: 16) {
-                SetupFeatureRow(icon: "target", title: "Set Your Goals", subtitle: "Track what matters to you")
-                SetupFeatureRow(icon: "chart.line.uptrend.xyaxis", title: "Daily Check-ins", subtitle: "Optimize your training")
-                SetupFeatureRow(icon: "person.2", title: "Connect with Therapist", subtitle: "Get personalized programs")
+            // What we'll ask
+            VStack(alignment: .leading, spacing: 14) {
+                SetupFeatureRow(
+                    icon: "target",
+                    title: "Choose your mode",
+                    subtitle: "Rehab, Strength, or Performance"
+                )
+                SetupFeatureRow(
+                    icon: "star.fill",
+                    title: "Pick your goals",
+                    subtitle: "We'll track what matters to you"
+                )
             }
             .padding(.horizontal, 32)
 
@@ -221,9 +250,9 @@ struct SetupFeatureRow: View {
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 24))
+                .font(.system(size: 22))
                 .foregroundColor(.modusCyan)
-                .frame(width: 40)
+                .frame(width: 36)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -247,6 +276,7 @@ struct ModeSelectionStepView: View {
             VStack(spacing: 8) {
                 Text("Choose Your Mode")
                     .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.modusDeepTeal)
 
                 Text("This personalizes your dashboard and features")
                     .font(.body)
@@ -300,7 +330,7 @@ struct ModeCard: View {
                         .foregroundColor(.secondary)
 
                     // Metrics
-                    Text(mode.primaryMetrics.joined(separator: " • "))
+                    Text(mode.primaryMetrics.joined(separator: " · "))
                         .font(.caption)
                         .foregroundColor(.modusCyan)
                 }
@@ -326,30 +356,38 @@ struct ModeCard: View {
     }
 }
 
-// MARK: - Goal Selection Step
+// MARK: - Goal Selection Step (ACP-1035: Visual Cards UI)
 
 struct GoalSelectionStepView: View {
     let availableGoals: [QuickSetupViewModel.QuickGoalTemplate]
     @Binding var selectedGoals: Set<QuickSetupViewModel.QuickGoalTemplate>
 
+    // Grid layout: 2 columns for visual cards
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
             // Header
             VStack(spacing: 8) {
-                Text("Set Your Goals")
+                Text("What's Your Focus?")
                     .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.modusDeepTeal)
 
-                Text("Select 1-3 goals to focus on")
+                Text("Pick up to 3 goals — you can change these anytime")
                     .font(.body)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            .padding(.top, 32)
+            .padding(.top, 24)
 
-            // Goal cards
+            // Goal cards in a 2-column grid
             ScrollView {
-                VStack(spacing: 12) {
+                LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(availableGoals) { goal in
-                        GoalCard(
+                        GoalVisualCard(
                             goal: goal,
                             isSelected: selectedGoals.contains(goal),
                             onTap: {
@@ -365,287 +403,112 @@ struct GoalSelectionStepView: View {
                 .padding(.horizontal, 20)
             }
 
-            // Selection count
-            Text("\(selectedGoals.count) of 3 selected")
-                .font(.footnote)
-                .foregroundColor(.secondary)
+            // Selection indicator
+            HStack(spacing: 6) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(index < selectedGoals.count ? Color.modusCyan : Color(.systemGray4))
+                        .frame(width: 8, height: 8)
+                }
+                Text("\(selectedGoals.count) of 3 selected")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 4)
+            }
+            .padding(.bottom, 4)
         }
         .padding()
     }
 }
 
-struct GoalCard: View {
+/// ACP-1035: Visual goal card with icon, gradient accent, and tap-to-select
+struct GoalVisualCard: View {
     let goal: QuickSetupViewModel.QuickGoalTemplate
     let isSelected: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Icon
-                Image(systemName: goal.icon)
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? .white : goal.color)
-                    .frame(width: 48, height: 48)
-                    .background(isSelected ? goal.color : goal.color.opacity(0.1))
-                    .cornerRadius(CornerRadius.sm)
+            VStack(spacing: 10) {
+                // Icon circle
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? goal.color : goal.color.opacity(0.12))
+                        .frame(width: 52, height: 52)
 
-                // Text
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(goal.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Text(goal.description)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Image(systemName: goal.icon)
+                        .font(.system(size: 24))
+                        .foregroundColor(isSelected ? .white : goal.color)
                 }
 
-                Spacer()
+                // Title
+                Text(goal.title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
 
-                // Checkbox
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? goal.color : .gray)
+                // Short description
+                Text(goal.description)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding()
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 12)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2.5)
             )
+            .overlay(alignment: .topTrailing) {
+                // Selected checkmark badge
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(goal.color)
+                        .background(Circle().fill(Color(.systemBackground)).padding(2))
+                        .offset(x: 6, y: -6)
+                }
+            }
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Readiness Step
-
-struct ReadinessStepView: View {
-    @Binding var sleepHours: Double
-    @Binding var sorenessLevel: Int
-    @Binding var energyLevel: Int
-    @Binding var stressLevel: Int
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 8) {
-                    Text("How Are You Feeling?")
-                        .font(.system(size: 28, weight: .bold))
-
-                    Text("This sets your baseline for training recommendations")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 32)
-
-                VStack(spacing: 20) {
-                    // Sleep
-                    ReadinessSlider(
-                        title: "Sleep",
-                        icon: "moon.fill",
-                        value: $sleepHours,
-                        range: 0...12,
-                        step: 0.5,
-                        valueLabel: String(format: "%.1f hrs", sleepHours),
-                        color: .indigo
-                    )
-
-                    // Soreness (inverted - 1 is best)
-                    ReadinessSlider(
-                        title: "Soreness",
-                        icon: "figure.walk",
-                        value: Binding(
-                            get: { Double(sorenessLevel) },
-                            set: { sorenessLevel = Int($0) }
-                        ),
-                        range: 1...10,
-                        step: 1,
-                        valueLabel: sorenessLabel,
-                        color: .orange,
-                        isInverted: true
-                    )
-
-                    // Energy
-                    ReadinessSlider(
-                        title: "Energy",
-                        icon: "bolt.fill",
-                        value: Binding(
-                            get: { Double(energyLevel) },
-                            set: { energyLevel = Int($0) }
-                        ),
-                        range: 1...10,
-                        step: 1,
-                        valueLabel: energyLabel,
-                        color: .green
-                    )
-
-                    // Stress (inverted - 1 is best)
-                    ReadinessSlider(
-                        title: "Stress",
-                        icon: "brain.head.profile",
-                        value: Binding(
-                            get: { Double(stressLevel) },
-                            set: { stressLevel = Int($0) }
-                        ),
-                        range: 1...10,
-                        step: 1,
-                        valueLabel: stressLabel,
-                        color: .purple,
-                        isInverted: true
-                    )
-                }
-                .padding(.horizontal, 20)
-
-                Spacer(minLength: 40)
-            }
-        }
-        .padding()
-    }
-
-    private var sorenessLabel: String {
-        switch sorenessLevel {
-        case 1...2: return "None"
-        case 3...4: return "Mild"
-        case 5...6: return "Moderate"
-        case 7...8: return "Significant"
-        default: return "Severe"
-        }
-    }
-
-    private var energyLabel: String {
-        switch energyLevel {
-        case 1...2: return "Exhausted"
-        case 3...4: return "Low"
-        case 5...6: return "Moderate"
-        case 7...8: return "Good"
-        default: return "Excellent"
-        }
-    }
-
-    private var stressLabel: String {
-        switch stressLevel {
-        case 1...2: return "Relaxed"
-        case 3...4: return "Low"
-        case 5...6: return "Moderate"
-        case 7...8: return "High"
-        default: return "Very High"
-        }
-    }
-}
-
-struct ReadinessSlider: View {
-    let title: String
-    let icon: String
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let step: Double
-    let valueLabel: String
-    let color: Color
-    var isInverted: Bool = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundColor(color)
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Text(valueLabel)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
-            Slider(value: $value, in: range, step: step)
-                .tint(color)
-        }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(CornerRadius.md)
-    }
-}
-
-// MARK: - Therapist Link Step
-
-struct TherapistLinkStepView: View {
-    @Binding var code: String
-    let hasTherapist: Bool
-
-    var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            VStack(spacing: 8) {
-                Text("Connect with Therapist")
-                    .font(.system(size: 28, weight: .bold))
-
-                Text("Optional: Enter the code from your therapist")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top, 32)
-
-            // Icon
-            Image(systemName: hasTherapist ? "checkmark.circle.fill" : "person.badge.plus")
-                .font(.system(size: 60))
-                .foregroundColor(hasTherapist ? .green : .modusCyan)
-                .padding()
-
-            if hasTherapist {
-                Text("Therapist Connected!")
-                    .font(.headline)
-                    .foregroundColor(.green)
-            } else {
-                // Code input
-                VStack(spacing: 16) {
-                    TextField("Enter 8-character code", text: $code)
-                        .textCase(.uppercase)
-                        .font(.system(size: 24, weight: .medium, design: .monospaced))
-                        .multilineTextAlignment(.center)
-                        .padding()
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(CornerRadius.md)
-                        .autocapitalization(.allCharacters)
-                        .disableAutocorrection(true)
-
-                    Text("Your therapist will give you this code.\nYou can also connect later from Settings.")
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 40)
-            }
-
-            Spacer()
-        }
-        .padding()
     }
 }
 
 // MARK: - Complete Step
 
 struct CompleteStepView: View {
+    let quickStarted: Bool
+    let selectedMode: Mode
+
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Success animation
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 100))
-                .foregroundColor(.green)
-                .padding(.bottom, 16)
+            // Success icon
+            ZStack {
+                Circle()
+                    .fill(Color.modusTealAccent.opacity(0.12))
+                    .frame(width: 120, height: 120)
+
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundColor(.modusTealAccent)
+            }
+            .padding(.bottom, 8)
 
             // Title
             Text("You're All Set!")
                 .font(.system(size: 32, weight: .bold))
+                .foregroundColor(.modusDeepTeal)
 
             // Subtitle
-            Text("Your personalized dashboard is ready.\nLet's start your journey!")
+            Text("Your \(selectedMode.displayName) dashboard is ready.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -653,15 +516,28 @@ struct CompleteStepView: View {
 
             Spacer()
 
-            // What's next
-            VStack(alignment: .leading, spacing: 16) {
+            // What's next — with deferred items hint
+            VStack(alignment: .leading, spacing: 14) {
                 Text("What's Next")
                     .font(.headline)
-                    .padding(.bottom, 4)
+                    .foregroundColor(.modusDeepTeal)
+                    .padding(.bottom, 2)
 
-                NextStepRow(icon: "figure.strengthtraining.traditional", text: "Complete your first workout")
-                NextStepRow(icon: "chart.line.uptrend.xyaxis", text: "Check in daily for personalized recommendations")
-                NextStepRow(icon: "star.fill", text: "Build your streak and track progress")
+                NextStepRow(
+                    icon: "figure.strengthtraining.traditional",
+                    text: "Start your first workout",
+                    color: .modusCyan
+                )
+                NextStepRow(
+                    icon: "chart.line.uptrend.xyaxis",
+                    text: "Check in daily for smart recommendations",
+                    color: .modusTealAccent
+                )
+                NextStepRow(
+                    icon: "person.badge.plus",
+                    text: "Connect with your therapist anytime in Settings",
+                    color: .modusDeepTeal
+                )
             }
             .padding(.horizontal, 32)
 
@@ -674,16 +550,18 @@ struct CompleteStepView: View {
 struct NextStepRow: View {
     let icon: String
     let text: String
+    var color: Color = .modusCyan
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(.modusCyan)
-                .frame(width: 32)
+                .font(.system(size: 18))
+                .foregroundColor(color)
+                .frame(width: 28)
 
             Text(text)
                 .font(.subheadline)
+                .foregroundColor(.primary)
         }
     }
 }

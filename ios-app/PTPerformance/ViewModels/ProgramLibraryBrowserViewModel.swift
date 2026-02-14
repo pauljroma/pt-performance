@@ -4,8 +4,115 @@
 //
 //  ViewModel for browsing and discovering programs in the program library
 //
+//  ACP-1031: Enhanced program browser with duration/equipment/goal filters,
+//  sorting options, and first-week preview support
+//
 
 import SwiftUI
+
+// MARK: - Sort Option
+
+enum ProgramSortOption: String, CaseIterable, Identifiable {
+    case popular = "Popular"
+    case newest = "Newest"
+    case duration = "Duration"
+    case difficulty = "Difficulty"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .popular: return "flame.fill"
+        case .newest: return "clock.fill"
+        case .duration: return "calendar"
+        case .difficulty: return "chart.bar.fill"
+        }
+    }
+}
+
+// MARK: - Duration Filter
+
+enum DurationFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case short = "4 Week"
+    case medium = "8 Week"
+    case long = "12 Week"
+
+    var id: String { rawValue }
+
+    /// Returns the range of weeks this filter accepts
+    var weekRange: ClosedRange<Int>? {
+        switch self {
+        case .all: return nil
+        case .short: return 1...5
+        case .medium: return 6...9
+        case .long: return 10...52
+        }
+    }
+}
+
+// MARK: - Equipment Filter
+
+enum EquipmentFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case bodyweight = "Bodyweight"
+    case dumbbells = "Dumbbells"
+    case barbell = "Barbell"
+    case bands = "Bands"
+    case fullGym = "Full Gym"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .all: return "list.bullet"
+        case .bodyweight: return "figure.walk"
+        case .dumbbells: return "dumbbell.fill"
+        case .barbell: return "figure.strengthtraining.traditional"
+        case .bands: return "circle.dotted"
+        case .fullGym: return "building.2.fill"
+        }
+    }
+}
+
+// MARK: - Goal Filter
+
+enum GoalFilter: String, CaseIterable, Identifiable {
+    case all = "All Goals"
+    case strength = "Strength"
+    case muscleBuilding = "Muscle Building"
+    case fatLoss = "Fat Loss"
+    case mobility = "Mobility"
+    case performance = "Performance"
+    case rehab = "Rehab"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .all: return "target"
+        case .strength: return "bolt.fill"
+        case .muscleBuilding: return "dumbbell.fill"
+        case .fatLoss: return "flame.fill"
+        case .mobility: return "figure.flexibility"
+        case .performance: return "figure.run"
+        case .rehab: return "cross.case.fill"
+        }
+    }
+
+    /// Keywords to match against program category, tags, and description
+    var matchKeywords: [String] {
+        switch self {
+        case .all: return []
+        case .strength: return ["strength", "power", "strong"]
+        case .muscleBuilding: return ["hypertrophy", "muscle", "building", "mass", "size"]
+        case .fatLoss: return ["fat loss", "weight loss", "lean", "cut", "conditioning", "cardio"]
+        case .mobility: return ["mobility", "flexibility", "stretch", "yoga", "recovery"]
+        case .performance: return ["performance", "athletic", "sport", "speed", "agility", "baseball"]
+        case .rehab: return ["rehab", "rehabilitation", "recovery", "injury", "prehab"]
+        }
+    }
+}
 
 // MARK: - ViewModel
 
@@ -34,6 +141,25 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
     @Published var selectedDifficulty: DifficultyLevel? {
         didSet { updateFilteredPrograms() }
     }
+
+    // ACP-1031: New filters
+    @Published var selectedDuration: DurationFilter = .all {
+        didSet { updateFilteredPrograms() }
+    }
+    @Published var selectedEquipment: EquipmentFilter = .all {
+        didSet { updateFilteredPrograms() }
+    }
+    @Published var selectedGoal: GoalFilter = .all {
+        didSet { updateFilteredPrograms() }
+    }
+    @Published var sortOption: ProgramSortOption = .popular {
+        didSet { updateFilteredPrograms() }
+    }
+
+    // ACP-1031: First-week preview state
+    @Published var previewWeek: [ProgramScheduleDay]?
+    @Published var isLoadingPreview = false
+    @Published var previewProgramId: UUID?
 
     // MARK: - Cached Filtered Arrays (Performance Optimization)
 
@@ -73,14 +199,73 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
                 let matchesDifficulty = selectedDifficulty == nil ||
                     program.difficultyLevel.lowercased() == selectedDifficulty?.rawValue.lowercased()
 
-                return matchesSearch && matchesCategory && matchesDifficulty
+                // ACP-1031: Duration filter
+                let matchesDuration: Bool
+                if let range = selectedDuration.weekRange {
+                    matchesDuration = range.contains(program.durationWeeks)
+                } else {
+                    matchesDuration = true
+                }
+
+                // ACP-1031: Equipment filter
+                let matchesEquipment: Bool
+                switch selectedEquipment {
+                case .all:
+                    matchesEquipment = true
+                case .bodyweight:
+                    matchesEquipment = program.equipment.isEmpty ||
+                        program.equipment.contains { $0.localizedCaseInsensitiveContains("bodyweight") || $0.localizedCaseInsensitiveContains("none") }
+                case .dumbbells:
+                    matchesEquipment = program.equipment.contains { $0.localizedCaseInsensitiveContains("dumbbell") }
+                case .barbell:
+                    matchesEquipment = program.equipment.contains { $0.localizedCaseInsensitiveContains("barbell") }
+                case .bands:
+                    matchesEquipment = program.equipment.contains { $0.localizedCaseInsensitiveContains("band") || $0.localizedCaseInsensitiveContains("resistance") }
+                case .fullGym:
+                    matchesEquipment = program.equipment.count >= 3
+                }
+
+                // ACP-1031: Goal filter
+                let matchesGoal: Bool
+                if selectedGoal == .all {
+                    matchesGoal = true
+                } else {
+                    let keywords = selectedGoal.matchKeywords
+                    let searchableText = [
+                        program.category,
+                        program.description ?? "",
+                        program.tagsList.joined(separator: " ")
+                    ].joined(separator: " ").lowercased()
+
+                    matchesGoal = keywords.contains { searchableText.contains($0) }
+                }
+
+                return matchesSearch && matchesCategory && matchesDifficulty && matchesDuration && matchesEquipment && matchesGoal
             }
             .sorted { lhs, rhs in
-                // Featured programs first, then alphabetical
-                if lhs.featured != rhs.featured {
-                    return lhs.featured
+                // ACP-1031: Apply selected sort option
+                switch sortOption {
+                case .popular:
+                    // Featured programs first, then alphabetical
+                    if lhs.featured != rhs.featured {
+                        return lhs.featured
+                    }
+                    return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+                case .newest:
+                    // Newest first by creation date
+                    let lhsDate = lhs.createdAt ?? Date.distantPast
+                    let rhsDate = rhs.createdAt ?? Date.distantPast
+                    return lhsDate > rhsDate
+                case .duration:
+                    // Shortest first
+                    return lhs.durationWeeks < rhs.durationWeeks
+                case .difficulty:
+                    // Easiest first
+                    let order: [String: Int] = ["beginner": 0, "intermediate": 1, "advanced": 2]
+                    let lhsOrder = order[lhs.difficultyLevel.lowercased()] ?? 1
+                    let rhsOrder = order[rhs.difficultyLevel.lowercased()] ?? 1
+                    return lhsOrder < rhsOrder
                 }
-                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
             }
     }
 
@@ -177,6 +362,35 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
         }
     }
 
+    // MARK: - ACP-1031: First Week Preview
+
+    /// Load the first week's workout schedule for a program preview
+    func loadFirstWeekPreview(for program: ProgramLibrary) async {
+        guard let programId = program.programId else {
+            previewWeek = nil
+            previewProgramId = program.id
+            isLoadingPreview = false
+            return
+        }
+
+        isLoadingPreview = true
+        previewProgramId = program.id
+
+        do {
+            let weeks = try await service.fetchProgramWorkoutSchedule(programLibraryId: program.id)
+            if let firstWeek = weeks.first {
+                previewWeek = firstWeek.activeDays
+            } else {
+                previewWeek = nil
+            }
+        } catch {
+            DebugLogger.shared.log("Failed to load first week preview: \(error)", level: .warning)
+            previewWeek = nil
+        }
+
+        isLoadingPreview = false
+    }
+
     // MARK: - Filter Helpers
 
     /// Clear all filters
@@ -184,11 +398,28 @@ class ProgramLibraryBrowserViewModel: ObservableObject {
         searchText = ""
         selectedCategory = nil
         selectedDifficulty = nil
+        selectedDuration = .all
+        selectedEquipment = .all
+        selectedGoal = .all
+        sortOption = .popular
     }
 
     /// Check if any filters are active
     var hasActiveFilters: Bool {
-        !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil
+        !searchText.isEmpty || selectedCategory != nil || selectedDifficulty != nil ||
+        selectedDuration != .all || selectedEquipment != .all || selectedGoal != .all
+    }
+
+    /// Count of active filters (for badge display)
+    var activeFilterCount: Int {
+        var count = 0
+        if !searchText.isEmpty { count += 1 }
+        if selectedCategory != nil { count += 1 }
+        if selectedDifficulty != nil { count += 1 }
+        if selectedDuration != .all { count += 1 }
+        if selectedEquipment != .all { count += 1 }
+        if selectedGoal != .all { count += 1 }
+        return count
     }
 
     // MARK: - Duplicate Program

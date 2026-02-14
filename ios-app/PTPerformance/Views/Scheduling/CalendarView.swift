@@ -3,10 +3,23 @@
 //  PTPerformance
 //
 //  Created by Build 46 Swarm Agent 1
-//  Weekly/monthly calendar view for scheduled sessions
+//  ACP-1033: Enhanced calendar with month/week/day views,
+//  training load density, quick-add, and workout status indicators
 //
 
 import SwiftUI
+
+// MARK: - Calendar View Mode
+
+enum CalendarViewMode: String, CaseIterable, Identifiable {
+    case month = "Month"
+    case week = "Week"
+    case day = "Day"
+
+    var id: String { rawValue }
+}
+
+// MARK: - CalendarView
 
 struct CalendarView: View {
 
@@ -16,6 +29,8 @@ struct CalendarView: View {
     @State private var scheduledSessions: [ScheduledSession] = []
     @State private var isLoading = false
     @State private var showScheduleSheet = false
+    @State private var showDayDetailSheet = false
+    @State private var quickAddDate: Date?
 
     let onDateSelected: ((Date) -> Void)?
 
@@ -31,26 +46,50 @@ struct CalendarView: View {
             // Header with month/year and navigation
             calendarHeader
 
-            // View mode toggle
-            viewModeToggle
+            // View mode segmented control (Month / Week / Day)
+            viewModeSegment
 
-            // Calendar grid
-            if viewMode == .month {
+            // Calendar content
+            switch viewMode {
+            case .month:
                 monthView
-            } else {
+            case .week:
                 weekView
+            case .day:
+                dayView
             }
 
-            // Session details for selected date
-            if !sessionsForSelectedDate.isEmpty {
-                sessionsList
-            }
+            // Training load legend
+            trainingLoadLegend
         }
         .onAppear {
             loadScheduledSessions()
         }
         .sheet(isPresented: $showScheduleSheet) {
-            ScheduleSessionView(selectedDate: selectedDate)
+            if let date = quickAddDate {
+                ScheduleSessionView(selectedDate: date)
+            } else {
+                ScheduleSessionView(selectedDate: selectedDate)
+            }
+        }
+        .sheet(isPresented: $showDayDetailSheet) {
+            DayDetailSheet(
+                date: selectedDate,
+                sessions: sessionsForSelectedDate,
+                onSchedule: {
+                    quickAddDate = selectedDate
+                    showDayDetailSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showScheduleSheet = true
+                    }
+                }
+            )
+        }
+        .onChange(of: showScheduleSheet) { _, isPresented in
+            if !isPresented {
+                quickAddDate = nil
+                loadScheduledSessions()
+            }
         }
     }
 
@@ -64,18 +103,23 @@ struct CalendarView: View {
             }) {
                 Image(systemName: "chevron.left")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
-            .accessibilityLabel("Previous \(viewMode == .month ? "month" : "week")")
+            .accessibilityLabel("Previous \(viewMode.rawValue.lowercased())")
 
             Spacer()
 
             VStack(spacing: 4) {
-                Text(monthYearString)
+                Text(headerTitle)
                     .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
 
                 if viewMode == .week {
                     Text(weekRangeString)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else if viewMode == .day {
+                    Text(daySubtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -89,29 +133,35 @@ struct CalendarView: View {
             }) {
                 Image(systemName: "chevron.right")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
-            .accessibilityLabel("Next \(viewMode == .month ? "month" : "week")")
+            .accessibilityLabel("Next \(viewMode.rawValue.lowercased())")
         }
         .padding()
         .background(Color(.systemBackground))
     }
 
-    private var viewModeToggle: some View {
+    // MARK: - View Mode Segment
+
+    private var viewModeSegment: some View {
         Picker("View Mode", selection: $viewMode) {
-            Text("Week").tag(CalendarViewMode.week)
-            Text("Month").tag(CalendarViewMode.month)
+            ForEach(CalendarViewMode.allCases) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
         }
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)
         .padding(.bottom, 8)
+        .onChange(of: viewMode) { _, _ in
+            HapticFeedback.selectionChanged()
+        }
     }
 
     // MARK: - Month View
 
     private var monthView: some View {
         VStack(spacing: 0) {
-            // Day headers (Sun, Mon, Tue, etc.)
+            // Day headers
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(weekdaySymbols, id: \.self) { symbol in
                     Text(symbol)
@@ -129,20 +179,28 @@ struct CalendarView: View {
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(monthDates, id: \.self) { date in
                     if let date = date {
-                        CalendarDateCell(
+                        EnhancedCalendarDateCell(
                             date: date,
                             isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                             isToday: calendar.isDateInToday(date),
                             isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month),
-                            sessions: sessionsForDate(date)
+                            sessions: sessionsForDate(date),
+                            trainingLoad: trainingLoadForDate(date),
+                            onTap: {
+                                selectedDate = date
+                                onDateSelected?(date)
+                                HapticFeedback.light()
+                                showDayDetailSheet = true
+                            },
+                            onQuickAdd: {
+                                quickAddDate = date
+                                HapticFeedback.medium()
+                                showScheduleSheet = true
+                            }
                         )
-                        .onTapGesture {
-                            selectedDate = date
-                            onDateSelected?(date)
-                        }
                     } else {
                         Color.clear
-                            .frame(height: 60)
+                            .frame(height: 68)
                     }
                 }
             }
@@ -168,83 +226,235 @@ struct CalendarView: View {
 
             Divider()
 
-            // Current week dates
+            // Current week dates with expanded detail
             LazyVGrid(columns: columns, spacing: 0) {
                 ForEach(currentWeekDates, id: \.self) { date in
-                    CalendarDateCell(
+                    EnhancedCalendarDateCell(
                         date: date,
                         isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
                         isToday: calendar.isDateInToday(date),
                         isCurrentMonth: true,
-                        sessions: sessionsForDate(date)
+                        sessions: sessionsForDate(date),
+                        trainingLoad: trainingLoadForDate(date),
+                        onTap: {
+                            selectedDate = date
+                            onDateSelected?(date)
+                            HapticFeedback.light()
+                            showDayDetailSheet = true
+                        },
+                        onQuickAdd: {
+                            quickAddDate = date
+                            HapticFeedback.medium()
+                            showScheduleSheet = true
+                        }
                     )
-                    .onTapGesture {
-                        selectedDate = date
-                        onDateSelected?(date)
-                    }
                 }
             }
-            .frame(height: 80)
+
+            // Week session summary below the grid
+            weekSessionSummary
         }
         .background(Color(.systemBackground))
     }
 
-    // MARK: - Sessions List
+    // MARK: - Day View
 
-    private var sessionsList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Scheduled Sessions")
-                    .font(.headline)
+    private var dayView: some View {
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                // Day header card
+                dayHeaderCard
 
-                Spacer()
-
-                Button(action: { showScheduleSheet = true }) {
-                    Label("Schedule", systemImage: "plus.circle.fill")
-                        .font(.subheadline)
-                }
-            }
-            .padding(.horizontal)
-            .padding(.top)
-
-            ScrollView {
-                VStack(spacing: 8) {
+                // Sessions for the day
+                if sessionsForSelectedDate.isEmpty {
+                    dayEmptyState
+                } else {
                     ForEach(sessionsForSelectedDate) { session in
-                        ScheduledSessionRow(session: session)
+                        DaySessionCard(session: session)
                     }
                 }
-                .padding(.horizontal)
+            }
+            .padding()
+        }
+    }
+
+    private var dayHeaderCard: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(dayFullDateString)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusDeepTeal)
+
+                let load = trainingLoadForDate(selectedDate)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(trainingLoadColor(load))
+                        .frame(width: 10, height: 10)
+                    Text(trainingLoadLabel(load))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            // Quick-add button
+            Button(action: {
+                quickAddDate = selectedDate
+                HapticFeedback.medium()
+                showScheduleSheet = true
+            }) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.modusCyan)
+            }
+            .accessibilityLabel("Add workout for \(dayFullDateString)")
+        }
+        .padding()
+        .background(Color.modusLightTeal)
+        .cornerRadius(CornerRadius.md)
+    }
+
+    private var dayEmptyState: some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "calendar.badge.plus")
+                .font(.system(size: 48))
+                .foregroundColor(.modusTealAccent.opacity(0.5))
+
+            Text("No workouts scheduled")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Button(action: {
+                quickAddDate = selectedDate
+                HapticFeedback.medium()
+                showScheduleSheet = true
+            }) {
+                Label("Schedule Workout", systemImage: "plus.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
+                    .background(Color.modusCyan)
+                    .cornerRadius(CornerRadius.sm)
             }
         }
-        .frame(maxHeight: 300)
-        .background(Color(.secondarySystemBackground))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.xl)
+    }
+
+    // MARK: - Week Session Summary
+
+    private var weekSessionSummary: some View {
+        let weekSessions = currentWeekDates.flatMap { sessionsForDate($0) }
+        let completed = weekSessions.filter { $0.status == .completed }.count
+        let scheduled = weekSessions.filter { $0.status == .scheduled }.count
+        let missed = weekSessions.filter { $0.isPastDue }.count
+
+        return VStack(spacing: Spacing.sm) {
+            Divider()
+
+            HStack(spacing: Spacing.lg) {
+                WeekSummaryBadge(
+                    count: completed,
+                    label: "Done",
+                    color: .modusTealAccent
+                )
+                WeekSummaryBadge(
+                    count: scheduled,
+                    label: "Upcoming",
+                    color: .modusCyan
+                )
+                WeekSummaryBadge(
+                    count: missed,
+                    label: "Missed",
+                    color: DesignTokens.statusError
+                )
+            }
+            .padding()
+        }
+    }
+
+    // MARK: - Training Load Legend
+
+    private var trainingLoadLegend: some View {
+        VStack(spacing: 4) {
+            Divider()
+            HStack(spacing: Spacing.md) {
+                legendDot(color: .modusCyan.opacity(0.15), label: "Rest")
+                legendDot(color: .modusCyan.opacity(0.4), label: "Light")
+                legendDot(color: .modusCyan.opacity(0.65), label: "Moderate")
+                legendDot(color: .modusCyan.opacity(0.9), label: "Heavy")
+                Spacer()
+                HStack(spacing: 4) {
+                    Circle().fill(Color.modusTealAccent).frame(width: 6, height: 6)
+                    Text("Done")
+                }
+                HStack(spacing: 4) {
+                    Circle().fill(Color.modusCyan).frame(width: 6, height: 6)
+                    Text("Upcoming")
+                }
+                HStack(spacing: 4) {
+                    Circle().fill(DesignTokens.statusError).frame(width: 6, height: 6)
+                    Text("Missed")
+                }
+            }
+            .font(.system(size: 10))
+            .foregroundColor(.secondary)
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+        }
+        .background(Color(.systemBackground))
+    }
+
+    private func legendDot(color: Color, label: String) -> some View {
+        HStack(spacing: 3) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(color)
+                .frame(width: 12, height: 12)
+            Text(label)
+        }
     }
 
     // MARK: - Helper Properties
 
-    private var monthYearString: String {
+    private var headerTitle: String {
         let formatter = DateFormatter()
+        if viewMode == .day {
+            formatter.dateFormat = "EEEE"
+            return formatter.string(from: selectedDate)
+        }
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: currentMonth)
+    }
+
+    private var daySubtitle: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM d, yyyy"
+        return formatter.string(from: selectedDate)
+    }
+
+    private var dayFullDateString: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .none
+        return formatter.string(from: selectedDate)
     }
 
     private var weekRangeString: String {
         guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
             return ""
         }
-
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
-
         let start = formatter.string(from: weekInterval.start)
         let end = formatter.string(from: weekInterval.end)
-
         return "\(start) - \(end)"
     }
 
     private var weekdaySymbols: [String] {
         let symbols = calendar.shortWeekdaySymbols
-        // Reorder to start with Sunday
         return Array(symbols.suffix(1) + symbols.prefix(6))
     }
 
@@ -257,7 +467,6 @@ struct CalendarView: View {
         var dates: [Date?] = []
         var currentDate = monthFirstWeek.start
 
-        // Generate 6 weeks of dates (42 days)
         for _ in 0..<42 {
             dates.append(currentDate)
             guard let nextDate = calendar.date(byAdding: .day, value: 1, to: currentDate) else {
@@ -298,26 +507,63 @@ struct CalendarView: View {
         }
     }
 
-    // MARK: - Actions
+    // MARK: - Training Load
+
+    /// Compute a 0.0...1.0 training load for a date based on session count and status.
+    /// 0 = rest day, 1.0 = heavy training day
+    private func trainingLoadForDate(_ date: Date) -> Double {
+        let sessions = sessionsForDate(date)
+        if sessions.isEmpty { return 0.0 }
+
+        let activeSessions = sessions.filter { $0.status != .cancelled }
+        if activeSessions.isEmpty { return 0.0 }
+
+        // Scale: 1 session = 0.35, 2 = 0.65, 3+ = 0.9+
+        let count = Double(activeSessions.count)
+        return min(1.0, 0.15 + count * 0.25)
+    }
+
+    private func trainingLoadColor(_ load: Double) -> Color {
+        if load == 0 { return .modusCyan.opacity(0.08) }
+        return .modusCyan.opacity(max(0.15, load))
+    }
+
+    private func trainingLoadLabel(_ load: Double) -> String {
+        switch load {
+        case 0: return "Rest Day"
+        case 0.01..<0.35: return "Light Training"
+        case 0.35..<0.65: return "Moderate Training"
+        default: return "Heavy Training"
+        }
+    }
+
+    // MARK: - Navigation
 
     private func previousPeriod() {
-        if viewMode == .month {
+        switch viewMode {
+        case .month:
             currentMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
-        } else {
+        case .week:
             currentMonth = calendar.date(byAdding: .weekOfYear, value: -1, to: currentMonth) ?? currentMonth
+        case .day:
+            selectedDate = calendar.date(byAdding: .day, value: -1, to: selectedDate) ?? selectedDate
         }
     }
 
     private func nextPeriod() {
-        if viewMode == .month {
+        switch viewMode {
+        case .month:
             currentMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
-        } else {
+        case .week:
             currentMonth = calendar.date(byAdding: .weekOfYear, value: 1, to: currentMonth) ?? currentMonth
+        case .day:
+            selectedDate = calendar.date(byAdding: .day, value: 1, to: selectedDate) ?? selectedDate
         }
     }
 
+    // MARK: - Data Loading
+
     private func loadScheduledSessions() {
-        // BUILD 286: Wire to SchedulingService (ACP-595)
         isLoading = true
 
         Task {
@@ -338,14 +584,19 @@ struct CalendarView: View {
     }
 }
 
-// MARK: - Calendar Date Cell
+// MARK: - Enhanced Calendar Date Cell
 
-struct CalendarDateCell: View {
+struct EnhancedCalendarDateCell: View {
     let date: Date
     let isSelected: Bool
     let isToday: Bool
     let isCurrentMonth: Bool
     let sessions: [ScheduledSession]
+    let trainingLoad: Double
+    let onTap: () -> Void
+    let onQuickAdd: () -> Void
+
+    @State private var showQuickAdd = false
 
     private var dayNumber: String {
         let formatter = DateFormatter()
@@ -354,80 +605,383 @@ struct CalendarDateCell: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
-            Text(dayNumber)
-                .font(.system(size: 16, weight: isToday ? .bold : .regular))
-                .foregroundColor(textColor)
-                .frame(width: 32, height: 32)
-                .background(backgroundColor)
-                .clipShape(Circle())
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 2) {
+                // Day number with training load background
+                Text(dayNumber)
+                    .font(.system(size: 14, weight: isToday ? .bold : .regular))
+                    .foregroundColor(textColor)
+                    .frame(width: 30, height: 30)
+                    .background(dayBackground)
+                    .clipShape(Circle())
 
-            // Session indicators
-            if !sessions.isEmpty {
-                HStack(spacing: 2) {
-                    ForEach(sessions.prefix(3)) { session in
-                        Circle()
-                            .fill(statusColor(for: session.status))
-                            .frame(width: 4, height: 4)
-                    }
+                // Workout status indicators
+                statusIndicators
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 68)
+            .background(cellBackground)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+            .onLongPressGesture {
+                onQuickAdd()
+            }
 
-                    if sessions.count > 3 {
-                        Text("+\(sessions.count - 3)")
-                            .font(.system(size: 8))
-                            .foregroundColor(.secondary)
-                    }
+            // Quick-add "+" button (visible on hover/selected)
+            if isSelected || showQuickAdd {
+                Button(action: onQuickAdd) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.modusCyan)
+                        .background(Circle().fill(Color(.systemBackground)).frame(width: 12, height: 12))
                 }
+                .offset(x: -2, y: 2)
+                .transition(.scale.combined(with: .opacity))
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 60)
-        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Tap to view details. Long press to add workout.")
     }
+
+    // MARK: - Visual Styling
 
     private var textColor: Color {
         if isSelected {
             return .white
         } else if isToday {
-            return .blue
+            return .modusCyan
         } else if !isCurrentMonth {
-            return .secondary
+            return .secondary.opacity(0.5)
         } else {
             return .primary
         }
     }
 
-    private var backgroundColor: Color {
+    @ViewBuilder
+    private var dayBackground: some View {
         if isSelected {
-            return .blue
+            Color.modusCyan
         } else if isToday {
-            return .blue.opacity(0.2)
+            Color.modusCyan.opacity(0.2)
         } else {
-            return .clear
+            Color.clear
         }
     }
 
-    private func statusColor(for status: ScheduledSession.ScheduleStatus) -> Color {
-        switch status {
-        case .scheduled:
-            return .blue
-        case .completed:
-            return .green
-        case .cancelled:
-            return .red
-        case .rescheduled:
-            return .orange
+    /// Cell background represents training load density:
+    /// lighter = rest, darker = heavy
+    @ViewBuilder
+    private var cellBackground: some View {
+        if trainingLoad > 0 && isCurrentMonth {
+            Color.modusCyan.opacity(trainingLoad * 0.18)
+        } else {
+            Color.clear
         }
+    }
+
+    // MARK: - Status Indicators
+
+    @ViewBuilder
+    private var statusIndicators: some View {
+        if !sessions.isEmpty {
+            HStack(spacing: 3) {
+                ForEach(sessions.prefix(3)) { session in
+                    statusDot(for: session)
+                }
+                if sessions.count > 3 {
+                    Text("+\(sessions.count - 3)")
+                        .font(.system(size: 8))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(height: 8)
+        } else {
+            Spacer()
+                .frame(height: 8)
+        }
+    }
+
+    @ViewBuilder
+    private func statusDot(for session: ScheduledSession) -> some View {
+        switch session.status {
+        case .completed:
+            // Completed: filled teal accent circle with checkmark
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 6))
+                .foregroundColor(.modusTealAccent)
+        case .scheduled:
+            if session.isPastDue {
+                // Missed: red warning dot
+                Circle()
+                    .fill(DesignTokens.statusError)
+                    .frame(width: 5, height: 5)
+            } else {
+                // Upcoming: cyan dot
+                Circle()
+                    .fill(Color.modusCyan)
+                    .frame(width: 5, height: 5)
+            }
+        case .cancelled:
+            // Cancelled: gray dot with line
+            Circle()
+                .strokeBorder(Color.secondary.opacity(0.5), lineWidth: 1)
+                .frame(width: 5, height: 5)
+        case .rescheduled:
+            // Rescheduled: orange dot
+            Circle()
+                .fill(DesignTokens.statusWarning)
+                .frame(width: 5, height: 5)
+        }
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityDescription: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        var desc = formatter.string(from: date)
+
+        if isToday { desc += ", Today" }
+
+        let completed = sessions.filter { $0.status == .completed }.count
+        let upcoming = sessions.filter { $0.status == .scheduled && !$0.isPastDue }.count
+        let missed = sessions.filter { $0.isPastDue }.count
+
+        if completed > 0 { desc += ", \(completed) completed" }
+        if upcoming > 0 { desc += ", \(upcoming) upcoming" }
+        if missed > 0 { desc += ", \(missed) missed" }
+        if sessions.isEmpty { desc += ", rest day" }
+
+        return desc
     }
 }
 
-// MARK: - Scheduled Session Row
+// MARK: - Day Session Card
+
+struct DaySessionCard: View {
+    let session: ScheduledSession
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            // Status stripe
+            RoundedRectangle(cornerRadius: 2)
+                .fill(statusColor)
+                .frame(width: 4)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(session.displayName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Spacer()
+
+                    statusBadge
+                }
+
+                Text(session.formattedTime)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if let notes = session.notes, !notes.isEmpty {
+                    Text(notes)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(session.displayName), \(session.formattedTime), \(session.status.displayName)")
+    }
+
+    private var statusBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: statusIcon)
+                .font(.system(size: 10))
+            Text(statusLabel)
+                .font(.caption2)
+                .fontWeight(.medium)
+        }
+        .foregroundColor(statusColor)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(statusColor.opacity(0.12))
+        .cornerRadius(CornerRadius.xs)
+    }
+
+    private var statusColor: Color {
+        switch session.status {
+        case .completed: return .modusTealAccent
+        case .scheduled: return session.isPastDue ? DesignTokens.statusError : .modusCyan
+        case .cancelled: return .secondary
+        case .rescheduled: return DesignTokens.statusWarning
+        }
+    }
+
+    private var statusIcon: String {
+        switch session.status {
+        case .completed: return "checkmark.circle.fill"
+        case .scheduled: return session.isPastDue ? "exclamationmark.circle.fill" : "clock.fill"
+        case .cancelled: return "xmark.circle"
+        case .rescheduled: return "arrow.triangle.2.circlepath"
+        }
+    }
+
+    private var statusLabel: String {
+        if session.status == .scheduled && session.isPastDue {
+            return "Missed"
+        }
+        return session.status.displayName
+    }
+}
+
+// MARK: - Week Summary Badge
+
+struct WeekSummaryBadge: View {
+    let count: Int
+    let label: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(count)")
+                .font(.title3.bold())
+                .foregroundColor(color)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(count) \(label)")
+    }
+}
+
+// MARK: - Day Detail Sheet
+
+struct DayDetailSheet: View {
+    let date: Date
+    let sessions: [ScheduledSession]
+    let onSchedule: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    // Summary header
+                    daySummaryHeader
+
+                    if sessions.isEmpty {
+                        emptyDayView
+                    } else {
+                        // Session cards
+                        ForEach(sessions) { session in
+                            DaySessionCard(session: session)
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle(formattedDate)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(.modusCyan)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: onSchedule) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.modusCyan)
+                    }
+                    .accessibilityLabel("Add workout")
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
+    }
+
+    private var daySummaryHeader: some View {
+        HStack(spacing: Spacing.md) {
+            let completed = sessions.filter { $0.status == .completed }.count
+            let upcoming = sessions.filter { $0.status == .scheduled && !$0.isPastDue }.count
+            let missed = sessions.filter { $0.isPastDue }.count
+
+            if completed > 0 {
+                Label("\(completed) completed", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundColor(.modusTealAccent)
+            }
+            if upcoming > 0 {
+                Label("\(upcoming) upcoming", systemImage: "clock.fill")
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+            }
+            if missed > 0 {
+                Label("\(missed) missed", systemImage: "exclamationmark.circle.fill")
+                    .font(.caption)
+                    .foregroundColor(DesignTokens.statusError)
+            }
+            if sessions.isEmpty {
+                Label("Rest day", systemImage: "bed.double")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(Color.modusLightTeal)
+        .cornerRadius(CornerRadius.md)
+    }
+
+    private var emptyDayView: some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 40))
+                .foregroundColor(.modusTealAccent.opacity(0.4))
+
+            Text("No workouts on this day")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Button(action: onSchedule) {
+                Label("Schedule Workout", systemImage: "plus.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
+                    .background(Color.modusCyan)
+                    .cornerRadius(CornerRadius.sm)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Spacing.xl)
+    }
+}
+
+// MARK: - Legacy Support: ScheduledSessionRow (used by other views)
 
 struct ScheduledSessionRow: View {
     let session: ScheduledSession
 
     var body: some View {
         HStack(spacing: 12) {
-            // Status indicator
             Circle()
                 .fill(statusColor)
                 .frame(width: 8, height: 8)
@@ -462,23 +1016,12 @@ struct ScheduledSessionRow: View {
 
     private var statusColor: Color {
         switch session.status {
-        case .scheduled:
-            return .blue
-        case .completed:
-            return .green
-        case .cancelled:
-            return .red
-        case .rescheduled:
-            return .orange
+        case .scheduled: return .modusCyan
+        case .completed: return .modusTealAccent
+        case .cancelled: return DesignTokens.statusError
+        case .rescheduled: return DesignTokens.statusWarning
         }
     }
-}
-
-// MARK: - Supporting Types
-
-enum CalendarViewMode {
-    case week
-    case month
 }
 
 // MARK: - Preview

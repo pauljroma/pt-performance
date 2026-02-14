@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  Created by Agent 1 - Volume/Strength Trend Charts
+//  ACP-1026: Enhanced with tap-to-select data points, annotations, and overlay metrics
 //  Line chart showing total volume (sets x reps x weight) over time
 //
 
@@ -10,13 +11,20 @@ import SwiftUI
 import Charts
 
 /// Reusable volume trend chart component
-/// Features animated line drawing with reduce motion support
+/// Features tap-to-select data point details, annotation markers,
+/// optional overlay metric, and animated line drawing with reduce motion support
 struct VolumeChart: View {
     let dataPoints: [VolumeDataPoint]
     var height: CGFloat = 200
     var showAverage: Bool = true
+    var annotations: [ChartAnnotation] = []
+    var overlayDataPoints: [StrengthDataPoint] = []
+    var overlayLabel: String = ""
+    var showOverlay: Bool = false
 
     @State private var isAnimated = false
+    @State private var selectedPoint: VolumeDataPoint?
+    @State private var selectedAnnotation: ChartAnnotation?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var averageVolume: Double {
@@ -50,6 +58,7 @@ struct VolumeChart: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Training Volume")
                         .font(.headline)
+                        .foregroundColor(.modusDeepTeal)
                         .accessibilityAddTraits(.isHeader)
 
                     Text("Total weight lifted per week")
@@ -64,13 +73,18 @@ struct VolumeChart: View {
                         Text(formatVolume(averageVolume))
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
 
                         Text("avg/week")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+
+            // Selected point tooltip
+            if let selected = selectedPoint {
+                selectedPointTooltip(selected)
             }
 
             if dataPoints.isEmpty {
@@ -100,6 +114,58 @@ struct VolumeChart: View {
         }
     }
 
+    // MARK: - Selected Point Tooltip
+
+    private func selectedPointTooltip(_ point: VolumeDataPoint) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(point.date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(formatVolume(point.totalVolume))
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.modusCyan)
+            }
+
+            Divider()
+                .frame(height: 30)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(point.sessionCount) sessions")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                let delta = point.totalVolume - averageVolume
+                let sign = delta >= 0 ? "+" : ""
+                Text("\(sign)\(formatVolume(delta)) vs avg")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(delta >= 0 ? .modusTealAccent : .red)
+            }
+
+            Spacer()
+
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    selectedPoint = nil
+                }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.secondary)
+                    .font(.body)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(Color.modusLightTeal)
+        .cornerRadius(CornerRadius.sm)
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+
+    // MARK: - Empty State
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "chart.bar.xaxis")
@@ -119,6 +185,8 @@ struct VolumeChart: View {
         .frame(maxWidth: .infinity)
     }
 
+    // MARK: - Chart View
+
     private var chartView: some View {
         Chart {
             ForEach(dataPoints) { point in
@@ -127,7 +195,7 @@ struct VolumeChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Volume", point.totalVolume)
                 )
-                .foregroundStyle(.blue.gradient)
+                .foregroundStyle(Color.modusCyan.gradient)
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 3))
 
@@ -136,9 +204,9 @@ struct VolumeChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Volume", point.totalVolume)
                 )
-                .foregroundStyle(.blue)
+                .foregroundStyle(selectedPoint?.id == point.id ? Color.modusDeepTeal : Color.modusCyan)
                 .symbol(.circle)
-                .symbolSize(50)
+                .symbolSize(selectedPoint?.id == point.id ? 100 : 50)
 
                 // Area fill
                 AreaMark(
@@ -147,12 +215,33 @@ struct VolumeChart: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.blue.opacity(0.3), .blue.opacity(0.05)],
+                        colors: [Color.modusCyan.opacity(0.3), Color.modusCyan.opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
                 )
                 .interpolationMethod(.catmullRom)
+            }
+
+            // Overlay metric (e.g., strength data)
+            if showOverlay && !overlayDataPoints.isEmpty {
+                ForEach(overlayDataPoints) { point in
+                    LineMark(
+                        x: .value("Date", point.date, unit: .day),
+                        y: .value(overlayLabel, point.estimatedOneRepMax)
+                    )
+                    .foregroundStyle(Color.modusTealAccent)
+                    .interpolationMethod(.catmullRom)
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 4]))
+
+                    PointMark(
+                        x: .value("Date", point.date, unit: .day),
+                        y: .value(overlayLabel, point.estimatedOneRepMax)
+                    )
+                    .foregroundStyle(Color.modusTealAccent)
+                    .symbol(.diamond)
+                    .symbolSize(40)
+                }
             }
 
             // Average line
@@ -168,6 +257,33 @@ struct VolumeChart: View {
                             .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.gray)
                     }
+            }
+
+            // Annotation markers
+            ForEach(annotations) { annotation in
+                RuleMark(x: .value("Event", annotation.date, unit: .day))
+                    .foregroundStyle(annotation.category.color.opacity(0.7))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                    .annotation(position: .top, alignment: .center) {
+                        Button {
+                            selectedAnnotation = annotation
+                        } label: {
+                            Image(systemName: annotation.category.icon)
+                                .font(.caption2)
+                                .foregroundColor(annotation.category.color)
+                                .padding(4)
+                                .background(annotation.category.color.opacity(0.15))
+                                .cornerRadius(CornerRadius.xs)
+                        }
+                        .buttonStyle(.plain)
+                    }
+            }
+
+            // Selected point rule mark
+            if let selected = selectedPoint {
+                RuleMark(x: .value("Selected", selected.date, unit: .day))
+                    .foregroundStyle(Color.modusDeepTeal.opacity(0.4))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5))
             }
         }
         .chartYScale(domain: 0...(maxVolume * 1.1))
@@ -189,8 +305,75 @@ struct VolumeChart: View {
                     .font(.caption)
             }
         }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture { location in
+                        handleChartTap(at: location, proxy: proxy, geometry: geometry)
+                    }
+            }
+        }
         .frame(height: height)
+        .popover(item: $selectedAnnotation) { annotation in
+            annotationPopover(annotation)
+        }
     }
+
+    // MARK: - Chart Tap Handler
+
+    private func handleChartTap(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
+        let xPosition = location.x - geometry[proxy.plotFrame!].origin.x
+        guard let date: Date = proxy.value(atX: xPosition) else { return }
+
+        // Find the nearest data point
+        let closest = dataPoints.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
+
+        withAnimation(.easeOut(duration: 0.2)) {
+            if selectedPoint?.id == closest?.id {
+                selectedPoint = nil
+            } else {
+                selectedPoint = closest
+                HapticFeedback.light()
+            }
+        }
+    }
+
+    // MARK: - Annotation Popover
+
+    private func annotationPopover(_ annotation: ChartAnnotation) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: annotation.category.icon)
+                    .foregroundColor(annotation.category.color)
+                Text(annotation.title)
+                    .font(.headline)
+            }
+
+            Text(annotation.date, format: .dateTime.month(.wide).day().year())
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            if let note = annotation.note {
+                Text(note)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+            }
+
+            Text(annotation.category.displayName)
+                .font(.caption2)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(annotation.category.color.opacity(0.15))
+                .foregroundColor(annotation.category.color)
+                .cornerRadius(CornerRadius.xs)
+        }
+        .padding()
+        .frame(minWidth: 200)
+    }
+
+    // MARK: - Helpers
 
     private func formatAxisVolume(_ volume: Double) -> String {
         if volume >= 1000 {
@@ -226,7 +409,10 @@ struct VolumeChart_Previews: PreviewProvider {
             Text("Volume Chart")
                 .font(.headline)
 
-            VolumeChart(dataPoints: Array(sampleData.reversed()))
+            VolumeChart(
+                dataPoints: Array(sampleData.reversed()),
+                annotations: [.sampleVacation, .sampleDeload]
+            )
 
             Text("Empty State")
                 .font(.headline)

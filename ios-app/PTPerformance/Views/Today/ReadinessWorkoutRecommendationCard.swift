@@ -23,6 +23,15 @@ struct ReadinessWorkoutRecommendationCard: View {
             // Quick recommendation message
             recommendationBanner
 
+            // ACP-1025: AI Transparency - expandable reasoning section
+            AIRecommendationTransparencyCard(
+                recommendationId: "readiness-\(adaptation.recommendationType.rawValue)-\(Date().formatted(.iso8601.year().month().day()))",
+                recommendationType: .workoutAdaptation,
+                reasoningSummary: adaptation.detailedRecommendation,
+                drivingFactors: buildDrivingFactors(),
+                confidenceLevel: .high
+            )
+
             // Expandable content
             if isExpanded {
                 expandedContent
@@ -227,6 +236,58 @@ struct ReadinessWorkoutRecommendationCard: View {
 
             Spacer()
         }
+    }
+
+    // MARK: - ACP-1025 Driving Factors Builder
+
+    /// Builds driving factors from the workout adaptation data for transparency display
+    private func buildDrivingFactors() -> [RecommendationDrivingFactor] {
+        var factors: [RecommendationDrivingFactor] = []
+
+        // Derive approximate readiness from intensity multiplier
+        // (full intensity = high readiness, low multiplier = low readiness)
+        let approxReadiness = adaptation.scalingFactors.intensityMultiplier * 100
+        factors.append(.readinessScore(score: approxReadiness))
+
+        // Add intensity factor if workout is modified
+        if adaptation.recommendationType != .restDay {
+            let intensityReduction = adaptation.scalingFactors.intensityMultiplier
+            if intensityReduction < 1.0 {
+                let changePercent = (1.0 - intensityReduction) * 100
+                factors.append(RecommendationDrivingFactor(
+                    icon: "scalemass",
+                    iconColor: changePercent > 15 ? .orange : .blue,
+                    metric: "Intensity reduced by \(Int(changePercent))%",
+                    detail: "Based on today's readiness assessment",
+                    category: .training
+                ))
+            }
+
+            let volumeReduction = adaptation.scalingFactors.volumeMultiplier
+            if volumeReduction < 1.0 {
+                let changePercent = (1.0 - volumeReduction) * 100
+                factors.append(RecommendationDrivingFactor(
+                    icon: "list.number",
+                    iconColor: changePercent > 25 ? .orange : .blue,
+                    metric: "Volume reduced by \(Int(changePercent))%",
+                    detail: "Fewer sets to manage fatigue",
+                    category: .training
+                ))
+            }
+        }
+
+        // Add rest day factor
+        if adaptation.recommendationType == .restDay {
+            factors.append(RecommendationDrivingFactor(
+                icon: "bed.double.fill",
+                iconColor: .indigo,
+                metric: "Rest day recommended",
+                detail: "Recovery takes priority today",
+                category: .recovery
+            ))
+        }
+
+        return factors
     }
 
     // MARK: - Loading Placeholder

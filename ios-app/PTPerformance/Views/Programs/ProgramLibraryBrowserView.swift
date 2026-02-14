@@ -8,6 +8,14 @@
 //  BUILD 320: Baseball Pack Integration
 //  Added baseball category with premium gating for baseball programs
 //
+//  ACP-1031: Program Browser UX Enhancement
+//  - Added filter chips for duration (4 week, 8 week, 12 week), equipment, and goal type
+//  - Clear difficulty indicators (stars + badges: Beginner/Intermediate/Advanced)
+//  - Preview button showing first week workout schedule before enrolling
+//  - Enhanced program cards with duration, sessions/week, difficulty, equipment icons
+//  - Sorting options (Popular, Newest, Duration, Difficulty)
+//  - Modus brand colors throughout
+//
 
 import SwiftUI
 
@@ -25,6 +33,8 @@ struct ProgramLibraryBrowserView: View {
     @State private var selectedProgram: ProgramLibrary?
     @State private var showBaseballLocked = false
     @State private var programToDuplicate: ProgramLibrary?
+    @State private var showFilters = false
+    @State private var previewProgram: ProgramLibrary?
 
     // MARK: - Constants
 
@@ -40,20 +50,28 @@ struct ProgramLibraryBrowserView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
-            searchBar
+            // Search bar + sort
+            searchAndSortBar
 
             // Category filter chips
             categoryFilters
 
-            // Difficulty filter chips
-            difficultyFilters
+            // ACP-1031: Collapsible advanced filters
+            if showFilters {
+                advancedFilters
+            }
+
+            // ACP-1031: Active filter summary + results count
+            filterSummaryBar
 
             // Content
             contentView
         }
         .sheet(item: $selectedProgram) { program in
             ProgramDetailSheet(program: program)
+        }
+        .sheet(item: $previewProgram) { program in
+            ProgramFirstWeekPreviewSheet(program: program, viewModel: viewModel)
         }
         .sheet(isPresented: $showBaseballLocked) {
             NavigationStack {
@@ -129,34 +147,86 @@ struct ProgramLibraryBrowserView: View {
         }
     }
 
-    // MARK: - Search Bar
+    // MARK: - Search and Sort Bar
 
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-                .accessibilityHidden(true)
+    private var searchAndSortBar: some View {
+        HStack(spacing: 8) {
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
 
-            TextField("Search programs...", text: $viewModel.searchText)
-                .textFieldStyle(PlainTextFieldStyle())
-                .autocorrectionDisabled()
-                .accessibilityLabel("Search programs")
-                .accessibilityHint("Enter text to filter programs by name")
+                TextField("Search programs...", text: $viewModel.searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .autocorrectionDisabled()
+                    .accessibilityLabel("Search programs")
+                    .accessibilityHint("Enter text to filter programs by name")
 
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                if !viewModel.searchText.isEmpty {
+                    Button {
+                        viewModel.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .accessibilityLabel("Clear search")
+                    .accessibilityHint("Removes search text and shows all programs")
                 }
-                .accessibilityLabel("Clear search")
-                .accessibilityHint("Removes search text and shows all programs")
             }
+            .padding(10)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(CornerRadius.sm)
+
+            // ACP-1031: Filter toggle button
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showFilters.toggle()
+                }
+                HapticFeedback.selectionChanged()
+            } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .font(.title3)
+                        .foregroundColor(showFilters ? .modusCyan : .secondary)
+
+                    // Active filter count badge
+                    if viewModel.activeFilterCount > 0 {
+                        Text("\(viewModel.activeFilterCount)")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 16, height: 16)
+                            .background(Color.modusCyan)
+                            .clipShape(Circle())
+                            .offset(x: 4, y: -4)
+                    }
+                }
+            }
+            .accessibilityLabel("Filters")
+            .accessibilityValue(showFilters ? "Open, \(viewModel.activeFilterCount) active" : "Closed")
+            .accessibilityHint("Double tap to \(showFilters ? "hide" : "show") advanced filters")
+
+            // ACP-1031: Sort menu
+            Menu {
+                ForEach(ProgramSortOption.allCases) { option in
+                    Button {
+                        viewModel.sortOption = option
+                        HapticFeedback.selectionChanged()
+                    } label: {
+                        Label(option.rawValue, systemImage: option.icon)
+                        if viewModel.sortOption == option {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down.circle")
+                    .font(.title3)
+                    .foregroundColor(viewModel.sortOption != .popular ? .modusCyan : .secondary)
+            }
+            .accessibilityLabel("Sort by \(viewModel.sortOption.rawValue)")
+            .accessibilityHint("Double tap to change sort order")
         }
-        .padding(10)
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
         .padding(.top, 8)
     }
@@ -213,33 +283,157 @@ struct ProgramLibraryBrowserView: View {
         }
     }
 
-    // MARK: - Difficulty Filters
+    // MARK: - ACP-1031: Advanced Filters (Collapsible)
 
-    private var difficultyFilters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(difficulties, id: \.self) { difficulty in
-                    let isSelected = (difficulty == "All" && viewModel.selectedDifficulty == nil) ||
-                        (difficulty != "All" && viewModel.selectedDifficulty?.rawValue.lowercased() == difficulty.lowercased())
+    private var advancedFilters: some View {
+        VStack(spacing: 8) {
+            // Difficulty filter row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Text("Difficulty")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60, alignment: .leading)
 
-                    ProgramFilterChip(
-                        title: difficulty,
-                        icon: iconForDifficulty(difficulty),
-                        isSelected: isSelected,
-                        color: colorForDifficulty(difficulty)
-                    ) {
-                        if difficulty == "All" {
-                            viewModel.selectedDifficulty = nil
-                        } else {
-                            let newDifficulty = DifficultyLevel(rawValue: difficulty.lowercased())
-                            viewModel.selectedDifficulty = viewModel.selectedDifficulty == newDifficulty ? nil : newDifficulty
+                    ForEach(difficulties, id: \.self) { difficulty in
+                        let isSelected = (difficulty == "All" && viewModel.selectedDifficulty == nil) ||
+                            (difficulty != "All" && viewModel.selectedDifficulty?.rawValue.lowercased() == difficulty.lowercased())
+
+                        ProgramFilterChip(
+                            title: difficulty,
+                            icon: iconForDifficulty(difficulty),
+                            isSelected: isSelected,
+                            color: colorForDifficulty(difficulty)
+                        ) {
+                            if difficulty == "All" {
+                                viewModel.selectedDifficulty = nil
+                            } else {
+                                let newDifficulty = DifficultyLevel(rawValue: difficulty.lowercased())
+                                viewModel.selectedDifficulty = viewModel.selectedDifficulty == newDifficulty ? nil : newDifficulty
+                            }
                         }
                     }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+
+            // Duration filter row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Text("Duration")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60, alignment: .leading)
+
+                    ForEach(DurationFilter.allCases) { duration in
+                        ProgramFilterChip(
+                            title: duration.rawValue,
+                            icon: duration == .all ? "clock" : "calendar.badge.clock",
+                            isSelected: viewModel.selectedDuration == duration,
+                            color: .modusCyan
+                        ) {
+                            viewModel.selectedDuration = viewModel.selectedDuration == duration ? .all : duration
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+
+            // Equipment filter row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Text("Equip")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60, alignment: .leading)
+
+                    ForEach(EquipmentFilter.allCases) { equip in
+                        ProgramFilterChip(
+                            title: equip.rawValue,
+                            icon: equip.icon,
+                            isSelected: viewModel.selectedEquipment == equip,
+                            color: .modusTealAccent
+                        ) {
+                            viewModel.selectedEquipment = viewModel.selectedEquipment == equip ? .all : equip
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+
+            // Goal filter row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    Text("Goal")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60, alignment: .leading)
+
+                    ForEach(GoalFilter.allCases) { goal in
+                        ProgramFilterChip(
+                            title: goal.rawValue,
+                            icon: goal.icon,
+                            isSelected: viewModel.selectedGoal == goal,
+                            color: .modusDeepTeal
+                        ) {
+                            viewModel.selectedGoal = viewModel.selectedGoal == goal ? .all : goal
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
         }
+        .padding(.bottom, 8)
+        .background(Color(.systemGroupedBackground))
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+
+    // MARK: - ACP-1031: Filter Summary Bar
+
+    private var filterSummaryBar: some View {
+        HStack {
+            // Results count
+            Text("\(viewModel.cachedFilteredPrograms.count) program\(viewModel.cachedFilteredPrograms.count == 1 ? "" : "s")")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            // Sort indicator
+            HStack(spacing: 4) {
+                Image(systemName: viewModel.sortOption.icon)
+                    .font(.caption2)
+                Text(viewModel.sortOption.rawValue)
+                    .font(.caption)
+            }
+            .foregroundColor(.modusCyan)
+
+            Spacer()
+
+            // Clear filters button (when filters active)
+            if viewModel.hasActiveFilters {
+                Button {
+                    viewModel.clearFilters()
+                    HapticFeedback.selectionChanged()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption2)
+                        Text("Clear")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.modusCyan)
+                }
+                .accessibilityLabel("Clear all filters")
+                .accessibilityHint("Removes all active filters and shows all programs")
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 6)
+        .background(Color(.secondarySystemGroupedBackground).opacity(0.5))
     }
 
     // MARK: - Content View
@@ -261,9 +455,15 @@ struct ProgramLibraryBrowserView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Array(viewModel.cachedFilteredPrograms.enumerated()), id: \.element.id) { index, program in
-                    ProgramLibraryCard(program: program) {
-                        programToDuplicate = program
-                    }
+                    EnhancedProgramLibraryCard(
+                        program: program,
+                        onDuplicate: {
+                            programToDuplicate = program
+                        },
+                        onPreview: {
+                            previewProgram = program
+                        }
+                    )
                     .onTapGesture {
                         selectedProgram = program
                     }
@@ -293,7 +493,7 @@ struct ProgramLibraryBrowserView: View {
                 ? "No programs match your current filters. Try adjusting your search criteria or browse all available programs."
                 : "Browse our library of professionally designed training programs for strength, mobility, conditioning, and more.",
             icon: viewModel.hasActiveFilters ? "magnifyingglass" : "figure.strengthtraining.traditional",
-            iconColor: viewModel.hasActiveFilters ? .secondary : .blue,
+            iconColor: viewModel.hasActiveFilters ? .secondary : .modusCyan,
             action: viewModel.hasActiveFilters ? EmptyStateView.EmptyStateAction(
                 title: "Clear All Filters",
                 icon: "xmark.circle",
@@ -437,26 +637,42 @@ private struct BaseballCategoryChip: View {
     }
 }
 
-// MARK: - Program Library Card
+// MARK: - ACP-1031: Enhanced Program Library Card
 
-struct ProgramLibraryCard: View {
+struct EnhancedProgramLibraryCard: View {
     let program: ProgramLibrary
     var onDuplicate: (() -> Void)? = nil
+    var onPreview: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Cover image at top
-            ProgramCoverImage(
-                url: program.coverImageUrl,
-                size: CGSize(width: CGFloat.infinity, height: 100),
-                cornerRadius: 0
-            )
-            .frame(maxWidth: .infinity)
-            .frame(height: 100)
-            .clipped()
-            .accessibilityHidden(true)
+            // Cover image at top with difficulty overlay
+            ZStack(alignment: .topTrailing) {
+                ProgramCoverImage(
+                    url: program.coverImageUrl,
+                    size: CGSize(width: CGFloat.infinity, height: 100),
+                    cornerRadius: 0
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: 100)
+                .clipped()
+                .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 8) {
+                // ACP-1031: Difficulty stars overlay
+                HStack(spacing: 2) {
+                    ForEach(1...3, id: \.self) { star in
+                        Image(systemName: star <= program.difficultyStars ? "star.fill" : "star")
+                            .font(.system(size: 10))
+                            .foregroundColor(star <= program.difficultyStars ? .yellow : .white.opacity(0.5))
+                    }
+                }
+                .padding(6)
+                .background(Color.black.opacity(0.5))
+                .cornerRadius(CornerRadius.sm)
+                .padding(8)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
                 // Header with category badge and featured star
                 HStack {
                     // Category badge
@@ -478,47 +694,100 @@ struct ProgramLibraryCard: View {
                     .font(.headline)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
+                    .foregroundColor(.modusDeepTeal)
 
-                // Description preview (2 lines max)
-                if let description = program.description, !description.isEmpty {
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+                // ACP-1031: Enhanced info row with duration, sessions/week, and equipment
+                HStack(spacing: 6) {
+                    // Duration
+                    HStack(spacing: 2) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 9))
+                        Text(program.formattedDuration)
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(.secondary)
+
+                    Text("|")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    // Sessions per week
+                    HStack(spacing: 2) {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 9))
+                        Text("\(program.estimatedSessionsPerWeek)x/wk")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundColor(.secondary)
+
+                    Text("|")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    // Equipment
+                    HStack(spacing: 2) {
+                        Image(systemName: program.equipmentIcon)
+                            .font(.system(size: 9))
+                        Text(program.equipmentSummary)
+                            .font(.system(size: 10))
+                            .lineLimit(1)
+                    }
+                    .foregroundColor(.secondary)
                 }
 
                 Spacer(minLength: 4)
 
-                // Bottom row: duration and difficulty
-                HStack(spacing: 8) {
-                    // Duration
-                    HStack(spacing: 4) {
-                        Image(systemName: "calendar")
-                            .font(.caption2)
-                            .accessibilityHidden(true)
-                        Text(program.formattedDuration)
-                            .font(.caption)
-                    }
-                    .foregroundColor(.secondary)
+                // ACP-1031: Bottom row with difficulty badge and preview button
+                HStack(spacing: 6) {
+                    // Enhanced difficulty badge
+                    ProgramDifficultyBadge(difficulty: program.difficultyLevel)
 
                     Spacer()
 
-                    // Difficulty pill
-                    ProgramDifficultyBadge(difficulty: program.difficultyLevel)
+                    // Preview button
+                    if program.programId != nil {
+                        Button {
+                            HapticFeedback.light()
+                            onPreview?()
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "eye.fill")
+                                    .font(.system(size: 9))
+                                Text("Preview")
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundColor(.modusCyan)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.modusCyan.opacity(0.12))
+                            .cornerRadius(CornerRadius.sm)
+                        }
+                        .accessibilityLabel("Preview first week of \(program.title)")
+                        .accessibilityHint("Shows the first week workout schedule before enrolling")
+                    }
                 }
             }
-            .padding(12)
+            .padding(10)
         }
-        .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 230, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
         .clipped()
         .adaptiveShadow(Shadow.subtle)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(program.title)\(program.featured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty")
+        .accessibilityLabel("\(program.title)\(program.featured ? ", featured program" : ""), \(program.category.capitalized) category, \(program.formattedDuration), \(program.difficultyLevel.capitalized) difficulty, \(program.estimatedSessionsPerWeek) sessions per week, \(program.equipmentSummary)")
         .accessibilityHint("Double tap to view program details")
         .contextMenu {
+            if let onPreview = onPreview, program.programId != nil {
+                Button {
+                    HapticFeedback.light()
+                    onPreview()
+                } label: {
+                    Label("Preview First Week", systemImage: "eye.fill")
+                }
+            }
+
             if let onDuplicate = onDuplicate {
                 Button {
                     HapticFeedback.medium()
@@ -651,7 +920,230 @@ struct ProgramDifficultyBadge: View {
     }
 }
 
-// MARK: - Program Preview Sheet
+// MARK: - ACP-1031: First Week Preview Sheet
+
+struct ProgramFirstWeekPreviewSheet: View {
+    let program: ProgramLibrary
+    @ObservedObject var viewModel: ProgramLibraryBrowserViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Program header
+                    programHeader
+
+                    Divider()
+
+                    // First week schedule
+                    firstWeekContent
+                }
+                .padding()
+            }
+            .navigationTitle("Week 1 Preview")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+                    .accessibilityLabel("Close preview")
+                }
+            }
+        }
+        .task {
+            await viewModel.loadFirstWeekPreview(for: program)
+        }
+    }
+
+    // MARK: - Program Header
+
+    private var programHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(program.title)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.modusDeepTeal)
+
+            HStack(spacing: 12) {
+                ProgramCategoryBadge(category: program.category)
+                ProgramDifficultyBadge(difficulty: program.difficultyLevel)
+
+                // Difficulty stars
+                HStack(spacing: 2) {
+                    ForEach(1...3, id: \.self) { star in
+                        Image(systemName: star <= program.difficultyStars ? "star.fill" : "star")
+                            .font(.caption)
+                            .foregroundColor(star <= program.difficultyStars ? .yellow : .gray.opacity(0.3))
+                    }
+                }
+            }
+
+            // Quick stats
+            HStack(spacing: 16) {
+                Label(program.formattedDuration, systemImage: "calendar")
+                Label("\(program.estimatedSessionsPerWeek)x/week", systemImage: "repeat")
+                Label(program.equipmentSummary, systemImage: program.equipmentIcon)
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - First Week Content
+
+    @ViewBuilder
+    private var firstWeekContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Image(systemName: "1.square.fill")
+                    .font(.title3)
+                    .foregroundColor(.modusCyan)
+                Text("Week 1 Schedule")
+                    .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
+            }
+
+            if viewModel.isLoadingPreview {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 12) {
+                        ProgressView()
+                        Text("Loading week 1 schedule...")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 30)
+            } else if let days = viewModel.previewWeek, !days.isEmpty {
+                VStack(spacing: 10) {
+                    ForEach(days, id: \.dayOfWeek) { day in
+                        PreviewDayRow(day: day)
+                    }
+                }
+
+                // Encouragement text
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(.modusCyan)
+                    Text("This is what your first week looks like. Enroll to get started with the full \(program.formattedDuration) program.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color.modusLightTeal)
+                .cornerRadius(CornerRadius.md)
+            } else {
+                // No schedule data available
+                VStack(spacing: 12) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.largeTitle)
+                        .foregroundColor(.modusCyan.opacity(0.5))
+
+                    Text("Week 1 Preview Not Available")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    Text("Enroll in this program to see the full workout schedule. Your therapist may customize the workouts for your specific needs.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+            }
+        }
+    }
+}
+
+// MARK: - Preview Day Row
+
+private struct PreviewDayRow: View {
+    let day: ProgramScheduleDay
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Day header
+            HStack {
+                Text(day.dayName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.modusDeepTeal)
+
+                Spacer()
+
+                Text("\(day.workouts.count) workout\(day.workouts.count == 1 ? "" : "s")")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            // Workouts for this day
+            ForEach(day.workouts, id: \.assignmentId) { workout in
+                HStack(spacing: 10) {
+                    // Category icon
+                    Image(systemName: workoutCategoryIcon(workout.category))
+                        .font(.caption)
+                        .foregroundColor(.modusCyan)
+                        .frame(width: 28, height: 28)
+                        .background(Color.modusCyan.opacity(0.12))
+                        .cornerRadius(CornerRadius.xs)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(workout.name)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+
+                        HStack(spacing: 8) {
+                            if let duration = workout.durationMinutes {
+                                Text("\(duration) min")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            if let difficulty = workout.difficulty {
+                                Text(difficulty.capitalized)
+                                    .font(.caption2)
+                                    .foregroundColor(difficultyColor(difficulty))
+                            }
+                        }
+                    }
+
+                    Spacer()
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.md)
+    }
+
+    private func workoutCategoryIcon(_ category: String?) -> String {
+        switch category?.lowercased() {
+        case "strength": return "dumbbell.fill"
+        case "cardio": return "heart.fill"
+        case "mobility": return "figure.flexibility"
+        case "recovery": return "bed.double.fill"
+        default: return "figure.run"
+        }
+    }
+
+    private func difficultyColor(_ difficulty: String) -> Color {
+        switch difficulty.lowercased() {
+        case "beginner": return .green
+        case "intermediate": return .orange
+        case "advanced": return .red
+        default: return .gray
+        }
+    }
+}
+
+// MARK: - Program Preview Sheet (Legacy - kept for backward compatibility)
 
 struct ProgramPreviewSheet: View {
     let program: ProgramLibrary
@@ -925,6 +1417,17 @@ private struct ProgramFlowLayout: Layout {
 
             self.size = CGSize(width: maxWidth, height: y + rowHeight)
         }
+    }
+}
+
+// MARK: - Legacy Card (kept for backward compatibility)
+
+struct ProgramLibraryCard: View {
+    let program: ProgramLibrary
+    var onDuplicate: (() -> Void)? = nil
+
+    var body: some View {
+        EnhancedProgramLibraryCard(program: program, onDuplicate: onDuplicate)
     }
 }
 

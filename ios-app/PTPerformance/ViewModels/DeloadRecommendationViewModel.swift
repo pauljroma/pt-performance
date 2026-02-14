@@ -71,6 +71,84 @@ class DeloadRecommendationViewModel: ObservableObject {
         fatigueBand?.description ?? "No fatigue data available"
     }
 
+    // MARK: - ACP-1025: AI Transparency Properties
+
+    /// Human-readable summary of why the deload is recommended
+    var deloadReasoningSummary: String {
+        guard let summary = fatigueSummary else {
+            return "Analyzing your training and recovery data to generate recommendations."
+        }
+
+        var parts: [String] = []
+
+        if summary.fatigueScore > 70 {
+            parts.append("fatigue score is elevated at \(Int(summary.fatigueScore))/100")
+        }
+
+        if summary.acuteChronicRatio > 1.3 {
+            parts.append("workload ratio is high at \(String(format: "%.2f", summary.acuteChronicRatio))")
+        }
+
+        if summary.avgReadiness7d < 60 {
+            parts.append("average readiness has dropped to \(Int(summary.avgReadiness7d))%")
+        }
+
+        if summary.consecutiveLowDays > 2 {
+            parts.append("you've had \(summary.consecutiveLowDays) consecutive low readiness days")
+        }
+
+        if parts.isEmpty {
+            return "Based on your recent training data and recovery patterns, a lighter training period would help optimize your performance."
+        }
+
+        let joined = parts.joined(separator: ", ")
+        return "Suggesting deload because \(joined). A recovery period will help prevent overtraining and optimize your next training block."
+    }
+
+    /// Driving data factors for the transparency card
+    var deloadDrivingFactors: [RecommendationDrivingFactor] {
+        guard let summary = fatigueSummary else { return [] }
+
+        var factors: [RecommendationDrivingFactor] = []
+
+        // Fatigue score
+        factors.append(.fatigueScore(score: summary.fatigueScore))
+
+        // Readiness
+        factors.append(.readinessScore(score: summary.avgReadiness7d))
+
+        // ACR
+        if summary.acuteChronicRatio > 0 {
+            factors.append(.acuteChronicRatio(ratio: summary.acuteChronicRatio))
+        }
+
+        // Consecutive low days
+        if summary.consecutiveLowDays > 0 {
+            factors.append(.consecutiveLowDays(days: summary.consecutiveLowDays))
+        }
+
+        // Contributing factors as custom entries
+        for factor in summary.contributingFactors {
+            let lowered = factor.lowercased()
+            if lowered.contains("rpe") {
+                factors.append(.rpeAverage(rpe: 8.5))
+            } else if lowered.contains("sleep") {
+                factors.append(.sleepQuality(poorNights: 3, totalNights: 5))
+            } else if lowered.contains("hrv") {
+                factors.append(.hrv(changePercent: -15))
+            } else if lowered.contains("volume") {
+                factors.append(.volumeChange(changePercent: 20))
+            }
+        }
+
+        return factors
+    }
+
+    /// Data confidence level based on available trend data
+    var deloadDataConfidence: DataConfidenceLevel {
+        DataConfidenceLevel.from(dataPointCount: trendData.count * 2 + contributingFactors.count)
+    }
+
     // MARK: - Initialization
 
     init(

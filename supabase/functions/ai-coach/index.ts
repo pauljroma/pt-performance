@@ -7,7 +7,8 @@
 // Claude AI to deliver actionable insights and guidance.
 //
 // Date: 2026-02-03
-// Ticket: ACP-1201
+// Updated: 2026-02-14 (ACP-1023 - Enhanced personalization & follow-ups)
+// Ticket: ACP-1201, ACP-1023
 // ============================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -83,6 +84,9 @@ interface PatientContext {
   supplements: SupplementData[]
   goals: { category: string; title: string; status: string }[]
   readiness: { date: string; readiness_score: number | null }[]
+  // ACP-1023: Injury context
+  injury_type: string | null
+  target_level: string | null
 }
 
 interface CoachingInsight {
@@ -123,8 +127,9 @@ async function gatherPatientContext(
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Gather all data in parallel
+  // Gather all data in parallel (ACP-1023: added patient info for injury context)
   const [
+    patientInfoResult,
     workoutsResult,
     readinessResult,
     hrvResult,
@@ -133,6 +138,13 @@ async function gatherPatientContext(
     supplementsResult,
     goalsResult
   ] = await Promise.all([
+    // Patient info (ACP-1023: injury context)
+    supabaseClient
+      .from('patients')
+      .select('injury_type, target_level')
+      .eq('id', patient_id)
+      .single(),
+
     // Workouts (last 14 days)
     supabaseClient
       .from('manual_sessions')
@@ -283,7 +295,10 @@ async function gatherPatientContext(
     fasting,
     supplements,
     goals,
-    readiness
+    readiness,
+    // ACP-1023: Injury context
+    injury_type: patientInfoResult.data?.injury_type || null,
+    target_level: patientInfoResult.data?.target_level || null,
   }
 }
 
@@ -432,6 +447,7 @@ YOUR ROLE:
 3. Provide actionable, personalized recommendations
 4. Explain the science behind your recommendations when helpful
 5. Flag any concerning patterns that warrant attention
+6. Consider their injury/rehab status in all training recommendations
 
 PATIENT CONTEXT AVAILABLE:
 - Workout history (training load, frequency, types)
@@ -441,25 +457,41 @@ PATIENT CONTEXT AVAILABLE:
 - Fasting history (protocols, adherence)
 - Supplement stack (what they're taking)
 - Active goals (what they're working toward)
+- Injury type and target athletic level
+- Readiness scores and trends
 
 COMMUNICATION STYLE:
 - Be conversational but knowledgeable
 - Use "you" language - make it personal
-- Reference specific data points when relevant
-- Keep responses focused and actionable
+- Reference specific data points when relevant (dates, scores, workout names)
+- Keep responses focused and actionable (2-3 paragraphs max)
 - Avoid generic advice - be specific to their data
 - If you don't have enough data, acknowledge it
+
+EXERCISE FORM EXPLANATIONS:
+When asked about exercise form or technique, use this structure:
+- **Setup**: Starting position, stance, grip
+- **Execution**: Step-by-step movement cues
+- **Breathing**: Inhale/exhale timing
+- **Common Mistakes**: Top 2-3 errors to avoid
+- **Feel It Here**: Where they should feel the exercise
 
 IMPORTANT GUIDELINES:
 - Never provide medical diagnoses
 - Recommend consulting healthcare providers for medical concerns
 - Base insights on their actual data, not assumptions
-- Prioritize safety over performance`
+- Prioritize safety over performance
+- If patient has an injury, always consider it in recommendations
+- Always include exactly 3 personalized follow-up questions in suggested_questions`
 
     // ========================================================================
     // BUILD USER CONTEXT
     // ========================================================================
     const userContext = `CURRENT PATIENT DATA:
+
+=== INJURY & REHAB CONTEXT ===
+${context.injury_type ? `Injury/Condition: ${context.injury_type}` : 'No documented injury'}
+${context.target_level ? `Target Level: ${context.target_level}` : 'Not specified'}
 
 === WORKOUTS (Last 14 Days) ===
 ${context.workouts.length > 0
@@ -516,20 +548,23 @@ USER MESSAGE: ${message}
 
 Respond with valid JSON ONLY:
 {
-  "response": "Your conversational response to their message (2-4 paragraphs, be specific to their data)",
+  "response": "Your conversational response to their message (2-3 concise paragraphs, reference specific data points)",
   "insights": [
     {
       "category": "training|recovery|nutrition|sleep|labs|supplements|general",
-      "observation": "What you noticed in their data",
-      "recommendation": "Specific action to take",
+      "observation": "What you noticed in their data (be specific with numbers/dates)",
+      "recommendation": "Specific action to take today or this week",
       "priority": "high|medium|low"
     }
   ],
   "suggested_questions": [
-    "A follow-up question they might want to ask",
-    "Another relevant question based on their data"
+    "Specific follow-up about their training or workout data",
+    "Specific follow-up about their recovery, sleep, or nutrition",
+    "Specific follow-up about their goals or progress"
   ]
-}`
+}
+
+IMPORTANT: Always include exactly 3 suggested_questions that are personalized to their data. Never use generic questions like "Tell me more" or "How are you feeling?". Reference their actual workout names, scores, or goals.`
 
     // ========================================================================
     // CALL ANTHROPIC API
@@ -555,12 +590,13 @@ Respond with valid JSON ONLY:
       }
     ]
 
+    // ACP-1023: Reduced max_tokens for faster responses, lowered temperature for consistency
     const completion = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
+      max_tokens: 1536,
       system: systemPrompt,
       messages: messages,
-      temperature: 0.5,
+      temperature: 0.4,
     })
 
     const responseText = completion.content[0].type === 'text'

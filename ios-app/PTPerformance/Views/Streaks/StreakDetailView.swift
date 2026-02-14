@@ -3,6 +3,7 @@
 //  PTPerformance
 //
 //  ACP-836: Streak Tracking Feature
+//  ACP-1029: Streak System Gamification - Growing flame icons, Modus brand colors
 //  Detailed streak statistics and achievements
 //
 
@@ -61,45 +62,19 @@ struct StreakDetailView: View {
 
     private var heroSection: some View {
         VStack(spacing: 20) {
-            // Streak flame with animation
-            ZStack {
-                // Outer glow
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [streakType.color.opacity(0.4), streakType.color.opacity(0)],
-                            center: .center,
-                            startRadius: 40,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 160, height: 160)
+            // ACP-1029: Growing flame icon that upgrades at milestones
+            GrowingFlameIcon(streak: viewModel.currentStreak, size: 36, showLabel: true)
+                .frame(height: 140)
 
-                // Main circle
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [streakType.color, streakType.color.opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 120, height: 120)
-                    .shadow(color: streakType.color.opacity(0.5), radius: 10)
+            // Streak count
+            VStack(spacing: 4) {
+                Text("\(viewModel.currentStreak)")
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
 
-                VStack(spacing: 4) {
-                    Image(systemName: streakType.iconName)
-                        .font(.system(size: 28))
-                        .foregroundColor(.white)
-
-                    Text("\(viewModel.currentStreak)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-
-                    Text("days")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
-                }
+                Text("days")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             // Status message
@@ -167,9 +142,9 @@ struct StreakDetailView: View {
             HStack(spacing: 8) {
                 ForEach(viewModel.weeklyActivity, id: \.date) { day in
                     VStack(spacing: 8) {
-                        // Day indicator
+                        // ACP-1029: Day indicator with Modus colors
                         Circle()
-                            .fill(day.hasActivity ? streakType.color : Color.gray.opacity(0.2))
+                            .fill(day.hasActivity ? Color.modusTealAccent : Color.gray.opacity(0.2))
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: day.hasActivity ? "checkmark" : "")
@@ -204,7 +179,7 @@ struct StreakDetailView: View {
             }
 
             ProgressView(value: Double(viewModel.thisWeekDays) / 7.0)
-                .tint(streakType.color)
+                .tint(Color.modusCyan)
         }
         .padding()
         .background(

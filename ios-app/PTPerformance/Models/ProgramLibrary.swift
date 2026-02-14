@@ -229,6 +229,54 @@ struct ProgramLibrary: Codable, Identifiable, Hashable, Equatable {
             return "\(durationWeeks) weeks"
         }
     }
+
+    // MARK: - ACP-1031: Enhanced Display Properties
+
+    /// Estimated sessions per week based on common program structures
+    var estimatedSessionsPerWeek: Int {
+        switch category.lowercased() {
+        case "strength": return 4
+        case "mobility": return 3
+        case "conditioning", "cardio": return 3
+        case "recovery": return 2
+        case "baseball": return 5
+        case "annuals": return 4
+        default: return 3
+        }
+    }
+
+    /// Short equipment summary for card display (e.g., "3 items" or "Bodyweight")
+    var equipmentSummary: String {
+        if equipment.isEmpty {
+            return "Bodyweight"
+        } else if equipment.count == 1 {
+            return equipment[0]
+        } else {
+            return "\(equipment.count) items"
+        }
+    }
+
+    /// Equipment icon for quick visual reference on cards
+    var equipmentIcon: String {
+        if equipment.isEmpty {
+            return "figure.walk"
+        }
+        let joined = equipment.joined(separator: " ").lowercased()
+        if joined.contains("barbell") { return "figure.strengthtraining.traditional" }
+        if joined.contains("dumbbell") { return "dumbbell.fill" }
+        if joined.contains("band") { return "circle.dotted" }
+        return "dumbbell.fill"
+    }
+
+    /// Difficulty star count for visual indicator (1-3)
+    var difficultyStars: Int {
+        switch difficultyLevel.lowercased() {
+        case "beginner": return 1
+        case "intermediate": return 2
+        case "advanced": return 3
+        default: return 1
+        }
+    }
 }
 
 // MARK: - Difficulty Level Enum (Optional helper)

@@ -3,12 +3,14 @@
 //  PTPerformance
 //
 //  ACP-836: Streak Tracking Feature
-//  Calendar showing activity days and streak history
+//  ACP-1029: Streak System Gamification - Color-coded activity density calendar
+//  Calendar showing activity days and streak history with density visualization
 //
 
 import SwiftUI
 
 /// Calendar view showing activity history for streak tracking
+/// ACP-1029: Enhanced with color-coded activity density using Modus brand colors
 struct StreakCalendarView: View {
     // MARK: - Properties
 
@@ -36,8 +38,8 @@ struct StreakCalendarView: View {
                 // Calendar grid
                 calendarGrid
 
-                // Legend
-                legendView
+                // ACP-1029: Enhanced density legend
+                densityLegendView
 
                 // Selected day details
                 if let date = selectedDate, let entry = viewModel.entry(for: date) {
@@ -46,6 +48,11 @@ struct StreakCalendarView: View {
 
                 // Monthly summary
                 monthlySummary
+
+                // ACP-1029: Streak freeze history for the month
+                if viewModel.hasFreezeHistory {
+                    freezeHistorySection
+                }
             }
             .padding()
         }
@@ -70,7 +77,7 @@ struct StreakCalendarView: View {
             }) {
                 Image(systemName: "chevron.left.circle.fill")
                     .font(.title2)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(Color.modusCyan)
             }
 
             Spacer()
@@ -86,7 +93,7 @@ struct StreakCalendarView: View {
             }) {
                 Image(systemName: "chevron.right.circle.fill")
                     .font(.title2)
-                    .foregroundColor(viewModel.canGoForward ? .accentColor : .gray)
+                    .foregroundColor(viewModel.canGoForward ? Color.modusCyan : .gray)
             }
             .disabled(!viewModel.canGoForward)
         }
@@ -136,6 +143,7 @@ struct StreakCalendarView: View {
         let isToday = Calendar.current.isDateInToday(date)
         let isSelected = selectedDate.map { Calendar.current.isDate(date, inSameDayAs: $0) } ?? false
         let isFuture = date > Date()
+        let density = ActivityDensity.density(from: entry)
 
         Button(action: {
             HapticFeedback.light()
@@ -150,16 +158,16 @@ struct StreakCalendarView: View {
                     .font(.system(size: 14, weight: isToday ? .bold : .regular))
                     .foregroundColor(isFuture ? .secondary.opacity(0.5) : .primary)
 
-                // Activity indicators
+                // ACP-1029: Color-coded density indicators using Modus colors
                 HStack(spacing: 2) {
                     if hasWorkout {
                         Circle()
-                            .fill(StreakType.workout.color)
+                            .fill(Color.modusCyan)
                             .frame(width: 6, height: 6)
                     }
                     if hasArmCare {
                         Circle()
-                            .fill(StreakType.armCare.color)
+                            .fill(Color.modusTealAccent)
                             .frame(width: 6, height: 6)
                     }
                 }
@@ -170,10 +178,11 @@ struct StreakCalendarView: View {
                 Group {
                     if isSelected {
                         Circle()
-                            .fill(Color.accentColor.opacity(0.2))
+                            .fill(Color.modusCyan.opacity(0.25))
                     } else if hasAnyActivity {
+                        // ACP-1029: Density-based background color
                         Circle()
-                            .fill(Color.green.opacity(0.2))
+                            .fill(densityCellColor(for: density))
                     } else {
                         Circle()
                             .fill(Color.clear)
@@ -184,7 +193,7 @@ struct StreakCalendarView: View {
                 Group {
                     if isToday {
                         Circle()
-                            .stroke(Color.accentColor, lineWidth: 2)
+                            .stroke(Color.modusCyan, lineWidth: 2)
                     }
                 }
             )
@@ -192,13 +201,45 @@ struct StreakCalendarView: View {
         .disabled(isFuture)
     }
 
-    // MARK: - Legend View
+    /// ACP-1029: Cell background color based on density
+    private func densityCellColor(for density: ActivityDensity) -> Color {
+        switch density {
+        case .none: return Color.clear
+        case .light: return Color.modusCyan.opacity(0.15)
+        case .moderate: return Color.modusTealAccent.opacity(0.25)
+        case .high: return Color.modusTealAccent.opacity(0.4)
+        }
+    }
 
-    private var legendView: some View {
-        HStack(spacing: 20) {
-            legendItem(color: StreakType.workout.color, text: "Workout")
-            legendItem(color: StreakType.armCare.color, text: "Arm Care")
-            legendItem(color: .green.opacity(0.3), text: "Activity Day")
+    // MARK: - ACP-1029: Enhanced Density Legend
+
+    private var densityLegendView: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 20) {
+                legendItem(color: Color.modusCyan, text: "Workout")
+                legendItem(color: Color.modusTealAccent, text: "Arm Care")
+            }
+
+            HStack(spacing: 12) {
+                Text("Activity Level:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 4) {
+                    ForEach([ActivityDensity.none, .light, .moderate, .high], id: \.rawValue) { density in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(densityLegendColor(for: density))
+                            .frame(width: 16, height: 16)
+                    }
+                }
+
+                Text("Low")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                Text("High")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+            }
         }
         .font(.caption)
     }
@@ -210,6 +251,16 @@ struct StreakCalendarView: View {
                 .frame(width: 8, height: 8)
             Text(text)
                 .foregroundColor(.secondary)
+        }
+    }
+
+    /// ACP-1029: Legend swatch color
+    private func densityLegendColor(for density: ActivityDensity) -> Color {
+        switch density {
+        case .none: return Color.gray.opacity(0.15)
+        case .light: return Color.modusCyan.opacity(0.3)
+        case .moderate: return Color.modusTealAccent.opacity(0.6)
+        case .high: return Color.modusTealAccent
         }
     }
 
@@ -234,26 +285,26 @@ struct StreakCalendarView: View {
             if entry.workoutCompleted {
                 HStack(spacing: 12) {
                     Image(systemName: StreakType.workout.iconName)
-                        .foregroundColor(StreakType.workout.color)
+                        .foregroundColor(Color.modusCyan)
                         .frame(width: 24)
                     Text("Workout completed")
                         .font(.subheadline)
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color.modusTealAccent)
                 }
             }
 
             if entry.armCareCompleted {
                 HStack(spacing: 12) {
                     Image(systemName: StreakType.armCare.iconName)
-                        .foregroundColor(StreakType.armCare.color)
+                        .foregroundColor(Color.modusTealAccent)
                         .frame(width: 24)
                     Text("Arm care completed")
                         .font(.subheadline)
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(Color.modusTealAccent)
                 }
             }
 
@@ -266,6 +317,17 @@ struct StreakCalendarView: View {
                         .font(.subheadline)
                 }
             }
+
+            // ACP-1029: Activity density badge
+            let density = ActivityDensity.density(from: entry)
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "chart.bar.fill")
+                    .font(.caption)
+                    .foregroundColor(Color.modusCyan)
+                Text("Activity Level: \(densityLabel(for: density))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding()
         .background(
@@ -273,6 +335,15 @@ struct StreakCalendarView: View {
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
+    }
+
+    private func densityLabel(for density: ActivityDensity) -> String {
+        switch density {
+        case .none: return "Rest Day"
+        case .light: return "Light"
+        case .moderate: return "Moderate"
+        case .high: return "Full Session"
+        }
     }
 
     // MARK: - Monthly Summary
@@ -286,7 +357,7 @@ struct StreakCalendarView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(viewModel.monthWorkoutCount)")
                         .font(.title.bold())
-                        .foregroundColor(StreakType.workout.color)
+                        .foregroundColor(Color.modusCyan)
                     Text("Workouts")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -295,7 +366,7 @@ struct StreakCalendarView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(viewModel.monthArmCareCount)")
                         .font(.title.bold())
-                        .foregroundColor(StreakType.armCare.color)
+                        .foregroundColor(Color.modusTealAccent)
                     Text("Arm Care")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -304,7 +375,7 @@ struct StreakCalendarView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(viewModel.monthActivityDays)")
                         .font(.title.bold())
-                        .foregroundColor(.green)
+                        .foregroundColor(Color.modusDeepTeal)
                     Text("Active Days")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -324,13 +395,56 @@ struct StreakCalendarView: View {
             }
 
             ProgressView(value: Double(viewModel.monthConsistencyPercent) / 100.0)
-                .tint(.green)
+                .tint(Color.modusTealAccent)
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
+        )
+    }
+
+    // MARK: - ACP-1029: Streak Freeze History
+
+    private var freezeHistorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "shield.checkered")
+                    .foregroundColor(Color.modusTealAccent)
+                Text("Streak Shields Used")
+                    .font(.headline)
+            }
+
+            ForEach(viewModel.freezeUsageDates, id: \.self) { date in
+                HStack(spacing: 12) {
+                    Image(systemName: "shield.checkered")
+                        .font(.caption)
+                        .foregroundColor(Color.modusTealAccent)
+
+                    Text(date, style: .date)
+                        .font(.subheadline)
+
+                    Spacer()
+
+                    Text("Streak Protected")
+                        .font(.caption)
+                        .foregroundColor(Color.modusTealAccent)
+                }
+                .padding(.vertical, 4)
+            }
+
+            if viewModel.freezeUsageDates.isEmpty {
+                Text("No streak shields used this month")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .adaptiveShadow(Shadow.subtle)
         )
     }
 }
@@ -449,6 +563,26 @@ class StreakCalendarViewModel: ObservableObject {
 
         guard daysInPeriod > 0 else { return 0 }
         return Int(Double(monthActivityDays) / Double(daysInPeriod) * 100)
+    }
+
+    /// ACP-1029: Check if there are any freeze usage dates to show
+    var hasFreezeHistory: Bool {
+        !StreakFreezeService.shared.inventory.freezes.filter { $0.isUsed }.isEmpty
+    }
+
+    /// ACP-1029: Dates when streak freezes were used
+    var freezeUsageDates: [Date] {
+        StreakFreezeService.shared.inventory.freezes
+            .filter { $0.isUsed }
+            .compactMap { $0.usedForDate }
+            .filter { date in
+                guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)),
+                      let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+                    return false
+                }
+                return date >= monthStart && date < monthEnd
+            }
+            .sorted()
     }
 
     // MARK: - Methods

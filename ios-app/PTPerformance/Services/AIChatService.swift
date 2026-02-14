@@ -3,12 +3,13 @@
 //  PTPerformance
 //
 //  Build 77 - AI Helper MVP
+//  ACP-1024 - Added pinned messages, search, quick actions
 //
 
 import SwiftUI
 import Supabase
 
-struct ChatMessage: Identifiable, Codable {
+struct ChatMessage: Identifiable, Codable, Equatable {
     let id: UUID
     let sessionId: UUID?
     let role: String  // "user" or "assistant"
@@ -24,6 +25,18 @@ struct ChatMessage: Identifiable, Codable {
         case tokensUsed = "tokens_used"
         case createdAt = "created_at"
     }
+
+    static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+/// Quick action chip that can appear below AI responses
+struct ChatQuickAction: Identifiable, Equatable {
+    let id = UUID()
+    let title: String
+    let icon: String
+    let prompt: String
 }
 
 /// Service for AI-powered chat interactions with athletes
@@ -55,7 +68,126 @@ class AIChatService: ObservableObject {
     /// The unique identifier for the current chat session
     @Published var currentSessionId: UUID?
 
+    /// Set of pinned message IDs persisted locally
+    @Published var pinnedMessageIds: Set<UUID> = []
+
+    /// Current search query for filtering messages
+    @Published var searchQuery: String = ""
+
+    /// Quick actions generated from the latest AI response
+    @Published var latestQuickActions: [ChatQuickAction] = []
+
     private let supabase = PTSupabaseClient.shared
+
+    /// UserDefaults key for pinned messages
+    private let pinnedMessagesKey = "ai_chat_pinned_messages"
+
+    init() {
+        loadPinnedMessages()
+    }
+
+    // MARK: - Pinned Messages
+
+    /// Messages that have been pinned/bookmarked by the user
+    var pinnedMessages: [ChatMessage] {
+        messages.filter { pinnedMessageIds.contains($0.id) }
+    }
+
+    /// Filtered messages based on current search query
+    var filteredMessages: [ChatMessage] {
+        guard !searchQuery.isEmpty else { return messages }
+        return messages.filter {
+            $0.content.localizedCaseInsensitiveContains(searchQuery)
+        }
+    }
+
+    /// Toggle pinned status for a message
+    func togglePin(for messageId: UUID) {
+        if pinnedMessageIds.contains(messageId) {
+            pinnedMessageIds.remove(messageId)
+        } else {
+            pinnedMessageIds.insert(messageId)
+        }
+        savePinnedMessages()
+    }
+
+    /// Check if a message is pinned
+    func isPinned(_ messageId: UUID) -> Bool {
+        pinnedMessageIds.contains(messageId)
+    }
+
+    private func loadPinnedMessages() {
+        if let data = UserDefaults.standard.data(forKey: pinnedMessagesKey),
+           let ids = try? JSONDecoder().decode(Set<UUID>.self, from: data) {
+            pinnedMessageIds = ids
+        }
+    }
+
+    private func savePinnedMessages() {
+        if let data = try? JSONEncoder().encode(pinnedMessageIds) {
+            UserDefaults.standard.set(data, forKey: pinnedMessagesKey)
+        }
+    }
+
+    // MARK: - Quick Actions
+
+    /// Generates contextual quick actions based on AI response content
+    func generateQuickActions(for responseContent: String) -> [ChatQuickAction] {
+        var actions: [ChatQuickAction] = []
+
+        let lowerContent = responseContent.lowercased()
+
+        // Always offer "Tell me more"
+        actions.append(ChatQuickAction(
+            title: "Tell me more",
+            icon: "text.bubble",
+            prompt: "Can you tell me more about that?"
+        ))
+
+        // Context-specific actions
+        if lowerContent.contains("exercise") || lowerContent.contains("workout") || lowerContent.contains("squat") || lowerContent.contains("press") || lowerContent.contains("deadlift") {
+            actions.append(ChatQuickAction(
+                title: "Show me how",
+                icon: "figure.strengthtraining.traditional",
+                prompt: "Can you show me the proper form and technique for this exercise?"
+            ))
+            actions.append(ChatQuickAction(
+                title: "Log this workout",
+                icon: "checkmark.circle",
+                prompt: "Help me log this workout to track my progress."
+            ))
+        }
+
+        if lowerContent.contains("recovery") || lowerContent.contains("rest") || lowerContent.contains("sleep") {
+            actions.append(ChatQuickAction(
+                title: "Recovery tips",
+                icon: "heart.fill",
+                prompt: "What are your top recovery recommendations for me right now?"
+            ))
+        }
+
+        if lowerContent.contains("pain") || lowerContent.contains("sore") || lowerContent.contains("injury") {
+            actions.append(ChatQuickAction(
+                title: "Alternative exercises",
+                icon: "arrow.triangle.swap",
+                prompt: "What alternative exercises can I do to avoid aggravating this?"
+            ))
+        }
+
+        if lowerContent.contains("nutrition") || lowerContent.contains("diet") || lowerContent.contains("protein") || lowerContent.contains("calories") {
+            actions.append(ChatQuickAction(
+                title: "Meal suggestions",
+                icon: "leaf.fill",
+                prompt: "Can you suggest specific meals or snacks for my goals?"
+            ))
+        }
+
+        // Limit to 4 actions max
+        return Array(actions.prefix(4))
+    }
+
+    // ACP-1023: Follow-up suggestions from the last AI response
+    @Published var followUpSuggestions: [String] = []
 
     // MARK: - Send Message
 
@@ -64,6 +196,7 @@ class AIChatService: ObservableObject {
     /// This method calls the AI chat completion edge function, which processes
     /// the message using Claude and returns a contextual response. Both the
     /// user message and assistant response are added to the local messages array.
+    /// ACP-1023: Now passes user context for personalized responses and surfaces follow-up suggestions.
     ///
     /// - Parameter text: The message text to send to the AI assistant
     ///
@@ -80,14 +213,32 @@ class AIChatService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        // Add user message immediately for responsive feel
+        let userMessage = ChatMessage(
+            id: UUID(),
+            sessionId: currentSessionId,
+            role: "user",
+            content: text,
+            tokensUsed: nil,
+            createdAt: Date()
+        )
+        self.messages.append(userMessage)
+
         let athleteId = PTSupabaseClient.shared.userId ?? ""
 
-        // Call AI chat completion Edge Function
-        let requestBody = [
+        // ACP-1023: Build request with user context for personalized responses
+        var requestBody: [String: Any] = [
             "athlete_id": athleteId,
             "message": text,
             "session_id": currentSessionId?.uuidString as Any
         ]
+
+        // ACP-1023: Gather lightweight user context
+        let userContext = await gatherUserContext()
+        if !userContext.isEmpty {
+            requestBody["user_context"] = userContext
+        }
+
         let bodyData = try JSONSerialization.data(withJSONObject: requestBody)
 
         let responseData: Data = try await supabase.client.functions.invoke(
@@ -106,8 +257,11 @@ class AIChatService: ObservableObject {
         }
 
         // Update session ID
-        await MainActor.run {
-            self.currentSessionId = sessionId
+        self.currentSessionId = sessionId
+
+        // ACP-1023: Extract follow-up suggestions from the response
+        if let suggestions = json["follow_up_suggestions"] as? [String], !suggestions.isEmpty {
+            self.followUpSuggestions = suggestions
         }
 
         // Create assistant message
@@ -120,21 +274,11 @@ class AIChatService: ObservableObject {
             createdAt: Date()
         )
 
-        // Add messages to local array
-        await MainActor.run {
-            // Add user message
-            self.messages.append(ChatMessage(
-                id: UUID(),
-                sessionId: sessionId,
-                role: "user",
-                content: text,
-                tokensUsed: nil,
-                createdAt: Date()
-            ))
+        // Add assistant message
+        self.messages.append(assistantMessage)
 
-            // Add assistant message
-            self.messages.append(assistantMessage)
-        }
+        // Generate quick actions for this response
+        self.latestQuickActions = generateQuickActions(for: messageText)
 
         return assistantMessage
     }
@@ -167,9 +311,7 @@ class AIChatService: ObservableObject {
                 return
             }
 
-            await MainActor.run {
-                self.currentSessionId = uuid
-            }
+            self.currentSessionId = uuid
 
             // Load messages
             let messagesResponse = try await supabase.client
@@ -183,12 +325,79 @@ class AIChatService: ObservableObject {
             decoder.dateDecodingStrategy = .iso8601
             let loadedMessages = try decoder.decode([ChatMessage].self, from: messagesResponse.data)
 
-            await MainActor.run {
-                self.messages = loadedMessages
-            }
+            self.messages = loadedMessages
         } catch {
             DebugLogger.shared.error("AIChatService", "Failed to load chat history: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - User Context (ACP-1023)
+
+    /// Gathers lightweight user context to send with chat requests
+    /// This enables the edge function to provide more personalized responses
+    private func gatherUserContext() async -> [String: Any] {
+        var context: [String: Any] = [:]
+
+        do {
+            // Fetch recent workout names
+            struct WorkoutRow: Decodable {
+                let name: String?
+            }
+            let recentWorkouts: [WorkoutRow] = try await supabase.client
+                .from("manual_sessions")
+                .select("name")
+                .eq("completed", value: true)
+                .order("completed_at", ascending: false)
+                .limit(3)
+                .execute()
+                .value
+
+            let workoutNames = recentWorkouts.compactMap { $0.name }
+            if !workoutNames.isEmpty {
+                context["recent_workouts"] = workoutNames
+            }
+
+            // Fetch latest readiness score
+            struct ReadinessRow: Decodable {
+                let readinessScore: Int?
+                enum CodingKeys: String, CodingKey {
+                    case readinessScore = "readiness_score"
+                }
+            }
+            let readiness: [ReadinessRow] = try await supabase.client
+                .from("daily_readiness")
+                .select("readiness_score")
+                .order("date", ascending: false)
+                .limit(1)
+                .execute()
+                .value
+
+            if let score = readiness.first?.readinessScore {
+                context["readiness_score"] = score
+            }
+
+            // Fetch active goal titles
+            struct GoalRow: Decodable {
+                let title: String
+            }
+            let goals: [GoalRow] = try await supabase.client
+                .from("patient_goals")
+                .select("title")
+                .eq("status", value: "active")
+                .limit(3)
+                .execute()
+                .value
+
+            let goalTitles = goals.map { $0.title }
+            if !goalTitles.isEmpty {
+                context["goals"] = goalTitles
+            }
+        } catch {
+            DebugLogger.shared.warning("AIChatService", "Failed to gather user context: \(error.localizedDescription)")
+            // Non-fatal: the edge function will still work without client context
+        }
+
+        return context
     }
 
     // MARK: - New Session
@@ -201,5 +410,8 @@ class AIChatService: ObservableObject {
     func startNewSession() {
         currentSessionId = nil
         messages = []
+        latestQuickActions = []
+        followUpSuggestions = []
+        searchQuery = ""
     }
 }
