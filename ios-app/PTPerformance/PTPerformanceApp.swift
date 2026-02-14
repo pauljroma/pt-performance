@@ -254,6 +254,7 @@ struct PTPerformanceApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .tint(.modusCyan)
                 .environmentObject(appState)
                 .environmentObject(storeKit)
                 .onAppear {

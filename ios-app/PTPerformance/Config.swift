@@ -29,7 +29,7 @@ enum Config {
         /// Baseball Pack one-time purchase product ID
         static let baseballPackProductID = "com.getmodus.app.baseballpack"
         /// Subscription group identifier
-        static let groupID = "PTPerformance Premium"
+        static let groupID = "Modus Premium"
 
         /// All valid subscription/purchase product IDs
         static var allProductIDs: Set<String> {

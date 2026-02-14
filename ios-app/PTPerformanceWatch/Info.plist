@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>PT Performance</string>
+    <string>Modus</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -31,7 +31,7 @@
     <key>WKRunsIndependentlyOfCompanionApp</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>
-    <string>com.ptperformance.ios</string>
+    <string>com.getmodus.app</string>
     <key>CLKComplicationPrincipalClass</key>
     <string>$(PRODUCT_MODULE_NAME).ComplicationController</string>
     <key>UIBackgroundModes</key>

@@ -108,7 +108,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
 
         case .modularLarge:
             return CLKComplicationTemplateModularLargeStandardBody(
-                headerTextProvider: CLKSimpleTextProvider(text: "PT Performance"),
+                headerTextProvider: CLKSimpleTextProvider(text: "Modus"),
                 body1TextProvider: CLKSimpleTextProvider(text: workoutData.nextWorkout),
                 body2TextProvider: CLKSimpleTextProvider(text: workoutData.status)
             )
