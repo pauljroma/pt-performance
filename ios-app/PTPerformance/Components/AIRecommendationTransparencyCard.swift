@@ -168,7 +168,7 @@ struct AIRecommendationTransparencyCard: View {
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
-                .padding(.leading, 4)
+                .padding(.leading, Spacing.xxs)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 ForEach(drivingFactors) { factor in
@@ -223,7 +223,7 @@ struct AIRecommendationTransparencyCard: View {
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
-                .padding(.leading, 4)
+                .padding(.leading, Spacing.xxs)
 
             HStack(spacing: Spacing.sm) {
                 // Bar chart indicator
@@ -290,7 +290,7 @@ struct AIRecommendationTransparencyCard: View {
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
-                .padding(.leading, 4)
+                .padding(.leading, Spacing.xxs)
 
             HStack(spacing: Spacing.sm) {
                 // Thumbs up

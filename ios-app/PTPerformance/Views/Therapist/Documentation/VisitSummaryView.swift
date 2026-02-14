@@ -128,7 +128,7 @@ struct VisitSummaryView: View {
             if let sessionType = viewModel.sessionType {
                 HStack(spacing: 6) {
                     Image(systemName: sessionType.icon)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text(sessionType.displayName)
                         .font(.subheadline)
                 }
@@ -275,7 +275,7 @@ struct VisitSummaryView: View {
                                 .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                         .background(rpeColor(item.rpe).opacity(0.2))
                         .cornerRadius(CornerRadius.sm)
                     }
@@ -359,7 +359,7 @@ struct VisitSummaryView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue)
+            .background(Color.modusCyan)
             .cornerRadius(CornerRadius.md)
         }
         .disabled(viewModel.isExporting)

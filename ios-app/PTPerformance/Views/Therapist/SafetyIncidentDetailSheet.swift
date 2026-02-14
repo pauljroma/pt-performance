@@ -124,8 +124,8 @@ struct SafetyIncidentDetailSheet: View {
                         .fontWeight(.medium)
                 }
                 .foregroundColor(statusColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(statusColor.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
 
@@ -218,7 +218,7 @@ struct SafetyIncidentDetailSheet: View {
             HStack {
                 Image(systemName: "person.circle.fill")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(patientName ?? "Unknown Patient")
@@ -255,7 +255,7 @@ struct SafetyIncidentDetailSheet: View {
             // Created
             TimelineRowView(
                 icon: "plus.circle.fill",
-                color: .blue,
+                color: .modusCyan,
                 title: "Created",
                 date: incident.createdAt
             )

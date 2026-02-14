@@ -234,7 +234,7 @@ struct ProgramAnalyticsDashboardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 Task { await loadData() }
@@ -244,9 +244,9 @@ struct ProgramAnalyticsDashboardView: View {
                     Text("Try Again")
                 }
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.blue)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -342,7 +342,7 @@ struct PopularProgramCard: View {
         HStack(spacing: 12) {
             // Rank indicator
             Circle()
-                .fill(Color.blue.gradient)
+                .fill(Color.modusCyan.gradient)
                 .frame(width: 40, height: 40)
                 .overlay(
                     Text("\(program.enrollmentCount)")
@@ -410,16 +410,16 @@ struct ProgramPerformanceCard: View {
                 Text("\(program.durationWeeks)w")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.15))
+                    .foregroundColor(.modusCyan)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(Color.modusCyan.opacity(0.15))
                     .cornerRadius(CornerRadius.xs)
             }
 
             // Stats row
             HStack(spacing: 16) {
-                ProgramStatItem(label: "Enrolled", value: "\(program.enrollmentCount)", icon: "person.2.fill", color: .blue)
+                ProgramStatItem(label: "Enrolled", value: "\(program.enrollmentCount)", icon: "person.2.fill", color: .modusCyan)
                 ProgramStatItem(label: "Active", value: "\(program.activeCount)", icon: "play.circle.fill", color: .green)
                 ProgramStatItem(label: "Completed", value: "\(program.completedCount)", icon: "checkmark.circle.fill", color: .teal)
 
@@ -451,7 +451,7 @@ struct ProgramPerformanceCard: View {
                             .frame(height: 6)
 
                         RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.blue)
+                            .fill(Color.modusCyan)
                             .frame(width: geometry.size.width * min(program.averageProgress / 100, 1.0), height: 6)
                     }
                 }
@@ -569,8 +569,8 @@ struct RecentEnrollmentCard: View {
                         .font(.caption2)
                 }
                 .foregroundColor(enrollment.status.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(enrollment.status.color.opacity(0.15))
                 .cornerRadius(CornerRadius.xs)
 
@@ -645,7 +645,7 @@ struct ProgramAnalyticsDetailSheet: View {
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 16) {
-                        DetailStatCard(title: "Total Enrolled", value: "\(program.enrollmentCount)", icon: "person.2.fill", color: .blue)
+                        DetailStatCard(title: "Total Enrolled", value: "\(program.enrollmentCount)", icon: "person.2.fill", color: .modusCyan)
                         DetailStatCard(title: "Active", value: "\(program.activeCount)", icon: "play.circle.fill", color: .green)
                         DetailStatCard(title: "Completed", value: "\(program.completedCount)", icon: "checkmark.circle.fill", color: .teal)
                         DetailStatCard(title: "Avg Progress", value: program.formattedAverageProgress, icon: "chart.line.uptrend.xyaxis", color: .purple)

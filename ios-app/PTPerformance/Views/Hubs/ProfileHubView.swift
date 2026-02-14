@@ -220,13 +220,13 @@ struct ProfileHubView: View {
                             Text("Connected to PT")
                                 .font(.caption)
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
                 }
 
                 Spacer()
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -244,7 +244,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "bell.badge.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
@@ -359,7 +359,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "figure.stand")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     Text("Body Composition")
@@ -438,14 +438,14 @@ struct ProfileHubView: View {
                 Text(modeBadgeText)
                     .font(.caption2)
                     .fontWeight(.medium)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(modeThemeColor.opacity(0.15))
                     .foregroundColor(modeThemeColor)
                     .cornerRadius(CornerRadius.xs)
                     .accessibilityHidden(true)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Training Mode: \(modeService.currentMode.displayName). \(modeService.currentMode.description)")
 
@@ -454,8 +454,8 @@ struct ProfileHubView: View {
                 ForEach(modeService.currentMode.primaryMetrics, id: \.self) { metric in
                     Text(metric)
                         .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.xs)
                 }
@@ -480,7 +480,7 @@ struct ProfileHubView: View {
                             .accessibilityHidden(true)
                     } else {
                         Image(systemName: therapistLinkingVM.isLinked ? "person.2.fill" : "person.badge.plus")
-                            .foregroundColor(therapistLinkingVM.isLinked ? .green : .blue)
+                            .foregroundColor(therapistLinkingVM.isLinked ? .green : .modusCyan)
                             .frame(width: 24)
                             .accessibilityHidden(true)
                     }
@@ -539,7 +539,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "book.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     Text("Learn")
@@ -557,7 +557,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "questionmark.circle")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                     Text("View Tutorial")
                         .foregroundColor(.primary)
@@ -593,7 +593,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "hand.raised.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     Text("Privacy Notice")
@@ -686,7 +686,7 @@ struct ProfileHubView: View {
             } label: {
                 HStack {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                         .accessibilityHidden(true)
                     Text("Log Out")
@@ -743,7 +743,7 @@ struct ProfileHubView: View {
                     HapticFeedback.light()
                     storeKit.debugPremiumOverride = nil
                 }
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityLabel("Reset to Real Status")
                 .accessibilityHint("Removes debug override and uses actual subscription status")
             }

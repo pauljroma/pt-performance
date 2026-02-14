@@ -40,7 +40,7 @@ struct PhaseDetailView: View {
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 24)
+                        .padding(.vertical, Spacing.lg)
                         Spacer()
                     }
                 } else {

@@ -97,8 +97,8 @@ struct PatientRankingTable: View {
                 .foregroundColor(.secondary)
                 .frame(width: 28)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
     }
 
@@ -115,12 +115,12 @@ struct PatientRankingTable: View {
                 Text(title)
                     .font(.caption)
                     .fontWeight(sortKey == key ? .bold : .semibold)
-                    .foregroundColor(sortKey == key ? .blue : .secondary)
+                    .foregroundColor(sortKey == key ? .modusCyan : .secondary)
 
                 if sortKey == key {
                     Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
                         .font(.caption2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
         }
@@ -192,8 +192,8 @@ struct PatientRankingRow: View {
                 // Status indicator
                 statusIndicator
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
             .background(rowBackground)
             .contentShape(Rectangle())
         }
@@ -240,7 +240,7 @@ struct PatientRankingRow: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [.blue, .purple],
+                        colors: [.modusCyan, .purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -329,7 +329,7 @@ struct CompactRankingList: View {
                 }) {
                     Text("View All")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -338,7 +338,7 @@ struct CompactRankingList: View {
                 Text("No patients")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
             } else {
                 VStack(spacing: 8) {
                     ForEach(rankings.prefix(5)) { entry in
@@ -347,7 +347,7 @@ struct CompactRankingList: View {
                 }
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
@@ -371,7 +371,7 @@ struct CompactRankingRow: View {
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .frame(width: 20, height: 20)
-                    .background(entry.rank <= 3 ? Color.blue : Color.gray)
+                    .background(entry.rank <= 3 ? Color.modusCyan : Color.gray)
                     .cornerRadius(CornerRadius.xs)
 
                 // Name
@@ -393,7 +393,7 @@ struct CompactRankingRow: View {
                     .font(.caption2)
                     .foregroundColor(statusColor)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())

@@ -441,7 +441,7 @@ struct ProgramWorkoutExecutionView: View {
                         isTimerVisible: $viewModel.isTimerVisible
                     )
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
 
                     // Main content
                     ScrollView {
@@ -546,7 +546,7 @@ struct ProgramWorkoutExecutionView: View {
     private var programContextHeader: some View {
         HStack(spacing: 8) {
             Image(systemName: "calendar.badge.checkmark")
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
             Text(viewModel.headerSubtitle)
@@ -557,8 +557,8 @@ struct ProgramWorkoutExecutionView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color.blue.opacity(0.1))
+        .padding(.vertical, Spacing.xs)
+        .background(Color.modusCyan.opacity(0.1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Program: \(viewModel.headerSubtitle)")
     }
@@ -703,8 +703,8 @@ struct ProgramWorkoutExecutionView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.blue.opacity(0.1))
-        .foregroundColor(.blue)
+        .background(Color.modusCyan.opacity(0.1))
+        .foregroundColor(.modusCyan)
         .cornerRadius(CornerRadius.sm)
     }
 
@@ -817,7 +817,7 @@ struct ProgramWorkoutExecutionView: View {
                 } label: {
                     Text("Quick Complete (Prescribed Values)")
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .disabled(viewModel.isLoading)
                 .accessibilityLabel("Quick complete with prescribed values")
@@ -906,7 +906,7 @@ private struct ExerciseListRow: View {
                         Text("\(exerciseNumber)")
                             .font(.caption)
                             .fontWeight(.bold)
-                            .foregroundColor(isCurrent ? .blue : .secondary)
+                            .foregroundColor(isCurrent ? .modusCyan : .secondary)
                     }
                 }
 
@@ -931,18 +931,18 @@ private struct ExerciseListRow: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.xs)
                 }
             }
-            .padding(12)
-            .background(isCurrent ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+            .padding(Spacing.sm)
+            .background(isCurrent ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isCurrent ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 2)
+                    .stroke(isCurrent ? Color.modusCyan.opacity(0.3) : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

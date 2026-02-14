@@ -49,7 +49,7 @@ struct AccessibleFormField: View {
                             .focused($isFocused)
                     }
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.systemBackground))

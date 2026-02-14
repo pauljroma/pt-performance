@@ -73,7 +73,7 @@ struct HealthSyncSettingsView: View {
                 }
                 Spacer()
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(healthKitService.isAuthorized ? "Connected. Bidirectional sync enabled" : "Not connected. Connect to sync with Apple Health")
 

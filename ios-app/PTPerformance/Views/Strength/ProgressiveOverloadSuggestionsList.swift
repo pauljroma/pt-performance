@@ -120,7 +120,7 @@ struct ProgressiveOverloadSuggestionsList: View {
             HStack {
                 Image(systemName: "brain.head.profile")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("AI Progression Suggestions")

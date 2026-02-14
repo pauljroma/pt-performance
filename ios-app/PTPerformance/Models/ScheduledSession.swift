@@ -11,6 +11,39 @@ import Foundation
 /// Represents a scheduled workout session
 struct ScheduledSession: Codable, Identifiable, Hashable {
 
+    // MARK: - Static Formatters
+
+    private static let dayOfWeekFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE"
+        return f
+    }()
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    private static let shortTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }()
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
     let id: UUID
     let patientId: UUID
     let sessionId: UUID
@@ -150,25 +183,17 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
         if let notes = notes, !notes.isEmpty {
             return notes
         }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
-        return "\(formatter.string(from: scheduledDate)) Session"
+        return "\(Self.dayOfWeekFormatter.string(from: scheduledDate)) Session"
     }
 
     // Computed property: Formatted date string
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: scheduledDate)
+        Self.mediumDateFormatter.string(from: scheduledDate)
     }
 
     // Computed property: Formatted time string
     var formattedTime: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: scheduledTime)
+        Self.shortTimeFormatter.string(from: scheduledTime)
     }
 
     // Computed property: Relative time string (e.g., "Tomorrow at 2:00 PM")
@@ -181,9 +206,7 @@ struct ScheduledSession: Codable, Identifiable, Hashable {
             return "Tomorrow at \(formattedTime)"
         } else if let daysUntil = calendar.dateComponents([.day], from: Date(), to: scheduledDate).day,
                   daysUntil >= 0 && daysUntil <= 7 {
-            let dayFormatter = DateFormatter()
-            dayFormatter.dateFormat = "EEEE" // Day of week
-            return "\(dayFormatter.string(from: scheduledDate)) at \(formattedTime)"
+            return "\(Self.dayOfWeekFormatter.string(from: scheduledDate)) at \(formattedTime)"
         } else {
             return "\(formattedDate) at \(formattedTime)"
         }
@@ -256,22 +279,18 @@ extension ScheduledSession {
             let updated_at: String
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        let isoFormatter = ISO8601DateFormatter()
-
         let directSession = DirectScheduledSession(
             id: id.uuidString,
             patient_id: patientId.uuidString,
             session_id: sessionId.uuidString,
-            scheduled_date: isoFormatter.string(from: scheduledDate),
-            scheduled_time: formatter.string(from: scheduledTime),
+            scheduled_date: iso8601Formatter.string(from: scheduledDate),
+            scheduled_time: timeOnlyFormatter.string(from: scheduledTime),
             status: status.rawValue,
-            completed_at: completedAt.map { isoFormatter.string(from: $0) },
+            completed_at: completedAt.map { iso8601Formatter.string(from: $0) },
             reminder_sent: reminderSent,
             notes: notes,
-            created_at: isoFormatter.string(from: createdAt),
-            updated_at: isoFormatter.string(from: updatedAt)
+            created_at: iso8601Formatter.string(from: createdAt),
+            updated_at: iso8601Formatter.string(from: updatedAt)
         )
 
         do {

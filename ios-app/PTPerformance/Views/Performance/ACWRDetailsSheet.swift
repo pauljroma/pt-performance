@@ -64,7 +64,7 @@ struct ACWRDetailsSheet: View {
                             .font(.headline)
                             .foregroundColor(.modusDeepTeal)
 
-                        zoneRow(color: .blue, range: "< 0.8", label: "Undertraining", description: "Training load may be too low")
+                        zoneRow(color: .modusCyan, range: "< 0.8", label: "Undertraining", description: "Training load may be too low")
                         zoneRow(color: .green, range: "0.8 - 1.3", label: "Optimal", description: "Sweet spot for adaptation")
                         zoneRow(color: .yellow, range: "1.3 - 1.5", label: "Caution", description: "Increased injury risk")
                         zoneRow(color: .red, range: "> 1.5", label: "Danger", description: "High injury risk, reduce load")

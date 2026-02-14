@@ -204,7 +204,7 @@ struct CaseloadOverviewView: View {
             HStack(spacing: 8) {
                 FilterChip(
                     label: "All (\(viewModel.patients.count))",
-                    color: .blue,
+                    color: .modusCyan,
                     isSelected: viewModel.filterStatus == nil,
                     action: { viewModel.filterStatus = nil }
                 )
@@ -230,7 +230,7 @@ struct CaseloadOverviewView: View {
                     action: { viewModel.filterStatus = viewModel.filterStatus == .good ? nil : .good }
                 )
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
     }
 
@@ -275,7 +275,7 @@ struct CaseloadOverviewView: View {
             title: "No Patients Yet",
             message: "Your patient caseload will appear here once patients have been assigned to you. Each patient's status, adherence, and progress will be visible at a glance.",
             icon: "person.3.fill",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: nil
         )
     }

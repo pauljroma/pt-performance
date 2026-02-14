@@ -72,7 +72,7 @@ struct DebugLogView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
                 .background(Color.gray.opacity(0.1))
 
                 // Filter picker
@@ -83,7 +83,7 @@ struct DebugLogView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
                 .accessibilityLabel("Log filter")
                 .accessibilityHint("Filter logs by type")
 
@@ -138,7 +138,7 @@ struct DebugLogView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color.gray.opacity(0.05))
     }
 
@@ -183,7 +183,7 @@ struct DebugLogView: View {
                         }
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
             .onChange(of: logger.messages.count) { _, _ in
                 if let lastMessage = logger.messages.last, searchText.isEmpty, selectedFilter == .all {
@@ -202,8 +202,8 @@ struct DebugLogView: View {
                 .foregroundColor(colorForLevel(message.level))
                 .textSelection(.enabled)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xxs)
         .background(backgroundColorForLevel(message.level))
     }
 
@@ -243,7 +243,7 @@ struct DebugLogView: View {
                 .accessibilityLabel("\(filteredMessages.count) messages displayed")
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color.gray.opacity(0.05))
     }
 

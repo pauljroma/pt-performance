@@ -163,7 +163,7 @@ struct TaskCustomizationSheet: View {
 
 // MARK: - Section Header
 
-fileprivate struct SectionHeader: View {
+private struct SectionHeader: View {
     let title: String
     let icon: String
 

@@ -113,8 +113,8 @@ struct ExerciseTemplateInfoSheet: View {
 
                 Color.clear.frame(height: 20)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.xs)
         }
     }
 
@@ -182,7 +182,7 @@ struct ExerciseTemplateInfoSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "camera.viewfinder")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("\(hdVideos.count) angles available")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -240,8 +240,8 @@ struct ExerciseTemplateInfoSheet: View {
                     .fontWeight(.medium)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
+                    .background(Color.modusCyan.opacity(0.1))
+                    .foregroundColor(.modusCyan)
                     .cornerRadius(CornerRadius.sm)
             }
 
@@ -266,7 +266,7 @@ struct ExerciseTemplateInfoSheet: View {
                 .font(.headline)
 
             if !cues.setup.isEmpty {
-                cueGroup(title: "Setup", icon: "figure.stand", cues: cues.setup, color: .blue)
+                cueGroup(title: "Setup", icon: "figure.stand", cues: cues.setup, color: .modusCyan)
             }
 
             if !cues.execution.isEmpty {

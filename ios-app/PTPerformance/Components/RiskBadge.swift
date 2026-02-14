@@ -15,7 +15,7 @@ import SwiftUI
 struct RiskBadge: View {
     let count: Int
     var severity: EscalationSeverity?
-    var size: BadgeSize = .standard
+    var size: BadgeSize = .medium
 
     var body: some View {
         if count > 0 {
@@ -23,12 +23,12 @@ struct RiskBadge: View {
                 badgeBackground
 
                 Text(displayCount)
-                    .font(size.font)
+                    .font(badgeFont)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                     .minimumScaleFactor(0.8)
             }
-            .frame(width: size.dimension, height: size.dimension)
+            .frame(width: badgeDimension, height: badgeDimension)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: count)
         }
     }
@@ -52,27 +52,24 @@ struct RiskBadge: View {
         return .red
     }
 
-    // MARK: - Badge Sizes
+    /// Use the canonical top-level BadgeSize enum
+    typealias BadgeSize = PTPerformance.BadgeSize
 
-    enum BadgeSize {
-        case small
-        case standard
-        case large
-
-        var dimension: CGFloat {
-            switch self {
-            case .small: return 16
-            case .standard: return 20
-            case .large: return 24
-            }
+    /// Circular badge dimension based on size
+    private var badgeDimension: CGFloat {
+        switch size {
+        case .small: return 16
+        case .medium: return 20
+        case .large: return 24
         }
+    }
 
-        var font: Font {
-            switch self {
-            case .small: return .system(size: 9)
-            case .standard: return .system(size: 11)
-            case .large: return .system(size: 13)
-            }
+    /// Fixed-size font for circular risk badge text
+    private var badgeFont: Font {
+        switch size {
+        case .small: return .system(size: 9)
+        case .medium: return .system(size: 11)
+        case .large: return .system(size: 13)
         }
     }
 }
@@ -262,7 +259,7 @@ struct RiskBadge_Previews: PreviewProvider {
             // Different sizes
             HStack(spacing: 24) {
                 RiskBadge(count: 5, size: .small)
-                RiskBadge(count: 5, size: .standard)
+                RiskBadge(count: 5, size: .medium)
                 RiskBadge(count: 5, size: .large)
             }
 

@@ -60,7 +60,7 @@ struct ErrorStateView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                     }
@@ -165,7 +165,7 @@ extension ErrorStateView {
             title: "Authentication Required",
             message: "Please sign in to access this content.",
             icon: "person.crop.circle.badge.exclamationmark",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             primaryAction: ErrorAction(title: "Sign In", icon: "arrow.right.circle.fill", action: signIn),
             secondaryAction: nil
         )
@@ -285,7 +285,7 @@ extension ErrorStateView {
         case .networkError:
             return ("network.slash", .orange)
         case .notAuthenticated, .sessionExpired, .invalidCredentials, .authenticationFailed:
-            return ("person.crop.circle.badge.exclamationmark", .blue)
+            return ("person.crop.circle.badge.exclamationmark", .modusCyan)
         case .dataNotFound, .sessionNotFound:
             return ("doc.questionmark", .gray)
         case .saveFailed, .deleteFailed, .databaseError:
@@ -325,7 +325,7 @@ struct CompactErrorView: View {
                 Button(action: retry) {
                     Image(systemName: "arrow.clockwise")
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
         }

@@ -379,10 +379,10 @@ struct ROMProgressCard: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.purple)
                 }
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
             }
         }
-        .padding(.vertical, 24)
+        .padding(.vertical, Spacing.lg)
         .padding(.horizontal)
         .frame(maxWidth: .infinity)
     }
@@ -476,7 +476,7 @@ struct ROMSummaryCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
         .buttonStyle(.plain)
     }

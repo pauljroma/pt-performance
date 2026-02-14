@@ -161,7 +161,7 @@ struct ArmCareAssessmentView: View {
             HStack {
                 Image(systemName: "figure.baseball")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("How's Your Arm Today?")
                     .font(.headline)
             }
@@ -174,7 +174,7 @@ struct ArmCareAssessmentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.modusCyan.opacity(0.1))
         )
     }
 
@@ -237,8 +237,8 @@ struct ArmCareAssessmentView: View {
                                     .font(.caption)
                             }
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(
                             Capsule()
                                 .fill(Color.red.opacity(0.2))
@@ -301,7 +301,7 @@ struct ArmCareAssessmentView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "figure.arms.open")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Shoulder")
                     .font(.headline)
                 Spacer()
@@ -384,7 +384,7 @@ struct ArmCareAssessmentView: View {
                         .font(.caption)
                         .foregroundColor(.orange)
                 }
-                .padding(8)
+                .padding(Spacing.xs)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.orange.opacity(0.1))
@@ -547,7 +547,7 @@ struct ArmCareAssessmentView: View {
             TextField("Any other concerns...", text: $notes, axis: .vertical)
                 .lineLimit(2...4)
                 .textFieldStyle(.plain)
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.secondarySystemGroupedBackground))
@@ -604,7 +604,7 @@ struct ArmCareAssessmentView: View {
                     .font(.headline)
                     .foregroundColor(viewModel.currentTrafficLight.color)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(Color(.systemBackground))

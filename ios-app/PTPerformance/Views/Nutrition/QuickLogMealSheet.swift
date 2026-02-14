@@ -45,9 +45,9 @@ struct QuickLogMealSheet: View {
                         } label: {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                 Text("Add Food")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                             }
                         }
                     } else {
@@ -83,7 +83,7 @@ struct QuickLogMealSheet: View {
                         HStack {
                             MacroSummaryItem(value: totalCalories, label: "Calories", color: .orange)
                             MacroSummaryItem(value: Int(totalProtein), label: "Protein", unit: "g", color: .red)
-                            MacroSummaryItem(value: Int(totalCarbs), label: "Carbs", unit: "g", color: .blue)
+                            MacroSummaryItem(value: Int(totalCarbs), label: "Carbs", unit: "g", color: .modusCyan)
                             MacroSummaryItem(value: Int(totalFat), label: "Fat", unit: "g", color: .yellow)
                         }
                     }

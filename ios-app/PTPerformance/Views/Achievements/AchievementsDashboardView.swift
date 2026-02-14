@@ -246,11 +246,11 @@ struct AchievementsDashboardView: View {
                     Text("\(Int(overallProgress * 100))%")
                         .font(.subheadline)
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 ProgressView(value: overallProgress)
-                    .tint(.blue)
+                    .tint(.modusCyan)
             }
             .padding()
             .background(

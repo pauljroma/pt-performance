@@ -129,7 +129,7 @@ struct BulkProgramAssignmentSheet: View {
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
                 } else {
                     ForEach(viewModel.availablePrograms) { program in
                         DatabaseProgramTemplateRow(
@@ -161,7 +161,7 @@ struct BulkProgramAssignmentSheet: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
             }
 
@@ -213,19 +213,19 @@ struct BulkProgramAssignmentSheet: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal)
-            .padding(.bottom, 24)
+            .padding(.bottom, Spacing.lg)
         }
     }
 
     // MARK: - Helper Functions
 
     private func avatarColor(for patient: Patient) -> Color {
-        let colors: [Color] = [.blue, .purple, .green, .orange, .pink, .indigo]
+        let colors: [Color] = [.modusCyan, .purple, .green, .orange, .pink, .indigo]
         let index = abs(patient.id.hashValue) % colors.count
         return colors[index]
     }
@@ -267,7 +267,7 @@ struct DatabaseProgramTemplateRow: View {
                 // Selection indicator
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? .modusCyan : .gray)
 
                 // Program info
                 VStack(alignment: .leading, spacing: 4) {

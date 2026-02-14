@@ -71,7 +71,7 @@ struct RehabProgressView: View {
                                     title: "Completed",
                                     value: adherenceData.map { "\($0.completedSessions)" } ?? "--",
                                     subtitle: adherenceData != nil ? "Sessions" : "No data yet",
-                                    color: adherenceData != nil ? .blue : .secondary,
+                                    color: adherenceData != nil ? .modusCyan : .secondary,
                                     icon: adherenceData != nil ? "figure.walk" : "minus.circle"
                                 )
 

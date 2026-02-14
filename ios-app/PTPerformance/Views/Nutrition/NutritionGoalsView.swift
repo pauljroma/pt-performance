@@ -63,7 +63,7 @@ struct NutritionGoalsView: View {
 
                     HStack {
                         Circle()
-                            .fill(Color.blue)
+                            .fill(Color.modusCyan)
                             .frame(width: 12, height: 12)
                         Text("Carbohydrates")
                         Spacer()

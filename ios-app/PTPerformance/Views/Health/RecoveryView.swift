@@ -219,7 +219,7 @@ struct RecoveryView: View {
                 Label("Log Session", systemImage: "plus.circle.fill")
             }
             .buttonStyle(.borderedProminent)
-            .padding(.top, 8)
+            .padding(.top, Spacing.xs)
         }
         .padding()
         .frame(maxWidth: .infinity)
@@ -317,7 +317,7 @@ struct RecoveryStatItem: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
             Text(value)
                 .font(.title3)
@@ -353,7 +353,7 @@ struct RecommendationCard: View {
                     .foregroundColor(.secondary)
                 Text("\(recommendation.suggestedDuration) min suggested")
                     .font(.caption2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
 
             Spacer()
@@ -408,7 +408,7 @@ struct RecoverySessionRow: View {
     var body: some View {
         HStack {
             Image(systemName: session.protocolType.icon)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 32)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -425,7 +425,7 @@ struct RecoverySessionRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(session.protocolType.displayName), \(session.loggedAt.formatted(date: .abbreviated, time: .shortened)), \(session.durationMinutes) minutes")
     }

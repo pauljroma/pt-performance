@@ -346,7 +346,7 @@ struct BiomarkerDashboardView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
     }
 
@@ -484,7 +484,7 @@ struct StatusCountCard: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(color.opacity(0.1))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
@@ -527,8 +527,8 @@ struct CategoryFilterChip: View {
                     .background(isSelected ? Color(.label).opacity(0.2) : Color.secondary.opacity(0.2))
                     .cornerRadius(CornerRadius.sm)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -569,7 +569,7 @@ struct CategoryHeaderEnhanced: View {
                 Text("\(count)")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, Spacing.xs)
                     .padding(.vertical, 2)
                     .background(Color(.tertiarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.sm)
@@ -581,8 +581,8 @@ struct CategoryHeaderEnhanced: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 4)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.xxs)
         .background(Color(.systemGroupedBackground))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(category.rawValue) category, \(count) biomarkers, \(systemStatus?.status.displayText ?? "status unknown")")
@@ -756,8 +756,8 @@ struct BiomarkerRowCompact: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, Spacing.xs)
+            .padding(.horizontal, Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
         }

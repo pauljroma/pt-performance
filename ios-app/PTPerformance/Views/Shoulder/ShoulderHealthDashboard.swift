@@ -185,8 +185,8 @@ struct ShoulderHealthDashboard: View {
         .font(.caption)
         .fontWeight(.medium)
         .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(level.color)
         .cornerRadius(CornerRadius.sm)
     }
@@ -517,7 +517,7 @@ struct ShoulderDiagramView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(8)
+        .padding(Spacing.xs)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
     }
@@ -581,7 +581,7 @@ struct ROMDisplayCard: View {
                     Text("\(Int(romStatus.totalArc))°")
                         .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -599,7 +599,7 @@ struct ROMDisplayCard: View {
                         .fontWeight(.bold)
                         .foregroundColor(deficit.severity.color)
                 }
-                .padding(8)
+                .padding(Spacing.xs)
                 .background(deficit.severity.color.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -715,7 +715,7 @@ struct ShoulderAlertCard: View {
                 Text(alert.recommendation)
                     .font(.caption)
             }
-            .foregroundColor(.blue)
+            .foregroundColor(.modusCyan)
         }
         .padding()
         .background(alert.severity.color.opacity(0.1))
@@ -739,9 +739,9 @@ struct ROMMeasurementRow: View {
             Spacer()
             Text("Total: \(Int(measurement.totalArc))°")
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 
@@ -764,7 +764,7 @@ struct StrengthMeasurementRow: View {
                 .fontWeight(.medium)
                 .foregroundColor(measurement.ratioCategory.color)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

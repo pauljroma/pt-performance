@@ -88,7 +88,7 @@ struct TherapistLinkingView: View {
                         HStack {
                             if viewModel.isLoading {
                                 ProgressView()
-                                    .padding(.trailing, 4)
+                                    .padding(.trailing, Spacing.xxs)
                             }
                             Image(systemName: "key.fill")
                             Text("Generate Linking Code")
@@ -105,7 +105,7 @@ struct TherapistLinkingView: View {
                             Text(code)
                                 .font(.system(.title, design: .monospaced))
                                 .fontWeight(.bold)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                                 .textSelection(.enabled)
 
                             if let timeRemaining = viewModel.timeRemaining {
@@ -118,7 +118,7 @@ struct TherapistLinkingView: View {
                                 .foregroundColor(timeRemaining == "Expired" ? .red : .orange)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
 
                         HStack {
                             Button {

@@ -148,7 +148,7 @@ struct IntervalTimerView: View {
     private var backgroundColor: Color {
         switch viewModel.state {
         case .ready:
-            return Color.blue.opacity(0.3)
+            return Color.modusCyan.opacity(0.3)
         case .work:
             return Color.green
         case .rest:
@@ -432,7 +432,7 @@ struct CompletionRPESheet: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("Save and Continue")

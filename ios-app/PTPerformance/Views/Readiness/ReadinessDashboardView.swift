@@ -96,7 +96,7 @@ struct ReadinessDashboardView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: viewModel.trendDirection.icon)
                                     .font(.caption)
-                                Text(viewModel.trendDirection.description)
+                                Text(viewModel.trendDirection.displayName)
                                     .font(.caption.weight(.medium))
                             }
                             .foregroundColor(viewModel.trendDirection.color)
@@ -524,7 +524,7 @@ extension ReadinessDashboardView {
             summary += "Current score: \(String(format: "%.1f", current)), \(category.displayName). "
         }
 
-        summary += "Trend is \(viewModel.trendDirection.description). "
+        summary += "Trend is \(viewModel.trendDirection.displayName). "
 
         if let avg = viewModel.averageScore {
             summary += "Average score: \(String(format: "%.1f", avg)). "

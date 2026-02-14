@@ -124,7 +124,7 @@ struct ConflictResolutionView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, 6)
         .background(
             Capsule()
@@ -181,7 +181,7 @@ struct ConflictResolutionView: View {
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, Spacing.md)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(Color.green)
@@ -197,12 +197,12 @@ struct ConflictResolutionView: View {
                     Text("Use Highest Confidence")
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.blue, lineWidth: 1)
+                        .stroke(Color.modusCyan, lineWidth: 1)
                 )
             }
 
@@ -215,7 +215,7 @@ struct ConflictResolutionView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.sm)
             }
         }
     }
@@ -344,8 +344,8 @@ struct ValueDiffIndicator: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             RoundedRectangle(cornerRadius: 6)
                 .fill(Color.orange.opacity(0.1))

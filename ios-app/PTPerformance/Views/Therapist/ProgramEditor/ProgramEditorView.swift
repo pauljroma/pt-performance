@@ -117,7 +117,7 @@ struct ProgramEditorView: View {
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 24)
+                        .padding(.vertical, Spacing.lg)
                         Spacer()
                     }
                 } else {
@@ -284,7 +284,7 @@ struct EditorPhaseRowView: View {
                     .lineLimit(2)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(phase.name)\(phase.durationWeeks.map { ", \($0) weeks" } ?? "")\(phase.goals.flatMap { $0.isEmpty ? nil : ", Goals: \($0)" } ?? "")")
         .accessibilityHint("Double tap to edit this phase")

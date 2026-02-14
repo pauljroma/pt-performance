@@ -277,7 +277,7 @@ struct AlertDetailSheet: View {
                         .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundColor(trendColor(for: trend, metricType: title))
-                        .padding(4)
+                        .padding(Spacing.xxs)
                         .background(trendColor(for: trend, metricType: title).opacity(0.15))
                         .clipShape(Circle())
                 }
@@ -290,11 +290,11 @@ struct AlertDetailSheet: View {
     }
 
     private func trendColor(for trend: PatientException.TrendDirection, metricType: String) -> Color {
-        // For pain, up is bad. For adherence, down is bad.
+        // For pain, improving (up) is bad. For adherence, declining (down) is bad.
         if metricType == "Pain Level" {
-            return trend == .up ? .red : .green
+            return trend == .improving ? .red : .green
         } else {
-            return trend == .down ? .red : .green
+            return trend == .declining ? .red : .green
         }
     }
 
@@ -317,7 +317,7 @@ struct AlertDetailSheet: View {
 
                 timelineItem(
                     icon: "person.fill",
-                    color: .blue,
+                    color: .modusCyan,
                     title: "Last Session",
                     subtitle: daysSinceText,
                     isFirst: false,
@@ -376,7 +376,7 @@ struct AlertDetailSheet: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
 
             Spacer()
         }
@@ -437,11 +437,11 @@ struct AlertDetailSheet: View {
 
         case .lowAdherence, .decliningAdherence:
             actions.append(("Send Reminder", "Encourage patient engagement", "bell.badge.fill", .orange))
-            actions.append(("Review Schedule", "Check for scheduling conflicts", "calendar", .blue))
+            actions.append(("Review Schedule", "Check for scheduling conflicts", "calendar", .modusCyan))
             actions.append(("Simplify Program", "Consider reducing complexity", "minus.circle", .purple))
 
         case .missedSession, .inactivity:
-            actions.append(("Check In", "Reach out to patient", "message.fill", .blue))
+            actions.append(("Check In", "Reach out to patient", "message.fill", .modusCyan))
             actions.append(("Review Barriers", "Identify obstacles to adherence", "magnifyingglass", .orange))
             actions.append(("Reschedule", "Set up new session time", "calendar.badge.plus", .green))
         }
@@ -467,7 +467,7 @@ struct AlertDetailSheet: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .cornerRadius(CornerRadius.md)
             }
 
@@ -586,8 +586,8 @@ struct AlertDetailSheet_Previews: PreviewProvider {
             severity: .critical,
             message: "Reported severe shoulder pain (9/10) during rehabilitation exercises",
             daysSinceLastSession: 12,
-            painTrend: .up,
-            adherenceTrend: .down,
+            painTrend: .improving,
+            adherenceTrend: .declining,
             currentPain: 9.0,
             currentAdherence: 35.0,
             createdAt: Date().addingTimeInterval(-7200)

@@ -33,7 +33,7 @@ struct WeeklySummaryPreferencesView: View {
             // Enable/Disable Section
             Section {
                 Toggle("Enable Weekly Summary", isOn: $notificationEnabled)
-                    .tint(.blue)
+                    .tint(.modusCyan)
             } footer: {
                 Text("Receive a push notification with your weekly workout recap")
             }
@@ -63,7 +63,7 @@ struct WeeklySummaryPreferencesView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "app.badge.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                                 .font(.system(size: 32))
 
                             VStack(alignment: .leading, spacing: 4) {
@@ -79,7 +79,7 @@ struct WeeklySummaryPreferencesView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                     }
                 }
             }
@@ -99,7 +99,7 @@ struct WeeklySummaryPreferencesView: View {
                         Spacer()
                     }
                 }
-                .listRowBackground(Color.blue)
+                .listRowBackground(Color.modusCyan)
                 .foregroundColor(.white)
                 .disabled(isSaving)
             }

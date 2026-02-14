@@ -133,7 +133,7 @@ struct ReportBuilderView: View {
             // Avatar
             Circle()
                 .fill(LinearGradient(
-                    colors: [.blue, .purple],
+                    colors: [.modusCyan, .purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -359,7 +359,7 @@ struct ReportBuilderView: View {
             .background(
                 reportService.isGenerating || selectedSections.isEmpty
                     ? Color.gray
-                    : Color.blue
+                    : Color.modusCyan
             )
             .cornerRadius(CornerRadius.md)
         }
@@ -537,7 +537,7 @@ struct SectionToggleRow: View {
         Button(action: action) {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: section.icon)
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
                     .frame(width: 24)
 
                 Text(section.displayName)
@@ -547,7 +547,7 @@ struct SectionToggleRow: View {
                 Spacer()
 
                 Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))

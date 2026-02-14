@@ -130,7 +130,7 @@ struct AuthLandingView: View {
                 // MARK: - Loading Indicator
                 if isLoading {
                     ProgressView("Signing in...")
-                        .padding(.top, 8)
+                        .padding(.top, Spacing.xs)
                         .accessibilityLabel("Signing in, please wait")
                 }
 
@@ -154,7 +154,7 @@ struct AuthLandingView: View {
                 // MARK: - Demo Login (For Testing)
                 VStack(spacing: 12) {
                     Divider()
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
 
                     Text("Demo Accounts")
                         .font(.caption)
@@ -173,7 +173,7 @@ struct AuthLandingView: View {
                                     .font(.caption.weight(.semibold))
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, Spacing.sm)
                             .background(Color.green.opacity(0.15))
                             .foregroundColor(.green)
                             .cornerRadius(CornerRadius.sm)
@@ -193,7 +193,7 @@ struct AuthLandingView: View {
                                     .font(.caption.weight(.semibold))
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, Spacing.sm)
                             .background(Color.purple.opacity(0.15))
                             .foregroundColor(.purple)
                             .cornerRadius(CornerRadius.sm)
@@ -208,10 +208,10 @@ struct AuthLandingView: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 16)
+                    .padding(.horizontal, Spacing.xl)
+                    .padding(.bottom, Spacing.md)
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Spacing.lg)
             .navigationDestination(isPresented: $showEmailSignIn) {
                 EmailSignInView()
                     .environmentObject(appState)

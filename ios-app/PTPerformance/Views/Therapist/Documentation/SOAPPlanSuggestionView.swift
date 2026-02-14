@@ -148,7 +148,7 @@ struct SOAPPlanSuggestionView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "doc.text.magnifyingglass")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Based on your note content")
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -156,7 +156,7 @@ struct SOAPPlanSuggestionView: View {
 
             HStack(spacing: 12) {
                 if !subjective.isEmpty {
-                    ContextBadge(letter: "S", color: .blue, hasContent: true)
+                    ContextBadge(letter: "S", color: .modusCyan, hasContent: true)
                 }
                 if !objective.isEmpty {
                     ContextBadge(letter: "O", color: .green, hasContent: true)
@@ -208,7 +208,7 @@ struct SOAPPlanSuggestionView: View {
                     )
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
         .accessibilityLabel("Filter suggestions by category")
     }
@@ -244,7 +244,7 @@ struct SOAPPlanSuggestionView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(24)
+            .padding(Spacing.lg)
             .background(.ultraThinMaterial)
             .cornerRadius(CornerRadius.lg)
         }
@@ -266,7 +266,7 @@ struct SOAPPlanSuggestionView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 dismiss()
@@ -296,7 +296,7 @@ struct SOAPPlanSuggestionView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 refreshSuggestions()
@@ -396,8 +396,8 @@ private struct SuggestionCard: View {
                         .fontWeight(.medium)
                 }
                 .foregroundColor(categoryColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(categoryColor.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
 
@@ -440,7 +440,7 @@ private struct SuggestionCard: View {
                     Text(suggestion.rationale)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .padding(.top, 4)
+                        .padding(.top, Spacing.xxs)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
@@ -455,7 +455,7 @@ private struct SuggestionCard: View {
                 .fontWeight(.medium)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.sm)
             }
@@ -530,9 +530,9 @@ private struct PlanCategoryChip: View {
                     .font(.caption)
                     .fontWeight(isSelected ? .semibold : .regular)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.lg)
         }

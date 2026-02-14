@@ -25,7 +25,7 @@ struct RecentActivityFeed: View {
                         .font(.headline)
                 } icon: {
                     Image(systemName: "clock.arrow.circlepath")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 Spacer()
@@ -34,7 +34,7 @@ struct RecentActivityFeed: View {
                     Button(action: { onViewAll?() }) {
                         Text("View All")
                             .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
             }

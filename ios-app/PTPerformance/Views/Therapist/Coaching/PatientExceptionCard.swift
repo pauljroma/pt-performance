@@ -195,7 +195,7 @@ struct PatientExceptionCard: View {
                     label: "Pain",
                     value: "\(Int(currentPain))/10",
                     trend: painTrend,
-                    isBad: painTrend == .up
+                    isBad: painTrend == .improving
                 )
             }
 
@@ -204,7 +204,7 @@ struct PatientExceptionCard: View {
                     label: "Adherence",
                     value: "\(Int(currentAdherence))%",
                     trend: adherenceTrend,
-                    isBad: adherenceTrend == .down
+                    isBad: adherenceTrend == .declining
                 )
             }
 
@@ -230,7 +230,7 @@ struct PatientExceptionCard: View {
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundColor(isBad ? .red : .green)
-                .padding(4)
+                .padding(Spacing.xxs)
                 .background((isBad ? Color.red : Color.green).opacity(0.15))
                 .clipShape(Circle())
         }
@@ -267,7 +267,7 @@ struct PatientExceptionCard: View {
                     Image(systemName: "chevron.right")
                         .font(.caption2)
                 }
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -277,7 +277,7 @@ struct PatientExceptionCard: View {
 
     private var expandedActions: some View {
         HStack(spacing: Spacing.md) {
-            actionButton(icon: "message.fill", title: "Message", color: .blue) {
+            actionButton(icon: "message.fill", title: "Message", color: .modusCyan) {
                 // Send message action
             }
 
@@ -425,8 +425,8 @@ struct PatientExceptionCard_Previews: PreviewProvider {
             severity: .critical,
             message: "Adherence has dropped to 35%",
             daysSinceLastSession: 12,
-            painTrend: .up,
-            adherenceTrend: .down,
+            painTrend: .improving,
+            adherenceTrend: .declining,
             currentPain: 7.0,
             currentAdherence: 35.0,
             createdAt: Date().addingTimeInterval(-7200)

@@ -22,7 +22,7 @@ struct TherapistPatientSetupView: View {
                     // Progress indicator
                     if viewModel.currentStep != .complete {
                         PatientSetupProgressView(currentStep: viewModel.currentStep)
-                            .padding(.top, 8)
+                            .padding(.top, Spacing.xs)
                             .padding(.horizontal)
                     }
 
@@ -60,7 +60,7 @@ struct TherapistPatientSetupView: View {
                             .font(.footnote)
                             .foregroundColor(.red)
                             .padding(.horizontal)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, Spacing.xs)
                     }
 
                     // Navigation buttons
@@ -183,7 +183,7 @@ struct BasicInfoStepView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 VStack(spacing: 16) {
                     // Name fields
@@ -321,7 +321,7 @@ struct TherapistModeSelectionView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 32)
+            .padding(.top, Spacing.xl)
 
             VStack(spacing: 16) {
                 ForEach(Mode.allCases, id: \.self) { mode in
@@ -417,7 +417,7 @@ struct TherapistGoalSelectionView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 VStack(spacing: 12) {
                     ForEach(availableGoals) { goal in
@@ -460,7 +460,7 @@ struct TherapistGoalSelectionView: View {
                                 .background(Color(.tertiarySystemGroupedBackground))
                                 .cornerRadius(CornerRadius.sm)
                         }
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Spacing.xxs)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -535,7 +535,7 @@ struct TrainingContextStepView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 VStack(spacing: 20) {
                     // Frequency stepper
@@ -581,7 +581,7 @@ struct TrainingContextStepView: View {
                             .foregroundColor(.secondary)
                         TextEditor(text: $viewModel.trainingNotes)
                             .frame(minHeight: 80)
-                            .padding(8)
+                            .padding(Spacing.xs)
                             .background(Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                     }
@@ -602,7 +602,7 @@ struct TrainingContextStepView: View {
                             .foregroundColor(.secondary)
                         TextEditor(text: $viewModel.restrictions)
                             .frame(minHeight: 60)
-                            .padding(8)
+                            .padding(Spacing.xs)
                             .background(Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                     }
@@ -614,7 +614,7 @@ struct TrainingContextStepView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Image(systemName: "shield.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             Text("Precautions")
                                 .font(.headline)
                         }
@@ -623,7 +623,7 @@ struct TrainingContextStepView: View {
                             .foregroundColor(.secondary)
                         TextEditor(text: $viewModel.precautions)
                             .frame(minHeight: 60)
-                            .padding(8)
+                            .padding(Spacing.xs)
                             .background(Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                     }
@@ -655,7 +655,7 @@ struct ReviewStepView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 VStack(alignment: .leading, spacing: 16) {
                     // Patient Info
@@ -806,7 +806,7 @@ struct PatientCreatedStepView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 16)
+                .padding(.top, Spacing.md)
             }
 
             Spacer()

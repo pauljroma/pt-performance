@@ -203,7 +203,7 @@ struct EmailComposerSheet: View {
                                 .font(.subheadline)
                         }
                         .toggleStyle(.switch)
-                        .tint(.blue)
+                        .tint(.modusCyan)
                     }
 
                     if clinicAdminEmail != nil {
@@ -212,7 +212,7 @@ struct EmailComposerSheet: View {
                                 .font(.subheadline)
                         }
                         .toggleStyle(.switch)
-                        .tint(.blue)
+                        .tint(.modusCyan)
                     }
                 }
                 .padding()
@@ -438,7 +438,7 @@ struct TemplateChip: View {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: template.icon)
                     .font(.caption)
-                    .foregroundColor(isSelected ? .white : .blue)
+                    .foregroundColor(isSelected ? .white : .modusCyan)
 
                 Text(template.name)
                     .font(.caption)
@@ -447,11 +447,11 @@ struct TemplateChip: View {
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.xl)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.xl)
-                    .stroke(isSelected ? Color.clear : Color.blue.opacity(0.3), lineWidth: 1)
+                    .stroke(isSelected ? Color.clear : Color.modusCyan.opacity(0.3), lineWidth: 1)
             )
         }
         .accessibilityLabel("\(template.name) template")

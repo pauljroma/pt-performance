@@ -103,12 +103,12 @@ struct ProgramWorkoutScheduleView: View {
             if let currentWeek = viewModel.currentWeek {
                 HStack {
                     Image(systemName: "arrow.right.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("You're on Week \(currentWeek)")
                         .fontWeight(.medium)
                 }
                 .font(.subheadline)
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
             }
         }
     }
@@ -252,7 +252,7 @@ private struct WeekSection: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Color.blue)
+                                    .background(Color.modusCyan)
                                     .cornerRadius(CornerRadius.xs)
                             }
                         }
@@ -269,9 +269,9 @@ private struct WeekSection: View {
                         .foregroundColor(.secondary)
                         .accessibilityHidden(true)
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 10)
-                .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+                .background(isCurrentWeek ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
             }
             .accessibilityLabel("Week \(week.weekNumber)\(isCurrentWeek ? ", current week" : ""), \(week.workoutCount) \(week.workoutCount == 1 ? "workout" : "workouts")")
@@ -290,10 +290,10 @@ private struct WeekSection: View {
                         Text("Rest week")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, Spacing.xs)
                     }
                 }
-                .padding(.leading, 12)
+                .padding(.leading, Spacing.sm)
             }
         }
     }
@@ -374,10 +374,10 @@ private struct WorkoutCard: View {
             // Start Button
             Image(systemName: "play.circle.fill")
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -434,7 +434,7 @@ struct WorkoutStartSheet: View {
                 // Workout Icon
                 Image(systemName: "figure.run")
                     .font(.system(size: 60))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .padding(.top, 20)
 
                 // Workout Info
@@ -484,7 +484,7 @@ struct WorkoutStartSheet: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(workout.name) workout")
@@ -515,7 +515,7 @@ struct WorkoutStartSheet: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
             Text(value)
@@ -666,7 +666,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, Spacing.xxs)
                         }
                     }
                     .padding()
@@ -691,7 +691,7 @@ struct WorkoutTemplatePlayerWrapper: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(template.name) workout")
@@ -986,11 +986,11 @@ private struct SessionCard: View {
                 } label: {
                     Image(systemName: "play.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
 
@@ -1001,7 +1001,7 @@ private struct SessionCard: View {
                         PhaseExerciseRow(exercise: exercise)
                     }
                 }
-                .padding(.leading, 16)
+                .padding(.leading, Spacing.md)
             }
         }
     }
@@ -1020,7 +1020,7 @@ private struct PhaseExerciseRow: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
                 .frame(width: 20, height: 20)
-                .background(Circle().fill(Color.blue))
+                .background(Circle().fill(Color.modusCyan))
 
             VStack(alignment: .leading, spacing: 2) {
                 // Exercise name
@@ -1043,7 +1043,7 @@ private struct PhaseExerciseRow: View {
                     if let label = exercise.blockLabel {
                         Text("• \(label)")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
             }
@@ -1070,7 +1070,7 @@ struct PhaseSessionStartSheet: View {
                 // Session Icon
                 Image(systemName: session.session.isThrowingDay == true ? "figure.baseball" : "figure.run")
                     .font(.system(size: 60))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .padding(.top, 20)
 
                 // Session Info
@@ -1149,7 +1149,7 @@ struct PhaseSessionStartSheet: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.lg)
                 }
                 .accessibilityLabel("Start \(session.session.name) workout")
@@ -1180,7 +1180,7 @@ struct PhaseSessionStartSheet: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
             Text(value)

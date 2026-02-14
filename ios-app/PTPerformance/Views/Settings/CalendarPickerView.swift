@@ -229,7 +229,7 @@ struct CalendarPickerView: View {
         Circle()
             .fill(Color(cgColor: calendar.color))
             .frame(width: 12, height: 12)
-            .padding(.trailing, 8)
+            .padding(.trailing, Spacing.xs)
     }
 
     // MARK: - Actions
@@ -301,8 +301,8 @@ struct CalendarBadgeView: View {
                 .font(.caption)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
                 .fill(Color.secondary.opacity(0.15))

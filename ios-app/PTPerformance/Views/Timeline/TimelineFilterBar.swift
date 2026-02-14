@@ -27,7 +27,7 @@ struct TimelineFilterBar: View {
                 Rectangle()
                     .fill(Color(.separator))
                     .frame(width: 1, height: 24)
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
 
                 // Individual type filters
                 ForEach(TimelineEventType.allCases) { type in
@@ -62,8 +62,8 @@ struct TimelineFilterBar: View {
                 }
             }
             .foregroundColor(viewModel.hasActiveFilters ? .primary : .white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(
                 Capsule()
                     .fill(viewModel.hasActiveFilters ? Color(.tertiarySystemFill) : Color.modusCyan)
@@ -106,8 +106,8 @@ struct TimelineFilterBar: View {
                 }
             }
             .foregroundColor(showAsActive ? .white : .primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(
                 Capsule()
                     .fill(showAsActive ? type.color : Color(.tertiarySystemFill))
@@ -199,8 +199,8 @@ struct TimelineDateRangePicker: View {
                         .font(.subheadline.weight(.medium))
                 }
                 .foregroundColor(viewModel.selectedDateRange == .custom ? .white : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .background(
                     Capsule()
                         .fill(viewModel.selectedDateRange == .custom ? Color.modusCyan : Color(.tertiarySystemFill))
@@ -226,8 +226,8 @@ struct TimelineDateRangePicker: View {
             Text(range.displayName)
                 .font(.subheadline.weight(.medium))
                 .foregroundColor(isSelected ? .white : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .background(
                     Capsule()
                         .fill(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))

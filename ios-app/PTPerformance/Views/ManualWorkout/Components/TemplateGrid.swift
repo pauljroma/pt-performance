@@ -143,7 +143,7 @@ struct PaginatedTemplateGrid: View {
                     onLoadMore()
                 }
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .padding()
             }
             Spacer()

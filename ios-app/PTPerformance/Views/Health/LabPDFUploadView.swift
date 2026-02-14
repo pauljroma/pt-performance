@@ -104,7 +104,7 @@ struct LabPDFUploadView: View {
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, Spacing.lg)
             }
 
             // Supported providers
@@ -124,12 +124,12 @@ struct LabPDFUploadView: View {
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, Spacing.md)
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 32)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xl)
             .accessibilityLabel("Select PDF file to upload")
             .accessibilityHint("Opens file picker to select a lab results PDF")
         }
@@ -450,7 +450,7 @@ struct BiomarkerEditRow: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .opacity(biomarker.isSelected ? 1.0 : 0.6)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {

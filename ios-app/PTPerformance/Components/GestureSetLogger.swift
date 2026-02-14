@@ -133,7 +133,7 @@ struct GestureSetLogger: View {
 
                         // Progress fill
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(viewModel.allSetsComplete ? Color.green : Color.blue)
+                            .fill(viewModel.allSetsComplete ? Color.green : Color.modusCyan)
                             .frame(
                                 width: geometry.size.width * viewModel.setsProgress,
                                 height: 8
@@ -186,7 +186,7 @@ struct GestureSetLogger: View {
         if viewModel.isSetComplete {
             return Color.green.opacity(0.15)
         } else if viewModel.repCount > 0 {
-            return Color.blue.opacity(0.08)
+            return Color.modusCyan.opacity(0.08)
         }
         return Color(.secondarySystemBackground)
     }

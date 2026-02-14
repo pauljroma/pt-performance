@@ -59,6 +59,19 @@ class NutritionService {
     private let logger = DebugLogger.shared
     private let errorLogger = ErrorLogger.shared
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
     private init() {}
 
     // MARK: - Nutrition Logs
@@ -95,8 +108,8 @@ class NutritionService {
             // Apply date filters and execute
             let logs: [NutritionLog]
             if let start = startDate, let end = endDate {
-                let startStr = ISO8601DateFormatter().string(from: start)
-                let endStr = ISO8601DateFormatter().string(from: end)
+                let startStr = Self.iso8601Formatter.string(from: start)
+                let endStr = Self.iso8601Formatter.string(from: end)
                 logger.log("[NutritionService] Date range: \(startStr) to \(endStr)", level: .diagnostic)
                 logs = try await baseQuery
                     .gte("logged_at", value: startStr)
@@ -106,7 +119,7 @@ class NutritionService {
                     .execute()
                     .value
             } else if let start = startDate {
-                let startStr = ISO8601DateFormatter().string(from: start)
+                let startStr = Self.iso8601Formatter.string(from: start)
                 logger.log("[NutritionService] Start date filter: \(startStr)", level: .diagnostic)
                 logs = try await baseQuery
                     .gte("logged_at", value: startStr)
@@ -115,7 +128,7 @@ class NutritionService {
                     .execute()
                     .value
             } else if let end = endDate {
-                let endStr = ISO8601DateFormatter().string(from: end)
+                let endStr = Self.iso8601Formatter.string(from: end)
                 logger.log("[NutritionService] End date filter: \(endStr)", level: .diagnostic)
                 logs = try await baseQuery
                     .lte("logged_at", value: endStr)
@@ -441,9 +454,7 @@ class NutritionService {
     /// - Returns: Daily summary with macro totals, or nil if no data
     /// - Throws: Database errors if the query fails
     func fetchDailySummary(patientId: String, date: Date) async throws -> DailyNutritionSummary? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = dateFormatter.string(from: date)
+        let dateStr = Self.dateOnlyFormatter.string(from: date)
 
         logger.log("[NutritionService] Fetching daily summary for \(dateStr)", level: .diagnostic)
 
@@ -515,9 +526,7 @@ class NutritionService {
     /// - Returns: Macro distribution breakdown, or nil if no data
     /// - Throws: Database errors if the query fails
     func fetchMacroDistribution(patientId: String, date: Date) async throws -> MacroDistribution? {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = dateFormatter.string(from: date)
+        let dateStr = Self.dateOnlyFormatter.string(from: date)
 
         logger.log("[NutritionService] Fetching macro distribution for \(dateStr)", level: .diagnostic)
 

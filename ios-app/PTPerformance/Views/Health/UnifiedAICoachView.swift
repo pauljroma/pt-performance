@@ -191,7 +191,7 @@ struct UnifiedAICoachView: View {
                 Text("Proactive Insights")
                     .font(.headline)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
@@ -263,7 +263,7 @@ struct UnifiedAICoachView: View {
             Text("Ask me about...")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-                .padding(.leading, 4)
+                .padding(.leading, Spacing.xxs)
 
             FlowLayout(spacing: 8) {
                 ForEach(viewModel.suggestedQuestions.prefix(6), id: \.self) { question in
@@ -281,7 +281,7 @@ struct UnifiedAICoachView: View {
         HStack(spacing: 12) {
             TextField("Ask your AI coach...", text: $viewModel.inputMessage, axis: .vertical)
                 .textFieldStyle(.plain)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.md)
                 .padding(.vertical, 10)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.xl)
@@ -306,7 +306,7 @@ struct UnifiedAICoachView: View {
             .accessibilityHint(viewModel.inputMessage.isEmpty ? "Enter a message first" : "Sends your question to the AI coach")
         }
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.systemBackground))
     }
 }
@@ -339,8 +339,8 @@ struct AICoachChatBubble: View {
                 // Message Content
                 Text(message.content)
                     .font(.subheadline)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.sm)
                     .background(message.role == .user ? Color.modusCyan : Color.modusLightTeal)
                     .foregroundColor(message.role == .user ? .white : .primary)
                     .cornerRadius(CornerRadius.lg)
@@ -578,8 +578,8 @@ struct SuggestedQuestionChip: View {
         }) {
             Text(question)
                 .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .background(Color(.secondarySystemGroupedBackground))
                 .foregroundColor(.primary)
                 .cornerRadius(CornerRadius.lg)
@@ -634,8 +634,8 @@ struct CoachTypingIndicator: View {
                             .opacity(dotAnimations[index] ? 1 : 0.4)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
                 .background(Color.modusLightTeal)
                 .cornerRadius(CornerRadius.lg)
             }
@@ -644,7 +644,7 @@ struct CoachTypingIndicator: View {
             Text(Self.thinkingMessages[currentMessageIndex])
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .padding(.leading, 48) // Align with bubble
+                .padding(.leading, Spacing.xxl) // Align with bubble
                 .transition(.opacity)
         }
         .onAppear {

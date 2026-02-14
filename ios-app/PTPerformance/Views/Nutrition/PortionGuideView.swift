@@ -54,7 +54,7 @@ struct PortionGuideView: View {
         VStack(spacing: 12) {
             Image(systemName: "hand.raised.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
             Text("Hand-Based Portions")
@@ -68,7 +68,7 @@ struct PortionGuideView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.lg)
     }
 
@@ -336,7 +336,7 @@ struct PortionTipRow: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {

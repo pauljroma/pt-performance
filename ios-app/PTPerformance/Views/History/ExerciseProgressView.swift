@@ -260,7 +260,7 @@ struct ExerciseProgressView: View {
         HStack {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             Text("All Exercise Progress")
                 .font(.title3)
                 .fontWeight(.semibold)
@@ -399,7 +399,7 @@ class ExerciseProgressViewModel: ObservableObject {
     }
 
     var improvingExercisesCount: Int {
-        exercises.filter { $0.trend == .increasing }.count
+        exercises.filter { $0.trend == .improving }.count
     }
 
     var exercisesThisWeek: Int {
@@ -533,8 +533,8 @@ class ExerciseProgressViewModel: ObservableObject {
 
     private func determineTrend(from ratio: Double?) -> ExerciseTrend.TrendDirection {
         guard let ratio = ratio else { return .stable }
-        if ratio > 0.05 { return .increasing }
-        if ratio < -0.05 { return .decreasing }
+        if ratio > 0.05 { return .improving }
+        if ratio < -0.05 { return .declining }
         return .stable
     }
 
@@ -924,7 +924,7 @@ struct ExerciseProgressView_Previews: PreviewProvider {
                 exerciseId: "ex-bench",
                 exerciseName: "Bench Press",
                 dataPoints: [],
-                trend: .increasing,
+                trend: .improving,
                 averageWeight: 185.0,
                 totalVolume: 18500,
                 sessionCount: 15,
@@ -946,7 +946,7 @@ struct ExerciseProgressView_Previews: PreviewProvider {
                 exerciseId: "ex-squat",
                 exerciseName: "Back Squat",
                 dataPoints: [],
-                trend: .increasing,
+                trend: .improving,
                 averageWeight: 275.0,
                 totalVolume: 32000,
                 sessionCount: 18,
@@ -990,7 +990,7 @@ struct ExerciseProgressView_Previews: PreviewProvider {
                 exerciseId: "ex-ohp",
                 exerciseName: "Overhead Press",
                 dataPoints: [],
-                trend: .increasing,
+                trend: .improving,
                 averageWeight: 115.0,
                 totalVolume: 9800,
                 sessionCount: 10,
@@ -1016,7 +1016,7 @@ struct ExerciseProgressView_Previews: PreviewProvider {
             exerciseId: "ex-1",
             exerciseName: "Barbell Squat",
             dataPoints: sampleDataPoints,
-            trend: .increasing,
+            trend: .improving,
             averageWeight: 185.0,
             totalVolume: 24500,
             sessionCount: 12,

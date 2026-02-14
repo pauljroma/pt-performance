@@ -376,7 +376,7 @@ struct ReportMetricCard_Previews: PreviewProvider {
 
                 HStack(spacing: Spacing.sm) {
                     MiniMetricBadge(value: "+15%", trend: .improving, color: .green)
-                    MiniMetricBadge(value: "0%", trend: .stable, color: .blue)
+                    MiniMetricBadge(value: "0%", trend: .stable, color: .modusCyan)
                     MiniMetricBadge(value: "-5%", trend: .declining, color: .red)
                 }
             }

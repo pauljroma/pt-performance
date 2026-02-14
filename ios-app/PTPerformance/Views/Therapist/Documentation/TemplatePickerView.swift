@@ -155,15 +155,15 @@ struct TPSectionHeader: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(title)
                 .font(.headline)
 
             Spacer()
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 4)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.xxs)
         .background(Color(.systemBackground))
     }
 }
@@ -197,7 +197,7 @@ struct TemplateCard: View {
 
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .font(.title2)
                     }
                 }
@@ -213,7 +213,7 @@ struct TemplateCard: View {
                 // Content preview badges
                 HStack(spacing: 8) {
                     if template.subjectiveTemplate != nil {
-                        TemplateBadge(label: "S", color: .blue)
+                        TemplateBadge(label: "S", color: .modusCyan)
                     }
                     if template.objectiveTemplate != nil {
                         TemplateBadge(label: "O", color: .green)
@@ -235,7 +235,7 @@ struct TemplateCard: View {
                             Text("Preview")
                         }
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
                 }
 
@@ -255,7 +255,7 @@ struct TemplateCard: View {
             .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -311,7 +311,7 @@ private struct TPTemplatePreviewSheet: View {
                         PreviewSection(
                             title: "Subjective",
                             icon: "person.wave.2",
-                            color: .blue,
+                            color: .modusCyan,
                             content: subjective
                         )
                     }

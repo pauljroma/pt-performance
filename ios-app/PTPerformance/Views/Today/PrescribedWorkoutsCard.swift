@@ -36,7 +36,7 @@ struct PrescribedWorkoutsCard: View {
                         onViewAll()
                     }
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityLabel("View all prescribed workouts")
                 }
             }
@@ -61,7 +61,7 @@ struct PrescribedWorkoutsCard: View {
                         Text("+ \(prescriptions.count - 3) more prescriptions")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .padding(.leading, 4)
+                            .padding(.leading, Spacing.xxs)
                     }
                 }
             }
@@ -106,7 +106,7 @@ struct PrescribedWorkoutsCard: View {
 
             Spacer()
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Prescription Card
@@ -180,7 +180,7 @@ struct PrescribedWorkoutsCard: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(Color.purple.opacity(0.15))
                     .foregroundColor(.purple)
@@ -216,8 +216,8 @@ struct PrescribedWorkoutsCard: View {
                 .font(.caption)
                 .fontWeight(.semibold)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(color.opacity(0.15))
         .foregroundColor(color)
         .cornerRadius(CornerRadius.sm)

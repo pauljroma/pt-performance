@@ -107,16 +107,16 @@ struct MealLogView: View {
                             Text(type.displayName)
                         }
                         .font(.subheadline)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(viewModel.mealType == type ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, Spacing.xs)
+                        .background(viewModel.mealType == type ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(viewModel.mealType == type ? .white : .primary)
                         .cornerRadius(CornerRadius.xl)
                     }
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
         .background(Color(.systemBackground))
     }
@@ -151,7 +151,7 @@ struct MealLogView: View {
                 viewModel.showAddCustomFoodSheet = true
             } label: {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("Add custom food")
             .accessibilityHint("Opens the form to add a new custom food item")
@@ -215,7 +215,7 @@ struct MealLogView: View {
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .padding(.vertical, Spacing.lg)
             } else {
                 ForEach(viewModel.searchResults) { food in
                     FoodSearchRow(food: food) {
@@ -248,10 +248,10 @@ struct MealLogView: View {
                             }
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 12)
+                            .foregroundColor(.modusCyan)
+                            .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 6)
-                            .background(Color.blue.opacity(0.1))
+                            .background(Color.modusCyan.opacity(0.1))
                             .cornerRadius(CornerRadius.sm)
                         }
                         .accessibilityLabel("Copy all meals from yesterday")
@@ -296,7 +296,7 @@ struct MealLogView: View {
                     HStack {
                         Image(systemName: viewModel.mealType.icon)
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("Common for \(viewModel.mealType.displayName)")
                             .font(.headline)
                     }
@@ -368,7 +368,7 @@ struct MealLogView: View {
                                     .font(.caption)
                             }
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, Spacing.sm)
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                         }
@@ -414,16 +414,16 @@ struct MealLogView: View {
                         Text("Log Meal")
                     }
                     .font(.headline)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.sm)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
                 .disabled(viewModel.isSaving || !viewModel.canSave)
             }
             .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.bottom, Spacing.xs)
         }
         .background(Color(.systemBackground))
     }
@@ -451,7 +451,7 @@ struct SelectedFoodRow: View {
 
             Button(action: onEdit) {
                 Image(systemName: "pencil.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("Edit food")
             .accessibilityHint("Edit serving size for this food item")
@@ -463,7 +463,7 @@ struct SelectedFoodRow: View {
             .accessibilityLabel("Remove food")
             .accessibilityHint("Removes this food item from the meal")
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -503,12 +503,12 @@ struct FoodSearchRow: View {
             Button(action: onAdd) {
                 Image(systemName: "plus.circle.fill")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("Add food")
             .accessibilityHint("Adds this food to your meal")
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -563,7 +563,7 @@ struct EnhancedFoodSearchRow: View {
                     HStack(spacing: 2) {
                         Text("C:")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("\(Int(food.carbsG))g")
                             .font(.caption2)
                             .fontWeight(.medium)
@@ -595,7 +595,7 @@ struct EnhancedFoodSearchRow: View {
                     Image(systemName: isFavorite ? "star.fill" : "star")
                         .font(.caption)
                         .foregroundColor(isFavorite ? .yellow : .secondary)
-                        .padding(8)
+                        .padding(Spacing.xs)
                 }
                 .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
 
@@ -606,7 +606,7 @@ struct EnhancedFoodSearchRow: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Add food")
             }
@@ -659,10 +659,10 @@ struct YesterdayMealCard: View {
                 }
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.1))
+                .background(Color.modusCyan.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
             }
             .accessibilityLabel("Add this meal")

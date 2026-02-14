@@ -309,7 +309,7 @@ struct AchievementLeaderboardView: View {
                 Circle()
                     .fill(
                         entry.isCurrentUser
-                            ? LinearGradient(colors: [.blue, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom)
+                            ? LinearGradient(colors: [.modusCyan, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom)
                             : LinearGradient(colors: [Color(.systemGray4), Color(.systemGray5)], startPoint: .top, endPoint: .bottom)
                     )
                     .frame(width: entry.rank == 1 ? 70 : 55, height: entry.rank == 1 ? 70 : 55)
@@ -335,7 +335,7 @@ struct AchievementLeaderboardView: View {
             Text(entry.displayNameFormatted)
                 .font(.caption)
                 .fontWeight(entry.isCurrentUser ? .bold : .medium)
-                .foregroundColor(entry.isCurrentUser ? .blue : .primary)
+                .foregroundColor(entry.isCurrentUser ? .modusCyan : .primary)
                 .lineLimit(1)
 
             // Points
@@ -371,12 +371,12 @@ struct AchievementLeaderboardView: View {
             Text("#\(entry.rank)")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 50)
 
             // Avatar
             Circle()
-                .fill(LinearGradient(colors: [.blue, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom))
+                .fill(LinearGradient(colors: [.modusCyan, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom))
                 .frame(width: 45, height: 45)
                 .overlay(
                     Text(entry.avatarInitials)
@@ -415,10 +415,10 @@ struct AchievementLeaderboardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.modusCyan.opacity(0.1))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                        .stroke(Color.modusCyan.opacity(0.3), lineWidth: 1)
                 )
         )
         .accessibilityElement(children: .combine)
@@ -447,14 +447,14 @@ struct AchievementLeaderboardView: View {
             Text("#\(entry.rank)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .foregroundColor(entry.isCurrentUser ? .blue : .secondary)
+                .foregroundColor(entry.isCurrentUser ? .modusCyan : .secondary)
                 .frame(width: 40, alignment: .leading)
 
             // Avatar
             Circle()
                 .fill(
                     entry.isCurrentUser
-                        ? LinearGradient(colors: [.blue, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom)
+                        ? LinearGradient(colors: [.modusCyan, .blue.opacity(0.7)], startPoint: .top, endPoint: .bottom)
                         : LinearGradient(colors: [Color(.systemGray4), Color(.systemGray5)], startPoint: .top, endPoint: .bottom)
                 )
                 .frame(width: 36, height: 36)
@@ -470,7 +470,7 @@ struct AchievementLeaderboardView: View {
                 Text(entry.displayNameFormatted)
                     .font(.subheadline)
                     .fontWeight(entry.isCurrentUser ? .bold : .medium)
-                    .foregroundColor(entry.isCurrentUser ? .blue : .primary)
+                    .foregroundColor(entry.isCurrentUser ? .modusCyan : .primary)
 
                 Text("\(entry.achievementCount) achievements")
                     .font(.caption2)
@@ -493,7 +493,7 @@ struct AchievementLeaderboardView: View {
         .padding(.horizontal, Spacing.md)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.sm)
-                .fill(entry.isCurrentUser ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+                .fill(entry.isCurrentUser ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.displayNameFormatted), rank \(entry.rank), \(entry.totalPoints) points, \(entry.achievementCount) achievements")
@@ -635,7 +635,7 @@ struct LeaderboardSkeletonView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.modusCyan.opacity(0.1))
         )
     }
 

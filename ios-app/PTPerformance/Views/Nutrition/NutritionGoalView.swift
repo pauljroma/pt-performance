@@ -212,7 +212,7 @@ struct NutritionGoalView: View {
                 value: $viewModel.targetCarbs,
                 range: 50...500,
                 unit: "g",
-                color: .blue,
+                color: .modusCyan,
                 percent: viewModel.carbsPercent
             )
 
@@ -341,10 +341,10 @@ private struct GoalPresetCard: View {
             }
             .frame(width: 140)
             .padding()
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
             .cornerRadius(CornerRadius.md)
         }

@@ -74,7 +74,7 @@ struct ShoulderStrengthEntry: View {
                         Text("100")
                             .font(.caption)
                     }
-                    .tint(.blue)
+                    .tint(.modusCyan)
                 }
             } header: {
                 Text("IR Strength")
@@ -213,7 +213,7 @@ struct ShoulderStrengthEntry: View {
                                     .font(.caption)
                             }
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
                 } header: {
                     Text("Recommendations")

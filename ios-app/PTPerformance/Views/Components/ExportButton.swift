@@ -79,7 +79,7 @@ struct ExportButton: View {
                     .font(.subheadline)
                     .foregroundColor(.white)
             }
-            .padding(24)
+            .padding(Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.systemGray))

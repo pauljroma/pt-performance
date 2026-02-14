@@ -116,7 +116,7 @@ struct ComparePeriodView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Period 1")
                             .font(.subheadline.bold())
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
 
                         HStack {
                             DatePicker(
@@ -174,7 +174,7 @@ struct ComparePeriodView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isLoading)
                 }
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
             }
             .padding()
             .background(Color(.secondarySystemBackground))
@@ -217,7 +217,7 @@ struct ComparePeriodView: View {
                     title: "Period 1",
                     summary: comparison.range1Summary,
                     dateInterval: comparison.range1,
-                    color: .blue,
+                    color: .modusCyan,
                     metricType: metricType
                 )
 
@@ -350,7 +350,7 @@ struct ComparePeriodView: View {
             VStack(spacing: 8) {
                 CompareInsightCard(
                     icon: comparison.significantDifference ? "exclamationmark.circle.fill" : "info.circle.fill",
-                    color: comparison.significantDifference ? (comparison.improvement >= 0 ? .green : .orange) : .blue,
+                    color: comparison.significantDifference ? (comparison.improvement >= 0 ? .green : .orange) : .modusCyan,
                     message: comparison.comparisonInsight
                 )
 
@@ -450,9 +450,9 @@ private struct PresetChip: View {
         Button(action: action) {
             Text(preset.displayName)
                 .font(.caption)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.blue : Color(.tertiarySystemBackground))
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
+                .background(isSelected ? Color.modusCyan : Color(.tertiarySystemBackground))
                 .foregroundColor(isSelected ? .white : .primary)
                 .cornerRadius(CornerRadius.xl)
         }
@@ -530,7 +530,7 @@ private struct DifferenceRow: View {
 
             Text(String(format: "%.1f", value1))
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 60, alignment: .trailing)
 
             Image(systemName: "arrow.right")
@@ -548,7 +548,7 @@ private struct DifferenceRow: View {
                 .foregroundColor(abs(difference) < 0.5 ? .gray : (isImprovement ? .green : .red))
                 .frame(width: 50, alignment: .trailing)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

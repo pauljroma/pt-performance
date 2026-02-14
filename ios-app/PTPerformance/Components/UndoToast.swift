@@ -60,7 +60,7 @@ struct UndoToastView: View {
                         .font(.system(size: 14, weight: .semibold))
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.2))
                 .cornerRadius(CornerRadius.lg)
@@ -76,10 +76,10 @@ struct UndoToastView: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white.opacity(0.7))
             }
-            .padding(.leading, 4)
+            .padding(.leading, Spacing.xxs)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
         .background(
             ZStack {
                 // Background
@@ -137,8 +137,8 @@ struct UndoToastContainer: View {
                 ))
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.bottom, Spacing.xs)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: undoManager.undoStack.count)
     }
 }
@@ -155,7 +155,7 @@ struct UndoToastModifier: ViewModifier {
 
             if !undoManager.undoStack.isEmpty {
                 UndoToastContainer(undoManager: undoManager)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, Spacing.md)
             }
         }
     }

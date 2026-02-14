@@ -63,9 +63,9 @@ struct AddMealSheet: View {
                     } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             Text("Add Food Items")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                     }
                 } else {
@@ -101,7 +101,7 @@ struct AddMealSheet: View {
                     HStack {
                         MacroSummaryItem(value: totalCalories, label: "Calories", color: .orange)
                         MacroSummaryItem(value: Int(totalProtein), label: "Protein", unit: "g", color: .red)
-                        MacroSummaryItem(value: Int(totalCarbs), label: "Carbs", unit: "g", color: .blue)
+                        MacroSummaryItem(value: Int(totalCarbs), label: "Carbs", unit: "g", color: .modusCyan)
                         MacroSummaryItem(value: Int(totalFat), label: "Fat", unit: "g", color: .yellow)
                     }
                 }
@@ -295,7 +295,7 @@ struct FoodSelectionRow: View {
                     .font(.caption)
             }
             .buttonStyle(.plain)
-            .padding(.leading, 8)
+            .padding(.leading, Spacing.xs)
         }
     }
 }

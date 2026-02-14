@@ -117,13 +117,13 @@ class ReadinessDashboardViewModel: ObservableObject {
 
     /// Trend direction indicator based on recent data
     var trendDirection: TrendDirection {
-        guard chartData.count >= 2 else { return .neutral }
+        guard chartData.count >= 2 else { return .stable }
 
         // Compare most recent score to average of previous scores
         let recentScore = chartData.last?.score ?? 0
         let previousScores = chartData.dropLast().map { $0.score }
 
-        guard !previousScores.isEmpty else { return .neutral }
+        guard !previousScores.isEmpty else { return .stable }
 
         let previousAverage = previousScores.reduce(0, +) / Double(previousScores.count)
         let difference = recentScore - previousAverage
@@ -133,39 +133,12 @@ class ReadinessDashboardViewModel: ObservableObject {
         } else if difference < -5 {
             return .declining
         } else {
-            return .neutral
+            return .stable
         }
     }
 
-    enum TrendDirection {
-        case improving
-        case declining
-        case neutral
-
-        var icon: String {
-            switch self {
-            case .improving: return "arrow.up.right"
-            case .declining: return "arrow.down.right"
-            case .neutral: return "arrow.right"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .improving: return .green
-            case .declining: return .orange
-            case .neutral: return .gray
-            }
-        }
-
-        var description: String {
-            switch self {
-            case .improving: return "Improving"
-            case .declining: return "Declining"
-            case .neutral: return "Stable"
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 
     // MARK: - Initialization
 

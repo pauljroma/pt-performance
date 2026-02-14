@@ -239,7 +239,7 @@ struct FastingView: View {
         if percentage >= 90 {
             return LinearGradient(colors: [.modusTealAccent, .modusCyan], startPoint: .leading, endPoint: .trailing)
         } else if percentage >= 75 {
-            return LinearGradient(colors: [.modusCyan, .blue], startPoint: .leading, endPoint: .trailing)
+            return LinearGradient(colors: [.modusCyan, .modusCyan], startPoint: .leading, endPoint: .trailing)
         } else if percentage >= 60 {
             return LinearGradient(colors: [.orange, .yellow], startPoint: .leading, endPoint: .trailing)
         } else {
@@ -357,7 +357,7 @@ struct FastingView: View {
                 Text(recommendation.nutritionTiming.timingNotes)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.top, 4)
+                    .padding(.top, Spacing.xxs)
             }
         }
         .padding()
@@ -398,7 +398,7 @@ struct FastingView: View {
                     .trim(from: 0, to: viewModel.currentProgress)
                     .stroke(
                         LinearGradient(
-                            colors: [.green, .blue],
+                            colors: [.green, .modusCyan],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
@@ -431,7 +431,7 @@ struct FastingView: View {
             if viewModel.remainingHours > 0 {
                 Text("\(viewModel.remainingHours, specifier: "%.1f") hours remaining")
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             } else {
                 Text("Goal reached!")
                     .font(.subheadline)
@@ -496,7 +496,7 @@ struct FastingView: View {
                 GridItem(.flexible())
             ], spacing: 12) {
                 FastingStatCard(title: "Completed", value: "\(stats.completedFasts)", icon: "checkmark.circle.fill", color: .green)
-                FastingStatCard(title: "Average", value: String(format: "%.1fh", stats.averageHours), icon: "clock.fill", color: .blue)
+                FastingStatCard(title: "Average", value: String(format: "%.1fh", stats.averageHours), icon: "clock.fill", color: .modusCyan)
                 FastingStatCard(title: "Longest", value: String(format: "%.1fh", stats.longestFast), icon: "trophy.fill", color: .yellow)
                 FastingStatCard(title: "Current Streak", value: "\(stats.currentStreak)", icon: "flame.fill", color: .orange)
             }
@@ -619,7 +619,7 @@ struct FastingHistoryRow: View {
                     .accessibilityHidden(true)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(fastAccessibilityLabel)
     }

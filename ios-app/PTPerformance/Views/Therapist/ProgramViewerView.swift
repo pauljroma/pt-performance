@@ -45,7 +45,7 @@ struct ProgramViewerView: View {
             title: "No Program Assigned",
             message: "This patient doesn't have a rehabilitation program yet. Create a personalized program with phases, sessions, and exercises to guide their recovery.",
             icon: "doc.badge.plus",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Create Program",
                 icon: "plus.circle.fill",
@@ -110,7 +110,7 @@ struct ProgramHeaderView: View {
                     .fontWeight(.medium)
             }
             .foregroundColor(program.resolvedProgramType.color)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Spacing.xs)
             .padding(.vertical, 3)
             .background(program.resolvedProgramType.color.opacity(0.15))
             .cornerRadius(CornerRadius.sm)
@@ -123,7 +123,7 @@ struct ProgramHeaderView: View {
             .font(.subheadline)
             .foregroundColor(.secondary)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(program.name), \(program.resolvedProgramType.displayName) program, Target level \(program.targetLevel), \(program.durationWeeks) weeks")
     }
@@ -142,7 +142,7 @@ struct PhaseView: View {
                 Text(goals)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, Spacing.xxs)
             }
 
             // Sessions
@@ -170,14 +170,14 @@ struct SessionDisclosureView: View {
                 Text("No exercises")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
             } else {
                 VStack(spacing: 8) {
                     ForEach(exercises) { exercise in
                         ExerciseRowCompact(exercise: exercise)
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
             }
         } label: {
             HStack {
@@ -207,7 +207,7 @@ struct SessionDisclosureView: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 
@@ -224,7 +224,7 @@ struct ExerciseRowCompact: View {
                 .fontWeight(.bold)
                 .foregroundColor(.white)
                 .frame(width: 24, height: 24)
-                .background(Circle().fill(Color.blue))
+                .background(Circle().fill(Color.modusCyan))
                 .accessibilityHidden(true)
 
             // Exercise name
@@ -254,8 +254,8 @@ struct ExerciseRowCompact: View {
             }
             .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
+        .padding(.vertical, Spacing.xxs)
+        .padding(.horizontal, Spacing.xs)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)

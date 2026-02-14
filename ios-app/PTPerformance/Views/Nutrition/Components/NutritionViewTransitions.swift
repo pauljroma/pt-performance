@@ -21,7 +21,7 @@ struct NutritionViewPeriodToggle: View {
                 periodButton(period)
             }
         }
-        .padding(4)
+        .padding(Spacing.xxs)
         .background(
             RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.tertiarySystemGroupedBackground))

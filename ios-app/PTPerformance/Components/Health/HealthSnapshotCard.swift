@@ -38,45 +38,14 @@ struct HealthSnapshotData {
         }
     }
 
-    enum TrendDirection {
-        case up
-        case down
-        case stable
-        case unknown
-
-        var icon: String {
-            switch self {
-            case .up: return "arrow.up.right"
-            case .down: return "arrow.down.right"
-            case .stable: return "arrow.right"
-            case .unknown: return "minus"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .up: return .modusTealAccent
-            case .down: return .orange
-            case .stable: return .modusCyan
-            case .unknown: return .secondary
-            }
-        }
-
-        var accessibilityDescription: String {
-            switch self {
-            case .up: return "improving"
-            case .down: return "declining"
-            case .stable: return "stable"
-            case .unknown: return "unknown"
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 
     /// Empty snapshot for loading state
     static var empty: HealthSnapshotData {
         HealthSnapshotData(
             recoveryScore: nil,
-            recoveryTrend: .unknown,
+            recoveryTrend: .fluctuating,
             fastingStatus: FastingStatus(isFasting: false, hoursElapsed: nil, targetHours: nil, currentProtocol: nil),
             supplementsCompliance: SupplementsCompliance(taken: 0, total: 0),
             labAlerts: 0,
@@ -192,7 +161,7 @@ struct HealthSnapshotCard: View {
         .buttonStyle(.plain)
         .disabled(onRecoveryTap == nil)
         .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel("Recovery: \(data.recoveryScore.map { "\($0) percent, trend \(data.recoveryTrend.accessibilityDescription)" } ?? "no data")")
+        .accessibilityLabel("Recovery: \(data.recoveryScore.map { "\($0) percent, trend \(data.recoveryTrend.accessibilityLabel)" } ?? "no data")")
         .accessibilityHint(onRecoveryTap != nil ? "Double tap to view recovery details" : "")
         .accessibilityIdentifier("recoveryMetric")
     }
@@ -478,7 +447,7 @@ struct HealthSnapshotCard_Previews: PreviewProvider {
             HealthSnapshotCard(
                 data: HealthSnapshotData(
                     recoveryScore: 78,
-                    recoveryTrend: .up,
+                    recoveryTrend: .improving,
                     fastingStatus: HealthSnapshotData.FastingStatus(
                         isFasting: true,
                         hoursElapsed: 14.5,
@@ -522,7 +491,7 @@ struct HealthSnapshotCard_Previews: PreviewProvider {
             MiniHealthSnapshotCard(
                 data: HealthSnapshotData(
                     recoveryScore: 85,
-                    recoveryTrend: .up,
+                    recoveryTrend: .improving,
                     fastingStatus: HealthSnapshotData.FastingStatus(
                         isFasting: true,
                         hoursElapsed: 12,

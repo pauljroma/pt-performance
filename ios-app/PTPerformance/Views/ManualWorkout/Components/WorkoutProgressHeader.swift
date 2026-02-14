@@ -30,7 +30,7 @@ struct WorkoutProgressHeader: View {
 
                         HStack(spacing: 4) {
                             Image(systemName: "clock.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             Text(elapsedTimeDisplay)
                                 .font(.title2)
                                 .fontWeight(.semibold)
@@ -50,7 +50,7 @@ struct WorkoutProgressHeader: View {
                     Image(systemName: isTimerVisible ? "eye.fill" : "eye.slash.fill")
                         .font(.body)
                         .foregroundColor(.secondary)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }

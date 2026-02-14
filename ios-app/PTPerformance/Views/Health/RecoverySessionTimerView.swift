@@ -91,14 +91,14 @@ struct RecoverySessionTimerView: View {
                 LinearGradient(
                     colors: timerManager.isHotPhase
                         ? [Color.orange.opacity(0.3), Color.red.opacity(0.2)]
-                        : [Color.cyan.opacity(0.3), Color.blue.opacity(0.2)],
+                        : [Color.cyan.opacity(0.3), Color.modusCyan.opacity(0.2)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .animation(.easeInOut(duration: 1.0), value: timerManager.isHotPhase)
             } else if sessionType.isColdTherapy {
                 LinearGradient(
-                    colors: [Color.cyan.opacity(0.3), Color.blue.opacity(0.2)],
+                    colors: [Color.cyan.opacity(0.3), Color.modusCyan.opacity(0.2)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

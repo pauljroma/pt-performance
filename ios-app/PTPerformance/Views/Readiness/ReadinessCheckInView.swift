@@ -338,7 +338,7 @@ struct ReadinessCheckInView: View {
                 // Sleep slider
                 metricSlider(
                     icon: "bed.double.fill",
-                    iconColor: .blue,
+                    iconColor: .modusCyan,
                     label: "Sleep",
                     value: $viewModel.sleepHours,
                     range: 0...12,
@@ -555,8 +555,6 @@ struct ReadinessCheckInView: View {
         .shadow(color: viewModel.canSubmit ? Color.modusCyan.opacity(0.3) : Color.clear, radius: 8, y: 4)
     }
 
-
-
     // MARK: - Success Overlay
 
     private var successOverlay: some View {
@@ -576,7 +574,7 @@ struct ReadinessCheckInView: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(
                 RoundedRectangle(cornerRadius: 20)
                     .fill(Color(.systemBackground))

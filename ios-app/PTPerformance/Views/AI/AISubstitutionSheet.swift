@@ -159,7 +159,7 @@ struct AISubstitutionSheet: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                     }
@@ -247,15 +247,15 @@ struct ReasonButton: View {
                 Spacer()
                 if reason == value {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
             .padding()
-            .background(reason == value ? Color.blue.opacity(0.1) : Color(.secondarySystemBackground))
+            .background(reason == value ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemBackground))
             .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(reason == value ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(reason == value ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -298,10 +298,10 @@ struct SubstitutionCard: View {
                     HStack(spacing: 4) {
                         Image(systemName: "dumbbell")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text(equipment.joined(separator: ", "))
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .lineLimit(1)
                     }
                 } else {
@@ -351,8 +351,8 @@ struct SubstitutionCard: View {
                 .font(.subheadline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
+                .background(Color.modusCyan.opacity(0.1))
+                .foregroundColor(.modusCyan)
                 .cornerRadius(CornerRadius.sm)
             }
         }

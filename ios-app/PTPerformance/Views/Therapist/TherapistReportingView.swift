@@ -134,7 +134,7 @@ struct TherapistReportingView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
 
                 // Content based on selected mode
                 ZStack {
@@ -431,7 +431,7 @@ struct AdherenceRow: View {
                     .italic()
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private func adherenceColor(_ percentage: Double) -> Color {
@@ -452,7 +452,7 @@ struct RecentActivityRow: View {
         HStack(spacing: 12) {
             Image(systemName: "person.circle.fill")
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(patient.fullName)
                 .font(.subheadline)
@@ -470,7 +470,7 @@ struct RecentActivityRow: View {
                     .italic()
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private func relativeTimeString(from date: Date) -> String {
@@ -539,7 +539,7 @@ struct NeedsAttentionRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private func attentionBadge(text: String, color: Color) -> some View {
@@ -547,7 +547,7 @@ struct NeedsAttentionRow: View {
             .font(.caption2)
             .fontWeight(.semibold)
             .foregroundColor(color == .yellow ? .black : .white)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Spacing.xs)
             .padding(.vertical, 3)
             .background(color)
             .cornerRadius(CornerRadius.sm)

@@ -3,7 +3,7 @@ import SwiftUI
 struct FilterChip: View {
     let label: String
     var icon: String? = nil
-    var color: Color = .blue
+    var color: Color = .modusCyan
     let isSelected: Bool
     let action: () -> Void
 
@@ -21,7 +21,7 @@ struct FilterChip: View {
                     .font(.subheadline)
                     .fontWeight(isSelected ? .semibold : .regular)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)

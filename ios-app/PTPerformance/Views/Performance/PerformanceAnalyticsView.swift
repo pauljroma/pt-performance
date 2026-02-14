@@ -127,7 +127,7 @@ struct PerformanceAnalyticsView: View {
                         }
                     }
 
-                    if let error = loadError, (todayReadiness != nil || fatigueService.currentFatigue != nil) {
+                    if let error = loadError, todayReadiness != nil || fatigueService.currentFatigue != nil {
                         // Partial error - some data loaded but not all
                         VStack(spacing: Spacing.sm) {
                             HStack {

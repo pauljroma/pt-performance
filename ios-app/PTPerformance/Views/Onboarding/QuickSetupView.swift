@@ -25,7 +25,7 @@ struct QuickSetupView: View {
                 // Progress indicator (hidden on welcome and complete)
                 if viewModel.currentStep != .welcome && viewModel.currentStep != .complete {
                     QuickSetupProgressView(currentStep: viewModel.currentStep)
-                        .padding(.top, 8)
+                        .padding(.top, Spacing.xs)
                         .padding(.horizontal)
                 }
 
@@ -43,7 +43,7 @@ struct QuickSetupView: View {
                         .accessibilityLabel("Skip for Now")
                         .accessibilityHint("Skip setup and go straight to the app")
                         .padding(.trailing, 20)
-                        .padding(.top, 4)
+                        .padding(.top, Spacing.xxs)
                     }
                 }
 
@@ -76,7 +76,7 @@ struct QuickSetupView: View {
                         .font(.footnote)
                         .foregroundColor(.red)
                         .padding(.horizontal)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
                 }
 
                 // Navigation buttons
@@ -211,7 +211,7 @@ struct WelcomeStepView: View {
                     .font(.system(size: 56))
                     .foregroundColor(.modusCyan)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, Spacing.xs)
 
             // Title
             Text("Let's Personalize")
@@ -241,7 +241,7 @@ struct WelcomeStepView: View {
                     subtitle: "We'll track what matters to you"
                 )
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, Spacing.xl)
 
             Spacer()
         }
@@ -290,7 +290,7 @@ struct ModeSelectionStepView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 32)
+            .padding(.top, Spacing.xl)
 
             // Mode cards
             VStack(spacing: 16) {
@@ -394,7 +394,7 @@ struct GoalSelectionStepView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
 
             // Goal cards in a 2-column grid
             ScrollView {
@@ -427,9 +427,9 @@ struct GoalSelectionStepView: View {
                 Text("\(selectedGoals.count) of 3 selected")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.leading, 4)
+                    .padding(.leading, Spacing.xxs)
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, Spacing.xxs)
         }
         .padding()
     }
@@ -471,8 +471,8 @@ struct GoalVisualCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .padding(.horizontal, 12)
+            .padding(.vertical, Spacing.md)
+            .padding(.horizontal, Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
             .overlay(
@@ -518,7 +518,7 @@ struct CompleteStepView: View {
                     .font(.system(size: 64))
                     .foregroundColor(.modusTealAccent)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, Spacing.xs)
 
             // Title
             Text("You're All Set!")
@@ -557,7 +557,7 @@ struct CompleteStepView: View {
                     color: .modusDeepTeal
                 )
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, Spacing.xl)
 
             Spacer()
         }

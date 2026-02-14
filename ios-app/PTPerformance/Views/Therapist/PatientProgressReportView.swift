@@ -447,7 +447,7 @@ struct PatientProgressReportView: View {
                             .foregroundColor(selectedDateRange == range ? .white : .primary)
                             .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, Spacing.xs)
-                            .background(selectedDateRange == range ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                            .background(selectedDateRange == range ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("\(range.displayName)")
@@ -626,7 +626,7 @@ struct PatientProgressReportView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue)
+            .background(Color.modusCyan)
             .cornerRadius(CornerRadius.md)
         }
         .accessibilityLabel("Share Report")
@@ -670,7 +670,7 @@ struct ReportPatientHeader: View {
             // Avatar
             Circle()
                 .fill(LinearGradient(
-                    colors: [.blue, .purple],
+                    colors: [.modusCyan, .purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))

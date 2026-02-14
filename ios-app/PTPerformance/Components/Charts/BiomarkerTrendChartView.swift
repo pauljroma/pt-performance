@@ -92,7 +92,7 @@ struct BiomarkerTrendChartView: View {
                             .foregroundColor(statusColor(for: latest.status))
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .background(statusColor(for: latest.status).opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
@@ -169,7 +169,7 @@ struct BiomarkerTrendChartView: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Value", point.value)
                 )
-                .foregroundStyle(Color.modusCyan.gradient)
+                .foregroundStyle(Color.blue.gradient)
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 3))
 
@@ -189,7 +189,7 @@ struct BiomarkerTrendChartView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Color.modusCyan.opacity(0.3), Color.modusCyan.opacity(0.05)],
+                        colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     )

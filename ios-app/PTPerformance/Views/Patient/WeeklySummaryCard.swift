@@ -96,7 +96,7 @@ struct WeeklySummaryCard: View {
             HStack {
                 Image(systemName: "calendar.badge.clock")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Text("This Week")
                     .font(.headline)
@@ -121,7 +121,7 @@ struct WeeklySummaryCard: View {
                     // Sessions
                     WeeklySummaryStatItem(
                         icon: "figure.strengthtraining.traditional",
-                        iconColor: .blue,
+                        iconColor: .modusCyan,
                         title: "Sessions",
                         value: "\(data.sessionsCompleted)",
                         percentChange: data.sessionsPercentChange
@@ -171,7 +171,7 @@ struct WeeklySummaryCard: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Helper Functions
@@ -315,7 +315,7 @@ struct CompactWeeklySummaryCard: View {
             // Sessions
             CompactStatItem(
                 icon: "figure.strengthtraining.traditional",
-                iconColor: .blue,
+                iconColor: .modusCyan,
                 value: "\(data.sessionsCompleted)",
                 label: "sessions",
                 change: data.sessionsPercentChange

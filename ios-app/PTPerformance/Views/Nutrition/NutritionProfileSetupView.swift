@@ -163,7 +163,7 @@ struct NutritionProfileSetupView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
                                 Image(systemName: level.icon)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                     .frame(width: 24)
                                 Text(level.displayName)
                                     .foregroundColor(.primary)
@@ -177,7 +177,7 @@ struct NutritionProfileSetupView: View {
 
                         if viewModel.activityLevel == level {
                             Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                     }
                 }
@@ -218,7 +218,7 @@ struct NutritionProfileSetupView: View {
 
                         if viewModel.goal == goalType {
                             Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                     }
                 }
@@ -267,7 +267,7 @@ struct NutritionProfileSetupView: View {
                     }
                     .font(.caption)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             }
         } header: {
             Text("Athlete Type")
@@ -346,7 +346,7 @@ struct NutritionProfileSetupView: View {
                     )
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             Text("Calculated Targets")
         } footer: {
@@ -371,8 +371,8 @@ private struct MacroPreviewPill: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(color.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }

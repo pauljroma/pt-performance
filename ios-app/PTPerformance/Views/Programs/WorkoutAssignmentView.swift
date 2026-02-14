@@ -88,7 +88,7 @@ struct WorkoutAssignmentView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
         }
         .background(Color(.secondarySystemGroupedBackground))
     }
@@ -105,7 +105,7 @@ struct WorkoutAssignmentView: View {
                             .font(.caption)
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, Spacing.xs)
                             .background(Color(.tertiarySystemGroupedBackground))
                     }
                 }
@@ -161,10 +161,10 @@ struct WorkoutAssignmentView: View {
                     .font(.caption)
                     .textFieldStyle(PlainTextFieldStyle())
             }
-            .padding(8)
+            .padding(Spacing.xs)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
-            .padding(8)
+            .padding(Spacing.xs)
 
             Divider()
 
@@ -196,8 +196,8 @@ struct WorkoutAssignmentView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                 }
             }
         }
@@ -287,15 +287,15 @@ private struct WeekTabButton: View {
                         .padding(.vertical, 2)
                         .background(
                             Capsule()
-                                .fill(isSelected ? Color.blue : Color(.systemGray4))
+                                .fill(isSelected ? Color.modusCyan : Color(.systemGray4))
                         )
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.xs)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.blue : Color.clear)
+                    .fill(isSelected ? Color.modusCyan : Color.clear)
             )
             .foregroundColor(isSelected ? .white : .primary)
         }
@@ -341,11 +341,11 @@ private struct DaySlotView: View {
                 )
             }
             .buttonStyle(.plain)
-            .padding(4)
+            .padding(Spacing.xxs)
 
             Spacer()
         }
-        .padding(.top, 4)
+        .padding(.top, Spacing.xxs)
         .background(Color(.systemBackground))
         .overlay(
             Rectangle()
@@ -385,13 +385,13 @@ private struct AssignedWorkoutCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.modusCyan.opacity(0.1))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .strokeBorder(Color.blue.opacity(0.3), lineWidth: 1)
+                .strokeBorder(Color.modusCyan.opacity(0.3), lineWidth: 1)
         )
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xxs)
     }
 }
 
@@ -417,7 +417,7 @@ private struct DraggableTemplateRow: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .padding(8)
+            .padding(Spacing.xs)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 6)
@@ -461,7 +461,7 @@ private struct QuickWorkoutPickerSheet: View {
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
 
                 // List
                 List(filteredTemplates) { template in
@@ -484,7 +484,7 @@ private struct QuickWorkoutPickerSheet: View {
                             Spacer()
 
                             Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                     }
                     .buttonStyle(.plain)

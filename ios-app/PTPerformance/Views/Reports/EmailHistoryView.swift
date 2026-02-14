@@ -174,7 +174,7 @@ struct EmailHistoryView: View {
         Section {
             HStack {
                 Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Text("Filters active")
                     .font(.subheadline)
@@ -409,8 +409,8 @@ struct EmailHistoryRow: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.xs)
-            .background(Color.blue.opacity(0.1))
-            .foregroundColor(.blue)
+            .background(Color.modusCyan.opacity(0.1))
+            .foregroundColor(.modusCyan)
             .cornerRadius(CornerRadius.sm)
         }
         .disabled(isResending)
@@ -489,7 +489,7 @@ struct EmailHistoryFilterSheet: View {
 
                                 if filter.statusFilter == status {
                                     Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.modusCyan)
                                 }
                             }
                         }

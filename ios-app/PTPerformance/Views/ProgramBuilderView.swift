@@ -267,7 +267,7 @@ struct PhaseRowView: View {
                     .foregroundColor(.orange)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

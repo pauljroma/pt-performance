@@ -56,7 +56,7 @@ struct ExerciseExplanationView: View {
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
 
                 Text(exerciseName)
@@ -110,7 +110,7 @@ struct ExerciseExplanationView: View {
                 ExplanationSection(
                     title: "Why This Exercise?",
                     icon: "questionmark.circle.fill",
-                    iconColor: .blue,
+                    iconColor: .modusCyan,
                     content: explanation.whyIncluded
                 )
             }
@@ -271,7 +271,7 @@ struct ExerciseExplanationView: View {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: "figure.arms.open")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
 
                 Text("Muscles Targeted")
@@ -786,7 +786,7 @@ struct ExerciseExplanationView_Previews: PreviewProvider {
                         HStack(spacing: Spacing.xs) {
                             Image(systemName: "figure.arms.open")
                                 .font(.title3)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
 
                             Text("Muscles Targeted")
                                 .font(.headline)
@@ -828,7 +828,7 @@ struct ExerciseExplanationView_Previews: PreviewProvider {
                     ExplanationSection(
                         title: "Why This Exercise?",
                         icon: "questionmark.circle.fill",
-                        iconColor: .blue,
+                        iconColor: .modusCyan,
                         content: "The Romanian Deadlift is included in your program to strengthen your posterior chain, improve hip hinge mechanics, and build foundational strength for athletic performance."
                     )
 

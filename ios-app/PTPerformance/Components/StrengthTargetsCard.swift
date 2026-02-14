@@ -15,7 +15,7 @@ struct StrengthTargetsCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Strength Targets")
                     .font(.headline)
             }
@@ -31,7 +31,7 @@ struct StrengthTargetsCard: View {
                         Text("\(Int(rm)) lbs")
                             .font(.title2)
                             .fontWeight(.bold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
 
                     Divider()
@@ -71,7 +71,7 @@ struct StrengthTargetsCard: View {
                         .font(.callout)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
         }
         .padding()
@@ -133,7 +133,7 @@ struct TargetRow: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

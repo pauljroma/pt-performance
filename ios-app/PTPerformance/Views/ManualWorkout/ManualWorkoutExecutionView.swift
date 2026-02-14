@@ -1026,8 +1026,8 @@ struct ManualWorkoutExecutionView: View {
                 Text(adjustment.fatigueBand.displayName)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(adjustment.fatigueBand.color.opacity(0.2))
                     .foregroundColor(adjustment.fatigueBand.color)
                     .cornerRadius(CornerRadius.sm)
@@ -1169,8 +1169,8 @@ struct ManualWorkoutExecutionView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(12)
-        .background(isCurrent ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+        .padding(Spacing.sm)
+        .background(isCurrent ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(blockTypeEnum?.displayName ?? blockType) block, \(exercises.filter { viewModel.completedExerciseIds.contains($0.id) }.count) of \(exercises.count) completed")
@@ -1240,7 +1240,7 @@ struct ManualWorkoutExecutionView: View {
                     } else if isCurrent {
                         Image(systemName: "play.circle.fill")
                             .font(.title3)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .accessibilityHidden(true)
                     } else {
                         Image(systemName: "circle")
@@ -1290,9 +1290,9 @@ struct ManualWorkoutExecutionView: View {
                             .accessibilityHidden(true)
                     }
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 10)
-                .background(isCurrent ? Color.blue.opacity(0.08) : Color(.systemBackground))
+                .background(isCurrent ? Color.modusCyan.opacity(0.08) : Color(.systemBackground))
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(exerciseAccessibilityLabel(exercise: exercise, isCompleted: isCompleted, isSkipped: isSkipped, isCurrent: isCurrent))
@@ -1302,7 +1302,7 @@ struct ManualWorkoutExecutionView: View {
             if isExpanded && !isCompleted && !isSkipped {
                 VStack(spacing: 12) {
                     Divider()
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
 
                     // Quick complete button
                     Button {
@@ -1329,7 +1329,7 @@ struct ManualWorkoutExecutionView: View {
                         .foregroundColor(.green)
                         .cornerRadius(CornerRadius.sm)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .accessibilityLabel("Complete as prescribed")
                     .accessibilityHint("Logs this exercise with the prescribed sets and reps")
 
@@ -1345,11 +1345,11 @@ struct ManualWorkoutExecutionView: View {
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .background(Color.modusCyan.opacity(0.1))
+                        .foregroundColor(.modusCyan)
                         .cornerRadius(CornerRadius.sm)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .accessibilityLabel("Log with custom values")
                     .accessibilityHint("Opens detailed logging to enter actual sets, reps, and weight")
 
@@ -1375,7 +1375,7 @@ struct ManualWorkoutExecutionView: View {
                         .font(.caption)
                         .foregroundColor(.orange)
                     }
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Spacing.xs)
                     .accessibilityLabel("Skip exercise")
                     .accessibilityHint("Skips this exercise and marks it as not completed")
                 }
@@ -1386,7 +1386,7 @@ struct ManualWorkoutExecutionView: View {
             .cornerRadius(CornerRadius.sm)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isCurrent ? Color.blue.opacity(0.3) : Color(.separator).opacity(0.3), lineWidth: 1)
+                    .stroke(isCurrent ? Color.modusCyan.opacity(0.3) : Color(.separator).opacity(0.3), lineWidth: 1)
             )
         }
     }
@@ -1436,7 +1436,7 @@ struct ManualWorkoutExecutionView: View {
                     } label: {
                         Image(systemName: "info.circle")
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                     .accessibilityLabel("Exercise details")
                     .accessibilityHint("Shows video demonstration and technique cues")
@@ -1499,7 +1499,7 @@ struct ManualWorkoutExecutionView: View {
                         } label: {
                             Image(systemName: "questionmark.circle")
                                 .font(.subheadline)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                         .accessibilityLabel("Show gesture hints")
                     }
@@ -1518,7 +1518,7 @@ struct ManualWorkoutExecutionView: View {
                 Text("Tap reps: +1 | Long press: -1 | Swipe weight: +/-5")
                     .font(.caption2)
                     .foregroundColor(.secondary)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, Spacing.xxs)
 
                 // Gesture-enabled set rows
                 ForEach(0..<viewModel.actualSets, id: \.self) { index in
@@ -1571,7 +1571,7 @@ struct ManualWorkoutExecutionView: View {
                             }
 
                             Slider(value: $viewModel.rpe, in: 1...10, step: 1)
-                                .accentColor(rpeColor(Int(viewModel.rpe)))
+                                .tint(rpeColor(Int(viewModel.rpe)))
                                 .accessibilityLabel("Rate of perceived exertion")
                                 .accessibilityValue("\(Int(viewModel.rpe)) out of 10")
 
@@ -1601,7 +1601,7 @@ struct ManualWorkoutExecutionView: View {
                             }
 
                             Slider(value: $viewModel.painScore, in: 0...10, step: 1)
-                                .accentColor(painColor(Int(viewModel.painScore)))
+                                .tint(painColor(Int(viewModel.painScore)))
                                 .accessibilityLabel("Pain score")
                                 .accessibilityValue("\(Int(viewModel.painScore)) out of 10")
 
@@ -1622,7 +1622,7 @@ struct ManualWorkoutExecutionView: View {
                             }
                         }
                     }
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
                 },
                 label: {
                     HStack {
@@ -1739,7 +1739,7 @@ struct ManualWorkoutExecutionView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
@@ -1765,7 +1765,7 @@ struct ManualWorkoutExecutionView: View {
                     .font(.headline)
                     .foregroundColor(.white)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(Color(.systemGray3).opacity(0.9))
             .cornerRadius(CornerRadius.lg)
         }
@@ -1979,17 +1979,17 @@ struct ExerciseInfoSheet: View {
                             if let block = exercise.blockName {
                                 Label(block.capitalized, systemImage: "square.grid.2x2")
                                     .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
+                                    .padding(.horizontal, Spacing.xs)
+                                    .padding(.vertical, Spacing.xxs)
+                                    .background(Color.modusCyan.opacity(0.1))
+                                    .foregroundColor(.modusCyan)
                                     .cornerRadius(CornerRadius.sm)
                             }
                             if let category = template?.category {
                                 Label(category.capitalized, systemImage: "tag")
                                     .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, Spacing.xs)
+                                    .padding(.vertical, Spacing.xxs)
                                     .background(Color.purple.opacity(0.1))
                                     .foregroundColor(.purple)
                                     .cornerRadius(CornerRadius.sm)
@@ -1997,8 +1997,8 @@ struct ExerciseInfoSheet: View {
                             if let bodyRegion = template?.body_region {
                                 Label(bodyRegion.capitalized, systemImage: "figure.arms.open")
                                     .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, Spacing.xs)
+                                    .padding(.vertical, Spacing.xxs)
                                     .background(Color.green.opacity(0.1))
                                     .foregroundColor(.green)
                                     .cornerRadius(CornerRadius.sm)
@@ -2055,7 +2055,7 @@ struct ExerciseInfoSheet: View {
                                         Text("\(index + 1).")
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(.modusCyan)
                                             .frame(width: 24)
 
                                         Text(cue.cue)
@@ -2067,7 +2067,7 @@ struct ExerciseInfoSheet: View {
                                             Text(time)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
-                                                .padding(.horizontal, 8)
+                                                .padding(.horizontal, Spacing.xs)
                                                 .padding(.vertical, 2)
                                                 .background(Color(.tertiarySystemGroupedBackground))
                                                 .cornerRadius(CornerRadius.xs)
@@ -2228,8 +2228,8 @@ struct AISubstitutionSheetForManual: View {
                     if let block = exercise.blockName {
                         Label(block.capitalized, systemImage: "square.grid.2x2")
                             .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(Color.orange.opacity(0.1))
                             .foregroundColor(.orange)
                             .cornerRadius(CornerRadius.sm)
@@ -2301,7 +2301,7 @@ struct AISubstitutionSheetForManual: View {
                                                 if let category = alt.category {
                                                     Text(category.capitalized)
                                                         .font(.caption)
-                                                        .foregroundColor(.blue)
+                                                        .foregroundColor(.modusCyan)
                                                 }
                                                 if let region = alt.bodyRegion {
                                                     Text(region.capitalized)
@@ -2334,7 +2334,7 @@ struct AISubstitutionSheetForManual: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         }
-                        .padding(.top, 8)
+                        .padding(.top, Spacing.xs)
                     }
                 }
 
@@ -2479,11 +2479,11 @@ struct ExercisePickerForWorkout: View {
                             Text(category)
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
                                 .background(
                                     (selectedCategory == nil && category == "All") || selectedCategory == category
-                                    ? Color.blue
+                                    ? Color.modusCyan
                                     : Color(.tertiarySystemGroupedBackground)
                                 )
                                 .foregroundColor(
@@ -2496,7 +2496,7 @@ struct ExercisePickerForWorkout: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             Divider()
@@ -2529,7 +2529,7 @@ struct ExercisePickerForWorkout: View {
                                                 .foregroundColor(.white)
                                                 .padding(.horizontal, 6)
                                                 .padding(.vertical, 2)
-                                                .background(Color.blue.opacity(0.7))
+                                                .background(Color.modusCyan.opacity(0.7))
                                                 .cornerRadius(CornerRadius.xs)
                                         }
                                         if let region = template.bodyRegion {
@@ -2543,7 +2543,7 @@ struct ExercisePickerForWorkout: View {
                                 Image(systemName: "plus.circle.fill")
                                     .foregroundColor(.green)
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, Spacing.xxs)
                         }
                         .id(template.id)
                     }
@@ -2628,8 +2628,8 @@ struct ProgressionSuggestionCard: View {
                 Text(suggestion.progressionType.displayText)
                     .font(.caption)
                     .fontWeight(.medium)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(suggestion.progressionType.color.opacity(0.2))
                     .foregroundColor(suggestion.progressionType.color)
                     .cornerRadius(CornerRadius.sm)

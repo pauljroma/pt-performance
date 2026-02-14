@@ -70,7 +70,7 @@ struct TrendInsightsView: View {
                             insightSection(
                                 title: "Observations",
                                 icon: "info.circle.fill",
-                                color: .blue,
+                                color: .modusCyan,
                                 insights: viewModel.neutralInsights
                             )
                         }
@@ -280,7 +280,7 @@ private struct TrendRecommendationCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "arrow.right.circle.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .font(.system(size: 18))
 
             Text(recommendation)
@@ -290,7 +290,7 @@ private struct TrendRecommendationCard: View {
             Spacer()
         }
         .padding()
-        .background(Color.blue.opacity(0.08))
+        .background(Color.modusCyan.opacity(0.08))
         .cornerRadius(CornerRadius.md)
     }
 }

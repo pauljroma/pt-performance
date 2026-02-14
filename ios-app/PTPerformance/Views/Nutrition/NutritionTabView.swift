@@ -180,7 +180,7 @@ struct FoodLibraryView: View {
                     } label: {
                         Text("All")
                             .font(.caption)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 6)
                             .background(selectedCategory == nil ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(selectedCategory == nil ? .white : .primary)
@@ -194,7 +194,7 @@ struct FoodLibraryView: View {
                         } label: {
                             Text(category.displayName)
                                 .font(.caption)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
                                 .background(selectedCategory == category ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(selectedCategory == category ? .white : .primary)
@@ -203,7 +203,7 @@ struct FoodLibraryView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             // Results
@@ -345,7 +345,7 @@ struct FoodLibraryRow: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

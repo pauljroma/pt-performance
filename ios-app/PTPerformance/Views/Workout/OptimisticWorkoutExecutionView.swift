@@ -137,7 +137,7 @@ struct OptimisticWorkoutExecutionView: View {
             }
             .padding(.horizontal)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.systemBackground))
     }
 
@@ -248,7 +248,7 @@ struct OptimisticWorkoutExecutionView: View {
                         viewModel.updateRPE(Int(newValue))
                     }
                 ), in: 1...10, step: 1)
-                .tint(.blue)
+                .tint(.modusCyan)
                 .accessibilityLabel("RPE Effort level")
                 .accessibilityValue("\(state.rpe) out of 10")
                 .accessibilityHint("Adjust to rate your perceived effort from 1 easy to 10 max effort")

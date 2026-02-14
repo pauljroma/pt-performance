@@ -40,8 +40,8 @@ struct AddGoalSheet: View {
                                 if viewModel.goalDescription.isEmpty {
                                     Text("Describe your goal in detail...")
                                         .foregroundColor(.secondary)
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, Spacing.xxs)
+                                        .padding(.vertical, Spacing.xs)
                                         .allowsHitTesting(false)
                                 }
                             },

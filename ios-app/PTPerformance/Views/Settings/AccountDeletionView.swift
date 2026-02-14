@@ -74,14 +74,14 @@ struct AccountDeletionView: View {
                     .font(.subheadline)
                     .foregroundColor(DesignTokens.statusError)
                     .fontWeight(.medium)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
 
                 Text("30-Day Grace Period: You can cancel this request within 30 days by logging in.")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 

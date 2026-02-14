@@ -274,7 +274,7 @@ struct RTSPhaseNode: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
             }
         }
         .padding(.vertical, Spacing.xs)

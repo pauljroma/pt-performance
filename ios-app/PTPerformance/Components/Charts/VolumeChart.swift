@@ -73,7 +73,7 @@ struct VolumeChart: View {
                         Text(formatVolume(averageVolume))
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(.modusCyan)
+                            .foregroundColor(.blue)
 
                         Text("avg/week")
                             .font(.caption2)
@@ -126,7 +126,7 @@ struct VolumeChart: View {
                 Text(formatVolume(point.totalVolume))
                     .font(.title3)
                     .fontWeight(.bold)
-                    .foregroundColor(.modusCyan)
+                    .foregroundColor(.blue)
             }
 
             Divider()
@@ -195,7 +195,7 @@ struct VolumeChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Volume", point.totalVolume)
                 )
-                .foregroundStyle(Color.modusCyan.gradient)
+                .foregroundStyle(Color.blue.gradient)
                 .interpolationMethod(.catmullRom)
                 .lineStyle(StrokeStyle(lineWidth: 3))
 
@@ -204,7 +204,7 @@ struct VolumeChart: View {
                     x: .value("Date", point.date, unit: .day),
                     y: .value("Volume", point.totalVolume)
                 )
-                .foregroundStyle(selectedPoint?.id == point.id ? Color.modusDeepTeal : Color.modusCyan)
+                .foregroundStyle(selectedPoint?.id == point.id ? Color.modusDeepTeal : Color.blue)
                 .symbol(.circle)
                 .symbolSize(selectedPoint?.id == point.id ? 100 : 50)
 
@@ -215,7 +215,7 @@ struct VolumeChart: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Color.modusCyan.opacity(0.3), Color.modusCyan.opacity(0.05)],
+                        colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -252,7 +252,7 @@ struct VolumeChart: View {
                     .annotation(position: .top, alignment: .trailing) {
                         Text("Avg")
                             .font(.caption2)
-                            .padding(4)
+                            .padding(Spacing.xxs)
                             .background(Color.gray.opacity(0.2))
                             .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.gray)
@@ -271,7 +271,7 @@ struct VolumeChart: View {
                             Image(systemName: annotation.category.icon)
                                 .font(.caption2)
                                 .foregroundColor(annotation.category.color)
-                                .padding(4)
+                                .padding(Spacing.xxs)
                                 .background(annotation.category.color.opacity(0.15))
                                 .cornerRadius(CornerRadius.xs)
                         }
@@ -363,8 +363,8 @@ struct VolumeChart: View {
 
             Text(annotation.category.displayName)
                 .font(.caption2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(annotation.category.color.opacity(0.15))
                 .foregroundColor(annotation.category.color)
                 .cornerRadius(CornerRadius.xs)

@@ -283,7 +283,7 @@ struct AchievementUnlockedView: View {
         case .platinum:
             return [.white, Color(red: 0.9, green: 0.9, blue: 1.0), .gray]
         case .diamond:
-            return [.cyan, .blue, .white, Color(red: 0.5, green: 0.8, blue: 1.0)]
+            return [.cyan, .modusCyan, .white, Color(red: 0.5, green: 0.8, blue: 1.0)]
         default:
             return [achievement.tier.color]
         }

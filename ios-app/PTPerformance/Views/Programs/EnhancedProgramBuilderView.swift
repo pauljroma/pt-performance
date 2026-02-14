@@ -31,7 +31,7 @@ struct EnhancedProgramBuilderView: View {
                     // Progress indicator (hide on start, quickBuildPicker, templatePicker, and preview)
                     if viewModel.currentStep != .start && viewModel.currentStep != .quickBuildPicker && viewModel.currentStep != .templatePicker && viewModel.currentStep != .preview {
                         BuilderProgressIndicator(currentStep: viewModel.currentStep)
-                            .padding(.top, 8)
+                            .padding(.top, Spacing.xs)
                             .padding(.horizontal)
                     }
 
@@ -86,7 +86,7 @@ struct EnhancedProgramBuilderView: View {
                             .font(.footnote)
                             .foregroundColor(.red)
                             .padding(.horizontal)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, Spacing.xs)
                     }
 
                     // Navigation buttons
@@ -311,7 +311,7 @@ private struct StartStepView: View {
                     Image(systemName: "rectangle.stack.badge.plus")
                         .font(.system(size: 60))
                         .foregroundColor(.modusCyan)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
                         .accessibilityHidden(true)
 
                     Text("How would you like to build?")
@@ -323,7 +323,7 @@ private struct StartStepView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 // Mode cards
                 VStack(spacing: 16) {
@@ -419,7 +419,7 @@ private struct QuickBuildPickerStepView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 60))
                         .foregroundColor(.modusCyan)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
                         .accessibilityHidden(true)
 
                     Text("Quick Build Templates")
@@ -432,7 +432,7 @@ private struct QuickBuildPickerStepView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
-                .padding(.top, 24)
+                .padding(.top, Spacing.lg)
 
                 // Template cards grid
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 200), spacing: 16)], spacing: 16) {
@@ -586,7 +586,7 @@ private struct TemplatePickerStepView: View {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 60))
                     .foregroundColor(.modusCyan)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Spacing.xs)
 
                 Text("Choose a Template")
                     .font(.system(size: 28, weight: .bold))
@@ -597,8 +597,8 @@ private struct TemplatePickerStepView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
-            .padding(.top, 24)
-            .padding(.bottom, 16)
+            .padding(.top, Spacing.lg)
+            .padding(.bottom, Spacing.md)
 
             // Search bar
             HStack {
@@ -622,7 +622,7 @@ private struct TemplatePickerStepView: View {
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
             .padding(.horizontal, 20)
-            .padding(.bottom, 12)
+            .padding(.bottom, Spacing.sm)
 
             // Content
             if viewModel.isLoadingTemplates {
@@ -657,8 +657,8 @@ private struct TemplatePickerStepView: View {
                         }
                         .font(.headline)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
                         .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.sm)
                     }
@@ -790,7 +790,7 @@ private struct PatientStepView: View {
                     Image(systemName: "person.crop.circle.badge.plus")
                         .font(.system(size: 60))
                         .foregroundColor(.modusCyan)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
 
                     Text("Assign to Patient")
                         .font(.system(size: 28, weight: .bold))
@@ -801,7 +801,7 @@ private struct PatientStepView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
-                .padding(.top, 32)
+                .padding(.top, Spacing.xl)
 
                 // Selected patient or picker button
                 VStack(spacing: 16) {
@@ -918,7 +918,7 @@ private struct BasicsStepView: View {
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
-                .padding(.top, 24)
+                .padding(.top, Spacing.lg)
 
                 // Form fields
                 VStack(spacing: 16) {
@@ -1028,7 +1028,7 @@ private struct PhasesStepView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 24)
+                .padding(.top, Spacing.lg)
 
                 // Phases list
                 VStack(spacing: 12) {
@@ -1091,7 +1091,7 @@ private struct PhasesStepView: View {
 private struct EmptyPhasesCard: View {
     var body: some View {
         ProgramEmptyStateView.noPhases()
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
     }
@@ -1106,7 +1106,7 @@ private struct PhaseCard: View {
     let onDelete: () -> Void
 
     private var phaseColor: Color {
-        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+        let colors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
         return colors[(phaseNumber - 1) % colors.count]
     }
 
@@ -1189,7 +1189,7 @@ private struct WorkoutsStepView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 24)
+                .padding(.top, Spacing.lg)
 
                 // Phases with workout counts
                 if viewModel.phases.isEmpty {
@@ -1240,7 +1240,7 @@ private struct PhaseWorkoutCard: View {
     let onTap: () -> Void
 
     private var phaseColor: Color {
-        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+        let colors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
         return colors[(phaseNumber - 1) % colors.count]
     }
 
@@ -1316,7 +1316,7 @@ private struct PreviewStepView: View {
                     Image(systemName: "checkmark.circle")
                         .font(.system(size: 60))
                         .foregroundColor(.green)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
                         .accessibilityHidden(true)
 
                     Text("Review Your Program")
@@ -1328,7 +1328,7 @@ private struct PreviewStepView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 24)
+                .padding(.top, Spacing.lg)
 
                 // Program summary
                 VStack(spacing: 16) {

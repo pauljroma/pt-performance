@@ -159,7 +159,7 @@ struct GoalDetailView: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(goal.category.color.opacity(0.15))
             .foregroundColor(goal.category.color)
@@ -171,7 +171,7 @@ struct GoalDetailView: View {
                     .font(.caption)
                     .fontWeight(.bold)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .background(statusColor(for: goal.status).opacity(0.15))
                     .foregroundColor(statusColor(for: goal.status))
                     .clipShape(Capsule())
@@ -423,7 +423,7 @@ struct GoalDetailView: View {
                         .padding(.vertical, Spacing.sm)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.blue)
+                .tint(.modusCyan)
             }
 
             if goal.status == .completed {

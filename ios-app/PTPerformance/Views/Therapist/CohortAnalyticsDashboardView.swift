@@ -175,7 +175,7 @@ struct CohortAnalyticsDashboardView: View {
                         Text("View")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
                 .padding(Spacing.sm)
@@ -281,8 +281,8 @@ struct CohortAnalyticsDashboardView: View {
                     .fontWeight(selectedSection == section ? .semibold : .regular)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(selectedSection == section ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .padding(.vertical, Spacing.xs)
+            .background(selectedSection == section ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(selectedSection == section ? .white : .primary)
             .cornerRadius(CornerRadius.md)
         }
@@ -394,7 +394,7 @@ struct CohortAnalyticsDashboardView: View {
                         Image(systemName: viewModel.rankingSortAscending ? "chevron.up" : "chevron.down")
                             .font(.caption)
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
             }
             .padding(.horizontal)
@@ -695,8 +695,8 @@ struct CohortAnalyticsDashboardView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(ratingColor(program.outcomeRating).opacity(0.15))
                 .foregroundColor(ratingColor(program.outcomeRating))
                 .cornerRadius(CornerRadius.sm)
@@ -738,7 +738,7 @@ struct CohortAnalyticsDashboardView: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.subheadline)
@@ -787,7 +787,7 @@ struct CohortAnalyticsDashboardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 Task { await loadData() }
@@ -797,9 +797,9 @@ struct CohortAnalyticsDashboardView: View {
                     Text("Try Again")
                 }
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.blue)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -876,7 +876,7 @@ struct PatientComparisonDetailSheet: View {
                         }
                         .font(.subheadline)
                         .foregroundColor(statusColor)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
                         .background(statusColor.opacity(0.15))
                         .cornerRadius(CornerRadius.md)

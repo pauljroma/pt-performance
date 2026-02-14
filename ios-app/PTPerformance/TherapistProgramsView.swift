@@ -165,7 +165,7 @@ struct TherapistProgramsView: View {
                     } label: {
                         Label("Edit", systemImage: "pencil")
                     }
-                    .tint(.blue)
+                    .tint(.modusCyan)
 
                     Button {
                         // Open analytics
@@ -258,7 +258,7 @@ struct ProgramListCard: View {
             HStack {
                 Image(systemName: "person.circle.fill")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
                 Text(program.patientName)
                     .font(.subheadline)
@@ -295,7 +295,7 @@ struct ProgramListCard: View {
                             Text("Analytics")
                         }
                         .font(.caption2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }

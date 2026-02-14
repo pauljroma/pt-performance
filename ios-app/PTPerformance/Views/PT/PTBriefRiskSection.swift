@@ -122,7 +122,7 @@ struct PTBriefRiskSection: View {
         }
         .foregroundColor(.white)
         .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.red)
         .cornerRadius(CornerRadius.xs)
     }

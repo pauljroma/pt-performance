@@ -193,27 +193,8 @@ struct ExerciseTrend: Identifiable {
 
     var id: String { exerciseId }
 
-    enum TrendDirection {
-        case increasing
-        case decreasing
-        case stable
-
-        var icon: String {
-            switch self {
-            case .increasing: return "arrow.up.right"
-            case .decreasing: return "arrow.down.right"
-            case .stable: return "arrow.right"
-            }
-        }
-
-        var color: String {
-            switch self {
-            case .increasing: return "green"
-            case .decreasing: return "red"
-            case .stable: return "gray"
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 }
 
 /// Individual data point for exercise trend

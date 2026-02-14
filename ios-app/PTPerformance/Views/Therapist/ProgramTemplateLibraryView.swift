@@ -93,7 +93,7 @@ struct ProgramTemplateLibraryView: View {
             title: "No Program Templates",
             message: "Save your programs as templates to reuse them with multiple patients. Templates help you create consistent, evidence-based programs efficiently.",
             icon: "doc.on.doc.fill",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: nil
         )
     }
@@ -195,7 +195,7 @@ struct TemplateRowView: View {
                     if template.isShared {
                         Image(systemName: "person.2.fill")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .accessibilityHidden(true)
                     }
                 }
@@ -219,7 +219,7 @@ struct TemplateRowView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -241,7 +241,7 @@ struct TemplateRowView: View {
                     systemImage: template.isShared ? "person.fill.xmark" : "person.2.fill"
                 )
             }
-            .tint(template.isShared ? .orange : .blue)
+            .tint(template.isShared ? .orange : .modusCyan)
         }
         .contextMenu {
             Button {

@@ -41,6 +41,25 @@ enum TimelineServiceError: Error, LocalizedError {
 @MainActor
 final class TimelineService: ObservableObject {
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        return f
+    }()
+
     // MARK: - Singleton
 
     static let shared = TimelineService()
@@ -236,10 +255,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch readiness/check-in events
     private func fetchReadinessEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.dateOnlyFormatter.string(from: dateRange.start)
+        let endDate = Self.dateOnlyFormatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -258,16 +275,8 @@ final class TimelineService: ObservableObject {
 
                 // Try multiple date formats
                 let formatters: [DateFormatter] = [
-                    {
-                        let f = DateFormatter()
-                        f.dateFormat = "yyyy-MM-dd"
-                        return f
-                    }(),
-                    {
-                        let f = DateFormatter()
-                        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-                        return f
-                    }()
+                    TimelineService.dateOnlyFormatter,
+                    TimelineService.dateTimeFormatter
                 ]
 
                 for formatter in formatters {
@@ -308,9 +317,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch workout/exercise events
     private func fetchWorkoutEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = ISO8601DateFormatter()
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.iso8601Formatter.string(from: dateRange.start)
+        let endDate = Self.iso8601Formatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -340,7 +348,7 @@ final class TimelineService: ObservableObject {
             for (workoutId, exercises) in sessionGroups {
                 guard let firstExercise = exercises.first,
                       let loggedAtString = firstExercise["logged_at"] as? String,
-                      let loggedAt = ISO8601DateFormatter().date(from: loggedAtString) else {
+                      let loggedAt = Self.iso8601Formatter.date(from: loggedAtString) else {
                     continue
                 }
 
@@ -379,9 +387,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch sleep events (from HealthKit sync table)
     private func fetchSleepEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = ISO8601DateFormatter()
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.iso8601Formatter.string(from: dateRange.start)
+        let endDate = Self.iso8601Formatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -402,7 +409,7 @@ final class TimelineService: ObservableObject {
                 guard let idString = record["id"] as? String,
                       let id = UUID(uuidString: idString),
                       let recordedAtString = record["recorded_at"] as? String,
-                      let recordedAt = ISO8601DateFormatter().date(from: recordedAtString),
+                      let recordedAt = Self.iso8601Formatter.date(from: recordedAtString),
                       let data = record["data"] as? [String: Any] else {
                     return nil
                 }
@@ -436,9 +443,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch recovery events
     private func fetchRecoveryEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = ISO8601DateFormatter()
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.iso8601Formatter.string(from: dateRange.start)
+        let endDate = Self.iso8601Formatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -459,7 +465,7 @@ final class TimelineService: ObservableObject {
                 guard let idString = record["id"] as? String,
                       let id = UUID(uuidString: idString),
                       let recordedAtString = record["recorded_at"] as? String,
-                      let recordedAt = ISO8601DateFormatter().date(from: recordedAtString),
+                      let recordedAt = Self.iso8601Formatter.date(from: recordedAtString),
                       let data = record["data"] as? [String: Any] else {
                     return nil
                 }
@@ -491,9 +497,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch vital events (heart rate, HRV, etc.)
     private func fetchVitalEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = ISO8601DateFormatter()
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.iso8601Formatter.string(from: dateRange.start)
+        let endDate = Self.iso8601Formatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -514,7 +519,7 @@ final class TimelineService: ObservableObject {
                 guard let idString = record["id"] as? String,
                       let id = UUID(uuidString: idString),
                       let recordedAtString = record["recorded_at"] as? String,
-                      let recordedAt = ISO8601DateFormatter().date(from: recordedAtString),
+                      let recordedAt = Self.iso8601Formatter.date(from: recordedAtString),
                       let data = record["data"] as? [String: Any] else {
                     return nil
                 }
@@ -546,9 +551,8 @@ final class TimelineService: ObservableObject {
 
     /// Fetch note events
     private func fetchNoteEvents(patientId: UUID, dateRange: DateInterval) async throws -> [TimelineEvent] {
-        let dateFormatter = ISO8601DateFormatter()
-        let startDate = dateFormatter.string(from: dateRange.start)
-        let endDate = dateFormatter.string(from: dateRange.end)
+        let startDate = Self.iso8601Formatter.string(from: dateRange.start)
+        let endDate = Self.iso8601Formatter.string(from: dateRange.end)
 
         do {
             let response = try await client.client
@@ -568,7 +572,7 @@ final class TimelineService: ObservableObject {
                 guard let idString = record["id"] as? String,
                       let id = UUID(uuidString: idString),
                       let createdAtString = record["created_at"] as? String,
-                      let createdAt = ISO8601DateFormatter().date(from: createdAtString) else {
+                      let createdAt = Self.iso8601Formatter.date(from: createdAtString) else {
                     return nil
                 }
 

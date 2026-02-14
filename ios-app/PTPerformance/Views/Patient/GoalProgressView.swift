@@ -240,7 +240,7 @@ struct MilestoneMarker: View {
             .frame(width: 8, height: 8)
             .overlay(
                 Circle()
-                    .stroke(Color.white, lineWidth: 1)
+                    .stroke(Color(.systemBackground), lineWidth: 1)
             )
             .offset(x: x, y: y)
             .scaleEffect(isAchieved ? 1.0 : 0.8)
@@ -294,7 +294,7 @@ struct CelebrationOverlay: View {
             ConfettiParticle(
                 x: CGFloat.random(in: -size/2...size/2),
                 y: CGFloat.random(in: -size/2...size/2),
-                color: [Color.green, Color.yellow, Color.blue, Color.orange, Color.purple].randomElement() ?? .modusCyan,
+                color: [Color.green, Color.yellow, Color.modusCyan, Color.orange, Color.purple].randomElement() ?? .modusCyan,
                 size: CGFloat.random(in: 4...8),
                 delay: Double.random(in: 0...0.5)
             )
@@ -605,7 +605,7 @@ struct DeadlineCountdownView: View {
         return HStack(spacing: Spacing.sm) {
             Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar.badge.clock")
                 .font(.title2)
-                .foregroundColor(isOverdue ? .red : .blue)
+                .foregroundColor(isOverdue ? .red : .modusCyan)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(isOverdue ? "Overdue" : "Time Remaining")
@@ -830,8 +830,8 @@ struct DeadlineBadge: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
-        .background(days >= 0 ? Color.blue.opacity(0.15) : Color.red.opacity(0.15))
-        .foregroundColor(days >= 0 ? .blue : .red)
+        .background(days >= 0 ? Color.modusCyan.opacity(0.15) : Color.red.opacity(0.15))
+        .foregroundColor(days >= 0 ? .modusCyan : .red)
         .clipShape(Capsule())
     }
 }

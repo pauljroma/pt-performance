@@ -129,7 +129,7 @@ struct VideoSettingsView: View {
                     DataUsageRow(quality: .hd, label: "HD (720p)")
                     DataUsageRow(quality: .fhd, label: "Full HD (1080p)")
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             } header: {
                 Text("Data Usage")
             } footer: {
@@ -168,12 +168,12 @@ struct VideoSettingsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.xs)
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(CornerRadius.sm)
                 .shadow(radius: 2)
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
             }
         }
         .alert("Error", isPresented: $showErrorAlert) {

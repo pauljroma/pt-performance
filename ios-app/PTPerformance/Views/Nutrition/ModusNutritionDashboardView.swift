@@ -120,7 +120,7 @@ struct ModusNutritionDashboardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 showProfileSetup = true
@@ -133,7 +133,7 @@ struct ModusNutritionDashboardView: View {
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, Spacing.xl)
         }
         .padding()
     }
@@ -176,17 +176,17 @@ struct ModusNutritionDashboardView: View {
                             Text(profile.athleteType)
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(viewModel.athleteGuidelines?.themeColor.opacity(0.2) ?? Color.blue.opacity(0.2))
-                                .foregroundColor(viewModel.athleteGuidelines?.themeColor ?? .blue)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
+                                .background(viewModel.athleteGuidelines?.themeColor.opacity(0.2) ?? Color.modusCyan.opacity(0.2))
+                                .foregroundColor(viewModel.athleteGuidelines?.themeColor ?? .modusCyan)
                                 .cornerRadius(CornerRadius.sm)
 
                             Text(profile.goal.displayName)
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(profile.goal.color.opacity(0.2))
                                 .foregroundColor(profile.goal.color)
                                 .cornerRadius(CornerRadius.sm)
@@ -203,7 +203,7 @@ struct ModusNutritionDashboardView: View {
                 } label: {
                     Image(systemName: "pencil.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Edit nutrition profile")
             }
@@ -446,7 +446,7 @@ private struct MacroTargetPill: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(color.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }

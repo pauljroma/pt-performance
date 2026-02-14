@@ -23,7 +23,7 @@ struct EnhancedFoodSearchBar: View {
             // Search icon with animation
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(isFocused ? .blue : .secondary)
+                .foregroundColor(isFocused ? .modusCyan : .secondary)
                 .animation(.easeInOut(duration: 0.2), value: isFocused)
 
             // Text field
@@ -68,7 +68,7 @@ struct EnhancedFoodSearchBar: View {
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 22))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("Add custom food")
             .accessibilityHint("Opens form to add a new custom food")
@@ -80,7 +80,7 @@ struct EnhancedFoodSearchBar: View {
                 .fill(Color(.secondarySystemBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .strokeBorder(isFocused ? Color.blue.opacity(0.5) : Color.clear, lineWidth: 2)
+                        .strokeBorder(isFocused ? Color.modusCyan.opacity(0.5) : Color.clear, lineWidth: 2)
                 )
         )
         .animation(.easeInOut(duration: 0.2), value: isFocused)
@@ -113,12 +113,12 @@ struct EnhancedSelectedFoodRow: View {
                     Text("\(item.servings, specifier: "%.1f") serving")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 8)
+                        .foregroundColor(.modusCyan)
+                        .padding(.horizontal, Spacing.xs)
                         .padding(.vertical, 3)
                         .background(
                             Capsule()
-                                .fill(Color.blue.opacity(0.15))
+                                .fill(Color.modusCyan.opacity(0.15))
                         )
 
                     Text("•")
@@ -140,11 +140,11 @@ struct EnhancedSelectedFoodRow: View {
             } label: {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 16))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .padding(Spacing.xs)
                     .background(
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.modusCyan.opacity(0.1))
                     )
             }
             .accessibilityLabel("Edit serving size")
@@ -207,7 +207,7 @@ struct EnhancedMealSummaryBar: View {
 
                     HStack(spacing: Spacing.sm) {
                         MacroSummaryPill(value: Int(totalProtein), label: "P", color: .red)
-                        MacroSummaryPill(value: Int(totalCarbs), label: "C", color: .blue)
+                        MacroSummaryPill(value: Int(totalCarbs), label: "C", color: .modusCyan)
                         MacroSummaryPill(value: Int(totalFat), label: "F", color: .yellow)
                     }
                 }
@@ -236,7 +236,7 @@ struct EnhancedMealSummaryBar: View {
                     .padding(.vertical, Spacing.sm)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .fill(canSave ? Color.blue : Color.gray)
+                            .fill(canSave ? Color.modusCyan : Color.gray)
                     )
                 }
                 .disabled(isSaving || !canSave)
@@ -331,7 +331,7 @@ struct EnhancedCategoryChip: View {
             .padding(.vertical, Spacing.xs)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                    .fill(isSelected ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
             )
             .foregroundColor(isSelected ? .white : .primary)
         }

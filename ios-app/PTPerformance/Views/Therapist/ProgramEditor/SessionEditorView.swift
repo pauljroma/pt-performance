@@ -63,7 +63,7 @@ struct SessionEditorDetailView: View {
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
-                                .padding(.vertical, 24)
+                                .padding(.vertical, Spacing.lg)
                                 Spacer()
                             }
                         } else {
@@ -156,7 +156,7 @@ struct SessionExerciseRow: View {
                 if exercise.exercise_templates?.hasVideo == true {
                     Image(systemName: "play.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -222,7 +222,7 @@ struct SessionExerciseRow: View {
                     .italic()
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

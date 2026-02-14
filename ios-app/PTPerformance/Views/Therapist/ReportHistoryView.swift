@@ -137,7 +137,7 @@ struct ReportHistoryView: View {
             HStack(spacing: Spacing.sm) {
                 Circle()
                     .fill(LinearGradient(
-                        colors: [.blue, .purple],
+                        colors: [.modusCyan, .purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))
@@ -295,7 +295,7 @@ struct ReportHistoryView: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.md)
                 }
                 .padding(.horizontal)
@@ -373,7 +373,7 @@ struct ReportHistoryRow: View {
                 onToggleCompare()
             } label: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
             }
             .buttonStyle(.plain)
 

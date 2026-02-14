@@ -90,7 +90,7 @@ struct TemplateDetailView: View {
                         .fontWeight(.medium)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.15))
+                        .background(Color.modusCyan.opacity(0.15))
                         .cornerRadius(CornerRadius.xs)
                 }
 
@@ -193,7 +193,7 @@ struct TemplateDetailView: View {
                     ForEach(template.tags, id: \.self) { tag in
                         Text(tag)
                             .font(.subheadline)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 6)
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.sm)
@@ -275,7 +275,7 @@ struct StatisticBox: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.title3)
@@ -307,7 +307,7 @@ struct PhaseDetailCard: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(width: 32, height: 32)
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .clipShape(Circle())
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -409,7 +409,7 @@ struct SessionDetailRow: View {
                         Text(session.exercises[index].setsRepsDisplay)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
 
@@ -420,20 +420,20 @@ struct SessionDetailRow: View {
                         .padding(.leading, 28)
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, Spacing.xxs)
 
             if let notes = session.notes {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: "info.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     Text(notes)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(8)
-                .background(Color.blue.opacity(0.05))
+                .padding(Spacing.xs)
+                .background(Color.modusCyan.opacity(0.05))
                 .cornerRadius(CornerRadius.sm)
             }
         }

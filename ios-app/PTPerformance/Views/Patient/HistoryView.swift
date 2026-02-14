@@ -472,7 +472,7 @@ struct WorkoutHistoryRow: View {
             // Type indicator icon
             Image(systemName: workout.isManual ? "figure.strengthtraining.traditional" : "list.clipboard")
                 .font(.title2)
-                .foregroundColor(workout.isManual ? .orange : .blue)
+                .foregroundColor(workout.isManual ? .orange : .modusCyan)
                 .frame(width: 40)
                 .accessibilityHidden(true)
 
@@ -706,7 +706,7 @@ struct EmptyHistoryView: View {
             title: "No History Yet",
             message: "Complete your first session to start tracking your progress and recovery journey. Your pain trends, adherence, and workout history will appear here.",
             icon: "clock.arrow.circlepath",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: onStartSession.map { action in
                 EmptyStateView.EmptyStateAction(
                     title: "Start First Session",

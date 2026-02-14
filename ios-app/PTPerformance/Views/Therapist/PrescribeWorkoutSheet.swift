@@ -85,7 +85,7 @@ struct PrescribeWorkoutSheet: View {
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             } header: {
                 Text("Patient")
             }
@@ -98,7 +98,7 @@ struct PrescribeWorkoutSheet: View {
                         ProgressView("Loading templates...")
                         Spacer()
                     }
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
                 } else if viewModel.filteredTemplates.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "doc.badge.plus")
@@ -121,7 +121,7 @@ struct PrescribeWorkoutSheet: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
                 } else {
                     // Search bar
                     HStack {
@@ -138,7 +138,7 @@ struct PrescribeWorkoutSheet: View {
                             }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
 
                     ForEach(viewModel.filteredTemplates) { template in
                         PrescriptionTemplateRow(
@@ -225,7 +225,7 @@ struct PrescribeWorkoutSheet: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
             }
         }
@@ -268,12 +268,12 @@ struct PrescribeWorkoutSheet: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal)
-            .padding(.bottom, 24)
+            .padding(.bottom, Spacing.lg)
         }
     }
 
@@ -281,7 +281,7 @@ struct PrescribeWorkoutSheet: View {
 
     private var avatarGradient: LinearGradient {
         LinearGradient(
-            colors: [.blue, .purple],
+            colors: [.modusCyan, .purple],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -343,7 +343,7 @@ private struct PrescriptionTemplateRow: View {
                 // Selection indicator
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? .modusCyan : .gray)
 
                 // Template info
                 VStack(alignment: .leading, spacing: 4) {

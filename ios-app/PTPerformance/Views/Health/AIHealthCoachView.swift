@@ -269,7 +269,7 @@ struct QuickQuestionButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Spacing.xs)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
             .scaleEffect(isPressed ? 0.96 : 1.0)
@@ -355,7 +355,7 @@ struct HealthCoachTypingIndicator: View {
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
 
@@ -412,7 +412,7 @@ struct TypingIndicator: View {
             }
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.lg)
         .onAppear {

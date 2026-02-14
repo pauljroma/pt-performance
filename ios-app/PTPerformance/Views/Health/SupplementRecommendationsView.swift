@@ -97,7 +97,7 @@ struct SupplementRecommendationsView: View {
                 }
                 .disabled(viewModel.selectedGoals.isEmpty)
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
                 .accessibilityLabel("Get AI recommendations")
                 .accessibilityHint(viewModel.selectedGoals.isEmpty ? "Select at least one goal first" : "Analyzes your data and generates personalized supplement recommendations")
 
@@ -127,7 +127,7 @@ struct SupplementRecommendationsView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, Spacing.xl)
             }
         }
         .accessibilityElement(children: .combine)
@@ -177,8 +177,8 @@ struct SupplementRecommendationsView: View {
                 if response.cached {
                     Text("Cached")
                         .font(.caption2)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(CornerRadius.xs)
                 }
@@ -249,10 +249,10 @@ struct SupplementRecommendationsView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             }
         }
         .padding()
@@ -277,7 +277,7 @@ struct SupplementRecommendationsView: View {
             // Optional
             let optional = recommendations.filter { $0.priority == .optional }
             if !optional.isEmpty {
-                priorityGroup(title: "Optional", icon: "plus.circle.fill", color: .blue, recommendations: optional)
+                priorityGroup(title: "Optional", icon: "plus.circle.fill", color: .modusCyan, recommendations: optional)
             }
         }
     }
@@ -364,7 +364,7 @@ struct SupplementRecommendationsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
                 Text("Disclaimer")
                     .font(.caption)
@@ -431,7 +431,7 @@ struct GoalSelectionCard: View {
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
             .overlay(
@@ -508,8 +508,8 @@ struct SupplementRecommendationCard: View {
                         ForEach(recommendation.goalAlignment, id: \.self) { goal in
                             Text(goal.capitalized)
                                 .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(Color.modusCyan.opacity(0.2))
                                 .foregroundColor(.modusCyan)
                                 .cornerRadius(CornerRadius.sm)
@@ -573,7 +573,7 @@ struct SupplementRecommendationCard: View {
                                 .font(.caption)
                                 .fontWeight(.medium)
                         }
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
                         .background(Color.modusCyan)
                         .foregroundColor(.white)
@@ -590,7 +590,7 @@ struct SupplementRecommendationCard: View {
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(Color.modusLightTeal)
                     .foregroundColor(.modusCyan)

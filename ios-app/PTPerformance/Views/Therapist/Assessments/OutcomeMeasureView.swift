@@ -271,7 +271,7 @@ struct OutcomeMeasureView: View {
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.green)
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.green.opacity(0.1))
@@ -301,7 +301,7 @@ struct OutcomeMeasureView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(viewModel.canSubmit ? Color.blue : Color.gray)
+                    .background(viewModel.canSubmit ? Color.modusCyan : Color.gray)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
@@ -393,12 +393,12 @@ struct OutcomeMeasureView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color(.systemBackground))
             )
-            .padding(32)
+            .padding(Spacing.xl)
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
@@ -423,10 +423,10 @@ private struct QuestionCard: View {
                 VStack(spacing: 12) {
                     Text("Q\(questionNumber)")
                         .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.blue.opacity(0.2)))
-                        .foregroundColor(.blue)
+                        .background(Capsule().fill(Color.modusCyan.opacity(0.2)))
+                        .foregroundColor(.modusCyan)
 
                     Text(question.text)
                         .font(.title3.weight(.medium))
@@ -448,7 +448,7 @@ private struct QuestionCard: View {
 
                 Spacer()
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
         }
     }
 }
@@ -471,7 +471,7 @@ private struct AnswerOptionButton: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 } else {
                     Image(systemName: "circle")
                         .foregroundColor(.secondary)
@@ -480,11 +480,11 @@ private struct AnswerOptionButton: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+                    .fill(isSelected ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .strokeBorder(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -574,7 +574,7 @@ private struct MeasureTypeRow: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
             .contentShape(Rectangle())

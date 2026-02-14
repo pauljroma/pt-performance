@@ -106,8 +106,8 @@ struct RTSTestRecordingView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.red)
                         .cornerRadius(CornerRadius.xs)
                 }
@@ -288,7 +288,7 @@ struct RTSTestRecordingView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.md)
-            .background(parsedValue != nil ? Color.blue : Color.gray)
+            .background(parsedValue != nil ? Color.modusCyan : Color.gray)
             .cornerRadius(CornerRadius.lg)
         }
         .disabled(parsedValue == nil || viewModel.isLoading)

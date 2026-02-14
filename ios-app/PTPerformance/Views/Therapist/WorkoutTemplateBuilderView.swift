@@ -201,7 +201,7 @@ struct WorkoutTemplateBuilderView: View {
                             }
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, Spacing.xxs)
                 }
             }
         }
@@ -231,7 +231,7 @@ struct WorkoutTemplateBuilderView: View {
                             }
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, Spacing.xxs)
                 }
             }
         }
@@ -271,7 +271,7 @@ struct WorkoutTemplateBuilderView: View {
             Button(action: viewModel.addExercise) {
                 Label("Add Exercise", systemImage: "plus.circle.fill")
                     .font(.body)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("Add exercise")
             .accessibilityHint("Adds a new exercise to the template")
@@ -335,7 +335,7 @@ struct WorkoutTemplateBuilderView: View {
                     .font(.headline)
                     .foregroundColor(.primary)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(Color(.systemBackground).opacity(0.95))
             .cornerRadius(CornerRadius.lg)
             .shadow(radius: 10)
@@ -409,7 +409,7 @@ private struct TemplateExerciseRowView: View {
 
                         Divider()
                             .frame(height: 40)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, Spacing.xs)
                             .accessibilityHidden(true)
 
                         // Reps input
@@ -443,7 +443,7 @@ private struct TemplateExerciseRowView: View {
                         .accessibilityHint("Optional instructions or tips for this exercise")
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             } label: {
                 HStack(spacing: 8) {
                     // Drag handle indicator (visible when in edit mode)
@@ -540,8 +540,8 @@ private struct TemplateExerciseRowView: View {
                         isNameFieldFocused = false
                     }
                 )
-                .padding(.leading, 32)
-                .padding(.top, 4)
+                .padding(.leading, Spacing.xl)
+                .padding(.top, Spacing.xxs)
             }
         }
     }
@@ -565,7 +565,7 @@ private struct ExerciseSuggestionsView: View {
             Text("Suggestions from library")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 6)
                 .accessibilityAddTraits(.isHeader)
 
@@ -587,10 +587,10 @@ private struct ExerciseSuggestionsView: View {
                                 if let category = template.category {
                                     Text(category.capitalized)
                                         .font(.caption2)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.modusCyan)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(Color.blue.opacity(0.1))
+                                        .background(Color.modusCyan.opacity(0.1))
                                         .cornerRadius(CornerRadius.xs)
                                 }
                                 if let bodyRegion = template.bodyRegion {
@@ -608,12 +608,12 @@ private struct ExerciseSuggestionsView: View {
                         Spacer()
 
                         Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .font(.title3)
                             .accessibilityHidden(true)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -622,7 +622,7 @@ private struct ExerciseSuggestionsView: View {
 
                 if template.id != suggestions.last?.id {
                     Divider()
-                        .padding(.leading, 12)
+                        .padding(.leading, Spacing.sm)
                         .accessibilityHidden(true)
                 }
             }
@@ -646,10 +646,10 @@ private struct EquipmentTag: View {
     var body: some View {
         Text(text)
             .font(.caption)
-            .foregroundColor(.blue)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.blue.opacity(0.1))
+            .foregroundColor(.modusCyan)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
+            .background(Color.modusCyan.opacity(0.1))
             .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Equipment: \(text)")
     }
@@ -665,8 +665,8 @@ private struct TagBadge: View {
         Text("#\(text)")
             .font(.caption)
             .foregroundColor(.purple)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(Color.purple.opacity(0.1))
             .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Tag: \(text)")

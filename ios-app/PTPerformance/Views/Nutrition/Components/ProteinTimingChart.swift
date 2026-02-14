@@ -96,7 +96,7 @@ struct ProteinTimingChart: View {
 
     private var chartView: some View {
         Chart {
-            ForEach(Array(mealProteinData.enumerated()), id: \.offset) { index, data in
+            ForEach(Array(mealProteinData.enumerated()), id: \.offset) { _, data in
                 BarMark(
                     x: .value("Meal", mealTypeShortName(data.mealType)),
                     y: .value("Protein", isAnimating ? data.protein : 0)

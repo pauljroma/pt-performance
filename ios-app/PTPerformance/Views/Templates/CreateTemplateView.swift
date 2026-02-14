@@ -213,7 +213,7 @@ struct CreateTemplateView: View {
 
                 Button(action: addTag) {
                     Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .disabled(newTag.isEmpty)
             }

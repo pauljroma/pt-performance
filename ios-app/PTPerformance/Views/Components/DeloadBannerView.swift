@@ -186,8 +186,8 @@ struct CompactDeloadBanner: View {
                     .font(.system(size: 10, weight: .semibold))
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(
                 Capsule()
                     .fill(urgency.color)

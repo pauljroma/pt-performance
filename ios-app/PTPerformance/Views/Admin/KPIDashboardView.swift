@@ -224,7 +224,7 @@ struct KPIDashboardView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, 6)
         .background(Color.green.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
@@ -243,8 +243,8 @@ struct KPIDashboardView: View {
                 Text(selectedPeriod.displayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color(.tertiarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.sm)
             }
@@ -305,7 +305,7 @@ struct KPIDashboardView: View {
                 }
             }
         }
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     private static let shortDateFormatter: DateFormatter = {
@@ -395,7 +395,7 @@ struct KPIDashboardView: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(statusColor(status))
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, 6)
         .background(statusColor(status).opacity(0.15))
         .cornerRadius(CornerRadius.sm)
@@ -575,7 +575,7 @@ struct KPIDashboardView: View {
                         .font(.caption)
                         .foregroundColor(.yellow)
                 }
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
             }
         }
         .padding()
@@ -826,7 +826,7 @@ struct KPIExportSheet: View {
                 // Icon
                 Image(systemName: "doc.text")
                     .font(.system(size: 60))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Text("Export KPI Report")
                     .font(.title2)
@@ -864,7 +864,7 @@ struct KPIExportSheet: View {
                             Text(generatePreview())
                                 .font(.system(.caption, design: .monospaced))
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
+                                .padding(Spacing.sm)
                                 .background(Color(.tertiarySystemGroupedBackground))
                                 .cornerRadius(CornerRadius.sm)
                         }

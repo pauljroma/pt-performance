@@ -325,8 +325,8 @@ struct HealthInsightRow: View {
                 Text(insight.category.displayName)
                     .font(.caption2)
                     .foregroundColor(insight.type.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(insight.type.color.opacity(colorScheme == .dark ? 0.2 : 0.1))
                     .cornerRadius(CornerRadius.xs)
 

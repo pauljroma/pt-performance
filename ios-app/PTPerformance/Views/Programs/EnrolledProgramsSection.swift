@@ -152,7 +152,7 @@ struct EnrolledProgramCard: View {
                 }
             }
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .frame(width: 160, height: 150)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
@@ -284,8 +284,8 @@ struct EnrolledProgramDetailSheet: View {
                         .fontWeight(.medium)
                 }
                 .foregroundColor(enrollment.enrollment.enrollmentStatus.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(enrollment.enrollment.enrollmentStatus.color.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -380,9 +380,9 @@ struct EnrolledProgramDetailSheet: View {
                 HStack {
                     Image(systemName: "calendar.badge.clock")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 44, height: 44)
-                        .background(Color.blue.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.sm)
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -402,7 +402,7 @@ struct EnrolledProgramDetailSheet: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.md)
             }
@@ -435,7 +435,7 @@ struct EnrolledProgramDetailSheet: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.caption)
@@ -448,7 +448,7 @@ struct EnrolledProgramDetailSheet: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
     }
@@ -476,7 +476,7 @@ struct EnrolledProgramDetailSheet: View {
 
                         Spacer()
                     }
-                    .padding(8)
+                    .padding(Spacing.xs)
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.sm)
                     .id(equipment)
@@ -539,7 +539,7 @@ struct EnrolledProgramDetailSheet: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.md)
             }

@@ -527,8 +527,8 @@ private struct MetricChip: View {
                 Text(metric.displayName)
                     .font(.caption)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? metric.color : Color(.secondarySystemBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)

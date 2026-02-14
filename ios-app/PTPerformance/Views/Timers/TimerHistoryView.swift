@@ -98,7 +98,7 @@ struct TimerHistoryView: View {
             // Header
             HStack {
                 Image(systemName: "chart.bar.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .font(.title3)
                     .accessibilityHidden(true)
 
@@ -195,13 +195,13 @@ struct TimerHistoryView: View {
             Text("\(sessionsForDate(date).count)")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.systemGroupedBackground))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(viewModel.formattedDate(date)), \(sessionsForDate(date).count) sessions")
@@ -401,9 +401,9 @@ struct TimerHistoryView: View {
                     Label("Repeat", systemImage: "arrow.clockwise")
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .padding(.vertical, Spacing.xs)
+                        .background(Color.modusCyan.opacity(0.1))
+                        .foregroundColor(.modusCyan)
                         .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel("Repeat this workout")
@@ -422,7 +422,7 @@ struct TimerHistoryView: View {
                     Label("Share", systemImage: "square.and.arrow.up")
                         .font(.subheadline)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                         .background(Color.gray.opacity(0.1))
                         .foregroundColor(.secondary)
                         .cornerRadius(CornerRadius.sm)
@@ -430,7 +430,7 @@ struct TimerHistoryView: View {
                 .accessibilityLabel("Share session summary")
             }
             .padding(.horizontal)
-            .padding(.bottom, 8)
+            .padding(.bottom, Spacing.xs)
         }
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
@@ -443,7 +443,7 @@ struct TimerHistoryView: View {
             title: emptyStateTitle,
             message: emptyStateDescription,
             icon: "clock.arrow.circlepath",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Start a Workout",
                 icon: "play.circle.fill",
@@ -632,7 +632,7 @@ private struct StatCell: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(color.opacity(0.05))
         .cornerRadius(CornerRadius.sm)
     }

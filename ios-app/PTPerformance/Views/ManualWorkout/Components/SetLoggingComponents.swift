@@ -25,8 +25,8 @@ struct TappableRepCounter: View {
             .font(.system(size: 24, weight: .bold, design: .rounded))
             .monospacedDigit()
             .frame(minWidth: 50)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, Spacing.xs)
+            .padding(.horizontal, Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(reps == prescribedReps ? Color.green.opacity(0.15) : Color.gray.opacity(0.1))
@@ -109,7 +109,7 @@ struct SwipeableWeightControl: View {
             Image(systemName: "chevron.up")
                 .font(.caption2)
                 .fontWeight(.bold)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .opacity(dragOffset < -10 ? min(1, abs(dragOffset) / threshold) : 0)
                 .scaleEffect(dragOffset < -threshold ? 1.2 : 1.0)
 
@@ -119,15 +119,15 @@ struct SwipeableWeightControl: View {
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .frame(minWidth: 60)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
+                    .padding(.vertical, Spacing.xs)
+                    .padding(.horizontal, Spacing.sm)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.modusCyan.opacity(0.1))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(abs(dragOffset) > threshold ? Color.blue.opacity(0.5) : Color.clear, lineWidth: 2)
+                            .stroke(abs(dragOffset) > threshold ? Color.modusCyan.opacity(0.5) : Color.clear, lineWidth: 2)
                     )
                     .offset(y: min(max(dragOffset * 0.2, -15), 15))
 
@@ -182,7 +182,7 @@ struct SwipeableWeightControl: View {
             Image(systemName: "chevron.down")
                 .font(.caption2)
                 .fontWeight(.bold)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .opacity(dragOffset > 10 ? min(1, dragOffset / threshold) : 0)
                 .scaleEffect(dragOffset > threshold ? 1.2 : 1.0)
         }
@@ -220,13 +220,13 @@ struct GestureSetRow: View {
             // Set number indicator
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.modusCyan.opacity(0.1))
                     .frame(width: 32, height: 32)
 
                 Text("\(setNumber)")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
 
             Spacer()
@@ -242,7 +242,7 @@ struct GestureSetRow: View {
             Text("x")
                 .font(.title3)
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xxs)
 
             // Weight (swipeable)
             VStack(spacing: 4) {
@@ -252,8 +252,8 @@ struct GestureSetRow: View {
                 SwipeableWeightControl(weight: $weight, increment: 5.0)
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.sm)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(.systemBackground))
@@ -336,11 +336,11 @@ struct GestureHintOverlay: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Spacing.lg)
                 .accessibilityLabel("Dismiss gesture hints")
             }
             .padding(Spacing.xl)
@@ -356,7 +356,7 @@ struct GestureHintOverlay: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {

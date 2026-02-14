@@ -68,7 +68,7 @@ struct FoodPickerView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             Divider()
@@ -208,9 +208,9 @@ struct FoodCategoryChip: View {
         Button(action: action) {
             Text(title)
                 .font(.caption)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                .background(isSelected ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                 .foregroundColor(isSelected ? .white : .primary)
                 .cornerRadius(CornerRadius.lg)
         }

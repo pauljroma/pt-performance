@@ -385,7 +385,7 @@ private struct SubscribedBadge: View {
         }
         .foregroundColor(.green)
         .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.green.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }

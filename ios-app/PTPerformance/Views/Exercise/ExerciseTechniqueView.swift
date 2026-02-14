@@ -28,7 +28,7 @@ struct ExerciseTechniqueView: View {
                         if let category = exercise.exercise_templates?.category {
                             HStack(spacing: 8) {
                                 Image(systemName: "figure.strengthtraining.traditional")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                 Text(category.capitalized)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
@@ -44,7 +44,7 @@ struct ExerciseTechniqueView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
 
                     // Video player section (if video exists)
                     if let videoUrl = exercise.exercise_templates?.videoUrl, !videoUrl.isEmpty {
@@ -105,7 +105,7 @@ struct ExerciseTechniqueView: View {
 
                     Spacer(minLength: 24)
                 }
-                .padding(.bottom, 24)
+                .padding(.bottom, Spacing.lg)
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
@@ -268,7 +268,7 @@ struct PrescriptionInfoCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .groupBoxStyle(TechniqueGroupBoxStyle(accentColor: .blue))
+        .groupBoxStyle(TechniqueGroupBoxStyle(accentColor: .modusCyan))
     }
 }
 
@@ -280,7 +280,7 @@ struct TechniqueGroupBoxStyle: GroupBoxStyle {
     func makeBody(configuration: Configuration) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             configuration.content
-                .padding(16)
+                .padding(Spacing.md)
         }
         .background(accentColor.opacity(0.05))
         .cornerRadius(CornerRadius.md)

@@ -57,11 +57,11 @@ struct ExerciseTemplatePicker: View {
                                 } label: {
                                     Text(category)
                                         .font(.subheadline)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, Spacing.md)
+                                        .padding(.vertical, Spacing.xs)
                                         .background(
                                             selectedCategory == category
-                                                ? Color.blue
+                                                ? Color.modusCyan
                                                 : Color.gray.opacity(0.2)
                                         )
                                         .foregroundColor(
@@ -74,7 +74,7 @@ struct ExerciseTemplatePicker: View {
                             }
                         }
                         .padding(.horizontal)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.sm)
                     }
                     .background(Color(uiColor: .systemGroupedBackground))
 
@@ -307,7 +307,7 @@ struct TemplateSelectionRow: View {
                                 .foregroundColor(.secondary)
                             Image(systemName: "play.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                     }
                 }
@@ -316,10 +316,10 @@ struct TemplateSelectionRow: View {
 
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
             }
             .contentShape(Rectangle())
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
         .buttonStyle(.plain)
     }

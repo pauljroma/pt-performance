@@ -443,7 +443,7 @@ struct ConsentAuditLogView: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private func actionIcon(for action: ConsentAction) -> some View {

@@ -102,7 +102,7 @@ struct LearningView: View {
 
                     Spacer()
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             // Quick access skeleton
@@ -122,7 +122,7 @@ struct LearningView: View {
                                 .frame(width: 90, height: 32)
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
                 }
                 .listRowInsets(EdgeInsets())
             }
@@ -175,7 +175,7 @@ struct LearningView: View {
                     HStack {
                         Image(systemName: "book.fill")
                             .font(.title)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("\(contentLoader.articles.count) Articles")
@@ -189,7 +189,7 @@ struct LearningView: View {
 
                         Spacer()
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
             }
 
@@ -199,7 +199,7 @@ struct LearningView: View {
                     LearningCategoryView()
                 } label: {
                     Label("Browse by Category", systemImage: "square.grid.2x2.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             } header: {
                 Text("Quick Access")
@@ -231,7 +231,7 @@ struct LearningView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
                 }
                 .listRowInsets(EdgeInsets())
             }
@@ -267,7 +267,7 @@ struct LearningView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
         }
     }
@@ -325,7 +325,7 @@ struct LearningView: View {
                                     .lineLimit(1)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
             } header: {
@@ -467,8 +467,8 @@ struct LearningFilterChip: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)

@@ -153,8 +153,8 @@ struct BaseballProgramDetailView: View {
                             .fontWeight(.semibold)
                     }
                     .foregroundColor(program.categoryEnum.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(program.categoryEnum.color.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
 
@@ -168,8 +168,8 @@ struct BaseballProgramDetailView: View {
                                 .fontWeight(.semibold)
                         }
                         .foregroundColor(baseballNavy)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(baseballNavy.opacity(0.15))
                         .cornerRadius(CornerRadius.sm)
                     }
@@ -183,8 +183,8 @@ struct BaseballProgramDetailView: View {
                             .fontWeight(.semibold)
                     }
                     .foregroundColor(program.seasonUIEnum.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(program.seasonUIEnum.color.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
@@ -282,7 +282,7 @@ struct BaseballProgramDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Equipment Needed", icon: "wrench.and.screwdriver.fill")
 
-            BaseballFlowLayout(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 ForEach(equipment(for: program), id: \.self) { item in
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
@@ -367,7 +367,7 @@ struct BaseballProgramDetailView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.md)
                 .background(
                     LinearGradient(
                         colors: [baseballNavy, baseballNavy.opacity(0.85)],
@@ -601,7 +601,7 @@ private struct StatCard: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }
@@ -688,63 +688,7 @@ private struct RealPhaseRow: View {
 
 // MARK: - Flow Layout
 
-private struct BaseballFlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(
-            in: proposal.replacingUnspecifiedDimensions().width,
-            subviews: subviews,
-            spacing: spacing
-        )
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(
-            in: bounds.width,
-            subviews: subviews,
-            spacing: spacing
-        )
-
-        for (index, subview) in subviews.enumerated() {
-            subview.place(
-                at: CGPoint(
-                    x: bounds.minX + result.positions[index].x,
-                    y: bounds.minY + result.positions[index].y
-                ),
-                proposal: .unspecified
-            )
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-
-                if x + size.width > maxWidth && x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, size.height)
-                x += size.width + spacing
-            }
-
-            self.size = CGSize(width: maxWidth, height: y + rowHeight)
-        }
-    }
-}
+// Uses the canonical FlowLayout from Components/FlowLayout.swift
 
 // MARK: - Preview
 // Note: Preview requires a real BaseballProgram from the service

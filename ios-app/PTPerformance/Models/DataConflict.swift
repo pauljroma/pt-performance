@@ -9,6 +9,35 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Shared Date Formatters
+
+private let _conflictMediumDateFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateStyle = .medium
+    f.timeStyle = .none
+    return f
+}()
+
+private let _conflictShortDateFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "MMM d"
+    return f
+}()
+
+private let _conflictShortTimeFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateStyle = .none
+    f.timeStyle = .short
+    return f
+}()
+
+private let _conflictMediumDateTimeFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateStyle = .medium
+    f.timeStyle = .short
+    return f
+}()
+
 // MARK: - Data Conflict
 
 /// Represents a data conflict between multiple sources for a given metric
@@ -61,17 +90,12 @@ struct DataConflict: Identifiable, Codable, Hashable {
 
     /// Formatted date for display
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        return formatter.string(from: conflictDate)
+        _conflictMediumDateFormatter.string(from: conflictDate)
     }
 
     /// Short formatted date for cards
     var shortFormattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: conflictDate)
+        _conflictShortDateFormatter.string(from: conflictDate)
     }
 
     /// Relative date string (e.g., "Today", "Yesterday")
@@ -209,10 +233,7 @@ struct ConflictingSource: Codable, Identifiable, Hashable {
 
     /// Formatted timestamp
     var formattedTimestamp: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: timestamp)
+        _conflictShortTimeFormatter.string(from: timestamp)
     }
 }
 
@@ -373,10 +394,7 @@ struct ConflictAuditEntry: Codable, Identifiable, Hashable {
 
     /// Formatted date for display
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: createdAt)
+        _conflictMediumDateTimeFormatter.string(from: createdAt)
     }
 }
 

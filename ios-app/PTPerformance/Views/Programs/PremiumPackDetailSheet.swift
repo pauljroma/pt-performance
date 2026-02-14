@@ -370,10 +370,10 @@ private struct PackTypeBadge: View {
         Text(type == .core ? "Core Pack" : "Add-on")
             .font(.caption)
             .fontWeight(.medium)
-            .foregroundColor(type == .core ? .blue : .secondary)
+            .foregroundColor(type == .core ? .modusCyan : .secondary)
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background((type == .core ? Color.blue : Color.gray).opacity(0.15))
+            .background((type == .core ? Color.modusCyan : Color.gray).opacity(0.15))
             .cornerRadius(CornerRadius.sm)
     }
 }
@@ -526,7 +526,7 @@ private struct ProgramsErrorView: View {
 
             Button("Try Again", action: retryAction)
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.lg)

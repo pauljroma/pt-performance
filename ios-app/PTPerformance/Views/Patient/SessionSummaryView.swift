@@ -58,12 +58,12 @@ struct SessionSummaryView: View {
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
                             .padding()
-                            .background(Color.blue.opacity(0.1))
+                            .background(Color.modusCyan.opacity(0.1))
                             .cornerRadius(CornerRadius.md)
                             .padding(.horizontal)
-                            .padding(.top, 8)
+                            .padding(.top, Spacing.xs)
                     }
-                    .padding(.top, 32)
+                    .padding(.top, Spacing.xl)
 
                     // BUILD 311: Stats Grid using stored session metrics
                     LazyVGrid(columns: [
@@ -116,12 +116,12 @@ struct SessionSummaryView: View {
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(Color.modusCyan)
                             .foregroundColor(.white)
                             .cornerRadius(CornerRadius.md)
                     }
                     .padding(.horizontal)
-                    .padding(.top, 16)
+                    .padding(.top, Spacing.md)
 
                     Spacer()
                 }

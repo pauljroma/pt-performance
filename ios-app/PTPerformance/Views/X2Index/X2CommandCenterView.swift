@@ -184,7 +184,7 @@ struct X2CommandCenterView: View {
                 }
             }
             .foregroundColor(isSelected ? .white : .primary)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.md)
             .padding(.vertical, 10)
             .background(
                 Capsule()
@@ -266,7 +266,7 @@ struct X2CommandCenterView: View {
                     .font(.subheadline.weight(.bold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.red)
                     .clipShape(Capsule())
             }
@@ -310,7 +310,7 @@ struct X2CommandCenterView: View {
                     .font(.subheadline.weight(.bold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.orange)
                     .clipShape(Capsule())
             }
@@ -346,7 +346,7 @@ struct X2CommandCenterView: View {
             HStack {
                 Label("Recent Reports", systemImage: "doc.text.fill")
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Spacer()
 
@@ -603,8 +603,8 @@ struct CommandCenterEmptyState: View {
                     Text(actionTitle)
                         .font(.headline)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
                         .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.md)
                 }
@@ -839,7 +839,7 @@ struct ReportMiniCard: View {
     var body: some View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: "doc.text.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .font(.body)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -873,7 +873,7 @@ struct ReportCard: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "doc.text.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .font(.title3)
 
                 VStack(alignment: .leading, spacing: 2) {

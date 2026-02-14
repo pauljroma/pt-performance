@@ -354,7 +354,7 @@ struct PatientHeaderCard: View {
             // Avatar
             Circle()
                 .fill(LinearGradient(
-                    colors: [.blue, .purple],
+                    colors: [.modusCyan, .purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -518,8 +518,8 @@ struct SectionErrorBanner: View {
 
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
         .background(Color.orange.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
     }
@@ -549,7 +549,7 @@ struct QuickActionsCard: View {
                 ActionButton(
                     title: "View Program",
                     icon: "doc.text.fill",
-                    color: .blue,
+                    color: .modusCyan,
                     action: onViewProgram
                 )
 

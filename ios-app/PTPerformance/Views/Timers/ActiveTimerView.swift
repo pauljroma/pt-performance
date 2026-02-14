@@ -310,7 +310,7 @@ struct ActiveTimerView: View {
                 .font(.title3.bold())
                 .foregroundColor(Color(.label))
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Computed Properties

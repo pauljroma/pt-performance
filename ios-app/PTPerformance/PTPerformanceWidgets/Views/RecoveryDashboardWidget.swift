@@ -89,7 +89,7 @@ struct RecoveryDashboardWidgetView: View {
             // Today's Workout
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.modusCyan)
 
                 if let workout = entry.workout {
                     VStack(alignment: .leading, spacing: 2) {
@@ -121,7 +121,7 @@ struct RecoveryDashboardWidgetView: View {
                 Spacer()
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xxs)
         .widgetURL(URL(string: "modus://recovery"))
     }
 

@@ -153,9 +153,9 @@ struct ScheduleSessionView: View {
                         }) {
                             Text(formatTime(time))
                                 .font(.caption)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
-                                .background(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                                .background(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(calendar.isDate(selectedTime, equalTo: time, toGranularity: .minute) ? .white : .primary)
                                 .cornerRadius(CornerRadius.sm)
                         }

@@ -78,7 +78,7 @@ struct EditSessionView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.sm)
                         Spacer()
                     }
                 } else if let error = exercisesError {
@@ -96,7 +96,7 @@ struct EditSessionView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                 } else if exercises.isEmpty {
                     HStack {
                         Spacer()
@@ -112,7 +112,7 @@ struct EditSessionView: View {
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 24)
+                        .padding(.vertical, Spacing.lg)
                         Spacer()
                     }
                 } else {
@@ -340,7 +340,7 @@ struct ExerciseRowDetailView: View {
                 if exercise.exercise_templates?.hasVideo == true {
                     Image(systemName: "play.circle.fill")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -364,7 +364,7 @@ struct ExerciseRowDetailView: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

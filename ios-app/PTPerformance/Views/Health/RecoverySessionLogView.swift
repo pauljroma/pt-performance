@@ -409,7 +409,7 @@ enum RecoverySessionType: String, CaseIterable, Identifiable {
         case .steamRoom:
             return LinearGradient(colors: [.mint, .teal], startPoint: .top, endPoint: .bottom)
         case .iceBath, .coldPlunge, .coldShower:
-            return LinearGradient(colors: [.cyan, .blue], startPoint: .top, endPoint: .bottom)
+            return LinearGradient(colors: [.cyan, .modusCyan], startPoint: .top, endPoint: .bottom)
         case .contrastTherapy:
             return LinearGradient(colors: [.purple, .indigo], startPoint: .top, endPoint: .bottom)
         }

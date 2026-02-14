@@ -51,7 +51,7 @@ struct PatientListView: View {
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.horizontal)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Spacing.xs)
                 }
                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.selectedCount > 0)
             }
@@ -230,7 +230,7 @@ struct PatientListView: View {
                             } label: {
                                 Label("Assign", systemImage: "doc.badge.plus")
                             }
-                            .tint(.blue)
+                            .tint(.modusCyan)
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button {
@@ -305,7 +305,7 @@ struct SelectablePatientRow: View {
                 // Selection checkbox
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? .modusCyan : .gray)
                     .accessibilityLabel(isSelected ? "Selected" : "Not selected")
 
                 // Patient card content
@@ -367,8 +367,8 @@ struct BulkActionBar: View {
             }
             .accessibilityLabel("Clear selection")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.ultraThinMaterial)
@@ -459,7 +459,7 @@ struct PatientRowCard: View {
                 .font(.caption)
                 .foregroundColor(.gray)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     private func adherenceColor(_ percentage: Double) -> Color {

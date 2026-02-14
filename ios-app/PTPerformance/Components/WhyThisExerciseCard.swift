@@ -110,7 +110,7 @@ struct WhyThisExerciseCard: View {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: "figure.arms.open")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .accessibilityHidden(true)
 
                         Text("Primary Muscles")
@@ -255,8 +255,8 @@ struct MuscleTag: View {
             .fontWeight(isPrimary ? .semibold : .regular)
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xxs)
-            .background(isPrimary ? Color.blue.opacity(0.15) : Color.gray.opacity(0.1))
-            .foregroundColor(isPrimary ? .blue : .secondary)
+            .background(isPrimary ? Color.modusCyan.opacity(0.15) : Color.gray.opacity(0.1))
+            .foregroundColor(isPrimary ? .modusCyan : .secondary)
             .cornerRadius(CornerRadius.xs)
             .accessibilityLabel("\(formattedName), \(isPrimary ? "primary" : "secondary") muscle")
     }
@@ -342,7 +342,7 @@ struct WhyThisExerciseCompactCard: View {
                         Image(systemName: "chevron.right")
                             .font(.caption2)
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Learn more about this exercise")
             }

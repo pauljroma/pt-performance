@@ -37,7 +37,7 @@ struct HelpArticleView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, Spacing.xs)
 
                 Divider()
 
@@ -105,12 +105,12 @@ struct MarkdownText: View {
                 Text(element.text)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
             case .heading2:
                 Text(element.text)
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .padding(.top, 4)
+                    .padding(.top, Spacing.xxs)
             case .heading3:
                 Text(element.text)
                     .font(.headline)

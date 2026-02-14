@@ -284,7 +284,7 @@ struct CompactGoalProgressCard: View {
                 .font(.headline)
                 .foregroundColor(color)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, 10)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
@@ -305,7 +305,7 @@ struct BodyCompGoalProgressCard_Previews: PreviewProvider {
                     target: 175.0,
                     start: 195.0,
                     unit: "lbs",
-                    color: .blue,
+                    color: .modusCyan,
                     icon: "scalemass"
                 )
 

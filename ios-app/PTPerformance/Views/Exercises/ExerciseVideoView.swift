@@ -59,13 +59,13 @@ struct ExerciseVideoView: View {
                             Image(systemName: showingFormCues ? "info.circle.fill" : "info.circle")
                                 .font(.title2)
                                 .foregroundColor(.white)
-                                .padding(12)
+                                .padding(Spacing.sm)
                                 .background(Color.black.opacity(0.5))
                                 .clipShape(Circle())
                         }
                         .accessibilityLabel(showingFormCues ? "Hide form cues" : "Show form cues")
                         .accessibilityHint("Displays exercise form guidance")
-                        .padding(8)
+                        .padding(Spacing.xs)
                     }
             }
         }
@@ -98,7 +98,7 @@ struct ExerciseVideoView: View {
             HStack {
                 Label("Form Cues", systemImage: "checkmark.circle.fill")
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Spacer()
 
@@ -120,13 +120,13 @@ struct ExerciseVideoView: View {
                         Text(displayTime)
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .frame(width: 50, alignment: .leading)
                     } else {
                         Text("\(index + 1).")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .frame(width: 50, alignment: .leading)
                     }
 
@@ -136,7 +136,7 @@ struct ExerciseVideoView: View {
 
                     Spacer()
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
 
                 if index < cues.count - 1 {
                     Divider()
@@ -164,7 +164,7 @@ struct ExerciseVideoView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button("Try Again") {
                 setupPlayer()

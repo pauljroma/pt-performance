@@ -63,7 +63,7 @@ struct ExerciseLogView: View {
                                         .fontWeight(.medium)
                                 }
                                 .font(.subheadline)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             }
                             .accessibilityLabel("View Technique Guide")
                             .accessibilityHint("Open guide with exercise instructions and form tips")
@@ -203,7 +203,7 @@ struct ExerciseLogView: View {
                         }
 
                         Slider(value: $rpe, in: 0...10, step: 1)
-                            .accentColor(rpeColor(Int(rpe)))
+                            .tint(rpeColor(Int(rpe)))
                             .accessibilityLabel("Rating of Perceived Exertion")
                             .accessibilityValue("\(Int(rpe)) out of 10, \(rpeDescription(Int(rpe)))")
                             .accessibilityHint("Adjust slider to rate how hard the exercise felt")
@@ -223,7 +223,7 @@ struct ExerciseLogView: View {
                         }
 
                         Slider(value: $painScore, in: 0...10, step: 1)
-                            .accentColor(painColor(Int(painScore)))
+                            .tint(painColor(Int(painScore)))
                             .accessibilityLabel("Pain Level")
                             .accessibilityValue("\(Int(painScore)) out of 10, \(painDescription(Int(painScore)))")
                             .accessibilityHint("Adjust slider to rate pain experienced during exercise")

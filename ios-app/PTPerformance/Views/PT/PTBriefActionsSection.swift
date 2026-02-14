@@ -181,12 +181,12 @@ struct PTBriefActionsSection: View {
         HStack(spacing: Spacing.md) {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.15))
+                    .fill(Color.modusCyan.opacity(0.15))
                     .frame(width: 40, height: 40)
 
                 Image(systemName: "sparkles")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityHidden(true)
 

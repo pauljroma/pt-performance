@@ -167,7 +167,7 @@ struct TemplateLibraryView: View {
                 .padding(.horizontal)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.systemBackground))
     }
 
@@ -219,7 +219,7 @@ struct TemplateLibraryView: View {
                     title: "No Templates Yet",
                     message: "Create workout templates to save and reuse your favorite routines. Templates make it easy to start workouts quickly.",
                     icon: "rectangle.stack.fill",
-                    iconColor: .blue,
+                    iconColor: .modusCyan,
                     action: EmptyStateView.EmptyStateAction(
                         title: "Create Template",
                         icon: "plus.circle.fill",
@@ -344,8 +344,8 @@ struct WorkoutTemplateCard: View {
                         ForEach(template.tags.prefix(5), id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(CornerRadius.sm)
                         }
@@ -366,7 +366,7 @@ struct WorkoutTemplateCard: View {
                 Text("View Details")
                     .font(.caption)
                     .fontWeight(.medium)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .padding()

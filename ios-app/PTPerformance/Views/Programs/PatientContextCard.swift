@@ -85,7 +85,7 @@ struct PatientContextCard: View {
                 activeGoalsSection
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }
@@ -116,7 +116,7 @@ struct PatientContextCard: View {
                     HStack(spacing: 4) {
                         Image(systemName: "figure.run")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text(sport)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -290,7 +290,7 @@ struct PatientContextCard: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.modusCyan)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, Spacing.xs)
                     .padding(.vertical, 2)
                     .background(Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
@@ -306,7 +306,7 @@ struct PatientContextCard: View {
                 Text("+\(patientGoals.count - 3) more goals")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.leading, 24)
+                    .padding(.leading, Spacing.lg)
             }
         }
     }
@@ -347,7 +347,7 @@ struct PatientContextCard: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            .padding(16)
+            .padding(Spacing.md)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
@@ -484,7 +484,7 @@ private struct GoalRow: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.leading, 24)
+        .padding(.leading, Spacing.lg)
     }
 }
 

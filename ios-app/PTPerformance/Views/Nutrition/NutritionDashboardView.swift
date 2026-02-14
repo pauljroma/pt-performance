@@ -288,7 +288,7 @@ struct NutritionDashboardView: View {
                 }
 
                 ProgressView(value: viewModel.calorieProgress)
-                    .tint(viewModel.calorieProgress >= 1.0 ? .green : .blue)
+                    .tint(viewModel.calorieProgress >= 1.0 ? .green : .modusCyan)
                     .accessibilityLabel("Calorie progress")
                     .accessibilityValue("\(Int(viewModel.calorieProgress * 100)) percent")
 
@@ -337,7 +337,7 @@ struct NutritionDashboardView: View {
             HStack(spacing: 16) {
                 Image(systemName: "sparkles")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -359,7 +359,7 @@ struct NutritionDashboardView: View {
                     .accessibilityHidden(true)
             }
             .padding()
-            .background(Color.blue.opacity(0.1))
+            .background(Color.modusCyan.opacity(0.1))
             .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
@@ -503,10 +503,10 @@ struct NutritionDashboardView: View {
                             HStack(spacing: 2) {
                                 Image(systemName: "calendar")
                                     .font(.caption2)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                 Text("\(viewModel.todaysPlannedMeals.count)")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                             }
                         }
                     }
@@ -728,7 +728,7 @@ struct WeekTrendCard: View {
             } else {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .padding(Spacing.sm)
@@ -816,7 +816,7 @@ struct PlannedMealRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: meal.mealType.icon)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .accessibilityHidden(true)
                     Text(meal.mealType.displayName)
                         .font(.subheadline)
@@ -864,7 +864,7 @@ struct PlannedMealRow: View {
                 .foregroundColor(.blue.opacity(0.5))
                 .accessibilityHidden(true)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
     }
@@ -917,7 +917,7 @@ struct MealLogRow: View {
             .accessibilityLabel("Delete meal")
             .accessibilityHint("Removes this meal from your log")
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 }
 

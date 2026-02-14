@@ -150,7 +150,7 @@ struct TherapistPrescriptionDashboardView: View {
                         title: "Active",
                         count: viewModel.activePrescriptions.count,
                         icon: "doc.badge.clock",
-                        color: .blue,
+                        color: .modusCyan,
                         subtitle: "in progress"
                     )
 
@@ -317,7 +317,7 @@ struct TherapistPrescriptionDashboardView: View {
                 }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? tabColor(for: tab) : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.md)
@@ -405,7 +405,7 @@ struct TherapistPrescriptionDashboardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
@@ -449,7 +449,7 @@ struct TherapistPrescriptionDashboardView: View {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                 if hasActiveFilters {
                     Circle()
-                        .fill(Color.blue)
+                        .fill(Color.modusCyan)
                         .frame(width: 8, height: 8)
                 }
             }
@@ -551,7 +551,7 @@ struct TherapistPrescriptionDashboardView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 Task { await loadData() }
@@ -561,9 +561,9 @@ struct TherapistPrescriptionDashboardView: View {
                     Text("Try Again")
                 }
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.blue)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }

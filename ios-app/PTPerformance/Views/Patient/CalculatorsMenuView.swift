@@ -13,7 +13,7 @@ struct CalculatorsMenuView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "figure.strengthtraining.traditional")
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .frame(width: 36, height: 36)
 
                         VStack(alignment: .leading, spacing: 3) {

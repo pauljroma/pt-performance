@@ -115,27 +115,8 @@ struct PatientException: Identifiable {
         }
     }
 
-    enum TrendDirection {
-        case up
-        case down
-        case stable
-
-        var icon: String {
-            switch self {
-            case .up: return "arrow.up"
-            case .down: return "arrow.down"
-            case .stable: return "arrow.right"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .up: return .red
-            case .down: return .green
-            case .stable: return .gray
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 }
 
 // MARK: - ViewModel (View-local)
@@ -227,7 +208,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     severity: .critical,
                     message: "Patient reported severe pain during last session",
                     daysSinceLastSession: daysSince,
-                    painTrend: .up,
+                    painTrend: .improving,
                     adherenceTrend: nil,
                     currentPain: 8.0,
                     currentAdherence: adherence,
@@ -245,7 +226,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     message: "Adherence has dropped to \(Int(adherence))%",
                     daysSinceLastSession: daysSince,
                     painTrend: nil,
-                    adherenceTrend: .down,
+                    adherenceTrend: .declining,
                     currentPain: nil,
                     currentAdherence: adherence,
                     createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
@@ -259,7 +240,7 @@ final class CoachingDashboardViewModel: ObservableObject {
                     message: "Adherence below 50% this week",
                     daysSinceLastSession: daysSince,
                     painTrend: nil,
-                    adherenceTrend: .down,
+                    adherenceTrend: .declining,
                     currentPain: nil,
                     currentAdherence: adherence,
                     createdAt: Date().addingTimeInterval(-Double.random(in: 3600...172800))
@@ -564,7 +545,7 @@ struct CoachingDashboardView: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
     }
 

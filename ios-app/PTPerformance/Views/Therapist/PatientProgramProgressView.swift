@@ -242,7 +242,7 @@ struct PatientProgressHeader: View {
 
                 Label("\(activeProgramsCount) Active", systemImage: "doc.text.fill")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .padding()
@@ -280,7 +280,7 @@ struct ProgramSelectorPill: View {
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
-            .background(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.md)
         }
@@ -317,7 +317,7 @@ struct ProgramInfoCard: View {
                 .fontWeight(.medium)
                 .foregroundColor(program.status.color)
                 .padding(.horizontal, Spacing.sm)
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
                 .background(program.status.color.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -364,7 +364,7 @@ struct InfoStatItem: View {
         VStack(spacing: Spacing.xxs) {
             Image(systemName: icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.subheadline)
@@ -511,7 +511,7 @@ struct WeeklyCompletionBar: View {
             // Week number
             Text("\(week.weekNumber)")
                 .font(.caption2)
-                .foregroundColor(isCurrent ? .blue : .secondary)
+                .foregroundColor(isCurrent ? .modusCyan : .secondary)
                 .fontWeight(isCurrent ? .bold : .regular)
         }
     }
@@ -755,7 +755,7 @@ struct AdherenceMetricsCard: View {
                 .fontWeight(.semibold)
                 .foregroundColor(adherenceColor)
                 .padding(.horizontal, Spacing.sm)
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
                 .background(adherenceColor.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -781,7 +781,7 @@ struct AdherenceMetricsCard: View {
 
                 AdherenceMetricItem(
                     icon: "calendar",
-                    iconColor: .blue,
+                    iconColor: .modusCyan,
                     label: "Total Scheduled",
                     value: "\(metrics.totalScheduled)"
                 )

@@ -476,35 +476,8 @@ struct ArmCareTrend: Codable {
         }
     }
 
-    enum TrendDirection: String, Codable {
-        case improving = "improving"
-        case stable = "stable"
-        case declining = "declining"
-
-        var displayName: String {
-            switch self {
-            case .improving: return "Improving"
-            case .stable: return "Stable"
-            case .declining: return "Declining"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .improving: return .green
-            case .stable: return .yellow
-            case .declining: return .red
-            }
-        }
-
-        var iconName: String {
-            switch self {
-            case .improving: return "arrow.up.right"
-            case .stable: return "arrow.right"
-            case .declining: return "arrow.down.right"
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 }
 
 // MARK: - Errors

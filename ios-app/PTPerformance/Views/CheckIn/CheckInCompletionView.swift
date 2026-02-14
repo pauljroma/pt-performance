@@ -209,7 +209,7 @@ struct CheckInCompletionView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, Spacing.xl)
 
             // Motivational message
             Text(streak.motivationalMessage)
@@ -258,7 +258,7 @@ struct CheckInCompletionView: View {
             }
             .accessibilityLabel("Close check-in")
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, Spacing.md)
     }
 
     // MARK: - Computed Properties

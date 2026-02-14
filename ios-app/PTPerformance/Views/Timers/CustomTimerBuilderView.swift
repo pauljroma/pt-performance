@@ -194,7 +194,7 @@ struct CustomTimerBuilderView: View {
             // Rounds
             HStack {
                 Label("Rounds", systemImage: "repeat")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Spacer()
                 Stepper(
                     value: $viewModel.rounds,
@@ -279,7 +279,7 @@ struct CustomTimerBuilderView: View {
                 // Total Time
                 HStack {
                     Image(systemName: "clock.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .accessibilityHidden(true)
                     Text("Total Time:")
                         .font(.headline)
@@ -287,7 +287,7 @@ struct CustomTimerBuilderView: View {
                     Text(viewModel.formattedTotalTime)
                         .font(.title2.monospacedDigit())
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total time: \(viewModel.formattedTotalTime)")
@@ -335,7 +335,7 @@ struct CustomTimerBuilderView: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             Text("Preview")
         } footer: {

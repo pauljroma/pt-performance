@@ -135,7 +135,7 @@ struct EnhancedWorkoutSummaryView: View {
                 Text("lbs")
                     .font(.title3)
                     .foregroundColor(.secondary)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Spacing.xs)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Total volume lifted: \(formatVolume(totalVolume)) pounds")
@@ -514,7 +514,7 @@ private struct PRCelebrationCard: View {
             }
         }
         .padding(Spacing.sm)
-        .background(Color.white.opacity(0.5))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .onAppear {
             withAnimation(.easeIn(duration: 0.3).delay(0.2)) {

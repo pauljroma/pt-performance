@@ -107,7 +107,7 @@ struct SafetyAlertCard: View {
                             Label("Acknowledge", systemImage: "eye.fill")
                                 .font(.subheadline.weight(.medium))
                         }
-                        .buttonStyle(AlertActionButtonStyle(color: .blue))
+                        .buttonStyle(AlertActionButtonStyle(color: .modusCyan))
                     }
 
                     Button(action: { onCallPatient?() }) {
@@ -185,7 +185,7 @@ struct EscalationStatusBadge: View {
         }
         .foregroundColor(status.color)
         .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .background(status.color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }
@@ -217,7 +217,7 @@ struct PatientAvatarView: View {
     private var initialsView: some View {
         Circle()
             .fill(LinearGradient(
-                colors: [.blue, .purple],
+                colors: [.modusCyan, .purple],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ))
@@ -394,7 +394,7 @@ struct CountBadge: View {
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.primary)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Spacing.xs)
         .padding(.vertical, 3)
         .background(color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)

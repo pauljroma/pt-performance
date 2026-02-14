@@ -256,6 +256,6 @@ struct NutritionLogRow: View {
             .font(.caption)
             .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }

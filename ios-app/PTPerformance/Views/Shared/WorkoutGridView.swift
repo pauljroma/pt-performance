@@ -161,8 +161,8 @@ struct WorkoutGridView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color.blue.opacity(0.1))
+        .padding(.vertical, Spacing.xs)
+        .background(Color.modusCyan.opacity(0.1))
     }
 
     private func successBanner(_ message: String) -> some View {
@@ -180,7 +180,7 @@ struct WorkoutGridView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color.green.opacity(0.1))
     }
 
@@ -190,36 +190,36 @@ struct WorkoutGridView: View {
         HStack(spacing: 0) {
             Text("Exercise")
                 .frame(width: 200, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             Text("Sets")
                 .frame(width: 60, alignment: .center)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xs)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             Text("Reps")
                 .frame(width: 80, alignment: .center)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xs)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             Text("Weight")
                 .frame(width: 80, alignment: .center)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xs)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             Text("Notes")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
@@ -248,8 +248,8 @@ struct WorkoutGridView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(width: 200, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
             }
             .buttonStyle(PlainButtonStyle())
 
@@ -263,8 +263,8 @@ struct WorkoutGridView: View {
             .keyboardType(.numberPad)
             .multilineTextAlignment(.center)
             .frame(width: 60)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xs)
             .textFieldStyle(RoundedBorderTextFieldStyle())
 
             // Reps
@@ -277,8 +277,8 @@ struct WorkoutGridView: View {
             .keyboardType(.numbersAndPunctuation)
             .multilineTextAlignment(.center)
             .frame(width: 80)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xs)
             .textFieldStyle(RoundedBorderTextFieldStyle())
 
             // Weight
@@ -291,8 +291,8 @@ struct WorkoutGridView: View {
             .keyboardType(.decimalPad)
             .multilineTextAlignment(.center)
             .frame(width: 80)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xs)
             .textFieldStyle(RoundedBorderTextFieldStyle())
 
             // Notes
@@ -303,8 +303,8 @@ struct WorkoutGridView: View {
                 }
             ))
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .textFieldStyle(RoundedBorderTextFieldStyle())
 
             // Delete button
@@ -332,7 +332,7 @@ struct WorkoutGridView: View {
             }
             .font(.subheadline)
             .fontWeight(.medium)
-            .foregroundColor(.blue)
+            .foregroundColor(.modusCyan)
             .frame(maxWidth: .infinity)
             .padding()
         }
@@ -379,7 +379,7 @@ struct GridExercisePickerView: View {
                             Spacer()
                             if exercise.id == selectedExerciseId {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                             }
                         }
                     }

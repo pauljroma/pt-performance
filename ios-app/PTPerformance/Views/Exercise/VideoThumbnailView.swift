@@ -122,8 +122,8 @@ struct VideoThumbnailView: View {
                             .fontWeight(.medium)
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.green.opacity(0.8))
                     .cornerRadius(CornerRadius.xs)
                 }
@@ -136,13 +136,13 @@ struct VideoThumbnailView: View {
                         .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.8))
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(Color.modusCyan.opacity(0.8))
                         .cornerRadius(CornerRadius.xs)
                 }
             }
-            .padding(8)
+            .padding(Spacing.xs)
 
             Spacer()
 
@@ -166,13 +166,13 @@ struct VideoThumbnailView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.black.opacity(0.6))
                         .cornerRadius(CornerRadius.xs)
                 }
             }
-            .padding(8)
+            .padding(Spacing.xs)
         }
     }
 }
@@ -239,7 +239,7 @@ struct CompactVideoThumbnailView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -350,9 +350,9 @@ struct PrimaryVideoCardView: View {
                                 .font(.caption)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.blue)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
+                                .background(Color.modusCyan)
                                 .cornerRadius(CornerRadius.xs)
                         }
                         .padding()
@@ -367,14 +367,14 @@ struct PrimaryVideoCardView: View {
                                     .font(.caption2)
                                     .fontWeight(.medium)
                                     .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, Spacing.xs)
+                                    .padding(.vertical, Spacing.xxs)
                                     .background(Color.green.opacity(0.9))
                                     .cornerRadius(CornerRadius.xs)
                             }
                             Spacer()
                         }
-                        .padding(8)
+                        .padding(Spacing.xs)
                     }
                 }
                 .aspectRatio(16/9, contentMode: .fit)

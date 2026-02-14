@@ -51,7 +51,7 @@ struct SessionDetailView: View {
                         Text("Manual Workout")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, Spacing.xs)
                             .padding(.vertical, 3)
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
@@ -129,7 +129,7 @@ struct SessionDetailView: View {
             if viewModel.isLoading {
                 ProgressView("Loading exercises...")
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
             } else if let error = viewModel.errorMessage {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
@@ -141,7 +141,7 @@ struct SessionDetailView: View {
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .padding(.vertical, Spacing.lg)
             } else if viewModel.exerciseLogs.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "tray")
@@ -152,7 +152,7 @@ struct SessionDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .padding(.vertical, Spacing.lg)
             } else {
                 ForEach(viewModel.exerciseLogs) { log in
                     Button {
@@ -247,7 +247,7 @@ struct ExerciseLogRow: View {
                     if log.hasVideo {
                         Image(systemName: "play.circle.fill")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
 

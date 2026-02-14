@@ -58,7 +58,7 @@ struct UpcomingSessionsView: View {
             title: "No Scheduled Sessions",
             message: "Schedule your workout sessions in advance to stay on track with your program. Set reminders to keep yourself accountable.",
             icon: "calendar.badge.clock",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Schedule Session",
                 icon: "plus.circle.fill",
@@ -274,7 +274,7 @@ struct UpcomingSessionRow: View {
                     .foregroundColor(.secondary)
             }
             .frame(width: 50)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
 
@@ -315,7 +315,7 @@ struct UpcomingSessionRow: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private var statusBadge: some View {
@@ -323,8 +323,8 @@ struct UpcomingSessionRow: View {
             .font(.caption)
             .fontWeight(.medium)
             .foregroundColor(statusColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(statusColor.opacity(0.15))
             .cornerRadius(CornerRadius.sm)
     }

@@ -36,7 +36,7 @@ struct AtRiskPatientsCard: View {
                     Button(action: { onViewAll?() }) {
                         Text("View All (\(atRiskPatients.count))")
                             .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
             }
@@ -168,7 +168,7 @@ struct AtRiskPatientRow: View {
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    .buttonStyle(QuickActionButtonStyle(color: .blue))
+                    .buttonStyle(QuickActionButtonStyle(color: .modusCyan))
                 }
                 .padding(.vertical, Spacing.sm)
                 .padding(.leading, 44)
@@ -239,7 +239,7 @@ struct AdherenceBadge: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(color)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Spacing.xs)
         .padding(.vertical, 3)
         .background(color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
@@ -318,8 +318,8 @@ struct RiskCountBadge: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(level.color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }

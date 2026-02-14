@@ -125,7 +125,7 @@ struct DocumentationDashboardView: View {
     private func filterIndicator(patient: PatientInfo) -> some View {
         HStack {
             Image(systemName: "person.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text("Showing: \(patient.fullName)")
                 .font(.subheadline)
@@ -143,7 +143,7 @@ struct DocumentationDashboardView: View {
             }
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.md)
     }
 
@@ -207,8 +207,8 @@ struct DocumentationDashboardView: View {
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.orange)
                         .clipShape(Capsule())
                 }
@@ -237,7 +237,7 @@ struct DocumentationDashboardView: View {
                             Image(systemName: "chevron.right")
                         }
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
                 }
             }
@@ -261,7 +261,7 @@ struct DocumentationDashboardView: View {
                     // Navigate to all notes
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
 
             if viewModel.recentNotes.isEmpty {
@@ -668,7 +668,7 @@ struct PatientFilterSheet: View {
 
                                 if selectedPatientId == patient.id {
                                     Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.modusCyan)
                                 }
                             }
                         }

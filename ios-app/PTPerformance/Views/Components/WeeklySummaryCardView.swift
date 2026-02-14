@@ -375,7 +375,7 @@ struct WeeklySummaryInlineCard: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.sm + 2)

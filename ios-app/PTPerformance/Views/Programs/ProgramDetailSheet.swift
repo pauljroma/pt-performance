@@ -130,7 +130,7 @@ struct ProgramDetailSheet: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "doc.text.magnifyingglass")
                                     .font(.title3)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                 Text("Program Template")
                                     .font(.headline)
                             }
@@ -145,10 +145,10 @@ struct ProgramDetailSheet: View {
                                 Text("Enroll to save this program, then work with your therapist to personalize the workouts.")
                                     .font(.caption)
                             }
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         }
                         .padding()
-                        .background(Color.blue.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.md)
                         .padding(.horizontal)
                     }
@@ -263,7 +263,7 @@ struct ProgramDetailSheet: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: program.programId == nil ? [.blue, .cyan] : [.blue, .purple],
+                                colors: program.programId == nil ? [.modusCyan, .cyan] : [.modusCyan, .purple],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -378,8 +378,8 @@ private struct InfoPill: View {
                 .font(.caption)
                 .fontWeight(.medium)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(color.opacity(0.15))
         .foregroundColor(color)
         .cornerRadius(CornerRadius.xl)
@@ -418,7 +418,7 @@ private struct ProgramTagChip: View {
     var body: some View {
         Text(text)
             .font(.caption)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
@@ -460,7 +460,7 @@ private struct PhasePreviewCard: View {
                     Text("\(phase.workoutCount)")
                         .font(.headline)
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     Text(phase.workoutCount == 1 ? "workout" : "workouts")
                         .font(.caption2)
@@ -476,7 +476,7 @@ private struct PhasePreviewCard: View {
                     .lineLimit(2)
             }
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
@@ -485,7 +485,7 @@ private struct PhasePreviewCard: View {
 
     /// Color based on phase number for visual variety
     private var phaseColor: Color {
-        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+        let colors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
         return colors[(phase.phaseNumber - 1) % colors.count]
     }
 }

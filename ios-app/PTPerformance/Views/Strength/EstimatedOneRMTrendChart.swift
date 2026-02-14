@@ -81,8 +81,8 @@ struct EstimatedOneRMTrendChart: View {
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
                             .background(
                                 selectedExercise == exercise.exerciseName
                                     ? Color.modusCyan
@@ -192,8 +192,8 @@ struct EstimatedOneRMTrendChart: View {
                 Text("Epley Formula")
                     .font(.caption2)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color(.tertiarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.xs)
             }
@@ -208,7 +208,7 @@ struct EstimatedOneRMTrendChart: View {
                             x: .value("Date", point.date, unit: .day),
                             y: .value("Est. 1RM", point.estimated1RM)
                         )
-                        .foregroundStyle(Color.modusCyan.gradient)
+                        .foregroundStyle(Color.blue.gradient)
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 3))
 
@@ -216,7 +216,7 @@ struct EstimatedOneRMTrendChart: View {
                             x: .value("Date", point.date, unit: .day),
                             y: .value("Est. 1RM", point.estimated1RM)
                         )
-                        .foregroundStyle(Color.modusCyan)
+                        .foregroundStyle(Color.blue)
                         .symbolSize(40)
                     }
 
@@ -228,7 +228,7 @@ struct EstimatedOneRMTrendChart: View {
                         )
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.modusCyan.opacity(0.3), Color.modusCyan.opacity(0.05)],
+                                colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.05)],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )

@@ -235,6 +235,13 @@ struct StartWorkoutUpdate: Encodable {
 class ManualWorkoutService: ObservableObject {
     private let supabase: PTSupabaseClient
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
     init(supabase: PTSupabaseClient = .shared) {
         self.supabase = supabase
     }
@@ -652,7 +659,7 @@ class ManualWorkoutService: ObservableObject {
         logger.log("Starting workout session: \(sessionId)", level: .diagnostic)
 
         do {
-            let now = ISO8601DateFormatter().string(from: Date())
+            let now = Self.iso8601Formatter.string(from: Date())
 
             let response = try await supabase.client
                 .from("manual_sessions")
@@ -712,7 +719,7 @@ class ManualWorkoutService: ObservableObject {
         logger.log("Completing workout session: \(sessionId)", level: .diagnostic)
 
         do {
-            let now = ISO8601DateFormatter().string(from: Date())
+            let now = Self.iso8601Formatter.string(from: Date())
 
             let updateInput = CompleteWorkoutInput(
                 completed: true,
@@ -791,8 +798,7 @@ class ManualWorkoutService: ObservableObject {
         logger.log("  Volume: \(totalVolume ?? 0), RPE: \(avgRpe ?? 0), Pain: \(avgPain ?? 0), Duration: \(durationMinutes ?? 0) min", level: .diagnostic)
 
         do {
-            let formatter = ISO8601DateFormatter()
-            let now = formatter.string(from: Date())
+            let now = Self.iso8601Formatter.string(from: Date())
 
             // Include started_at for proper session summary time-based filtering
             struct CompletePrescribedInput: Codable {
@@ -817,7 +823,7 @@ class ManualWorkoutService: ObservableObject {
 
             let updateInput = CompletePrescribedInput(
                 completed: true,
-                startedAt: startedAt.map { formatter.string(from: $0) },
+                startedAt: startedAt.map { Self.iso8601Formatter.string(from: $0) },
                 completedAt: now,
                 totalVolume: totalVolume,
                 avgRpe: avgRpe,
@@ -1021,7 +1027,6 @@ class ManualWorkoutService: ObservableObject {
         let logger = DebugLogger.shared
         logger.log("Logging prescribed exercise: \(sessionExerciseId)", level: .diagnostic)
 
-        let formatter = ISO8601DateFormatter()
         let input = CreatePrescribedExerciseLogInput(
             sessionExerciseId: sessionExerciseId,
             patientId: patientId,
@@ -1032,7 +1037,7 @@ class ManualWorkoutService: ObservableObject {
             rpe: rpe,
             painScore: painScore,
             notes: notes,
-            loggedAt: formatter.string(from: Date())
+            loggedAt: Self.iso8601Formatter.string(from: Date())
         )
 
         do {

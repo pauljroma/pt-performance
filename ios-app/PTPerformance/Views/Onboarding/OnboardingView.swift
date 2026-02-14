@@ -33,8 +33,8 @@ struct OnboardingView: View {
                             Text("Quick Start")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.modusCyan)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
+                                .padding(.horizontal, Spacing.md)
+                                .padding(.vertical, Spacing.xs)
                                 .background(Color.modusCyan.opacity(0.12))
                                 .cornerRadius(CornerRadius.xl)
                         }
@@ -44,7 +44,7 @@ struct OnboardingView: View {
                     }
                 }
                 .frame(height: 52)
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
 
                 // Page content
                 TabView(selection: $currentPage) {
@@ -91,7 +91,7 @@ struct OnboardingView: View {
                         }
                         .accessibilityLabel("Explore First")
                         .accessibilityHint("Skip setup and explore the app")
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
                     } else {
                         // Non-final pages — subtle next hint
                         Color.clear
@@ -162,20 +162,20 @@ private struct OnboardingValuePage: View {
                     .frame(width: 80, height: 80)
                     .foregroundColor(.modusCyan)
             }
-            .padding(.bottom, 32)
+            .padding(.bottom, Spacing.xl)
 
             Text("Train Smarter.\nRecover Faster.")
                 .font(.system(size: 34, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundColor(.modusDeepTeal)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Text("Your all-in-one platform for guided workouts, progress tracking, and recovery optimization.")
                 .font(.system(size: 17))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
-                .padding(.top, 12)
+                .padding(.top, Spacing.sm)
                 .lineSpacing(4)
 
             Spacer()
@@ -234,7 +234,7 @@ private struct OnboardingFeaturesPage: View {
             Text("Everything You Need")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.modusDeepTeal)
-                .padding(.bottom, 24)
+                .padding(.bottom, Spacing.lg)
 
             VStack(spacing: 14) {
                 FeatureCard(
@@ -258,7 +258,7 @@ private struct OnboardingFeaturesPage: View {
                     subtitle: "Real-time progress sharing with your care team"
                 )
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Spacing.lg)
 
             Spacer()
         }
@@ -313,12 +313,12 @@ private struct OnboardingGetStartedPage: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 64))
                 .foregroundColor(.modusTealAccent)
-                .padding(.bottom, 24)
+                .padding(.bottom, Spacing.lg)
 
             Text("Ready When You Are")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.modusDeepTeal)
-                .padding(.bottom, 8)
+                .padding(.bottom, Spacing.xs)
 
             Text("Set up your profile for personalized workouts and goals, or jump straight in and explore.")
                 .font(.system(size: 17))
@@ -342,7 +342,7 @@ private struct OnboardingGetStartedPage: View {
             .padding(Spacing.md)
             .background(Color.modusLightTeal)
             .cornerRadius(CornerRadius.md)
-            .padding(.horizontal, 32)
+            .padding(.horizontal, Spacing.xl)
 
             Spacer()
         }

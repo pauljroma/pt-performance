@@ -100,7 +100,7 @@ struct ROMExercisesView: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("About ROM Tracking")
                         .font(.subheadline.weight(.semibold))
                 }

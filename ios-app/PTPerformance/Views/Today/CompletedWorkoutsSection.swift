@@ -61,7 +61,7 @@ struct CompletedWorkoutsSection: View {
     private func completedWorkoutRow(_ workout: TodayWorkoutSummary) -> some View {
         HStack(spacing: 12) {
             Image(systemName: workout.isPrescribed ? "clipboard.fill" : "dumbbell.fill")
-                .foregroundColor(workout.isPrescribed ? .blue : .orange)
+                .foregroundColor(workout.isPrescribed ? .modusCyan : .orange)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -95,8 +95,8 @@ struct CompletedWorkoutsSection: View {
                 .font(.caption)
                 .accessibilityHidden(true)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.sm)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(CornerRadius.sm)
         .contentShape(Rectangle())

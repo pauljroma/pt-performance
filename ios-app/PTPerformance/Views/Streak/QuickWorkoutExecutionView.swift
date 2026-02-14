@@ -144,8 +144,8 @@ struct QuickWorkoutExecutionView: View {
                     }
                     .font(.headline)
                     .foregroundColor(workoutTypeColor)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
                     .background(Color(.systemBackground))
                     .cornerRadius(CornerRadius.xl)
                 } else {
@@ -175,7 +175,7 @@ struct QuickWorkoutExecutionView: View {
             }
             .frame(height: 4)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(workoutTypeColor)
     }
 
@@ -336,8 +336,8 @@ struct QuickWorkoutExecutionView: View {
             }
             .font(.headline)
             .foregroundColor(completedExercises.contains(exercise.id) ? .white : workoutTypeColor)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 16)
+            .padding(.horizontal, Spacing.xl)
+            .padding(.vertical, Spacing.md)
             .background(completedExercises.contains(exercise.id) ? workoutTypeColor : Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.xl)
         }
@@ -375,12 +375,12 @@ struct QuickWorkoutExecutionView: View {
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, Spacing.md)
                     .background(workoutTypeColor)
                     .cornerRadius(CornerRadius.lg)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 32)
+            .padding(.horizontal, Spacing.xl)
+            .padding(.bottom, Spacing.xl)
         }
     }
 
@@ -431,8 +431,8 @@ struct QuickWorkoutExecutionView: View {
                         .foregroundColor(workoutTypeColor)
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.md)
                 .background(Color(.systemBackground))
             }
         }

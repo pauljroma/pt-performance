@@ -291,7 +291,7 @@ struct TherapistSchedulingView: View {
             // Filter bar
             filterBar
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
 
             // Session list
             if viewModel.filteredSessions.isEmpty {
@@ -438,7 +438,7 @@ struct TherapistSchedulingView: View {
             // Status badge
             statusBadge(for: item.session.status)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     // MARK: - Status Badge
@@ -447,8 +447,8 @@ struct TherapistSchedulingView: View {
         Text(status.displayName)
             .font(.caption2)
             .fontWeight(.semibold)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(statusColor(for: status).opacity(0.15))
             .foregroundColor(statusColor(for: status))
             .clipShape(Capsule())
@@ -470,7 +470,7 @@ struct TherapistSchedulingView: View {
     }
 
     private func avatarColor(for patient: Patient) -> Color {
-        let colors: [Color] = [.blue, .purple, .green, .orange, .pink, .indigo]
+        let colors: [Color] = [.modusCyan, .purple, .green, .orange, .pink, .indigo]
         let index = abs(patient.id.hashValue) % colors.count
         return colors[index]
     }

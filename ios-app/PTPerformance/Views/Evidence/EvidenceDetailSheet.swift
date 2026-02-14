@@ -256,7 +256,7 @@ struct EvidenceDetailSheet: View {
                 .foregroundColor(.primary)
                 .fontDesign(.monospaced)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     // MARK: - Review Section
@@ -289,7 +289,7 @@ struct EvidenceDetailSheet: View {
                         Text(notes)
                             .font(.caption)
                             .foregroundColor(.primary)
-                            .padding(.top, 4)
+                            .padding(.top, Spacing.xxs)
                     }
                 }
                 .padding()

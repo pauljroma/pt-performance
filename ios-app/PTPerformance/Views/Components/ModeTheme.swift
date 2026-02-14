@@ -99,6 +99,6 @@ extension View {
         let theme = ModeTheme.theme(for: mode)
         return self
             .environment(\.mode, mode)
-            .accentColor(theme.accentColor)
+            .tint(theme.accentColor)
     }
 }

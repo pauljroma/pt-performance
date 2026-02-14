@@ -56,7 +56,7 @@ struct SiriTipsView: View {
             Image(systemName: "waveform.circle.fill")
                 .font(.system(size: 60))
                 .foregroundStyle(.linearGradient(
-                    colors: [.blue, .purple],
+                    colors: [.modusCyan, .purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -119,7 +119,7 @@ struct SiriTipsView: View {
     private var readinessCard: some View {
         ShortcutCard(
             icon: "gauge.with.dots.needle.33percent",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             title: "Check Readiness",
             isExpanded: expandedSection == "readiness",
             phrases: [
@@ -286,7 +286,7 @@ struct ShortcutCard: View {
                     Text("Try saying:")
                         .font(.caption.bold())
                         .foregroundColor(.secondary)
-                        .padding(.top, 4)
+                        .padding(.top, Spacing.xxs)
 
                     ForEach(phrases, id: \.self) { phrase in
                         HStack(alignment: .top) {
@@ -397,7 +397,7 @@ struct CompactSiriTipCard: View {
                 Image(systemName: "waveform.circle.fill")
                     .font(.title)
                     .foregroundStyle(.linearGradient(
-                        colors: [.blue, .purple],
+                        colors: [.modusCyan, .purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ))

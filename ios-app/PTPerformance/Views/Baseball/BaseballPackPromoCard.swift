@@ -94,7 +94,7 @@ struct BaseballPackPromoCard: View {
                 featureTag(icon: "figure.arms.open", text: "Arm Care")
                 featureTag(icon: "bolt.fill", text: "Velocity")
             }
-            .padding(.top, 4)
+            .padding(.top, Spacing.xxs)
         }
         .padding(Spacing.sm)
     }

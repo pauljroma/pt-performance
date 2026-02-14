@@ -109,7 +109,7 @@ struct WeeklySummaryHistoryView: View {
                     }
                 }
                 .frame(height: 180)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
                 .accessibilityLabel(chartAccessibilityLabel)
                 .accessibilityHint("Shows adherence percentage trend over time")
             } else {
@@ -254,7 +254,7 @@ struct WeeklySummaryHistoryView: View {
             title: LocalizedStrings.EmptyStates.noWeeklyHistoryYet,
             message: "Complete workouts throughout the week to see your progress summaries here. Track your adherence trends and celebrate your weekly wins.",
             icon: "calendar.badge.clock",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: nil
         )
     }
@@ -353,7 +353,7 @@ struct WeeklySummaryDetailSheet: View {
                             ForEach(summary.improvementAreas, id: \.self) { area in
                                 HStack {
                                     Image(systemName: "target")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.modusCyan)
                                     Text(area)
                                         .font(.subheadline)
                                     Spacer()

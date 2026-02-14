@@ -509,7 +509,7 @@ struct PainBodyDiagramView: View {
                         Text(location.region.displayName)
                             .font(.title2.weight(.semibold))
                     }
-                    .padding(.top, 16)
+                    .padding(.top, Spacing.md)
                 }
 
                 // Intensity display

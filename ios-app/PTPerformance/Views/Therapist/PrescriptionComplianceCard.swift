@@ -41,7 +41,7 @@ struct PrescriptionComplianceCard: View {
                 // Quick actions
                 actionsSection
             }
-            .padding(16)
+            .padding(Spacing.md)
             .background(cardBackground)
             .cornerRadius(CornerRadius.lg)
             .overlay(
@@ -105,7 +105,7 @@ struct PrescriptionComplianceCard: View {
 
     private var avatarGradient: LinearGradient {
         LinearGradient(
-            colors: [.blue, .purple],
+            colors: [.modusCyan, .purple],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -164,8 +164,8 @@ struct PrescriptionComplianceCard: View {
                 .font(.caption)
                 .fontWeight(.medium)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(priorityColor.opacity(0.1))
         .foregroundColor(priorityColor)
         .cornerRadius(CornerRadius.xs)
@@ -225,7 +225,7 @@ struct PrescriptionComplianceCard: View {
                 actionButton(
                     icon: "bell",
                     title: "Remind",
-                    color: .blue,
+                    color: .modusCyan,
                     action: {
                         HapticFeedback.light()
                         onRemind()
@@ -422,7 +422,7 @@ struct CompactPrescriptionCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.blue, .purple],
+                            colors: [.modusCyan, .purple],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -473,7 +473,7 @@ struct CompactPrescriptionCard: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
@@ -680,7 +680,7 @@ struct PrescriptionComplianceCard_Previews: PreviewProvider {
                         title: "Active",
                         count: 12,
                         icon: "doc.badge.clock",
-                        color: .blue,
+                        color: .modusCyan,
                         subtitle: "prescriptions"
                     )
 

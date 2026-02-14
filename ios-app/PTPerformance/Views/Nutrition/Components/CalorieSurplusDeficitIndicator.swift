@@ -147,8 +147,8 @@ struct CalorieSurplusDeficitIndicator: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(status.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
                 .fill(status.color.opacity(colorScheme == .dark ? 0.25 : 0.15))
@@ -241,7 +241,7 @@ struct CompactCalorieBalanceBadge: View {
         if absPercentage < 5 {
             return .green
         } else if absPercentage < 15 {
-            return difference > 0 ? .blue : .orange
+            return difference > 0 ? .modusCyan : .orange
         } else {
             return difference > 0 ? .purple : .red
         }
@@ -265,8 +265,8 @@ struct CompactCalorieBalanceBadge: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
                 .fill(color.opacity(colorScheme == .dark ? 0.25 : 0.15))

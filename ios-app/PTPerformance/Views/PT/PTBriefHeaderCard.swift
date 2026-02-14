@@ -225,7 +225,7 @@ struct PTBriefHeaderCard: View {
         }
         .foregroundColor(.modusCyan)
         .padding(.horizontal, Spacing.xs)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.xs)
     }

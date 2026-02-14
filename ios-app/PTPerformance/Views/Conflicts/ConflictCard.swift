@@ -76,7 +76,7 @@ struct ConflictCard: View {
                 Text("Resolve")
                     .font(.caption.weight(.semibold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(
                         Capsule()
@@ -100,33 +100,26 @@ struct ConflictCard: View {
 /// Minimal conflict badge for inline display
 struct ConflictBadge: View {
     let count: Int
-    var size: BadgeSize = .regular
+    var size: BadgeSize = .medium
 
-    enum BadgeSize {
-        case small, regular, large
+    /// Use the canonical top-level BadgeSize enum
+    typealias BadgeSize = PTPerformance.BadgeSize
 
-        var iconFont: Font {
-            switch self {
-            case .small: return .caption2
-            case .regular: return .caption
-            case .large: return .body
-            }
+    /// Count label font based on size
+    private var countFont: Font {
+        switch size {
+        case .small: return .system(size: 9, weight: .bold)
+        case .medium: return .caption2.weight(.bold)
+        case .large: return .caption.weight(.bold)
         }
+    }
 
-        var countFont: Font {
-            switch self {
-            case .small: return .system(size: 9, weight: .bold)
-            case .regular: return .caption2.weight(.bold)
-            case .large: return .caption.weight(.bold)
-            }
-        }
-
-        var padding: CGFloat {
-            switch self {
-            case .small: return 4
-            case .regular: return 6
-            case .large: return 8
-            }
+    /// Conflict badge padding based on size
+    private var badgePadding: CGFloat {
+        switch size {
+        case .small: return 4
+        case .medium: return 6
+        case .large: return 8
         }
     }
 
@@ -137,12 +130,12 @@ struct ConflictBadge: View {
 
             if count > 1 {
                 Text("\(count)")
-                    .font(size.countFont)
+                    .font(countFont)
             }
         }
         .foregroundColor(.white)
-        .padding(.horizontal, size.padding)
-        .padding(.vertical, size.padding - 2)
+        .padding(.horizontal, badgePadding)
+        .padding(.vertical, badgePadding - 2)
         .background(
             Capsule()
                 .fill(Color.orange)
@@ -166,8 +159,8 @@ struct TimelineConflictIndicator: View {
                     .font(.caption)
                     .foregroundColor(.orange)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.orange.opacity(0.15))
@@ -213,8 +206,8 @@ struct MiniConflictCard: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, Spacing.xs)
+            .padding(.horizontal, Spacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.tertiarySystemGroupedBackground))
@@ -299,7 +292,7 @@ struct ConflictsSummarySection: View {
 #Preview("ConflictBadge") {
     HStack(spacing: 20) {
         ConflictBadge(count: 1, size: .small)
-        ConflictBadge(count: 3, size: .regular)
+        ConflictBadge(count: 3, size: .medium)
         ConflictBadge(count: 12, size: .large)
     }
     .padding()

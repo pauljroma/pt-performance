@@ -575,7 +575,7 @@ struct RecoveryTrackingView: View {
                 QuickLogCard(
                     title: "Cold Plunge",
                     icon: "snowflake",
-                    gradient: [.cyan, .blue],
+                    gradient: [.cyan, .modusCyan],
                     action: {
                         HapticFeedback.medium()
                         viewModel.startQuickLog(for: .coldPlunge)

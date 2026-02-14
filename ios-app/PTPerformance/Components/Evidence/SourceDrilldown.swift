@@ -129,8 +129,8 @@ struct SourceDrilldown: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(recencyColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(recencyColor.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }

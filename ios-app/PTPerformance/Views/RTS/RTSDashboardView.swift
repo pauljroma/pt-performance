@@ -170,7 +170,7 @@ struct RTSDashboardView: View {
                 VStack(spacing: Spacing.sm) {
                     Image(systemName: "flag.fill")
                         .font(.largeTitle)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     Text("Ready to Begin")
                         .font(.headline)
@@ -344,7 +344,7 @@ struct RTSDashboardView: View {
                 .font(.headline)
                 .padding(.horizontal, Spacing.lg)
                 .padding(.vertical, Spacing.md)
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -449,23 +449,24 @@ struct RTSTrafficLightBadge: View {
     let level: RTSTrafficLight
     var size: BadgeSize = .medium
 
-    enum BadgeSize {
-        case small, medium, large
+    /// Use the canonical top-level BadgeSize enum
+    typealias BadgeSize = PTPerformance.BadgeSize
 
-        var dimension: CGFloat {
-            switch self {
-            case .small: return 24
-            case .medium: return 36
-            case .large: return 48
-            }
+    /// Traffic light badge dimension based on size
+    private var badgeDimension: CGFloat {
+        switch size {
+        case .small: return 24
+        case .medium: return 36
+        case .large: return 48
         }
+    }
 
-        var iconSize: Font {
-            switch self {
-            case .small: return .caption
-            case .medium: return .body
-            case .large: return .title2
-            }
+    /// Traffic light icon size based on size
+    private var badgeIconSize: Font {
+        switch size {
+        case .small: return .caption
+        case .medium: return .body
+        case .large: return .title2
         }
     }
 
@@ -473,14 +474,14 @@ struct RTSTrafficLightBadge: View {
         ZStack {
             Circle()
                 .fill(level.color.opacity(0.2))
-                .frame(width: size.dimension, height: size.dimension)
+                .frame(width: badgeDimension, height: badgeDimension)
 
             Circle()
                 .fill(level.color)
-                .frame(width: size.dimension * 0.7, height: size.dimension * 0.7)
+                .frame(width: badgeDimension * 0.7, height: badgeDimension * 0.7)
 
             Image(systemName: level.icon)
-                .font(size.iconSize)
+                .font(badgeIconSize)
                 .foregroundColor(.white)
         }
         .accessibilityLabel("\(level.displayName) status")

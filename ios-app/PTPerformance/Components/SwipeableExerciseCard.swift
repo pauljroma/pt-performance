@@ -326,7 +326,7 @@ struct SwipeableExerciseCard: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.md)
         .padding(.vertical, 14)
         .background(
             ZStack {

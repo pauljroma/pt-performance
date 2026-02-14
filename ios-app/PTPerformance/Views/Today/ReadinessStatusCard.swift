@@ -104,7 +104,7 @@ struct ReadinessStatusCard: View {
             HStack {
                 Image(systemName: "heart.text.square")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -130,7 +130,7 @@ struct ReadinessStatusCard: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.sm + 2)
             }

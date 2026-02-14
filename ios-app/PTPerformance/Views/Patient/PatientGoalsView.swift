@@ -125,7 +125,7 @@ struct PatientGoalsView: View {
             title: "No Goals Yet",
             message: "Set your first goal to start tracking your progress toward recovery and performance milestones. Goals help you stay motivated and measure your improvement.",
             icon: "target",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Add Your First Goal",
                 icon: "plus.circle.fill",
@@ -192,7 +192,7 @@ struct PatientGoalsView: View {
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
+                    .padding(.vertical, Spacing.xl)
                 } else {
                     ForEach(filteredGoals) { goal in
                         NavigationLink {
@@ -216,7 +216,7 @@ struct PatientGoalsView: View {
                             } label: {
                                 Label("Edit", systemImage: "pencil")
                             }
-                            .tint(.blue)
+                            .tint(.modusCyan)
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             if goal.status == .active {

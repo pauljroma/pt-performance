@@ -12,7 +12,7 @@ struct ExerciseRow: View {
                 .font(.headline)
                 .foregroundColor(.white)
                 .frame(width: 32, height: 32)
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .clipShape(Circle())
 
             // Exercise details
@@ -152,7 +152,7 @@ struct ExerciseDetailView: View {
                         Text("Log This Exercise")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(Color.modusCyan)
                             .foregroundColor(.white)
                             .cornerRadius(CornerRadius.md)
                     }
@@ -216,8 +216,8 @@ struct OneTapStartButton: View {
                     .fontWeight(.semibold)
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 32)
-            .padding(.vertical, 16)
+            .padding(.horizontal, Spacing.xl)
+            .padding(.vertical, Spacing.md)
             .background(
                 Capsule()
                     .fill(Color.green)

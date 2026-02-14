@@ -95,7 +95,7 @@ struct VideoPlayerView: View {
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
                                 .background(Color.white.opacity(0.2))
                                 .cornerRadius(CornerRadius.sm)
@@ -108,14 +108,14 @@ struct VideoPlayerView: View {
                             } label: {
                                 Image(systemName: playerController.isLooping ? "repeat.1" : "repeat")
                                     .font(.title3)
-                                    .foregroundColor(playerController.isLooping ? .blue : .white)
+                                    .foregroundColor(playerController.isLooping ? .modusCyan : .white)
                                     .frame(width: 44, height: 44)
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.bottom, Spacing.sm)
                     }
-                    .padding(.top, 12)
+                    .padding(.top, Spacing.sm)
                     .background(
                         LinearGradient(
                             gradient: Gradient(colors: [.clear, .black.opacity(0.7)]),
@@ -243,7 +243,7 @@ struct VideoProgressBar: View {
             )
         }
         .frame(height: 12)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.md)
     }
 }
 

@@ -65,7 +65,7 @@ struct MealTimelineView: View {
                         .foregroundColor(.secondary)
 
                     Circle()
-                        .fill(Color.blue.opacity(0.5))
+                        .fill(Color.modusCyan.opacity(0.5))
                         .frame(width: 6, height: 6)
                     Text("Planned")
                         .font(.caption2)
@@ -171,7 +171,7 @@ struct TimelineItemView: View {
             // Timeline indicator
             VStack(spacing: 0) {
                 Circle()
-                    .fill(item.type == .logged ? Color.green : Color.blue.opacity(0.5))
+                    .fill(item.type == .logged ? Color.green : Color.modusCyan.opacity(0.5))
                     .frame(width: 10, height: 10)
 
                 if !isLast {
@@ -246,7 +246,7 @@ struct LoggedMealTimelineCard: View {
                     HStack(spacing: 2) {
                         Text("C:")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("\(Int(log.totalCarbsG ?? 0))g")
                             .font(.caption2)
                             .fontWeight(.medium)
@@ -319,12 +319,12 @@ struct PlannedMealTimelineCard: View {
                     Text("Planned")
                         .font(.caption2)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 4)
+                        .foregroundColor(.modusCyan)
+                        .padding(.horizontal, Spacing.xxs)
                         .padding(.vertical, 1)
                         .background(
                             Capsule()
-                                .fill(Color.blue.opacity(0.15))
+                                .fill(Color.modusCyan.opacity(0.15))
                         )
                 }
                 .foregroundColor(.primary.opacity(0.8))
@@ -369,7 +369,7 @@ struct PlannedMealTimelineCard: View {
                 .fill(Color(.secondarySystemBackground).opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: CornerRadius.sm)
-                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
+                        .strokeBorder(Color.modusCyan.opacity(0.2), lineWidth: 1)
                 )
         )
     }

@@ -71,7 +71,7 @@ struct AddCustomFoodView: View {
                 }
 
                 macroRow("Protein *", value: $protein, unit: "g", color: .red)
-                macroRow("Carbs *", value: $carbs, unit: "g", color: .blue)
+                macroRow("Carbs *", value: $carbs, unit: "g", color: .modusCyan)
                 macroRow("Fat *", value: $fat, unit: "g", color: .yellow)
             }
 

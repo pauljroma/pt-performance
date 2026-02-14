@@ -253,7 +253,7 @@ struct TherapistProgramBuilderView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("No phases yet. Add phases to structure your program.")
             Spacer()
@@ -280,7 +280,7 @@ struct TherapistProgramBuilderView: View {
                 }
             }
             .disabled(!viewModel.isReadyToPublish || viewModel.isLoading)
-            .foregroundColor(viewModel.isReadyToPublish ? .blue : .secondary)
+            .foregroundColor(viewModel.isReadyToPublish ? .modusCyan : .secondary)
         } footer: {
             if !viewModel.isReadyToPublish {
                 Text("Add at least one phase with workouts to publish")
@@ -406,7 +406,7 @@ private struct PhaseListRow: View {
     }
 
     private var phaseColor: Color {
-        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+        let colors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
         return colors[(phaseNumber - 1) % colors.count]
     }
 }
@@ -447,7 +447,7 @@ private struct TagChipRemovable: View {
         HStack(spacing: 4) {
             Text("#\(text)")
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
@@ -458,7 +458,7 @@ private struct TagChipRemovable: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .contain)
     }

@@ -157,7 +157,7 @@ struct WeeklyReportGeneratorSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
             .background(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))
             .cornerRadius(CornerRadius.sm)
         }
@@ -187,12 +187,12 @@ struct WeeklyReportGeneratorSheet: View {
                 Text("All patients will be included")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
             } else {
                 Text("\(selectedPatients.count) patients selected")
                     .font(.subheadline)
                     .foregroundColor(.modusCyan)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
             }
 
             Button {
@@ -221,7 +221,7 @@ struct WeeklyReportGeneratorSheet: View {
             Toggle(isOn: $includeCharts) {
                 HStack {
                     Image(systemName: "chart.bar.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Progress Charts")
                 }
             }
@@ -279,7 +279,7 @@ struct WeeklyReportGeneratorSheet: View {
                     .foregroundColor(isSelected ? .white : .primary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))
             .cornerRadius(CornerRadius.md)
         }

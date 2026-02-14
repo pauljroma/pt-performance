@@ -202,7 +202,7 @@ struct EnhancedPlannedMealCard: View {
                     .font(.system(size: 8))
                     .foregroundColor(.white)
                     .padding(3)
-                    .background(Circle().fill(Color.blue))
+                    .background(Circle().fill(Color.modusCyan))
                     .offset(x: 4, y: -4)
             }
 
@@ -217,12 +217,12 @@ struct EnhancedPlannedMealCard: View {
                     Text("Planned")
                         .font(.caption2)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(
                             Capsule()
-                                .fill(Color.blue.opacity(0.15))
+                                .fill(Color.modusCyan.opacity(0.15))
                         )
 
                     Spacer()
@@ -280,7 +280,7 @@ struct EnhancedPlannedMealCard: View {
                     RoundedRectangle(cornerRadius: CornerRadius.md)
                         .strokeBorder(
                             LinearGradient(
-                                colors: [Color.blue.opacity(0.3), Color.blue.opacity(0.1)],
+                                colors: [Color.modusCyan.opacity(0.3), Color.modusCyan.opacity(0.1)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),

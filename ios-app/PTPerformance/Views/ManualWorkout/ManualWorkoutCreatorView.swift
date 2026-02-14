@@ -349,8 +349,8 @@ struct ManualWorkoutCreatorView: View {
 
                     // Start Workout Button
                     startWorkoutButton
-                        .padding(.top, 8)
-                        .padding(.bottom, 32)
+                        .padding(.top, Spacing.xs)
+                        .padding(.bottom, Spacing.xl)
                 }
                 .padding(.horizontal)
             }
@@ -419,7 +419,7 @@ struct ManualWorkoutCreatorView: View {
                 .accessibilityLabel("Workout name")
                 .accessibilityHint("Enter a name for your workout")
         }
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     private var startWorkoutButton: some View {
@@ -439,8 +439,8 @@ struct ManualWorkoutCreatorView: View {
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(viewModel.canStartWorkout ? Color.blue : Color.gray)
+            .padding(.vertical, Spacing.md)
+            .background(viewModel.canStartWorkout ? Color.modusCyan : Color.gray)
             .foregroundColor(.white)
             .cornerRadius(CornerRadius.md)
         }
@@ -493,7 +493,7 @@ struct BlockSection: View {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .accessibilityHidden(true)
                 }
                 .padding()
@@ -512,7 +512,7 @@ struct BlockSection: View {
                         ForEach(exercises) { exercise in
                             CreatorExerciseRow(exercise: exercise)
                                 .padding(.horizontal)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, Spacing.xs)
 
                             if exercise.id != exercises.last?.id {
                                 Divider()
@@ -532,7 +532,7 @@ struct BlockSection: View {
                                 .foregroundColor(blockType.color)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.sm)
                     }
                     .buttonStyle(.plain)
                     .background(blockType.color.opacity(0.08))
@@ -592,7 +592,7 @@ private struct CreatorExerciseRow: View {
             if exercise.videoUrl != nil {
                 Image(systemName: "play.circle.fill")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .accessibilityLabel("Has video demonstration")
             }
         }
@@ -1027,8 +1027,8 @@ struct ExercisePickerRowView: View {
             if exercise.hasVideo {
                 Image(systemName: "play.circle")
                     .font(.caption)
-                    .foregroundColor(.blue)
-                    .padding(.trailing, 4)
+                    .foregroundColor(.modusCyan)
+                    .padding(.trailing, Spacing.xxs)
             }
 
             Image(systemName: "plus.circle.fill")
@@ -1036,7 +1036,7 @@ struct ExercisePickerRowView: View {
                 .foregroundColor(blockType.color)
                 .accessibilityHidden(true)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(exercise.name), \(exercise.category?.capitalized ?? ""), \(exercise.body_region?.capitalized ?? "")")

@@ -463,7 +463,7 @@ private struct AssessmentRow: View {
                 .fontWeight(.bold)
                 .foregroundColor(assessment.riskLevel.color)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 }
 
@@ -503,7 +503,7 @@ private struct LegacyTrendChart: View {
                             }
                         }
                     }
-                    .stroke(Color.blue, lineWidth: 2)
+                    .stroke(Color.modusCyan, lineWidth: 2)
                 }
 
                 // Points
@@ -617,7 +617,7 @@ struct UCLCheckInSheet: View {
             ForEach(0..<steps.count, id: \.self) { index in
                 VStack(spacing: 4) {
                     Circle()
-                        .fill(index <= currentStep ? Color.blue : Color.gray.opacity(0.3))
+                        .fill(index <= currentStep ? Color.modusCyan : Color.gray.opacity(0.3))
                         .frame(width: 10, height: 10)
 
                     Text(steps[index])
@@ -627,7 +627,7 @@ struct UCLCheckInSheet: View {
 
                 if index < steps.count - 1 {
                     Rectangle()
-                        .fill(index < currentStep ? Color.blue : Color.gray.opacity(0.3))
+                        .fill(index < currentStep ? Color.modusCyan : Color.gray.opacity(0.3))
                         .frame(height: 2)
                         .frame(maxWidth: .infinity)
                 }
@@ -667,7 +667,7 @@ struct UCLCheckInSheet: View {
             Section {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Pain on the medial (inner) side of the elbow during or after throwing is the most common early warning sign of UCL stress.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -701,7 +701,7 @@ struct UCLCheckInSheet: View {
             Section {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Decreased velocity or accuracy can be early signs of UCL fatigue before pain develops.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -734,7 +734,7 @@ struct UCLCheckInSheet: View {
             Section {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("The ulnar nerve runs near the UCL. Numbness in the ring and pinky fingers can indicate nerve irritation from UCL inflammation.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -775,7 +775,7 @@ struct UCLCheckInSheet: View {
             Section {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Pitch count and throwing intensity are major factors in UCL stress. Following guidelines helps prevent injury.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -816,7 +816,7 @@ struct UCLCheckInSheet: View {
             Section {
                 HStack {
                     Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Throwing while fatigued significantly increases UCL injury risk. Always prioritize recovery.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -971,12 +971,12 @@ struct UCLEducationSheet: View {
                     ForEach(UCLEducationalContent.keyFacts, id: \.self) { fact in
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                                 .padding(.top, 2)
                             Text(fact)
                                 .font(.subheadline)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
 
@@ -989,7 +989,7 @@ struct UCLEducationSheet: View {
                             Text(sign)
                                 .font(.subheadline)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
 
@@ -1002,7 +1002,7 @@ struct UCLEducationSheet: View {
                             Text(strategy)
                                 .font(.subheadline)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
 
@@ -1021,7 +1021,7 @@ struct UCLEducationSheet: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
             }

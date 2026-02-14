@@ -107,7 +107,7 @@ struct WeeklyReportView: View {
             // Patient Avatar
             Circle()
                 .fill(LinearGradient(
-                    colors: [.blue, .purple],
+                    colors: [.modusCyan, .purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ))
@@ -362,7 +362,7 @@ struct WeeklyReportView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue)
+            .background(Color.modusCyan)
             .cornerRadius(CornerRadius.md)
         }
         .accessibilityLabel("Export PDF Report")

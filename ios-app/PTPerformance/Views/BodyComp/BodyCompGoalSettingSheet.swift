@@ -198,7 +198,7 @@ struct BodyCompGoalSettingSheet: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             Text("Current Stats")
         } footer: {
@@ -226,7 +226,7 @@ struct BodyCompGoalSettingSheet: View {
                 if let rate = weeklyWeightChange, viewModel.latestWeight != nil {
                     HStack {
                         Image(systemName: rate < 0 ? "arrow.down.right" : "arrow.up.right")
-                            .foregroundColor(isWeightRateHealthy ? .blue : .orange)
+                            .foregroundColor(isWeightRateHealthy ? .modusCyan : .orange)
 
                         let direction = rate < 0 ? "lose" : "gain"
                         Text("\(abs(rate), specifier: "%.1f") lbs/week to \(direction)")
@@ -359,11 +359,11 @@ struct BodyCompGoalSettingSheet: View {
                 TimelineButton(title: "90 days", weeks: 12) { targetDate = Date().addingTimeInterval(90 * 24 * 60 * 60) }
                 TimelineButton(title: "6 months", weeks: 26) { targetDate = Date().addingTimeInterval(180 * 24 * 60 * 60) }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
 
             HStack {
                 Image(systemName: "calendar")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("\(weeksUntilTarget) weeks until target date")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -392,7 +392,7 @@ struct BodyCompGoalSettingSheet: View {
                 TipRow(icon: "chart.line.uptrend.xyaxis", text: "Track regularly to monitor progress")
                 TipRow(icon: "figure.run", text: "Combine with consistent exercise and nutrition")
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             Label("Tips for Success", systemImage: "lightbulb")
         }

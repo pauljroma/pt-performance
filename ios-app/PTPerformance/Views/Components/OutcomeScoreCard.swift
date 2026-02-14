@@ -41,7 +41,7 @@ struct OutcomeScoreCard: View {
                         scoreGauge
                         changeFromBaselineSection
                     }
-                    .padding(.top, 8)
+                    .padding(.top, Spacing.xs)
 
                     if showDetails {
                         Divider()
@@ -503,8 +503,8 @@ struct OutcomeScoreBadge: View {
                     .foregroundColor(.green)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             RoundedRectangle(cornerRadius: 6)
                 .fill(Color(.tertiarySystemBackground))

@@ -268,8 +268,8 @@ struct TodayHubView: View {
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(
                 Capsule()
                     .fill(Color(.secondarySystemGroupedBackground))

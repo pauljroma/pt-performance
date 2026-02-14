@@ -125,7 +125,7 @@ struct CalendarSettingsView: View {
                     .accessibilityHint("Requests permission to access your calendars")
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(permissionTitle). \(permissionSubtitle)")
         } header: {
@@ -316,7 +316,7 @@ struct CalendarSettingsView: View {
                 HStack {
                     if calendarService.isSyncing {
                         ProgressView()
-                            .padding(.trailing, 8)
+                            .padding(.trailing, Spacing.xs)
                             .accessibilityHidden(true)
                     }
                     Text(calendarService.isSyncing ? "Syncing..." : "Sync Now")

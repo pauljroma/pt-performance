@@ -542,23 +542,8 @@ struct CohortTrendData: Codable, Equatable {
     /// Trend direction for retention
     let retentionTrend: TrendDirection
 
-    enum TrendDirection: String, Codable {
-        case increasing
-        case decreasing
-        case stable
-
-        var iconName: String {
-            switch self {
-            case .increasing: return "arrow.up.right"
-            case .decreasing: return "arrow.down.right"
-            case .stable: return "arrow.right"
-            }
-        }
-
-        var isPositive: Bool {
-            self == .increasing
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 
     // MARK: - CodingKeys
 

@@ -85,7 +85,7 @@ struct SafetyIncidentRow: View {
                 .foregroundColor(severityColor)
         }
         .frame(width: 60)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(severityColor.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
     }
@@ -101,8 +101,8 @@ struct SafetyIncidentRow: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(statusColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(statusColor.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -118,8 +118,8 @@ struct SafetyIncidentRow: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(.purple)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.purple.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -137,7 +137,7 @@ struct SafetyIncidentRow: View {
                 } label: {
                     Image(systemName: "magnifyingglass")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .buttonStyle(.plain)
 
@@ -260,8 +260,8 @@ struct CompactSafetyIncidentRow: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.vertical, Spacing.xs)
+            .padding(.horizontal, Spacing.sm)
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
         }

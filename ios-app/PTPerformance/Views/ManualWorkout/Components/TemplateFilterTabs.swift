@@ -34,7 +34,7 @@ struct TemplateSearchBar: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 }
 
@@ -68,7 +68,7 @@ struct TemplateCategoryFilters: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
         }
     }
 }
@@ -92,8 +92,8 @@ struct TemplateCategoryChip: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -121,11 +121,11 @@ struct TabButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(isSelected ? Color.blue : Color.clear)
+            .background(isSelected ? Color.modusCyan : Color.clear)
             .foregroundColor(isSelected ? .white : .secondary)
             .cornerRadius(CornerRadius.sm)
         }
-        .padding(4)
+        .padding(Spacing.xxs)
     }
 }
 
@@ -163,6 +163,6 @@ struct TemplateTabPicker: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
-        .padding(.bottom, 8)
+        .padding(.bottom, Spacing.xs)
     }
 }

@@ -18,7 +18,7 @@ struct ContextualHelpButton: View {
         } label: {
             Image(systemName: "questionmark.circle")
                 .font(.system(size: 20))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
         }
         .accessibilityLabel("Help")
         .accessibilityHint("Opens help and support articles")

@@ -40,3 +40,5 @@ excluded:
   - PTPerformanceWidgets
   - Pods
   - .build
+  - build
+  - build/DerivedData

@@ -239,7 +239,7 @@ struct CalendarView: View {
         }
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)
-        .padding(.bottom, 8)
+        .padding(.bottom, Spacing.xs)
         .onChange(of: viewMode) { _, _ in
             HapticFeedback.selectionChanged()
         }
@@ -257,7 +257,7 @@ struct CalendarView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                 }
             }
 
@@ -308,7 +308,7 @@ struct CalendarView: View {
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                 }
             }
 
@@ -1111,7 +1111,7 @@ struct DaySessionCard: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(statusColor)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Spacing.xs)
         .padding(.vertical, 3)
         .background(statusColor.opacity(0.12))
         .cornerRadius(CornerRadius.xs)

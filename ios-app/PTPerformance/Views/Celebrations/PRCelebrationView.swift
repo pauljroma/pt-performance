@@ -337,7 +337,7 @@ struct PRBadgeView: View {
                         Text("NEW")
                             .font(.system(size: 8, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 4)
+                            .padding(.horizontal, Spacing.xxs)
                             .padding(.vertical, 1)
                             .background(Color.green)
                             .cornerRadius(CornerRadius.xs)

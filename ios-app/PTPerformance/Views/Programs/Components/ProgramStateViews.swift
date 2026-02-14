@@ -61,7 +61,7 @@ struct ProgramLoadingOverlay: View {
                     .font(.headline)
                     .foregroundColor(.primary)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(Color(.systemBackground).opacity(0.95))
             .cornerRadius(CornerRadius.lg)
             .shadow(radius: 10)
@@ -138,7 +138,7 @@ struct ProgramErrorView: View {
                     .foregroundColor(.secondary)
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, Spacing.xs)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
@@ -253,7 +253,7 @@ struct ProgramEmptyStateView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
                 .accessibilityLabel(action.title)
                 .accessibilityHint(action.hint ?? "")
             }
@@ -333,7 +333,7 @@ extension ProgramEmptyStateView {
             title: "No Active Programs",
             message: "You haven't enrolled in any programs yet. Browse our library to find one that fits your goals.",
             icon: "rectangle.stack.badge.plus",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: ProgramEmptyStateAction("Browse Programs", icon: "magnifyingglass", hint: "Opens the program library", action: browseAction)
         )
     }
@@ -373,7 +373,7 @@ struct ProgramInlineError: View {
                     Image(systemName: "arrow.clockwise")
                         .font(.subheadline.weight(.medium))
                 }
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
         }
         .padding()

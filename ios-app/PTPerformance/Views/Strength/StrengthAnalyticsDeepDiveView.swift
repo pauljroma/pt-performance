@@ -114,7 +114,7 @@ struct StrengthAnalyticsDeepDiveView: View {
                                 .fontWeight(.medium)
                         }
                         .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                         .background(
                             selectedTab == tab
                                 ? Color.modusCyan

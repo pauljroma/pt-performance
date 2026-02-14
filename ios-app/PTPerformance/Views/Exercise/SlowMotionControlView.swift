@@ -63,10 +63,10 @@ struct SlowMotionControlView: View {
             Text("Perfect for form review")
                 .font(.caption)
         }
-        .foregroundColor(.blue)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color.blue.opacity(0.15))
+        .foregroundColor(.modusCyan)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
+        .background(Color.modusCyan.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
 
@@ -82,7 +82,7 @@ struct SlowMotionControlView: View {
                 ZStack {
                     // Background
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(isSelected ? Color.blue : Color.white.opacity(0.1))
+                        .fill(isSelected ? Color.modusCyan : Color.white.opacity(0.1))
                         .frame(height: 48)
 
                     // Speed value
@@ -101,17 +101,17 @@ struct SlowMotionControlView: View {
                                 .font(.caption2)
                         }
                     }
-                    .foregroundColor(isSelected ? .blue : .white.opacity(0.5))
+                    .foregroundColor(isSelected ? .modusCyan : .white.opacity(0.5))
                 } else if speed == .normal {
                     Text("Normal")
                         .font(.caption2)
-                        .foregroundColor(isSelected ? .blue : .white.opacity(0.5))
+                        .foregroundColor(isSelected ? .modusCyan : .white.opacity(0.5))
                 } else {
                     HStack(spacing: 2) {
                         Image(systemName: "hare.fill")
                             .font(.caption2)
                     }
-                    .foregroundColor(isSelected ? .blue : .white.opacity(0.5))
+                    .foregroundColor(isSelected ? .modusCyan : .white.opacity(0.5))
                 }
             }
         }
@@ -207,8 +207,8 @@ struct CompactSpeedControlView: View {
             }
             .font(.caption)
             .fontWeight(.semibold)
-            .foregroundColor(currentSpeed.isSlowMotion ? .blue : .white)
-            .padding(.horizontal, 12)
+            .foregroundColor(currentSpeed.isSlowMotion ? .modusCyan : .white)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(Color.white.opacity(0.2))
             .cornerRadius(CornerRadius.sm)
@@ -279,7 +279,7 @@ struct SpeedSliderView: View {
                             .fontWeight(speed == preset ? .bold : .regular)
                             .foregroundColor(speed == preset ? .white : .white.opacity(0.6))
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, Spacing.xxs)
                             .background(speed == preset ? speedColor.opacity(0.3) : Color.clear)
                             .cornerRadius(CornerRadius.xs)
                     }

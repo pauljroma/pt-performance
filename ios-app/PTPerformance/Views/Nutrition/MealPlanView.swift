@@ -105,10 +105,10 @@ struct MealPlanView: View {
                 if let type = plan.planType {
                     Text(type.displayName)
                         .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
+                        .background(Color.modusCyan.opacity(0.1))
+                        .foregroundColor(.modusCyan)
                         .cornerRadius(CornerRadius.sm)
                 }
             }
@@ -154,7 +154,7 @@ struct MealPlanView: View {
                 Label("Create Plan", systemImage: "plus.circle.fill")
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.sm)
             }
@@ -178,11 +178,11 @@ struct MealPlanView: View {
                                 .fontWeight(selectedDay == day ? .bold : .regular)
 
                             Circle()
-                                .fill(selectedDay == day ? Color.blue : Color.clear)
+                                .fill(selectedDay == day ? Color.modusCyan : Color.clear)
                                 .frame(width: 6, height: 6)
                         }
                         .frame(width: 44, height: 50)
-                        .background(selectedDay == day ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+                        .background(selectedDay == day ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                     }
                     .buttonStyle(.plain)
@@ -403,7 +403,7 @@ struct MealPlanRowWithActivate: View {
                     onActivate()
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
 
             Image(systemName: "chevron.right")
@@ -425,7 +425,7 @@ struct MealPlanItemRow: View {
         HStack {
             Image(systemName: item.mealType.icon)
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 40)
 
             VStack(alignment: .leading, spacing: 4) {

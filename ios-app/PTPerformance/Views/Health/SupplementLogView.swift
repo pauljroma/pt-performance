@@ -53,7 +53,7 @@ struct SupplementLogView: View {
                                 .font(.caption)
                                 .foregroundColor(.modusCyan)
                                 .padding(.horizontal, Spacing.sm)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(Color.modusCyan.opacity(0.1))
                                 .cornerRadius(CornerRadius.sm)
                         }

@@ -211,7 +211,7 @@ struct ShoulderROMEntry: View {
                                     .font(.caption)
                                     .foregroundColor(.red)
                             }
-                            .padding(.top, 4)
+                            .padding(.top, Spacing.xxs)
                         }
                     }
                 } header: {

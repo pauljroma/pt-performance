@@ -135,7 +135,7 @@ struct ProgramLibraryBrowserView: View {
                             .font(.subheadline)
                             .foregroundColor(.white)
                     }
-                    .padding(24)
+                    .padding(Spacing.lg)
                     .background(Color(.systemBackground))
                     .cornerRadius(CornerRadius.md)
                     .shadow(radius: 10)
@@ -228,7 +228,7 @@ struct ProgramLibraryBrowserView: View {
             .accessibilityHint("Double tap to change sort order")
         }
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Category Filters
@@ -266,7 +266,7 @@ struct ProgramLibraryBrowserView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -387,7 +387,7 @@ struct ProgramLibraryBrowserView: View {
                 .padding(.horizontal)
             }
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, Spacing.xs)
         .background(Color(.systemGroupedBackground))
         .transition(.move(edge: .top).combined(with: .opacity))
     }
@@ -574,8 +574,8 @@ private struct ProgramFilterChip: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -616,8 +616,8 @@ private struct BaseballCategoryChip: View {
                         .accessibilityHidden(true)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.modusCyan.opacity(0.8) : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -669,7 +669,7 @@ struct EnhancedProgramLibraryCard: View {
                 .padding(6)
                 .background(Color.black.opacity(0.5))
                 .cornerRadius(CornerRadius.sm)
-                .padding(8)
+                .padding(Spacing.xs)
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -757,8 +757,8 @@ struct EnhancedProgramLibraryCard: View {
                                     .font(.system(size: 10, weight: .medium))
                             }
                             .foregroundColor(.modusCyan)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(Color.modusCyan.opacity(0.12))
                             .cornerRadius(CornerRadius.sm)
                         }
@@ -847,8 +847,8 @@ struct ProgramCategoryBadge: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(categoryColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(categoryColor.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -895,8 +895,8 @@ struct ProgramDifficultyBadge: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(difficultyColor)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(difficultyColor.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -1118,7 +1118,7 @@ private struct PreviewDayRow: View {
                 }
             }
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }
@@ -1216,8 +1216,8 @@ struct ProgramPreviewSheet: View {
                             .fontWeight(.medium)
                     }
                     .foregroundColor(.yellow)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.yellow.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
@@ -1291,7 +1291,7 @@ struct ProgramPreviewSheet: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }
@@ -1303,7 +1303,7 @@ struct ProgramPreviewSheet: View {
             Text("Equipment Required")
                 .font(.headline)
 
-            ProgramFlowLayout(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 ForEach(program.equipment, id: \.self) { equipment in
                     Text(equipment)
                         .font(.caption)
@@ -1323,7 +1323,7 @@ struct ProgramPreviewSheet: View {
             Text("Tags")
                 .font(.headline)
 
-            ProgramFlowLayout(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 ForEach(program.tagsList, id: \.self) { tag in
                     Text("#\(tag)")
                         .font(.caption)
@@ -1351,7 +1351,7 @@ struct ProgramPreviewSheet: View {
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.md)
                 .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
@@ -1365,60 +1365,7 @@ struct ProgramPreviewSheet: View {
 }
 
 // MARK: - Flow Layout (for tags and equipment)
-
-private struct ProgramFlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(
-            in: proposal.replacingUnspecifiedDimensions().width,
-            subviews: subviews,
-            spacing: spacing
-        )
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(
-            in: bounds.width,
-            subviews: subviews,
-            spacing: spacing
-        )
-
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                       y: bounds.minY + result.positions[index].y),
-                          proposal: .unspecified)
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-
-                if x + size.width > maxWidth && x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, size.height)
-                x += size.width + spacing
-            }
-
-            self.size = CGSize(width: maxWidth, height: y + rowHeight)
-        }
-    }
-}
+// Uses the canonical FlowLayout from Components/FlowLayout.swift
 
 // MARK: - Legacy Card (kept for backward compatibility)
 

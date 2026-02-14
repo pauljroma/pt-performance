@@ -102,7 +102,7 @@ struct MyWorkoutsGrid: View {
         LazyVStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "person.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("My Created Workouts")
                     .font(.headline)
                 Spacer()

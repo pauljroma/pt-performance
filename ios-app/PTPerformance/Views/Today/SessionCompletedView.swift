@@ -31,7 +31,7 @@ struct SessionCompletedView: View {
                 }
 
                 Divider()
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
 
                 // Options for next steps
                 nextStepsSection
@@ -216,7 +216,7 @@ struct SessionCompletedView: View {
                 }
             }
         }
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Next Steps Section
@@ -240,7 +240,7 @@ struct SessionCompletedView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -277,9 +277,9 @@ struct SessionCompletedView: View {
                     Text("View Session Summary")
                 }
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
-            .padding(.top, 8)
+            .padding(.top, Spacing.xs)
             .accessibilityLabel("View Session Summary")
             .accessibilityHint("Shows detailed summary of completed workout")
         }

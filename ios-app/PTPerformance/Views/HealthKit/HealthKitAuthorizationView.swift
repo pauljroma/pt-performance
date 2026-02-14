@@ -23,7 +23,7 @@ struct HealthKitAuthorizationView: View {
                     // Header icon
                     Image(systemName: "applewatch")
                         .font(.system(size: 60))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .padding(.top, 20)
 
                     // Title
@@ -41,7 +41,7 @@ struct HealthKitAuthorizationView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Data We Access")
                             .font(.headline)
-                            .padding(.bottom, 4)
+                            .padding(.bottom, Spacing.xxs)
 
                         DataAccessRow(
                             icon: "heart.fill",
@@ -122,7 +122,7 @@ struct HealthKitAuthorizationView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                     }

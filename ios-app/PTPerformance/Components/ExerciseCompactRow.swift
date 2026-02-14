@@ -110,7 +110,7 @@ struct ExerciseCompactRow: View {
                 .font(.headline)
                 .foregroundColor(.white)
                 .frame(width: 32, height: 32)
-                .background(isCompleted ? Color.green : Color.blue)
+                .background(isCompleted ? Color.green : Color.modusCyan)
                 .clipShape(Circle())
 
             // Exercise details
@@ -187,7 +187,7 @@ struct ExerciseCompactRow: View {
         }) {
             Label(value, systemImage: icon)
                 .font(.caption)
-                .foregroundColor(editingField == field ? .blue : .secondary)
+                .foregroundColor(editingField == field ? .modusCyan : .secondary)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -231,7 +231,7 @@ struct ExerciseCompactRow: View {
             Divider()
                 .padding(.horizontal)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     @ViewBuilder
@@ -350,7 +350,7 @@ struct ExerciseCompactRow: View {
                     Text("Add Set")
                 }
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -377,7 +377,7 @@ struct ExerciseCompactRow: View {
                     get: { Double(rpe) },
                     set: { rpe = Int($0) }
                 ), in: 0...10, step: 1)
-                    .accentColor(rpeColor)
+                    .tint(rpeColor)
                     .accessibilityLabel("Rating of Perceived Exertion")
                     .accessibilityValue("\(rpe) out of 10, \(rpeDescription)")
             }
@@ -397,7 +397,7 @@ struct ExerciseCompactRow: View {
                     get: { Double(painScore) },
                     set: { painScore = Int($0) }
                 ), in: 0...10, step: 1)
-                    .accentColor(painColor)
+                    .tint(painColor)
                     .accessibilityLabel("Pain Level")
                     .accessibilityValue("\(painScore) out of 10, \(painDescription)")
 
@@ -442,7 +442,7 @@ struct ExerciseCompactRow: View {
             .font(.headline)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.blue)
+            .background(Color.modusCyan)
             .foregroundColor(.white)
             .cornerRadius(CornerRadius.md)
         }
@@ -534,7 +534,7 @@ struct ExerciseCompactRow: View {
         if isCompleted {
             return Color.green.opacity(colorScheme == .dark ? 0.2 : 0.1)
         } else if isExpanded {
-            return Color.blue.opacity(colorScheme == .dark ? 0.15 : 0.05)
+            return Color.modusCyan.opacity(colorScheme == .dark ? 0.15 : 0.05)
         } else {
             return Color(.systemBackground)
         }
@@ -544,7 +544,7 @@ struct ExerciseCompactRow: View {
         if isCompleted {
             return Color.green
         } else if isExpanded {
-            return Color.blue.opacity(0.5)
+            return Color.modusCyan.opacity(0.5)
         } else {
             return Color(.separator)
         }

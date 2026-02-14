@@ -118,7 +118,7 @@ struct ProtocolBuilderView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.systemGray6))
     }
 
@@ -141,7 +141,7 @@ struct ProtocolBuilderView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
         }
         .background(Color(.systemBackground))
     }
@@ -228,7 +228,7 @@ struct ProtocolBuilderView: View {
                             Text("Quick Assign")
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.sm)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isAssigning)
@@ -289,8 +289,8 @@ private struct ProtocolFilterChip: View {
                 Text(title)
                     .font(.subheadline)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.modusCyan : Color(.systemGray5))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)

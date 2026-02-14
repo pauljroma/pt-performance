@@ -159,7 +159,7 @@ struct NotificationSettingsView: View {
                     .accessibilityHint("Requests permission to send notifications")
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(hasPermission ? "Notifications enabled. You'll receive workout and prescription reminders" : "Notifications disabled. Enable notifications to get reminders")
         } header: {
@@ -184,7 +184,7 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .blue))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
             .accessibilityLabel("Smart Timing")
             .accessibilityValue(smartTimingEnabled ? "On" : "Off")
             .accessibilityHint("Toggle to automatically learn your workout schedule")
@@ -204,7 +204,7 @@ struct NotificationSettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("How It Works: We analyze when you usually train and send reminders at the optimal time for each day")
             }
@@ -348,7 +348,7 @@ struct NotificationSettingsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("No patterns yet. Complete more workouts to see your training patterns")
             } else {

@@ -93,7 +93,7 @@ struct CohortComparisonCard: View {
                 // Delta indicator
                 deltaSection
             }
-            .padding(16)
+            .padding(Spacing.md)
             .background(cardBackground)
             .cornerRadius(CornerRadius.lg)
             .overlay(
@@ -134,8 +134,8 @@ struct CohortComparisonCard: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(statusColor.opacity(0.15))
             .foregroundColor(statusColor)
             .cornerRadius(CornerRadius.sm)
@@ -167,7 +167,7 @@ struct CohortComparisonCard: View {
             Text("vs")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .padding(.bottom, 8)
+                .padding(.bottom, Spacing.xs)
 
             Spacer()
 
@@ -253,7 +253,7 @@ struct CohortComparisonCard: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(.top, 4)
+        .padding(.top, Spacing.xxs)
     }
 
     private var cardBackground: Color {
@@ -311,7 +311,7 @@ struct MiniComparisonCard: View {
             }
             .foregroundColor(statusColor)
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
@@ -397,13 +397,13 @@ struct ComparisonSummaryCard: View {
                         .font(.caption)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.modusCyan.opacity(0.1))
+                .foregroundColor(.modusCyan)
                 .cornerRadius(CornerRadius.md)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
@@ -414,14 +414,14 @@ struct ComparisonSummaryCard: View {
             Text("\(comparison.overallPercentile)")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(comparison.comparisonStatus == .aboveAverage ? .green :
-                               comparison.comparisonStatus == .average ? .blue : .orange)
+                               comparison.comparisonStatus == .average ? .modusCyan : .orange)
 
             Text("percentile")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
     }

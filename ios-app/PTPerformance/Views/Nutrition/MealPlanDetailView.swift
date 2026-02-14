@@ -195,7 +195,7 @@ struct MealPlanDetailView: View {
                 Label("Add Meal", systemImage: "plus.circle.fill")
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.sm)
             }
@@ -337,14 +337,14 @@ struct DaySelectorButton: View {
                         .foregroundColor(isSelected ? .white : .secondary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                        .background(isSelected ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
             }
             .frame(width: 50, height: 55)
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
-            .foregroundColor(isSelected ? .blue : .primary)
+            .foregroundColor(isSelected ? .modusCyan : .primary)
         }
         .buttonStyle(.plain)
     }
@@ -359,7 +359,7 @@ struct MealTypeSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: mealType.icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text(mealType.displayName)
                     .font(.subheadline)
                     .fontWeight(.medium)

@@ -140,7 +140,7 @@ struct ROMInputCard: View {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
-                    .padding(8)
+                    .padding(Spacing.xs)
                     .background(Color(.secondarySystemBackground))
                     .clipShape(Circle())
             }
@@ -181,7 +181,7 @@ struct ROMInputCard: View {
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 10)
                     .background(Color(.tertiarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
@@ -207,7 +207,7 @@ struct ROMInputCard: View {
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 10)
                     .background(Color(.tertiarySystemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
@@ -432,7 +432,7 @@ struct ROMInputCard: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundColor(.red)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.red.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
                 }
@@ -454,7 +454,7 @@ struct ROMInputCard: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm + 2))
                 }
@@ -564,7 +564,7 @@ struct ROMInputCardCompact: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.sm + 2)

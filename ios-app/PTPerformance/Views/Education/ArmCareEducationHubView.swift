@@ -321,8 +321,8 @@ struct FeaturedArticleCard: View {
                         .fontWeight(.semibold)
                 }
                 .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color.black.opacity(0.6))
                 .cornerRadius(CornerRadius.xs)
                 .padding(Spacing.xs)
@@ -355,7 +355,7 @@ struct FeaturedArticleCard: View {
                         Text("Video")
                             .font(.caption2)
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
             }
         }
@@ -453,7 +453,7 @@ struct ArticleCard: View {
                             Text("Video")
                                 .font(.caption2)
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
 
                     if article.hasRelatedExercises {
@@ -549,7 +549,7 @@ struct ArmCareCategoryChip: View {
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background(isSelected ? Color.blue : Color(.tertiarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
         }
@@ -682,7 +682,7 @@ struct ArmCareArticleDetailView: View {
                     .fontWeight(.semibold)
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(categoryColor)
             .cornerRadius(CornerRadius.sm)
@@ -715,7 +715,7 @@ struct ArmCareArticleDetailView: View {
                         Text("Includes video")
                             .font(.caption)
                     }
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
 
                 Spacer()
@@ -761,7 +761,7 @@ struct ArmCareArticleDetailView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "play.rectangle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Video Content")
                     .font(.headline)
                     .fontWeight(.semibold)
@@ -786,8 +786,8 @@ struct ArmCareArticleDetailView: View {
                             .font(.caption)
                     }
                     .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
+                    .background(Color.modusCyan.opacity(0.1))
+                    .foregroundColor(.modusCyan)
                     .cornerRadius(CornerRadius.md)
                 }
             }

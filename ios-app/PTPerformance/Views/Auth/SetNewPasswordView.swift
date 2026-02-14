@@ -74,14 +74,14 @@ struct SetNewPasswordView: View {
                         .font(.largeTitle)
                         .foregroundColor(.modusCyan)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, Spacing.xs)
 
                     Text("Create a new password for your account. Make sure it's at least 8 characters and includes an uppercase letter and a number.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             // MARK: - Password Fields
@@ -139,7 +139,7 @@ struct SetNewPasswordView: View {
                         if isLoading {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
-                                .padding(.trailing, 8)
+                                .padding(.trailing, Spacing.xs)
                                 .accessibilityHidden(true)
                         }
                         Text("Update Password")

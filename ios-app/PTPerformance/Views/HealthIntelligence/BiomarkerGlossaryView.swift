@@ -85,7 +85,7 @@ struct BiomarkerGlossaryView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
     }
 
@@ -195,8 +195,8 @@ private struct GlossaryCategoryChip: View {
                     .background(isSelected ? Color.white.opacity(0.3) : Color.secondary.opacity(0.2))
                     .cornerRadius(CornerRadius.sm)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -228,13 +228,13 @@ private struct GlossarySectionHeader: View {
             Text("\(count)")
                 .font(.caption)
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, Spacing.xs)
                 .padding(.vertical, 2)
                 .background(Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
         }
         .padding(.vertical, Spacing.xs)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xxs)
         .background(Color(.systemGroupedBackground))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(category.rawValue), \(count) biomarkers")
@@ -369,8 +369,8 @@ struct BiomarkerEducationDetailView: View {
                 Text(education.unit)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color(.tertiarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.sm)
             }
@@ -585,7 +585,7 @@ private struct DietarySourceRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private var isPositive: Bool {
@@ -619,7 +619,7 @@ private struct LifestyleFactorRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

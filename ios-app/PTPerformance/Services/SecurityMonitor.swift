@@ -14,6 +14,13 @@ import Sentry
 @MainActor
 final class SecurityMonitor: ObservableObject {
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
     // MARK: - Properties
 
     static let shared = SecurityMonitor()
@@ -140,7 +147,7 @@ final class SecurityMonitor: ObservableObject {
 
         let input = FailedLoginAttemptInsert(
             userEmail: email,
-            attemptedAt: ISO8601DateFormatter().string(from: Date())
+            attemptedAt: Self.iso8601Formatter.string(from: Date())
         )
 
         do {

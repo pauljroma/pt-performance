@@ -243,12 +243,12 @@ struct PerformanceModeDashboardView: View {
     private var acwrZoneIndicator: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 2) {
-                Rectangle().fill(Color.blue).frame(width: 20, height: 6)
+                Rectangle().fill(Color.modusCyan).frame(width: 20, height: 6)
                 Rectangle().fill(Color.green).frame(width: 30, height: 6)
                 Rectangle().fill(Color.yellow).frame(width: 15, height: 6)
                 Rectangle().fill(Color.red).frame(width: 15, height: 6)
             }
-            .cornerRadius(3)
+            .cornerRadius(CornerRadius.xs)
 
             HStack {
                 Text("<0.8")
@@ -460,7 +460,7 @@ struct PerformanceModeDashboardView: View {
                             Rectangle()
                                 .fill(entry.fatigueBand.color.opacity(0.7))
                                 .frame(width: 30, height: height)
-                                .cornerRadius(4)
+                                .cornerRadius(CornerRadius.xs)
 
                             Text(entry.calculationDate.formatted(.dateTime.weekday(.abbreviated)))
                                 .font(.caption2)

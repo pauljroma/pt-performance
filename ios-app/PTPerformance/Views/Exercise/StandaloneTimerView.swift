@@ -94,7 +94,7 @@ struct StandaloneTimerView: View {
                             HStack {
                                 Image(systemName: "slider.horizontal.3")
                                     .font(.system(size: 24))
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                     .frame(width: 50)
 
                                 VStack(alignment: .leading, spacing: 4) {

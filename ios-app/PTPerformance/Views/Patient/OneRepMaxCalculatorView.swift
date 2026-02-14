@@ -91,7 +91,7 @@ struct OneRepMaxCalculatorView: View {
         Section {
             HStack {
                 Image(systemName: "scalemass")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .frame(width: 24)
                 TextField("Weight lifted (lbs)", text: $weightText)
                     .keyboardType(.decimalPad)
@@ -101,7 +101,7 @@ struct OneRepMaxCalculatorView: View {
 
             HStack {
                 Image(systemName: "repeat")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .frame(width: 24)
                 TextField("Reps performed (1-30)", text: $repsText)
                     .keyboardType(.numberPad)
@@ -124,7 +124,7 @@ struct OneRepMaxCalculatorView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "figure.strengthtraining.traditional")
                         .font(.system(size: 36))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     Text("Estimated 1RM")
                         .font(.subheadline)
@@ -141,7 +141,7 @@ struct OneRepMaxCalculatorView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.md)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Estimated one rep max: \(roundToPlate(oneRM), specifier: "%.1f") pounds")
             }
@@ -199,7 +199,7 @@ struct OneRepMaxCalculatorView: View {
 
                     Text("1RM = weight x (1 + reps / 30)")
                         .font(.system(.body, design: .monospaced))
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
@@ -212,7 +212,7 @@ struct OneRepMaxCalculatorView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
         }
     }

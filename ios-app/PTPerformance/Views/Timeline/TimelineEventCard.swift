@@ -253,8 +253,8 @@ struct TimelineEventCard: View {
                         .foregroundColor(.primary)
                         .lineLimit(1)
                 }
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
+                .padding(.vertical, Spacing.xxs)
+                .padding(.horizontal, Spacing.xs)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.orange.opacity(0.1))

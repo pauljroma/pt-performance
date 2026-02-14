@@ -93,8 +93,8 @@ struct CanonicalTimelineView: View {
                         .font(.caption2.weight(.semibold))
                 }
                 .foregroundColor(.primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.tertiarySystemFill))
@@ -198,7 +198,7 @@ struct CanonicalTimelineView: View {
                                     viewModel.expandEvent(id: event.id)
                                 }
                             )
-                            .padding(.vertical, 4)
+                            .padding(.vertical, Spacing.xxs)
                         }
                     } header: {
                         TimelineSectionHeader(
@@ -325,7 +325,7 @@ struct TimelineConflictSummaryView: View {
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                 }
             }
             .navigationTitle("Data Conflicts")
@@ -402,7 +402,7 @@ private struct TimelinePreviewWrapper: View {
                                         viewModel.expandEvent(id: event.id)
                                     }
                                 )
-                                .padding(.vertical, 4)
+                                .padding(.vertical, Spacing.xxs)
                             }
                         } header: {
                             TimelineSectionHeader(

@@ -167,7 +167,7 @@ struct ProgramEffectivenessDetailView: View {
                     Text("\(program.activeEnrollments)")
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Active")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -236,8 +236,8 @@ struct ProgramEffectivenessDetailView: View {
                     .fontWeight(isSelected ? .semibold : .regular)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+            .padding(.vertical, Spacing.xs)
+            .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.md)
         }
@@ -328,7 +328,7 @@ struct ProgramEffectivenessDetailView: View {
         HStack {
             Image(systemName: "clock")
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Average Duration")
@@ -593,13 +593,13 @@ private struct PatientProgressCard: View {
                 // Avatar
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.2))
+                        .fill(Color.modusCyan.opacity(0.2))
                         .frame(width: 44, height: 44)
 
                     Text(patient.initials)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 // Info
@@ -623,8 +623,8 @@ private struct PatientProgressCard: View {
                 Text(patient.enrollmentStatus.displayName)
                     .font(.caption2)
                     .foregroundColor(patient.enrollmentStatus.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(patient.enrollmentStatus.color.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
 
@@ -652,13 +652,13 @@ private struct PatientDetailSheet: View {
                 HStack {
                     ZStack {
                         Circle()
-                            .fill(Color.blue.opacity(0.2))
+                            .fill(Color.modusCyan.opacity(0.2))
                             .frame(width: 60, height: 60)
 
                         Text(patient.initials)
                             .font(.title2)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -670,7 +670,7 @@ private struct PatientDetailSheet: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             Section("Progress") {
@@ -692,7 +692,7 @@ private struct PatientDetailSheet: View {
                     Text("Adherence")
                     Spacer()
                     Text(String(format: "%.0f%%", patient.adherenceRate * 100))
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 if let painReduction = patient.painReduction {

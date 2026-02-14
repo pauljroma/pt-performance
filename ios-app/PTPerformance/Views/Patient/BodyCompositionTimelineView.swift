@@ -98,7 +98,7 @@ struct BodyCompositionTimelineView: View {
                     Text(period.label)
                         .font(.caption)
                         .fontWeight(selectedPeriod == period ? .bold : .regular)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
                         .background(
                             selectedPeriod == period
@@ -255,8 +255,8 @@ struct BodyCompositionTimelineView: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)
@@ -282,7 +282,7 @@ struct BodyCompositionTimelineView: View {
             title: "No Body Composition Data",
             message: "Start tracking your weight, body fat percentage, and muscle mass to visualize your fitness journey over time.",
             icon: "figure.arms.open",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Add First Entry",
                 icon: "plus.circle.fill",

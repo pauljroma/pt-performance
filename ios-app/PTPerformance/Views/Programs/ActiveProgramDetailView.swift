@@ -148,8 +148,8 @@ struct ActiveProgramDetailView: View {
                         .fontWeight(.medium)
                 }
                 .foregroundColor(enrollment.enrollment.enrollmentStatus.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(enrollment.enrollment.enrollmentStatus.color.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
                 .accessibilityLabel("Status: \(enrollment.enrollment.enrollmentStatus.displayName)")
@@ -308,9 +308,9 @@ struct ActiveProgramDetailView: View {
                 // History Icon
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .frame(width: 44, height: 44)
-                    .background(Color.blue.opacity(0.1))
+                    .background(Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
                     .accessibilityHidden(true)
 
@@ -354,7 +354,7 @@ struct ActiveProgramDetailView: View {
                     .foregroundColor(.secondary)
                     .accessibilityHidden(true)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
@@ -517,7 +517,7 @@ struct ActiveProgramDetailView: View {
                             .accessibilityHidden(true)
                     }
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.md)
             }
@@ -568,9 +568,9 @@ private struct PhaseTimelineCard: View {
                     Text("CURRENT")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Spacing.xxs)
                         .padding(.vertical, 2)
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.xs)
                 }
 
@@ -599,11 +599,11 @@ private struct PhaseTimelineCard: View {
         }
         .padding(10)
         .frame(width: 120)
-        .background(isCurrentPhase ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
+        .background(isCurrentPhase ? Color.modusCyan.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(isCurrentPhase ? Color.blue : Color.clear, lineWidth: 2)
+                .stroke(isCurrentPhase ? Color.modusCyan : Color.clear, lineWidth: 2)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Phase \(phase.phaseNumber): \(phase.phaseName), \(phase.formattedWeekRange), \(phase.workoutCount) workouts\(isCurrentPhase ? ", current phase" : "")\(isCompleted ? ", completed" : "")")
@@ -647,7 +647,7 @@ private struct ProgramPhaseSection: View {
                 HStack {
                     // Phase indicator
                     Circle()
-                        .fill(isCurrentPhase ? Color.blue : Color.gray.opacity(0.5))
+                        .fill(isCurrentPhase ? Color.modusCyan : Color.gray.opacity(0.5))
                         .frame(width: 12, height: 12)
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -664,7 +664,7 @@ private struct ProgramPhaseSection: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Color.blue)
+                                    .background(Color.modusCyan)
                                     .cornerRadius(CornerRadius.xs)
                             }
                         }
@@ -681,7 +681,7 @@ private struct ProgramPhaseSection: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(isCurrentPhase ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
+                .background(isCurrentPhase ? Color.modusCyan.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
             }
             .buttonStyle(.plain)
@@ -700,7 +700,7 @@ private struct ProgramPhaseSection: View {
                         )
                     }
                 }
-                .padding(.leading, 16)
+                .padding(.leading, Spacing.md)
             }
         }
     }
@@ -762,13 +762,13 @@ private struct ProgramSessionCard: View {
                 } label: {
                     Image(systemName: "play.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Start \(sessionWithExercises.session.name)")
                 .accessibilityHint("Begins the workout session")
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color(.systemBackground))
             .cornerRadius(CornerRadius.sm)
             .adaptiveShadow(Shadow.subtle)
@@ -783,7 +783,7 @@ private struct ProgramSessionCard: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
                                 .frame(width: 20, height: 20)
-                                .background(Circle().fill(Color.blue))
+                                .background(Circle().fill(Color.modusCyan))
                                 .accessibilityHidden(true)
 
                             Text(exercise.exerciseTemplate?.name ?? "Exercise")
@@ -806,7 +806,7 @@ private struct ProgramSessionCard: View {
                         .accessibilityLabel("Exercise \(exercise.sequence): \(exercise.exerciseTemplate?.name ?? "Exercise")\(exercise.targetSets.flatMap { sets in exercise.targetReps.map { reps in ", \(sets) sets of \(reps) reps" } } ?? "")")
                     }
                 }
-                .padding(.leading, 24)
+                .padding(.leading, Spacing.lg)
             }
         }
         .accessibilityElement(children: .contain)
@@ -860,7 +860,7 @@ private struct ProgramWeekSection: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Color.blue)
+                                    .background(Color.modusCyan)
                                     .cornerRadius(CornerRadius.xs)
                             }
 
@@ -892,9 +892,9 @@ private struct ProgramWeekSection: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 10)
-                .background(isCurrentWeek ? Color.blue.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
+                .background(isCurrentWeek ? Color.modusCyan.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
             }
             .buttonStyle(.plain)
@@ -912,10 +912,10 @@ private struct ProgramWeekSection: View {
                         Text("Rest week")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, Spacing.xs)
                     }
                 }
-                .padding(.leading, 12)
+                .padding(.leading, Spacing.sm)
             }
         }
     }
@@ -1020,9 +1020,9 @@ private struct ProgramWorkoutCard: View {
             // Action Button - replay or start
             Image(systemName: isCompleted ? "arrow.clockwise.circle.fill" : "play.circle.fill")
                 .font(.title2)
-                .foregroundColor(isCompleted ? .green : .blue)
+                .foregroundColor(isCompleted ? .green : .modusCyan)
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)

@@ -349,7 +349,7 @@ struct PainAlertsView: View {
     }
 
     private var trendingUpCount: Int {
-        exceptions.filter { $0.painTrend == .up }.count
+        exceptions.filter { $0.painTrend == .improving }.count
     }
 }
 
@@ -438,18 +438,18 @@ struct PainAlertPatientRow: View {
             Text(trendText)
                 .font(.caption2)
         }
-        .foregroundColor(exception.painTrend == .up ? .red : .green)
+        .foregroundColor(exception.painTrend == .improving ? .red : .green)
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
-        .background((exception.painTrend == .up ? Color.red : Color.green).opacity(0.15))
+        .background((exception.painTrend == .improving ? Color.red : Color.green).opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }
 
     private var trendText: String {
         switch exception.painTrend {
-        case .up: return "Increasing"
-        case .down: return "Decreasing"
-        case .stable, .none: return "Stable"
+        case .improving: return "Increasing"
+        case .declining: return "Decreasing"
+        case .stable, .fluctuating, .none: return "Stable"
         }
     }
 
@@ -490,7 +490,7 @@ struct PainAlertsView_Previews: PreviewProvider {
             severity: .critical,
             message: "Reported severe pain during session",
             daysSinceLastSession: 0,
-            painTrend: .up,
+            painTrend: .improving,
             adherenceTrend: nil,
             currentPain: 9.0,
             currentAdherence: 75.0,

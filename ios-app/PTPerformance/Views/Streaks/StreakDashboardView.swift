@@ -186,7 +186,7 @@ struct StreakDashboardView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.sm)
                     .fill(viewModel.isAtRisk ? DesignTokens.statusWarning.opacity(0.1) : Color.modusTealAccent.opacity(0.1))

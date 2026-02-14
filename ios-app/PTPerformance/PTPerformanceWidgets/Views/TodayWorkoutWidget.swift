@@ -22,7 +22,7 @@ struct TodayWorkoutWidgetView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.modusCyan)
                 Text("Today")
                     .font(.caption)
                     .foregroundStyle(.secondary)

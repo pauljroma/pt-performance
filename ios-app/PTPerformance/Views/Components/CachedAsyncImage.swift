@@ -40,7 +40,7 @@ struct ExerciseThumbnailImage: View {
 
     private var exercisePlaceholder: some View {
         ZStack {
-            Color.blue.opacity(0.1)
+            Color.modusCyan.opacity(0.1)
             Image(systemName: "figure.strengthtraining.traditional")
                 .font(.system(size: size * 0.4))
                 .foregroundColor(.blue.opacity(0.6))
@@ -115,7 +115,7 @@ struct ProfileAvatarImage: View {
 
     private var avatarColor: Color {
         // Consistent color based on name
-        let colors: [Color] = [.blue, .purple, .green, .orange, .pink, .indigo, .teal]
+        let colors: [Color] = [.modusCyan, .purple, .green, .orange, .pink, .indigo, .teal]
         let hash = abs((firstName + lastName).hashValue)
         return colors[hash % colors.count]
     }

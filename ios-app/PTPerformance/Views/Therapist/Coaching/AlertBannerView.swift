@@ -292,7 +292,7 @@ struct AlertToast: View {
                     }
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
                 .padding()
                 .background(
@@ -490,8 +490,8 @@ struct AlertBannerView_Previews: PreviewProvider {
             severity: .critical,
             message: "Reported severe pain during last session",
             daysSinceLastSession: 15,
-            painTrend: .up,
-            adherenceTrend: .down,
+            painTrend: .improving,
+            adherenceTrend: .declining,
             currentPain: 9.0,
             currentAdherence: 25.0,
             createdAt: Date().addingTimeInterval(-3600)

@@ -22,12 +22,12 @@ struct SubscriptionView: View {
                             .font(.system(size: 48))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: storeKit.isPremium ? [.green, .blue] : [.blue, .purple],
+                                    colors: storeKit.isPremium ? [.green, .modusCyan] : [.modusCyan, .purple],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .padding(.top, 16)
+                            .padding(.top, Spacing.md)
 
                         Text(storeKit.isPremium ? "Premium Active" : "Unlock Premium")
                             .font(.largeTitle)
@@ -162,7 +162,7 @@ struct SubscriptionView: View {
                                 .padding()
                                 .background(
                                     LinearGradient(
-                                        colors: [.blue, .purple],
+                                        colors: [.modusCyan, .purple],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
@@ -194,7 +194,7 @@ struct SubscriptionView: View {
                     } label: {
                         Text("Restore Purchases")
                             .font(.subheadline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                     .accessibilityLabel("Restore previous purchases")
 
@@ -204,7 +204,7 @@ struct SubscriptionView: View {
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, Spacing.lg)
                 }
             }
             .navigationTitle("Premium")
@@ -281,7 +281,7 @@ private struct FeatureRow: View {
                 .font(.title3)
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [.blue, .purple],
+                        colors: [.modusCyan, .purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -322,11 +322,11 @@ private struct PricingCard: View {
                             .font(.caption2)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, Spacing.xs)
                             .padding(.vertical, 3)
                             .background(
                                 LinearGradient(
-                                    colors: [.blue, .purple],
+                                    colors: [.modusCyan, .purple],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -355,7 +355,7 @@ private struct PricingCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(isSelected ? Color.blue : Color(.separator), lineWidth: isSelected ? 2 : 1)
+                .stroke(isSelected ? Color.modusCyan : Color(.separator), lineWidth: isSelected ? 2 : 1)
         )
     }
 }

@@ -64,7 +64,7 @@ struct BaseballPackLockedView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.md)
         }
     }
 
@@ -130,7 +130,7 @@ struct BaseballPackLockedView: View {
             } label: {
                 Text("Restore Purchases")
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .padding(.horizontal)
@@ -163,7 +163,7 @@ struct BaseballPackLockedBanner: View {
                 Text("View")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(Color.orange)
                     .foregroundColor(.white)
@@ -188,8 +188,8 @@ struct BaseballPremiumBadge: View {
                 .fontWeight(.bold)
         }
         .foregroundColor(.white)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.orange)
         .cornerRadius(CornerRadius.xs)
     }

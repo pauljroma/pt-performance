@@ -24,6 +24,13 @@ import Supabase
 @MainActor
 final class KPITrackingService: ObservableObject {
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
     // MARK: - Singleton
 
     static let shared = KPITrackingService()
@@ -211,7 +218,7 @@ final class KPITrackingService: ObservableObject {
         do {
             var insertData: [String: AnyEncodable] = [
                 "event_type": AnyEncodable(type.rawValue),
-                "created_at": AnyEncodable(ISO8601DateFormatter().string(from: Date()))
+                "created_at": AnyEncodable(Self.iso8601Formatter.string(from: Date()))
             ]
 
             if let userId = userId {
@@ -376,7 +383,7 @@ final class KPITrackingService: ObservableObject {
                 guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                     throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
                 }
-                let startString = ISO8601DateFormatter().string(from: periodStart)
+                let startString = Self.iso8601Formatter.string(from: periodStart)
 
                 // Briefs opened
                 let briefsResponse = try await supabase.client
@@ -467,7 +474,7 @@ final class KPITrackingService: ObservableObject {
                 guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                     throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
                 }
-                let startString = ISO8601DateFormatter().string(from: periodStart)
+                let startString = Self.iso8601Formatter.string(from: periodStart)
 
                 // Check-ins completed
                 let checkInsResponse = try await supabase.client
@@ -544,7 +551,7 @@ final class KPITrackingService: ObservableObject {
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                 throw NSError(domain: "KPITrackingService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to calculate period start"])
             }
-            let startString = ISO8601DateFormatter().string(from: periodStart)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
 
             let response = try await supabase.client
                 .from("vw_ai_metrics")
@@ -666,7 +673,7 @@ final class KPITrackingService: ObservableObject {
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                 return generateSampleTrendData(periodDays: periodDays, baseValue: 0.65, variance: 0.1)
             }
-            let startString = ISO8601DateFormatter().string(from: periodStart)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
 
             // Get daily PT activity counts
             let response = try await supabase.client
@@ -725,7 +732,7 @@ final class KPITrackingService: ObservableObject {
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                 return generateSampleTrendData(periodDays: periodDays, baseValue: 0.95, variance: 0.03)
             }
-            let startString = ISO8601DateFormatter().string(from: periodStart)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
 
             let response = try await supabase.client
                 .from("vw_ai_metrics")
@@ -759,7 +766,7 @@ final class KPITrackingService: ObservableObject {
             guard let periodStart = Calendar.current.date(byAdding: .day, value: -periodDays, to: Date()) else {
                 return generateSampleTrendData(periodDays: periodDays, baseValue: 3000, variance: 500)
             }
-            let startString = ISO8601DateFormatter().string(from: periodStart)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
 
             let response = try await supabase.client
                 .from("vw_ai_metrics")
@@ -810,8 +817,8 @@ final class KPITrackingService: ObservableObject {
             let totalPTs = totalResponse.count ?? 0
 
             // Get weekly active PTs (PTs who had any activity in the period)
-            let startString = ISO8601DateFormatter().string(from: periodStart)
-            let endString = ISO8601DateFormatter().string(from: periodEnd)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
+            let endString = Self.iso8601Formatter.string(from: periodEnd)
 
             let activeResponse = try await supabase.client
                 .from("kpi_events")
@@ -905,8 +912,8 @@ final class KPITrackingService: ObservableObject {
                 .execute()
             let totalAthletes = totalResponse.count ?? 0
 
-            let startString = ISO8601DateFormatter().string(from: periodStart)
-            let endString = ISO8601DateFormatter().string(from: periodEnd)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
+            let endString = Self.iso8601Formatter.string(from: periodEnd)
 
             // Get weekly active athletes
             let activeResponse = try await supabase.client
@@ -988,8 +995,8 @@ final class KPITrackingService: ObservableObject {
     /// Fetch AI metrics for a time period
     private func fetchAIMetrics(from periodStart: Date, to periodEnd: Date) async -> AIMetrics {
         do {
-            let startString = ISO8601DateFormatter().string(from: periodStart)
-            let endString = ISO8601DateFormatter().string(from: periodEnd)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
+            let endString = Self.iso8601Formatter.string(from: periodEnd)
 
             // Get AI claim events
             let claimsResponse = try await supabase.client
@@ -1078,7 +1085,7 @@ final class KPITrackingService: ObservableObject {
     /// Fetch safety metrics for a time period
     private func fetchSafetyMetrics(from periodStart: Date, to periodEnd: Date) async -> SafetyMetrics {
         do {
-            let startString = ISO8601DateFormatter().string(from: periodStart)
+            let startString = Self.iso8601Formatter.string(from: periodStart)
 
             // Get total incidents in period
             let totalResponse = try await supabase.client
@@ -1190,18 +1197,28 @@ struct KPITrendDataPoint: Identifiable, Sendable {
 
     var id: String { "\(date.timeIntervalSince1970)-\(value)" }
 
+    // MARK: - Static Formatters
+
+    private static let monthDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MM/dd"
+        return f
+    }()
+
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "d"
+        return f
+    }()
+
     /// Formatted date for display
     var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: date)
+        Self.monthDayFormatter.string(from: date)
     }
 
     /// Formatted short date
     var shortDate: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
+        Self.dayFormatter.string(from: date)
     }
 }
 

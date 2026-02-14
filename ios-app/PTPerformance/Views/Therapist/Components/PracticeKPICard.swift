@@ -95,8 +95,8 @@ struct PracticeKPITrendBadge: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(trend.direction.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(trend.direction.color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
     }

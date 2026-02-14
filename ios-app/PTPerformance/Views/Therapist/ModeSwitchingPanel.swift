@@ -23,7 +23,7 @@ struct ModeSwitchingPanel: View {
             HStack {
                 Image(systemName: "switch.2")
                     .font(.title2)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Text("Patient Mode")
                     .font(.title2)
@@ -166,7 +166,7 @@ struct ModeSwitchingPanel: View {
                 Text("No mode changes yet")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
             } else {
                 ForEach(viewModel.modeHistory.prefix(5)) { entry in
                     modeHistoryRow(entry)
@@ -218,7 +218,7 @@ struct ModeSwitchingPanel: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     // MARK: - Helper

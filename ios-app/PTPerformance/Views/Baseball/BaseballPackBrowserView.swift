@@ -261,8 +261,8 @@ struct BaseballPackBrowserView: View {
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
                             .background(Color.red.opacity(0.15))
                             .foregroundColor(.red)
                             .cornerRadius(CornerRadius.xl)
@@ -270,7 +270,7 @@ struct BaseballPackBrowserView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             // Content
@@ -311,7 +311,7 @@ struct BaseballPackBrowserView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Category Menu
@@ -336,8 +336,8 @@ struct BaseballPackBrowserView: View {
                 Image(systemName: "chevron.down")
                     .font(.caption2)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(viewModel.selectedCategory != .all ? viewModel.selectedCategory.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedCategory != .all ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -366,8 +366,8 @@ struct BaseballPackBrowserView: View {
                 Image(systemName: "chevron.down")
                     .font(.caption2)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(viewModel.selectedPosition != .all ? baseballNavy : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedPosition != .all ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -396,8 +396,8 @@ struct BaseballPackBrowserView: View {
                 Image(systemName: "chevron.down")
                     .font(.caption2)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(viewModel.selectedSeason != .all ? viewModel.selectedSeason.color : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(viewModel.selectedSeason != .all ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -447,7 +447,7 @@ struct BaseballPackBrowserView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             if viewModel.hasActiveFilters {
                 Button {
@@ -517,11 +517,11 @@ struct BaseballProgramCard: View {
                                     .fontWeight(.semibold)
                             }
                             .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(baseballRed)
                             .cornerRadius(CornerRadius.xs)
-                            .padding(8)
+                            .padding(Spacing.xs)
                         }
                         Spacer()
                     }
@@ -578,13 +578,13 @@ struct BaseballProgramCard: View {
                         .font(.caption2)
                         .fontWeight(.medium)
                         .foregroundColor(program.difficultyColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(program.difficultyColor.opacity(0.15))
                         .cornerRadius(CornerRadius.sm)
                 }
             }
-            .padding(12)
+            .padding(Spacing.sm)
         }
         .frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
         .background(Color(.systemBackground))
@@ -608,8 +608,8 @@ private struct BaseballCategoryBadge: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(category.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(category.color.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }

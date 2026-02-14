@@ -183,7 +183,7 @@ struct WorkingWeightCalculatorView: View {
             if estimateFromLift {
                 HStack {
                     Image(systemName: "scalemass")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                     TextField("Weight lifted (lbs)", text: $liftWeightText)
                         .keyboardType(.decimalPad)
@@ -193,7 +193,7 @@ struct WorkingWeightCalculatorView: View {
 
                 HStack {
                     Image(systemName: "repeat")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                     TextField("Reps performed (1-30)", text: $liftRepsText)
                         .keyboardType(.numberPad)
@@ -211,12 +211,12 @@ struct WorkingWeightCalculatorView: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                 }
             } else {
                 HStack {
                     Image(systemName: "figure.strengthtraining.traditional")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 24)
                     TextField("Known 1RM (lbs)", text: $oneRMText)
                         .keyboardType(.decimalPad)
@@ -261,11 +261,11 @@ struct WorkingWeightCalculatorView: View {
                     }
 
                     Slider(value: $customPercentage, in: 50...100, step: 5)
-                        .accentColor(.orange)
+                        .tint(.orange)
                         .accessibilityLabel("Custom intensity percentage")
                         .accessibilityValue("\(Int(customPercentage)) percent of one rep max")
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             } else {
                 // Show goal parameters as a summary
                 VStack(alignment: .leading, spacing: 6) {
@@ -290,7 +290,7 @@ struct WorkingWeightCalculatorView: View {
                         value: selectedGoal.restTime
                     )
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             }
         } header: {
             Text("Training Goal")
@@ -369,7 +369,7 @@ struct WorkingWeightCalculatorView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
+                .padding(.vertical, Spacing.md)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(workingWeightAccessibilityLabel(low: low, high: high))
             } header: {
@@ -439,7 +439,7 @@ struct WorkingWeightCalculatorView: View {
                             }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(warmupAccessibilityLabel(warmup))
                 }

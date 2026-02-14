@@ -390,7 +390,7 @@ struct AnimatedChart_Previews: PreviewProvider {
                 HStack(spacing: Spacing.lg - Spacing.xxs) {
                     AnimatedProgressRing(
                         progress: 0.75,
-                        color: .blue,
+                        color: .modusCyan,
                         size: 80,
                         lineWidth: 8
                     )
@@ -422,7 +422,7 @@ struct AnimatedChart_Previews: PreviewProvider {
                         AnimatedChartBar(
                             value: CGFloat.random(in: 30...100),
                             maxValue: 100,
-                            color: .blue,
+                            color: .modusCyan,
                             delay: Double(index) * 0.1
                         )
                     }

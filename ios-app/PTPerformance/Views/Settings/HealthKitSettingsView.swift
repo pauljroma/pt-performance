@@ -33,7 +33,7 @@ struct HealthKitSettingsView: View {
                     }
                     Spacer()
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(healthKitService.isAuthorized ? "Connected. Bidirectional sync enabled" : "Not connected. Connect to sync HRV, sleep, and heart rate")
 
@@ -212,7 +212,7 @@ struct HealthKitSettingsView: View {
                         DataTypeChip(icon: "flame.fill", text: "Energy")
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
 
                 // Export
                 VStack(alignment: .leading, spacing: 8) {
@@ -223,7 +223,7 @@ struct HealthKitSettingsView: View {
                         DataTypeChip(icon: "figure.strengthtraining.traditional", text: "Workouts")
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             } header: {
                 Text("Bidirectional Sync")
             } footer: {
@@ -255,7 +255,7 @@ struct HealthKitSettingsView: View {
                         description: "See your training in Apple Health Activity"
                     )
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             } header: {
                 Text("How We Use Your Data")
             }
@@ -284,8 +284,8 @@ private struct DataTypeChip: View {
             Text(text)
                 .font(.caption)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .accessibilityLabel(text)

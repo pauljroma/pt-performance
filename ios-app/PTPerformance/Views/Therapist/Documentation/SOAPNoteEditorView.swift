@@ -179,8 +179,8 @@ struct SOAPNoteEditorView: View {
                 }
                 .font(.caption)
                 .foregroundColor(.green)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color.green.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
             } else if viewModel.isDraft {
@@ -190,8 +190,8 @@ struct SOAPNoteEditorView: View {
                 }
                 .font(.caption)
                 .foregroundColor(.orange)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(Color.orange.opacity(0.15))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -206,7 +206,7 @@ struct SOAPNoteEditorView: View {
             SOAPSectionEditor(
                 title: "Subjective",
                 icon: "person.wave.2",
-                iconColor: .blue,
+                iconColor: .modusCyan,
                 placeholder: "Patient's reported symptoms, concerns, and history...",
                 text: $viewModel.subjective,
                 isLocked: viewModel.isSigned
@@ -271,10 +271,10 @@ struct SOAPNoteEditorView: View {
                         }
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("Get AI suggestions for treatment plan")
@@ -313,7 +313,7 @@ struct SOAPNoteEditorView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(viewModel.canSign ? Color.blue : Color.gray)
+                    .background(viewModel.canSign ? Color.modusCyan : Color.gray)
                     .cornerRadius(CornerRadius.md)
                 }
                 .disabled(!viewModel.canSign)
@@ -355,8 +355,8 @@ struct SOAPNoteEditorView: View {
             Text("Saving...")
                 .font(.caption)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(.ultraThinMaterial)
         .cornerRadius(CornerRadius.xl)
     }
@@ -431,7 +431,7 @@ struct SOAPSectionEditor: View {
                     TextEditor(text: $text)
                         .font(.body)
                         .frame(minHeight: 120)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                         .overlay(
@@ -440,8 +440,8 @@ struct SOAPSectionEditor: View {
                                     Text(placeholder)
                                         .font(.body)
                                         .foregroundColor(.secondary.opacity(0.5))
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 16)
+                                        .padding(.horizontal, Spacing.sm)
+                                        .padding(.vertical, Spacing.md)
                                         .allowsHitTesting(false)
                                 }
                             },

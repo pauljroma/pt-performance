@@ -124,7 +124,7 @@ struct ProgressChartsView: View {
                             .fontWeight(viewModel.selectedPeriod == period ? .bold : .regular)
                             .foregroundColor(viewModel.selectedPeriod == period ? .white : .primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, Spacing.xs)
                             .background(
                                 viewModel.selectedPeriod == period
                                     ? Color.modusCyan
@@ -356,8 +356,8 @@ struct ProgressChartsView: View {
 
             Text(annotation.category.displayName)
                 .font(.caption2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(annotation.category.color.opacity(0.1))
                 .foregroundColor(annotation.category.color)
                 .cornerRadius(CornerRadius.xs)
@@ -618,8 +618,8 @@ struct AddAnnotationSheet: View {
 
                         Text(category.displayName)
                             .font(.caption2)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(category.color.opacity(0.1))
                             .foregroundColor(category.color)
                             .cornerRadius(CornerRadius.xs)

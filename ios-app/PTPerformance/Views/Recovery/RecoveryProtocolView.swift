@@ -141,8 +141,8 @@ struct RecoveryProtocolView: View {
                     } label: {
                         Text(tab.rawValue)
                             .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
                             .background(
                                 Capsule()
                                     .fill(selectedTab == tab
@@ -154,7 +154,7 @@ struct RecoveryProtocolView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
     }
 
@@ -383,7 +383,7 @@ struct ScalingFactorPill: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.caption.weight(.semibold))
@@ -405,7 +405,7 @@ struct ForecastCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar.badge.clock")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("3-Day Forecast")
                     .font(.headline)
             }
@@ -464,7 +464,7 @@ struct ForecastDayView: View {
             HStack(spacing: 2) {
                 ForEach(0..<3) { i in
                     Circle()
-                        .fill(Double(i) < forecast.confidence * 3 ? Color.blue : Color.gray.opacity(0.3))
+                        .fill(Double(i) < forecast.confidence * 3 ? Color.modusCyan : Color.gray.opacity(0.3))
                         .frame(width: 4, height: 4)
                 }
             }
@@ -704,12 +704,12 @@ struct AlternativeWorkoutCard: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(Color.blue.opacity(0.15))
+                        .fill(Color.modusCyan.opacity(0.15))
                         .frame(width: 50, height: 50)
 
                     Image(systemName: workout.type.icon)
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -755,12 +755,12 @@ struct AlternativeWorkoutDetailSheet: View {
                     HStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.blue.opacity(0.15))
+                                .fill(Color.modusCyan.opacity(0.15))
                                 .frame(width: 60, height: 60)
 
                             Image(systemName: workout.type.icon)
                                 .font(.title)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
@@ -821,7 +821,7 @@ struct AlternativeWorkoutDetailSheet: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(Color.modusCyan)
                             .cornerRadius(CornerRadius.md)
                     }
                 }
@@ -1017,7 +1017,7 @@ struct EmptyStateCard: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(32)
+        .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)

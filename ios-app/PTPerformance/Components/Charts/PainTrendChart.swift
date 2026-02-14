@@ -59,7 +59,7 @@ struct PainTrendChart: View {
                     .annotation(position: .top, alignment: .trailing) {
                         Text("Safety Threshold")
                             .font(.caption2)
-                            .padding(4)
+                            .padding(Spacing.xxs)
                             .background(Color.orange.opacity(0.2))
                             .cornerRadius(CornerRadius.xs)
                             .foregroundColor(.orange)

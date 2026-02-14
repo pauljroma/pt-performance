@@ -520,7 +520,7 @@ struct SupplementInteractionView: View {
                             .foregroundColor(.primary)
                     } icon: {
                         Image(systemName: "clock.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
 
                     Spacer()
@@ -551,7 +551,7 @@ struct SupplementInteractionView: View {
                             } else {
                                 Image(systemName: "clock.arrow.circlepath")
                                     .font(.caption)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                     .accessibilityHidden(true)
 
                                 Text(recommendation)
@@ -756,7 +756,7 @@ private struct SupplementInteractionResultsPreview: View {
                             .font(.headline)
                     } icon: {
                         Image(systemName: "clock.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
 
                     VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -811,7 +811,7 @@ private struct SupplementInteractionResultsPreview: View {
         HStack(alignment: .top, spacing: Spacing.sm) {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(text)
                 .font(.subheadline)

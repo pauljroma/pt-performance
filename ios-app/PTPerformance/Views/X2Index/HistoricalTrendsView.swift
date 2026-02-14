@@ -143,7 +143,7 @@ struct HistoricalTrendsView: View {
                     metricButton(metric)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
     }
 
@@ -163,7 +163,7 @@ struct HistoricalTrendsView: View {
                     .font(.subheadline.weight(.medium))
             }
             .foregroundColor(isSelected ? .white : .primary)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.md)
             .padding(.vertical, 10)
             .background(
                 Capsule()
@@ -198,7 +198,7 @@ struct HistoricalTrendsView: View {
             Text(range.displayName)
                 .font(.caption.weight(.medium))
                 .foregroundColor(isSelected ? .modusCyan : .secondary)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
@@ -361,7 +361,7 @@ struct HistoricalTrendsView: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 16) {
-                TrendStatisticBox(label: "Average", value: viewModel.averageDisplay, color: .blue)
+                TrendStatisticBox(label: "Average", value: viewModel.averageDisplay, color: .modusCyan)
                 TrendStatisticBox(label: "High", value: viewModel.highDisplay, color: .green)
                 TrendStatisticBox(label: "Low", value: viewModel.lowDisplay, color: .orange)
             }
@@ -414,8 +414,8 @@ struct HistoricalTrendBadge: View {
                 .font(.caption.weight(.medium))
         }
         .foregroundColor(trend.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(trend.color.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
     }

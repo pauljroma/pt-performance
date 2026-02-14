@@ -136,9 +136,9 @@ struct FoodSearchView: View {
                 } label: {
                     Text("All")
                         .font(.caption)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
-                        .background(selectedCategory == nil ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                        .background(selectedCategory == nil ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == nil ? .white : .primary)
                         .cornerRadius(CornerRadius.lg)
                 }
@@ -154,16 +154,16 @@ struct FoodSearchView: View {
                             Text(category.displayName)
                                 .font(.caption)
                         }
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
-                        .background(selectedCategory == category ? Color.blue : Color(.tertiarySystemGroupedBackground))
+                        .background(selectedCategory == category ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                         .foregroundColor(selectedCategory == category ? .white : .primary)
                         .cornerRadius(CornerRadius.lg)
                     }
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -183,7 +183,7 @@ struct FoodSearchView: View {
                         Text("All Brands")
                     }
                     .font(.caption)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(selectedBrand == nil ? Color.green : Color(.tertiarySystemGroupedBackground))
                     .foregroundColor(selectedBrand == nil ? .white : .primary)
@@ -197,7 +197,7 @@ struct FoodSearchView: View {
                     } label: {
                         Text(brand)
                             .font(.caption)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, Spacing.sm)
                             .padding(.vertical, 6)
                             .background(selectedBrand == brand ? Color.green : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(selectedBrand == brand ? .white : .primary)
@@ -206,7 +206,7 @@ struct FoodSearchView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
         .background(Color(.systemGroupedBackground))
     }
@@ -239,7 +239,7 @@ struct FoodSearchView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 searchError = nil
@@ -375,7 +375,7 @@ struct FoodSearchSkeletonRow: View {
                 }
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .onAppear {
             withAnimation(
                 Animation.linear(duration: 1.5)
@@ -441,7 +441,7 @@ struct FoodSearchResultRow: View {
                         HStack(spacing: 2) {
                             Text("C:")
                                 .font(.caption2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                             Text("\(Int(food.carbsG))g")
                                 .font(.caption2)
                                 .fontWeight(.medium)
@@ -468,11 +468,11 @@ struct FoodSearchResultRow: View {
             // Macro badges
             HStack(spacing: 4) {
                 MacroBadge(value: Int(food.proteinG), label: "P", color: .red)
-                MacroBadge(value: Int(food.carbsG), label: "C", color: .blue)
+                MacroBadge(value: Int(food.carbsG), label: "C", color: .modusCyan)
                 MacroBadge(value: Int(food.fatG), label: "F", color: .yellow)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

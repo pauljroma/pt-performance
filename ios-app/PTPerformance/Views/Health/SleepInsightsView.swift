@@ -97,7 +97,7 @@ struct SleepInsightsView: View {
                     HStack(spacing: Spacing.lg) {
                         sleepStat(icon: "moon.zzz.fill", label: "Deep", value: lastNight.deepMinutes, color: .indigo)
                         sleepStat(icon: "brain.head.profile", label: "REM", value: lastNight.remMinutes, color: .purple)
-                        sleepStat(icon: "heart.fill", label: "Light", value: lastNight.coreMinutes, color: .blue)
+                        sleepStat(icon: "heart.fill", label: "Light", value: lastNight.coreMinutes, color: .modusCyan)
                     }
                 } else {
                     Text("No sleep data available")

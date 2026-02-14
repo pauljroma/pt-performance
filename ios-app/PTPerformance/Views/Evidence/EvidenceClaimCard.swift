@@ -134,8 +134,8 @@ struct EvidenceClaimCard: View {
                     .fontWeight(.semibold)
             }
             .foregroundColor(confidenceColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(confidenceColor.opacity(0.15))
             .cornerRadius(CornerRadius.sm)
         }

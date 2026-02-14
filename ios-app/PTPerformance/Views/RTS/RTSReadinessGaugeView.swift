@@ -317,8 +317,8 @@ struct RTSReadinessTrendIndicator: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(trend.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(trend.color.opacity(0.15))
         .cornerRadius(CornerRadius.xs)
         .accessibilityLabel("Trend: \(trend.displayName)")

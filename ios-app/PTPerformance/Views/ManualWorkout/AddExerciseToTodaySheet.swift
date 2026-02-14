@@ -50,7 +50,7 @@ struct AddExerciseToTodaySheet: View {
                     }
                     .padding(.horizontal)
                 }
-                .padding(.bottom, 4)
+                .padding(.bottom, Spacing.xxs)
             }
 
             // Body region filter chips
@@ -67,7 +67,7 @@ struct AddExerciseToTodaySheet: View {
                 }
                 .padding(.horizontal)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, Spacing.xs)
 
             // Exercise list
             if viewModel.isLoading {
@@ -154,7 +154,7 @@ struct AddExerciseToTodaySheet: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                     }
@@ -206,8 +206,8 @@ struct AddExercisePickerRow: View {
                                 .font(.caption)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
+                                .background(Color.modusCyan.opacity(0.1))
+                                .foregroundColor(.modusCyan)
                                 .cornerRadius(CornerRadius.xs)
                         }
 
@@ -223,14 +223,14 @@ struct AddExercisePickerRow: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .font(.title2)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

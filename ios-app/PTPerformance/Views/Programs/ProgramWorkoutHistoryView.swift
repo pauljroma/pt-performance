@@ -312,7 +312,7 @@ private struct StatCard: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(color.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
@@ -369,7 +369,7 @@ private struct WorkoutHistoryCard: View {
                             Text(volume)
                                 .font(.caption)
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
 
                     if let rpe = workout.rpeDisplay {
@@ -392,7 +392,7 @@ private struct WorkoutHistoryCard: View {
                 .foregroundColor(.secondary)
                 .accessibilityHidden(true)
         }
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.sm)
         .adaptiveShadow(Shadow.subtle)
@@ -488,7 +488,7 @@ private struct ProgramWorkoutDetailSheet: View {
             if let phase = workout.phaseName {
                 Label(phase, systemImage: "square.stack.3d.up")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -500,7 +500,7 @@ private struct ProgramWorkoutDetailSheet: View {
     private var statsRow: some View {
         HStack(spacing: 12) {
             if let volume = workout.volumeDisplay {
-                statPill(icon: "scalemass.fill", value: volume, color: .blue)
+                statPill(icon: "scalemass.fill", value: volume, color: .modusCyan)
             }
 
             if let rpe = workout.rpeDisplay {
@@ -586,7 +586,7 @@ private struct ExerciseDetailRow: View {
 
                     Text(exercise.loadDisplay)
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     if exercise.rpe > 0 {
                         Text("RPE \(exercise.rpe)")
@@ -601,7 +601,7 @@ private struct ExerciseDetailRow: View {
             if exercise.hasVideo {
                 Image(systemName: "play.circle")
                     .font(.title3)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
         }
         .padding(10)

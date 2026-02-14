@@ -63,7 +63,7 @@ struct WeekOverviewWidgetView: View {
             // Next workout
             HStack {
                 Image(systemName: "calendar")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.modusCyan)
 
                 if let workout = entry.nextWorkout, workout.status != .restDay {
                     VStack(alignment: .leading, spacing: 2) {
@@ -93,7 +93,7 @@ struct WeekOverviewWidgetView: View {
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xxs)
         .widgetURL(URL(string: "modus://schedule"))
     }
 

@@ -107,8 +107,8 @@ struct MetricTrendCard: View {
                             .font(.caption.bold())
                             .foregroundColor(trendColor)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(trendColor.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
                 }

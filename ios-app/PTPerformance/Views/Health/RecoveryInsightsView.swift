@@ -229,8 +229,8 @@ struct PersonalizedRecommendationCard: View {
                         .font(.caption2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.modusTealAccent)
                         .cornerRadius(CornerRadius.xs)
                 }
@@ -305,8 +305,8 @@ private struct DetailChip: View {
                 .font(.caption2)
         }
         .foregroundColor(.secondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
     }
@@ -324,8 +324,8 @@ struct CompactInsightRow: View {
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(impactColor)
                 .cornerRadius(CornerRadius.sm)
 

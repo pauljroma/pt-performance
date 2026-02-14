@@ -895,6 +895,79 @@ struct DesignSystem_Previews: PreviewProvider {
 }
 #endif
 
+// MARK: - Badge Size
+
+/// Canonical badge size enum used across badge components.
+/// Each component may extend with additional computed properties as needed.
+enum BadgeSize {
+    case small
+    case medium
+    case large
+
+    /// Standard icon font for badge icons
+    var iconFont: Font {
+        switch self {
+        case .small: return .caption2
+        case .medium: return .caption
+        case .large: return .body
+        }
+    }
+
+    /// Standard label font for badge text
+    var labelFont: Font {
+        switch self {
+        case .small: return .caption2
+        case .medium: return .caption
+        case .large: return .subheadline
+        }
+    }
+
+    /// Standard horizontal padding
+    var horizontalPadding: CGFloat {
+        switch self {
+        case .small: return 6
+        case .medium: return 8
+        case .large: return 12
+        }
+    }
+
+    /// Standard vertical padding
+    var verticalPadding: CGFloat {
+        switch self {
+        case .small: return 3
+        case .medium: return 4
+        case .large: return 6
+        }
+    }
+
+    /// Standard spacing between badge elements
+    var spacing: CGFloat {
+        switch self {
+        case .small: return 2
+        case .medium: return 4
+        case .large: return 6
+        }
+    }
+
+    /// Minimum width for the badge
+    var minWidth: CGFloat {
+        switch self {
+        case .small: return 20
+        case .medium: return 24
+        case .large: return 32
+        }
+    }
+
+    /// Standard corner radius for badges
+    var cornerRadius: CGFloat {
+        switch self {
+        case .small: return CornerRadius.xs
+        case .medium: return CornerRadius.sm
+        case .large: return CornerRadius.md
+        }
+    }
+}
+
 // MARK: - Pain Score Color
 
 /// Shared pain score color mapping used across Rehab views

@@ -131,7 +131,7 @@ struct WorkoutPickerView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
         }
@@ -173,7 +173,7 @@ struct WorkoutPickerView: View {
                 .foregroundColor(.orange)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
         } else if viewModel.aiRecommendations.isEmpty && !viewModel.isLoadingAI {
             VStack(spacing: 8) {
                 Image(systemName: "brain.head.profile")
@@ -187,7 +187,7 @@ struct WorkoutPickerView: View {
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
         } else {
             ForEach(viewModel.aiRecommendations) { recommendation in
                 AIWorkoutRecommendationCard(recommendation: recommendation) {
@@ -232,7 +232,7 @@ struct WorkoutPickerView: View {
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
         } else {
             ForEach(viewModel.recommendations) { template in
                 WorkoutRecommendationCard(template: template) {
@@ -517,7 +517,7 @@ private struct PresetButton: View {
                 Text(title)
                     .font(.caption)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.md)
             .padding(.vertical, 10)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.sm)
@@ -559,7 +559,7 @@ private struct CategoryToggle: View {
                     .font(.title2)
                     .foregroundColor(isOn ? .orange : .secondary)
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(isOn ? Color.orange.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
         }
@@ -586,8 +586,8 @@ private struct WorkoutRecommendationCard: View {
                     if let duration = template.durationDisplay {
                         Text(duration)
                             .font(.caption)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(Color.orange.opacity(0.2))
                             .foregroundColor(.orange)
                             .cornerRadius(CornerRadius.sm)
@@ -702,7 +702,7 @@ private struct WorkoutTemplateDetailSheet: View {
                                 .padding(.vertical, 6)
                             }
                         }
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                     }
                 }
                 .padding(.vertical)
@@ -761,7 +761,7 @@ private struct ModeToggleButton: View {
                     .fontWeight(isSelected ? .semibold : .regular)
             }
             .padding(.vertical, 10)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.md)
             .frame(maxWidth: .infinity)
             .background(
                 isSelected
@@ -797,8 +797,8 @@ private struct AIContextBanner: View {
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(band.color.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
@@ -864,8 +864,8 @@ private struct AIWorkoutRecommendationCard: View {
                             .font(.caption)
                             .fontWeight(.semibold)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(matchScoreColor.opacity(0.2))
                     .foregroundColor(matchScoreColor)
                     .cornerRadius(CornerRadius.sm)

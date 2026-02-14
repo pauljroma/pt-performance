@@ -19,7 +19,7 @@ struct HelpCategoryView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "books.vertical.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .padding(.top, 20)
 
                         Text("Help Center")
@@ -138,7 +138,7 @@ struct CategoryArticleListView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             }
         }
         .navigationTitle(category.rawValue)

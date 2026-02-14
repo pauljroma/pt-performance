@@ -686,11 +686,11 @@ struct GuidedBreathingView: View {
                         value: "\(breathingManager.completedBreaths)"
                     )
 
-                    if breathingManager.session.ambientSound != nil {
+                    if let sound = breathingManager.session.ambientSound {
                         StatRow(
-                            icon: breathingManager.session.ambientSound!.icon,
+                            icon: sound.icon,
                             label: "Ambient Sound",
-                            value: breathingManager.session.ambientSound!.displayName
+                            value: sound.displayName
                         )
                     }
                 }

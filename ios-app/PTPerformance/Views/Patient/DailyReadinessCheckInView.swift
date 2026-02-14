@@ -118,7 +118,7 @@ struct DailyReadinessCheckInView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
 
                         // Readiness Score
                         if let score = preview.score {
@@ -177,7 +177,7 @@ struct DailyReadinessCheckInView: View {
                                     .foregroundColor(.red)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
             }

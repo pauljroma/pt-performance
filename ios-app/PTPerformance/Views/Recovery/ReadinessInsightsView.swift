@@ -138,12 +138,12 @@ struct ReadinessInsightsView: View {
                     } label: {
                         Text(tab.rawValue)
                             .font(.subheadline.weight(.medium))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
                             .background(
                                 Capsule()
                                     .fill(selectedInsightTab == tab
-                                        ? Color.blue
+                                        ? Color.modusCyan
                                         : Color(.tertiarySystemGroupedBackground)
                                     )
                             )
@@ -334,7 +334,7 @@ struct ReadinessTrendChart: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Readiness Trend")
                     .font(.headline)
                 Spacer()
@@ -583,7 +583,7 @@ struct PatternCard: View {
                         .font(.caption)
                         .foregroundColor(.primary)
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.yellow.opacity(0.1))
@@ -628,8 +628,8 @@ struct CorrelationCard: View {
 
             Text(impact)
                 .font(.caption.weight(.medium))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(
                     Capsule()
                         .fill(impactColor.opacity(0.2))
@@ -649,7 +649,7 @@ struct CorrelationExplanationCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Understanding Correlations")
                     .font(.subheadline.weight(.medium))
             }
@@ -661,7 +661,7 @@ struct CorrelationExplanationCard: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color.modusCyan.opacity(0.1))
         )
     }
 }
@@ -719,7 +719,7 @@ struct TrainingOptimizationCard: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "target")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Training Optimization")
                     .font(.headline)
             }
@@ -796,7 +796,7 @@ struct TrainingWindowsCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "calendar.badge.clock")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Upcoming Training Windows")
                     .font(.headline)
             }
@@ -888,7 +888,7 @@ struct InsightEmptyState: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(32)
+        .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)

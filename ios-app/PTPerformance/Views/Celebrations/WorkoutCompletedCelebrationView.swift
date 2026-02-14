@@ -343,7 +343,7 @@ struct WorkoutSummaryCard: View {
                 GridItem(.flexible())
             ], spacing: Spacing.md) {
                 if let duration = duration {
-                    CelebrationStatCell(label: "Duration", value: "\(duration) min", icon: "clock.fill", color: .blue)
+                    CelebrationStatCell(label: "Duration", value: "\(duration) min", icon: "clock.fill", color: .modusCyan)
                 }
 
                 CelebrationStatCell(label: "Exercises", value: "\(exerciseCount)", icon: "figure.strengthtraining.traditional", color: .green)

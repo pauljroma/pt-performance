@@ -94,7 +94,7 @@ struct TemplateCardView: View {
                     HStack(spacing: 4) {
                         Text("\u{2022}")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text(displayName)
                             .font(.caption)
                             .foregroundColor(.primary)
@@ -108,10 +108,10 @@ struct TemplateCardView: View {
                 if allExercises.count > 5 {
                     Text("+ \(allExercises.count - 5) more exercises")
                         .font(.caption2)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
     }
 

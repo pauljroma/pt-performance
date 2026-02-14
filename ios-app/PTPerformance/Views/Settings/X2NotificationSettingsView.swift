@@ -129,7 +129,7 @@ struct X2NotificationSettingsView: View {
                     .controlSize(.small)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             Text("Permission")
         } footer: {
@@ -237,7 +237,7 @@ struct X2NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .blue))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
         } header: {
             HStack {
                 Image(systemName: "checklist")
@@ -267,7 +267,7 @@ struct X2NotificationSettingsView: View {
                         .padding(.leading, 28)
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .blue))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
 
             Toggle(isOn: $viewModel.briefNotificationsEnabled) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -283,7 +283,7 @@ struct X2NotificationSettingsView: View {
                         .padding(.leading, 28)
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .blue))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
         } header: {
             Text("Notification Types")
         }

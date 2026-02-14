@@ -481,7 +481,7 @@ private extension ReviewContraindication {
             description: "Patient is 16 years old. Consider age-appropriate loading parameters for developing musculoskeletal system.",
             severity: .info,
             affectedExercises: [UUID()]
-        ),
+        )
     ]
 }
 
@@ -519,7 +519,7 @@ private extension ReviewContraindication {
                     description: "Patient has no prior resistance training experience. Start with bodyweight progressions.",
                     severity: .info,
                     affectedExercises: [UUID()]
-                ),
+                )
             ],
             acknowledgedIds: .constant([])
         )

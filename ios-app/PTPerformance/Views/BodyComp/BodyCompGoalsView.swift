@@ -112,7 +112,7 @@ struct BodyCompGoalsView: View {
             title: "No Goals Set",
             message: "Set body composition goals to track your progress toward your target weight, body fat, or muscle mass.",
             icon: "target",
-            iconColor: .blue,
+            iconColor: .modusCyan,
             action: EmptyStateView.EmptyStateAction(
                 title: "Set Goals",
                 icon: "plus.circle.fill",
@@ -199,7 +199,7 @@ struct BodyCompGoalsView: View {
                         target: goals.targetWeight,
                         starting: goals.startingWeight,
                         unit: "lbs",
-                        color: .blue,
+                        color: .modusCyan,
                         icon: "scalemass"
                     )
                 }
@@ -279,7 +279,7 @@ struct BodyCompGoalsView: View {
                     Text(viewModel.targetDateText)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -296,7 +296,7 @@ struct BodyCompGoalsView: View {
                             .frame(height: 8)
 
                         Capsule()
-                            .fill(Color.blue)
+                            .fill(Color.modusCyan)
                             .frame(width: geometry.size.width * timeProgress, height: 8)
                     }
                 }
@@ -395,15 +395,15 @@ struct BodyCompGoalsView: View {
                 } label: {
                     Text("Set New Goals")
                         .font(.headline)
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 12)
+                        .foregroundColor(.modusCyan)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm)
                         .background(Color(.systemBackground))
                         .cornerRadius(CornerRadius.xl)
                 }
                 .padding(.top)
             }
-            .padding(32)
+            .padding(Spacing.xl)
         }
         .transition(.opacity)
         .animation(.easeInOut, value: showingCelebration)
@@ -490,8 +490,8 @@ private struct GoalHistoryRow: View {
             // Status badge
             Text(goal.status.displayName)
                 .font(.caption)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(goal.status.color.opacity(0.2))
                 .foregroundColor(goal.status.color)
                 .cornerRadius(CornerRadius.sm)
@@ -504,7 +504,7 @@ private struct GoalHistoryRow: View {
             }
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

@@ -567,7 +567,7 @@ private struct SupplementComplianceBadge: View {
                 .fontWeight(.medium)
         }
         .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .background(color.opacity(0.15))
         .foregroundColor(color)
         .cornerRadius(CornerRadius.sm)

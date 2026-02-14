@@ -180,12 +180,12 @@ struct ConflictsListView: View {
                     Text("Auto-Resolve")
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.blue.opacity(0.1))
+                        .fill(Color.modusCyan.opacity(0.1))
                 )
             }
             .disabled(viewModel.isResolving)
@@ -199,7 +199,7 @@ struct ConflictsListView: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
@@ -235,7 +235,7 @@ struct ConflictsListView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
     }
 
@@ -261,7 +261,7 @@ struct ConflictsListView: View {
                     Text(dateGroup)
                         .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
-                        .padding(.leading, 4)
+                        .padding(.leading, Spacing.xxs)
 
                     ForEach(conflicts) { conflict in
                         ConflictCard(conflict: conflict) {
@@ -320,9 +320,9 @@ struct ConflictsListView: View {
                     Text("View Resolution History")
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
-            .padding(.top, 8)
+            .padding(.top, Spacing.xs)
         }
         .padding(.top, 60)
     }

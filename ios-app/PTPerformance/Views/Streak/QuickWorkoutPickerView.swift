@@ -392,7 +392,7 @@ struct QuickWorkoutDetailSheet: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
 
                 if index < workout.exercises.count - 1 {
                     Divider()

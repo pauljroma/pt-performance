@@ -78,7 +78,7 @@ struct TodayWorkoutCard: View {
                 Text("\(exercises.count)")
                     .font(.title)
                     .fontWeight(.bold)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("exercises")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -129,10 +129,10 @@ struct TodayWorkoutCard: View {
                 Text("+ \(exercises.count - 3) more exercises")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.leading, 24)
+                    .padding(.leading, Spacing.lg)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Start Workout Button

@@ -109,7 +109,7 @@ struct HelpView: View {
                                 .frame(width: 80, height: 32)
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
                 }
                 .listRowInsets(EdgeInsets())
             }
@@ -172,7 +172,7 @@ struct HelpView: View {
                     HelpCategoryView()
                 } label: {
                     Label("Browse by Category", systemImage: "square.grid.2x2.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
 
                 if let firstArticle = contentLoader.articles.first(where: { $0.category == .gettingStarted }) {
@@ -212,7 +212,7 @@ struct HelpView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
                 }
                 .listRowInsets(EdgeInsets())
             }
@@ -248,7 +248,7 @@ struct HelpView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
         }
     }
@@ -284,7 +284,7 @@ struct HelpView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(2)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                     }
                 }
             } header: {
@@ -410,7 +410,7 @@ struct HelpArticleSkeletonRow: View {
                     .shimmer(isAnimating: isAnimating)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .onAppear {
             withAnimation(
                 Animation.linear(duration: 1.5)
@@ -459,7 +459,7 @@ struct HelpSearchResultSkeletonRow: View {
                     .shimmer(isAnimating: isAnimating)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .onAppear {
             withAnimation(
                 Animation.linear(duration: 1.5)

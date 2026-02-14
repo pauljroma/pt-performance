@@ -79,7 +79,7 @@ struct ProgramHeatmapChart: View {
             Text("Low")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .padding(.leading, 4)
+                .padding(.leading, Spacing.xxs)
 
             Text("High")
                 .font(.caption2)
@@ -362,7 +362,7 @@ struct DropoffFunnelChart: View {
                             .font(.caption2)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, Spacing.xs)
 
                         Spacer()
 
@@ -370,7 +370,7 @@ struct DropoffFunnelChart: View {
                             Text("-\(phase.droppedPatients)")
                                 .font(.caption2)
                                 .foregroundColor(.red)
-                                .padding(.horizontal, 8)
+                                .padding(.horizontal, Spacing.xs)
                         }
                     }
                 }
@@ -385,7 +385,7 @@ struct DropoffFunnelChart: View {
             .padding(.vertical, 2)
             .background(
                 selectedPhase?.id == phase.id ?
-                    Color.blue.opacity(0.1) : Color.clear
+                    Color.modusCyan.opacity(0.1) : Color.clear
             )
             .cornerRadius(CornerRadius.xs)
         }

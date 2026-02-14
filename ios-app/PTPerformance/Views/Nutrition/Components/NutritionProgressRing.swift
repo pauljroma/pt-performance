@@ -184,7 +184,7 @@ struct TripleMacroRingsView: View {
                 name: "Carbs",
                 current: carbsCurrent,
                 target: carbsTarget,
-                color: .blue,
+                color: .modusCyan,
                 delay: 0.1
             )
 
@@ -265,7 +265,7 @@ struct CalorieProgressRing: View {
             // Background ring
             Circle()
                 .stroke(
-                    Color.blue.opacity(colorScheme == .dark ? 0.15 : 0.1),
+                    Color.modusCyan.opacity(colorScheme == .dark ? 0.15 : 0.1),
                     lineWidth: 12
                 )
                 .frame(width: size, height: size)
@@ -292,12 +292,12 @@ struct CalorieProgressRing: View {
 
                 Text("\(remainingCalories) left")
                     .font(.system(size: size * 0.07, weight: .medium))
-                    .foregroundColor(progress >= 1.0 ? .green : .blue)
+                    .foregroundColor(progress >= 1.0 ? .green : .modusCyan)
                     .padding(.horizontal, Spacing.xs)
                     .padding(.vertical, 2)
                     .background(
                         Capsule()
-                            .fill((progress >= 1.0 ? Color.green : Color.blue).opacity(0.15))
+                            .fill((progress >= 1.0 ? Color.green : Color.modusCyan).opacity(0.15))
                     )
             }
 
@@ -354,7 +354,7 @@ struct CalorieProgressRing: View {
     }
 
     private var progressGradient: AngularGradient {
-        let baseColor = progress >= 1.0 ? Color.green : Color.blue
+        let baseColor = progress >= 1.0 ? Color.green : Color.modusCyan
         return AngularGradient(
             gradient: Gradient(colors: [
                 baseColor.opacity(0.6),
@@ -436,7 +436,7 @@ private struct NutritionConfettiPiece: View {
     @State private var yOffset: CGFloat = 0
     @State private var rotation: Double = 0
 
-    private let colors: [Color] = [.green, .blue, .orange, .purple, .yellow]
+    private let colors: [Color] = [.green, .modusCyan, .orange, .purple, .yellow]
 
     var body: some View {
         let angle = Double(index) * (360.0 / 12.0)

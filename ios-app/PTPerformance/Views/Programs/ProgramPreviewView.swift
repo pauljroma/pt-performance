@@ -40,7 +40,7 @@ struct ProgramPreviewView: View {
 
                     // Publish Button (always visible)
                     publishButton
-                        .padding(.top, 8)
+                        .padding(.top, Spacing.xs)
                 }
                 .padding()
             }
@@ -129,9 +129,9 @@ struct ProgramPreviewView: View {
         VStack(spacing: 12) {
             Image(systemName: "eye.fill")
                 .font(.title)
-                .foregroundColor(.blue)
-                .padding(12)
-                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.modusCyan)
+                .padding(Spacing.sm)
+                .background(Color.modusCyan.opacity(0.1))
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
@@ -169,7 +169,7 @@ struct ProgramPreviewView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal, 8)
+                                .padding(.horizontal, Spacing.xs)
                         }
                     )
 
@@ -186,8 +186,8 @@ struct ProgramPreviewView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(difficulty.color)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, Spacing.xs)
+                        .padding(.vertical, Spacing.xxs)
                         .background(difficulty.color.opacity(0.15))
                         .cornerRadius(CornerRadius.sm)
 
@@ -369,7 +369,7 @@ struct ProgramPreviewView: View {
                 HStack(spacing: 12) {
                     // Patient avatar
                     Circle()
-                        .fill(Color.blue.gradient)
+                        .fill(Color.modusCyan.gradient)
                         .frame(width: 44, height: 44)
                         .overlay(
                             Text(patient.initials)
@@ -489,7 +489,7 @@ struct ProgramPreviewView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
             } else {
                 WeeklyCalendarGrid(phases: viewModel.phases)
             }
@@ -559,7 +559,7 @@ struct ProgramPreviewView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, Spacing.lg)
     }
 
     // MARK: - Summary Stats Section
@@ -626,7 +626,7 @@ struct ProgramPreviewView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(canPublish ? Color.blue : Color.gray)
+            .background(canPublish ? Color.modusCyan : Color.gray)
             .foregroundColor(.white)
             .cornerRadius(CornerRadius.md)
         }
@@ -660,7 +660,7 @@ struct ProgramPreviewView: View {
 private struct WeeklyCalendarGrid: View {
     let phases: [TherapistPhaseData]
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
     private let daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
     private var totalWeeks: Int {
@@ -715,7 +715,7 @@ private struct WeeklyCalendarGrid: View {
                     }
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -767,7 +767,7 @@ private struct DayCell: View {
 private struct ProgramTimelineView: View {
     let phases: [TherapistPhaseData]
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -782,7 +782,7 @@ private struct ProgramTimelineView: View {
                     )
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -838,7 +838,7 @@ private struct PhasePreviewCard: View {
     let startWeek: Int
     let endWeek: Int
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
 
     private var phaseColor: Color {
         phaseColors[(phaseNumber - 1) % phaseColors.count]
@@ -875,8 +875,8 @@ private struct PhasePreviewCard: View {
                 Text("\(phase.durationWeeks) weeks")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(CornerRadius.sm)
             }
@@ -933,7 +933,7 @@ private struct PatientPhasePreviewCard: View {
     let startWeek: Int
     let endWeek: Int
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
 
     private var phaseColor: Color {
         phaseColors[(phaseNumber - 1) % phaseColors.count]

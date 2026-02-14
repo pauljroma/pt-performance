@@ -165,7 +165,7 @@ struct TimerPickerView: View {
                     }
                 }
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
     }
 
@@ -191,7 +191,7 @@ struct TimerPickerView: View {
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, Spacing.xxs)
     }
 
     // MARK: - Preset Grid
@@ -536,8 +536,8 @@ private struct CategoryChip: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
@@ -616,8 +616,8 @@ private struct PresetCard: View {
                 Text(preset.templateJson.difficulty?.displayName ?? "Easy")
                     .font(.caption2)
                     .fontWeight(.semibold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(difficultyColor.opacity(0.2))
                     .foregroundColor(difficultyColor)
                     .cornerRadius(CornerRadius.xs)
@@ -764,7 +764,7 @@ private struct PresetDetailView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
             }
 
             Section("Timer Configuration") {

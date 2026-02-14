@@ -183,7 +183,7 @@ struct SupplementDetailView: View {
                     Label(timing.displayName, systemImage: timing.icon)
                         .font(.caption)
                         .padding(.horizontal, Spacing.sm)
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                         .background(Color.modusCyan.opacity(0.15))
                         .foregroundColor(.modusCyan)
                         .cornerRadius(CornerRadius.sm)

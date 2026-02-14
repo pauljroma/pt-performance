@@ -467,11 +467,11 @@ private struct AHFilterChip: View {
                 }
             }
             .font(.subheadline.weight(isSelected ? .semibold : .regular))
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Spacing.md)
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.blue : Color(.secondarySystemGroupedBackground))
+                    .fill(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             )
             .foregroundColor(isSelected ? .white : .primary)
         }
@@ -507,8 +507,8 @@ private struct AssessmentHistoryCard: View {
                         // Status badge
                         Text(assessment.status.displayName)
                             .font(.caption.weight(.medium))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, Spacing.xxs)
                             .background(
                                 Capsule()
                                     .fill(assessment.status.color.opacity(0.2))
@@ -721,7 +721,7 @@ private struct DetailSection<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text(title)
                     .font(.headline)
             }

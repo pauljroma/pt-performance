@@ -318,7 +318,7 @@ struct CompactNextAchievementCard: View {
 // MARK: - Achievement Recommendations Helper
 
 /// Helper to compute recommended next achievements
-fileprivate enum NextAchievementHelper {
+private enum NextAchievementHelper {
     /// Get the closest achievements to being unlocked
     /// - Parameters:
     ///   - achievements: All achievement progress

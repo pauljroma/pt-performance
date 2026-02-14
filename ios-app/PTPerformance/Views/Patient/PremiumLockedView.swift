@@ -26,7 +26,7 @@ struct PremiumLockedView: View {
                     .font(.system(size: 56))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.blue, .purple],
+                            colors: [.modusCyan, .purple],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -60,7 +60,7 @@ struct PremiumLockedView: View {
                     .padding()
                     .background(
                         LinearGradient(
-                            colors: [.blue, .purple],
+                            colors: [.modusCyan, .purple],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -80,7 +80,7 @@ struct PremiumLockedView: View {
                 } label: {
                     Text("Restore Purchases")
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Restore previous purchases")
 

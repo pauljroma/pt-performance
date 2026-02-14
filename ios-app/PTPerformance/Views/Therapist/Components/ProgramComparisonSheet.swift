@@ -84,8 +84,8 @@ struct ProgramComparisonSheet: View {
                         Text("Export Comparison")
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.blue)
+                    .padding(.vertical, Spacing.sm)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
@@ -284,7 +284,7 @@ struct ProgramComparisonSheet: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Spacing.xs)
                 .background(Color(.systemGray6))
 
                 // Data rows
@@ -332,7 +332,7 @@ struct ProgramComparisonSheet: View {
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
     }
 
     // MARK: - Helper Methods
@@ -366,7 +366,7 @@ struct ProgramComparisonSheet: View {
     }
 
     private func programColor(for index: Int) -> Color {
-        let colors: [Color] = [.blue, .green, .purple, .orange]
+        let colors: [Color] = [.modusCyan, .green, .purple, .orange]
         return colors[index % colors.count]
     }
 
@@ -413,7 +413,7 @@ private struct ComparisonProgramBadge: View {
     let colorIndex: Int
 
     private var color: Color {
-        let colors: [Color] = [.blue, .green, .purple, .orange]
+        let colors: [Color] = [.modusCyan, .green, .purple, .orange]
         return colors[colorIndex % colors.count]
     }
 
@@ -435,8 +435,8 @@ private struct ComparisonProgramBadge: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(color.opacity(0.1))
         .cornerRadius(CornerRadius.md)
     }
@@ -457,8 +457,8 @@ private struct WinnerBadge: View {
                 .foregroundColor(.primary)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(Color.yellow.opacity(0.2))
         .cornerRadius(CornerRadius.sm)
     }

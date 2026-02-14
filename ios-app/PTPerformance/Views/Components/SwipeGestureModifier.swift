@@ -304,7 +304,7 @@ extension View {
             .font(.headline)
 
         RoundedRectangle(cornerRadius: 12)
-            .fill(Color.blue.opacity(0.1))
+            .fill(Color.modusCyan.opacity(0.1))
             .frame(height: 80)
             .overlay(
                 HStack {

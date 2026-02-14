@@ -146,10 +146,10 @@ struct HealthSyncStatusView: View {
                         .font(.system(size: 9, weight: .medium))
                 }
                 .foregroundColor(quality.color)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xxs)
                 .padding(.vertical, 2)
                 .background(quality.color.opacity(0.15))
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
                 .accessibilityLabel("Data quality: \(quality.label)")
             }
         }
@@ -360,7 +360,7 @@ struct HealthSyncStatusView: View {
             // Last Import
             DataTile(
                 icon: "arrow.down.circle.fill",
-                iconColor: .blue,
+                iconColor: .modusCyan,
                 title: "Import",
                 value: healthKitService.lastSyncDate.map { shortTimeAgo($0) } ?? "Never"
             )
@@ -510,7 +510,7 @@ struct HealthSyncBanner: View {
                 } label: {
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 

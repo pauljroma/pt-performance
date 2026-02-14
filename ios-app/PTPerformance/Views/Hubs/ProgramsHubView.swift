@@ -46,8 +46,8 @@ struct ProgramsHubView: View {
                 // Segmented control for sub-sections (inside NavigationStack)
                 segmentedPicker
                     .padding(.horizontal)
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
+                    .padding(.top, Spacing.xs)
+                    .padding(.bottom, Spacing.xs)
 
                 // Content based on selection (no more nested NavigationStacks)
                 contentView

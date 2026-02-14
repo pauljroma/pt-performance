@@ -82,7 +82,7 @@ struct MuscleGroupVolumeView: View {
                         angularInset: 2
                     )
                     .foregroundStyle(group.muscleGroup.color)
-                    .cornerRadius(4)
+                    .cornerRadius(CornerRadius.xs)
                     .opacity(selectedGroup == nil || selectedGroup == group.muscleGroup ? 1.0 : 0.4)
                 }
                 .chartLegend(.hidden)
@@ -160,7 +160,7 @@ struct MuscleGroupVolumeView: View {
                             .foregroundColor(.primary)
                             .lineLimit(1)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .padding(.horizontal, 6)
                     .background(
                         selectedGroup == group.muscleGroup
@@ -309,7 +309,7 @@ struct MuscleGroupVolumeView: View {
                         .fill(data.muscleGroup.color)
                         .frame(width: geometry.size.width * CGFloat(data.percentage / 100), height: 4)
                 }
-                .cornerRadius(2)
+                .cornerRadius(CornerRadius.xs)
             }
             .frame(height: 4)
         }

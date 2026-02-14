@@ -73,11 +73,11 @@ struct ExercisePickerView: View {
                             } label: {
                                 Text(category)
                                     .font(.subheadline)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, Spacing.md)
+                                    .padding(.vertical, Spacing.xs)
                                     .background(
                                         selectedCategory == category
-                                            ? Color.blue
+                                            ? Color.modusCyan
                                             : Color.gray.opacity(0.2)
                                     )
                                     .foregroundColor(
@@ -90,7 +90,7 @@ struct ExercisePickerView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
 
                 // Body region filter
@@ -107,7 +107,7 @@ struct ExercisePickerView: View {
                                         .font(.subheadline)
                                 }
                                 .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, Spacing.xs)
                                 .background(
                                     selectedBodyRegion == region
                                         ? Color.green
@@ -123,7 +123,7 @@ struct ExercisePickerView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
 
@@ -192,7 +192,7 @@ struct ExercisePickerView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.primary)
                         }
-                        .padding(24)
+                        .padding(Spacing.lg)
                         .background(Color(.systemBackground))
                         .cornerRadius(CornerRadius.md)
                     }
@@ -314,10 +314,10 @@ struct ExercisePickerRow: View {
 
             Image(systemName: "plus.circle.fill")
                 .font(.title3)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
         }
         .contentShape(Rectangle())
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .sheet(isPresented: $showTechniqueGuide) {
             ExerciseTechniqueView(exercise: exercise)
         }

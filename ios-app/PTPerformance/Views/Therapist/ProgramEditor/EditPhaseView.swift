@@ -90,7 +90,7 @@ struct EditPhaseView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 12)
+                        .padding(.vertical, Spacing.sm)
                         Spacer()
                     }
                 } else if let error = sessionsError {
@@ -108,7 +108,7 @@ struct EditPhaseView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                 } else if sessions.isEmpty {
                     HStack {
                         Spacer()
@@ -124,7 +124,7 @@ struct EditPhaseView: View {
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 24)
+                        .padding(.vertical, Spacing.lg)
                         Spacer()
                     }
                 } else {
@@ -296,7 +296,7 @@ struct SessionRowView: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

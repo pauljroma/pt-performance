@@ -124,7 +124,7 @@ struct ExerciseDetailSheet: View {
                             .fontWeight(.semibold)
                     }
                     .foregroundColor(.orange)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(Color.orange.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
@@ -139,7 +139,7 @@ struct ExerciseDetailSheet: View {
                         .fontWeight(.semibold)
                 }
                 .foregroundColor(.green)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, Spacing.sm)
                 .padding(.vertical, 6)
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
@@ -233,21 +233,21 @@ struct ExerciseDetailSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "dumbbell.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("Equipment Needed")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
 
                     FlowLayout(spacing: 8) {
                         ForEach(equipment, id: \.self) { item in
                             Text(item)
                                 .font(.caption)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
+                                .background(Color.modusCyan.opacity(0.1))
+                                .foregroundColor(.modusCyan)
                                 .cornerRadius(CornerRadius.sm)
                         }
                     }
@@ -270,7 +270,7 @@ struct ExerciseDetailSheet: View {
                         ForEach(muscles, id: \.self) { muscle in
                             Text(muscle)
                                 .font(.caption)
-                                .padding(.horizontal, 12)
+                                .padding(.horizontal, Spacing.sm)
                                 .padding(.vertical, 6)
                                 .background(Color.green.opacity(0.1))
                                 .foregroundColor(.green)

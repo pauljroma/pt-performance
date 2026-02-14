@@ -838,10 +838,10 @@ struct WorkoutTemplatePreviewSheet: View {
                             .font(.caption2)
                             .fontWeight(.medium)
                     }
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.15))
+                    .foregroundColor(.modusCyan)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(Color.modusCyan.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
             }
@@ -905,7 +905,7 @@ struct WorkoutTemplatePreviewSheet: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, Spacing.md)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
@@ -948,8 +948,8 @@ struct WorkoutTemplatePreviewSheet: View {
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.blue)
+                .padding(.vertical, Spacing.md)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -1018,7 +1018,7 @@ struct BlockPreviewCard: View {
                     if block.exercises.count > 5 {
                         Text("+ \(block.exercises.count - 5) more exercises")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                 }
                 .padding(.leading, 40)

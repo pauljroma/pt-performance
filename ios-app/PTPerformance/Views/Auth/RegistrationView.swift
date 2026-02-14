@@ -127,7 +127,7 @@ struct RegistrationView: View {
                         if isLoading {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
-                                .padding(.trailing, 8)
+                                .padding(.trailing, Spacing.xs)
                                 .accessibilityHidden(true)
                         }
                         Text("Create Account")

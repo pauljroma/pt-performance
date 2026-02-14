@@ -377,44 +377,17 @@ struct ConfidenceGradeBadge: View {
     let grade: ConfidenceGrade
     var size: BadgeSize = .medium
 
-    enum BadgeSize {
-        case small
-        case medium
-        case large
-
-        var fontSize: Font {
-            switch self {
-            case .small: return .caption2
-            case .medium: return .caption
-            case .large: return .subheadline
-            }
-        }
-
-        var padding: CGFloat {
-            switch self {
-            case .small: return 4
-            case .medium: return 6
-            case .large: return 8
-            }
-        }
-
-        var minWidth: CGFloat {
-            switch self {
-            case .small: return 20
-            case .medium: return 24
-            case .large: return 32
-            }
-        }
-    }
+    /// Use the canonical top-level BadgeSize enum
+    typealias BadgeSize = PTPerformance.BadgeSize
 
     var body: some View {
         Text(grade.rawValue)
-            .font(size.fontSize)
+            .font(size.labelFont)
             .fontWeight(.bold)
             .foregroundColor(.white)
             .frame(minWidth: size.minWidth)
-            .padding(.horizontal, size.padding)
-            .padding(.vertical, size.padding / 2)
+            .padding(.horizontal, size.horizontalPadding)
+            .padding(.vertical, size.verticalPadding)
             .background(grade.color)
             .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Grade \(grade.rawValue): \(grade.displayLabel)")

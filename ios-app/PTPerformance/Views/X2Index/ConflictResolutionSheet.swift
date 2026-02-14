@@ -161,7 +161,7 @@ struct ConflictGroupResolutionSheet: View {
                     VStack(spacing: 8) {
                         Image(systemName: "1.circle.fill")
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
 
                         Text("Source 1")
                             .font(.caption)
@@ -175,11 +175,11 @@ struct ConflictGroupResolutionSheet: View {
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .fill(selectedResolution == .useFirst ? Color.blue.opacity(0.1) : Color(.tertiarySystemFill))
+                            .fill(selectedResolution == .useFirst ? Color.modusCyan.opacity(0.1) : Color(.tertiarySystemFill))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .stroke(selectedResolution == .useFirst ? Color.blue : Color.clear, lineWidth: 2)
+                            .stroke(selectedResolution == .useFirst ? Color.modusCyan : Color.clear, lineWidth: 2)
                     )
                 }
                 .buttonStyle(.plain)
@@ -289,7 +289,7 @@ struct ConflictGroupResolutionSheet: View {
 
                 Spacer()
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
         }
         .buttonStyle(.plain)
     }
@@ -304,7 +304,7 @@ struct ConflictGroupResolutionSheet: View {
 
             TextEditor(text: $notes)
                 .frame(minHeight: 80)
-                .padding(8)
+                .padding(Spacing.xs)
                 .background(Color(.systemBackground))
                 .cornerRadius(CornerRadius.sm)
                 .overlay(

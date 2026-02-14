@@ -202,13 +202,13 @@ extension FastingPhase {
             )
         case .deepKetosis:
             return LinearGradient(
-                colors: [.blue, .purple],
+                colors: [.modusCyan, .purple],
                 startPoint: .leading,
                 endPoint: .trailing
             )
         case .autophagy:
             return LinearGradient(
-                colors: [.purple, .blue],
+                colors: [.purple, .modusCyan],
                 startPoint: .leading,
                 endPoint: .trailing
             )

@@ -431,7 +431,7 @@ struct StreakCalendarView: View {
                         .font(.caption)
                         .foregroundColor(Color.modusTealAccent)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Spacing.xxs)
             }
 
             if viewModel.freezeUsageDates.isEmpty {

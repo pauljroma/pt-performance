@@ -118,18 +118,18 @@ struct ProgressAssessmentView: View {
                             Text(tab.title)
                         }
                         .font(.subheadline.weight(selectedTab == tab ? .semibold : .regular))
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, Spacing.md)
                         .padding(.vertical, 10)
                         .background(
                             Capsule()
-                                .fill(selectedTab == tab ? Color.blue : Color(.secondarySystemGroupedBackground))
+                                .fill(selectedTab == tab ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
                         )
                         .foregroundColor(selectedTab == tab ? .white : .primary)
                     }
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.vertical, Spacing.sm)
         }
         .background(Color(.systemBackground))
     }
@@ -373,7 +373,7 @@ struct ProgressAssessmentView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }
@@ -705,7 +705,7 @@ private struct ChangeRow: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundColor(status.color)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 
@@ -950,10 +950,10 @@ private struct PAGoalProgressCard: View {
             HStack {
                 Text("Goal \(goalNumber)")
                     .font(.caption.weight(.semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(Color.blue.opacity(0.2)))
-                    .foregroundColor(.blue)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(Capsule().fill(Color.modusCyan.opacity(0.2)))
+                    .foregroundColor(.modusCyan)
 
                 Spacer()
 

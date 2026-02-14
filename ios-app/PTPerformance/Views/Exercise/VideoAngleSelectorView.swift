@@ -38,7 +38,7 @@ struct VideoAngleSelectorView: View {
                             angleThumbnail(video: video)
                         }
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Spacing.xxs)
                 }
             }
         }
@@ -57,7 +57,7 @@ struct VideoAngleSelectorView: View {
                 ZStack {
                     // Background
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(isSelected ? Color.blue : Color.white.opacity(0.1))
+                        .fill(isSelected ? Color.modusCyan : Color.white.opacity(0.1))
                         .frame(width: 64, height: 64)
 
                     // Icon
@@ -76,7 +76,7 @@ struct VideoAngleSelectorView: View {
                             }
                             Spacer()
                         }
-                        .padding(4)
+                        .padding(Spacing.xxs)
                     }
                 }
 
@@ -136,7 +136,7 @@ struct VideoAngleSelectorView: View {
                         }
                     }
                     .foregroundColor(.white)
-                    .padding(8)
+                    .padding(Spacing.xs)
                     .background(
                         LinearGradient(
                             colors: [.clear, .black.opacity(0.7)],
@@ -150,7 +150,7 @@ struct VideoAngleSelectorView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -188,7 +188,7 @@ struct CompactAngleSelectorView: View {
                 compactAngleButton(for: angle)
             }
         }
-        .padding(4)
+        .padding(Spacing.xxs)
         .background(Color.black.opacity(0.3))
         .cornerRadius(CornerRadius.sm)
     }
@@ -213,7 +213,7 @@ struct CompactAngleSelectorView: View {
             .foregroundColor(isSelected ? .white : .white.opacity(0.6))
             .padding(.horizontal, isSelected ? 12 : 8)
             .padding(.vertical, 6)
-            .background(isSelected ? Color.blue : Color.clear)
+            .background(isSelected ? Color.modusCyan : Color.clear)
             .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)

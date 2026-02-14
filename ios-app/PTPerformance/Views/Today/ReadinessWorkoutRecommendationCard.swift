@@ -210,12 +210,12 @@ struct ReadinessWorkoutRecommendationCard: View {
             } label: {
                 Label("Full Protocol", systemImage: "doc.text")
                     .font(.caption.weight(.medium))
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .foregroundColor(.modusCyan)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
                     .background(
                         Capsule()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.modusCyan.opacity(0.1))
                     )
             }
 
@@ -226,8 +226,8 @@ struct ReadinessWorkoutRecommendationCard: View {
                 Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.purple)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
                     .background(
                         Capsule()
                             .fill(Color.purple.opacity(0.1))
@@ -256,7 +256,7 @@ struct ReadinessWorkoutRecommendationCard: View {
                 let changePercent = (1.0 - intensityReduction) * 100
                 factors.append(RecommendationDrivingFactor(
                     icon: "scalemass",
-                    iconColor: changePercent > 15 ? .orange : .blue,
+                    iconColor: changePercent > 15 ? .orange : .modusCyan,
                     metric: "Intensity reduced by \(Int(changePercent))%",
                     detail: "Based on today's readiness assessment",
                     category: .training
@@ -268,7 +268,7 @@ struct ReadinessWorkoutRecommendationCard: View {
                 let changePercent = (1.0 - volumeReduction) * 100
                 factors.append(RecommendationDrivingFactor(
                     icon: "list.number",
-                    iconColor: changePercent > 25 ? .orange : .blue,
+                    iconColor: changePercent > 25 ? .orange : .modusCyan,
                     metric: "Volume reduced by \(Int(changePercent))%",
                     detail: "Fewer sets to manage fatigue",
                     category: .training
@@ -336,7 +336,7 @@ struct AdjustmentPill: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.caption.weight(.semibold))
@@ -347,10 +347,10 @@ struct AdjustmentPill: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.blue.opacity(0.05))
+                .fill(Color.modusCyan.opacity(0.05))
         )
     }
 }
@@ -364,7 +364,7 @@ struct AlternativeWorkoutPill: View {
             HStack(spacing: 8) {
                 Image(systemName: workout.type.icon)
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(workout.name)
@@ -376,11 +376,11 @@ struct AlternativeWorkoutPill: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.modusCyan.opacity(0.1))
             )
         }
         .buttonStyle(.plain)
@@ -409,7 +409,7 @@ struct QuickRecoveryTipRow: View {
                     .foregroundColor(.orange)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

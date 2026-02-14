@@ -352,7 +352,7 @@ struct InlineCitationBadge: View {
                     .font(.system(size: 8, weight: .bold))
                     .foregroundColor(grade.color)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
             .padding(.vertical, 2)
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(CornerRadius.xs)

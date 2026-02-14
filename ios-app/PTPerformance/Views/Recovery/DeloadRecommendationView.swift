@@ -206,7 +206,7 @@ struct DeloadRecommendationView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(color.opacity(0.1))

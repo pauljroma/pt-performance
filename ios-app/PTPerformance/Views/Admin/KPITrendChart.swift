@@ -35,7 +35,7 @@ struct KPITrendChart: View {
         data: [KPITrendDataPoint],
         targetValue: Double? = nil,
         formatValue: @escaping (Double) -> String = { String(format: "%.1f", $0) },
-        trendColor: Color = .blue,
+        trendColor: Color = .modusCyan,
         isInverted: Bool = false
     ) {
         self.title = title
@@ -112,8 +112,8 @@ struct KPITrendChart: View {
             }
         }
         .foregroundColor(trend == .stable ? .gray : (isPositive ? .green : .red))
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background((trend == .stable ? Color.gray : (isPositive ? Color.green : Color.red)).opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -405,7 +405,7 @@ struct CompactTrendChart: View {
 
     @State private var isAnimating = false
 
-    init(data: [KPITrendDataPoint], trendColor: Color = .blue, showPoints: Bool = false) {
+    init(data: [KPITrendDataPoint], trendColor: Color = .modusCyan, showPoints: Bool = false) {
         self.data = data
         self.trendColor = trendColor
         self.showPoints = showPoints

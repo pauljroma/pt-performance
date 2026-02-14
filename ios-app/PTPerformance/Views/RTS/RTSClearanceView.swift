@@ -174,20 +174,20 @@ struct RTSClearanceView: View {
 
                             if viewModel.clearanceType == type {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                             }
                         }
                         .padding(Spacing.md)
                         .background(
                             RoundedRectangle(cornerRadius: CornerRadius.md)
                                 .fill(viewModel.clearanceType == type
-                                    ? Color.blue.opacity(0.1)
+                                    ? Color.modusCyan.opacity(0.1)
                                     : Color(.systemBackground)
                                 )
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: CornerRadius.md)
-                                .stroke(viewModel.clearanceType == type ? Color.blue : Color.clear, lineWidth: 2)
+                                .stroke(viewModel.clearanceType == type ? Color.modusCyan : Color.clear, lineWidth: 2)
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -371,7 +371,7 @@ struct RTSClearanceView: View {
                 // Primary signature
                 HStack {
                     Image(systemName: "signature")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Signed by Therapist")
@@ -456,7 +456,7 @@ struct RTSClearanceView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.lg)
                 }
             }
@@ -471,10 +471,10 @@ struct RTSClearanceView: View {
                         Text("Mark as Complete")
                     }
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, Spacing.md)
-                    .background(Color.blue.opacity(0.1))
+                    .background(Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.lg)
                 }
             }

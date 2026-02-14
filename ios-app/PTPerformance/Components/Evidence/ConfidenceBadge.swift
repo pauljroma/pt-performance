@@ -229,59 +229,8 @@ struct ConfidenceBadge: View {
 // MARK: - Badge Size
 
 extension ConfidenceBadge {
-    enum BadgeSize {
-        case small
-        case medium
-        case large
-
-        var iconFont: Font {
-            switch self {
-            case .small: return .caption2
-            case .medium: return .caption
-            case .large: return .body
-            }
-        }
-
-        var labelFont: Font {
-            switch self {
-            case .small: return .caption2
-            case .medium: return .caption
-            case .large: return .subheadline
-            }
-        }
-
-        var spacing: CGFloat {
-            switch self {
-            case .small: return 2
-            case .medium: return 4
-            case .large: return 6
-            }
-        }
-
-        var horizontalPadding: CGFloat {
-            switch self {
-            case .small: return 6
-            case .medium: return 8
-            case .large: return 12
-            }
-        }
-
-        var verticalPadding: CGFloat {
-            switch self {
-            case .small: return 3
-            case .medium: return 4
-            case .large: return 6
-            }
-        }
-
-        var cornerRadius: CGFloat {
-            switch self {
-            case .small: return CornerRadius.xs
-            case .medium: return CornerRadius.sm
-            case .large: return CornerRadius.md
-            }
-        }
-    }
+    /// Use the canonical top-level BadgeSize enum
+    typealias BadgeSize = PTPerformance.BadgeSize
 }
 
 // MARK: - Confidence Score Badge

@@ -32,27 +32,27 @@ struct BaseballPackMarketingView: View {
 
                 // Features Section
                 featuresSection
-                    .padding(.top, 32)
+                    .padding(.top, Spacing.xl)
 
                 // What's Included Section
                 whatsIncludedSection
-                    .padding(.top, 32)
+                    .padding(.top, Spacing.xl)
 
                 // Pricing Section
                 pricingSection
-                    .padding(.top, 32)
+                    .padding(.top, Spacing.xl)
 
                 // Purchase Button
                 purchaseButton
-                    .padding(.top, 24)
+                    .padding(.top, Spacing.lg)
 
                 // Restore Purchases
                 restorePurchasesButton
-                    .padding(.top, 16)
+                    .padding(.top, Spacing.md)
 
                 // Legal Text
                 legalText
-                    .padding(.top, 24)
+                    .padding(.top, Spacing.lg)
                     .padding(.bottom, 40)
             }
             .padding(.horizontal)
@@ -105,7 +105,7 @@ struct BaseballPackMarketingView: View {
                     .foregroundColor(.white)
             }
             .shadow(color: baseballNavy.opacity(0.3), radius: 12, x: 0, y: 6)
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
 
             Text("Baseball Performance Pack")
                 .font(.title)
@@ -203,7 +203,7 @@ struct BaseballPackMarketingView: View {
                         Text("one-time")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.top, 12)
+                            .padding(.top, Spacing.sm)
                     }
 
                     Text("Lifetime Access")
@@ -229,7 +229,7 @@ struct BaseballPackMarketingView: View {
                 }
             }
         }
-        .padding(.vertical, 24)
+        .padding(.vertical, Spacing.lg)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 16)
@@ -262,7 +262,7 @@ struct BaseballPackMarketingView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(
                 LinearGradient(
                     colors: [baseballNavy, baseballNavy.opacity(0.85)],

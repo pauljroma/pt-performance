@@ -73,7 +73,7 @@ struct NutritionRecommendationView: View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "chart.pie.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Today's Progress")
                     .font(.headline)
                 Spacer()
@@ -133,9 +133,9 @@ struct NutritionRecommendationView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(32)
+        .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
@@ -144,7 +144,7 @@ struct NutritionRecommendationView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Image(systemName: "sparkles")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("AI Recommendation")
                     .font(.headline)
                 Spacer()
@@ -155,7 +155,7 @@ struct NutritionRecommendationView: View {
                     }
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -163,7 +163,7 @@ struct NutritionRecommendationView: View {
                 .font(.body)
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
@@ -186,7 +186,7 @@ struct NutritionRecommendationView: View {
             }
             .buttonStyle(.borderedProminent)
         }
-        .padding(24)
+        .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
         .background(Color.orange.opacity(0.1))
         .cornerRadius(CornerRadius.lg)
@@ -197,7 +197,7 @@ struct NutritionRecommendationView: View {
         VStack(spacing: 16) {
             Image(systemName: "sparkles")
                 .font(.system(size: 48))
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text("Get AI Recommendations")
                 .font(.title2)
@@ -219,9 +219,9 @@ struct NutritionRecommendationView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
         }
-        .padding(24)
+        .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(Color.blue.opacity(0.1))
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
@@ -465,7 +465,7 @@ private struct ConsumedMealRow: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: log.mealType?.icon ?? "fork.knife")
                 .font(.title2)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 32)
 
             VStack(alignment: .leading, spacing: 4) {

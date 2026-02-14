@@ -72,7 +72,7 @@ struct ConflictHistoryView: View {
                     Text(dateGroup)
                         .font(.headline)
                         .foregroundColor(.secondary)
-                        .padding(.leading, 4)
+                        .padding(.leading, Spacing.xxs)
 
                     ForEach(conflicts) { conflict in
                         ConflictHistoryCard(conflict: conflict)
@@ -136,7 +136,7 @@ struct ConflictHistoryView: View {
 
                     Spacer()
                 }
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
             }
         }
         .padding()
@@ -202,7 +202,7 @@ struct ConflictHistoryView: View {
             HStack(spacing: 16) {
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(Color.blue)
+                        .fill(Color.modusCyan)
                         .frame(width: 8, height: 8)
                     Text("\(stats.autoResolved) auto")
                         .font(.caption)
@@ -242,7 +242,7 @@ struct ConflictHistoryView: View {
                         }
                         .font(.caption.weight(.medium))
                         .foregroundColor(.secondary)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
                         .background(
                             Capsule()
@@ -263,7 +263,7 @@ struct ConflictHistoryView: View {
                     }
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, Spacing.xxs)
         }
     }
 
@@ -425,8 +425,8 @@ struct ConflictHistoryCard: View {
                 .font(.caption.weight(.medium))
         }
         .foregroundColor(conflict.status.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
                 .fill(conflict.status.color.opacity(0.15))
@@ -473,7 +473,7 @@ struct ConflictFilterChip: View {
                     .font(.caption.weight(.medium))
             }
             .foregroundColor(isSelected ? .white : color)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(
                 Capsule()

@@ -8,6 +8,15 @@
 
 import Foundation
 
+// MARK: - Shared Date Formatter
+
+private let _streakDateOnlyFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "yyyy-MM-dd"
+    f.timeZone = TimeZone.current
+    return f
+}()
+
 // MARK: - Streak Type
 
 /// Types of streaks that can be tracked
@@ -92,10 +101,7 @@ struct StreakRecord: Codable, Identifiable, Hashable, Equatable {
 
     private static func decodeDateField(container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys) throws -> Date? {
         if let dateString = try? container.decode(String.self, forKey: key) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone.current
-            return dateFormatter.date(from: dateString)
+            return _streakDateOnlyFormatter.date(from: dateString)
         }
         return try? container.decode(Date.self, forKey: key)
     }
@@ -162,10 +168,7 @@ struct StreakHistory: Codable, Identifiable, Hashable, Equatable {
 
         // Handle DATE format
         if let dateString = try? container.decode(String.self, forKey: .activityDate) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone.current
-            activityDate = dateFormatter.date(from: dateString) ?? Date()
+            activityDate = _streakDateOnlyFormatter.date(from: dateString) ?? Date()
         } else {
             activityDate = try container.decode(Date.self, forKey: .activityDate)
         }
@@ -220,19 +223,13 @@ struct StreakStatistics: Codable, Hashable, Equatable {
 
         // Handle DATE format for optional dates
         if let dateString = try? container.decode(String.self, forKey: .lastActivityDate) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone.current
-            lastActivityDate = dateFormatter.date(from: dateString)
+            lastActivityDate = _streakDateOnlyFormatter.date(from: dateString)
         } else {
             lastActivityDate = try? container.decode(Date.self, forKey: .lastActivityDate)
         }
 
         if let dateString = try? container.decode(String.self, forKey: .streakStartDate) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone.current
-            streakStartDate = dateFormatter.date(from: dateString)
+            streakStartDate = _streakDateOnlyFormatter.date(from: dateString)
         } else {
             streakStartDate = try? container.decode(Date.self, forKey: .streakStartDate)
         }
@@ -272,10 +269,7 @@ struct CalendarHistoryEntry: Codable, Identifiable, Hashable, Equatable {
 
         // Handle DATE format
         if let dateString = try? container.decode(String.self, forKey: .activityDate) {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone.current
-            activityDate = dateFormatter.date(from: dateString) ?? Date()
+            activityDate = _streakDateOnlyFormatter.date(from: dateString) ?? Date()
         } else {
             activityDate = try container.decode(Date.self, forKey: .activityDate)
         }

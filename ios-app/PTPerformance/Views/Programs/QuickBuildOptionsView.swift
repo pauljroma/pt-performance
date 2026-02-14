@@ -295,8 +295,8 @@ struct QuickBuildTemplateCard: View {
                     .font(.caption2)
                     .fontWeight(.medium)
                     .foregroundColor(typeColor)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(
                         Capsule()
                             .fill(typeColor.opacity(0.12))
@@ -323,7 +323,7 @@ struct QuickBuildTemplateCard: View {
             // Template details row
             templateDetailsRow
         }
-        .padding(16)
+        .padding(Spacing.md)
         .frame(minHeight: 200)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
@@ -436,8 +436,8 @@ struct DurationBadge: View {
             .font(.caption)
             .fontWeight(.semibold)
             .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(
                 Capsule()
                     .fill(Color.accentBlue)

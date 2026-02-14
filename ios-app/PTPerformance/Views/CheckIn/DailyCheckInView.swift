@@ -199,8 +199,8 @@ struct DailyCheckInView: View {
                 .background(Color.modusCyan)
                 .cornerRadius(CornerRadius.md)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 32)
+            .padding(.horizontal, Spacing.xl)
+            .padding(.bottom, Spacing.xl)
         }
     }
 
@@ -247,7 +247,7 @@ struct DailyCheckInView: View {
                 title: "Sleep Quality",
                 subtitle: "How well did you sleep last night?",
                 icon: "bed.double.fill",
-                iconColor: .blue,
+                iconColor: .modusCyan,
                 minValue: 1,
                 maxValue: 5,
                 value: $viewModel.sleepQuality,
@@ -257,7 +257,7 @@ struct DailyCheckInView: View {
                 maxEmoji: "😃",
                 onValueChanged: { viewModel.updateSleepQuality($0) }
             )
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
 
             // Optional sleep hours toggle
             Toggle(isOn: $viewModel.includeSleepHours) {
@@ -274,7 +274,7 @@ struct DailyCheckInView: View {
                         .font(.title2.bold())
 
                     Slider(value: $viewModel.sleepHours, in: 0...12, step: 0.5)
-                        .tint(.blue)
+                        .tint(.modusCyan)
                         .padding(.horizontal)
                 }
                 .transition(.opacity)
@@ -301,7 +301,7 @@ struct DailyCheckInView: View {
                 isInverted: true,
                 onValueChanged: { viewModel.updateSoreness($0) }
             )
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
 
             // Soreness locations
             if viewModel.soreness >= 4 {
@@ -333,7 +333,7 @@ struct DailyCheckInView: View {
                 maxEmoji: "⚡️",
                 onValueChanged: { viewModel.updateEnergy($0) }
             )
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
 
             // Mood quick selector
             VStack(spacing: 12) {
@@ -377,7 +377,7 @@ struct DailyCheckInView: View {
                 isInverted: true,
                 onValueChanged: { viewModel.updateStress($0) }
             )
-            .padding(.top, 24)
+            .padding(.top, Spacing.lg)
         }
     }
 
@@ -389,12 +389,12 @@ struct DailyCheckInView: View {
             HStack {
                 Text("Optional")
                     .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(CornerRadius.xs)
             }
-            .padding(.top, 16)
+            .padding(.top, Spacing.md)
 
             // Pain toggle
             Toggle(isOn: $viewModel.hasPain) {
@@ -406,7 +406,7 @@ struct DailyCheckInView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
 
             if viewModel.hasPain {
                 CheckInSliderQuestion(
@@ -442,24 +442,24 @@ struct DailyCheckInView: View {
             HStack {
                 Text("Optional")
                     .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.gray.opacity(0.2))
                     .cornerRadius(CornerRadius.xs)
             }
-            .padding(.top, 16)
+            .padding(.top, Spacing.md)
 
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: "note.text")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text("Anything else to note?")
                         .font(.headline)
                 }
 
                 TextEditor(text: $viewModel.freeText)
                     .frame(minHeight: 120)
-                    .padding(8)
+                    .padding(Spacing.xs)
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(CornerRadius.md)
                     .overlay(
@@ -475,7 +475,7 @@ struct DailyCheckInView: View {
 
             // Live readiness preview
             readinessPreview
-                .padding(.top, 16)
+                .padding(.top, Spacing.md)
         }
     }
 
@@ -506,8 +506,8 @@ struct DailyCheckInView: View {
                             Text(location.displayName)
                                 .font(.caption)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 4)
+                        .padding(.vertical, Spacing.xs)
+                        .padding(.horizontal, Spacing.xxs)
                         .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
@@ -617,8 +617,8 @@ struct DailyCheckInView: View {
                 }
                 .font(.headline)
                 .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
                 .background(viewModel.canProceed ? Color.modusCyan : Color.gray)
                 .cornerRadius(CornerRadius.md)
             }
@@ -636,14 +636,14 @@ struct DailyCheckInView: View {
                 Text("Review Your Check-In")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .padding(.top, 24)
+                    .padding(.top, Spacing.lg)
 
                 // Summary cards
                 VStack(spacing: 12) {
                     CompactSliderQuestion(
                         title: "Sleep Quality",
                         icon: "bed.double.fill",
-                        iconColor: .blue,
+                        iconColor: .modusCyan,
                         value: viewModel.sleepQuality,
                         maxValue: 5,
                         isInverted: false
@@ -715,8 +715,8 @@ struct DailyCheckInView: View {
                     .cornerRadius(CornerRadius.md)
                 }
                 .disabled(!viewModel.canSubmit)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 32)
+                .padding(.horizontal, Spacing.xl)
+                .padding(.bottom, Spacing.xl)
             }
         }
     }
@@ -760,8 +760,8 @@ struct DailyCheckInView: View {
                 Text("Try Again")
                     .font(.headline)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 32)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, Spacing.xl)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
             }

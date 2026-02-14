@@ -376,7 +376,7 @@ struct IntakeAssessmentView: View {
             VStack(alignment: .leading, spacing: 20) {
                 // Pain scales
                 VStack(spacing: 16) {
-                    painSlider(title: "Pain at Rest", value: $viewModel.painAtRest, color: .blue)
+                    painSlider(title: "Pain at Rest", value: $viewModel.painAtRest, color: .modusCyan)
                     painSlider(title: "Pain with Activity", value: $viewModel.painWithActivity, color: .orange)
                     painSlider(title: "Worst Pain", value: $viewModel.painWorst, color: .red)
                 }
@@ -436,7 +436,7 @@ struct IntakeAssessmentView: View {
                             viewModel.addPainLocation()
                         } label: {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.modusCyan)
                         }
                         .disabled(viewModel.newPainLocation.isEmpty)
                     }
@@ -572,7 +572,7 @@ struct IntakeAssessmentView: View {
                         viewModel.addGoal()
                     } label: {
                         Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                     }
                     .disabled(viewModel.newGoal.isEmpty)
                 }
@@ -677,7 +677,7 @@ struct IntakeAssessmentView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(viewModel.canSubmit ? Color.blue : Color.gray)
+                .background(viewModel.canSubmit ? Color.modusCyan : Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -700,7 +700,7 @@ struct IntakeAssessmentView: View {
                 }
             }
         }
-        .padding(.top, 16)
+        .padding(.top, Spacing.md)
     }
 
     // MARK: - Saving Overlay
@@ -765,7 +765,7 @@ private struct CollapsibleSection<Content: View>: View {
             Button(action: toggleAction) {
                 HStack {
                     Image(systemName: icon)
-                        .foregroundColor(hasError ? .red : .blue)
+                        .foregroundColor(hasError ? .red : .modusCyan)
                     Text(title)
                         .font(.headline)
                         .foregroundColor(.primary)
@@ -773,10 +773,10 @@ private struct CollapsibleSection<Content: View>: View {
                     if let badge = badge {
                         Text(badge)
                             .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 8)
+                            .padding(.horizontal, Spacing.xs)
                             .padding(.vertical, 2)
-                            .background(Capsule().fill(Color.blue.opacity(0.2)))
-                            .foregroundColor(.blue)
+                            .background(Capsule().fill(Color.modusCyan.opacity(0.2)))
+                            .foregroundColor(.modusCyan)
                     }
 
                     if hasError {
@@ -873,8 +873,8 @@ private struct ROMMeasurementCard: View {
             VStack(alignment: .trailing, spacing: 4) {
                 Text(measurement.limitationSeverity.displayName)
                     .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(
                         Capsule()
                             .fill(measurement.statusColor.opacity(0.2))

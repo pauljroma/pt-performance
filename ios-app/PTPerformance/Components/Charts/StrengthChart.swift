@@ -218,15 +218,15 @@ struct StrengthChart: View {
             // Starting baseline
             if startingMax > 0 {
                 RuleMark(y: .value("Starting", startingMax))
-                    .foregroundStyle(Color.modusCyan.opacity(0.6))
+                    .foregroundStyle(Color.blue.opacity(0.6))
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 5]))
                     .annotation(position: .bottom, alignment: .leading) {
                         Text("Start")
                             .font(.caption2)
-                            .padding(4)
-                            .background(Color.modusCyan.opacity(0.2))
+                            .padding(Spacing.xxs)
+                            .background(Color.blue.opacity(0.2))
                             .cornerRadius(CornerRadius.xs)
-                            .foregroundColor(.modusCyan)
+                            .foregroundColor(.blue)
                     }
             }
 
@@ -242,7 +242,7 @@ struct StrengthChart: View {
                             Image(systemName: annotation.category.icon)
                                 .font(.caption2)
                                 .foregroundColor(annotation.category.color)
-                                .padding(4)
+                                .padding(Spacing.xxs)
                                 .background(annotation.category.color.opacity(0.15))
                                 .cornerRadius(CornerRadius.xs)
                         }
@@ -333,8 +333,8 @@ struct StrengthChart: View {
 
             Text(annotation.category.displayName)
                 .font(.caption2)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.horizontal, Spacing.xs)
+                .padding(.vertical, Spacing.xxs)
                 .background(annotation.category.color.opacity(0.15))
                 .foregroundColor(annotation.category.color)
                 .cornerRadius(CornerRadius.xs)

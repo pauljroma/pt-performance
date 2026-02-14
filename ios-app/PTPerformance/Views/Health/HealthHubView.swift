@@ -307,11 +307,11 @@ struct HealthHubView: View {
 
     private var recoveryTrend: HealthSnapshotData.TrendDirection {
         if viewModel.hasRecoveredToday && viewModel.recoveryStreak > 2 {
-            return .up
+            return .improving
         } else if viewModel.recoveryStreak > 0 {
             return .stable
         } else {
-            return .down
+            return .declining
         }
     }
 
@@ -502,7 +502,7 @@ struct HealthHubView: View {
                 LegacyQuickActionButton(
                     title: "Recov",
                     icon: "snowflake",
-                    gradientColors: [.cyan, .blue],
+                    gradientColors: [.cyan, .modusCyan],
                     destination: .recovery
                 )
 

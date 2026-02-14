@@ -34,6 +34,13 @@ import Supabase
 /// ```
 actor EmailDeliveryService {
 
+    // MARK: - Static Formatters
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        return f
+    }()
+
     // MARK: - Singleton
 
     static let shared = EmailDeliveryService()
@@ -305,14 +312,12 @@ actor EmailDeliveryService {
 
         // Apply date range filters
         if let startDate = filter.startDate {
-            let formatter = ISO8601DateFormatter()
-            query = query.gte("created_at", value: formatter.string(from: startDate))
+            query = query.gte("created_at", value: Self.iso8601Formatter.string(from: startDate))
         }
 
         if let endDate = filter.endDate {
-            let formatter = ISO8601DateFormatter()
             let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: endDate) ?? endDate
-            query = query.lt("created_at", value: formatter.string(from: endOfDay))
+            query = query.lt("created_at", value: Self.iso8601Formatter.string(from: endOfDay))
         }
 
         // Apply status filter

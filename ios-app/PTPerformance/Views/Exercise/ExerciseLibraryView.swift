@@ -472,7 +472,7 @@ private struct ExerciseEquipmentChip: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 7)
             .background(
                 isSelected
@@ -507,7 +507,7 @@ struct DifficultyChip: View {
                     .font(.caption)
                     .fontWeight(.medium)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 7)
             .background(
                 isSelected
@@ -559,7 +559,7 @@ struct RecentExerciseCard: View {
                                     .font(.caption)
                                     .foregroundColor(.white)
                                     .shadow(radius: 2)
-                                    .padding(4)
+                                    .padding(Spacing.xxs)
                             }
                         }
                     }
@@ -857,7 +857,7 @@ struct ExerciseFilterSheet: View {
                                             .fontWeight(.medium)
                                     }
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
+                                    .padding(.vertical, Spacing.sm)
                                     .background(
                                         viewModel.selectedDifficulty == level
                                             ? level.color
@@ -1177,7 +1177,7 @@ struct ExerciseLibraryDetailSheet: View {
                     }
                 }
             }
-            .padding(.leading, 24)
+            .padding(.leading, Spacing.lg)
         }
     }
 

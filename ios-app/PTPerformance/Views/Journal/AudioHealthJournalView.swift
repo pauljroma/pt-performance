@@ -214,8 +214,8 @@ struct JournalEntryCard: View {
                                     Text(tag.displayName)
                                         .font(.system(size: 11))
                                 }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, Spacing.xs)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(tag.color.opacity(0.2))
                                 .foregroundColor(tag.color)
                                 .cornerRadius(CornerRadius.xs)

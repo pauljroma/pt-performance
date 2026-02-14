@@ -108,7 +108,7 @@ struct DailySummaryWidgetView: View {
             }
             .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Spacing.xs)
         .widgetURL(URL(string: "modus://today"))
     }
 

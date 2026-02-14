@@ -68,12 +68,14 @@ struct UpdateOutcomeMeasureDTO: Encodable {
 /// Summary of patient progress across all outcome measures
 struct PatientOutcomeProgress: Codable {
     let patientId: UUID
-    let measures: [OutcomeMeasureSummary]
+    let measures: [PatientMeasureSummary]
     let overallProgressStatus: ProgressStatus
     let mcidAchievementCount: Int
     let lastAssessmentDate: Date?
 
-    struct OutcomeMeasureSummary: Codable, Identifiable {
+    /// Summary of a single outcome measure for a patient.
+    /// Distinct from OutcomeMeasureTrend.OutcomeMeasureSummary which tracks individual data points.
+    struct PatientMeasureSummary: Codable, Identifiable {
         let id: UUID
         let measureType: OutcomeMeasureType
         let latestScore: Double
@@ -348,14 +350,14 @@ final class OutcomeMeasureService: ObservableObject {
         }
 
         // Build summaries for each measure type
-        var summaries: [PatientOutcomeProgress.OutcomeMeasureSummary] = []
+        var summaries: [PatientOutcomeProgress.PatientMeasureSummary] = []
         var mcidCount = 0
         var latestDate: Date?
 
         for (measureType, measures) in measuresByType {
             guard let latest = measures.first else { continue }
 
-            let summary = PatientOutcomeProgress.OutcomeMeasureSummary(
+            let summary = PatientOutcomeProgress.PatientMeasureSummary(
                 id: latest.id,
                 measureType: measureType,
                 latestScore: latest.normalizedScore ?? latest.rawScore ?? 0,

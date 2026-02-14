@@ -53,7 +53,7 @@ struct ExerciseHistorySheet: View {
                         title: "No History Yet",
                         message: "Complete workouts with this exercise to track your progress. Weight, reps, and performance trends will appear here.",
                         icon: "chart.line.uptrend.xyaxis",
-                        iconColor: .blue,
+                        iconColor: .modusCyan,
                         action: nil
                     )
                     .padding()
@@ -130,7 +130,7 @@ struct ExerciseHistorySheet: View {
                 )
             }
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, Spacing.xs)
     }
 
     // MARK: - Session List
@@ -139,7 +139,7 @@ struct ExerciseHistorySheet: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Recent Sessions")
                 .font(.headline)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Spacing.xxs)
 
             ForEach(viewModel.sessions) { session in
                 SessionHistoryRow(session: session, fallbackUnit: preferredWeightUnit)
@@ -220,7 +220,7 @@ private struct StatCard: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
@@ -279,7 +279,7 @@ private struct Estimated1RMCard: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, Spacing.xxs)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))

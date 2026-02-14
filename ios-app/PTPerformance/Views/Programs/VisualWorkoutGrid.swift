@@ -16,7 +16,7 @@ import SwiftUI
 struct VisualWorkoutGrid: View {
     let phases: [TherapistPhaseData]
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -40,7 +40,7 @@ struct VisualWorkoutGrid: View {
                             phaseRow(phase: phase, phaseNumber: index + 1)
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
             }
         }
@@ -66,7 +66,7 @@ struct VisualWorkoutGrid: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
+        .padding(.vertical, Spacing.lg)
     }
 
     // MARK: - Week Headers Row
@@ -193,7 +193,7 @@ struct VisualWorkoutGrid: View {
 struct CompactWorkoutGrid: View {
     let phases: [TherapistPhaseData]
 
-    private let phaseColors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal]
+    private let phaseColors: [Color] = [.modusCyan, .purple, .orange, .green, .pink, .teal]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -240,8 +240,8 @@ struct CompactWorkoutGrid: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
         .accessibilityElement(children: .combine)
@@ -289,12 +289,12 @@ struct WeekSummaryGrid: View {
 
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.blue.opacity(0.1 + intensity * 0.4))
+                    .fill(Color.modusCyan.opacity(0.1 + intensity * 0.4))
 
                 Text("\(count)")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(count > 0 ? .blue : .secondary)
+                    .foregroundColor(count > 0 ? .modusCyan : .secondary)
             }
             .frame(height: 32)
         }

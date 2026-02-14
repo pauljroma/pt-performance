@@ -49,7 +49,7 @@ struct ExerciseVideoDemoView: View {
                         cacheSection
                     }
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, Spacing.xl)
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
@@ -104,7 +104,7 @@ struct ExerciseVideoDemoView: View {
             if let category = exercise.exercise_templates?.category {
                 HStack(spacing: 8) {
                     Image(systemName: "figure.strengthtraining.traditional")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     Text(category.capitalized)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -120,7 +120,7 @@ struct ExerciseVideoDemoView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Loading Section
@@ -154,7 +154,7 @@ struct ExerciseVideoDemoView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
         }
         .frame(height: 200)
         .frame(maxWidth: .infinity)

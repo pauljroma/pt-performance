@@ -99,7 +99,7 @@ struct BiomarkerDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 .foregroundColor(trendColor)
-                .padding(.top, 4)
+                .padding(.top, Spacing.xxs)
             }
 
             // Last updated
@@ -344,8 +344,8 @@ struct BiomarkerDetailView: View {
                 Text("Coming Soon")
                     .font(.caption2)
                     .fontWeight(.semibold)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.modusCyan.opacity(0.2))
                     .foregroundColor(.modusCyan)
                     .cornerRadius(CornerRadius.sm)
@@ -467,7 +467,7 @@ struct HistoricalValueRow: View {
                     .foregroundColor(statusColor)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(point.date.formatted(date: .long, time: .omitted)), \(formatValue(point.value)) \(point.unit), \(point.status.displayText)")
     }

@@ -260,7 +260,7 @@ struct StreakDetailView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     // MARK: - Historical Streaks Section
@@ -294,7 +294,7 @@ struct StreakDetailView: View {
                             .fill(streakType.color.opacity(Double(streak.length) / Double(max(viewModel.longestStreak, 1))))
                             .frame(width: CGFloat(min(streak.length * 3, 80)), height: 8)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
 
                     if streak.startDate != viewModel.recentStreakHistory.last?.startDate {
                         Divider()

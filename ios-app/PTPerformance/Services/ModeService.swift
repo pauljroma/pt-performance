@@ -125,7 +125,7 @@ class ModeService: ObservableObject {
                 ModeFeature(mode: .rehab, featureKey: FeatureKey.safetyAlerts.rawValue, featureName: "Recovery & Deload Alerts"),
                 ModeFeature(mode: .rehab, featureKey: FeatureKey.ptMessaging.rawValue, featureName: "PT Messaging"),
                 ModeFeature(mode: .rehab, featureKey: FeatureKey.progressPhotos.rawValue, featureName: "Progress Photos"),
-                ModeFeature(mode: .rehab, featureKey: FeatureKey.functionTests.rawValue, featureName: "Function Tests"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.functionTests.rawValue, featureName: "Function Tests")
             ]
         case .strength:
             return [
@@ -134,7 +134,7 @@ class ModeService: ObservableObject {
                 ModeFeature(mode: .strength, featureKey: FeatureKey.progressiveOverload.rawValue, featureName: "Progressive Overload"),
                 ModeFeature(mode: .strength, featureKey: FeatureKey.habitStreaks.rawValue, featureName: "Habit Streaks"),
                 ModeFeature(mode: .strength, featureKey: FeatureKey.workoutCalendar.rawValue, featureName: "Workout Calendar"),
-                ModeFeature(mode: .strength, featureKey: FeatureKey.bodyComp.rawValue, featureName: "Body Composition"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.bodyComp.rawValue, featureName: "Body Composition")
             ]
         case .performance:
             return [
@@ -143,7 +143,7 @@ class ModeService: ObservableObject {
                 ModeFeature(mode: .performance, featureKey: FeatureKey.periodization.rawValue, featureName: "Training Load & Periodization"),
                 ModeFeature(mode: .performance, featureKey: FeatureKey.teamManagement.rawValue, featureName: "Team Management"),
                 ModeFeature(mode: .performance, featureKey: FeatureKey.competitionPrep.rawValue, featureName: "Competition Prep"),
-                ModeFeature(mode: .performance, featureKey: FeatureKey.videoAnalysis.rawValue, featureName: "Video Analysis"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.videoAnalysis.rawValue, featureName: "Video Analysis")
             ]
         }
     }

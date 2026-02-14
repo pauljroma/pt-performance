@@ -18,7 +18,7 @@ struct ExerciseCuesCard: View {
                 CueSection(
                     title: "Setup",
                     icon: "figure.stand",
-                    iconColor: .blue,
+                    iconColor: .modusCyan,
                     cues: techniqueCues.setup
                 )
             }
@@ -100,7 +100,7 @@ struct CueGroupBoxStyle: GroupBoxStyle {
     func makeBody(configuration: Configuration) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             configuration.content
-                .padding(16)
+                .padding(Spacing.md)
         }
         .background(accentColor.opacity(0.05))
         .cornerRadius(CornerRadius.md)

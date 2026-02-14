@@ -190,7 +190,7 @@ struct EscalationQueueView: View {
             if viewModel.filter.isFiltered {
                 HStack {
                     Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
 
                     Text("Filters active")
                         .font(.caption)
@@ -205,7 +205,7 @@ struct EscalationQueueView: View {
                 }
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)
-                .background(Color.blue.opacity(0.1))
+                .background(Color.modusCyan.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
             }
         }
@@ -412,7 +412,7 @@ struct EscalationQueueRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .frame(width: 36)
                 } else {
                     ZStack {
@@ -465,7 +465,7 @@ struct EscalationQueueRow: View {
             }
             .padding(.vertical, Spacing.md)
             .contentShape(Rectangle())
-            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+            .background(isSelected ? Color.modusCyan.opacity(0.1) : Color.clear)
         }
         .buttonStyle(PlainButtonStyle())
         .onLongPressGesture {
@@ -538,7 +538,7 @@ struct EscalationDetailSheet: View {
 
                         TimelineRow(
                             icon: "plus.circle.fill",
-                            color: .blue,
+                            color: .modusCyan,
                             title: "Created",
                             date: escalation.createdAt
                         )

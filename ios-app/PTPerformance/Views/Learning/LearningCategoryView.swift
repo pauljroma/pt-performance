@@ -19,7 +19,7 @@ struct LearningCategoryView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "baseball.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                             .padding(.top, 20)
 
                         Text("Learning Center")
@@ -33,7 +33,7 @@ struct LearningCategoryView: View {
                         Text("\(contentLoader.articles.count) total articles")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .padding(.top, 4)
+                            .padding(.top, Spacing.xxs)
                     }
                     .padding(.bottom, 20)
 
@@ -180,7 +180,7 @@ struct LearningCategoryArticleListView: View {
 
                         Spacer()
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                 }
             }
 
@@ -219,7 +219,7 @@ struct LearningCategoryArticleListView: View {
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, Spacing.xxs)
                         }
                     }
                 } header: {

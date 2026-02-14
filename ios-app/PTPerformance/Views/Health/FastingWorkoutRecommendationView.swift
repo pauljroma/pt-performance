@@ -87,7 +87,7 @@ struct FastingWorkoutRecommendationView: View {
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(intensityColor)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Spacing.md)
                 .padding(.vertical, 6)
                 .background(intensityColor.opacity(0.15))
                 .cornerRadius(CornerRadius.xl)
@@ -165,8 +165,8 @@ struct FastingWorkoutRecommendationView: View {
             Text(type)
                 .font(.subheadline)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, Spacing.xs)
         .background(Color.modusCyan.opacity(0.15))
         .foregroundColor(.modusCyan)
         .cornerRadius(CornerRadius.xl)
@@ -269,7 +269,7 @@ struct FastingWorkoutRecommendationView: View {
                 Text(recommendation.nutritionTiming.timingNotes)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.top, 4)
+                    .padding(.top, Spacing.xxs)
             }
         }
         .padding()
@@ -283,7 +283,7 @@ struct FastingWorkoutRecommendationView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "drop.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Hydration & Electrolytes")
                     .font(.headline)
                 Spacer()
@@ -419,7 +419,7 @@ struct NutritionTimingRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 
@@ -482,7 +482,7 @@ struct FastingWorkoutRecommendationCompactView: View {
                             Text(type)
                                 .font(.caption)
                                 .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
+                                .padding(.vertical, Spacing.xxs)
                                 .background(Color.modusCyan.opacity(0.15))
                                 .foregroundColor(.modusCyan)
                                 .cornerRadius(CornerRadius.md)

@@ -111,7 +111,7 @@ struct FoodDetailSheet: View {
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title)
-                        .foregroundColor(servings > 0.25 ? .blue : .gray)
+                        .foregroundColor(servings > 0.25 ? .modusCyan : .gray)
                 }
                 .disabled(servings <= 0.25)
                 .accessibilityLabel("Decrease servings")
@@ -128,7 +128,7 @@ struct FoodDetailSheet: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
                 .accessibilityLabel("Increase servings")
             }
@@ -143,10 +143,10 @@ struct FoodDetailSheet: View {
                         Text("\(value, specifier: "%.1f")")
                             .font(.subheadline)
                             .fontWeight(servings == value ? .bold : .medium)
-                            .foregroundColor(servings == value ? .white : .blue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(servings == value ? Color.blue : Color.blue.opacity(0.1))
+                            .foregroundColor(servings == value ? .white : .modusCyan)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(servings == value ? Color.modusCyan : Color.modusCyan.opacity(0.1))
                             .cornerRadius(CornerRadius.sm)
                     }
                 }
@@ -313,7 +313,7 @@ struct NutritionRow: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 
@@ -349,10 +349,10 @@ struct PortionPresetButton: View {
             Text(label)
                 .font(.caption)
                 .fontWeight(.medium)
-                .foregroundColor(currentServings == servings ? .white : .blue)
+                .foregroundColor(currentServings == servings ? .white : .modusCyan)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(currentServings == servings ? Color.blue : Color.blue.opacity(0.1))
+                .background(currentServings == servings ? Color.modusCyan : Color.modusCyan.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
         }
         .accessibilityLabel("\(label) portion")

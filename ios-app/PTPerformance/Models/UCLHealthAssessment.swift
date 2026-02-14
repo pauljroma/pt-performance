@@ -376,35 +376,8 @@ struct UCLTrendData {
     let riskElevationDays: Int
     let lastAssessmentDate: Date?
 
-    enum TrendDirection {
-        case improving
-        case stable
-        case worsening
-
-        var displayName: String {
-            switch self {
-            case .improving: return "Improving"
-            case .stable: return "Stable"
-            case .worsening: return "Worsening"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .improving: return .green
-            case .stable: return .yellow
-            case .worsening: return .red
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .improving: return "arrow.down.right"
-            case .stable: return "arrow.right"
-            case .worsening: return "arrow.up.right"
-            }
-        }
-    }
+    /// Use the canonical top-level TrendDirection enum
+    typealias TrendDirection = PTPerformance.TrendDirection
 
     /// Calculate trend from recent assessments
     static func calculate(from assessments: [UCLHealthAssessment]) -> UCLTrendData {
@@ -430,7 +403,7 @@ struct UCLTrendData {
             if recentAvg < olderAvg - 5 {
                 trendDirection = .improving
             } else if recentAvg > olderAvg + 5 {
-                trendDirection = .worsening
+                trendDirection = .declining
             } else {
                 trendDirection = .stable
             }

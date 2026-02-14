@@ -132,7 +132,7 @@ struct PhaseEditorSheet: View {
                     Label("Visual Grid", systemImage: "calendar")
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         } header: {
             HStack {
                 Text("Workout Assignments (\(phase.workoutAssignments.count))")
@@ -160,7 +160,7 @@ struct PhaseEditorSheet: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.vertical, 24)
+            .padding(.vertical, Spacing.lg)
             Spacer()
         }
     }
@@ -258,7 +258,7 @@ private struct WorkoutAssignmentRow: View {
             .accessibilityLabel("Delete workout")
             .accessibilityHint("Removes this workout assignment from the phase")
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 
     private func dayName(_ day: Int) -> String {
@@ -306,7 +306,7 @@ struct WorkoutSearchSheet: View {
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.sm)
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.top, Spacing.xs)
 
                 // Content
                 if isLoading {
@@ -447,7 +447,7 @@ private struct WorkoutTemplateSearchRow: View {
                 Spacer()
 
                 Image(systemName: "plus.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
             }
             .contentShape(Rectangle())
         }

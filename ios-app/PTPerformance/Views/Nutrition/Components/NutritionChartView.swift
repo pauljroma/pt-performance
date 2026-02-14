@@ -104,7 +104,7 @@ struct WeeklyNutritionChart: View {
                     Text("Goal")
                         .font(.caption2)
                         .foregroundColor(.green)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, Spacing.xxs)
                 }
 
             ForEach(trends.reversed()) { trend in

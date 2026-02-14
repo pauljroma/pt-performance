@@ -126,7 +126,7 @@ struct ProgramEffectivenessView: View {
                         title: "Programs",
                         value: "\(viewModel.summaryStats.totalPrograms)",
                         icon: "doc.richtext",
-                        color: .blue,
+                        color: .modusCyan,
                         subtitle: "total"
                     )
 
@@ -286,7 +286,7 @@ struct ProgramEffectivenessView: View {
                     .fontWeight(isSelected ? .semibold : .regular)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? tabColor(for: tab) : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.md)
@@ -478,8 +478,8 @@ struct ProgramEffectivenessView: View {
                             Text("Compare Programs")
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(viewModel.canCompare ? Color.blue : Color.gray)
+                        .padding(.vertical, Spacing.sm)
+                        .background(viewModel.canCompare ? Color.modusCyan : Color.gray)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                     }
@@ -527,7 +527,7 @@ struct ProgramEffectivenessView: View {
                     viewModel.clearFilters()
                 }
                 .font(.subheadline)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
             }
         }
         .padding(.vertical, 60)
@@ -544,7 +544,7 @@ struct ProgramEffectivenessView: View {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                 if hasActiveFilters {
                     Circle()
-                        .fill(Color.blue)
+                        .fill(Color.modusCyan)
                         .frame(width: 8, height: 8)
                 }
             }
@@ -641,7 +641,7 @@ struct ProgramEffectivenessView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, Spacing.xl)
 
             Button {
                 Task { await loadData() }
@@ -651,9 +651,9 @@ struct ProgramEffectivenessView: View {
                     Text("Try Again")
                 }
                 .font(.headline)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.blue)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }
@@ -839,7 +839,7 @@ private struct ProgramMetricsCard: View {
                 // Metrics
                 HStack(spacing: 16) {
                     MetricPill(label: "Completion", value: program.formattedCompletionRate, color: .green)
-                    MetricPill(label: "Adherence", value: program.formattedAdherence, color: .blue)
+                    MetricPill(label: "Adherence", value: program.formattedAdherence, color: .modusCyan)
                     MetricPill(label: "Patients", value: "\(program.totalEnrollments)", color: .purple)
                 }
 
@@ -853,7 +853,7 @@ private struct ProgramMetricsCard: View {
                             Text("Analytics")
                         }
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                     }
 
                     Spacer()
@@ -885,8 +885,8 @@ struct EffectivenessScoreBadge: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(rating.color)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(rating.color.opacity(0.15))
         .cornerRadius(CornerRadius.sm)
     }
@@ -929,7 +929,7 @@ private struct SelectedComparisonChip: View {
         .foregroundColor(.white)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.blue)
+        .background(Color.modusCyan)
         .cornerRadius(CornerRadius.lg)
     }
 }
@@ -943,7 +943,7 @@ private struct ComparisonSelectableCard: View {
         Button(action: onToggle) {
             HStack {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(program.programName)
@@ -961,11 +961,11 @@ private struct ComparisonSelectableCard: View {
                 EffectivenessScoreBadge(rating: program.effectivenessRating, score: program.effectivenessScore)
             }
             .padding()
-            .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemBackground))
+            .background(isSelected ? Color.modusCyan.opacity(0.1) : Color(.systemBackground))
             .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(PlainButtonStyle())

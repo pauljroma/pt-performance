@@ -343,7 +343,7 @@ struct RehabModeDashboardView: View {
                         Rectangle()
                             .fill(painScoreColor(entry.score))
                             .frame(width: 30, height: CGFloat(entry.score) * 10)
-                            .cornerRadius(4)
+                            .cornerRadius(CornerRadius.xs)
 
                         Text(entry.date.formatted(.dateTime.weekday(.abbreviated)))
                             .font(.caption2)
@@ -424,7 +424,7 @@ struct RehabModeDashboardView: View {
             }
 
             VStack(spacing: Spacing.xs) {
-                ForEach(Array(viewModel.recoveryTips.enumerated()), id: \.offset) { index, tip in
+                ForEach(Array(viewModel.recoveryTips.enumerated()), id: \.offset) { _, tip in
                     HStack(alignment: .top, spacing: Spacing.sm) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption)

@@ -345,28 +345,28 @@ struct WearableConnectSheet: View {
                 DataCapability(icon: "waveform.path.ecg", label: "HRV"),
                 DataCapability(icon: "flame.fill", label: "Strain"),
                 DataCapability(icon: "battery.100", label: "Recovery"),
-                DataCapability(icon: "bed.double.fill", label: "Sleep"),
+                DataCapability(icon: "bed.double.fill", label: "Sleep")
             ]
         case .appleWatch:
             return [
                 DataCapability(icon: "waveform.path.ecg", label: "HRV"),
                 DataCapability(icon: "heart.fill", label: "Heart Rate"),
                 DataCapability(icon: "bed.double.fill", label: "Sleep"),
-                DataCapability(icon: "figure.run", label: "Workouts"),
+                DataCapability(icon: "figure.run", label: "Workouts")
             ]
         case .oura:
             return [
                 DataCapability(icon: "waveform.path.ecg", label: "HRV"),
                 DataCapability(icon: "battery.100", label: "Readiness"),
                 DataCapability(icon: "bed.double.fill", label: "Sleep"),
-                DataCapability(icon: "figure.walk", label: "Activity"),
+                DataCapability(icon: "figure.walk", label: "Activity")
             ]
         case .garmin:
             return [
                 DataCapability(icon: "waveform.path.ecg", label: "HRV"),
                 DataCapability(icon: "bolt.fill", label: "Body Battery"),
                 DataCapability(icon: "bed.double.fill", label: "Sleep"),
-                DataCapability(icon: "brain.head.profile", label: "Stress"),
+                DataCapability(icon: "brain.head.profile", label: "Stress")
             ]
         }
     }

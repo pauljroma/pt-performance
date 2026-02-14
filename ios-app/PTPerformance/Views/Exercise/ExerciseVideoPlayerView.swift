@@ -252,7 +252,7 @@ struct ExerciseVideoPlayerView: View {
                 .frame(width: 32, height: 32)
         }
         .padding(.horizontal)
-        .padding(.top, 8)
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Bottom Control Bar
@@ -324,7 +324,7 @@ struct ExerciseVideoPlayerView: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Spacing.sm)
                         .padding(.vertical, 6)
                         .background(showAngleSelector ? Color.modusCyan : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.sm)
@@ -350,7 +350,7 @@ struct ExerciseVideoPlayerView: View {
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(controller.playbackSpeed.isSlowMotion ? .modusCyan : .white)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, 6)
                     .background(showSpeedSelector ? Color.modusCyan : Color.white.opacity(0.2))
                     .cornerRadius(CornerRadius.sm)
@@ -421,10 +421,10 @@ struct ExerciseVideoPlayerView: View {
                     .accessibilityHint("Enable picture in picture mode")
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.md)
         }
-        .padding(.top, 12)
+        .padding(.top, Spacing.sm)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [.clear, .black.opacity(0.8)]),
@@ -556,7 +556,7 @@ struct ExerciseVideoPlayerView: View {
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
                 }
@@ -575,7 +575,7 @@ struct ExerciseVideoPlayerView: View {
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.5))
                     }
-                    .padding(.vertical, 24)
+                    .padding(.vertical, Spacing.lg)
                 } else {
                     ScrollView {
                         VStack(spacing: 8) {
@@ -637,7 +637,7 @@ struct ExerciseVideoPlayerView: View {
             }
             .accessibilityLabel("Delete bookmark")
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, Spacing.sm)
         .padding(.vertical, 10)
         .background(Color.white.opacity(0.1))
         .cornerRadius(CornerRadius.sm)
@@ -678,7 +678,7 @@ struct ExerciseVideoPlayerView: View {
                         HapticFeedback.light()
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.white.opacity(0.2))
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
@@ -687,14 +687,14 @@ struct ExerciseVideoPlayerView: View {
                         addBookmark()
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, Spacing.sm)
                     .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                     .disabled(newBookmarkLabel.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .padding(24)
+            .padding(Spacing.lg)
             .background(Color.black.opacity(0.95))
             .cornerRadius(CornerRadius.lg)
             .padding(.horizontal, 40)
@@ -754,7 +754,7 @@ struct ExerciseVideoPlayerView: View {
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, Spacing.md)
                         .background(loopSegment.pointA != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.md)
                     }
@@ -783,7 +783,7 @@ struct ExerciseVideoPlayerView: View {
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, Spacing.md)
                         .background(loopSegment.pointB != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.md)
                     }
@@ -799,8 +799,8 @@ struct ExerciseVideoPlayerView: View {
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.9))
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
+                    .padding(.vertical, Spacing.xs)
+                    .padding(.horizontal, Spacing.sm)
                     .background(Color.modusTealAccent.opacity(0.2))
                     .cornerRadius(CornerRadius.sm)
                 }
@@ -1251,7 +1251,7 @@ struct EnhancedVideoProgressBar: View {
             )
         }
         .frame(height: 44)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Spacing.md)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Video progress")
         .accessibilityValue("\(Int(progress * 100)) percent")

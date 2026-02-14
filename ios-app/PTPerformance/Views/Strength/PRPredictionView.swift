@@ -277,8 +277,8 @@ struct PRPredictionView: View {
                 .fontWeight(.medium)
                 .foregroundColor(confidenceColor(confidence))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(confidenceColor(confidence).opacity(0.1))
         .cornerRadius(CornerRadius.sm)
     }
@@ -299,7 +299,7 @@ struct PRPredictionView: View {
                         x: .value("Date", point.date, unit: .day),
                         y: .value("1RM", point.estimated1RM)
                     )
-                    .foregroundStyle(Color.modusCyan.gradient)
+                    .foregroundStyle(Color.blue.gradient)
                     .interpolationMethod(.catmullRom)
                     .lineStyle(StrokeStyle(lineWidth: 2.5))
 
@@ -307,7 +307,7 @@ struct PRPredictionView: View {
                         x: .value("Date", point.date, unit: .day),
                         y: .value("1RM", point.estimated1RM)
                     )
-                    .foregroundStyle(Color.modusCyan)
+                    .foregroundStyle(Color.blue)
                     .symbolSize(30)
                 }
 

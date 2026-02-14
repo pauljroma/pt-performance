@@ -123,7 +123,7 @@ struct RTSProtocolEditorView: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [.blue, .purple],
+                        colors: [.modusCyan, .purple],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -271,7 +271,7 @@ struct RTSProtocolEditorView: View {
                 Toggle(isOn: $hasSurgery) {
                     HStack {
                         Image(systemName: "stethoscope")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.modusCyan)
                         Text("Had Surgery")
                             .font(.subheadline)
                     }
@@ -363,7 +363,7 @@ struct RTSProtocolEditorView: View {
             VStack(spacing: Spacing.xxs) {
                 Text("\(totalWeeks)")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Total Weeks")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -424,7 +424,7 @@ struct RTSProtocolEditorView: View {
                 } label: {
                     Text("View Details")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                 }
             }
 
@@ -480,7 +480,7 @@ struct RTSProtocolEditorView: View {
     private func sectionHeader(title: String, icon: String, required: Bool) -> some View {
         HStack(spacing: Spacing.xs) {
             Image(systemName: icon)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
 
             Text(title)
                 .font(.headline)
@@ -618,7 +618,7 @@ private struct SportPickerSheet: View {
 
                                         if selectedSport?.id == sport.id {
                                             Image(systemName: "checkmark")
-                                                .foregroundColor(.blue)
+                                                .foregroundColor(.modusCyan)
                                         }
                                     }
                                 }

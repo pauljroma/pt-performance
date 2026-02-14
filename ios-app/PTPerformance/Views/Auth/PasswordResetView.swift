@@ -80,7 +80,7 @@ struct PasswordResetView: View {
                             if isLoading && confirmationType == .magicLink {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle())
-                                    .padding(.trailing, 8)
+                                    .padding(.trailing, Spacing.xs)
                                     .accessibilityHidden(true)
                             }
                             VStack(spacing: 2) {
@@ -112,7 +112,7 @@ struct PasswordResetView: View {
                             if isLoading && confirmationType == .passwordReset {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle())
-                                    .padding(.trailing, 8)
+                                    .padding(.trailing, Spacing.xs)
                                     .accessibilityHidden(true)
                             }
                             Text("Reset My Password")
@@ -147,7 +147,7 @@ struct PasswordResetView: View {
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Spacing.xs)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(confirmationMessage)
                 }

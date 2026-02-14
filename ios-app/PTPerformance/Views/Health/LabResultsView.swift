@@ -170,8 +170,8 @@ struct LabResultRow: View {
                         Text("\(abnormalCount) flagged")
                             .font(.caption)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.orange.opacity(0.2))
                     .foregroundColor(.orange)
                     .cornerRadius(CornerRadius.sm)
@@ -182,8 +182,8 @@ struct LabResultRow: View {
                         Text("Normal")
                             .font(.caption)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, Spacing.xs)
+                    .padding(.vertical, Spacing.xxs)
                     .background(Color.modusTealAccent.opacity(0.2))
                     .foregroundColor(.modusTealAccent)
                     .cornerRadius(CornerRadius.sm)
@@ -194,7 +194,7 @@ struct LabResultRow: View {
                 .foregroundColor(.modusCyan)
                 .accessibilityHidden(true)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(result.testTypeValue.displayName), \((result.testDate ?? Date()).formatted(date: .abbreviated, time: .omitted)), \(statusAccessibilityLabel)")
         .accessibilityHint("Tap to view lab result details and get AI analysis")
@@ -704,7 +704,7 @@ struct MarkerRow: View {
                 .accessibilityHidden(true)
         }
         .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.vertical, Spacing.xs)
         .background(marker.status != .normal ? statusColor.opacity(0.1) : Color.clear)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(marker.name), \(String(format: "%.1f", marker.value)) \(marker.unit), \(statusAccessibilityLabel)")
@@ -790,7 +790,7 @@ struct AddLabResultView: View {
                             }
                             .foregroundColor(.modusTealAccent)
                         }
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.xs)
                     }
                     .listRowBackground(Color.modusLightTeal)
                     .accessibilityLabel("Upload Lab PDF")
@@ -814,7 +814,7 @@ struct AddLabResultView: View {
                     Text("Manual entry of individual biomarkers coming soon.")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .padding(.vertical, 4)
+                        .padding(.vertical, Spacing.xxs)
                 }
             }
             .navigationTitle("Add Lab Result")

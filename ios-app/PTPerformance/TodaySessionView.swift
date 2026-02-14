@@ -727,7 +727,7 @@ struct TodaySessionView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, Spacing.lg)
                         .padding(.vertical, Spacing.sm)
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.md)
                 }
                 .padding(.top, 8)

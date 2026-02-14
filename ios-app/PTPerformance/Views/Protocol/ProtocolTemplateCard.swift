@@ -85,8 +85,8 @@ struct ProtocolCategoryBadge: View {
                 .font(.caption2)
                 .fontWeight(.medium)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(categoryColor.opacity(0.15))
         .foregroundColor(categoryColor)
         .cornerRadius(CornerRadius.sm)

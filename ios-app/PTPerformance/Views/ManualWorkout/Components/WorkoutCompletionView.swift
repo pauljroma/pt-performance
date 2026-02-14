@@ -40,7 +40,7 @@ struct WorkoutCompletionView: View {
 
                 // Summary Stats
                 VStack(spacing: 16) {
-                    summaryStatRow(title: "Duration", value: elapsedTimeDisplay, icon: "clock.fill", color: .blue)
+                    summaryStatRow(title: "Duration", value: elapsedTimeDisplay, icon: "clock.fill", color: .modusCyan)
                     summaryStatRow(title: "Exercises", value: "\(completedCount)/\(totalExercises)", icon: "list.bullet", color: .purple)
                     summaryStatRow(title: "Total Volume", value: volumeDisplay, icon: "scalemass.fill", color: .green)
 
@@ -64,11 +64,11 @@ struct WorkoutCompletionView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
                         .cornerRadius(CornerRadius.md)
                 }
-                .padding(.top, 16)
+                .padding(.top, Spacing.md)
                 .accessibilityLabel("Done")
                 .accessibilityHint("Closes workout summary and returns to home")
             }
@@ -92,7 +92,7 @@ struct WorkoutCompletionView: View {
             Text(value)
                 .font(.headline)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
     }

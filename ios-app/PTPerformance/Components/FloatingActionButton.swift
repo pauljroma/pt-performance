@@ -97,13 +97,13 @@ struct FloatingActionButton: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [.blue, .blue.opacity(0.8)]),
+                                    gradient: Gradient(colors: [.modusCyan, .modusCyan.opacity(0.8)]),
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
                             .frame(width: buttonSize, height: buttonSize)
-                            .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                            .shadow(color: .modusCyan.opacity(0.3), radius: 8, x: 0, y: 4)
 
                         Image(systemName: "plus")
                             .font(.system(size: 24, weight: .semibold))
@@ -134,12 +134,12 @@ struct FloatingActionButton: View {
 
                 Image(systemName: icon)
                     .font(.system(size: 18))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                     .frame(width: 24, height: 24)
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
             .background(
                 Capsule()
                     .fill(Color(UIColor.systemBackground))

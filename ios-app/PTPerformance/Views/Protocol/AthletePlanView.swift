@@ -156,8 +156,8 @@ struct AthletePlanView: View {
             }
             .font(.subheadline)
             .fontWeight(.medium)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.xs)
             .background(statusColor(for: plan.status).opacity(0.15))
             .foregroundColor(statusColor(for: plan.status))
             .cornerRadius(CornerRadius.xl)
@@ -283,7 +283,7 @@ struct AthletePlanView: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.top, 8)
+                        .padding(.top, Spacing.xs)
 
                         ForEach(tasks) { task in
                             TaskRowView(task: task) {
@@ -404,7 +404,7 @@ private struct StatCard: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, Spacing.sm)
         .background(Color(.systemGray6))
         .cornerRadius(CornerRadius.md)
     }

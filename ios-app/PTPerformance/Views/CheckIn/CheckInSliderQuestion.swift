@@ -323,7 +323,7 @@ struct CompactSliderQuestion: View {
                 .foregroundColor(valueColor)
                 .frame(width: 30, alignment: .trailing)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xxs)
     }
 }
 

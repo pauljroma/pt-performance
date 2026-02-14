@@ -44,8 +44,8 @@ struct OptimisticSetRow: View {
             // Complete button
             completeButton
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.sm)
         .background(backgroundColor)
         .cornerRadius(CornerRadius.sm + 2)
         .accessibilityElement(children: .combine)
@@ -102,7 +102,7 @@ struct OptimisticSetRow: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(Color.modusCyan.opacity(0.15))
             .cornerRadius(CornerRadius.sm)
@@ -142,7 +142,7 @@ struct OptimisticSetRow: View {
                         .fontWeight(.bold)
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 6)
             .background(Color(.systemOrange).opacity(0.15))
             .cornerRadius(CornerRadius.sm)

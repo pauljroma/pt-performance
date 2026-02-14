@@ -154,7 +154,7 @@ struct TherapistDashboardView: View {
                                 } label: {
                                     Text("View All (\(escalationService.activeEscalations.count))")
                                         .font(.subheadline)
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.modusCyan)
                                 }
                             }
                         }
@@ -240,7 +240,7 @@ struct TherapistDashboardView: View {
                                 .padding(.horizontal)
                                 .background(
                                     selectedPatient?.id == patient.id
-                                        ? Color.blue.opacity(0.1)
+                                        ? Color.modusCyan.opacity(0.1)
                                         : Color.clear
                                 )
                                 .cornerRadius(CornerRadius.md)
@@ -304,7 +304,7 @@ struct PatientCardView: View {
         HStack(spacing: 12) {
             // Avatar
             Circle()
-                .fill(Color.blue.gradient)
+                .fill(Color.modusCyan.gradient)
                 .frame(width: 50, height: 50)
                 .overlay(
                     Text(patient.initials)
@@ -363,7 +363,7 @@ struct AddPatientPlaceholderView: View {
             VStack(spacing: 24) {
                 Image(systemName: "person.badge.plus")
                     .font(.system(size: 60))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                 Text("Add Patient")
                     .font(.title)

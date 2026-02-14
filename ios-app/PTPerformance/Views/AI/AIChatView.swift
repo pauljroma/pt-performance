@@ -784,8 +784,8 @@ struct AIChatTypingIndicator: View {
                             .offset(y: dotAnimations[index] ? -4 : 2)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
                 .background(Color(.secondarySystemGroupedBackground))
                 .cornerRadius(CornerRadius.lg)
 

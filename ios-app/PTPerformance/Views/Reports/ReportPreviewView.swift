@@ -399,7 +399,7 @@ struct ReportGenerationProgressView: View {
         VStack(spacing: Spacing.md) {
             ProgressView(value: reportService.generationProgress)
                 .progressViewStyle(LinearProgressViewStyle())
-                .tint(.blue)
+                .tint(.modusCyan)
 
             HStack {
                 if reportService.isGenerating {

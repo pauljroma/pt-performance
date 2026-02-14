@@ -108,7 +108,7 @@ struct AdherenceDashboardView: View {
                     }
                     .foregroundColor(trend.color)
                     .padding(.horizontal, Spacing.sm)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Spacing.xxs)
                     .background(trend.color.opacity(0.15))
                     .cornerRadius(CornerRadius.xs)
                 }
@@ -347,7 +347,7 @@ struct AdherenceDashboardView: View {
                         // Navigate to full list
                     }
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 }
             }
             .padding(.horizontal)
@@ -371,7 +371,7 @@ struct AdherenceDashboardView: View {
                     AdherencePatientRow(
                         patient: patient,
                         adherence: patient.adherencePercentage ?? 0,
-                        trend: .down,
+                        trend: .declining,
                         onTap: {
                             selectedPatient = patient
                         },
@@ -642,7 +642,7 @@ struct AdherencePatientRow: View {
 
                     Image(systemName: trend.icon)
                         .font(.caption2)
-                        .foregroundColor(trend == .down ? .red : .green)
+                        .foregroundColor(trend == .declining ? .red : .green)
                 }
             }
 

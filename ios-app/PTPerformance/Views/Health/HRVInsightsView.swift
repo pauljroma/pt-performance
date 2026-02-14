@@ -116,14 +116,14 @@ struct HRVInsightsView: View {
                     x: .value("Date", reading.date, unit: .day),
                     y: .value("HRV", reading.hrvSDNN)
                 )
-                .foregroundStyle(Color.modusCyan.opacity(0.6))
+                .foregroundStyle(Color.blue.opacity(0.6))
                 .symbolSize(40)
 
                 LineMark(
                     x: .value("Date", reading.date, unit: .day),
                     y: .value("HRV", reading.hrvSDNN)
                 )
-                .foregroundStyle(Color.modusCyan.opacity(0.3))
+                .foregroundStyle(Color.blue.opacity(0.3))
                 .lineStyle(StrokeStyle(lineWidth: 1))
             }
 
@@ -148,9 +148,9 @@ struct HRVInsightsView: View {
                     Text(change.label)
                         .font(.caption2)
                         .foregroundColor(.orange)
-                        .padding(4)
+                        .padding(Spacing.xxs)
                         .background(Color(.systemBackground))
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
         }
@@ -351,12 +351,12 @@ struct HRVInsightsView: View {
                     Rectangle()
                         .fill(Color.secondary.opacity(0.2))
                         .frame(height: 24)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
 
                     Rectangle()
                         .fill(color)
                         .frame(width: geometry.size.width * CGFloat(value / maxValue), height: 24)
-                        .cornerRadius(4)
+                        .cornerRadius(CornerRadius.xs)
                 }
             }
             .frame(height: 24)

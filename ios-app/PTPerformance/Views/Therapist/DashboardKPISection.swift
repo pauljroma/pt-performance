@@ -162,7 +162,7 @@ struct DashboardKPISection: View {
                 QuickActionButton(
                     icon: "person.badge.plus",
                     title: "Add Patient",
-                    color: .blue,
+                    color: .modusCyan,
                     action: onAddPatient
                 )
                 .accessibilityLabel("Add new patient")
@@ -369,7 +369,7 @@ struct QuickActionButton: View {
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Spacing.md)
             .background(color.gradient)
             .cornerRadius(CornerRadius.md)
             .shadow(color: color.opacity(0.3), radius: 4, x: 0, y: 2)
@@ -448,8 +448,8 @@ struct StatusBadge: View {
             .font(.caption2)
             .fontWeight(.medium)
             .foregroundColor(textColor)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(backgroundColor)
             .cornerRadius(CornerRadius.sm)
     }

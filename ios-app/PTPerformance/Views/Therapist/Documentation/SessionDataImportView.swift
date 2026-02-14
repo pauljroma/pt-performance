@@ -148,7 +148,7 @@ struct SessionDataImportView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "slider.horizontal.3")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text("Import Options")
                     .font(.headline)
             }
@@ -363,7 +363,7 @@ private struct SessionSelectionCard: View {
                         onSelectAll()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                     Text("|")
                         .foregroundColor(.secondary)
@@ -372,7 +372,7 @@ private struct SessionSelectionCard: View {
                         onDeselectAll()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
 
                     Spacer()
 
@@ -397,7 +397,7 @@ private struct SessionSelectionCard: View {
         .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.blue : Color.clear, lineWidth: 2)
+                .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
         )
     }
 
@@ -430,7 +430,7 @@ private struct ExerciseSelectionRow: View {
         Button(action: onToggle) {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .blue : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
                     .font(.title3)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -464,7 +464,7 @@ private struct ExerciseSelectionRow: View {
 
                 Spacer()
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, Spacing.xxs)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(log.exerciseName), \(log.actualSets) sets, RPE \(log.rpe)")
@@ -511,7 +511,7 @@ private struct ImportOptionToggle: View {
                     .font(.subheadline)
             }
         }
-        .toggleStyle(SwitchToggleStyle(tint: .blue))
+        .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
         .accessibilityLabel("\(title) toggle")
         .accessibilityValue(isOn ? "On" : "Off")
     }

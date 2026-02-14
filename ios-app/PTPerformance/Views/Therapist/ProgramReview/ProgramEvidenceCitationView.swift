@@ -451,7 +451,7 @@ private extension ReviewEvidenceCitation {
                 doi: "10.1007/s40279-016-0645-6",
                 relevanceNote: "Meta-analysis of 8,459 athletes showing NHE reduces hamstring injuries by 51% overall.",
                 evidenceLevel: .systematicReview
-            ),
+            )
         ],
         "Hip Strengthening": [
             ReviewEvidenceCitation(
@@ -462,7 +462,7 @@ private extension ReviewEvidenceCitation {
                 doi: "10.4085/1062-6050-47.2.08",
                 relevanceNote: "Demonstrated significant improvement in pain and function with targeted hip abductor exercises.",
                 evidenceLevel: .rct
-            ),
+            )
         ],
         "Plyometric Progression": [
             ReviewEvidenceCitation(
@@ -482,8 +482,8 @@ private extension ReviewEvidenceCitation {
                 doi: "10.26603/ijspt20150721",
                 relevanceNote: "Cohort study showing improved limb symmetry index with structured plyometric progression.",
                 evidenceLevel: .cohortStudy
-            ),
-        ],
+            )
+        ]
     ]
 }
 

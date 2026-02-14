@@ -140,7 +140,7 @@ struct CelebrationToast: View {
                         Image(systemName: "xmark")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .padding(8)
+                            .padding(Spacing.xs)
                     }
                 }
                 .padding()
@@ -341,7 +341,7 @@ struct AchievementsLinkCard: View {
                         Text("\(recentCount)")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(4)
+                            .padding(Spacing.xxs)
                             .background(Circle().fill(Color.red))
                             .offset(x: 8, y: -8)
                     }

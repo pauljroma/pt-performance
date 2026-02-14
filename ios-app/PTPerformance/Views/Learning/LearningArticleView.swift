@@ -72,10 +72,10 @@ struct LearningArticleView: View {
                         Text(excerpt)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.top, 4)
+                            .padding(.top, Spacing.xxs)
                     }
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, Spacing.xs)
 
                 Divider()
 
@@ -94,7 +94,7 @@ struct LearningArticleView: View {
                             .font(.headline)
                             .foregroundColor(.primary)
 
-                        LearningFlowLayout(spacing: 8) {
+                        FlowLayout(spacing: 8) {
                             ForEach(article.keywords, id: \.self) { keyword in
                                 Text(keyword)
                                     .font(.caption)
@@ -165,60 +165,4 @@ struct LearningArticleView: View {
 }
 
 // MARK: - Flow Layout (for tags)
-
-private struct LearningFlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(
-            in: proposal.replacingUnspecifiedDimensions().width,
-            subviews: subviews,
-            spacing: spacing
-        )
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(
-            in: bounds.width,
-            subviews: subviews,
-            spacing: spacing
-        )
-        for (index, subview) in subviews.enumerated() {
-            let position = result.positions[index]
-            let absolutePosition = CGPoint(
-                x: position.x + bounds.origin.x,
-                y: position.y + bounds.origin.y
-            )
-            subview.place(at: absolutePosition, proposal: .unspecified)
-        }
-    }
-
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var lineHeight: CGFloat = 0
-
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-
-                if x + size.width > maxWidth && x > 0 {
-                    // Start new line
-                    x = 0
-                    y += lineHeight + spacing
-                    lineHeight = 0
-                }
-
-                positions.append(CGPoint(x: x, y: y))
-                x += size.width + spacing
-                lineHeight = max(lineHeight, size.height)
-            }
-
-            self.size = CGSize(width: maxWidth, height: y + lineHeight)
-        }
-    }
-}
+// Uses the canonical FlowLayout from Components/FlowLayout.swift
