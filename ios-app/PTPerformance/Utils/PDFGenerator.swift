@@ -81,7 +81,7 @@ final class PDFGenerator {
 
     // MARK: - Colors
 
-    private let primaryColor = UIColor.systemBlue
+    private let primaryColor = UIColor.modusCyan
     private let textColor = UIColor.label
     private let secondaryTextColor = UIColor.secondaryLabel
     private let separatorColor = UIColor.separator

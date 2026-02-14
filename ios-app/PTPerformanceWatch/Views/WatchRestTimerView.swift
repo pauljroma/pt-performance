@@ -48,7 +48,7 @@ struct WatchRestTimerView: View {
         } else if timeRemaining <= 15 {
             return .orange
         }
-        return .blue
+        return .modusCyan
     }
 
     var body: some View {

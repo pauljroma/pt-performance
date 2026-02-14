@@ -1,6 +1,6 @@
 //
 //  SharedWorkoutModels.swift
-//  PT Performance Shared
+//  Modus Shared
 //
 //  Shared models between iOS and watchOS targets
 //  ACP-824: Apple Watch Standalone App

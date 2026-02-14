@@ -2,7 +2,7 @@
 //  PTPerformanceWatchApp.swift
 //  PTPerformanceWatch
 //
-//  Apple Watch standalone app for PT Performance
+//  Apple Watch standalone app for Modus
 //  ACP-824: Standalone Watch App Implementation
 //
 

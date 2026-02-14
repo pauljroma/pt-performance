@@ -295,7 +295,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     private func createWorkoutIcon() -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 20, height: 20))
         return renderer.image { ctx in
-            UIColor.systemBlue.setFill()
+            UIColor(red: 8/255, green: 145/255, blue: 178/255, alpha: 1.0).setFill()
             let path = UIBezierPath(ovalIn: CGRect(x: 2, y: 2, width: 16, height: 16))
             path.fill()
         }
@@ -320,7 +320,7 @@ struct WorkoutComplicationView: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Image(systemName: "figure.strengthtraining.traditional")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.modusCyan)
                 Text("Next Workout")
                     .font(.caption2)
                     .foregroundStyle(.secondary)

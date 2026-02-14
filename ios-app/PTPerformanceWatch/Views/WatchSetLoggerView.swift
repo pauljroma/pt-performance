@@ -51,7 +51,7 @@ struct WatchSetLoggerView: View {
 
                     Text("\(reps)")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(focusedField == .reps ? .blue : .primary)
+                        .foregroundStyle(focusedField == .reps ? .modusCyan : .primary)
                         .focusable(true)
                         .focused($focusedField, equals: .reps)
                         .digitalCrownRotation(
@@ -90,7 +90,7 @@ struct WatchSetLoggerView: View {
                         HStack(spacing: 4) {
                             Text("\(Int(weight))")
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundStyle(focusedField == .weight ? .blue : .primary)
+                                .foregroundStyle(focusedField == .weight ? .modusCyan : .primary)
 
                             Text(exercise.loadUnit ?? "lbs")
                                 .font(.caption)

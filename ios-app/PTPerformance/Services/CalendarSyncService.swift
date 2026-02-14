@@ -152,8 +152,8 @@ final class CalendarSyncService: ObservableObject {
             throw CalendarSyncError.calendarNotFound
         }
 
-        // Set calendar color (blue to match Modus branding)
-        newCalendar.cgColor = UIColor.systemBlue.cgColor
+        // Set calendar color to match Modus branding (cyan teal)
+        newCalendar.cgColor = UIColor.modusCyan.cgColor
 
         do {
             try eventStore.saveCalendar(newCalendar, commit: true)

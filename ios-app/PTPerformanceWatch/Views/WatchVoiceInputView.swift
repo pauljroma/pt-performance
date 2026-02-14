@@ -36,7 +36,7 @@ struct WatchVoiceInputView: View {
                     if isListening {
                         ForEach(0..<3) { i in
                             Circle()
-                                .stroke(Color.blue.opacity(0.3 - Double(i) * 0.1), lineWidth: 2)
+                                .stroke(Color.modusCyan.opacity(0.3 - Double(i) * 0.1), lineWidth: 2)
                                 .scaleEffect(1 + Double(i) * 0.2 + animationPhase * 0.1)
                                 .animation(
                                     Animation.easeInOut(duration: 1)
@@ -48,7 +48,7 @@ struct WatchVoiceInputView: View {
                     }
 
                     Circle()
-                        .fill(isListening ? Color.red : Color.blue)
+                        .fill(isListening ? Color.red : Color.modusCyan)
                         .frame(width: 60, height: 60)
 
                     Image(systemName: isListening ? "stop.fill" : "mic.fill")

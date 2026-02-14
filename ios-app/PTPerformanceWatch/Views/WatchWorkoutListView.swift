@@ -57,7 +57,7 @@ struct WatchWorkoutListView: View {
         VStack(spacing: 12) {
             Image(systemName: "figure.strengthtraining.traditional")
                 .font(.system(size: 40))
-                .foregroundStyle(.blue)
+                .foregroundStyle(.modusCyan)
 
             Text("No Workouts Today")
                 .font(.headline)
@@ -136,7 +136,7 @@ struct WatchSessionRow: View {
                     .foregroundStyle(.green)
             case .inProgress:
                 Image(systemName: "play.circle.fill")
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.modusCyan)
             case .scheduled:
                 Image(systemName: "clock")
                     .foregroundStyle(.orange)
@@ -155,7 +155,7 @@ struct WatchSessionRow: View {
                     .frame(height: 4)
 
                 Rectangle()
-                    .fill(Color.blue)
+                    .fill(Color.modusCyan)
                     .frame(width: geometry.size.width * session.progressPercentage, height: 4)
             }
             .clipShape(Capsule())

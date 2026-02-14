@@ -1,6 +1,6 @@
 //
 //  WorkoutDataProtocol.swift
-//  PT Performance Shared
+//  Modus Shared
 //
 //  Shared protocol for workout data access between iOS and watchOS
 //  ACP-824: Apple Watch Standalone App
