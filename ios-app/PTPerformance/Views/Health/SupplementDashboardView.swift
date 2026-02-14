@@ -6,11 +6,13 @@ import SwiftUI
 /// swipe-to-log, goal-based recommendations, and evidence grades
 struct SupplementDashboardView: View {
     @StateObject private var viewModel = SupplementDashboardViewModel()
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var showingQuickLog = false
     @State private var showingRoutineEditor = false
     @State private var showingSupplementDetail: CatalogSupplement?
     @State private var showingGoalPicker = false
+    @State private var showingInteractionView = false
 
     var body: some View {
         NavigationStack {
@@ -82,9 +84,16 @@ struct SupplementDashboardView: View {
             }
             .task {
                 await viewModel.loadData()
+                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
             }
             .refreshable {
                 await viewModel.loadData()
+                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
+            }
+            .sheet(isPresented: $showingInteractionView) {
+                NavigationStack {
+                    SupplementInteractionView()
+                }
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("Dismiss") { viewModel.dismissError() }
@@ -122,6 +131,18 @@ struct SupplementDashboardView: View {
             VStack(spacing: Spacing.lg) {
                 // Compliance Progress Card
                 complianceCard
+
+                // Safety Warning Banner (Interaction Checker)
+                if let rating = interactionService.overallSafetyRating {
+                    SafetyWarningBanner(
+                        safetyRating: rating,
+                        interactionCount: interactionService.interactions.count,
+                        mostCriticalMessage: interactionService.interactions.first?.description,
+                        onTap: {
+                            showingInteractionView = true
+                        }
+                    )
+                }
 
                 // Today's Stack Section (Grouped by Timing)
                 todayStackSection

@@ -4,6 +4,7 @@ import SwiftUI
 /// Supplement Detail View - View supplement details and add to routine
 struct SupplementDetailView: View {
     @StateObject private var viewModel = SupplementDetailViewModel()
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.dismiss) private var dismiss
 
     let supplementId: UUID
@@ -31,6 +32,9 @@ struct SupplementDetailView: View {
 
                     // Timing
                     timingSection(supplement)
+
+                    // Interactions
+                    interactionsSection(supplement)
 
                     // Add/Remove from Routine Button
                     if viewModel.isInRoutine {
@@ -192,6 +196,108 @@ struct SupplementDetailView: View {
         .cornerRadius(CornerRadius.lg)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Best time to take: \(supplement.timing.map { $0.displayName }.joined(separator: ", "))")
+    }
+
+    /// Interactions section: shows known interactions for this supplement with
+    /// other supplements in the user's routine or configured medications.
+    private func interactionsSection(_ supplement: CatalogSupplement) -> some View {
+        let relevantInteractions = interactionService.interactions.filter { interaction in
+            interaction.supplement1.lowercased() == supplement.name.lowercased()
+            || interaction.supplement2.lowercased() == supplement.name.lowercased()
+        }
+
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Interactions")
+                .font(.headline)
+                .foregroundColor(.modusDeepTeal)
+                .accessibilityAddTraits(.isHeader)
+
+            if interactionService.isChecking {
+                HStack(spacing: Spacing.sm) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Checking interactions...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, Spacing.sm)
+            } else if relevantInteractions.isEmpty {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "checkmark.shield.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                        .accessibilityHidden(true)
+
+                    Text("No known interactions with your current routine")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No known interactions with your current routine")
+            } else {
+                ForEach(relevantInteractions, id: \.description) { interaction in
+                    HStack(alignment: .top, spacing: Spacing.sm) {
+                        Circle()
+                            .fill(interactionSeverityColor(interaction.severity))
+                            .frame(width: 10, height: 10)
+                            .padding(.top, 5)
+                            .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: Spacing.xs) {
+                                Text(interactionPartnerName(for: supplement.name, in: interaction))
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+
+                                Text("(\(interaction.severity.displayName))")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(interactionSeverityColor(interaction.severity))
+                            }
+
+                            Text(interaction.description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(3)
+
+                            if !interaction.recommendation.isEmpty {
+                                Text(interaction.recommendation)
+                                    .font(.caption)
+                                    .foregroundColor(.modusCyan)
+                                    .italic()
+                                    .padding(.top, 2)
+                            }
+                        }
+                    }
+                    .padding(.vertical, Spacing.xxs)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(interaction.severity.displayName) interaction with \(interactionPartnerName(for: supplement.name, in: interaction)): \(interaction.description)")
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.lg)
+    }
+
+    /// Returns the name of the other supplement in an interaction pair.
+    private func interactionPartnerName(for supplementName: String, in interaction: SupplementInteraction) -> String {
+        if interaction.supplement1.lowercased() == supplementName.lowercased() {
+            return interaction.supplement2
+        }
+        return interaction.supplement1
+    }
+
+    /// Maps interaction severity to a display color.
+    private func interactionSeverityColor(_ severity: SupplementInteraction.Severity) -> Color {
+        switch severity {
+        case .critical: return .red
+        case .major: return .orange
+        case .moderate: return .yellow
+        case .minor: return .green
+        }
     }
 
     private func addToRoutineButton(_ supplement: CatalogSupplement) -> some View {

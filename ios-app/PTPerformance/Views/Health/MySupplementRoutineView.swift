@@ -5,12 +5,14 @@ import SwiftUI
 /// User's routine grouped by timing (morning, pre-workout, etc.)
 struct MySupplementRoutineView: View {
     @StateObject private var viewModel = MySupplementRoutineViewModel()
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var showingAddSupplement = false
     @State private var showingEditMode = false
     @State private var supplementToEdit: RoutineSupplement?
+    @State private var showingInteractionView = false
 
     var body: some View {
         NavigationStack {
@@ -58,13 +60,37 @@ struct MySupplementRoutineView: View {
                     }
                 )
             }
+            .sheet(isPresented: $showingInteractionView) {
+                NavigationStack {
+                    SupplementInteractionView()
+                }
+            }
             .task {
                 await viewModel.loadRoutine()
+                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
             }
             .refreshable {
                 await viewModel.loadRoutine()
+                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
             }
         }
+    }
+
+    // MARK: - Interaction Helpers
+
+    /// Returns the worst (highest) interaction severity for a given supplement name,
+    /// or nil if the supplement has no interactions in the current routine.
+    private func worstSeverity(for supplementName: String) -> SupplementInteraction.Severity? {
+        let matching = interactionService.interactions.filter { interaction in
+            interaction.supplement1.lowercased() == supplementName.lowercased()
+            || interaction.supplement2.lowercased() == supplementName.lowercased()
+        }
+        guard !matching.isEmpty else { return nil }
+        // Severity ordering: .critical > .major > .moderate > .minor
+        if matching.contains(where: { $0.severity == .critical }) { return .critical }
+        if matching.contains(where: { $0.severity == .major }) { return .major }
+        if matching.contains(where: { $0.severity == .moderate }) { return .moderate }
+        return .minor
     }
 
     // MARK: - Loading View
@@ -147,6 +173,22 @@ struct MySupplementRoutineView: View {
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
 
+            // Interaction Safety Banner
+            if let rating = interactionService.overallSafetyRating, rating != .safe {
+                Section {
+                    SafetyWarningBanner(
+                        safetyRating: rating,
+                        interactionCount: interactionService.interactions.count,
+                        mostCriticalMessage: interactionService.interactions.first?.description,
+                        onTap: {
+                            showingInteractionView = true
+                        }
+                    )
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
             // Grouped by Timing
             ForEach(SupplementTiming.allCases, id: \.self) { timing in
                 let items = viewModel.items(for: timing)
@@ -155,6 +197,7 @@ struct MySupplementRoutineView: View {
                         ForEach(items) { item in
                             SupplementRoutineRow(
                                 item: item,
+                                interactionSeverity: worstSeverity(for: item.name),
                                 onTap: {
                                     supplementToEdit = item
                                 }
@@ -305,19 +348,35 @@ extension SupplementTiming {
 
 private struct SupplementRoutineRow: View {
     let item: RoutineSupplement
+    /// Optional interaction severity for this supplement (nil if no interactions).
+    var interactionSeverity: SupplementInteraction.Severity?
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: Spacing.sm) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(Color.modusCyan.opacity(0.15))
-                        .frame(width: 40, height: 40)
+                // Icon with optional interaction severity indicator
+                ZStack(alignment: .topTrailing) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.modusCyan.opacity(0.15))
+                            .frame(width: 40, height: 40)
 
-                    Image(systemName: item.category.icon)
-                        .foregroundColor(.modusCyan)
+                        Image(systemName: item.category.icon)
+                            .foregroundColor(.modusCyan)
+                    }
+
+                    if let severity = interactionSeverity {
+                        Circle()
+                            .fill(severityDotColor(severity))
+                            .frame(width: 10, height: 10)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color(.systemBackground), lineWidth: 1.5)
+                            )
+                            .offset(x: 2, y: -2)
+                            .accessibilityLabel("\(severity.displayName) interaction")
+                    }
                 }
 
                 // Details
@@ -357,6 +416,15 @@ private struct SupplementRoutineRow: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    private func severityDotColor(_ severity: SupplementInteraction.Severity) -> Color {
+        switch severity {
+        case .critical: return .red
+        case .major: return .orange
+        case .moderate: return .yellow
+        case .minor: return .green
+        }
     }
 }
 
