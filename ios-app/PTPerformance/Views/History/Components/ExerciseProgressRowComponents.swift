@@ -103,9 +103,10 @@ struct ExerciseProgressRow: View {
 
     private var trendColor: Color {
         switch exercise.trend {
-        case .increasing: return .green
-        case .decreasing: return .red
+        case .improving: return .green
+        case .declining: return .red
         case .stable: return .gray
+        case .fluctuating: return .orange
         }
     }
 
@@ -207,7 +208,7 @@ struct ExerciseProgressRowComponents_Previews: PreviewProvider {
             exerciseId: "ex-1",
             exerciseName: "Barbell Squat",
             dataPoints: sampleDataPoints,
-            trend: .increasing,
+            trend: .improving,
             averageWeight: 185.0,
             totalVolume: 24500,
             sessionCount: 12,
