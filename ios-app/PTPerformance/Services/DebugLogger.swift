@@ -21,14 +21,36 @@ class DebugLogger {
     private let logger = Logger(subsystem: "com.getmodus.app", category: "Debug")
     private let isEnabled: Bool
 
+    /// Minimum log level — messages below this threshold are silently dropped.
+    /// Release builds only show warnings and errors to reduce noise.
+    #if DEBUG
+    private let minimumLevel: LogLevel = .diagnostic
+    #else
+    private let minimumLevel: LogLevel = .warning
+    #endif
+
     // MARK: - Log Levels
 
-    enum LogLevel: String {
+    enum LogLevel: String, Comparable {
         case diagnostic = "🔍"
         case info = "ℹ️"
         case success = "✅"
         case warning = "⚠️"
         case error = "❌"
+
+        private var severity: Int {
+            switch self {
+            case .diagnostic: return 0
+            case .info: return 1
+            case .success: return 2
+            case .warning: return 3
+            case .error: return 4
+            }
+        }
+
+        static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
+            lhs.severity < rhs.severity
+        }
     }
 
     // MARK: - Initialization
@@ -43,7 +65,7 @@ class DebugLogger {
 
     /// Log a message with level
     func log(_ message: String, level: LogLevel = .info, file: String = #file, function: String = #function, line: Int = #line) {
-        guard isEnabled else { return }
+        guard isEnabled, level >= minimumLevel else { return }
 
         let fileName = (file as NSString).lastPathComponent
         let logMessage = "\(level.rawValue) [\(fileName):\(line)] \(message)"
@@ -122,7 +144,7 @@ class DebugLogger {
 
     /// Log a network request
     func logRequest(url: URL, method: String = "GET", body: Data? = nil) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .info else { return }
 
         var message = "🌐 HTTP \(method) \(url.absoluteString)"
 
@@ -135,7 +157,7 @@ class DebugLogger {
 
     /// Log a network response
     func logResponse(url: URL, statusCode: Int, data: Data? = nil) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .info else { return }
 
         let statusEmoji = statusCode < 300 ? "✅" : "❌"
         var message = "\(statusEmoji) HTTP \(statusCode) \(url.absoluteString)"
@@ -153,21 +175,21 @@ class DebugLogger {
 
     /// Log function entry (for tracing execution flow)
     func entering(_ function: String = #function, file: String = #file, line: Int = #line) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .diagnostic else { return }
         let fileName = (file as NSString).lastPathComponent
         logger.debug("→ Entering \(fileName):\(function)")
     }
 
     /// Log function exit (for tracing execution flow)
     func exiting(_ function: String = #function, file: String = #file, line: Int = #line) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .diagnostic else { return }
         let fileName = (file as NSString).lastPathComponent
         logger.debug("← Exiting \(fileName):\(function)")
     }
 
     /// Log a database query
     func logQuery(table: String, query: String, params: [String: Any] = [:]) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .info else { return }
 
         var message = "🗄️ \(table): \(query)"
 
@@ -181,7 +203,7 @@ class DebugLogger {
 
     /// Log a date conversion for timezone debugging
     func logDateConversion(original: Date, formatted: String, formatter: String) {
-        guard isEnabled else { return }
+        guard isEnabled, minimumLevel <= .diagnostic else { return }
 
         let message = "📅 Date Conversion: \(original) → \(formatted) (using \(formatter))"
         logger.info("\(message)")

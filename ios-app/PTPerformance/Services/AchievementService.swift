@@ -44,6 +44,8 @@ class AchievementService: ObservableObject {
     private let client: PTSupabaseClient
     private let logger = DebugLogger.shared
     private var patientId: UUID?
+    private var lastCheckTime: Date?
+    private let checkCooldown: TimeInterval = 60 // Don't re-check more than once per minute
 
     // UserDefaults keys for local caching
     private let unlockedAchievementsKey = "unlocked_achievements"
@@ -57,9 +59,16 @@ class AchievementService: ObservableObject {
 
     // MARK: - Public Methods
 
-    /// Initialize service for a patient
+    /// Initialize service for a patient (debounced — won't re-run within cooldown period)
     func initialize(for patientId: UUID) async {
         self.patientId = patientId
+
+        // Skip if we checked recently (prevents spam on tab switches)
+        if let lastCheck = lastCheckTime, Date().timeIntervalSince(lastCheck) < checkCooldown {
+            return
+        }
+        lastCheckTime = Date()
+
         await loadAchievements()
         await checkAllAchievements()
     }
@@ -151,7 +160,7 @@ class AchievementService: ObservableObject {
             currentValue: currentValue
         )
 
-        // Save to server
+        // Save to server (table may not exist yet — save locally regardless)
         do {
             try await client.client
                 .from("patient_achievements")
@@ -160,7 +169,8 @@ class AchievementService: ObservableObject {
 
             logger.log("AchievementService: Unlocked achievement: \(definition.title)", level: .success)
         } catch {
-            logger.log("AchievementService: Failed to save achievement: \(error)", level: .warning)
+            // Table may not exist or have different schema — log once, don't spam
+            logger.log("AchievementService: Server save skipped for \(definition.title) (table not ready)", level: .diagnostic)
         }
 
         // Update local state
@@ -359,13 +369,13 @@ class AchievementService: ObservableObject {
             logger.log("AchievementService: Failed to fetch streak data: \(error)", level: .warning)
         }
 
-        // Fetch workout count from scheduled sessions
+        // Fetch workout count from scheduled sessions (completed_at is not null)
         do {
             let response = try await client.client
                 .from("scheduled_sessions")
                 .select("id", head: false, count: .exact)
                 .eq("patient_id", value: patientId.uuidString)
-                .eq("completed", value: true)
+                .not("completed_at", operator: .is, value: "null")
                 .execute()
 
             stats.completedWorkouts = response.count ?? 0
@@ -373,13 +383,13 @@ class AchievementService: ObservableObject {
             logger.log("AchievementService: Failed to fetch workout count: \(error)", level: .warning)
         }
 
-        // Also count manual sessions
+        // Also count manual sessions (completed_at is not null)
         do {
             let response = try await client.client
                 .from("manual_sessions")
                 .select("id", head: false, count: .exact)
                 .eq("patient_id", value: patientId.uuidString)
-                .eq("status", value: "completed")
+                .not("completed_at", operator: .is, value: "null")
                 .execute()
 
             stats.completedWorkouts += response.count ?? 0
