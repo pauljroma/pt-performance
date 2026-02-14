@@ -18,7 +18,7 @@ struct StrengthModeStatusCard: View {
     var recentPRs: [RecentPRInfo] = []
     var volumeTrend: VolumeTrend = .unknown
     var currentStreak: Int = 0
-    var unit: String = "lbs"
+    var unit: String = WeightUnit.defaultUnit
     var onTapCard: (() -> Void)? = nil
     var onViewPRs: (() -> Void)? = nil
     var onViewVolume: (() -> Void)? = nil
@@ -187,7 +187,7 @@ struct StrengthModeStatusCard: View {
 
     private func topLiftCell(lift: TopLiftInfo) -> some View {
         VStack(spacing: 4) {
-            Text(shortLiftName(lift.exerciseName))
+            Text(lift.exerciseName.shortLiftName)
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .lineLimit(1)
@@ -208,16 +208,6 @@ struct StrengthModeStatusCard: View {
         .cornerRadius(CornerRadius.xs)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(lift.exerciseName): \(Int(lift.weight)) \(lift.unit)")
-    }
-
-    private func shortLiftName(_ name: String) -> String {
-        switch name {
-        case "Bench Press": return "Bench"
-        case "Back Squat", "Squat": return "Squat"
-        case "Deadlift": return "Dead"
-        case "Overhead Press": return "OHP"
-        default: return String(name.prefix(6))
-        }
     }
 
     // MARK: - Recent PRs Section

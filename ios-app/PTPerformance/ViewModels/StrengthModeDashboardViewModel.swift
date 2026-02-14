@@ -95,8 +95,24 @@ class StrengthModeDashboardViewModel: ObservableObject {
     private let errorLogger = ErrorLogger.shared
     private let logger = DebugLogger.shared
 
-    /// Track if initial data has been loaded
-    private var hasLoadedInitialData = false
+    /// Canonical names for the three core powerlifting lifts (Squat, Bench, Deadlift).
+    private static let coreNames = [
+        BigLift.squat.rawValue,
+        BigLift.benchPress.rawValue,
+        BigLift.deadlift.rawValue
+    ]
+
+    /// Track when data was last loaded for staleness check
+    private var lastLoadedAt: Date?
+
+    /// Remember the last-used patient ID so refresh/forceRefresh don't lose it
+    private var resolvedPatientId: UUID?
+
+    /// Data is considered stale after 30 seconds
+    private var isDataStale: Bool {
+        guard let lastLoaded = lastLoadedAt else { return true }
+        return Date().timeIntervalSince(lastLoaded) > 30
+    }
 
     // MARK: - Computed Properties
 
@@ -138,22 +154,12 @@ class StrengthModeDashboardViewModel: ObservableObject {
 
     /// Core lifts only (Squat, Bench, Deadlift)
     var coreLifts: [BigLiftSummary] {
-        let coreNames = [
-            BigLift.squat.rawValue,
-            BigLift.benchPress.rawValue,
-            BigLift.deadlift.rawValue
-        ]
-        return bigLifts.filter { coreNames.contains($0.exerciseName) }
+        bigLifts.filter { Self.coreNames.contains($0.exerciseName) }
     }
 
     /// Accessory lifts (OHP, Row, etc.)
     var accessoryLifts: [BigLiftSummary] {
-        let coreNames = [
-            BigLift.squat.rawValue,
-            BigLift.benchPress.rawValue,
-            BigLift.deadlift.rawValue
-        ]
-        return bigLifts.filter { !coreNames.contains($0.exerciseName) }
+        bigLifts.filter { !Self.coreNames.contains($0.exerciseName) }
     }
 
     /// Whether there are any progression suggestions available
@@ -192,75 +198,76 @@ class StrengthModeDashboardViewModel: ObservableObject {
     ///
     /// Fetches big lifts, PRs, volume, streak, and progression suggestions
     /// in parallel where possible for optimal performance.
-    func loadDashboardData() async {
-        // Prevent duplicate fetches
-        guard !hasLoadedInitialData else {
-            logger.info("STRENGTH_DASHBOARD", "Skipping reload - data already loaded")
+    ///
+    /// - Parameter overridePatientId: Optional UUID to use instead of the authenticated user's ID.
+    ///   When provided, this takes precedence over `supabase.userId`.
+    func loadDashboardData(patientId overridePatientId: UUID? = nil) async {
+        // Skip reload if data was loaded recently (within 30 seconds)
+        guard isDataStale else {
+            logger.info("STRENGTH_DASHBOARD", "Skipping reload - data loaded \(Int(Date().timeIntervalSince(lastLoadedAt ?? Date())))s ago")
             return
         }
 
-        guard let patientId = patientId, let patientUUID = patientUUID else {
+        // Resolve patient identifiers, preferring the override
+        let resolvedUUID: UUID
+        let resolvedStringId: String
+        if let override = overridePatientId {
+            resolvedUUID = override
+            resolvedStringId = override.uuidString
+        } else if let id = patientId, let uuid = patientUUID {
+            resolvedStringId = id
+            resolvedUUID = uuid
+        } else {
             errorMessage = "Please sign in to view your strength dashboard."
             showError = true
             errorLogger.logError(AppError.notAuthenticated, context: "StrengthModeDashboardViewModel.loadDashboardData")
             return
         }
 
+        self.resolvedPatientId = resolvedUUID
+
         isLoading = true
-        hasLoadedInitialData = true
         defer { isLoading = false }
 
-        logger.info("STRENGTH_DASHBOARD", "Loading dashboard for patient: \(patientId)")
+        logger.info("STRENGTH_DASHBOARD", "Loading dashboard for patient: \(resolvedStringId)")
 
-        // Load each component individually to prevent one failure from stopping others
-        await withTaskGroup(of: Void.self) { group in
-            // Fetch big lifts
-            group.addTask { @MainActor in
-                await self.fetchBigLifts(patientId: patientUUID)
-            }
+        // Run independent data fetches in parallel using async let
+        async let liftsResult: Void = fetchBigLifts(patientId: resolvedUUID)
+        async let streakResult: Void = fetchStreakData(patientId: resolvedUUID)
+        async let volumeResult: Void = fetchWeeklyVolume(patientId: resolvedStringId)
 
-            // Fetch streak data
-            group.addTask { @MainActor in
-                await self.fetchStreakData(patientId: patientUUID)
-            }
+        _ = await (liftsResult, streakResult, volumeResult)
 
-            // Fetch weekly volume
-            group.addTask { @MainActor in
-                await self.fetchWeeklyVolume(patientId: patientId)
-            }
-
-            // Fetch recent PRs
-            group.addTask { @MainActor in
-                await self.fetchRecentPRs(patientId: patientId)
-            }
-        }
+        // Fetch recent PRs after big lifts are loaded (depends on self.bigLifts)
+        await fetchRecentPRs(from: self.bigLifts, patientId: resolvedStringId)
 
         // Fetch progression suggestions after we have big lifts data
-        await fetchProgressionSuggestions(patientId: patientUUID)
+        await fetchProgressionSuggestions(patientId: resolvedUUID)
 
+        lastLoadedAt = Date()
         logger.success("STRENGTH_DASHBOARD", "Dashboard load complete")
     }
 
     /// Refresh all dashboard data (pull-to-refresh)
     func refreshData() async {
-        hasLoadedInitialData = false
-        await loadDashboardData()
+        lastLoadedAt = nil
+        await loadDashboardData(patientId: resolvedPatientId)
     }
 
     /// Force refresh without checking cache flag
     func forceRefresh() async {
-        hasLoadedInitialData = false
+        lastLoadedAt = nil
         errorMessage = nil
         showError = false
-        await loadDashboardData()
+        await loadDashboardData(patientId: resolvedPatientId)
     }
 
     /// Retry loading after an error
     func retryLoad() async {
         errorMessage = nil
         showError = false
-        hasLoadedInitialData = false
-        await loadDashboardData()
+        lastLoadedAt = nil
+        await loadDashboardData(patientId: resolvedPatientId)
     }
 
     /// Clear error state
@@ -271,34 +278,6 @@ class StrengthModeDashboardViewModel: ObservableObject {
 
     // MARK: - 1RM Calculations
 
-    /// Calculate estimated 1RM using the Epley formula
-    ///
-    /// Epley Formula: weight * (1 + reps/30)
-    /// Optionally adjusts for RPE if provided.
-    ///
-    /// - Parameters:
-    ///   - weight: The weight lifted (in lbs)
-    ///   - reps: Number of repetitions performed
-    ///   - rpe: Optional Rate of Perceived Exertion (0-10 scale)
-    /// - Returns: Estimated one-rep max
-    func calculateEstimated1RM(weight: Double, reps: Int, rpe: Double? = nil) -> Double {
-        guard reps > 0 else { return weight }
-
-        // Epley formula: weight * (1 + reps/30)
-        var estimated1RM = weight * (1.0 + Double(reps) / 30.0)
-
-        // Adjust for RPE if provided (RPE 10 = true max, lower RPE means more in tank)
-        if let rpe = rpe, rpe > 0 && rpe < 10 {
-            // Estimate reps in reserve based on RPE (10 - RPE = RIR)
-            let repsInReserve = 10.0 - rpe
-            // Adjust 1RM estimate upward based on RIR
-            let adjustmentFactor = 1.0 + (repsInReserve * 0.033)
-            estimated1RM *= adjustmentFactor
-        }
-
-        return estimated1RM
-    }
-
     /// Calculate SBD (Squat/Bench/Deadlift) total
     ///
     /// Uses estimated 1RMs from the big lifts data for the three
@@ -306,14 +285,8 @@ class StrengthModeDashboardViewModel: ObservableObject {
     ///
     /// - Returns: Combined SBD total in pounds
     func calculateSBDTotal() -> Double {
-        let coreNames = [
-            BigLift.squat.rawValue,
-            BigLift.benchPress.rawValue,
-            BigLift.deadlift.rawValue
-        ]
-
-        return bigLifts
-            .filter { coreNames.contains($0.exerciseName) }
+        bigLifts
+            .filter { Self.coreNames.contains($0.exerciseName) }
             .reduce(0) { $0 + $1.estimated1rm }
     }
 
@@ -329,19 +302,18 @@ class StrengthModeDashboardViewModel: ObservableObject {
 
     /// Check if an exercise is a core lift (SBD)
     func isCoreLift(_ exerciseName: String) -> Bool {
-        let coreNames = [
-            BigLift.squat.rawValue,
-            BigLift.benchPress.rawValue,
-            BigLift.deadlift.rawValue
-        ]
-        return coreNames.contains(exerciseName)
+        Self.coreNames.contains(exerciseName)
     }
 
     /// Get suggestion for a specific exercise
     func suggestion(for exerciseName: String) -> ProgressionSuggestion? {
-        // Find a suggestion that matches this exercise
-        // This is a simplified lookup - in practice, suggestions are tied to exercise template IDs
-        progressionSuggestions.first
+        // Suggestions are generated in the same order as bigLifts.prefix(3),
+        // so match by finding the exercise's index in bigLifts and returning the corresponding suggestion
+        guard let liftIndex = bigLifts.prefix(3).firstIndex(where: { $0.exerciseName == exerciseName }),
+              liftIndex < progressionSuggestions.count else {
+            return nil
+        }
+        return progressionSuggestions[liftIndex]
     }
 
     // MARK: - Private Data Fetching Methods
@@ -416,7 +388,7 @@ class StrengthModeDashboardViewModel: ObservableObject {
     }
 
     /// Fetch recent personal records from the last 30 days
-    private func fetchRecentPRs(patientId: String) async {
+    private func fetchRecentPRs(from bigLifts: [BigLiftSummary], patientId: String) async {
         // Build PRs from big lifts data that have recent PR dates
         let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
 
@@ -452,12 +424,16 @@ class StrengthModeDashboardViewModel: ObservableObject {
         var suggestions: [ProgressionSuggestion] = []
 
         for lift in bigLifts.prefix(3) { // Limit to top 3 lifts for performance
-            // Create a sample performance entry from the big lift data
+            // Create a sample performance entry from the big lift data.
+            // Hardcoded reps (5) and RPE (7.5) are fallback defaults used when
+            // actual per-set data isn't available from the BigLiftSummary.
+            // BigLiftSummary only stores aggregate metrics (max weight, estimated 1RM),
+            // not individual set details, so we approximate a typical strength set.
             let performance = ExercisePerformance(
                 date: lift.lastPerformed ?? Date(),
                 load: lift.currentMaxWeight,
-                reps: [5], // Assume 5-rep set for strength training
-                rpe: 7.5  // Default moderate RPE
+                reps: [5],
+                rpe: 7.5
             )
 
             // Generate local suggestion using the ProgressiveOverloadAIService

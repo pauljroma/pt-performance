@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Combine
 
 @MainActor
 class ModeSwitchingViewModel: ObservableObject {
@@ -28,14 +27,31 @@ class ModeSwitchingViewModel: ObservableObject {
     private let modeService = ModeService.shared
     private let supabase = PTSupabaseClient.shared
 
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        return formatter
+    }()
+
+    /// Codable response for patient mode query
+    private struct PatientModeResponse: Codable {
+        let mode: String
+        let mode_changed_at: String?
+        let first_name: String?
+        let last_name: String?
+    }
+
     /// Check if current user is a therapist (can change modes)
     var canChangeMode: Bool {
-        // Check if user has therapist role
         guard supabase.userId != nil else { return false }
 
-        // In production, check user role from database
-        // For now, allow all authenticated users (will be restricted by RLS)
-        return true
+        // Only therapists can change patient modes.
+        // Additionally, a therapist must be viewing another user's profile
+        // (not their own) to change the mode.
+        if supabase.userRole == .therapist {
+            return supabase.userId != patientId
+        }
+
+        return false
     }
 
     init(patientId: String) {
@@ -47,29 +63,25 @@ class ModeSwitchingViewModel: ObservableObject {
         do {
             let response = try await supabase.client
                 .from("patients")
-                .select("id, mode, mode_changed_at, first_name, last_name")
+                .select("mode, mode_changed_at, first_name, last_name")
                 .eq("id", value: patientId)
                 .single()
                 .execute()
 
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            let decoded = try JSONDecoder().decode(PatientModeResponse.self, from: response.data)
 
-            let data = try JSONSerialization.jsonObject(with: response.data) as? [String: Any]
-
-            if let modeString = data?["mode"] as? String,
-               let mode = Mode(rawValue: modeString) {
+            if let mode = Mode(rawValue: decoded.mode) {
                 currentMode = mode
                 selectedMode = mode
             }
 
-            if let changedAtString = data?["mode_changed_at"] as? String,
-               let date = ISO8601DateFormatter().date(from: changedAtString) {
+            if let changedAtString = decoded.mode_changed_at,
+               let date = Self.iso8601Formatter.date(from: changedAtString) {
                 modeChangedAt = date
             }
 
-            let firstName = data?["first_name"] as? String ?? ""
-            let lastName = data?["last_name"] as? String ?? ""
+            let firstName = decoded.first_name ?? ""
+            let lastName = decoded.last_name ?? ""
             patientName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
 
             DebugLogger.shared.log("[ModeSwitching] Loaded patient mode: \(currentMode.displayName)", level: .success)
@@ -80,14 +92,19 @@ class ModeSwitchingViewModel: ObservableObject {
         }
     }
 
-    /// Load mode change history
+    /// Load mode change history for the patient being viewed
     func loadModeHistory() async {
-        modeHistory = await modeService.loadModeHistory()
+        modeHistory = await modeService.loadModeHistory(patientId: patientId)
     }
 
     /// Confirm and execute mode change
     func confirmModeChange() async {
         guard selectedMode != currentMode else { return }
+        guard canChangeMode else {
+            errorMessage = "You do not have permission to change this patient's mode."
+            showingError = true
+            return
+        }
 
         isChangingMode = true
         defer { isChangingMode = false }
@@ -112,6 +129,8 @@ class ModeSwitchingViewModel: ObservableObject {
             DebugLogger.shared.error("ModeSwitchingViewModel", "Failed to change mode: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
             showingError = true
+            // Reset selection back to current mode on failure
+            selectedMode = currentMode
         }
     }
 }

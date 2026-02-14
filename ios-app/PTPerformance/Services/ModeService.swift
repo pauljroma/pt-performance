@@ -8,6 +8,20 @@
 import Foundation
 import Combine
 
+// MARK: - ModeService Errors
+
+enum ModeServiceError: LocalizedError {
+    case modeChangeFailed(underlying: Error)
+    case loadFailed(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .modeChangeFailed(let e): return "Failed to change mode: \(e.localizedDescription)"
+        case .loadFailed(let e): return "Failed to load mode: \(e.localizedDescription)"
+        }
+    }
+}
+
 /// Service for managing patient mode and feature visibility
 @MainActor
 class ModeService: ObservableObject {
@@ -16,24 +30,23 @@ class ModeService: ObservableObject {
     @Published var currentMode: Mode = .rehab
     @Published var modeFeatures: [ModeFeature] = []
     @Published var isLoading = false
+    @Published var loadError: String?
 
     private let supabase = PTSupabaseClient.shared
     private let debugLogger = DebugLogger.shared
     private var cancellables = Set<AnyCancellable>()
+    private var loadTask: Task<Void, Never>?
 
     private init() {
         // Load mode when user ID changes
         supabase.$userId
             .sink { [weak self] userId in
                 if userId != nil {
-                    Task { [weak self] in await self?.loadPatientMode() }
+                    self?.loadTask?.cancel()
+                    self?.loadTask = Task { [weak self] in await self?.loadPatientMode() }
                 }
             }
             .store(in: &cancellables)
-    }
-
-    deinit {
-        cancellables.removeAll()
     }
 
     /// Load current patient's mode from database
@@ -60,6 +73,7 @@ class ModeService: ObservableObject {
 
             let patientMode = try decoder.decode(PatientMode.self, from: response.data)
             currentMode = patientMode.mode
+            loadError = nil
 
             // Load features for this mode
             await loadModeFeatures(for: patientMode.mode)
@@ -67,6 +81,7 @@ class ModeService: ObservableObject {
             debugLogger.log("[ModeService] Loaded patient mode: \(patientMode.mode.displayName)", level: .success)
         } catch {
             debugLogger.log("[ModeService] Failed to load patient mode: \(error)", level: .error)
+            loadError = ModeServiceError.loadFailed(underlying: error).localizedDescription
             // Default to rehab mode on error
             currentMode = .rehab
             await loadModeFeatures(for: .rehab)
@@ -85,12 +100,51 @@ class ModeService: ObservableObject {
 
             let decoder = JSONDecoder()
             let features = try decoder.decode([ModeFeature].self, from: response.data)
-            modeFeatures = features
 
-            debugLogger.log("[ModeService] Loaded \(features.count) features for \(mode.displayName)", level: .success)
+            if features.isEmpty {
+                debugLogger.log("[ModeService] No features in mode_features table for \(mode.displayName), using defaults", level: .warning)
+                modeFeatures = Self.defaultFeatures(for: mode)
+            } else {
+                modeFeatures = features
+            }
+
+            debugLogger.log("[ModeService] Loaded \(modeFeatures.count) features for \(mode.displayName)", level: .success)
         } catch {
-            debugLogger.log("[ModeService] Failed to load mode features: \(error)", level: .error)
-            modeFeatures = []
+            debugLogger.log("[ModeService] Failed to load mode features: \(error), using defaults", level: .error)
+            modeFeatures = Self.defaultFeatures(for: mode)
+        }
+    }
+
+    /// Sensible default features per mode when the mode_features table is empty or unavailable
+    static func defaultFeatures(for mode: Mode) -> [ModeFeature] {
+        switch mode {
+        case .rehab:
+            return [
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.painTracking.rawValue, featureName: "Pain Tracking"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.romExercises.rawValue, featureName: "ROM Exercises"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.safetyAlerts.rawValue, featureName: "Recovery & Deload Alerts"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.ptMessaging.rawValue, featureName: "PT Messaging"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.progressPhotos.rawValue, featureName: "Progress Photos"),
+                ModeFeature(mode: .rehab, featureKey: FeatureKey.functionTests.rawValue, featureName: "Function Tests"),
+            ]
+        case .strength:
+            return [
+                ModeFeature(mode: .strength, featureKey: FeatureKey.prTracking.rawValue, featureName: "PR Tracking"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.volumeTrends.rawValue, featureName: "Volume Tracking"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.progressiveOverload.rawValue, featureName: "Progressive Overload"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.habitStreaks.rawValue, featureName: "Habit Streaks"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.workoutCalendar.rawValue, featureName: "Workout Calendar"),
+                ModeFeature(mode: .strength, featureKey: FeatureKey.bodyComp.rawValue, featureName: "Body Composition"),
+            ]
+        case .performance:
+            return [
+                ModeFeature(mode: .performance, featureKey: FeatureKey.readinessScore.rawValue, featureName: "Readiness Score"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.advancedAnalytics.rawValue, featureName: "ACWR & Fatigue Tracking"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.periodization.rawValue, featureName: "Training Load & Periodization"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.teamManagement.rawValue, featureName: "Team Management"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.competitionPrep.rawValue, featureName: "Competition Prep"),
+                ModeFeature(mode: .performance, featureKey: FeatureKey.videoAnalysis.rawValue, featureName: "Video Analysis"),
+            ]
         }
     }
 
@@ -99,9 +153,10 @@ class ModeService: ObservableObject {
         return modeFeatures.contains { $0.featureKey == featureKey.rawValue }
     }
 
-    /// Get mode history for current patient
-    func loadModeHistory() async -> [ModeHistoryEntry] {
-        guard let userId = supabase.userId else {
+    /// Get mode history for a patient
+    /// - Parameter patientId: The patient's ID. If nil, falls back to the current user's ID.
+    func loadModeHistory(patientId: String? = nil) async -> [ModeHistoryEntry] {
+        guard let resolvedId = patientId ?? supabase.userId else {
             return []
         }
 
@@ -109,7 +164,7 @@ class ModeService: ObservableObject {
             let response = try await supabase.client
                 .from("mode_history")
                 .select()
-                .eq("patient_id", value: userId)
+                .eq("patient_id", value: resolvedId)
                 .order("created_at", ascending: false)
                 .limit(10)
                 .execute()
@@ -129,6 +184,7 @@ class ModeService: ObservableObject {
     }
 
     /// Change patient mode (therapist only - calls edge function)
+    /// Note: The caller is responsible for reloading the correct patient's mode after this succeeds.
     func changePatientMode(patientId: String, newMode: Mode, reason: String?) async throws {
         do {
             try await supabase.client.functions.invoke(
@@ -142,15 +198,8 @@ class ModeService: ObservableObject {
                 )
             )
         } catch {
-            throw NSError(
-                domain: "ModeService",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to change mode: \(error.localizedDescription)"]
-            )
+            throw ModeServiceError.modeChangeFailed(underlying: error)
         }
-
-        // Reload mode after change
-        await loadPatientMode()
 
         debugLogger.log("[ModeService] Changed patient mode to \(newMode.displayName)", level: .success)
     }

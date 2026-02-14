@@ -42,7 +42,7 @@ struct ProgressiveOverloadCard: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header with exercise name and progression badge
             headerSection
 
@@ -58,18 +58,18 @@ struct ProgressiveOverloadCard: View {
             // Apply suggestion button
             actionButtons
         }
-        .padding(DesignTokens.spacingLarge)
+        .padding(Spacing.md)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.subtle)
-        .animation(.easeInOut(duration: DesignTokens.animationDurationNormal), value: isExpanded)
+        .animation(.easeInOut(duration: AnimationDuration.standard), value: isExpanded)
     }
 
     // MARK: - Header Section
 
     private var headerSection: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(exerciseName)
                     .font(.headline)
                     .foregroundColor(.primary)
@@ -87,7 +87,7 @@ struct ProgressiveOverloadCard: View {
     }
 
     private var progressionBadge: some View {
-        HStack(spacing: DesignTokens.spacingXSmall) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: suggestion.progressionType.icon)
                 .font(.system(size: 14, weight: .semibold))
 
@@ -96,23 +96,23 @@ struct ProgressiveOverloadCard: View {
                 .fontWeight(.semibold)
         }
         .foregroundColor(.white)
-        .padding(.horizontal, DesignTokens.spacingSmall)
-        .padding(.vertical, DesignTokens.spacingXSmall)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(suggestion.progressionType.color)
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Weight Comparison Section
 
     private var weightComparisonSection: some View {
-        HStack(spacing: DesignTokens.spacingLarge) {
+        HStack(spacing: Spacing.md) {
             // Current weight
-            VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text("Current")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                Text("\(formatWeight(currentWeight)) lbs")
+                Text("\(formatWeight(currentWeight)) \(WeightUnit.defaultUnit)")
                     .font(.title3)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
@@ -124,12 +124,12 @@ struct ProgressiveOverloadCard: View {
                 .foregroundColor(suggestion.progressionType.color)
 
             // Recommended weight
-            VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text("Recommended")
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                Text("\(formatWeight(suggestion.nextLoad)) lbs")
+                Text("\(formatWeight(suggestion.nextLoad)) \(WeightUnit.defaultUnit)")
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundColor(suggestion.progressionType.color)
@@ -138,7 +138,7 @@ struct ProgressiveOverloadCard: View {
             Spacer()
 
             // Change amount
-            VStack(alignment: .trailing, spacing: DesignTokens.spacingXSmall) {
+            VStack(alignment: .trailing, spacing: Spacing.xxs) {
                 Text("Change")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -149,9 +149,9 @@ struct ProgressiveOverloadCard: View {
                     .foregroundColor(suggestion.progressionType.color)
             }
         }
-        .padding(DesignTokens.spacingMedium)
+        .padding(Spacing.sm)
         .background(Color(.tertiarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var weightChangeArrow: String {
@@ -159,16 +159,16 @@ struct ProgressiveOverloadCard: View {
         if abs(diff) < 0.1 {
             return "equal"
         } else if diff > 0 {
-            return "arrow.right"
+            return "arrow.up.right"
         } else {
-            return "arrow.right"
+            return "arrow.down.right"
         }
     }
 
     // MARK: - Indicators Row
 
     private var indicatorsRow: some View {
-        HStack(spacing: DesignTokens.spacingMedium) {
+        HStack(spacing: Spacing.sm) {
             // Confidence indicator
             confidenceIndicator
 
@@ -188,7 +188,7 @@ struct ProgressiveOverloadCard: View {
     }
 
     private var confidenceIndicator: some View {
-        HStack(spacing: DesignTokens.spacingXSmall) {
+        HStack(spacing: Spacing.xxs) {
             Circle()
                 .fill(suggestion.confidenceColor)
                 .frame(width: 8, height: 8)
@@ -209,7 +209,7 @@ struct ProgressiveOverloadCard: View {
     }
 
     private var trendIndicator: some View {
-        HStack(spacing: DesignTokens.spacingXSmall) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: suggestion.analysis.trend.icon)
                 .font(.system(size: 12))
                 .foregroundColor(suggestion.analysis.trend.color)
@@ -245,7 +245,7 @@ struct ProgressiveOverloadCard: View {
     // MARK: - Reasoning Section
 
     private var reasoningSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Button(action: {
                 withAnimation {
                     isExpanded.toggle()
@@ -277,7 +277,7 @@ struct ProgressiveOverloadCard: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, DesignTokens.spacingXSmall)
+                    .padding(.top, Spacing.xxs)
                     .transition(.opacity.combined(with: .move(edge: .top)))
 
                 // Additional analysis details
@@ -287,12 +287,12 @@ struct ProgressiveOverloadCard: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        Text("\(formatWeight(estimated1RM)) lbs")
+                        Text("\(formatWeight(estimated1RM)) \(WeightUnit.defaultUnit)")
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
                     }
-                    .padding(.top, DesignTokens.spacingXSmall)
+                    .padding(.top, Spacing.xxs)
                 }
 
                 if let fatigueImpact = suggestion.analysis.fatigueImpact {
@@ -309,15 +309,15 @@ struct ProgressiveOverloadCard: View {
                 }
             }
         }
-        .padding(DesignTokens.spacingMedium)
+        .padding(Spacing.sm)
         .background(Color(.tertiarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: DesignTokens.spacingMedium) {
+        HStack(spacing: Spacing.sm) {
             if let dismiss = onDismiss {
                 Button(action: {
                     HapticFeedback.light()
@@ -328,9 +328,9 @@ struct ProgressiveOverloadCard: View {
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, DesignTokens.spacingMedium)
+                        .padding(.vertical, Spacing.sm)
                         .background(Color(.tertiarySystemBackground))
-                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                        .cornerRadius(CornerRadius.md)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Dismiss suggestion")
@@ -338,10 +338,15 @@ struct ProgressiveOverloadCard: View {
 
             Button(action: {
                 HapticFeedback.medium()
-                isApplying = true
-                onApply()
+                Task {
+                    isApplying = true
+                    onApply()
+                    // Small delay to show the applying state visually
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    isApplying = false
+                }
             }) {
-                HStack(spacing: DesignTokens.spacingSmall) {
+                HStack(spacing: Spacing.xs) {
                     if isApplying {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
@@ -357,13 +362,13 @@ struct ProgressiveOverloadCard: View {
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.spacingMedium)
+                .padding(.vertical, Spacing.sm)
                 .background(suggestion.progressionType.color)
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
+                .cornerRadius(CornerRadius.md)
             }
             .buttonStyle(.plain)
             .disabled(isApplying)
-            .accessibilityLabel("Apply suggestion to set weight to \(formatWeight(suggestion.nextLoad)) pounds")
+            .accessibilityLabel("Apply suggestion to set weight to \(formatWeight(suggestion.nextLoad)) \(WeightUnit.defaultUnit)")
         }
     }
 
@@ -390,7 +395,7 @@ struct ProgressiveOverloadCardCompact: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: DesignTokens.spacingMedium) {
+            HStack(spacing: Spacing.sm) {
                 // Progression type icon
                 ZStack {
                     Circle()
@@ -403,14 +408,14 @@ struct ProgressiveOverloadCardCompact: View {
                 }
 
                 // Exercise info
-                VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(exerciseName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
                         .lineLimit(1)
 
-                    HStack(spacing: DesignTokens.spacingXSmall) {
+                    HStack(spacing: Spacing.xxs) {
                         Text(suggestion.progressionType.displayText)
                             .font(.caption)
                             .foregroundColor(suggestion.progressionType.color)
@@ -433,9 +438,9 @@ struct ProgressiveOverloadCardCompact: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            .padding(DesignTokens.spacingMedium)
+            .padding(Spacing.sm)
             .background(Color(.secondarySystemBackground))
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
@@ -456,7 +461,7 @@ struct ProgressiveOverloadCardCompact: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(suggestion.confidenceColor.opacity(0.1))
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

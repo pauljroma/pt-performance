@@ -138,6 +138,7 @@ struct ROMeasurement: Codable, Identifiable {
     var painWithMovement: Bool?
     var endFeel: String?
     var notes: String?
+    var createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -151,6 +152,7 @@ struct ROMeasurement: Codable, Identifiable {
         case painWithMovement = "pain_with_movement"
         case endFeel = "end_feel"
         case notes
+        case createdAt = "created_at"
     }
 
     // MARK: - Computed Properties
@@ -232,7 +234,8 @@ struct ROMeasurement: Codable, Identifiable {
         measurementMethod: String? = nil,
         painWithMovement: Bool? = nil,
         endFeel: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        createdAt: Date? = nil
     ) {
         self.id = id
         self.joint = joint
@@ -245,6 +248,7 @@ struct ROMeasurement: Codable, Identifiable {
         self.painWithMovement = painWithMovement
         self.endFeel = endFeel
         self.notes = notes
+        self.createdAt = createdAt
     }
 
     /// Convenience initializer with ClosedRange
@@ -258,7 +262,8 @@ struct ROMeasurement: Codable, Identifiable {
         measurementMethod: String? = nil,
         painWithMovement: Bool? = nil,
         endFeel: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        createdAt: Date? = nil
     ) {
         self.init(
             id: id,
@@ -271,7 +276,8 @@ struct ROMeasurement: Codable, Identifiable {
             measurementMethod: measurementMethod,
             painWithMovement: painWithMovement,
             endFeel: endFeel,
-            notes: notes
+            notes: notes,
+            createdAt: createdAt
         )
     }
 }

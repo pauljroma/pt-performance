@@ -7,7 +7,6 @@
 //
 
 import SwiftUI
-import Combine
 
 /// ViewModel for loading mode-specific status card data
 /// Supports Rehab, Strength, and Performance modes with appropriate metrics
@@ -45,17 +44,22 @@ class ModeStatusCardViewModel: ObservableObject {
     /// 2. Each ViewModel instance needs its own loading/error state
     /// 3. The service uses dependency injection (PTSupabaseClient.shared) internally
     private let readinessService = ReadinessService()
+    private let volumeAnalyticsService = VolumeAnalyticsService()
 
     // MARK: - Data Loading
 
     /// Load all mode-specific data for the given patient
-    /// - Parameter patientId: The patient UUID to load data for
-    func loadData(for patientId: UUID) async {
+    /// - Parameters:
+    ///   - patientId: The patient UUID to load data for
+    ///   - mode: The patient's actual mode. Falls back to `modeService.currentMode` when nil.
+    func loadData(for patientId: UUID, mode: Mode? = nil) async {
         isLoading = true
         defer { isLoading = false }
 
-        // Load data based on current mode
-        switch modeService.currentMode {
+        let activeMode = mode ?? modeService.currentMode
+
+        // Load data based on the patient's active mode
+        switch activeMode {
         case .rehab:
             await loadRehabData(for: patientId)
         case .strength:
@@ -68,27 +72,42 @@ class ModeStatusCardViewModel: ObservableObject {
     // MARK: - Rehab Data
 
     private func loadRehabData(for patientId: UUID) async {
-        // Load pain data
-        // In production, this would fetch from PainTrackingService
-        // For now, use placeholder data to demonstrate the UI
+        // Pain scores require PainTrackingService (not yet available)
+        // Keep nil/empty for honesty rather than faking data
+        todayPainScore = nil
+        previousPainScore = nil
+        activePainRegions = []
 
         do {
             // Load deload recommendation (using shared service instance)
             try await deloadService.fetchRecommendation(patientId: patientId)
             if let recommendation = deloadService.recommendation {
                 deloadUrgency = recommendation.urgency
+
+                // Derive alert state from deload urgency:
+                // recommended/required urgency levels indicate actionable alerts
+                switch recommendation.urgency {
+                case .recommended:
+                    hasActiveAlerts = true
+                    alertCount = 1
+                case .required:
+                    hasActiveAlerts = true
+                    alertCount = 1
+                case .none, .suggested:
+                    hasActiveAlerts = false
+                    alertCount = 0
+                }
+            } else {
+                deloadUrgency = nil
+                hasActiveAlerts = false
+                alertCount = 0
             }
 
-            // Reset other rehab data (would be loaded from services in production)
-            todayPainScore = nil
-            previousPainScore = nil
-            activePainRegions = []
-            hasActiveAlerts = false
-            alertCount = 0
-
-            DebugLogger.shared.log("[ModeStatusCardVM] Rehab data loaded", level: .diagnostic)
+            DebugLogger.shared.log("[ModeStatusCardVM] Rehab data loaded (alerts=\(alertCount))", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load rehab data: \(error)", level: .warning)
+            hasActiveAlerts = false
+            alertCount = 0
         }
     }
 
@@ -96,9 +115,13 @@ class ModeStatusCardViewModel: ObservableObject {
 
     private func loadStrengthData(for patientId: UUID) async {
         do {
-            // Load big lifts and streak in parallel
+            // Load big lifts, streak, and volume data in parallel
             async let summariesTask = BigLiftsService.shared.fetchBigLiftsSummary(patientId: patientId)
             async let streakTask = StreakTrackingService.shared.getCombinedStreak(for: patientId)
+            async let volumeTask = volumeAnalyticsService.fetchVolumeTimeSeries(
+                patientId: patientId.uuidString,
+                period: .month
+            )
 
             let summaries = try await summariesTask
             let streak = try await streakTask
@@ -112,22 +135,38 @@ class ModeStatusCardViewModel: ObservableObject {
                 TopLiftInfo(
                     exerciseName: lift.exerciseName,
                     weight: lift.estimated1rm,
-                    unit: "lbs"
+                    unit: lift.loadUnit
                 )
             }
 
-            // Calculate volume trend (placeholder - would use volume analytics service)
-            volumeTrend = .unknown
+            // Calculate volume trend by comparing the last two weekly data points
+            do {
+                let volumeDataPoints = try await volumeTask
+                volumeTrend = Self.deriveVolumeTrend(from: volumeDataPoints)
+            } catch {
+                DebugLogger.shared.log("[ModeStatusCardVM] Volume trend fetch failed, falling back to .unknown: \(error)", level: .warning)
+                volumeTrend = .unknown
+            }
 
             // Use streak result
             if let streak = streak {
                 strengthStreak = streak.currentStreak
             }
 
-            // Reset PR data (would be loaded from PR tracking service)
-            recentPRs = []
+            // Derive recent PRs from BigLiftSummary lastPrDate (within last 7 days)
+            let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+            recentPRs = summaries.compactMap { lift -> RecentPRInfo? in
+                guard let prDate = lift.lastPrDate, prDate > sevenDaysAgo else { return nil }
+                return RecentPRInfo(
+                    exerciseName: lift.exerciseName,
+                    weight: lift.currentMaxWeight,
+                    unit: lift.loadUnit,
+                    date: prDate,
+                    improvement: lift.improvementPct30d
+                )
+            }
 
-            DebugLogger.shared.log("[ModeStatusCardVM] Strength data loaded: total=\(estimatedTotal ?? 0)", level: .diagnostic)
+            DebugLogger.shared.log("[ModeStatusCardVM] Strength data loaded: total=\(estimatedTotal ?? 0), recentPRs=\(recentPRs.count)", level: .diagnostic)
         } catch {
             DebugLogger.shared.log("[ModeStatusCardVM] Failed to load strength data: \(error)", level: .warning)
             // Reset to defaults on error
@@ -136,6 +175,32 @@ class ModeStatusCardViewModel: ObservableObject {
             recentPRs = []
             volumeTrend = .unknown
             strengthStreak = 0
+        }
+    }
+
+    // MARK: - Volume Trend Calculation
+
+    /// Derive a volume trend by comparing the last two weekly data points
+    /// - Parameter dataPoints: Weekly volume data points sorted chronologically
+    /// - Returns: The derived VolumeTrend
+    private static func deriveVolumeTrend(from dataPoints: [VolumeDataPoint]) -> VolumeTrend {
+        // Need at least 2 weeks of data to compare
+        guard dataPoints.count >= 2 else { return .unknown }
+
+        let currentWeek = dataPoints[dataPoints.count - 1].totalVolume
+        let previousWeek = dataPoints[dataPoints.count - 2].totalVolume
+
+        guard previousWeek > 0 else { return .unknown }
+
+        let percentChange = ((currentWeek - previousWeek) / previousWeek) * 100
+
+        // Treat changes within +/-threshold as stable
+        if abs(percentChange) < VolumeTrendThreshold.stablePercent {
+            return .stable
+        } else if percentChange > 0 {
+            return .up(percentage: percentChange)
+        } else {
+            return .down(percentage: abs(percentChange))
         }
     }
 
@@ -171,7 +236,7 @@ class ModeStatusCardViewModel: ObservableObject {
                     readinessScore = score
                 } else {
                     DebugLogger.shared.log("[ModeStatusCardVM] Readiness data not available, falling back to fatigue-based calculation", level: .diagnostic)
-                    readinessScore = max(0, 100 - (fatigue.fatigueScore ?? 5) * 10)
+                    readinessScore = max(0, 100 - fatigue.fatigueScore * 10)
                 }
 
                 performanceStatusData = PerformanceStatusData(
@@ -196,9 +261,11 @@ class ModeStatusCardViewModel: ObservableObject {
     // MARK: - Refresh
 
     /// Refresh data for the current mode
-    /// - Parameter patientId: The patient UUID to refresh data for
-    func refresh(for patientId: UUID) async {
-        await loadData(for: patientId)
+    /// - Parameters:
+    ///   - patientId: The patient UUID to refresh data for
+    ///   - mode: The patient's actual mode. Falls back to `modeService.currentMode` when nil.
+    func refresh(for patientId: UUID, mode: Mode? = nil) async {
+        await loadData(for: patientId, mode: mode)
     }
 }
 
@@ -266,16 +333,19 @@ struct PerformanceStatusData {
     let trainingRecommendation: String
     let lastUpdated: Date?
 
+    /// Whether real data was loaded (as opposed to the empty placeholder).
+    /// Uses `lastUpdated` as a sentinel: empty state has nil, real data always sets a date.
+    /// This avoids treating a legitimate readinessScore of 0 as "no data".
+    var hasData: Bool {
+        lastUpdated != nil
+    }
+
     var formattedACWR: String {
         String(format: "%.2f", acwrValue)
     }
 
     var formattedReadiness: String {
         String(format: "%.0f", readinessScore)
-    }
-
-    var hasData: Bool {
-        acwrValue > 0 || readinessScore > 0
     }
 
     static let empty = PerformanceStatusData(
@@ -299,14 +369,36 @@ enum ACWRStatus: String, CaseIterable {
         switch value {
         case ..<0.8:
             return .undertraining
-        case 0.8...1.3:
+        case 0.8..<1.3:
             return .optimal
-        case 1.3...1.5:
+        case 1.3..<1.5:
             return .caution
         case 1.5...:
             return .danger
         default:
             return .unknown
+        }
+    }
+
+    /// Color associated with this ACWR status
+    var color: Color {
+        switch self {
+        case .undertraining: return .blue
+        case .optimal: return .green
+        case .caution: return .orange
+        case .danger: return .red
+        case .unknown: return .secondary
+        }
+    }
+
+    /// SF Symbol icon associated with this ACWR status
+    var icon: String {
+        switch self {
+        case .undertraining: return "arrow.down.circle"
+        case .optimal: return "checkmark.circle.fill"
+        case .caution: return "exclamationmark.triangle"
+        case .danger: return "xmark.octagon.fill"
+        case .unknown: return "questionmark.circle"
         }
     }
 

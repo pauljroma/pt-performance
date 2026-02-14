@@ -16,6 +16,9 @@ struct PatientDetailView: View {
     @State private var showWeeklyReports = false
     @State private var showGenerateWeeklyReport = false
     @State private var showProgramProgress = false
+    @State private var showModeSwitching = false
+    @State private var quickReportError: String?
+    @State private var showQuickReportError = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     init(patient: Patient) {
@@ -163,6 +166,15 @@ struct PatientDetailView: View {
 
                     Divider()
 
+                    // Mode Management
+                    Button {
+                        showModeSwitching = true
+                    } label: {
+                        Label("Change Patient Mode", systemImage: "switch.2")
+                    }
+
+                    Divider()
+
                     // Clinical Documentation
                     Button {
                         showIntakeAssessment = true
@@ -232,10 +244,17 @@ struct PatientDetailView: View {
         }
         .sheet(isPresented: $showIntakeAssessment) {
             NavigationStack {
-                IntakeAssessmentView(
-                    patientId: patient.id,
-                    therapistId: UUID(uuidString: PTSupabaseClient.shared.userId ?? "") ?? UUID()
-                )
+                if let therapistIdString = PTSupabaseClient.shared.userId,
+                   let therapistUUID = UUID(uuidString: therapistIdString) {
+                    IntakeAssessmentView(
+                        patientId: patient.id,
+                        therapistId: therapistUUID
+                    )
+                } else {
+                    Text("Unable to load assessment. Please sign in again.")
+                        .foregroundColor(.secondary)
+                        .padding()
+                }
             }
         }
         .sheet(isPresented: $showSOAPNote) {
@@ -279,6 +298,28 @@ struct PatientDetailView: View {
                     }
             }
         }
+        .sheet(isPresented: $showModeSwitching) {
+            NavigationStack {
+                ScrollView {
+                    ModeSwitchingPanel(patientId: patient.id.uuidString)
+                        .padding()
+                }
+                .navigationTitle("Patient Mode")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Close") {
+                            showModeSwitching = false
+                        }
+                    }
+                }
+            }
+        }
+        .alert("Report Generation Failed", isPresented: $showQuickReportError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(quickReportError ?? "An unknown error occurred.")
+        }
     }
 
     // MARK: - Quick Report Generation
@@ -286,15 +327,18 @@ struct PatientDetailView: View {
     private func generateQuickReport(preset: ReportPreset) {
         Task {
             do {
-                let report = try await ReportGenerationService.shared.generateQuickReport(
+                _ = try await ReportGenerationService.shared.generateQuickReport(
                     preset: preset,
                     patient: patient
                 )
-                // Show report builder with the generated report
+                // Show report builder after successful generation
                 showReportBuilder = true
             } catch {
-                // Error is handled by the service
                 DebugLogger.shared.log("[PatientDetailView] Quick report generation failed: \(error.localizedDescription)", level: .error)
+                await MainActor.run {
+                    quickReportError = error.localizedDescription
+                    showQuickReportError = true
+                }
             }
         }
     }

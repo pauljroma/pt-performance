@@ -18,15 +18,12 @@ struct StrengthModeDashboardView: View {
 
     // MARK: - Environment
 
-    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - State
 
     @StateObject private var viewModel = StrengthModeDashboardViewModel()
-    @State private var showExerciseDetail: String?
     @State private var showAllPRs = false
-    @State private var selectedTimeRange: StrengthTimeRange = .month
 
     // MARK: - Initialization
 
@@ -81,7 +78,7 @@ struct StrengthModeDashboardView: View {
             await viewModel.forceRefresh()
         }
         .task {
-            await viewModel.loadDashboardData()
+            await viewModel.loadDashboardData(patientId: patientId)
         }
         .sheetWithHaptic(isPresented: $showAllPRs) {
             AllPRsSheet(prs: viewModel.recentPRs)
@@ -122,13 +119,7 @@ struct StrengthModeDashboardView: View {
                 }
             }
 
-            // Time range picker
-            Picker("Time Range", selection: $selectedTimeRange) {
-                ForEach(StrengthTimeRange.allCases, id: \.self) { range in
-                    Text(range.displayName).tag(range)
-                }
-            }
-            .pickerStyle(.segmented)
+            // Time range filtering reserved for future implementation
         }
     }
 
@@ -201,7 +192,7 @@ struct StrengthModeDashboardView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     ForEach(viewModel.coreLifts.prefix(3)) { lift in
                         HStack(spacing: Spacing.xs) {
-                            Text(shortLiftName(lift.exerciseName))
+                            Text(lift.exerciseName.shortLiftName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
@@ -223,6 +214,9 @@ struct StrengthModeDashboardView: View {
                 )
             )
             .cornerRadius(CornerRadius.md)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Estimated powerlifting total")
+            .accessibilityValue(viewModel.formattedSBDTotal)
         }
     }
 
@@ -281,63 +275,60 @@ struct StrengthModeDashboardView: View {
     }
 
     private func bigLiftCard(_ lift: BigLiftSummary) -> some View {
-        Button(action: {
-            HapticFeedback.light()
-            showExerciseDetail = lift.exerciseName
-        }) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                HStack {
-                    Text(shortLiftName(lift.exerciseName))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .lineLimit(1)
-                        .foregroundColor(.primary)
-
-                    Spacer()
-
-                    if lift.hasRecentPR {
-                        Image(systemName: "trophy.fill")
-                            .font(.caption)
-                            .foregroundColor(.yellow)
-                    }
-                }
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack {
+                Text(lift.exerciseName.shortLiftName)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
 
                 Spacer()
 
-                Text(lift.formattedMaxWeight)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                    .monospacedDigit()
-
-                HStack(spacing: 4) {
-                    Text("Est 1RM:")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    Text(lift.formattedEstimated1rm)
+                if lift.hasRecentPR {
+                    Image(systemName: "trophy.fill")
                         .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.purple)
-                }
-
-                if let improvement = lift.formattedImprovement {
-                    HStack(spacing: 2) {
-                        Image(systemName: lift.isImproving ? "arrow.up.right" : "arrow.down.right")
-                            .font(.caption2)
-                        Text(improvement)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(lift.isImproving ? .green : .red)
+                        .foregroundColor(.yellow)
                 }
             }
-            .padding(Spacing.sm)
-            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(CornerRadius.md)
-            .adaptiveShadow(Shadow.subtle)
+
+            Spacer()
+
+            Text(lift.formattedMaxWeight)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+                .monospacedDigit()
+
+            HStack(spacing: 4) {
+                Text("Est 1RM:")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text(lift.formattedEstimated1rm)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.purple)
+            }
+
+            if let improvement = lift.formattedImprovement {
+                HStack(spacing: 2) {
+                    Image(systemName: lift.isImproving ? "arrow.up.right" : "arrow.down.right")
+                        .font(.caption2)
+                    Text(improvement)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(lift.isImproving ? .green : .red)
+            }
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(Spacing.sm)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.md)
+        .adaptiveShadow(Shadow.subtle)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(lift.exerciseName), \(lift.formattedMaxWeight)")
+        .accessibilityValue("Estimated 1RM: \(lift.formattedEstimated1rm)\(lift.hasRecentPR ? ", recent PR" : "")")
     }
 
     // MARK: - Recent PRs Section
@@ -373,7 +364,7 @@ struct StrengthModeDashboardView: View {
 
     private func prCard(_ pr: PersonalRecord) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(shortLiftName(pr.exerciseName))
+            Text(pr.exerciseName.shortLiftName)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -489,7 +480,7 @@ struct StrengthModeDashboardView: View {
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
 
-                Text(String(format: "Try %.0f lbs x %d reps", suggestion.nextLoad, suggestion.nextReps))
+                Text(String(format: "Try %.0f %@ x %d reps", suggestion.nextLoad, WeightUnit.defaultUnit, suggestion.nextReps))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -536,34 +527,6 @@ struct StrengthModeDashboardView: View {
         .cornerRadius(CornerRadius.md)
     }
 
-    // MARK: - Helpers
-
-    private func shortLiftName(_ name: String) -> String {
-        switch name {
-        case "Bench Press": return "Bench"
-        case "Back Squat", "Squat": return "Squat"
-        case "Deadlift": return "Deadlift"
-        case "Overhead Press": return "OHP"
-        case "Barbell Row": return "Row"
-        default: return String(name.prefix(8))
-        }
-    }
-}
-
-// MARK: - Time Range Enum
-
-private enum StrengthTimeRange: String, CaseIterable {
-    case week = "week"
-    case month = "month"
-    case quarter = "quarter"
-
-    var displayName: String {
-        switch self {
-        case .week: return "Week"
-        case .month: return "Month"
-        case .quarter: return "3 Months"
-        }
-    }
 }
 
 // MARK: - All PRs Sheet
@@ -588,7 +551,7 @@ private struct AllPRsSheet: View {
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text(String(format: "%.0f lbs", pr.value))
+                        Text(pr.formattedValue)
                             .font(.headline)
                             .fontWeight(.bold)
 
@@ -621,7 +584,6 @@ struct StrengthModeDashboardView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             StrengthModeDashboardView(patientId: UUID())
-                .environmentObject(AppState())
         }
     }
 }

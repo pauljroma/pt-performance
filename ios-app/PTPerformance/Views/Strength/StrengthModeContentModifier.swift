@@ -18,10 +18,9 @@ struct StrengthModeContentModifier: ViewModifier {
 
     @State private var showStrengthStatusCard = true
     @State private var showStrengthDashboard = false
-    @State private var showPRCelebration = false
     @State private var prCelebrationData: PRCelebrationData?
     @State private var showPRHistory = false
-    @State private var isLoading = false
+    @State private var isLoadingStrengthData = false
 
     // Strength data state
     @State private var estimatedTotal: Double?
@@ -29,7 +28,7 @@ struct StrengthModeContentModifier: ViewModifier {
     @State private var recentPRs: [RecentPRInfo] = []
     @State private var volumeTrend: VolumeTrend = .unknown
     @State private var currentStreak: Int = 0
-    @State private var unit: String = "lbs"
+    @State private var unit: String = WeightUnit.defaultUnit
 
     // MARK: - Body
 
@@ -48,19 +47,19 @@ struct StrengthModeContentModifier: ViewModifier {
                 .sheet(isPresented: $showPRHistory) {
                     prHistorySheet
                 }
-                .fullScreenCover(isPresented: $showPRCelebration) {
-                    if let data = prCelebrationData {
-                        PRCelebrationView(
-                            data: data,
-                            onDismiss: {
-                                showPRCelebration = false
-                                prCelebrationData = nil
-                            },
-                            onShare: {
-                                // TODO: Implement share functionality
-                                HapticFeedback.light()
-                            }
-                        )
+                .fullScreenCover(item: $prCelebrationData) { data in
+                    PRCelebrationView(
+                        data: data,
+                        onDismiss: {
+                            prCelebrationData = nil
+                        }
+                    )
+                }
+                .overlay {
+                    if isLoadingStrengthData {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .background(Color.clear)
                     }
                 }
                 .task {
@@ -92,11 +91,15 @@ struct StrengthModeContentModifier: ViewModifier {
                 onViewPRs: {
                     HapticFeedback.light()
                     showPRHistory = true
+                },
+                onViewVolume: {
+                    HapticFeedback.light()
+                    showStrengthDashboard = true
                 }
             )
             .padding(.horizontal)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
+            .padding(.top, Spacing.xs)
+            .padding(.bottom, Spacing.sm)
         }
         .background(Color(.systemGroupedBackground))
     }
@@ -140,20 +143,25 @@ struct StrengthModeContentModifier: ViewModifier {
     private func loadStrengthData() async {
         guard let patientId = patientId else { return }
 
-        isLoading = true
-        defer { isLoading = false }
+        isLoadingStrengthData = true
+        defer { isLoadingStrengthData = false }
 
-        // Load streak data
-        await loadStreakData(for: patientId)
+        // Fetch big lifts summary once and share result across PR and top-lift processing
+        let allSummaries: [BigLiftSummary]
+        do {
+            allSummaries = try await BigLiftsService.shared.fetchBigLiftsSummary(patientId: patientId)
+        } catch {
+            DebugLogger.shared.log("Failed to fetch big lifts summary: \(error)", level: .warning)
+            allSummaries = []
+        }
 
-        // Load PR data
-        await loadPRData(for: patientId)
+        // Run all four processing steps in parallel
+        async let streakResult: Void = loadStreakData(for: patientId)
+        async let prResult: Void = loadPRData(from: allSummaries)
+        async let volumeResult: Void = loadVolumeData(for: patientId)
+        async let topLiftsResult: Void = loadTopLifts(from: allSummaries, patientId: patientId)
 
-        // Load volume comparison
-        await loadVolumeData(for: patientId)
-
-        // Load top lifts / estimated total
-        await loadTopLifts(for: patientId)
+        _ = await (streakResult, prResult, volumeResult, topLiftsResult)
     }
 
     private func loadStreakData(for patientId: UUID) async {
@@ -167,23 +175,95 @@ struct StrengthModeContentModifier: ViewModifier {
         }
     }
 
-    private func loadPRData(for patientId: UUID) async {
-        // TODO: Implement actual PR data loading from StrengthAnalyticsService
-        // For now, this would query recent PRs from the database
-        // recentPRs = try await strengthService.getRecentPRs(for: patientId, withinDays: 7)
+    private func loadPRData(from summaries: [BigLiftSummary]) async {
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+
+        recentPRs = summaries.compactMap { summary in
+            guard let prDate = summary.lastPrDate, prDate >= sevenDaysAgo else {
+                return nil
+            }
+            // Calculate improvement from the 30-day improvement percentage if available
+            let improvement: Double? = summary.improvementPct30d.map { pct in
+                summary.currentMaxWeight * pct / (100.0 + pct)
+            }
+            return RecentPRInfo(
+                exerciseName: summary.exerciseName,
+                weight: summary.currentMaxWeight,
+                unit: summary.loadUnit,
+                date: prDate,
+                improvement: improvement
+            )
+        }
+        .sorted { $0.date > $1.date }
+
+        DebugLogger.shared.log("Loaded \(recentPRs.count) recent PRs", level: .diagnostic)
     }
 
     private func loadVolumeData(for patientId: UUID) async {
-        // TODO: Implement actual volume comparison
-        // let comparison = try await analyticsService.compareWeeklyVolume(for: patientId)
-        // volumeTrend = comparison.trend
+        do {
+            let volumeService = VolumeAnalyticsService()
+            // Fetch two weeks of volume data to compare current vs previous week
+            let dataPoints = try await volumeService.fetchVolumeTimeSeries(
+                patientId: patientId.uuidString,
+                period: .month
+            )
+
+            // Need at least two data points (weeks) to compute a trend
+            guard dataPoints.count >= 2 else {
+                volumeTrend = .unknown
+                return
+            }
+
+            let currentWeek = dataPoints[dataPoints.count - 1].totalVolume
+            let previousWeek = dataPoints[dataPoints.count - 2].totalVolume
+
+            if previousWeek > 0 {
+                let percentageChange = ((currentWeek - previousWeek) / previousWeek) * 100.0
+                if abs(percentageChange) < VolumeTrendThreshold.stablePercent {
+                    volumeTrend = .stable
+                } else if percentageChange > 0 {
+                    volumeTrend = .up(percentage: percentageChange)
+                } else {
+                    volumeTrend = .down(percentage: percentageChange)
+                }
+            } else if currentWeek > 0 {
+                volumeTrend = .up(percentage: 100.0)
+            } else {
+                volumeTrend = .unknown
+            }
+
+            DebugLogger.shared.log("Volume trend calculated: \(volumeTrend)", level: .diagnostic)
+        } catch {
+            DebugLogger.shared.log("Failed to load volume data: \(error)", level: .warning)
+            volumeTrend = .unknown
+        }
     }
 
-    private func loadTopLifts(for patientId: UUID) async {
-        // TODO: Implement actual top lifts loading
-        // let lifts = try await strengthService.getTopLifts(for: patientId)
-        // topLifts = lifts
-        // estimatedTotal = lifts.reduce(0) { $0 + $1.weight }
+    private func loadTopLifts(from allSummaries: [BigLiftSummary], patientId: UUID) async {
+        // Filter to core lifts only from the already-fetched summaries
+        let coreNames = ["Squat", "Back Squat", "Bench Press", "Deadlift"]
+        let summaries = allSummaries.filter { summary in
+            coreNames.contains(where: { summary.exerciseName.localizedCaseInsensitiveContains($0) })
+        }
+
+        // Convert to TopLiftInfo for display
+        topLifts = summaries.map { lift in
+            TopLiftInfo(
+                exerciseName: lift.exerciseName,
+                weight: lift.estimated1rm,
+                unit: lift.loadUnit
+            )
+        }
+
+        // Calculate estimated total from core lifts
+        estimatedTotal = summaries.isEmpty ? nil : summaries.reduce(0) { $0 + $1.estimated1rm }
+
+        // Use the unit from the first summary if available
+        if let firstUnit = summaries.first?.loadUnit {
+            unit = firstUnit
+        }
+
+        DebugLogger.shared.log("Loaded \(topLifts.count) top lifts, estimated total: \(estimatedTotal ?? 0)", level: .diagnostic)
     }
 
     // MARK: - PR Notification Handler
@@ -211,7 +291,7 @@ struct StrengthModeContentModifier: ViewModifier {
             prType = .newPR
         }
 
-        // Create celebration data
+        // Create celebration data (setting this triggers the fullScreenCover via item binding)
         prCelebrationData = PRCelebrationData(
             exerciseName: exerciseName,
             newWeight: newWeight,
@@ -220,9 +300,6 @@ struct StrengthModeContentModifier: ViewModifier {
             unit: prUnit,
             type: prType
         )
-
-        // Show celebration
-        showPRCelebration = true
 
         // Add to recent PRs
         let newPR = RecentPRInfo(
@@ -288,7 +365,7 @@ struct PRHistoryListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.md) {
             Image(systemName: "trophy")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary.opacity(0.5))

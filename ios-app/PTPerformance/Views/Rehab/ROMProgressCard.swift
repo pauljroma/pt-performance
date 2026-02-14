@@ -25,7 +25,7 @@ struct ROMProgressCard: View {
     // MARK: - Computed Properties
 
     private var filteredMeasurements: [ROMeasurement] {
-        var result = measurements
+        var result = measurements.filter { $0.measurementDate != nil }
 
         if let joint = targetJoint {
             result = result.filter { $0.joint == joint }
@@ -34,7 +34,7 @@ struct ROMProgressCard: View {
             result = result.filter { $0.movement == movement }
         }
 
-        return result.sorted { $0.measurementDate ?? Date() > $1.measurementDate ?? Date() }
+        return result.sorted { ($0.measurementDate ?? .distantPast) > ($1.measurementDate ?? .distantPast) }
     }
 
     private var latestMeasurement: ROMeasurement? {
@@ -53,7 +53,7 @@ struct ROMProgressCard: View {
         let normalRange = Double(latest.normalRangeMax - latest.normalRangeMin)
         guard normalRange > 0 else { return nil }
 
-        let baselineDeficit = Double(latest.normalRangeMin - baseline.degrees)
+        let baselineDeficit = Double(baseline.normalRangeMin - baseline.degrees)
         let currentDeficit = Double(latest.normalRangeMin - latest.degrees)
 
         if baselineDeficit <= 0 { return 100 } // Started within normal
@@ -83,7 +83,7 @@ struct ROMProgressCard: View {
             if filteredMeasurements.isEmpty {
                 emptyState
             } else {
-                VStack(spacing: 16) {
+                VStack(spacing: Spacing.md) {
                     // Current Status
                     currentStatusSection
 
@@ -101,19 +101,21 @@ struct ROMProgressCard: View {
             }
         }
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .stroke(Color.purple.opacity(0.2), lineWidth: 1)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("ROM progress for \(targetJoint?.capitalized ?? "all joints")")
     }
 
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             // Icon
             ZStack {
                 Circle()
@@ -153,7 +155,7 @@ struct ROMProgressCard: View {
     // MARK: - Current Status Section
 
     private var currentStatusSection: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: Spacing.md) {
             // Current ROM Display
             if let latest = latestMeasurement {
                 VStack(spacing: 4) {
@@ -191,14 +193,16 @@ struct ROMProgressCard: View {
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(Color(.tertiarySystemFill))
 
-                                // Current progress
-                                let progress = min(1, max(0, Double(latest.degrees) / Double(latest.normalRangeMin)))
+                                // Current progress (guard against divide-by-zero)
+                                let progress = latest.normalRangeMin > 0 ? min(1, max(0, Double(latest.degrees) / Double(latest.normalRangeMin))) : 0
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(latest.statusColor)
                                     .frame(width: geometry.size.width * CGFloat(progress))
                             }
                         }
                         .frame(height: 6)
+                        .accessibilityLabel("ROM progress bar")
+                        .accessibilityValue("\(latest.degrees) degrees out of \(latest.normalRangeMin) normal range")
                     }
 
                     // Status label
@@ -231,30 +235,32 @@ struct ROMProgressCard: View {
     // MARK: - Progress Chart Section
 
     private var progressChartSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Progress Over Time")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            Chart(filteredMeasurements.prefix(10).reversed()) { measurement in
-                // Line showing progress
-                LineMark(
-                    x: .value("Date", measurement.measurementDate ?? Date()),
-                    y: .value("Degrees", measurement.degrees)
-                )
-                .foregroundStyle(Color.purple)
-                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
-                .interpolationMethod(.catmullRom)
+            Chart {
+                ForEach(filteredMeasurements.prefix(10).reversed()) { measurement in
+                    // Line showing progress
+                    LineMark(
+                        x: .value("Date", measurement.measurementDate ?? Date()),
+                        y: .value("Degrees", measurement.degrees)
+                    )
+                    .foregroundStyle(Color.purple)
+                    .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .interpolationMethod(.catmullRom)
 
-                // Points
-                PointMark(
-                    x: .value("Date", measurement.measurementDate ?? Date()),
-                    y: .value("Degrees", measurement.degrees)
-                )
-                .foregroundStyle(measurement.statusColor)
-                .symbolSize(30)
+                    // Points
+                    PointMark(
+                        x: .value("Date", measurement.measurementDate ?? Date()),
+                        y: .value("Degrees", measurement.degrees)
+                    )
+                    .foregroundStyle(measurement.statusColor)
+                    .symbolSize(30)
+                }
 
-                // Normal range reference line
+                // Normal range reference line (rendered once, outside ForEach)
                 if let latest = latestMeasurement {
                     RuleMark(y: .value("Normal Min", latest.normalRangeMin))
                         .foregroundStyle(Color.green.opacity(0.5))
@@ -270,10 +276,12 @@ struct ROMProgressCard: View {
                 }
             }
             .frame(height: 150)
+            .accessibilityLabel("ROM progress chart over time")
+            .accessibilityValue("\(filteredMeasurements.count) measurements recorded")
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.tertiarySystemBackground))
         )
     }
@@ -281,14 +289,14 @@ struct ROMProgressCard: View {
     // MARK: - Baseline Comparison Section
 
     private func baselineComparisonSection(baseline: ROMeasurement, latest: ROMeasurement) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text("Progress from Baseline")
                 .font(.caption.weight(.semibold))
                 .foregroundColor(.secondary)
 
-            HStack(spacing: 16) {
+            HStack(spacing: Spacing.md) {
                 // Baseline
-                VStack(spacing: 4) {
+                VStack(spacing: Spacing.xxs) {
                     Text("\(baseline.degrees)\u{00B0}")
                         .font(.title3.weight(.semibold))
                         .foregroundColor(.secondary)
@@ -300,7 +308,7 @@ struct ROMProgressCard: View {
                 .frame(maxWidth: .infinity)
 
                 // Arrow with improvement
-                VStack(spacing: 4) {
+                VStack(spacing: Spacing.xxs) {
                     let improvement = latest.degrees - baseline.degrees
                     Image(systemName: improvement >= 0 ? "arrow.right" : "arrow.left")
                         .foregroundColor(improvement >= 0 ? .green : .red)
@@ -316,7 +324,7 @@ struct ROMProgressCard: View {
                 .frame(maxWidth: .infinity)
 
                 // Current
-                VStack(spacing: 4) {
+                VStack(spacing: Spacing.xxs) {
                     Text("\(latest.degrees)\u{00B0}")
                         .font(.title3.weight(.semibold))
                         .foregroundColor(latest.statusColor)
@@ -329,7 +337,7 @@ struct ROMProgressCard: View {
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(isImproving ? Color.green.opacity(0.1) : Color.orange.opacity(0.1))
             )
 
@@ -351,7 +359,7 @@ struct ROMProgressCard: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.sm) {
             Image(systemName: "ruler")
                 .font(.system(size: 32))
                 .foregroundColor(.secondary.opacity(0.5))
@@ -383,10 +391,9 @@ struct ROMProgressCard: View {
 // MARK: - ROM Measurement Extension
 
 extension ROMeasurement {
+    /// Returns the measurement date from the model's `createdAt` field
     var measurementDate: Date? {
-        // Assuming the model has a createdAt or measuredAt date
-        // For now returning nil - would be populated from actual data
-        nil
+        createdAt
     }
 }
 
@@ -403,13 +410,8 @@ struct ROMSummaryCard: View {
             .sorted { $0.key < $1.key }
     }
 
-    // Get latest measurement per joint
-    private func latestMeasurement(for joint: String) -> ROMeasurement? {
-        measurements.filter { $0.joint == joint }.first
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: Spacing.md) {
             // Header
             HStack {
                 Image(systemName: "figure.stand")
@@ -431,7 +433,7 @@ struct ROMSummaryCard: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
@@ -440,7 +442,7 @@ struct ROMSummaryCard: View {
         Button {
             onViewDetail?(joint)
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.sm) {
                 // Status indicator
                 Circle()
                     .fill(measurement.statusColor)

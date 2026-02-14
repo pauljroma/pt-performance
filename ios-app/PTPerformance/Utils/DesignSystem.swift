@@ -910,3 +910,50 @@ struct DesignSystem_Previews: PreviewProvider {
     }
 }
 #endif
+
+// MARK: - Pain Score Color
+
+/// Shared pain score color mapping used across Rehab views
+/// Maps a 0-10 pain score to a semantic color
+func painScoreColor(_ score: Int) -> Color {
+    switch score {
+    case 0...3: return .green
+    case 4...6: return .yellow
+    case 7...10: return .red
+    default: return .secondary
+    }
+}
+
+// MARK: - Readiness Color
+
+/// Shared readiness-score-to-color mapping used across Performance Mode views.
+/// Eliminates duplicated switch logic in PerformanceModeDashboardView and PerformanceModeStatusCard.
+enum ReadinessColor {
+    static func color(for score: Double) -> Color {
+        switch score {
+        case 80...: return .green
+        case 60..<80: return .yellow
+        case 40..<60: return .orange
+        default: return .red
+        }
+    }
+}
+
+// MARK: - Weight Unit Default
+
+/// Default weight unit used when no unit is provided by the data model.
+/// Centralised here so the fallback can be changed in one place if the app
+/// adds a user-preference for metric/imperial units later.
+enum WeightUnit {
+    static let defaultUnit = "lbs"
+}
+
+// MARK: - Volume Trend Constants
+
+/// Shared thresholds for volume trend calculations.
+/// Used by ModeStatusCardViewModel.deriveVolumeTrend and
+/// StrengthModeContentModifier.loadVolumeData to ensure consistency.
+enum VolumeTrendThreshold {
+    /// Percentage change (absolute) below which volume is considered "stable".
+    static let stablePercent: Double = 5.0
+}

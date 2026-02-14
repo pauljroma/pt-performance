@@ -17,14 +17,13 @@ struct RehabModeContentModifier: ViewModifier {
     @State private var showRehabStatusCard = true
     @State private var painLocations: [PainLocation] = []
     @State private var todayPainScore: Int?
-    @State private var previousPainScore: Int?
-    @State private var hasActiveAlerts = false
-    @State private var alertCount = 0
+    @State private var previousPainScore: Int? // TODO: Wire when PainTrackingService is available
+    @State private var hasActiveAlerts = false // TODO: Wire when PainTrackingService is available
+    @State private var alertCount = 0 // TODO: Wire when PainTrackingService is available
     @State private var deloadUrgency: DeloadUrgency?
     @State private var showPainDiagram = false
     @State private var showRehabDashboard = false
     @State private var showSafetyInfo = false
-    @State private var isLoading = false
 
     func body(content: Content) -> some View {
         if modeService.currentMode == .rehab {
@@ -46,7 +45,7 @@ struct RehabModeContentModifier: ViewModifier {
                 .sheet(isPresented: $showSafetyInfo) {
                     safetyInfoSheet
                 }
-                .task {
+                .task(id: patientId) {
                     await loadRehabData()
                 }
         } else {
@@ -108,6 +107,7 @@ struct RehabModeContentModifier: ViewModifier {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         HapticFeedback.light()
+                        painLocations = []
                         showPainDiagram = false
                     }
                     .accessibilityHint("Discards pain log and returns to previous screen")
@@ -193,13 +193,11 @@ struct RehabModeContentModifier: ViewModifier {
     private func loadRehabData() async {
         guard let patientId = patientId else { return }
 
-        isLoading = true
-        defer { isLoading = false }
-
         // Load deload status
         do {
             let service = DeloadRecommendationService.shared
-            let recommendation = try await service.getRecommendation(for: patientId)
+            try await service.fetchRecommendation(patientId: patientId)
+            let recommendation = service.recommendation
             deloadUrgency = recommendation?.urgency
         } catch {
             DebugLogger.shared.log("Failed to load deload status: \(error)", level: .warning)
@@ -210,16 +208,13 @@ struct RehabModeContentModifier: ViewModifier {
     }
 
     private func savePainData() async {
-        guard let patientId = patientId else { return }
-
+        // NOTE: Pain data is only stored locally in @State for this session.
+        // No persistence layer exists yet. Full pain tracking is available
+        // through RehabModeDashboardView once PainTrackingService is implemented.
         if !painLocations.isEmpty {
             let totalIntensity = painLocations.reduce(0) { $0 + $1.intensity }
-            todayPainScore = totalIntensity / painLocations.count
+            todayPainScore = Int(round(Double(totalIntensity) / Double(painLocations.count)))
         }
-
-        // Pain data is managed locally in the modifier for quick entry
-        // Full pain tracking is available through RehabModeDashboardView
-        HapticFeedback.success()
     }
 }
 
@@ -277,6 +272,7 @@ struct RehabExerciseWarningBanner: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Dismiss warning")
             }
         }
         .padding()

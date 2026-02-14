@@ -9,7 +9,7 @@
 import SwiftUI
 
 /// Model representing an exercise with its progression suggestion
-struct ExerciseSuggestionItem: Identifiable {
+struct ExerciseSuggestionItem: Identifiable, Equatable {
     let id: UUID
     let exerciseName: String
     let exerciseTemplateId: UUID
@@ -79,7 +79,7 @@ struct ProgressiveOverloadSuggestionsList: View {
 
     private var suggestionsList: some View {
         ScrollView {
-            LazyVStack(spacing: DesignTokens.spacingMedium) {
+            LazyVStack(spacing: Spacing.sm) {
                 // Summary header
                 summaryHeader
 
@@ -103,8 +103,8 @@ struct ProgressiveOverloadSuggestionsList: View {
                     ))
                 }
             }
-            .padding(DesignTokens.spacingLarge)
-            .animation(.easeInOut(duration: DesignTokens.animationDurationNormal), value: filteredSuggestions.count)
+            .padding(Spacing.md)
+            .animation(.easeInOut(duration: AnimationDuration.standard), value: filteredSuggestions.count)
         }
         .refreshable {
             if let refresh = onRefresh {
@@ -116,7 +116,7 @@ struct ProgressiveOverloadSuggestionsList: View {
     // MARK: - Summary Header
 
     private var summaryHeader: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack {
                 Image(systemName: "brain.head.profile")
                     .font(.title2)
@@ -136,7 +136,7 @@ struct ProgressiveOverloadSuggestionsList: View {
             }
 
             // Quick stats
-            HStack(spacing: DesignTokens.spacingLarge) {
+            HStack(spacing: Spacing.md) {
                 statBadge(
                     count: suggestions.filter { $0.suggestion.progressionType == .increase }.count,
                     label: "Increase",
@@ -155,15 +155,15 @@ struct ProgressiveOverloadSuggestionsList: View {
                     color: .orange
                 )
             }
-            .padding(.top, DesignTokens.spacingXSmall)
+            .padding(.top, Spacing.xxs)
         }
-        .padding(DesignTokens.spacingMedium)
+        .padding(Spacing.sm)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func statBadge(count: Int, label: String, color: Color) -> some View {
-        HStack(spacing: DesignTokens.spacingXSmall) {
+        HStack(spacing: Spacing.xxs) {
             Text("\(count)")
                 .font(.headline)
                 .foregroundColor(color)
@@ -180,7 +180,7 @@ struct ProgressiveOverloadSuggestionsList: View {
 
     private var progressionTypeFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignTokens.spacingSmall) {
+            HStack(spacing: Spacing.xs) {
                 filterChip(type: nil, label: "All")
                 filterChip(type: .increase, label: "Increase")
                 filterChip(type: .hold, label: "Hold")
@@ -196,11 +196,11 @@ struct ProgressiveOverloadSuggestionsList: View {
 
         return Button(action: {
             HapticFeedback.light()
-            withAnimation(.easeInOut(duration: DesignTokens.animationDurationFast)) {
+            withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
                 selectedFilter = isSelected ? nil : type
             }
         }) {
-            HStack(spacing: DesignTokens.spacingXSmall) {
+            HStack(spacing: Spacing.xxs) {
                 if let progressionType = type {
                     Image(systemName: progressionType.icon)
                         .font(.system(size: 12))
@@ -211,10 +211,10 @@ struct ProgressiveOverloadSuggestionsList: View {
                     .fontWeight(isSelected ? .semibold : .regular)
             }
             .foregroundColor(isSelected ? .white : chipColor)
-            .padding(.horizontal, DesignTokens.spacingMedium)
-            .padding(.vertical, DesignTokens.spacingSmall)
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
             .background(isSelected ? chipColor : chipColor.opacity(0.15))
-            .cornerRadius(DesignTokens.cornerRadiusSmall + 8)
+            .cornerRadius(CornerRadius.sm + 8)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Filter by \(label)")
@@ -231,14 +231,14 @@ struct ProgressiveOverloadSuggestionsList: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: DesignTokens.spacingLarge) {
+        VStack(spacing: Spacing.md) {
             Spacer()
 
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            VStack(spacing: DesignTokens.spacingSmall) {
+            VStack(spacing: Spacing.xs) {
                 Text("No Suggestions Yet")
                     .font(.headline)
                     .foregroundColor(.primary)
@@ -247,7 +247,7 @@ struct ProgressiveOverloadSuggestionsList: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, DesignTokens.spacingXLarge)
+                    .padding(.horizontal, Spacing.lg)
             }
 
             Spacer()
@@ -258,9 +258,9 @@ struct ProgressiveOverloadSuggestionsList: View {
     // MARK: - Detail Sheet
 
     private func suggestionDetailSheet(for item: ExerciseSuggestionItem) -> some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(spacing: DesignTokens.spacingLarge) {
+                VStack(spacing: Spacing.md) {
                     ProgressiveOverloadCard(
                         exerciseName: item.exerciseName,
                         currentWeight: item.currentWeight,
@@ -275,7 +275,7 @@ struct ProgressiveOverloadSuggestionsList: View {
                         } : nil
                     )
                 }
-                .padding(DesignTokens.spacingLarge)
+                .padding(Spacing.md)
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Suggestion Details")
@@ -298,60 +298,23 @@ struct ProgressiveOverloadSuggestionsListLoading: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: DesignTokens.spacingMedium) {
+            VStack(spacing: Spacing.sm) {
                 // Header skeleton
-                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemBackground))
                     .frame(height: 100)
-                    .shimmer()
+                    .shimmer(isAnimating: true)
 
                 // Card skeletons
                 ForEach(0..<3, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .fill(Color(.secondarySystemBackground))
                         .frame(height: 72)
-                        .shimmer()
+                        .shimmer(isAnimating: true)
                 }
             }
-            .padding(DesignTokens.spacingLarge)
+            .padding(Spacing.md)
         }
-    }
-}
-
-// MARK: - Shimmer Effect
-
-private struct ShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = 0
-
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            Color.white.opacity(0.3),
-                            .clear
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 2)
-                    .offset(x: -geometry.size.width + phase * geometry.size.width * 2)
-                    .onAppear {
-                        withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
-                            phase = 1
-                        }
-                    }
-                }
-            )
-            .mask(content)
-    }
-}
-
-private extension View {
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
     }
 }
 
@@ -383,40 +346,26 @@ class ProgressiveOverloadSuggestionsViewModel: ObservableObject {
     /// - Parameter exercises: Array of tuples containing exercise info (name, templateId, currentWeight)
     func loadSuggestions(for exercises: [(name: String, templateId: UUID, currentWeight: Double)]) async {
         isLoading = true
+        defer { isLoading = false }
         error = nil
         suggestions = []
 
-        var loadedSuggestions: [ExerciseSuggestionItem] = []
-
-        for exercise in exercises {
-            do {
-                // Fetch exercise history
-                let history = try await service.getExerciseHistory(
-                    exerciseTemplateId: exercise.templateId,
-                    days: 30
-                )
-
-                guard !history.isEmpty else { continue }
-
-                // Get suggestion
-                let suggestion = try await service.getProgressionSuggestion(
-                    exerciseTemplateId: exercise.templateId,
-                    recentPerformance: history
-                )
-
-                let item = ExerciseSuggestionItem(
-                    exerciseName: exercise.name,
-                    exerciseTemplateId: exercise.templateId,
-                    currentWeight: exercise.currentWeight,
-                    suggestion: suggestion
-                )
-
-                loadedSuggestions.append(item)
-
-            } catch {
-                // Continue with other exercises if one fails
-                DebugLogger.shared.warning("PROGRESSION_LIST", "Failed to load suggestion for \(exercise.name): \(error)")
+        // Use TaskGroup to fetch all exercises in parallel instead of sequentially.
+        // The nonisolated static helper ensures tasks run off the main actor.
+        let loadedSuggestions = await withTaskGroup(of: ExerciseSuggestionItem?.self, returning: [ExerciseSuggestionItem].self) { group in
+            for exercise in exercises {
+                group.addTask {
+                    await Self.fetchSuggestion(service: self.service, exercise: exercise)
+                }
             }
+
+            var results: [ExerciseSuggestionItem] = []
+            for await result in group {
+                if let item = result {
+                    results.append(item)
+                }
+            }
+            return results
         }
 
         suggestions = loadedSuggestions.sorted { first, second in
@@ -424,8 +373,37 @@ class ProgressiveOverloadSuggestionsViewModel: ObservableObject {
             let priority: [ProgressionType: Int] = [.increase: 0, .hold: 1, .decrease: 2, .deload: 3]
             return (priority[first.suggestion.progressionType] ?? 4) < (priority[second.suggestion.progressionType] ?? 4)
         }
+    }
 
-        isLoading = false
+    // MARK: - Private Helpers
+
+    /// Fetch a single exercise's suggestion off the main actor.
+    ///
+    /// This is `nonisolated static` so that `TaskGroup.addTask` closures
+    /// do not inherit `@MainActor` isolation, allowing true parallel execution.
+    private nonisolated static func fetchSuggestion(
+        service: ProgressiveOverloadAIService,
+        exercise: (name: String, templateId: UUID, currentWeight: Double)
+    ) async -> ExerciseSuggestionItem? {
+        do {
+            let history = try await service.getExerciseHistory(
+                exerciseTemplateId: exercise.templateId,
+                days: 30
+            )
+            guard !history.isEmpty else { return nil }
+            let suggestion = try await service.getProgressionSuggestion(
+                exerciseTemplateId: exercise.templateId,
+                recentPerformance: history
+            )
+            return ExerciseSuggestionItem(
+                exerciseName: exercise.name,
+                exerciseTemplateId: exercise.templateId,
+                currentWeight: exercise.currentWeight,
+                suggestion: suggestion
+            )
+        } catch {
+            return nil
+        }
     }
 
     /// Apply a suggestion by accepting it in the service
@@ -543,7 +521,7 @@ struct ProgressiveOverloadSuggestionsList_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             // With suggestions
-            NavigationView {
+            NavigationStack {
                 ProgressiveOverloadSuggestionsList(
                     suggestions: sampleSuggestions,
                     onApplySuggestion: { _ in },
@@ -554,7 +532,7 @@ struct ProgressiveOverloadSuggestionsList_Previews: PreviewProvider {
             }
 
             // Empty state
-            NavigationView {
+            NavigationStack {
                 ProgressiveOverloadSuggestionsList(
                     suggestions: [],
                     onApplySuggestion: { _ in }
@@ -563,7 +541,7 @@ struct ProgressiveOverloadSuggestionsList_Previews: PreviewProvider {
             }
 
             // Loading state
-            NavigationView {
+            NavigationStack {
                 ProgressiveOverloadSuggestionsListLoading()
                     .navigationTitle("Progression")
             }

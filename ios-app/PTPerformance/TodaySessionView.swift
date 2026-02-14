@@ -48,6 +48,10 @@ struct TodaySessionView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
+    // Shared service instances to avoid re-instantiating on every call
+    private let readinessServiceInstance = ReadinessService()
+    private let armCareService = ArmCareAssessmentService()
+
     // Exercise state management
     @State private var completedExercises: [UUID: Bool] = [:]
     @State private var expandedExercises: [UUID: Bool] = [:]
@@ -55,8 +59,6 @@ struct TodaySessionView: View {
     // Explicit workout session tracking
     @State private var sessionStartTime: Date?
     @State private var isWorkoutStarted = false
-    @State private var currentTime = Date() // For running clock
-    @State private var timer: Timer?
 
     // Store completed session with correct started_at/completed_at
     @State private var completedSession: Session?
@@ -79,6 +81,11 @@ struct TodaySessionView: View {
 
     var shouldUseSplitView: Bool {
         DeviceHelper.shouldUseSplitView(horizontalSizeClass: horizontalSizeClass)
+    }
+
+    /// Safely convert a patient ID string to UUID, returning nil if invalid
+    private func validPatientUUID(_ patientId: String) -> UUID? {
+        UUID(uuidString: patientId)
     }
 
     var body: some View {
@@ -108,14 +115,14 @@ struct TodaySessionView: View {
                 }
             }
         }) {
-            if let patientId = appState.userId {
-                ReadinessCheckInView(patientId: UUID(uuidString: patientId) ?? UUID())
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
+                ReadinessCheckInView(patientId: uuid)
             }
         }
         .springSheet(isPresented: $showReadinessDashboard) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
-                    ReadinessDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                    ReadinessDashboardView(patientId: uuid)
                 }
             }
         }
@@ -125,8 +132,8 @@ struct TodaySessionView: View {
                 await loadTodayArmCare()
             }
         }) {
-            if let patientId = appState.userId {
-                ArmCareAssessmentView(patientId: UUID(uuidString: patientId) ?? UUID())
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
+                ArmCareAssessmentView(patientId: uuid)
             }
         }
         // Adaptive Training: Modification suggestion sheet
@@ -163,16 +170,16 @@ struct TodaySessionView: View {
         }
         // Recovery Intelligence sheets
         .springSheet(isPresented: $showRecoveryProtocol) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
-                    RecoveryProtocolView(patientId: UUID(uuidString: patientId) ?? UUID())
+                    RecoveryProtocolView(patientId: uuid)
                 }
             }
         }
         .springSheet(isPresented: $showReadinessInsights) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
-                    ReadinessInsightsView(patientId: UUID(uuidString: patientId) ?? UUID())
+                    ReadinessInsightsView(patientId: uuid)
                 }
             }
         }
@@ -191,9 +198,9 @@ struct TodaySessionView: View {
             }
         }
         .springSheet(isPresented: $showStrengthDashboard) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
-                    StrengthModeDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                    StrengthModeDashboardView(patientId: uuid)
                         .environmentObject(appState)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {
@@ -206,9 +213,9 @@ struct TodaySessionView: View {
             }
         }
         .springSheet(isPresented: $showPerformanceDashboard) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
-                    PerformanceModeDashboardView(patientId: UUID(uuidString: patientId) ?? UUID())
+                    PerformanceModeDashboardView(patientId: uuid)
                         .environmentObject(appState)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {
@@ -222,10 +229,10 @@ struct TodaySessionView: View {
         }
         // Manual Workout Sheets
         .springSheet(isPresented: $showTemplateLibrary) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
                     WorkoutTemplateLibraryView(
-                        patientId: UUID(uuidString: patientId) ?? UUID(),
+                        patientId: uuid,
                         onStartWorkout: { template in
                             // Store template and trigger session creation
                             selectedWorkoutTemplate = template
@@ -239,10 +246,10 @@ struct TodaySessionView: View {
             }
         }
         .springSheet(isPresented: $showWorkoutCreator) {
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 NavigationStack {
                     ManualWorkoutCreatorView(
-                        patientId: UUID(uuidString: patientId) ?? UUID()
+                        patientId: uuid
                     )
                 }
             }
@@ -260,10 +267,10 @@ struct TodaySessionView: View {
         }
         // Use item: pattern to avoid SwiftUI state race condition
         .fullScreenCover(item: $createdManualSession) { (session: ManualSession) in
-            if let patientId = appState.userId {
+            if let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 ManualWorkoutExecutionView(
                     session: session,
-                    patientId: UUID(uuidString: patientId) ?? UUID(),
+                    patientId: uuid,
                     onComplete: {
                         // If this was a prescribed workout, mark the prescription as completed
                         if let prescription = selectedPrescription {
@@ -290,16 +297,14 @@ struct TodaySessionView: View {
         }
         // Unified workout execution for prescribed sessions
         .fullScreenCover(isPresented: $showUnifiedWorkoutExecution) {
-            if let session = viewModel.session, let patientId = appState.userId {
+            if let session = viewModel.session, let patientId = appState.userId, let uuid = validPatientUUID(patientId) {
                 ManualWorkoutExecutionView(
                     prescribedSession: session,
                     exercises: viewModel.exercises,
-                    patientId: UUID(uuidString: patientId) ?? UUID(),
+                    patientId: uuid,
                     onComplete: {
                         showUnifiedWorkoutExecution = false
                         isWorkoutStarted = false
-                        timer?.invalidate()
-                        timer = nil
                         // Refresh completed workouts and fetch next session in parallel
                         Task {
                             async let completedTask: () = viewModel.fetchTodaysCompletedWorkouts()
@@ -314,26 +319,32 @@ struct TodaySessionView: View {
         .task {
             // Configure adaptive workout VM with patient ID
             if let userId = appState.userId,
-               let patientId = UUID(uuidString: userId) {
+               let patientId = validPatientUUID(userId) {
                 adaptiveWorkoutVM.configure(patientId: patientId)
-                // ACP-MODE: Load mode-specific status data
-                await modeStatusVM.loadData(for: patientId)
             }
 
-            // Only fetch on initial load; onComplete callbacks handle refresh after workouts
-            if viewModel.session == nil && !viewModel.isLoading {
-                await viewModel.fetchTodaySession()
-            }
-            await loadTodayReadiness()
-            await loadTodayArmCare()  // ACP-522: Load arm care assessment
-            // Load enrolled programs for the My Programs section
-            await enrolledProgramsViewModel.loadEnrolledPrograms()
-            // Load pending prescriptions from therapist
-            await loadPendingPrescriptions()
-            // Recovery Intelligence: Load workout adaptation based on readiness
-            await loadWorkoutAdaptation()
-            // Adaptive Training: Load any pending workout modifications
-            await adaptiveWorkoutVM.loadPendingModifications()
+            // Parallelize all independent data loads
+            // Capture main-actor state before parallel dispatch
+            let shouldLoadMode = appState.userId.flatMap { validPatientUUID($0) }
+            let shouldFetchSession = viewModel.session == nil && !viewModel.isLoading
+
+            async let a: () = {
+                if let patientId = shouldLoadMode {
+                    await modeStatusVM.loadData(for: patientId)
+                }
+            }()
+            async let b: () = {
+                if shouldFetchSession {
+                    await viewModel.fetchTodaySession()
+                }
+            }()
+            async let c: () = loadTodayReadiness()
+            async let d: () = loadTodayArmCare()
+            async let e: () = enrolledProgramsViewModel.loadEnrolledPrograms()
+            async let f: () = loadPendingPrescriptions()
+            async let g: () = loadWorkoutAdaptation()
+            async let h: () = adaptiveWorkoutVM.loadPendingModifications()
+            _ = await (a, b, c, d, e, f, g, h)
 
             // If readiness exists but no pending modification, check if one should be generated
             if todayReadiness != nil && !adaptiveWorkoutVM.hasTodayModification {
@@ -341,9 +352,7 @@ struct TodaySessionView: View {
             }
         }
         .onDisappear {
-            // Stop timer when view disappears
-            timer?.invalidate()
-            timer = nil
+            // Cleanup when view disappears
         }
         // Adaptive Training: Sync VM's showModificationSheet with local state
         .onChange(of: adaptiveWorkoutVM.showModificationSheet) { _, newValue in
@@ -629,143 +638,23 @@ struct TodaySessionView: View {
         }
     }
 
-    // MARK: - ACP-MODE: Mode Status Card
+    // MARK: - ACP-MODE: Mode Status Card (extracted to TodayModeStatusCard.swift)
 
-    /// Mode-specific status card that displays relevant metrics and navigates to full dashboard
-    @ViewBuilder
+    /// Convenience wrapper that wires up the extracted `TodayModeStatusCard`
+    /// with this view's state and action bindings.
     private var modeStatusCard: some View {
-        switch modeService.currentMode {
-        case .rehab:
-            RehabModeStatusCard(
-                todayPainScore: modeStatusVM.todayPainScore,
-                previousPainScore: modeStatusVM.previousPainScore,
-                activePainRegions: modeStatusVM.activePainRegions,
-                hasActiveAlerts: modeStatusVM.hasActiveAlerts,
-                alertCount: modeStatusVM.alertCount,
-                deloadUrgency: modeStatusVM.deloadUrgency,
-                onLogPain: {
-                    HapticFeedback.light()
-                    showRehabDashboard = true
-                },
-                onViewAlerts: {
-                    HapticFeedback.light()
-                    showRehabDashboard = true
-                },
-                onViewDashboard: {
-                    HapticFeedback.light()
-                    showRehabDashboard = true
-                }
-            )
-
-        case .strength:
-            if let patientId = appState.userId {
-                StrengthModeStatusCard(
-                    estimatedTotal: modeStatusVM.estimatedTotal,
-                    topLifts: modeStatusVM.topLifts,
-                    recentPRs: modeStatusVM.recentPRs,
-                    volumeTrend: modeStatusVM.volumeTrend,
-                    currentStreak: modeStatusVM.strengthStreak,
-                    unit: "lbs",
-                    onTapCard: {
-                        HapticFeedback.light()
-                        showStrengthDashboard = true
-                    },
-                    onViewPRs: {
-                        HapticFeedback.light()
-                        showStrengthDashboard = true
-                    }
-                )
-            }
-
-        case .performance:
-            if let patientId = appState.userId {
-                PerformanceModeStatusCard(
-                    patientId: patientId,
-                    statusData: modeStatusVM.performanceStatusData,
-                    onTapCard: {
-                        HapticFeedback.light()
-                        showPerformanceDashboard = true
-                    },
-                    onCheckIn: {
-                        HapticFeedback.light()
-                        showReadinessCheckIn = true
-                    }
-                )
-            }
-        }
-    }
-
-    // MARK: - Start Workout Section with Running Clock
-
-    @ViewBuilder
-    private var startWorkoutSection: some View {
-        VStack(spacing: 16) {
-            if !isWorkoutStarted {
-                // Start Workout Button
-                Button(action: startWorkout) {
-                    HStack {
-                        Image(systemName: "play.circle.fill")
-                            .font(.title2)
-                        Text("Start Workout")
-                            .font(.headline)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(DesignTokens.cornerRadiusMedium)
-                }
-            } else {
-                // Running Clock
-                VStack(spacing: 8) {
-                    HStack(spacing: 12) {
-                        // Pulsing indicator
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 12, height: 12)
-                            .opacity(currentTime.timeIntervalSince1970.truncatingRemainder(dividingBy: 1.0) < 0.5 ? 1.0 : 0.3)
-
-                        Text("Workout in Progress")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        Spacer()
-                    }
-
-                    HStack {
-                        Image(systemName: "timer")
-                            .font(.title)
-                            .foregroundColor(.green)
-
-                        Text(elapsedTimeFormatted)
-                            .font(.system(size: 36, weight: .bold, design: .monospaced))
-                            .foregroundColor(.green)
-
-                        Spacer()
-                    }
-                }
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
-                        .stroke(Color.green.opacity(0.3), lineWidth: 2)
-                )
-            }
-        }
-        .padding(.horizontal)
+        TodayModeStatusCard(
+            currentMode: modeService.currentMode,
+            modeStatusVM: modeStatusVM,
+            hasUserId: appState.userId != nil,
+            onShowRehabDashboard: { showRehabDashboard = true },
+            onShowStrengthDashboard: { showStrengthDashboard = true },
+            onShowPerformanceDashboard: { showPerformanceDashboard = true },
+            onShowReadinessCheckIn: { showReadinessCheckIn = true }
+        )
     }
 
     // MARK: - Workout Timing Helpers
-
-    private var elapsedTimeFormatted: String {
-        guard let startTime = sessionStartTime else { return "00:00:00" }
-        let elapsed = currentTime.timeIntervalSince(startTime)
-        let hours = Int(elapsed) / 3600
-        let minutes = (Int(elapsed) % 3600) / 60
-        let seconds = Int(elapsed) % 60
-        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
-    }
 
     private func startWorkout() {
         // Haptic feedback for starting workout
@@ -773,30 +662,6 @@ struct TodaySessionView: View {
         // Launch unified workout execution view
         showUnifiedWorkoutExecution = true
         DebugLogger.shared.log("Launching unified workout execution view")
-    }
-
-    @ViewBuilder
-    private func sessionHeaderView(_ session: Session) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(session.dateDisplay)
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text(session.name)
-                .font(.title)
-                .bold()
-
-            HStack {
-                Image(systemName: "circle")
-                Text(session.completionStatus)
-            }
-            .font(.subheadline)
-            .foregroundColor(.blue)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
     }
 
     @ViewBuilder
@@ -924,12 +789,11 @@ struct TodaySessionView: View {
         defer { isLoadingReadiness = false }
 
         do {
-            let readinessService = ReadinessService()
-            todayReadiness = try await readinessService.fetchTodayReadiness(for: patientId)
-            DebugLogger.shared.log("✅ Loaded today's readiness: \(todayReadiness != nil ? "YES" : "NO")")
+            todayReadiness = try await readinessServiceInstance.fetchTodayReadiness(for: patientId)
+            DebugLogger.shared.log("[READINESS] Loaded today's readiness: \(todayReadiness != nil ? "YES" : "NO")")
         } catch {
             // Silently fail - just means no check-in today
-            DebugLogger.shared.log("ℹ️ No readiness check-in for today: \(error.localizedDescription)")
+            DebugLogger.shared.log("[READINESS] No readiness check-in for today: \(error.localizedDescription)")
             todayReadiness = nil
         }
     }
@@ -946,7 +810,6 @@ struct TodaySessionView: View {
         defer { isLoadingArmCare = false }
 
         do {
-            let armCareService = ArmCareAssessmentService()
             todayArmCare = try await armCareService.getTodayAssessment(for: patientId)
             DebugLogger.shared.log("Loaded today's arm care: \(todayArmCare != nil ? "YES" : "NO")")
         } catch {
@@ -1256,7 +1119,7 @@ struct TodaySessionView: View {
 
     private func createManualSessionFromTemplate(_ template: AnyWorkoutTemplate, patientId: String) async {
         guard let patientUUID = UUID(uuidString: patientId) else {
-            DebugLogger.shared.log("❌ Invalid patient ID for manual workout", level: .error)
+            DebugLogger.shared.log("[TEMPLATE] Invalid patient ID for manual workout", level: .error)
             return
         }
 
@@ -1266,7 +1129,7 @@ struct TodaySessionView: View {
         let service = ManualWorkoutService()
 
         do {
-            DebugLogger.shared.log("📝 Creating manual session from template: \(template.name)", level: .diagnostic)
+            DebugLogger.shared.log("[TEMPLATE] Creating manual session from template: \(template.name)", level: .diagnostic)
 
             // 1. Create the manual session (chosen = self-selected from library)
             let session = try await service.createManualSession(
@@ -1277,7 +1140,7 @@ struct TodaySessionView: View {
                 sessionSource: .chosen
             )
 
-            DebugLogger.shared.log("✅ Manual session created: \(session.id)", level: .success)
+            DebugLogger.shared.log("[SESSION] Manual session created: \(session.id)", level: .success)
 
             // 2. Add exercises from the template
             // Note: Pass nil for exerciseTemplateId - imported templates don't have valid FK references
@@ -1302,20 +1165,20 @@ struct TodaySessionView: View {
                 }
             }
 
-            DebugLogger.shared.log("✅ Added \(sequence) exercises to session", level: .success)
+            DebugLogger.shared.log("[TEMPLATE] Added \(sequence) exercises to session", level: .success)
 
             // 3. Start the workout
             let startedSession = try await service.startWorkout(session.id)
 
             // 4. Store the session - fullScreenCover(item:) will present automatically
-            DebugLogger.shared.log("🎯 Setting createdManualSession to trigger fullScreenCover: \(startedSession.id)", level: .success)
+            DebugLogger.shared.log("[SESSION] Setting createdManualSession to trigger fullScreenCover: \(startedSession.id)", level: .success)
             await MainActor.run {
                 createdManualSession = startedSession
-                DebugLogger.shared.log("🎯 createdManualSession set, fullScreenCover should present", level: .diagnostic)
+                DebugLogger.shared.log("[SESSION] createdManualSession set, fullScreenCover should present", level: .diagnostic)
             }
 
         } catch {
-            DebugLogger.shared.log("❌ Failed to create manual session: \(error)", level: .error)
+            DebugLogger.shared.log("[SESSION] Failed to create manual session: \(error)", level: .error)
             // Ensure session is nil so fullScreenCover doesn't present
             await MainActor.run {
                 createdManualSession = nil

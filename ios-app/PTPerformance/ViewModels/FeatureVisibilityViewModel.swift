@@ -8,7 +8,14 @@
 import Combine
 import SwiftUI
 
-/// Manages which features are visible based on patient mode
+/// Manages which features are visible based on patient mode.
+///
+/// Architecture note: This ViewModel provides an `@EnvironmentObject`-compatible wrapper
+/// around `ModeService.shared` for views that need reactive feature-visibility state
+/// (e.g. published `visibleFeatures` set). The companion `visibleIf(_:)` View extension
+/// is a lightweight convenience that reads the same `ModeService.shared` source of truth
+/// directly, avoiding the need to inject an environment object for simple show/hide logic.
+/// Both paths resolve to the same underlying data; they are complementary, not redundant.
 @MainActor
 class FeatureVisibilityViewModel: ObservableObject {
     @Published var visibleFeatures: Set<String> = []
@@ -33,10 +40,6 @@ class FeatureVisibilityViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
-    deinit {
-        cancellables.removeAll()
-    }
-
     /// Update visible features based on current mode
     private func updateVisibleFeatures() {
         visibleFeatures = Set(modeService.modeFeatures.map { $0.featureKey })
@@ -49,90 +52,6 @@ class FeatureVisibilityViewModel: ObservableObject {
         return visibleFeatures.contains(featureKey.rawValue)
     }
 
-    /// Check if a feature is visible (string-based for dynamic checks)
-    func isVisible(_ featureKey: String) -> Bool {
-        return visibleFeatures.contains(featureKey)
-    }
-
-    /// Get tab bar items for current mode
-    func tabBarItems() -> [TabBarItem] {
-        switch currentMode {
-        case .rehab:
-            return [
-                TabBarItem(title: "Today", icon: "calendar", featureKey: nil),
-                TabBarItem(title: "History", icon: "clock.arrow.circlepath", featureKey: nil),
-                TabBarItem(title: "PT Chat", icon: "message.fill", featureKey: .ptMessaging),
-                TabBarItem(title: "Help", icon: "questionmark.circle", featureKey: nil)
-            ]
-
-        case .strength:
-            return [
-                TabBarItem(title: "Today", icon: "calendar", featureKey: nil),
-                TabBarItem(title: "PRs", icon: "trophy.fill", featureKey: .prTracking),
-                TabBarItem(title: "History", icon: "chart.bar.fill", featureKey: .volumeTrends),
-                TabBarItem(title: "Programs", icon: "list.bullet", featureKey: nil),
-                TabBarItem(title: "Help", icon: "questionmark.circle", featureKey: nil)
-            ]
-
-        case .performance:
-            return [
-                TabBarItem(title: "Readiness", icon: "bolt.heart.fill", featureKey: .readinessScore),
-                TabBarItem(title: "Today", icon: "calendar", featureKey: nil),
-                TabBarItem(title: "Team", icon: "person.3.fill", featureKey: .teamManagement),
-                TabBarItem(title: "Analytics", icon: "chart.xyaxis.line", featureKey: .advancedAnalytics),
-                TabBarItem(title: "Programs", icon: "list.bullet", featureKey: nil)
-            ]
-        }
-    }
-
-    /// Get sections visible in History view for current mode
-    func historyViewSections() -> [HistorySection] {
-        var sections: [HistorySection] = [
-            HistorySection(title: "Recent Sessions", icon: "clock", featureKey: nil)
-        ]
-
-        if isVisible(.painTracking) {
-            sections.append(HistorySection(title: "Pain Trend", icon: "heart.text.square", featureKey: .painTracking))
-        }
-
-        if isVisible(.volumeTrends) {
-            sections.append(HistorySection(title: "Volume Trends", icon: "chart.bar", featureKey: .volumeTrends))
-        }
-
-        if isVisible(.prTracking) {
-            sections.append(HistorySection(title: "Personal Records", icon: "trophy", featureKey: .prTracking))
-        }
-
-        if isVisible(.readinessScore) {
-            sections.append(HistorySection(title: "Readiness History", icon: "bolt.heart", featureKey: .readinessScore))
-        }
-
-        return sections
-    }
-}
-
-/// Tab bar item definition
-@MainActor
-struct TabBarItem: Identifiable {
-    let title: String
-    let icon: String
-    let featureKey: FeatureKey?  // nil = always visible
-
-    var id: String { "\(title)-\(icon)" }
-
-    var isVisible: Bool {
-        guard let featureKey = featureKey else { return true }
-        return ModeService.shared.isFeatureEnabled(featureKey)
-    }
-}
-
-/// History section definition
-struct HistorySection: Identifiable {
-    let title: String
-    let icon: String
-    let featureKey: FeatureKey?  // nil = always visible
-
-    var id: String { "\(title)-\(icon)" }
 }
 
 /// SwiftUI View extension for conditional feature visibility

@@ -25,6 +25,17 @@ struct ModeFeature: Codable, Identifiable, Hashable, Equatable {
         case enabled
     }
 
+    // MARK: - Memberwise Init (for fallback defaults)
+
+    init(id: String = UUID().uuidString, mode: Mode, featureKey: String, featureName: String, featureDescription: String? = nil, enabled: Bool = true) {
+        self.id = id
+        self.mode = mode
+        self.featureKey = featureKey
+        self.featureName = featureName
+        self.featureDescription = featureDescription
+        self.enabled = enabled
+    }
+
     // MARK: - Safe Decoding
 
     init(from decoder: Decoder) throws {

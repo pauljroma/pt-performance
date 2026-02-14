@@ -14,7 +14,6 @@ import SwiftUI
 struct RehabModeDashboardView: View {
     // MARK: - Environment
 
-    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - State
@@ -22,7 +21,6 @@ struct RehabModeDashboardView: View {
     @StateObject private var viewModel = RehabModeDashboardViewModel()
     @State private var showPainLogger = false
     @State private var showDeloadDetails = false
-    @State private var selectedTimeRange: TimeRange = .week
 
     // MARK: - Body
 
@@ -117,14 +115,6 @@ struct RehabModeDashboardView: View {
                     .cornerRadius(CornerRadius.md)
                 }
             }
-
-            // Time range picker
-            Picker("Time Range", selection: $selectedTimeRange) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Text(range.displayName).tag(range)
-                }
-            }
-            .pickerStyle(.segmented)
         }
     }
 
@@ -251,6 +241,9 @@ struct RehabModeDashboardView: View {
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Pain overview")
+            .accessibilityValue("Today: \(viewModel.todayPainScore.map { "\($0) out of 10" } ?? "not recorded"). Weekly average: \(viewModel.weeklyAveragePain.map { String(format: "%.1f out of 10", $0) } ?? "not available"). Trend: \(viewModel.painTrendLabel)")
         }
     }
 
@@ -318,11 +311,11 @@ struct RehabModeDashboardView: View {
                 .font(.largeTitle)
                 .foregroundColor(.secondary)
 
-            Text("No pain history yet")
+            Text("Log your first pain entry to see trends")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            Text("Log your pain levels to track progress over time")
+            Text("Pain tracking helps monitor recovery progress over time")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -345,7 +338,7 @@ struct RehabModeDashboardView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Simple bar chart representation
             HStack(alignment: .bottom, spacing: 4) {
-                ForEach(viewModel.painHistory.suffix(7), id: \.date) { entry in
+                ForEach(Array(viewModel.painHistory.suffix(7))) { entry in
                     VStack(spacing: 4) {
                         Rectangle()
                             .fill(painScoreColor(entry.score))
@@ -406,6 +399,9 @@ struct RehabModeDashboardView: View {
         .padding(Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(location.region.shortName) pain")
+        .accessibilityValue("\(location.intensity) out of 10")
     }
 
     // MARK: - Recovery Tips Section
@@ -420,8 +416,15 @@ struct RehabModeDashboardView: View {
                     .foregroundColor(.modusDeepTeal)
             }
 
+            if !viewModel.isDeloadContextual {
+                Text("General wellness tips")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+
             VStack(spacing: Spacing.xs) {
-                ForEach(viewModel.recoveryTips, id: \.self) { tip in
+                ForEach(Array(viewModel.recoveryTips.enumerated()), id: \.offset) { index, tip in
                     HStack(alignment: .top, spacing: Spacing.sm) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption)
@@ -441,171 +444,13 @@ struct RehabModeDashboardView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func painScoreColor(_ score: Int) -> Color {
-        switch score {
-        case 0...3: return .green
-        case 4...6: return .yellow
-        case 7...8: return .orange
-        default: return .red
-        }
-    }
-}
-
-// MARK: - Time Range Enum
-
-private enum TimeRange: String, CaseIterable {
-    case week = "week"
-    case month = "month"
-    case threeMonths = "3months"
-
-    var displayName: String {
-        switch self {
-        case .week: return "Week"
-        case .month: return "Month"
-        case .threeMonths: return "3 Months"
-        }
-    }
-}
-
-// MARK: - Rehab Mode Dashboard ViewModel
-
-@MainActor
-class RehabModeDashboardViewModel: ObservableObject {
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-
-    @Published var todayPainScore: Int?
-    @Published var weeklyAveragePain: Double?
-    @Published var painHistory: [PainHistoryEntry] = []
-    @Published var activePainRegions: [PainLocation] = []
-    @Published var deloadRecommendation: DeloadRecommendation?
-    @Published var recoveryTips: [String] = []
-
-    private let supabase = PTSupabaseClient.shared
-    private let deloadService = DeloadRecommendationService.shared
-
-    var painTrendIcon: String {
-        guard let today = todayPainScore, let avg = weeklyAveragePain else {
-            return "minus"
-        }
-        if Double(today) < avg {
-            return "arrow.down.right"
-        } else if Double(today) > avg {
-            return "arrow.up.right"
-        }
-        return "minus"
-    }
-
-    var painTrendColor: Color {
-        guard let today = todayPainScore, let avg = weeklyAveragePain else {
-            return .secondary
-        }
-        if Double(today) < avg {
-            return .green
-        } else if Double(today) > avg {
-            return .red
-        }
-        return .secondary
-    }
-
-    var painTrendLabel: String {
-        guard let today = todayPainScore, let avg = weeklyAveragePain else {
-            return "N/A"
-        }
-        if Double(today) < avg {
-            return "Improving"
-        } else if Double(today) > avg {
-            return "Worsening"
-        }
-        return "Stable"
-    }
-
-    func loadData() async {
-        guard !isLoading else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        guard let patientIdString = supabase.userId,
-              let patientId = UUID(uuidString: patientIdString) else {
-            errorMessage = "Please sign in to view your rehab dashboard."
-            return
-        }
-
-        // Load deload recommendation
-        do {
-            try await deloadService.fetchRecommendation(patientId: patientId)
-            deloadRecommendation = deloadService.recommendation
-        } catch {
-            DebugLogger.shared.log("[RehabDashboardVM] Failed to load deload: \(error)", level: .warning)
-        }
-
-        // Load sample data (would be fetched from services in production)
-        loadSampleData()
-    }
-
-    func refresh() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        guard let patientIdString = supabase.userId,
-              let patientId = UUID(uuidString: patientIdString) else {
-            return
-        }
-
-        do {
-            try await deloadService.fetchRecommendation(patientId: patientId)
-            deloadRecommendation = deloadService.recommendation
-        } catch {
-            DebugLogger.shared.log("[RehabDashboardVM] Refresh failed: \(error)", level: .warning)
-        }
-
-        loadSampleData()
-    }
-
-    private func loadSampleData() {
-        // Sample data for demonstration
-        todayPainScore = 4
-        weeklyAveragePain = 5.2
-
-        painHistory = [
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400 * 6), score: 6),
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400 * 5), score: 5),
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400 * 4), score: 6),
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400 * 3), score: 5),
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400 * 2), score: 4),
-            PainHistoryEntry(date: Date().addingTimeInterval(-86400), score: 5),
-            PainHistoryEntry(date: Date(), score: 4)
-        ]
-
-        activePainRegions = [
-            PainLocation(region: .shoulderRight, intensity: 4),
-            PainLocation(region: .kneeLeft, intensity: 3)
-        ]
-
-        recoveryTips = [
-            "Focus on mobility work before training",
-            "Consider ice therapy after sessions",
-            "Ensure adequate sleep for recovery",
-            "Stay hydrated throughout the day"
-        ]
-    }
-}
-
-// MARK: - Pain History Entry
-
-struct PainHistoryEntry: Identifiable {
-    let id = UUID()
-    let date: Date
-    let score: Int
 }
 
 // MARK: - Placeholder Sheets
 
 private struct PainLoggerSheet: View {
     let onComplete: () -> Void
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -635,7 +480,7 @@ private struct PainLoggerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Cancel") {
-                        onComplete()
+                        dismiss()
                     }
                 }
             }
@@ -693,7 +538,6 @@ struct RehabModeDashboardView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             RehabModeDashboardView()
-                .environmentObject(AppState())
         }
     }
 }

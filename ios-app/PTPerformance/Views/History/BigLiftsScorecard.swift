@@ -162,7 +162,7 @@ struct BigLiftsScorecard: View {
                         .foregroundColor(.primary)
                         .monospacedDigit()
 
-                    Text("lbs")
+                    Text(WeightUnit.defaultUnit)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -218,7 +218,7 @@ struct BigLiftsScorecard: View {
         }) {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 HStack {
-                    Text(shortLiftName(lift.exerciseName))
+                    Text(lift.exerciseName.shortLiftName)
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
@@ -328,16 +328,6 @@ struct BigLiftsScorecard: View {
         await viewModel.fetchData(for: uuid)
     }
 
-    private func shortLiftName(_ name: String) -> String {
-        switch name {
-        case "Bench Press": return "Bench"
-        case "Back Squat", "Squat": return "Squat"
-        case "Deadlift": return "Deadlift"
-        case "Overhead Press": return "OHP"
-        case "Barbell Row": return "Row"
-        default: return String(name.prefix(8))
-        }
-    }
 }
 
 // MARK: - All Lifts Sheet

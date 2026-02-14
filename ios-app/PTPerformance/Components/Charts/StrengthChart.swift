@@ -13,13 +13,10 @@ import Charts
 /// Features animated line drawing with reduce motion support
 struct StrengthChart: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let dataPoints: [StrengthDataPoint]
     let exerciseName: String
     var height: CGFloat = 200
     var showImprovement: Bool = true
-
-    @State private var isAnimated = false
 
     private var startingMax: Double {
         dataPoints.first?.estimatedOneRepMax ?? 0
@@ -41,7 +38,7 @@ struct StrengthChart: View {
     private var accessibilitySummary: String {
         guard !dataPoints.isEmpty else { return "No strength data available" }
         let improvementText = improvement >= 0 ? "up" : "down"
-        return "Strength progression chart for \(exerciseName) showing \(dataPoints.count) data points. Current estimated 1RM: \(String(format: "%.1f", currentMax)) pounds, \(improvementText) \(String(format: "%.1f", abs(improvement))) percent from start"
+        return "Strength progression chart for \(exerciseName) showing \(dataPoints.count) data points. Current estimated 1RM: \(String(format: "%.1f", currentMax)) \(WeightUnit.defaultUnit), \(improvementText) \(String(format: "%.1f", abs(improvement))) percent from start"
     }
 
     var body: some View {
@@ -73,7 +70,7 @@ struct StrengthChart: View {
                                 .foregroundColor(improvement >= 0 ? .green : .red)
                         }
 
-                        Text("Est. 1RM: \(String(format: "%.0f", currentMax)) lbs")
+                        Text("Est. 1RM: \(String(format: "%.0f", currentMax)) \(WeightUnit.defaultUnit)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -94,17 +91,6 @@ struct StrengthChart: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Strength Progression Chart")
         .accessibilityValue(accessibilitySummary)
-        .onAppear {
-            if reduceMotion {
-                isAnimated = true
-            } else {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeOut(duration: 0.8)) {
-                        isAnimated = true
-                    }
-                }
-            }
-        }
     }
 
     private var emptyState: some View {

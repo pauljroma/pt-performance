@@ -50,8 +50,9 @@ struct ModeSwitchingPanel: View {
                 .shadow(radius: 2)
         )
         .task {
-            await viewModel.loadPatientMode()
-            await viewModel.loadModeHistory()
+            async let a: () = viewModel.loadPatientMode()
+            async let b: () = viewModel.loadModeHistory()
+            _ = await (a, b)
         }
         .alert("Change Mode", isPresented: $viewModel.showingConfirmation) {
             Button("Cancel", role: .cancel) {

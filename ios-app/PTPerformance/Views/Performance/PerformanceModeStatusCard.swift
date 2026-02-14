@@ -13,7 +13,6 @@ import SwiftUI
 struct PerformanceModeStatusCard: View {
     // MARK: - Properties
 
-    var patientId: String? = nil
     var statusData: PerformanceStatusData = .empty
     var onTapCard: (() -> Void)? = nil
     var onCheckIn: (() -> Void)? = nil
@@ -52,22 +51,11 @@ struct PerformanceModeStatusCard: View {
     }
 
     private var acwrColor: Color {
-        switch acwrStatus {
-        case .undertraining: return .blue
-        case .optimal: return .green
-        case .caution: return .yellow
-        case .danger: return .red
-        case .unknown: return .secondary
-        }
+        acwrStatus.color
     }
 
     private var readinessColor: Color {
-        switch statusData.readinessScore {
-        case 80...100: return .green
-        case 60..<80: return .yellow
-        case 40..<60: return .orange
-        default: return .red
-        }
+        ReadinessColor.color(for: statusData.readinessScore)
     }
 
     // MARK: - Header Section
@@ -236,23 +224,11 @@ struct PerformanceModeStatusCard: View {
     }
 
     private var acwrStatusIcon: String {
-        switch acwrStatus {
-        case .undertraining: return "arrow.up.circle"
-        case .optimal: return "checkmark.circle.fill"
-        case .caution: return "exclamationmark.triangle"
-        case .danger: return "exclamationmark.octagon"
-        case .unknown: return "questionmark.circle"
-        }
+        acwrStatus.icon
     }
 
     private var acwrStatusDescription: String {
-        switch acwrStatus {
-        case .undertraining: return "Consider increasing load"
-        case .optimal: return "Training load balanced"
-        case .caution: return "Monitor fatigue closely"
-        case .danger: return "Reduce training load"
-        case .unknown: return "More data needed"
-        }
+        acwrStatus.recommendation
     }
 
     // MARK: - Training Recommendation Banner
@@ -325,18 +301,14 @@ struct PerformanceModeStatusCard: View {
 
     // MARK: - Helpers
 
-    private func timeAgoText(from date: Date) -> String {
-        let interval = Date().timeIntervalSince(date)
-        let minutes = Int(interval / 60)
-        let hours = minutes / 60
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
 
-        if hours > 0 {
-            return "\(hours)h ago"
-        } else if minutes > 0 {
-            return "\(minutes)m ago"
-        } else {
-            return "Just now"
-        }
+    private func timeAgoText(from date: Date) -> String {
+        Self.relativeFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
