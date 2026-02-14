@@ -933,7 +933,7 @@ final class SupplementService: ObservableObject {
         todaySchedule = schedule.sorted { $0.scheduledTime < $1.scheduledTime }
     }
 
-    private func timeForTimeOfDay(_ timeOfDay: TimeOfDay, on date: Date) -> Date {
+    private func timeForTimeOfDay(_ timeOfDay: SupplementTimeOfDay, on date: Date) -> Date {
         let calendar = Calendar.current
         var components = calendar.dateComponents([.year, .month, .day], from: date)
 
@@ -1044,9 +1044,9 @@ final class SupplementService: ObservableObject {
         }
     }
 
-    private func parseTimingFromString(_ timing: String) -> [TimeOfDay] {
+    private func parseTimingFromString(_ timing: String) -> [SupplementTimeOfDay] {
         let lower = timing.lowercased()
-        var times: [TimeOfDay] = []
+        var times: [SupplementTimeOfDay] = []
 
         if lower.contains("morning") || lower.contains("am") {
             times.append(.morning)

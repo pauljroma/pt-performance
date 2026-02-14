@@ -978,9 +978,11 @@ struct ManualWorkoutExecutionView: View {
                 RestTimerOverlay(
                     timeRemaining: restTimeRemaining,
                     totalTime: restDuration,
-                    onSkip: skipRest
+                    onSkip: skipRest,
+                    onAdjust: adjustRestTime,
+                    exerciseCategory: viewModel.currentExercise?.blockName
                 )
-                .transition(.opacity)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         // BUILD 320: Gesture hints overlay
@@ -1891,6 +1893,12 @@ struct ManualWorkoutExecutionView: View {
         restTimer?.invalidate()
         restTimer = nil
         showRestTimer = false
+    }
+
+    /// Adjust rest time on-the-fly
+    private func adjustRestTime(_ adjustment: TimeInterval) {
+        restTimeRemaining = max(0, restTimeRemaining + adjustment)
+        restDuration = max(restDuration, restTimeRemaining) // Ensure totalTime reflects adjustment
     }
 
     /// Check if there are more exercises to complete

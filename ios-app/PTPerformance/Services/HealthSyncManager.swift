@@ -105,6 +105,33 @@ class HealthSyncManager: ObservableObject {
         }
     }
 
+    /// Schedule background sync with exponential backoff after failures
+    private func scheduleBackgroundSyncWithBackoff(failureCount: Int) {
+        let config = healthKitService.syncConfig
+
+        guard config.backgroundSyncEnabled else {
+            return
+        }
+
+        guard let baseInterval = config.syncFrequency.backgroundInterval else {
+            return
+        }
+
+        // Exponential backoff: 2^failureCount * baseInterval, capped at 24 hours
+        let backoffMultiplier = min(pow(2.0, Double(failureCount)), 24.0)
+        let interval = min(baseInterval * backoffMultiplier, 86400) // Max 24 hours
+
+        let request = BGAppRefreshTaskRequest(identifier: HealthSyncManager.syncTaskIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: interval)
+
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            DebugLogger.shared.info("HealthSyncManager", "Scheduled background sync with backoff: \(interval/3600) hours (attempt \(failureCount + 1))")
+        } catch {
+            DebugLogger.shared.error("HealthSyncManager", "Failed to schedule background sync with backoff: \(error.localizedDescription)")
+        }
+    }
+
     /// Schedule a processing task for heavier sync operations
     func scheduleBackgroundProcessing() {
         let request = BGProcessingTaskRequest(identifier: HealthSyncManager.processingTaskIdentifier)
@@ -122,12 +149,9 @@ class HealthSyncManager: ObservableObject {
 
     // MARK: - Background Task Handlers
 
-    /// Handle background app refresh task
+    /// Handle background app refresh task with exponential backoff retry
     private func handleBackgroundSync(task: BGAppRefreshTask) async {
         DebugLogger.shared.info("HealthSyncManager", "Starting background sync")
-
-        // Schedule next sync first
-        scheduleBackgroundSync()
 
         // Set up expiration handler
         task.expirationHandler = { [weak self] in
@@ -140,8 +164,8 @@ class HealthSyncManager: ObservableObject {
         do {
             isSyncing = true
 
-            // Perform the sync
-            _ = try await healthKitService.syncTodayData()
+            // Perform the sync with retry logic
+            _ = try await performSyncWithRetry(maxRetries: 3)
 
             // Export any pending workouts
             await exportPendingWorkouts()
@@ -149,15 +173,29 @@ class HealthSyncManager: ObservableObject {
             lastBackgroundSync = Date()
             userDefaults.set(Date(), forKey: lastBackgroundSyncKey)
 
+            // Reset failure count on success
+            userDefaults.set(0, forKey: "PTPerformance.backgroundSyncFailureCount")
+
             isSyncing = false
             task.setTaskCompleted(success: true)
             DebugLogger.shared.success("HealthSyncManager", "Background sync completed successfully")
 
+            // Schedule next sync with normal interval
+            scheduleBackgroundSync()
+
         } catch {
             isSyncing = false
             syncError = error.localizedDescription
+
+            // Track failure count for exponential backoff
+            let failureCount = userDefaults.integer(forKey: "PTPerformance.backgroundSyncFailureCount")
+            userDefaults.set(failureCount + 1, forKey: "PTPerformance.backgroundSyncFailureCount")
+
             task.setTaskCompleted(success: false)
             DebugLogger.shared.error("HealthSyncManager", "Background sync failed: \(error)")
+
+            // Schedule retry with exponential backoff
+            scheduleBackgroundSyncWithBackoff(failureCount: failureCount + 1)
         }
     }
 
@@ -227,11 +265,15 @@ class HealthSyncManager: ObservableObject {
         syncError = nil
 
         do {
-            // Import health data
-            _ = try await healthKitService.syncTodayData()
+            // Import health data with retry
+            _ = try await performSyncWithRetry(maxRetries: 2)
 
             // Export pending workouts
             await exportPendingWorkouts()
+
+            // Update last background sync time
+            lastBackgroundSync = Date()
+            userDefaults.set(Date(), forKey: lastBackgroundSyncKey)
 
             isSyncing = false
             DebugLogger.shared.success("HealthSyncManager", "Manual sync completed")
@@ -241,6 +283,33 @@ class HealthSyncManager: ObservableObject {
             syncError = error.localizedDescription
             DebugLogger.shared.error("HealthSyncManager", "Manual sync failed: \(error)")
         }
+    }
+
+    /// Perform sync with retry logic and exponential backoff
+    private func performSyncWithRetry(maxRetries: Int) async throws -> HealthKitDayData {
+        var lastError: Error?
+        var retryDelay: TimeInterval = 1.0 // Start with 1 second
+
+        for attempt in 0...maxRetries {
+            do {
+                let data = try await healthKitService.syncTodayData()
+                if attempt > 0 {
+                    DebugLogger.shared.success("HealthSyncManager", "Sync succeeded on retry attempt \(attempt)")
+                }
+                return data
+            } catch {
+                lastError = error
+                if attempt < maxRetries {
+                    DebugLogger.shared.warning("HealthSyncManager", "Sync attempt \(attempt + 1) failed, retrying in \(retryDelay)s: \(error.localizedDescription)")
+                    try await Task.sleep(nanoseconds: UInt64(retryDelay * 1_000_000_000))
+                    retryDelay *= 2.0 // Exponential backoff
+                } else {
+                    DebugLogger.shared.error("HealthSyncManager", "Sync failed after \(maxRetries + 1) attempts")
+                }
+            }
+        }
+
+        throw lastError ?? HealthKitError.queryFailed("Sync failed after retries")
     }
 
     // MARK: - Workout Export Queue

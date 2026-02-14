@@ -70,6 +70,7 @@ class ReadinessCheckInViewModel: ObservableObject {
     @Published var showSuccess: Bool = false
     @Published var hasSubmittedToday: Bool = false
     @Published var todayEntry: DailyReadiness?
+    @Published var historicalComparison: HistoricalComparison?
 
     // MARK: - Computed Properties
 
@@ -167,6 +168,10 @@ class ReadinessCheckInViewModel: ObservableObject {
                 hasSubmittedToday = false
                 resetForm()
             }
+
+            // ACP-1020: Load historical comparison
+            await loadHistoricalComparison()
+
         } catch {
             // This is an actual error (network failure, etc.), not just "no data"
             DebugLogger.shared.error("ReadinessCheckIn", "Failed to load today's readiness: \(error)")
@@ -186,6 +191,42 @@ class ReadinessCheckInViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    /// ACP-1020: Load historical readiness scores for comparison
+    private func loadHistoricalComparison() async {
+        do {
+            // Fetch recent readiness scores using existing method
+            let scores = try await readinessService.fetchRecentReadiness(for: patientId, limit: 30)
+            guard !scores.isEmpty else {
+                historicalComparison = nil
+                return
+            }
+
+            let scoreValues = scores.compactMap { $0.readinessScore }
+            guard !scoreValues.isEmpty else {
+                historicalComparison = nil
+                return
+            }
+
+            // Calculate statistics
+            let weekScores = Array(scoreValues.prefix(7))
+            let weekAvg = weekScores.isEmpty ? 0 : weekScores.reduce(0, +) / Double(weekScores.count)
+
+            let monthScores = scoreValues
+            let monthAvg = monthScores.reduce(0, +) / Double(monthScores.count)
+
+            let best = scoreValues.max() ?? 0
+
+            historicalComparison = HistoricalComparison(
+                weekAverage: weekAvg,
+                monthAverage: monthAvg,
+                best: best
+            )
+        } catch {
+            DebugLogger.shared.warning("ReadinessCheckIn", "Failed to load historical comparison: \(error)")
+            historicalComparison = nil
+        }
     }
 
     // MARK: - Submit Readiness

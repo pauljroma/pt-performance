@@ -561,7 +561,7 @@ final class RecoveryService: ObservableObject {
                 suggestedFrequency: suggestedFrequency,
                 suggestedDuration: avgDuration,
                 suggestedTimeOfDay: timeOfDay,
-                priority: topInsight.impactPercentage > 10 ? .high : .medium,
+                priority: topInsight.impactPercentage > 10 ? RecoveryPriority.high : RecoveryPriority.medium,
                 basedOnInsights: protocolInsights.map { $0.id }
             ))
         }
@@ -573,6 +573,7 @@ final class RecoveryService: ObservableObject {
         for protocolType in unusedProtocols.prefix(2) {
             let (benefit, duration) = defaultBenefitForProtocol(protocolType)
 
+            let timeOfDay: SupplementTimeOfDay? = nil
             recommendations.append(PersonalizedRecoveryRecommendation(
                 protocolType: protocolType,
                 title: "Try \(protocolType.displayName)",
@@ -580,8 +581,8 @@ final class RecoveryService: ObservableObject {
                 expectedBenefit: benefit,
                 suggestedFrequency: "Start with 1-2x per week",
                 suggestedDuration: duration,
-                suggestedTimeOfDay: nil,
-                priority: .low
+                suggestedTimeOfDay: timeOfDay,
+                priority: RecoveryPriority.low
             ))
         }
 
@@ -589,15 +590,15 @@ final class RecoveryService: ObservableObject {
     }
 
     /// Determine optimal time of day based on session patterns
-    private func determineOptimalTimeOfDay(sessions: [RecoverySession]) -> TimeOfDay? {
+    private func determineOptimalTimeOfDay(sessions: [RecoverySession]) -> SupplementTimeOfDay? {
         guard !sessions.isEmpty else { return nil }
 
         let calendar = Calendar.current
-        var timeDistribution: [TimeOfDay: Int] = [:]
+        var timeDistribution: [SupplementTimeOfDay: Int] = [:]
 
         for session in sessions {
             let hour = calendar.component(.hour, from: session.loggedAt)
-            let timeOfDay: TimeOfDay
+            let timeOfDay: SupplementTimeOfDay
             switch hour {
             case 5..<12: timeOfDay = .morning
             case 12..<17: timeOfDay = .afternoon

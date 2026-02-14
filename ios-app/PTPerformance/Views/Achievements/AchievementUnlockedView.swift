@@ -200,7 +200,7 @@ struct AchievementUnlockedView: View {
                     // Share button (optional)
                     if onShare != nil {
                         Button(action: {
-                            HapticFeedback.light()
+                            HapticFeedback.medium()
                             onShare?()
                         }) {
                             HStack {

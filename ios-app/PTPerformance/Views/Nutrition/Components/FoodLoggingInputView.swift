@@ -88,139 +88,7 @@ struct EnhancedFoodSearchBar: View {
     }
 }
 
-// MARK: - Enhanced Food Search Result Row
-
-/// Polished food search result row with improved visual hierarchy
-struct EnhancedFoodSearchRow: View {
-    let food: FoodSearchResult
-    let onAdd: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        HStack(spacing: Spacing.md) {
-            // Food icon/category indicator
-            ZStack {
-                RoundedRectangle(cornerRadius: CornerRadius.xs)
-                    .fill(categoryColor.opacity(0.15))
-                    .frame(width: 40, height: 40)
-
-                Image(systemName: categoryIcon)
-                    .font(.system(size: 16))
-                    .foregroundColor(categoryColor)
-            }
-
-            // Food details
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: Spacing.xxs) {
-                    Text(food.name)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-
-                    if food.isVerified {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.caption2)
-                            .foregroundColor(.green)
-                    }
-                }
-
-                if let brand = food.brand {
-                    Text(brand)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-
-                // Serving and calorie info
-                HStack(spacing: Spacing.xs) {
-                    Text(food.servingSize)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary.opacity(0.5))
-
-                    HStack(spacing: 2) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-
-                        Text("\(food.calories) cal")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    if food.proteinG > 0 {
-                        Text("•")
-                            .font(.caption)
-                            .foregroundColor(.secondary.opacity(0.5))
-
-                        Text("\(Int(food.proteinG))g P")
-                            .font(.caption)
-                            .foregroundColor(.red.opacity(0.8))
-                    }
-                }
-            }
-
-            Spacer()
-
-            // Add button
-            Button {
-                onAdd()
-                HapticFeedback.light()
-            } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(.blue)
-            }
-            .scaleEffect(isPressed ? 0.9 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in isPressed = true }
-                    .onEnded { _ in isPressed = false }
-            )
-        }
-        .padding(Spacing.sm)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.sm)
-                .fill(Color(.systemBackground))
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(food.name), \(food.servingSize), \(food.calories) calories")
-        .accessibilityHint("Double tap to add to meal")
-    }
-
-    private var categoryColor: Color {
-        guard let categoryString = food.category,
-              let category = FoodCategory(rawValue: categoryString) else {
-            return .gray
-        }
-        switch category {
-        case .protein: return .red
-        case .grain: return .brown
-        case .vegetable: return .green
-        case .fruit: return .orange
-        case .dairy: return .blue
-        case .fat: return .yellow
-        case .beverage: return .cyan
-        case .snack: return .pink
-        case .supplement: return .purple
-        case .condiment: return .gray
-        }
-    }
-
-    private var categoryIcon: String {
-        guard let categoryString = food.category,
-              let category = FoodCategory(rawValue: categoryString) else {
-            return "fork.knife"
-        }
-        return category.icon
-    }
-}
+// MARK: - EnhancedFoodSearchRow defined in MealLogView.swift (ACP-1017/1019)
 
 // MARK: - Selected Food Item Row
 
@@ -499,7 +367,9 @@ struct FoodLoggingInputView_Previews: PreviewProvider {
                         category: "protein",
                         isVerified: true
                     ),
-                    onAdd: {}
+                    isFavorite: false,
+                    onAdd: {},
+                    onToggleFavorite: {}
                 )
 
                 EnhancedMealSummaryBar(

@@ -237,70 +237,6 @@ struct NextAchievementCard: View {
     }
 }
 
-// MARK: - Up Next Section
-
-/// A section showing recommended next achievements
-struct UpNextAchievementsSection: View {
-    let achievements: [AchievementProgress]
-    var onAchievementTap: ((AchievementProgress) -> Void)?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            // Header
-            HStack {
-                Image(systemName: "target")
-                    .foregroundColor(.orange)
-                Text("Up Next")
-                    .font(.headline)
-                Spacer()
-                if achievements.count > 3 {
-                    Text("\(achievements.count) available")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityLabel("Up next, \(achievements.count) achievements available")
-
-            // Achievement cards
-            if achievements.isEmpty {
-                emptyState
-            } else {
-                VStack(spacing: Spacing.sm) {
-                    ForEach(achievements.prefix(3)) { achievement in
-                        NextAchievementCard(progress: achievement) {
-                            onAchievementTap?(achievement)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var emptyState: some View {
-        HStack(spacing: Spacing.md) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.title)
-                .foregroundColor(.green)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("All caught up!")
-                    .font(.headline)
-                Text("You've unlocked all available achievements.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .fill(Color.green.opacity(0.1))
-        )
-    }
-}
-
 // MARK: - Compact Next Achievement Card
 
 /// A smaller card for inline display
@@ -382,7 +318,7 @@ struct CompactNextAchievementCard: View {
 // MARK: - Achievement Recommendations Helper
 
 /// Helper to compute recommended next achievements
-enum AchievementRecommendations {
+fileprivate enum NextAchievementHelper {
     /// Get the closest achievements to being unlocked
     /// - Parameters:
     ///   - achievements: All achievement progress
@@ -482,7 +418,7 @@ struct NextAchievementCard_Previews: PreviewProvider {
                             unlockedAt: nil
                         )
                     ]
-                )
+                ) { _ in }
 
                 // Compact cards
                 VStack(spacing: Spacing.xs) {

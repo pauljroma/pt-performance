@@ -391,7 +391,36 @@ struct WorkoutCompletionSummary: View {
     @ObservedObject var viewModel: OptimisticWorkoutViewModel
     let onDismiss: () -> Void
 
+    @State private var summaryData: WorkoutSummaryData?
+
     var body: some View {
+        Group {
+            if let summaryData = summaryData {
+                EnhancedWorkoutSummaryView(
+                    workoutName: summaryData.workoutName,
+                    completedAt: summaryData.completedAt,
+                    duration: summaryData.duration,
+                    totalVolume: summaryData.totalVolume,
+                    previousVolume: summaryData.previousVolume,
+                    exercisesCompleted: summaryData.exercisesCompleted,
+                    muscleGroupBreakdown: summaryData.muscleGroupBreakdown,
+                    currentStreak: summaryData.currentStreak,
+                    onDismiss: onDismiss,
+                    onShare: { image in
+                        shareWorkoutSummary(image: image)
+                    }
+                )
+            } else {
+                // Fallback to simple summary while loading
+                simpleSummary
+            }
+        }
+        .onAppear {
+            loadSummaryData()
+        }
+    }
+
+    private var simpleSummary: some View {
         NavigationStack {
             VStack(spacing: 24) {
                 // Success icon
@@ -465,6 +494,31 @@ struct WorkoutCompletionSummary: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label): \(value)")
+    }
+
+    private func loadSummaryData() {
+        // Generate summary data from viewModel
+        // For now, use placeholder values for streak and previous volume
+        // These would ideally come from a service or be passed in
+        summaryData = viewModel.generateSummaryData(
+            sessionName: "Workout Session",
+            currentStreak: 0,
+            previousVolume: nil
+        )
+    }
+
+    private func shareWorkoutSummary(image: UIImage) {
+        let activityVC = UIActivityViewController(
+            activityItems: [image],
+            applicationActivities: nil
+        )
+
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootVC = window.rootViewController {
+            activityVC.popoverPresentationController?.sourceView = rootVC.view
+            rootVC.present(activityVC, animated: true)
+        }
     }
 }
 

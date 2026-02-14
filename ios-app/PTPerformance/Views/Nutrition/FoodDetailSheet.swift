@@ -140,17 +140,57 @@ struct FoodDetailSheet: View {
                         HapticFeedback.light()
                         servings = value
                     } label: {
-                        Text(value == 1.0 ? "1" : String(format: "%.1f", value))
+                        Text("\(value, specifier: "%.1f")")
                             .font(.subheadline)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.xs)
-                            .background(servings == value ? Color.blue : Color(.tertiarySystemGroupedBackground))
-                            .foregroundColor(servings == value ? .white : .primary)
+                            .fontWeight(servings == value ? .bold : .medium)
+                            .foregroundColor(servings == value ? .white : .blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(servings == value ? Color.blue : Color.blue.opacity(0.1))
                             .cornerRadius(CornerRadius.sm)
                     }
-                    .accessibilityLabel("\(value == 1.0 ? "1" : String(format: "%.1f", value)) servings")
                 }
             }
+
+            // Portion size presets (ACP-1019)
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Text("Common Portions")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .padding(.top, Spacing.xs)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.xs) {
+                        PortionPresetButton(
+                            label: "1 cup",
+                            servings: 1.0,
+                            currentServings: $servings
+                        )
+                        PortionPresetButton(
+                            label: "1/2 cup",
+                            servings: 0.5,
+                            currentServings: $servings
+                        )
+                        PortionPresetButton(
+                            label: "1 tbsp",
+                            servings: 0.25,
+                            currentServings: $servings
+                        )
+                        PortionPresetButton(
+                            label: "100g",
+                            servings: 1.0,
+                            currentServings: $servings
+                        )
+                        PortionPresetButton(
+                            label: "1 oz",
+                            servings: 0.35,
+                            currentServings: $servings
+                        )
+                    }
+                }
+            }
+
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
@@ -290,5 +330,31 @@ struct NutritionRow: View {
         )
     ) { updated in
         print("Updated servings: \(updated.servings)")
+    }
+}
+
+// MARK: - Portion Preset Button (ACP-1019)
+
+/// Button for quick portion size selection
+struct PortionPresetButton: View {
+    let label: String
+    let servings: Double
+    @Binding var currentServings: Double
+
+    var body: some View {
+        Button {
+            HapticFeedback.light()
+            currentServings = servings
+        } label: {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(currentServings == servings ? .white : .blue)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(currentServings == servings ? Color.blue : Color.blue.opacity(0.1))
+                .cornerRadius(CornerRadius.sm)
+        }
+        .accessibilityLabel("\(label) portion")
     }
 }

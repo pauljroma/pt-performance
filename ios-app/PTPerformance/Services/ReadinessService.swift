@@ -424,6 +424,15 @@ class ReadinessService: ObservableObject {
         }
     }
 
+    /// Fetch readiness history for a patient (alias for fetchRecentReadiness)
+    /// - Parameters:
+    ///   - patientId: Patient UUID
+    ///   - days: Number of days to fetch (default 30)
+    /// - Returns: Array of readiness records
+    func getReadinessHistory(for patientId: UUID, days: Int = 30) async throws -> [DailyReadiness] {
+        return try await fetchRecentReadiness(for: patientId, limit: days)
+    }
+
     // MARK: - Fetch Readiness for Date Range
 
     /// Fetch readiness entries for a specific date range
@@ -636,6 +645,13 @@ struct ReadinessSummary {
         }
         return current - average
     }
+}
+
+/// Historical readiness comparison data
+struct HistoricalComparison {
+    let weekAverage: Double
+    let monthAverage: Double
+    let best: Double
 }
 
 // MARK: - ReadinessService Extension for Daily Check-in

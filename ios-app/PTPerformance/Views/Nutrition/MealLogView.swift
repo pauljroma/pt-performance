@@ -227,10 +227,92 @@ struct MealLogView: View {
         }
     }
 
-    // MARK: - Suggestions Section
+    // MARK: - Suggestions Section (ACP-1017: Enhanced)
 
     private var suggestionsSection: some View {
         VStack(spacing: 20) {
+            // Copy Yesterday's Meals (ACP-1017)
+            if !viewModel.yesterdaysMeals.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Yesterday's Meals")
+                            .font(.headline)
+                        Spacer()
+                        Button {
+                            HapticFeedback.medium()
+                            viewModel.copyYesterdaysMeals()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "doc.on.doc.fill")
+                                Text("Copy All")
+                            }
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(CornerRadius.sm)
+                        }
+                        .accessibilityLabel("Copy all meals from yesterday")
+                    }
+
+                    ForEach(viewModel.yesterdaysMeals.prefix(3)) { log in
+                        YesterdayMealCard(log: log) {
+                            for item in log.foodItems {
+                                viewModel.foodItems.append(item)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Favorites (ACP-1017: One-tap favorites)
+            if !viewModel.favoriteFoods.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundColor(.yellow)
+                        Text("Favorites")
+                            .font(.headline)
+                    }
+
+                    ForEach(viewModel.favoriteFoods.prefix(5)) { food in
+                        EnhancedFoodSearchRow(food: food, isFavorite: true) {
+                            viewModel.addFood(food)
+                        } onToggleFavorite: {
+                            Task {
+                                await viewModel.toggleFavorite(food)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Time of Day Suggestions (ACP-1017: Smart suggestions based on time of day)
+            if !viewModel.timeOfDayFoods.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: viewModel.mealType.icon)
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text("Common for \(viewModel.mealType.displayName)")
+                            .font(.headline)
+                    }
+
+                    ForEach(viewModel.timeOfDayFoods.prefix(5)) { food in
+                        EnhancedFoodSearchRow(food: food, isFavorite: viewModel.isFavorite(food)) {
+                            viewModel.addFood(food)
+                        } onToggleFavorite: {
+                            Task {
+                                await viewModel.toggleFavorite(food)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Recent Foods
             if !viewModel.recentFoods.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
@@ -238,8 +320,12 @@ struct MealLogView: View {
                         .font(.headline)
 
                     ForEach(viewModel.recentFoods.prefix(5)) { food in
-                        FoodSearchRow(food: food) {
+                        EnhancedFoodSearchRow(food: food, isFavorite: viewModel.isFavorite(food)) {
                             viewModel.addFood(food)
+                        } onToggleFavorite: {
+                            Task {
+                                await viewModel.toggleFavorite(food)
+                            }
                         }
                     }
                 }
@@ -251,9 +337,13 @@ struct MealLogView: View {
                     Text("Popular")
                         .font(.headline)
 
-                    ForEach(viewModel.popularFoods.prefix(10)) { food in
-                        FoodSearchRow(food: food) {
+                    ForEach(viewModel.popularFoods.prefix(8)) { food in
+                        EnhancedFoodSearchRow(food: food, isFavorite: viewModel.isFavorite(food)) {
                             viewModel.addFood(food)
+                        } onToggleFavorite: {
+                            Task {
+                                await viewModel.toggleFavorite(food)
+                            }
                         }
                     }
                 }
@@ -419,6 +509,167 @@ struct FoodSearchRow: View {
             .accessibilityHint("Adds this food to your meal")
         }
         .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Enhanced Food Search Row (ACP-1017, ACP-1019)
+
+struct EnhancedFoodSearchRow: View {
+    let food: FoodSearchResult
+    let isFavorite: Bool
+    let onAdd: () -> Void
+    let onToggleFavorite: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Text(food.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    if food.isVerified {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.caption2)
+                            .foregroundColor(.green)
+                    }
+                }
+
+                if let brand = food.brand, !brand.isEmpty {
+                    Text(brand)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                // Macro preview inline (ACP-1019: Show macro preview in search results)
+                HStack(spacing: Spacing.sm) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(.orange)
+                        Text("\(food.calories)")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+
+                    HStack(spacing: 2) {
+                        Text("P:")
+                            .font(.caption2)
+                            .foregroundColor(.red)
+                        Text("\(Int(food.proteinG))g")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+
+                    HStack(spacing: 2) {
+                        Text("C:")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                        Text("\(Int(food.carbsG))g")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+
+                    HStack(spacing: 2) {
+                        Text("F:")
+                            .font(.caption2)
+                            .foregroundColor(.yellow)
+                        Text("\(Int(food.fatG))g")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                    }
+                }
+
+                Text(food.servingSize)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            HStack(spacing: Spacing.xs) {
+                // Favorite button (ACP-1017: One-tap favorites)
+                Button {
+                    HapticFeedback.light()
+                    onToggleFavorite()
+                } label: {
+                    Image(systemName: isFavorite ? "star.fill" : "star")
+                        .font(.caption)
+                        .foregroundColor(isFavorite ? .yellow : .secondary)
+                        .padding(8)
+                }
+                .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+
+                // Add button (ACP-1019: Quick-add without opening detail)
+                Button {
+                    HapticFeedback.medium()
+                    onAdd()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.blue)
+                }
+                .accessibilityLabel("Add food")
+            }
+        }
+        .padding(.vertical, 6)
+    }
+}
+
+// MARK: - Yesterday Meal Card (ACP-1017)
+
+struct YesterdayMealCard: View {
+    let log: NutritionLog
+    let onCopy: () -> Void
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                if let mealType = log.mealType {
+                    HStack(spacing: 4) {
+                        Image(systemName: mealType.icon)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(mealType.displayName)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                }
+
+                Text("\(log.totalCalories ?? 0) cal | P: \(Int(log.totalProteinG ?? 0))g")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if !log.foodItems.isEmpty {
+                    Text(log.foodItems.map { $0.name }.joined(separator: ", "))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            Button {
+                HapticFeedback.light()
+                onCopy()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Add")
+                }
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.blue)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(CornerRadius.sm)
+            }
+            .accessibilityLabel("Add this meal")
+        }
+        .padding(Spacing.sm)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.sm)
     }
 }
 

@@ -232,7 +232,7 @@ struct PersonalizedRecoveryRecommendation: Identifiable, Codable, Equatable {
     let expectedBenefit: String
     let suggestedFrequency: String?
     let suggestedDuration: Int? // minutes
-    let suggestedTimeOfDay: TimeOfDay?
+    let suggestedTimeOfDay: SupplementTimeOfDay?
     let priority: RecoveryPriority
     let basedOnInsights: [UUID] // IDs of supporting insights
 
@@ -244,7 +244,7 @@ struct PersonalizedRecoveryRecommendation: Identifiable, Codable, Equatable {
         expectedBenefit: String,
         suggestedFrequency: String? = nil,
         suggestedDuration: Int? = nil,
-        suggestedTimeOfDay: TimeOfDay? = nil,
+        suggestedTimeOfDay: SupplementTimeOfDay? = nil,
         priority: RecoveryPriority,
         basedOnInsights: [UUID] = []
     ) {
@@ -261,7 +261,7 @@ struct PersonalizedRecoveryRecommendation: Identifiable, Codable, Equatable {
     }
 }
 
-// TimeOfDay is defined in Supplement.swift
+// SupplementTimeOfDay is defined in Supplement.swift
 
 // MARK: - Preview Support
 

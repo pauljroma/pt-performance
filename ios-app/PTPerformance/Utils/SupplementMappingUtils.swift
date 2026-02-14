@@ -23,7 +23,7 @@ enum SupplementMappingUtils {
     }
 
     /// Map supplement timing to legacy time of day
-    static func mapTimingToTimeOfDay(_ timing: SupplementTiming) -> TimeOfDay? {
+    static func mapTimingToTimeOfDay(_ timing: SupplementTiming) -> SupplementTimeOfDay? {
         switch timing {
         case .morning: return .morning
         case .afternoon: return .afternoon

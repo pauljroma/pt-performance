@@ -82,37 +82,52 @@ struct ProfileHubView: View {
                 profileHeaderSection
                     .staggeredAnimation(index: 0)
 
+                // Quick Access to Settings - ACP-1036
+                quickSettingsSection
+                    .staggeredAnimation(index: 1)
+
+                // Achievement Showcase
+                if let patientIdString = supabase.userId,
+                   let patientId = UUID(uuidString: patientIdString) {
+                    Section {
+                        AchievementShowcaseView(patientId: patientId)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                    .staggeredAnimation(index: 2)
+                }
+
                 // Health Section (Premium features consolidated here)
                 healthSection
-                    .staggeredAnimation(index: 1)
+                    .staggeredAnimation(index: 3)
 
                 // Tools & Tracking
                 toolsSection
-                    .staggeredAnimation(index: 2)
+                    .staggeredAnimation(index: 4)
 
                 // Training Mode
                 trainingModeSection
-                    .staggeredAnimation(index: 3)
+                    .staggeredAnimation(index: 5)
 
                 // Therapist Section
                 therapistSection
-                    .staggeredAnimation(index: 4)
+                    .staggeredAnimation(index: 6)
 
                 // Support Section
                 supportSection
-                    .staggeredAnimation(index: 5)
+                    .staggeredAnimation(index: 7)
 
                 // Subscription Section
                 subscriptionSection
-                    .staggeredAnimation(index: 6)
+                    .staggeredAnimation(index: 8)
 
                 // Account Section
                 accountSection
-                    .staggeredAnimation(index: 7)
+                    .staggeredAnimation(index: 9)
 
                 // Debug Section
                 debugSection
-                    .staggeredAnimation(index: 8)
+                    .staggeredAnimation(index: 10)
             }
             .navigationTitle("Profile")
             .task {
@@ -121,6 +136,46 @@ struct ProfileHubView: View {
             .fullScreenCoverWithHaptic(isPresented: $showQuickSetup) {
                 QuickSetupView()
             }
+        }
+    }
+
+    // MARK: - Quick Settings Section (ACP-1036)
+
+    /// Quick access to unified settings
+    private var quickSettingsSection: some View {
+        Section {
+            NavigationLink {
+                UnifiedSettingsView()
+                    .environmentObject(storeKit)
+                    .environmentObject(appState)
+            } label: {
+                HStack(spacing: Spacing.md) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundColor(.modusCyan)
+                        .font(.title2)
+                        .frame(width: 32)
+                        .accessibilityHidden(true)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Settings")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        Text("Manage account, preferences, and data")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                        .accessibilityHidden(true)
+                }
+                .padding(.vertical, Spacing.xs)
+            }
+            .accessibilityLabel("Settings")
+            .accessibilityHint("Manage account, preferences, health data, and more")
         }
     }
 

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Achievement Type
 
@@ -53,6 +54,7 @@ enum AchievementType: String, Codable, CaseIterable, Identifiable {
         case .special: return "pink"
         }
     }
+
 }
 
 // MARK: - Achievement Tier
@@ -105,6 +107,65 @@ enum AchievementTier: String, Codable, CaseIterable, Comparable {
     }
 }
 
+// MARK: - Achievement Rarity
+
+/// Rarity levels for achievements (determines unlock percentage thresholds)
+enum AchievementRarity: String, Codable, CaseIterable, Comparable {
+    case common = "common"
+    case rare = "rare"
+    case epic = "epic"
+    case legendary = "legendary"
+
+    var displayName: String {
+        rawValue.capitalized
+    }
+
+    /// Typical unlock percentage for this rarity
+    var unlockPercentage: Double {
+        switch self {
+        case .common: return 60.0  // 60%+ users unlock
+        case .rare: return 30.0    // 30-60% users unlock
+        case .epic: return 10.0    // 10-30% users unlock
+        case .legendary: return 5.0 // <10% users unlock
+        }
+    }
+
+    /// Color for rarity indicators (uses Modus design system)
+    var color: Color {
+        switch self {
+        case .common: return .modusCyan.opacity(0.6)
+        case .rare: return .modusLightTeal
+        case .epic: return .yellow
+        case .legendary: return .modusTealAccent
+        }
+    }
+
+    /// Icon for rarity
+    var icon: String {
+        switch self {
+        case .common: return "circle.fill"
+        case .rare: return "diamond.fill"
+        case .epic: return "crown.fill"
+        case .legendary: return "sparkles"
+        }
+    }
+
+    static func < (lhs: AchievementRarity, rhs: AchievementRarity) -> Bool {
+        let order: [AchievementRarity] = [.common, .rare, .epic, .legendary]
+        return order.firstIndex(of: lhs)! < order.firstIndex(of: rhs)!
+    }
+
+    /// Determine rarity based on tier
+    static func from(tier: AchievementTier) -> AchievementRarity {
+        switch tier {
+        case .bronze: return .common
+        case .silver: return .rare
+        case .gold: return .epic
+        case .platinum, .diamond: return .legendary
+        }
+    }
+}
+
 // MARK: - Achievement Definition
 
 /// Static definition of an achievement that can be unlocked
@@ -120,6 +181,11 @@ struct AchievementDefinition: Identifiable, Hashable {
 
     var formattedRequirement: String {
         "\(requirement) \(requirementUnit)"
+    }
+
+    /// Derived rarity from tier
+    var rarity: AchievementRarity {
+        AchievementRarity.from(tier: tier)
     }
 
     func hash(into hasher: inout Hasher) {
@@ -592,6 +658,14 @@ enum PRCelebrationType {
         case .milestonePR: return "cyan"
         }
     }
+}
+
+// MARK: - Preview Support
+
+// MARK: - Color Extensions
+
+extension AchievementTier {
+
 }
 
 // MARK: - Preview Support

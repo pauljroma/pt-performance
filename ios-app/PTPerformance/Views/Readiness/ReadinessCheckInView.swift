@@ -78,31 +78,29 @@ struct ReadinessCheckInView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    // Main content
-                    Form {
-                        quickFillSection
+                    // ACP-1020: Single-screen streamlined form
+                    ScrollView {
+                        VStack(spacing: Spacing.lg) {
+                            // Quick fill section (sticky-like at top)
+                            quickFillCardSection
 
-                        // Data from Apple Watch badge
-                        if wasAutoFilled {
-                            HStack {
-                                Image(systemName: "applewatch")
-                                Text("Data from Apple Watch")
+                            // Historical comparison inline
+                            if let comparison = viewModel.historicalComparison {
+                                historicalComparisonCard(comparison)
                             }
-                            .font(.caption)
-                            .foregroundColor(.green)
-                            .padding(.horizontal)
-                            .listRowBackground(Color.clear)
-                        }
 
-                        headerSection
-                        sleepSection
-                        sorenessSection
-                        energySection
-                        stressSection
-                        notesSection
-                        scorePreviewSection
-                        submitSection
+                            // Consolidated metrics card
+                            metricsCard
+
+                            // Live score preview
+                            liveScoreCard
+
+                            // Submit button
+                            submitButton
+                        }
+                        .padding()
                     }
+                    .background(Color(.systemGroupedBackground))
                     .disabled(viewModel.isLoading)
                     .springSheet(isPresented: $showHealthKitPrompt) {
                         HealthKitAuthorizationView()
@@ -178,490 +176,386 @@ struct ReadinessCheckInView: View {
         }
     }
 
-    // MARK: - Quick Fill Section
+    // MARK: - ACP-1020: Streamlined Quick Fill Card Section
 
-    private var quickFillSection: some View {
-        Section {
-            if HealthKitService.isHealthKitAvailable {
-                if healthKitIsAuthorized {
-                    // Authorized: Show auto-fill button and health data
-                    VStack(alignment: .leading, spacing: 12) {
-                        // Auto-fill button
-                        Button {
-                            Task {
-                                await autoFillFromHealthKit()
+    private var quickFillCardSection: some View {
+        Card(shadow: Shadow.medium) {
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                HStack {
+                    Image(systemName: "applewatch")
+                        .font(.title2)
+                        .foregroundColor(.modusCyan)
+                        .accessibilityHidden(true)
+
+                    Text(dateString)
+                        .font(.headline)
+                        .accessibleHeader()
+
+                    Spacer()
+
+                    if viewModel.hasSubmittedToday {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Done")
+                                .font(.caption.bold())
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+
+                if HealthKitService.isHealthKitAvailable {
+                    if healthKitIsAuthorized {
+                        // Show HealthKit data preview and auto-fill button
+                        VStack(spacing: Spacing.sm) {
+                            if let hrv = todayHRV {
+                                HStack {
+                                    Image(systemName: "waveform.path.ecg")
+                                        .foregroundColor(.modusTealAccent)
+                                    Text("HRV")
+                                    Spacer()
+                                    HRVTrendIndicator(hrv: hrv, baseline: hrvBaseline)
+                                    Text("\(Int(hrv)) ms")
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(hrvColor(hrv))
+                                }
+                                .font(.subheadline)
                             }
+
+                            if let sleep = todaySleep {
+                                HStack {
+                                    Image(systemName: "bed.double.fill")
+                                        .foregroundColor(.modusTealAccent)
+                                    Text("Sleep")
+                                    Spacer()
+                                    Text(formatSleep(sleep.totalMinutes))
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(sleepColor(sleep.totalMinutes))
+                                }
+                                .font(.subheadline)
+                            }
+
+                            Divider()
+
+                            // Auto-fill button
+                            Button {
+                                HapticFeedback.medium()
+                                Task {
+                                    await autoFillFromHealthKit()
+                                }
+                            } label: {
+                                HStack {
+                                    if isAutoFilling {
+                                        ProgressView()
+                                            .progressViewStyle(.circular)
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: isAutoFilled ? "checkmark.circle.fill" : "arrow.down.circle.fill")
+                                    }
+                                    Text(isAutoFilled ? "Auto-Filled from Watch" : "Skip & Auto-Fill from Watch")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                }
+                            }
+                            .disabled(isAutoFilling)
+                            .foregroundColor(isAutoFilled ? .green : .modusCyan)
+                            .accessibilityLabel("Skip and auto-fill from Apple Watch")
+                            .accessibilityHint("Automatically fills sleep and energy fields using HealthKit data")
+                        }
+                    } else {
+                        // Show connect button
+                        Button {
+                            HapticFeedback.medium()
+                            showHealthKitPrompt = true
                         } label: {
                             HStack {
-                                if isAutoFilling {
-                                    ProgressView()
-                                        .progressViewStyle(.circular)
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Image(systemName: "applewatch")
-                                }
-                                Text("Fill from Apple Watch")
+                                Image(systemName: "heart.circle")
+                                Text("Connect Apple Watch")
+                                    .fontWeight(.semibold)
                                 Spacer()
-                                if isAutoFilled {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(.green)
-                                }
+                                Image(systemName: "chevron.right")
                             }
                         }
-                        .disabled(isAutoFilling)
-                        .accessibilityLabel("Fill from Apple Watch")
-                        .accessibilityHint("Imports sleep and HRV data from your Apple Watch")
-
-                        // Show today's HRV with trend indicator
-                        if let hrv = todayHRV {
-                            HStack {
-                                Text("Today's HRV")
-                                Spacer()
-                                HRVTrendIndicator(hrv: hrv, baseline: hrvBaseline)
-                                Text("\(Int(hrv)) ms")
-                                    .foregroundColor(hrvColor(hrv))
-                            }
-                            .font(.subheadline)
-                        }
-
-                        // Show sleep from Apple Watch
-                        if let sleep = todaySleep {
-                            HStack {
-                                Text("Last Night's Sleep")
-                                Spacer()
-                                Text(formatSleep(sleep.totalMinutes))
-                                    .foregroundColor(sleepColor(sleep.totalMinutes))
-                            }
-                            .font(.subheadline)
-                        }
+                        .foregroundColor(.modusCyan)
+                        .accessibilityLabel("Connect Apple Watch")
                     }
-                    .padding(.vertical, 4)
-                } else {
-                    // Not authorized: Show connect button
-                    Button("Connect Apple Watch") {
-                        showHealthKitPrompt = true
-                    }
-                    .accessibilityLabel("Connect Apple Watch")
-                    .accessibilityHint("Opens Apple Health permissions to sync watch data")
                 }
-            }
-        } header: {
-            if HealthKitService.isHealthKitAvailable {
-                Text("Quick Fill")
-            }
-        } footer: {
-            if HealthKitService.isHealthKitAvailable && healthKitIsAuthorized {
-                Text("Pull sleep hours and HRV from your Apple Watch to auto-fill the form")
             }
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - ACP-1020: Historical Comparison Card
 
-    private var headerSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(dateString)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+    private func historicalComparisonCard(_ comparison: HistoricalComparison) -> some View {
+        Card(shadow: Shadow.subtle) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                HStack {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .foregroundColor(.modusDeepTeal)
+                        .accessibilityHidden(true)
 
-                if viewModel.hasSubmittedToday {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text("You've already checked in today")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                } else {
-                    Text("How are you feeling today?")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Text("Your Trend")
+                        .font(.subheadline.bold())
+                        .accessibleHeader()
                 }
+
+                HStack(spacing: Spacing.lg) {
+                    trendStat(label: "7-Day Avg", value: comparison.weekAverage, icon: "calendar")
+                    Divider()
+                    trendStat(label: "30-Day Avg", value: comparison.monthAverage, icon: "calendar.badge.clock")
+                    Divider()
+                    trendStat(label: "Best", value: comparison.best, icon: "star.fill")
+                }
+                .frame(height: 44)
             }
-            .padding(.vertical, 4)
         }
+    }
+
+    private func trendStat(label: String, value: Double, icon: String) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                    .foregroundColor(.modusCyan)
+                Text(String(format: "%.0f", value))
+                    .font(.title3.bold())
+                    .foregroundColor(.modusCyan)
+            }
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Today's date: \(dateString)")
+        .accessibilityLabel("\(label): \(Int(value))")
     }
 
-    // MARK: - Sleep Section
+    // MARK: - ACP-1020: Consolidated Metrics Card
 
-    private var sleepSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "bed.double.fill")
-                        .foregroundColor(.blue)
-                        .frame(width: 24)
-                    Text("Sleep")
-                        .font(.headline)
-                    Spacer()
-                    Text(viewModel.sleepHoursLabel)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                Slider(
+    private var metricsCard: some View {
+        Card(shadow: Shadow.medium) {
+            VStack(spacing: Spacing.md) {
+                // Sleep slider
+                metricSlider(
+                    icon: "bed.double.fill",
+                    iconColor: .blue,
+                    label: "Sleep",
                     value: $viewModel.sleepHours,
-                    in: 0...12,
-                    step: 0.5
-                ) {
-                    Text("Sleep Hours")
-                } minimumValueLabel: {
-                    Text("0")
-                        .font(.caption)
-                } maximumValueLabel: {
-                    Text("12")
-                        .font(.caption)
-                }
-                .tint(.blue)
-                .accessibilityLabel("Hours of sleep")
-                .accessibilityValue(viewModel.sleepHoursLabel)
-                .accessibilityHint("Adjust to set hours slept last night")
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Sleep Quality")
-        } footer: {
-            Text("How many hours did you sleep last night?")
-        }
-    }
+                    range: 0...12,
+                    step: 0.5,
+                    displayValue: viewModel.sleepHoursLabel,
+                    minLabel: "0h",
+                    maxLabel: "12h"
+                )
 
-    // MARK: - Soreness Section
+                Divider()
 
-    private var sorenessSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "figure.walk")
-                        .foregroundColor(viewModel.sorenessColor)
-                        .frame(width: 24)
-                    Text("Soreness")
-                        .font(.headline)
-                    Spacer()
-                    Text(viewModel.sorenessLevelLabel)
-                        .font(.subheadline)
-                        .foregroundColor(viewModel.sorenessColor)
-                }
-
-                HStack(spacing: 4) {
-                    ForEach(1...10, id: \.self) { level in
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(level <= viewModel.sorenessLevel ? viewModel.sorenessColor : Color.gray.opacity(0.3))
-                            .frame(height: 24)
-                    }
-                }
-
-                Slider(
-                    value: Binding(
-                        get: { Double(viewModel.sorenessLevel) },
-                        set: { viewModel.sorenessLevel = Int($0) }
-                    ),
-                    in: 1...10,
-                    step: 1
-                ) {
-                    Text("Soreness Level")
-                } minimumValueLabel: {
-                    VStack {
-                        Text("😊")
-                        Text("None")
-                            .font(.caption2)
-                    }
-                } maximumValueLabel: {
-                    VStack {
-                        Text("😣")
-                        Text("Severe")
-                            .font(.caption2)
-                    }
-                }
-                .tint(viewModel.sorenessColor)
-                .accessibilityLabel("Muscle soreness level")
-                .accessibilityValue("\(viewModel.sorenessLevel) out of 10, \(viewModel.sorenessLevelLabel)")
-                .accessibilityHint("1 is no soreness, 10 is severe soreness")
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Muscle Soreness")
-        } footer: {
-            Text("Rate your overall muscle soreness (1 = no soreness, 10 = extreme)")
-        }
-    }
-
-    // MARK: - Energy Section
-
-    private var energySection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "bolt.fill")
-                        .foregroundColor(viewModel.energyColor)
-                        .frame(width: 24)
-                    Text("Energy")
-                        .font(.headline)
-                    Spacer()
-                    Text(viewModel.energyLevelLabel)
-                        .font(.subheadline)
-                        .foregroundColor(viewModel.energyColor)
-                }
-
-                HStack(spacing: 4) {
-                    ForEach(1...10, id: \.self) { level in
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(level <= viewModel.energyLevel ? viewModel.energyColor : Color.gray.opacity(0.3))
-                            .frame(height: 24)
-                    }
-                }
-
-                Slider(
+                // Energy slider
+                metricLevelSlider(
+                    icon: "bolt.fill",
+                    iconColor: viewModel.energyColor,
+                    label: "Energy",
                     value: Binding(
                         get: { Double(viewModel.energyLevel) },
                         set: { viewModel.energyLevel = Int($0) }
                     ),
-                    in: 1...10,
-                    step: 1
-                ) {
-                    Text("Energy Level")
-                } minimumValueLabel: {
-                    VStack {
-                        Text("😴")
-                        Text("Low")
-                            .font(.caption2)
-                    }
-                } maximumValueLabel: {
-                    VStack {
-                        Text("⚡️")
-                        Text("High")
-                            .font(.caption2)
-                    }
-                }
-                .tint(viewModel.energyColor)
-                .accessibilityLabel("Energy level")
-                .accessibilityValue("\(viewModel.energyLevel) out of 10, \(viewModel.energyLevelLabel)")
-                .accessibilityHint("1 is exhausted, 10 is fully energized")
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Energy Level")
-        } footer: {
-            Text("How energized do you feel? (1 = exhausted, 10 = fully energized)")
-        }
-    }
+                    displayValue: viewModel.energyLevelLabel,
+                    color: viewModel.energyColor
+                )
 
-    // MARK: - Stress Section
+                Divider()
 
-    private var stressSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "brain.head.profile")
-                        .foregroundColor(viewModel.stressColor)
-                        .frame(width: 24)
-                    Text("Stress")
-                        .font(.headline)
-                    Spacer()
-                    Text(viewModel.stressLevelLabel)
-                        .font(.subheadline)
-                        .foregroundColor(viewModel.stressColor)
-                }
+                // Soreness slider
+                metricLevelSlider(
+                    icon: "figure.walk",
+                    iconColor: viewModel.sorenessColor,
+                    label: "Soreness",
+                    value: Binding(
+                        get: { Double(viewModel.sorenessLevel) },
+                        set: { viewModel.sorenessLevel = Int($0) }
+                    ),
+                    displayValue: viewModel.sorenessLevelLabel,
+                    color: viewModel.sorenessColor
+                )
 
-                HStack(spacing: 4) {
-                    ForEach(1...10, id: \.self) { level in
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(level <= viewModel.stressLevel ? viewModel.stressColor : Color.gray.opacity(0.3))
-                            .frame(height: 24)
-                    }
-                }
+                Divider()
 
-                Slider(
+                // Stress slider
+                metricLevelSlider(
+                    icon: "brain.head.profile",
+                    iconColor: viewModel.stressColor,
+                    label: "Stress",
                     value: Binding(
                         get: { Double(viewModel.stressLevel) },
                         set: { viewModel.stressLevel = Int($0) }
                     ),
-                    in: 1...10,
-                    step: 1
-                ) {
-                    Text("Stress Level")
-                } minimumValueLabel: {
-                    VStack {
-                        Text("😌")
-                        Text("Calm")
-                            .font(.caption2)
-                    }
-                } maximumValueLabel: {
-                    VStack {
-                        Text("😰")
-                        Text("High")
-                            .font(.caption2)
-                    }
+                    displayValue: viewModel.stressLevelLabel,
+                    color: viewModel.stressColor
+                )
+
+                // Optional notes field
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Notes (Optional)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    TextField("Any additional notes...", text: $viewModel.notes, axis: .vertical)
+                        .lineLimit(2...4)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Notes")
                 }
-                .tint(viewModel.stressColor)
-                .accessibilityLabel("Stress level")
-                .accessibilityValue("\(viewModel.stressLevel) out of 10, \(viewModel.stressLevelLabel)")
-                .accessibilityHint("1 is calm, 10 is extreme stress")
             }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Stress Level")
-        } footer: {
-            Text("How stressed do you feel? (1 = no stress, 10 = extreme stress)")
         }
     }
 
-    // MARK: - Notes Section
+    private func metricSlider(
+        icon: String,
+        iconColor: Color,
+        label: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        displayValue: String,
+        minLabel: String,
+        maxLabel: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(iconColor)
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
 
-    private var notesSection: some View {
-        Section {
-            TextField("Add any notes...", text: $viewModel.notes, axis: .vertical)
-                .lineLimit(3...6)
-                .textFieldStyle(.plain)
-                .accessibilityLabel("Notes")
-                .accessibilityHint("Optional notes about your wellness today")
-        } header: {
-            Text("Notes (Optional)")
-        } footer: {
-            Text("Any additional details about how you're feeling?")
-        }
-    }
+                Text(label)
+                    .font(.subheadline.bold())
 
-    // MARK: - Score Preview Section
+                Spacer()
 
-    private var scorePreviewSection: some View {
-        Section {
-            // BUILD 123: Show live score preview during form entry
-            if let entry = viewModel.todayEntry, let score = entry.readinessScore {
-                // Submitted entry - show actual score from database
-                scorePreviewCard(score: score)
-            } else {
-                // No submission yet - show live calculated score
-                liveScorePreviewCard
+                Text(displayValue)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-        } header: {
-            Text("Readiness Score Preview")
+
+            Slider(value: value, in: range, step: step)
+                .tint(iconColor)
+                .accessibilityLabel("\(label): \(displayValue)")
         }
     }
 
-    /// BUILD 123: Live score preview card with battery visualization
-    private var liveScorePreviewCard: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 20) {
-                // Battery-style circle indicator
+    private func metricLevelSlider(
+        icon: String,
+        iconColor: Color,
+        label: String,
+        value: Binding<Double>,
+        displayValue: String,
+        color: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(iconColor)
+                    .frame(width: 24)
+                    .accessibilityHidden(true)
+
+                Text(label)
+                    .font(.subheadline.bold())
+
+                Spacer()
+
+                Text(displayValue)
+                    .font(.subheadline)
+                    .foregroundColor(color)
+            }
+
+            // Visual level indicators
+            HStack(spacing: 4) {
+                ForEach(1...10, id: \.self) { level in
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(level <= Int(value.wrappedValue) ? color : Color.secondary.opacity(0.2))
+                        .frame(height: 16)
+                }
+            }
+
+            Slider(value: value, in: 1...10, step: 1)
+                .tint(color)
+                .accessibilityLabel("\(label): \(displayValue)")
+        }
+    }
+
+    // MARK: - ACP-1020: Live Score Card
+
+    private var liveScoreCard: some View {
+        Card(shadow: Shadow.prominent) {
+            HStack(spacing: Spacing.lg) {
+                // Score circle
                 ZStack {
                     Circle()
-                        .fill(viewModel.liveScoreCategory.color)
+                        .fill(viewModel.liveScoreCategory.color.opacity(0.2))
                         .frame(width: 80, height: 80)
 
+                    Circle()
+                        .fill(viewModel.liveScoreCategory.color)
+                        .frame(width: 70, height: 70)
+
                     Text(viewModel.liveScoreFormatted)
-                        .font(.title.bold())
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
                 }
                 .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(viewModel.liveScoreCategory.displayName)
-                        .font(.title2.bold())
-                        .foregroundColor(viewModel.liveScoreCategory.color)
-
-                    Text("Live Preview")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Live Readiness")
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    Text("Updates as you adjust sliders")
+                    Text(viewModel.liveScoreCategory.displayName)
+                        .font(.title3.bold())
+                        .foregroundColor(.primary)
+
+                    Text("Updates as you adjust")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
 
                 Spacer()
             }
-            .padding()
-            .background(viewModel.liveScoreCategory.color.opacity(0.1))
-            .cornerRadius(CornerRadius.md)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Live readiness score preview: \(viewModel.liveScoreFormatted), \(viewModel.liveScoreCategory.displayName)")
-            .accessibilityHint("Score updates automatically as you adjust the sliders")
+            .accessibilityLabel("Live readiness score: \(viewModel.liveScoreFormatted), \(viewModel.liveScoreCategory.displayName)")
         }
     }
 
-    // MARK: - Submit Section
+    // MARK: - ACP-1020: Submit Button
 
-    private var submitSection: some View {
-        Section {
-            Button {
-                Task {
-                    await submitCheckIn()
-                }
-            } label: {
-                HStack {
-                    Spacer()
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                    } else {
-                        Text(viewModel.hasSubmittedToday ? "Update Check-In" : "Submit Check-In")
-                            .fontWeight(.semibold)
-                    }
-                    Spacer()
-                }
+    private var submitButton: some View {
+        Button {
+            HapticFeedback.medium()
+            Task {
+                await submitCheckIn()
             }
-            .disabled(!viewModel.canSubmit)
-            .buttonStyle(.borderedProminent)
-            .listRowBackground(viewModel.canSubmit ? Color.accentColor : Color.gray.opacity(0.3))
-            .accessibilityLabel(viewModel.hasSubmittedToday ? "Update today's check-in" : "Submit today's check-in")
-            .accessibilityHint(viewModel.canSubmit ? "Tap to submit" : "Complete all required fields to enable")
-        }
-    }
-
-    // MARK: - Score Preview Card
-
-    private func scorePreviewCard(score: Double) -> some View {
-        let category = ReadinessCategory.category(for: score)
-
-        return VStack(spacing: 12) {
+        } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Your Score")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Text(String(format: "%.1f", score))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .foregroundColor(category.color)
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(category.displayName)
-                        .font(.headline)
-                        .foregroundColor(category.color)
-                    Text("Readiness")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(.white)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text(viewModel.hasSubmittedToday ? "Update Check-In" : "Submit Check-In")
+                        .fontWeight(.semibold)
                 }
             }
-
-            Divider()
-
-            HStack {
-                Image(systemName: category.recommendsRest ? "bed.double.fill" : "figure.run")
-                    .foregroundColor(category.color)
-                Text(category.recommendation)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                Spacer()
-            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.md)
+            .background(viewModel.canSubmit ? Color.modusCyan : Color.secondary.opacity(0.3))
+            .foregroundColor(.white)
+            .cornerRadius(CornerRadius.md)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(category.color.opacity(0.1))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(category.color.opacity(0.3), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Readiness score: \(String(format: "%.1f", score)), \(category.displayName). \(category.recommendation)")
+        .disabled(!viewModel.canSubmit || viewModel.isLoading)
+        .accessibilityLabel(viewModel.hasSubmittedToday ? "Update today's check-in" : "Submit today's check-in")
+        .shadow(color: viewModel.canSubmit ? Color.modusCyan.opacity(0.3) : Color.clear, radius: 8, y: 4)
     }
+
+
 
     // MARK: - Success Overlay
 

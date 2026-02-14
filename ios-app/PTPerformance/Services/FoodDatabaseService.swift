@@ -106,15 +106,22 @@ class FoodDatabaseService {
 
     // MARK: - Search
 
-    /// Search food items by name
-    func searchFoods(query: String, limit: Int = 50) async throws -> [FoodSearchResult] {
+    /// Search food items by name with fuzzy matching (ACP-1019)
+    func searchFoods(query: String, limit: Int = 50, brandFilter: String? = nil) async throws -> [FoodSearchResult] {
         guard !query.isEmpty else { return [] }
 
-        // Use ilike for case-insensitive search
-        let response = try await supabase.client
+        var queryBuilder = supabase.client
             .from("food_items")
             .select("id, name, brand, serving_size, calories, protein_g, carbs_g, fat_g, category, is_verified")
             .or("is_system.eq.true,created_by.eq.\(supabase.userId ?? "")")
+
+        // Apply brand filter if provided (ACP-1019)
+        if let brand = brandFilter {
+            queryBuilder = queryBuilder.eq("brand", value: brand)
+        }
+
+        // Use ilike for case-insensitive fuzzy search
+        let response = try await queryBuilder
             .ilike("name", pattern: "%\(query)%")
             .order("is_verified", ascending: false)
             .order("name", ascending: true)
@@ -286,6 +293,154 @@ class FoodDatabaseService {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode([FoodItem].self, from: response.data)
+    }
+
+    /// Fetch favorite foods (ACP-1017)
+    func fetchFavoriteFoods(patientId: String, limit: Int = 10) async throws -> [FoodSearchResult] {
+        let response = try await supabase.client
+            .from("favorite_foods")
+            .select("food_item_id")
+            .eq("patient_id", value: patientId)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+
+        struct FavoriteRow: Codable {
+            let foodItemId: UUID
+            enum CodingKeys: String, CodingKey {
+                case foodItemId = "food_item_id"
+            }
+        }
+
+        let decoder = JSONDecoder()
+        let favorites = try decoder.decode([FavoriteRow].self, from: response.data)
+
+        guard !favorites.isEmpty else { return [] }
+
+        // Fetch the food items
+        let foodIds = favorites.map { $0.foodItemId.uuidString }
+        let foodsResponse = try await supabase.client
+            .from("food_items")
+            .select("id, name, brand, serving_size, calories, protein_g, carbs_g, fat_g, category, is_verified")
+            .in("id", values: foodIds)
+            .execute()
+
+        return try decoder.decode([FoodSearchResult].self, from: foodsResponse.data)
+    }
+
+    /// Toggle food favorite status (ACP-1017)
+    func toggleFavorite(patientId: String, foodId: UUID) async throws {
+        // Check if already favorited
+        let checkResponse = try await supabase.client
+            .from("favorite_foods")
+            .select("id")
+            .eq("patient_id", value: patientId)
+            .eq("food_item_id", value: foodId.uuidString)
+            .execute()
+
+        struct FavoriteCheck: Codable {
+            let id: UUID
+        }
+
+        let decoder = JSONDecoder()
+        let existingFavorites = try? decoder.decode([FavoriteCheck].self, from: checkResponse.data)
+
+        if let existingFavorites = existingFavorites, !existingFavorites.isEmpty {
+            // Remove favorite
+            _ = try await supabase.client
+                .from("favorite_foods")
+                .delete()
+                .eq("patient_id", value: patientId)
+                .eq("food_item_id", value: foodId.uuidString)
+                .execute()
+        } else {
+            // Add favorite
+            struct AddFavorite: Codable {
+                let patientId: String
+                let foodItemId: String
+                enum CodingKeys: String, CodingKey {
+                    case patientId = "patient_id"
+                    case foodItemId = "food_item_id"
+                }
+            }
+            let newFavorite = AddFavorite(patientId: patientId, foodItemId: foodId.uuidString)
+            _ = try await supabase.client
+                .from("favorite_foods")
+                .insert(newFavorite)
+                .execute()
+        }
+    }
+
+    /// Fetch foods commonly eaten at this time of day (ACP-1017)
+    func fetchTimeOfDayFoods(patientId: String, mealType: MealType, limit: Int = 10) async throws -> [FoodSearchResult] {
+        // Get recent logs of this meal type
+        let logsResponse = try await supabase.client
+            .from("nutrition_logs")
+            .select("food_items")
+            .eq("patient_id", value: patientId)
+            .eq("meal_type", value: mealType.rawValue)
+            .order("logged_at", ascending: false)
+            .limit(20)
+            .execute()
+
+        let decoder = JSONDecoder()
+
+        struct FoodItemsWrapper: Codable {
+            let foodItems: [LoggedFoodItem]
+            enum CodingKeys: String, CodingKey {
+                case foodItems = "food_items"
+            }
+        }
+
+        let logs = try decoder.decode([FoodItemsWrapper].self, from: logsResponse.data)
+
+        // Extract unique food item IDs
+        var seenIds = Set<UUID>()
+        var uniqueIds: [UUID] = []
+
+        for log in logs {
+            for item in log.foodItems {
+                if let foodItemId = item.foodItemId, !seenIds.contains(foodItemId) {
+                    seenIds.insert(foodItemId)
+                    uniqueIds.append(foodItemId)
+                    if uniqueIds.count >= limit { break }
+                }
+            }
+            if uniqueIds.count >= limit { break }
+        }
+
+        guard !uniqueIds.isEmpty else { return [] }
+
+        // Fetch the food items
+        let idStrings = uniqueIds.map { $0.uuidString }
+        let foodsResponse = try await supabase.client
+            .from("food_items")
+            .select("id, name, brand, serving_size, calories, protein_g, carbs_g, fat_g, category, is_verified")
+            .in("id", values: idStrings)
+            .execute()
+
+        return try decoder.decode([FoodSearchResult].self, from: foodsResponse.data)
+    }
+
+    /// Fetch all available brands for filtering (ACP-1019)
+    func fetchAvailableBrands() async throws -> [String] {
+        let response = try await supabase.client
+            .from("food_items")
+            .select("brand")
+            .or("is_system.eq.true,created_by.eq.\(supabase.userId ?? "")")
+            .not("brand", operator: .is, value: "null")
+            .execute()
+
+        struct BrandRow: Codable {
+            let brand: String?
+        }
+
+        let decoder = JSONDecoder()
+        let rows = try decoder.decode([BrandRow].self, from: response.data)
+
+        // Get unique brands
+        let uniqueBrands = Set(rows.compactMap { $0.brand })
+        return Array(uniqueBrands).sorted()
     }
 
     /// Fetch recently logged foods for quick access

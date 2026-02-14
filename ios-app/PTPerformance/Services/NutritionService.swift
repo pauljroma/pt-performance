@@ -162,6 +162,30 @@ class NutritionService {
         )
     }
 
+    /// Fetch yesterday's nutrition logs for a patient (ACP-1017).
+    ///
+    /// - Parameter patientId: The patient's ID string
+    /// - Returns: Array of yesterday's nutrition logs
+    /// - Throws: Database errors if the query fails
+    func fetchYesterdaysLogs(patientId: String) async throws -> [NutritionLog] {
+        let calendar = Calendar.current
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: Date()) else {
+            logger.log("[NutritionService] Failed to calculate yesterday's date", level: .warning)
+            return []
+        }
+        let startOfDay = calendar.startOfDay(for: yesterday)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            logger.log("[NutritionService] Failed to calculate end of yesterday", level: .warning)
+            return []
+        }
+
+        return try await fetchNutritionLogs(
+            patientId: patientId,
+            startDate: startOfDay,
+            endDate: endOfDay
+        )
+    }
+
     /// Create a new nutrition log.
     ///
     /// - Parameter log: The nutrition log data to create

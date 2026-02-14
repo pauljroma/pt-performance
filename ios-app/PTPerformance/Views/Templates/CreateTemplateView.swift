@@ -194,7 +194,7 @@ struct CreateTemplateView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(tags, id: \.self) { tag in
-                            TagChip(
+                            TemplateTagChip(
                                 text: tag,
                                 onRemove: {
                                     tags.removeAll { $0 == tag }
@@ -299,7 +299,7 @@ struct CreateTemplateView: View {
 
 // MARK: - Tag Chip
 
-struct TagChip: View {
+struct TemplateTagChip: View {
     let text: String
     let onRemove: () -> Void
 

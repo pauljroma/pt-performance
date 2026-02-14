@@ -38,6 +38,17 @@ struct CalendarView: View {
     /// Cached month dates grid, recalculated only when currentMonth changes (Fix 6)
     @State private var cachedMonthDates: [Date?] = []
 
+    // ACP-1034: Smart Scheduling Suggestions
+    @StateObject private var smartSchedulingService = SmartSchedulingService.shared
+    @State private var todaySuggestion: SchedulingSuggestion?
+    @State private var allSuggestions: [SchedulingSuggestion] = []
+    @State private var bestTrainingTimes: [TrainingTimeWindow] = []
+    @State private var missedWorkoutProposals: [ReschedulingProposal] = []
+    @State private var calendarConflicts: [Date: [CalendarConflictInfo]] = [:]
+    @State private var showBestTimesWidget = false
+    @State private var showConflictDetails = false
+    @State private var selectedConflictDate: Date?
+
     let onDateSelected: ((Date) -> Void)?
 
     private let calendar = Calendar.current
@@ -103,6 +114,11 @@ struct CalendarView: View {
             // View mode segmented control (Month / Week / Day)
             viewModeSegment
 
+            // ACP-1034: Smart Scheduling Suggestions
+            if viewMode == .month {
+                smartSuggestionsSection
+            }
+
             // Calendar content
             switch viewMode {
             case .month:
@@ -119,6 +135,7 @@ struct CalendarView: View {
         .onAppear {
             cachedMonthDates = Self.computeMonthDates(for: currentMonth, calendar: calendar)
             loadScheduledSessions()
+            loadSmartSuggestions()
         }
         .onChange(of: currentMonth) { _, newMonth in
             cachedMonthDates = Self.computeMonthDates(for: newMonth, calendar: calendar)
@@ -134,6 +151,7 @@ struct CalendarView: View {
             DayDetailSheet(
                 date: selectedDate,
                 sessions: sessionsForSelectedDate,
+                conflicts: calendarConflicts[selectedDate] ?? [],
                 onSchedule: {
                     quickAddDate = selectedDate
                     showDayDetailSheet = false
@@ -143,10 +161,22 @@ struct CalendarView: View {
                 }
             )
         }
+        .sheet(isPresented: $showBestTimesWidget) {
+            NavigationStack {
+                bestTimesView
+            }
+        }
+        .sheet(isPresented: $showConflictDetails) {
+            if let conflictDate = selectedConflictDate,
+               let conflicts = calendarConflicts[conflictDate] {
+                ConflictDetailsSheet(date: conflictDate, conflicts: conflicts)
+            }
+        }
         .onChange(of: showScheduleSheet) { _, isPresented in
             if !isPresented {
                 quickAddDate = nil
                 loadScheduledSessions()
+                loadSmartSuggestions()
             }
         }
     }
@@ -646,6 +676,205 @@ struct CalendarView: View {
             }
         }
     }
+
+    // ACP-1034: Load smart scheduling suggestions
+    private func loadSmartSuggestions() {
+        Task {
+            guard let patientIdString = PTSupabaseClient.shared.userId,
+                  let patientId = UUID(uuidString: patientIdString) else {
+                return
+            }
+
+            do {
+                // Load suggestions concurrently
+                async let todaySuggestionTask = smartSchedulingService.getTodaySuggestion(for: patientId)
+                async let allSuggestionsTask = smartSchedulingService.generateSuggestions(for: patientId, days: 7)
+                async let bestTimesTask = smartSchedulingService.analyzeBestTrainingTimes(for: patientId)
+                async let missedWorkoutsTask = smartSchedulingService.autoAdjustMissedWorkouts(for: patientId, autoApply: false)
+
+                let (today, all, times, missed) = try await (todaySuggestionTask, allSuggestionsTask, bestTimesTask, missedWorkoutsTask)
+
+                await MainActor.run {
+                    todaySuggestion = today
+                    allSuggestions = all
+                    bestTrainingTimes = times
+                    missedWorkoutProposals = missed
+                }
+
+                // Load calendar conflicts for suggested dates
+                for suggestion in all {
+                    let conflicts = await smartSchedulingService.getCalendarConflicts(on: suggestion.date)
+                    await MainActor.run {
+                        calendarConflicts[suggestion.date] = conflicts
+                    }
+                }
+            } catch {
+                // Silently fail - suggestions are optional
+            }
+        }
+    }
+}
+
+// MARK: - Smart Suggestions Section
+
+extension CalendarView {
+
+    @ViewBuilder
+    private var smartSuggestionsSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.md) {
+                // Missed workout reschedule cards
+                ForEach(missedWorkoutProposals.prefix(2)) { proposal in
+                    MissedWorkoutRescheduleCard(
+                        proposal: proposal,
+                        onAccept: {
+                            rescheduleWorkout(proposal: proposal)
+                        },
+                        onDismiss: {
+                            dismissProposal(proposal)
+                        }
+                    )
+                    .frame(width: 320)
+                }
+
+                // Today's suggestion
+                if let suggestion = todaySuggestion {
+                    SmartSchedulingSuggestionCard(
+                        suggestion: suggestion,
+                        onSchedule: {
+                            quickAddDate = suggestion.date
+                            showScheduleSheet = true
+                        }
+                    )
+                    .frame(width: 320)
+                }
+
+                // Best times widget preview
+                if !bestTrainingTimes.isEmpty {
+                    bestTimesPreviewCard
+                        .frame(width: 280)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var bestTimesPreviewCard: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "clock.badge.checkmark")
+                    .font(.title3)
+                    .foregroundColor(.modusCyan)
+                    .accessibilityHidden(true)
+
+                Text("Best Times to Train")
+                    .font(.headline)
+                    .foregroundColor(.modusDeepTeal)
+
+                Spacer()
+            }
+
+            if let firstWindow = bestTrainingTimes.first {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(firstWindow.timeOfDay)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text("\(firstWindow.startHour):00 - \(firstWindow.endHour):00")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    HStack {
+                        Text("\(Int(firstWindow.avgReadiness))% avg readiness")
+                            .font(.caption2)
+                            .foregroundColor(.modusTealAccent)
+
+                        Spacer()
+                    }
+                }
+
+                Button(action: {
+                    HapticFeedback.light()
+                    showBestTimesWidget = true
+                }) {
+                    HStack {
+                        Text("View All Times")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.modusCyan)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xs)
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(CornerRadius.md)
+        .adaptiveShadow(Shadow.subtle)
+    }
+
+    private var bestTimesView: some View {
+        BestTimeToTrainWidget(timeWindows: bestTrainingTimes) { window in
+            // Auto-schedule at this time
+            let calendar = Calendar.current
+            guard let targetDate = calendar.nextDate(after: Date(), matching: DateComponents(hour: window.startHour), matchingPolicy: .nextTime) else {
+                return
+            }
+            quickAddDate = targetDate
+            showBestTimesWidget = false
+            showScheduleSheet = true
+        }
+        .padding()
+        .navigationTitle("Best Times to Train")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Done") {
+                    showBestTimesWidget = false
+                }
+                .foregroundColor(.modusCyan)
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    private func rescheduleWorkout(proposal: ReschedulingProposal) {
+        Task {
+            do {
+                let newDate = Calendar.current.date(
+                    bySettingHour: proposal.suggestedTime.hour,
+                    minute: proposal.suggestedTime.minute,
+                    second: 0,
+                    of: proposal.suggestedDate
+                ) ?? proposal.suggestedDate
+
+                _ = try await SchedulingService.shared.rescheduleSession(
+                    scheduledSessionId: proposal.originalSession.id,
+                    newDate: proposal.suggestedDate,
+                    newTime: newDate
+                )
+
+                HapticFeedback.success()
+
+                await MainActor.run {
+                    loadScheduledSessions()
+                    loadSmartSuggestions()
+                }
+            } catch {
+                HapticFeedback.error()
+            }
+        }
+    }
+
+    private func dismissProposal(_ proposal: ReschedulingProposal) {
+        missedWorkoutProposals.removeAll { $0.id == proposal.id }
+    }
 }
 
 // MARK: - Enhanced Calendar Date Cell
@@ -941,9 +1170,11 @@ struct WeekSummaryBadge: View {
 struct DayDetailSheet: View {
     let date: Date
     let sessions: [ScheduledSession]
+    let conflicts: [CalendarConflictInfo]
     let onSchedule: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var showConflictDetails = false
 
     var body: some View {
         NavigationStack {
@@ -951,6 +1182,11 @@ struct DayDetailSheet: View {
                 VStack(alignment: .leading, spacing: Spacing.md) {
                     // Summary header
                     daySummaryHeader
+
+                    // ACP-1034: Calendar conflicts warning
+                    if !conflicts.isEmpty {
+                        calendarConflictsSection
+                    }
 
                     if sessions.isEmpty {
                         emptyDayView
@@ -978,8 +1214,47 @@ struct DayDetailSheet: View {
                     .accessibilityLabel("Add workout")
                 }
             }
+            .sheet(isPresented: $showConflictDetails) {
+                ConflictDetailsSheet(date: date, conflicts: conflicts)
+            }
         }
         .presentationDetents([.medium, .large])
+    }
+
+    // ACP-1034: Calendar conflicts section
+    private var calendarConflictsSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            CalendarConflictBadge(conflicts: conflicts) {
+                showConflictDetails = true
+            }
+
+            if conflicts.count <= 2 {
+                ForEach(conflicts.prefix(2)) { conflict in
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "calendar")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(conflict.title)
+                                .font(.caption)
+                                .foregroundColor(.primary)
+
+                            Text(conflict.timeRange)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xs)
+                    .background(Color(.tertiarySystemGroupedBackground))
+                    .cornerRadius(CornerRadius.xs)
+                }
+            }
+        }
     }
 
     private static let mediumDateFormatter: DateFormatter = {
@@ -1096,6 +1371,88 @@ struct ScheduledSessionRow: View {
         case .completed: return .modusTealAccent
         case .cancelled: return DesignTokens.statusError
         case .rescheduled: return DesignTokens.statusWarning
+        }
+    }
+}
+
+// MARK: - Conflict Details Sheet
+
+/// Sheet displaying detailed calendar conflicts
+struct ConflictDetailsSheet: View {
+    let date: Date
+    let conflicts: [CalendarConflictInfo]
+
+    @Environment(\.dismiss) private var dismiss
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(DesignTokens.statusWarning)
+                                .accessibilityHidden(true)
+
+                            Text("\(conflicts.count) Calendar Event\(conflicts.count > 1 ? "s" : "")")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+
+                        Text("You have existing commitments on this day. Consider scheduling your workout at a different time.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.vertical, Spacing.xs)
+                }
+
+                Section("Events") {
+                    ForEach(conflicts) { conflict in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .font(.caption)
+                                    .foregroundColor(.modusCyan)
+                                    .accessibilityHidden(true)
+
+                                Text(conflict.title)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                            }
+
+                            HStack {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .accessibilityHidden(true)
+
+                                Text(conflict.timeRange)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, Spacing.xxs)
+                    }
+                }
+            }
+            .navigationTitle(Self.dateFormatter.string(from: date))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(.modusCyan)
+                }
+            }
         }
     }
 }

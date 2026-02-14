@@ -22,11 +22,11 @@ final class SupplementPickerViewModel: ObservableObject {
                 brand: catalogItem.brand,
                 category: SupplementMappingUtils.mapCatalogToSupplementCategory(catalogItem.category),
                 dosage: catalogItem.dosageRange,
-                frequency: .daily,
+                frequency: SupplementFrequency.daily,
                 timeOfDay: catalogItem.timing.compactMap { SupplementMappingUtils.mapTimingToTimeOfDay($0) },
                 withFood: catalogItem.timing.contains(.withMeal),
                 notes: catalogItem.description,
-                momentousProductId: nil,
+                momentousProductId: Optional<String>.none,
                 isActive: true,
                 createdAt: catalogItem.createdAt
             )

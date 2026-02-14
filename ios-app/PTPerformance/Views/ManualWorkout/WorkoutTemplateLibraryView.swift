@@ -533,7 +533,7 @@ struct WorkoutTemplateLibraryView: View {
             }
             .sheet(isPresented: $viewModel.showingPreview) {
                 if let template = viewModel.selectedTemplate {
-                    TemplatePreviewSheet(
+                    WorkoutTemplatePreviewSheet(
                         template: template,
                         onStartWorkout: {
                             onStartWorkout(template)
@@ -770,7 +770,7 @@ struct WorkoutTemplateLibraryView: View {
 
 // MARK: - Template Preview Sheet
 
-struct TemplatePreviewSheet: View {
+struct WorkoutTemplatePreviewSheet: View {
     let template: AnyWorkoutTemplate
     let onStartWorkout: () -> Void
     let onDismiss: () -> Void

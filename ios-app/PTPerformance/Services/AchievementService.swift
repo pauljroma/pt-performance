@@ -255,16 +255,19 @@ class AchievementService: ObservableObject {
         pendingPRCelebration = nil
     }
 
-    /// Share achievement
+    /// Share achievement (deprecated - use AchievementShareHelper instead)
     func shareAchievement(_ achievement: AchievementDefinition) -> String {
-        let shareText = """
-        I just unlocked the "\(achievement.title)" achievement in Modus!
+        // Generate shareable text directly to avoid scope issues
+        return """
+        I just unlocked the "\(achievement.title)" achievement in Modus! 🏆
 
         \(achievement.description)
 
+        Tier: \(achievement.tier.displayName)
+        Rarity: \(achievement.rarity.displayName)
+
         #Modus #FitnessGoals #Achievement
         """
-        return shareText
     }
 
     // MARK: - Private Methods

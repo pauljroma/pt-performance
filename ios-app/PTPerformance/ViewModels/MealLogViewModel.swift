@@ -29,6 +29,9 @@ class MealLogViewModel: ObservableObject {
     @Published var isSearching = false
     @Published var recentFoods: [FoodSearchResult] = []
     @Published var popularFoods: [FoodSearchResult] = []
+    @Published var favoriteFoods: [FoodSearchResult] = []
+    @Published var timeOfDayFoods: [FoodSearchResult] = []
+    @Published var yesterdaysMeals: [NutritionLog] = []
 
     // Selected food for editing
     @Published var selectedFood: LoggedFoodItem?
@@ -91,11 +94,17 @@ class MealLogViewModel: ObservableObject {
         do {
             async let recentTask = foodService.fetchRecentlyLoggedFoods(patientId: patientId)
             async let popularTask = foodService.fetchPopularFoods()
+            async let favoritesTask = foodService.fetchFavoriteFoods(patientId: patientId)
+            async let timeOfDayTask = foodService.fetchTimeOfDayFoods(patientId: patientId, mealType: mealType)
+            async let yesterdayTask = nutritionService.fetchYesterdaysLogs(patientId: patientId)
 
-            let (recent, popular) = try await (recentTask, popularTask)
+            let (recent, popular, favorites, timeOfDay, yesterday) = try await (recentTask, popularTask, favoritesTask, timeOfDayTask, yesterdayTask)
 
             recentFoods = recent
             popularFoods = popular
+            favoriteFoods = favorites
+            timeOfDayFoods = timeOfDay
+            yesterdaysMeals = yesterday
         } catch {
             ErrorLogger.shared.logError(error, context: "MealLogViewModel.loadInitialData")
             self.error = "Unable to load food options. Pull down to refresh."
@@ -245,6 +254,34 @@ class MealLogViewModel: ObservableObject {
 
     func addFromRecent(_ food: FoodSearchResult) {
         addFood(food)
+    }
+
+    // MARK: - Copy Yesterday's Meals
+
+    func copyYesterdaysMeals() {
+        foodItems.removeAll()
+        for log in yesterdaysMeals {
+            for item in log.foodItems {
+                foodItems.append(item)
+            }
+        }
+    }
+
+    // MARK: - Toggle Favorite
+
+    func toggleFavorite(_ food: FoodSearchResult) async {
+        guard let patientId = patientId else { return }
+        do {
+            try await foodService.toggleFavorite(patientId: patientId, foodId: food.id)
+            // Refresh favorites
+            favoriteFoods = try await foodService.fetchFavoriteFoods(patientId: patientId)
+        } catch {
+            ErrorLogger.shared.logError(error, context: "MealLogViewModel.toggleFavorite")
+        }
+    }
+
+    func isFavorite(_ food: FoodSearchResult) -> Bool {
+        favoriteFoods.contains { $0.id == food.id }
     }
 
     // MARK: - Reset

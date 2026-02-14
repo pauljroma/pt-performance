@@ -143,7 +143,7 @@ class OptimisticWorkoutViewModel: ObservableObject {
     let sessionId: UUID
     let patientId: UUID
     private(set) var exercises: [Exercise] = []
-    private var startTime: Date?
+    var startTime: Date?
     private var snapshots: [UUID: ExerciseUIStateSnapshot] = [:]
 
     // MARK: - Services

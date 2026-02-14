@@ -222,6 +222,11 @@ class ProgramWorkoutExecutionViewModel: ObservableObject {
         restTimeRemaining = 0
     }
 
+    func adjustRestTime(_ adjustment: TimeInterval) {
+        restTimeRemaining = max(0, restTimeRemaining + adjustment)
+        restTotalTime = max(restTotalTime, restTimeRemaining)
+    }
+
     // MARK: - Exercise Navigation
 
     func setupInputFields(for exercise: ManualSessionExercise) {
@@ -464,8 +469,13 @@ struct ProgramWorkoutExecutionView: View {
                         onSkip: {
                             viewModel.skipRestTimer()
                             viewModel.moveToNextExercise()
-                        }
+                        },
+                        onAdjust: { adjustment in
+                            viewModel.adjustRestTime(adjustment)
+                        },
+                        exerciseCategory: viewModel.currentExercise?.blockName
                     )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
                 // Loading overlay

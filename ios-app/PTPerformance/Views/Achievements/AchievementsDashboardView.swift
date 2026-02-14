@@ -76,7 +76,28 @@ struct AchievementsDashboardView: View {
         }
         .sheet(item: $selectedAchievement) { achievement in
             AchievementDetailSheet(progress: achievement, onShare: {
-                shareText = AchievementService.shared.shareAchievement(achievement.definition)
+                // Generate share text inline
+                let dateString: String
+                if let date = achievement.unlockedAt {
+                    let formatter = DateFormatter()
+                    formatter.dateStyle = .medium
+                    dateString = formatter.string(from: date)
+                } else {
+                    dateString = "recently"
+                }
+
+                shareText = """
+                I just unlocked the "\(achievement.definition.title)" achievement in Modus! 🏆
+
+                \(achievement.definition.description)
+
+                Earned: \(dateString)
+                Tier: \(achievement.definition.tier.displayName)
+                Rarity: \(achievement.definition.rarity.displayName)
+
+                #Modus #FitnessGoals #Achievement
+                """
+                selectedAchievement = nil
                 showShareSheet = true
             })
         }
@@ -539,23 +560,45 @@ struct AchievementDetailSheet: View {
                     AchievementBadgeView(
                         definition: progress.definition,
                         isUnlocked: progress.isUnlocked,
-                        size: 120
+                        size: 120,
+                        animated: true
                     )
                     .padding(.top, Spacing.xl)
 
                     // Info
                     VStack(spacing: Spacing.sm) {
-                        // Tier badge
-                        Text(progress.definition.tier.displayName.uppercased())
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(progress.definition.tier.color)
+                        // Rarity and Tier badges
+                        HStack(spacing: Spacing.sm) {
+                            // Rarity badge
+                            HStack(spacing: Spacing.xxs) {
+                                Image(systemName: progress.definition.rarity.icon)
+                                    .font(.caption2)
+                                Text(progress.definition.rarity.displayName.uppercased())
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                            }
+                            .foregroundColor(progress.definition.rarity.color)
                             .padding(.horizontal, Spacing.md)
                             .padding(.vertical, Spacing.xxs)
                             .background(
                                 Capsule()
-                                    .fill(progress.definition.tier.color.opacity(0.2))
+                                    .fill(progress.definition.rarity.color.opacity(0.2))
                             )
+                            .accessibilityLabel("\(progress.definition.rarity.displayName) rarity")
+
+                            // Tier badge
+                            Text(progress.definition.tier.displayName.uppercased())
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundColor(progress.definition.tier.color)
+                                .padding(.horizontal, Spacing.md)
+                                .padding(.vertical, Spacing.xxs)
+                                .background(
+                                    Capsule()
+                                        .fill(progress.definition.tier.color.opacity(0.2))
+                                )
+                                .accessibilityLabel("\(progress.definition.tier.displayName) tier")
+                        }
 
                         Text(progress.definition.title)
                             .font(.title2)
@@ -568,40 +611,93 @@ struct AchievementDetailSheet: View {
                             .padding(.horizontal)
                     }
 
-                    // Progress or unlock date
+                    // Progress or unlock stats
                     if progress.isUnlocked {
-                        VStack(spacing: Spacing.sm) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.title)
-                                .foregroundColor(.green)
+                        VStack(spacing: Spacing.md) {
+                            // Unlock status
+                            VStack(spacing: Spacing.sm) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.green)
 
-                            if let date = progress.unlockedAt {
-                                Text("Unlocked on \(date.formatted(date: .long, time: .omitted))")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
+                                if let date = progress.unlockedAt {
+                                    Text("Unlocked on \(date.formatted(date: .long, time: .omitted))")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
 
-                            HStack(spacing: Spacing.xs) {
-                                Image(systemName: "star.fill")
-                                    .foregroundColor(.yellow)
-                                Text("\(progress.definition.tier.points) points earned")
-                                    .fontWeight(.medium)
+                                HStack(spacing: Spacing.xs) {
+                                    Image(systemName: "star.fill")
+                                        .foregroundColor(.yellow)
+                                    Text("\(progress.definition.tier.points) points earned")
+                                        .fontWeight(.medium)
+                                }
                             }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: CornerRadius.md)
+                                    .fill(Color.green.opacity(0.1))
+                            )
+
+                            // Achievement stats
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
+                                Text("Achievement Stats")
+                                    .font(.headline)
+                                    .accessibilityAddTraits(.isHeader)
+
+                                AchievementStatRow(
+                                    icon: "calendar",
+                                    label: "Date Earned",
+                                    value: progress.unlockedAt?.formatted(date: .abbreviated, time: .omitted) ?? "Recently"
+                                )
+
+                                AchievementStatRow(
+                                    icon: "number",
+                                    label: "Final Value",
+                                    value: "\(progress.currentValue) \(progress.definition.requirementUnit)"
+                                )
+
+                                AchievementStatRow(
+                                    icon: progress.definition.rarity.icon,
+                                    label: "Rarity",
+                                    value: progress.definition.rarity.displayName
+                                )
+
+                                AchievementStatRow(
+                                    icon: "chart.bar",
+                                    label: "Typical Unlock Rate",
+                                    value: "\(Int(progress.definition.rarity.unlockPercentage))% of users"
+                                )
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: CornerRadius.md)
+                                    .fill(Color(.secondarySystemGroupedBackground))
+                            )
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: CornerRadius.md)
-                                .fill(Color.green.opacity(0.1))
-                        )
                     } else {
                         VStack(spacing: Spacing.sm) {
                             Text("Progress")
                                 .font(.headline)
 
-                            ProgressView(value: progress.progress)
-                                .tint(progress.definition.type.color)
-                                .frame(height: 8)
-                                .clipShape(Capsule())
+                            // Circular progress
+                            CircularProgressIndicator(
+                                progress: progress.progress,
+                                color: progress.definition.type.color,
+                                size: 100,
+                                lineWidth: 8
+                            ) {
+                                VStack(spacing: 2) {
+                                    Text("\(progress.progressPercentage)%")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(progress.definition.type.color)
+                                    Text("complete")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, Spacing.md)
 
                             Text("\(progress.currentValue) / \(progress.definition.requirement) \(progress.definition.requirementUnit)")
                                 .font(.subheadline)
@@ -609,6 +705,7 @@ struct AchievementDetailSheet: View {
 
                             Text("\(progress.remainingValue) more to unlock!")
                                 .font(.caption)
+                                .fontWeight(.medium)
                                 .foregroundColor(progress.definition.type.color)
                         }
                         .padding()
@@ -621,7 +718,7 @@ struct AchievementDetailSheet: View {
                     // Share button (if unlocked)
                     if progress.isUnlocked {
                         Button(action: {
-                            HapticFeedback.light()
+                            HapticFeedback.medium()
                             onShare()
                         }) {
                             HStack {
@@ -632,10 +729,18 @@ struct AchievementDetailSheet: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(progress.definition.tier.color)
+                            .background(
+                                LinearGradient(
+                                    colors: [progress.definition.tier.color, progress.definition.tier.color.opacity(0.8)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .cornerRadius(CornerRadius.md)
+                            .adaptiveShadow(Shadow.medium)
                         }
                         .padding(.horizontal)
+                        .accessibilityLabel("Share this achievement")
                     }
                 }
                 .padding()
@@ -650,6 +755,37 @@ struct AchievementDetailSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Achievement Stat Row
+
+struct AchievementStatRow: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.modusCyan)
+                .frame(width: 20)
+                .accessibilityHidden(true)
+
+            Text(label)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            Spacer()
+
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(value)")
     }
 }
 

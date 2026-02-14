@@ -79,6 +79,8 @@ struct SwipeableExerciseCard: View {
     let totalSets: Int
     let isCompleted: Bool
     let isSkipped: Bool
+    var actualReps: Int?
+    var actualWeight: Double?
 
     /// Called when the exercise set is completed via swipe
     let onComplete: () -> Void
@@ -88,6 +90,12 @@ struct SwipeableExerciseCard: View {
 
     /// Optional: Called when the card is tapped (for detailed logging)
     var onTap: (() -> Void)?
+
+    /// Optional: Called when user taps reps to edit
+    var onEditReps: (() -> Void)?
+
+    /// Optional: Called when user taps weight to edit
+    var onEditWeight: (() -> Void)?
 
     // MARK: - State
 
@@ -99,6 +107,8 @@ struct SwipeableExerciseCard: View {
     @State private var completionOpacity: CGFloat = 1.0
     @State private var iconRotation: Double = 0
     @State private var backgroundGradientProgress: CGFloat = 0
+    @State private var showCompletionCheckmark = false
+    @State private var hasTriggeredThresholdHaptic = false
 
     // Gesture thresholds
     private let completeThreshold: CGFloat = 120
@@ -121,9 +131,9 @@ struct SwipeableExerciseCard: View {
 
     private var cardBackgroundColor: Color {
         if isCompleted {
-            return Color.green.opacity(0.1)
+            return Color.modusTealAccent.opacity(0.1)
         } else if isSkipped {
-            return Color.orange.opacity(0.1)
+            return DesignTokens.statusWarning.opacity(0.1)
         }
         return Color(.systemBackground)
     }
@@ -139,9 +149,9 @@ struct SwipeableExerciseCard: View {
 
     private var statusColor: Color {
         if isCompleted {
-            return .green
+            return .modusTealAccent
         } else if isSkipped {
-            return .orange
+            return DesignTokens.statusWarning
         }
         return .clear
     }
@@ -154,18 +164,26 @@ struct SwipeableExerciseCard: View {
             backgroundActionsView
 
             // Main card content
-            mainCardView
-                .offset(x: offset)
-                .scaleEffect(completionScale)
-                .opacity(completionOpacity)
-                .gesture(isDisabled ? nil : dragGesture)
-                .onTapGesture {
-                    if !isDisabled {
-                        onTap?()
+            ZStack {
+                mainCardView
+                    .offset(x: offset)
+                    .scaleEffect(completionScale)
+                    .opacity(completionOpacity)
+                    .gesture(isDisabled ? nil : dragGesture)
+                    .onTapGesture {
+                        if !isDisabled {
+                            onTap?()
+                        }
                     }
+
+                // Completion checkmark overlay
+                if showCompletionCheckmark {
+                    completionOverlay
                 }
+            }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: cardState)
+        .animation(.spring(response: 0.35, dampingFraction: 0.6), value: cardState)
+        .animation(.spring(response: 0.35, dampingFraction: 0.6), value: offset)
         .sheet(isPresented: $showModificationSheet) {
             ModificationOptionsSheet(
                 exercise: exercise,
@@ -190,6 +208,28 @@ struct SwipeableExerciseCard: View {
         }
     }
 
+    // MARK: - Completion Overlay
+
+    private var completionOverlay: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: CornerRadius.md)
+                .fill(Color.modusTealAccent.opacity(0.95))
+
+            VStack(spacing: Spacing.sm) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.white)
+                    .rotationEffect(.degrees(iconRotation))
+
+                Text("Complete!")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+            }
+        }
+        .transition(.scale.combined(with: .opacity))
+    }
+
     // MARK: - Background Actions View
 
     private var backgroundActionsView: some View {
@@ -206,7 +246,7 @@ struct SwipeableExerciseCard: View {
     }
 
     private var completeActionBackground: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 28))
                 .fontWeight(.bold)
@@ -226,7 +266,7 @@ struct SwipeableExerciseCard: View {
         .frame(maxHeight: .infinity)
         .background(
             LinearGradient(
-                colors: [Color.green.opacity(0.9), Color.green],
+                colors: [Color.modusTealAccent.opacity(0.9), Color.modusTealAccent],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -236,7 +276,7 @@ struct SwipeableExerciseCard: View {
     }
 
     private var modifyActionBackground: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("Options")
                     .font(.headline)
@@ -255,7 +295,7 @@ struct SwipeableExerciseCard: View {
         .frame(maxHeight: .infinity)
         .background(
             LinearGradient(
-                colors: [Color.orange, Color.orange.opacity(0.9)],
+                colors: [DesignTokens.statusWarning, DesignTokens.statusWarning.opacity(0.9)],
                 startPoint: .leading,
                 endPoint: .trailing
             )
@@ -300,7 +340,7 @@ struct SwipeableExerciseCard: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.green.opacity(0.15 * swipeProgress),
+                                    Color.modusTealAccent.opacity(0.2 * swipeProgress),
                                     Color.clear
                                 ],
                                 startPoint: .leading,
@@ -316,7 +356,7 @@ struct SwipeableExerciseCard: View {
                             LinearGradient(
                                 colors: [
                                     Color.clear,
-                                    Color.orange.opacity(0.15 * swipeProgress)
+                                    DesignTokens.statusWarning.opacity(0.15 * swipeProgress)
                                 ],
                                 startPoint: .leading,
                                 endPoint: .trailing
@@ -350,13 +390,13 @@ struct SwipeableExerciseCard: View {
 
     private var setIndicatorColor: Color {
         if isCompleted {
-            return .green
+            return .modusTealAccent
         } else if isSkipped {
-            return .orange
+            return DesignTokens.statusWarning
         } else if offset > 0 {
-            return Color.green.opacity(0.5 + swipeProgress * 0.5)
+            return Color.modusTealAccent.opacity(0.5 + swipeProgress * 0.5)
         }
-        return .blue
+        return .modusCyan
     }
 
     private var exerciseInfo: some View {
@@ -377,35 +417,77 @@ struct SwipeableExerciseCard: View {
     }
 
     private var prescriptionDetails: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            // Reps
-            HStack(spacing: 4) {
-                Text(exercise.targetReps ?? "10")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(isDisabled ? .secondary : .primary)
-                Text("reps")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+        VStack(alignment: .trailing, spacing: Spacing.xxs) {
+            // Reps (tappable for quick edit)
+            Button {
+                if !isDisabled, let onEditReps = onEditReps {
+                    HapticFeedback.light()
+                    onEditReps()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(String(actualReps ?? Int(exercise.targetReps ?? "10") ?? 10))
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(isDisabled ? .secondary : .modusPrimary)
+                    Text("reps")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if !isDisabled && onEditReps != nil {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.modusCyan.opacity(0.6))
+                    }
+                }
             }
+            .disabled(isDisabled || onEditReps == nil)
+            .accessibilityLabel("\(actualReps ?? Int(exercise.targetReps ?? "10") ?? 10) reps")
+            .accessibilityHint(isDisabled ? "" : "Double tap to edit reps")
+            .accessibilityAddTraits(isDisabled || onEditReps == nil ? [] : .isButton)
 
-            // Weight if applicable
+            // Weight if applicable (tappable for quick edit)
             if let load = exercise.targetLoad, load > 0 {
-                Text(exercise.loadDisplay)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Button {
+                    if !isDisabled, let onEditWeight = onEditWeight {
+                        HapticFeedback.light()
+                        onEditWeight()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(formatWeight(actualWeight ?? load))
+                            .font(.caption)
+                            .foregroundColor(isDisabled ? .secondary : .primary)
+                        if !isDisabled && onEditWeight != nil {
+                            Image(systemName: "pencil.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.modusCyan.opacity(0.6))
+                        }
+                    }
+                }
+                .disabled(isDisabled || onEditWeight == nil)
+                .accessibilityLabel("\(formatWeight(actualWeight ?? load))")
+                .accessibilityHint(isDisabled ? "" : "Double tap to edit weight")
+                .accessibilityAddTraits(isDisabled || onEditWeight == nil ? [] : .isButton)
             }
+        }
+    }
+
+    private func formatWeight(_ weight: Double) -> String {
+        if weight.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(weight)) \(exercise.loadUnit ?? "lbs")"
+        } else {
+            return String(format: "%.1f %@", weight, exercise.loadUnit ?? "lbs")
         }
     }
 
     private var borderColor: Color {
         if isCompleted {
-            return .green.opacity(0.3)
+            return .modusTealAccent.opacity(0.4)
         } else if isSkipped {
-            return .orange.opacity(0.3)
+            return DesignTokens.statusWarning.opacity(0.4)
         } else if offset > completeThreshold * 0.8 {
-            return .green.opacity(swipeProgress)
+            return .modusTealAccent.opacity(swipeProgress)
         } else if offset < modifyThreshold * 0.8 {
-            return .orange.opacity(swipeProgress)
+            return DesignTokens.statusWarning.opacity(swipeProgress)
         }
         return .clear
     }
@@ -445,42 +527,55 @@ struct SwipeableExerciseCard: View {
                 // Rubber-band effect past threshold
                 let overshoot = translation - completeThreshold
                 offset = completeThreshold + (overshoot * 0.3)
+
+                // Trigger threshold haptic once
+                if !hasTriggeredThresholdHaptic {
+                    HapticFeedback.medium()
+                    hasTriggeredThresholdHaptic = true
+                }
             } else {
                 offset = translation
+                hasTriggeredThresholdHaptic = false
             }
             cardState = .swipingRight(progress: swipeProgress)
 
             // Update icon rotation based on progress
             iconRotation = swipeProgress * 360
+
+            // Light haptic at 50% threshold
+            if offset > completeThreshold * 0.5 && offset < completeThreshold * 0.55 {
+                HapticFeedback.light()
+            }
         } else {
             // Left swipe (modify) - more resistance
             if -translation > abs(modifyThreshold) {
                 let overshoot = -translation - abs(modifyThreshold)
                 offset = modifyThreshold - (overshoot * 0.2)
+
+                // Trigger threshold haptic once
+                if !hasTriggeredThresholdHaptic {
+                    HapticFeedback.light()
+                    hasTriggeredThresholdHaptic = true
+                }
             } else {
                 offset = translation
+                hasTriggeredThresholdHaptic = false
             }
             cardState = .swipingLeft(progress: swipeProgress)
-        }
-
-        // Haptic feedback at threshold
-        if offset > completeThreshold && !isDragging {
-            // Already past threshold, will complete
-        } else if offset > completeThreshold * 0.95 {
-            // About to reach threshold
-            HapticFeedback.medium()
         }
     }
 
     private func handleDragEnded(_ value: DragGesture.Value) {
         isDragging = false
+        hasTriggeredThresholdHaptic = false
 
         if offset > completeThreshold {
             triggerCompletion()
         } else if offset < modifyThreshold {
             triggerModificationSheet()
         } else {
-            // Snap back
+            // Snap back with light haptic
+            HapticFeedback.light()
             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                 offset = 0
                 cardState = .idle
@@ -495,24 +590,25 @@ struct SwipeableExerciseCard: View {
         // Success haptic
         HapticFeedback.success()
 
-        // Animate completion
-        withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
-            completionScale = 1.05
+        // Show checkmark overlay briefly
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            showCompletionCheckmark = true
             iconRotation = 360
         }
 
         // Then animate off and callback
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                showCompletionCheckmark = false
                 offset = UIScreen.main.bounds.width
                 completionOpacity = 0
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 onComplete()
 
                 // Reset for next appearance
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
                     offset = 0
                     completionScale = 1.0
                     completionOpacity = 1.0
@@ -528,7 +624,7 @@ struct SwipeableExerciseCard: View {
         HapticFeedback.medium()
 
         // Snap back and show sheet
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
             offset = 0
             cardState = .idle
         }
@@ -539,27 +635,28 @@ struct SwipeableExerciseCard: View {
     private func handleModificationSelected(_ option: ExerciseModificationOption) {
         showModificationSheet = false
 
-        // Light haptic for selection
-        HapticFeedback.light()
+        // Selection haptic
+        HapticFeedback.selectionChanged()
 
         if option == .skip {
             // Animate skip similar to complete but to the left
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                 offset = -UIScreen.main.bounds.width
                 completionOpacity = 0
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 onModify(option)
 
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
                     offset = 0
                     completionOpacity = 1.0
                     cardState = .skipped
                 }
             }
         } else {
-            // Just notify for other modifications
+            // Just notify for other modifications with haptic
+            HapticFeedback.light()
             cardState = .modified
             onModify(option)
         }
@@ -651,8 +748,11 @@ struct ModificationOptionButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 12) {
+        Button(action: {
+            HapticFeedback.light()
+            action()
+        }) {
+            VStack(spacing: Spacing.sm) {
                 Image(systemName: option.icon)
                     .font(.title)
                     .foregroundColor(option.color)
@@ -664,15 +764,18 @@ struct ModificationOptionButton: View {
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 20)
+            .padding(.vertical, Spacing.lg)
             .background(option.color.opacity(0.1))
             .cornerRadius(CornerRadius.md)
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md)
-                    .stroke(option.color.opacity(0.3), lineWidth: 1)
+                    .stroke(option.color.opacity(0.3), lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(option.rawValue)
+        .accessibilityHint("Double tap to apply this modification")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -705,8 +808,12 @@ struct ModificationOptionButton: View {
                 totalSets: 3,
                 isCompleted: false,
                 isSkipped: false,
+                actualReps: 10,
+                actualWeight: 135,
                 onComplete: { print("Set 1 completed!") },
-                onModify: { option in print("Modified: \(option.rawValue)") }
+                onModify: { option in print("Modified: \(option.rawValue)") },
+                onEditReps: { print("Edit reps") },
+                onEditWeight: { print("Edit weight") }
             )
 
             SwipeableExerciseCard(

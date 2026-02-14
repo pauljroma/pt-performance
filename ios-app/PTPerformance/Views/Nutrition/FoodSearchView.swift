@@ -17,6 +17,9 @@ struct FoodSearchView: View {
     @State private var selectedCategory: FoodCategory?
     @State private var showAddCustomFood = false
     @State private var searchError: String?
+    @State private var selectedBrand: String?
+    @State private var availableBrands: [String] = []
+    @State private var showBrandFilter = false
 
     private let foodService = FoodDatabaseService.shared
     let onFoodSelected: (FoodSearchResult) -> Void
@@ -28,6 +31,11 @@ struct FoodSearchView: View {
 
             // Category Filter
             categoryFilter
+
+            // Brand Filter (ACP-1019)
+            if !availableBrands.isEmpty && !searchText.isEmpty {
+                brandFilter
+            }
 
             // Results
             if isSearching {
@@ -55,6 +63,14 @@ struct FoodSearchView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+            }
+        }
+        .task {
+            // Load available brands (ACP-1019)
+            do {
+                availableBrands = try await foodService.fetchAvailableBrands()
+            } catch {
+                // Silently fail - brand filter is optional
             }
         }
         .sheet(isPresented: $showAddCustomFood) {
@@ -151,6 +167,50 @@ struct FoodSearchView: View {
         }
     }
 
+    // MARK: - Brand Filter (ACP-1019)
+
+    private var brandFilter: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // All brands button
+                Button {
+                    selectedBrand = nil
+                    performSearch()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "building.2")
+                            .font(.caption2)
+                        Text("All Brands")
+                    }
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(selectedBrand == nil ? Color.green : Color(.tertiarySystemGroupedBackground))
+                    .foregroundColor(selectedBrand == nil ? .white : .primary)
+                    .cornerRadius(CornerRadius.lg)
+                }
+
+                ForEach(availableBrands.prefix(10), id: \.self) { brand in
+                    Button {
+                        selectedBrand = brand
+                        performSearch()
+                    } label: {
+                        Text(brand)
+                            .font(.caption)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(selectedBrand == brand ? Color.green : Color(.tertiarySystemGroupedBackground))
+                            .foregroundColor(selectedBrand == brand ? .white : .primary)
+                            .cornerRadius(CornerRadius.lg)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
     // MARK: - Loading State
 
     private var searchLoadingState: some View {
@@ -243,7 +303,8 @@ struct FoodSearchView: View {
         Task {
             do {
                 try await Task.sleep(nanoseconds: 300_000_000) // Debounce
-                searchResults = try await foodService.searchFoods(query: searchText)
+                // ACP-1019: Use fuzzy matching with brand filter
+                searchResults = try await foodService.searchFoods(query: searchText, brandFilter: selectedBrand)
                 isSearching = false
             } catch {
                 isSearching = false
@@ -326,7 +387,7 @@ struct FoodSearchSkeletonRow: View {
     }
 }
 
-// MARK: - Food Search Result Row
+// MARK: - Food Search Result Row (ACP-1019: Enhanced with macro preview)
 
 struct FoodSearchResultRow: View {
     let food: FoodSearchResult
@@ -352,18 +413,54 @@ struct FoodSearchResultRow: View {
                         .foregroundColor(.secondary)
                 }
 
+                // ACP-1019: Macro preview in search results
                 HStack(spacing: 8) {
-                    Text(food.servingSize)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 2) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(.orange)
+                        Text("\(food.calories)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
 
                     Text("•")
+                        .font(.caption2)
                         .foregroundColor(.secondary)
 
-                    Text("\(food.calories) cal")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                    HStack(spacing: 6) {
+                        HStack(spacing: 2) {
+                            Text("P:")
+                                .font(.caption2)
+                                .foregroundColor(.red)
+                            Text("\(Int(food.proteinG))g")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                        }
+
+                        HStack(spacing: 2) {
+                            Text("C:")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Text("\(Int(food.carbsG))g")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                        }
+
+                        HStack(spacing: 2) {
+                            Text("F:")
+                                .font(.caption2)
+                                .foregroundColor(.yellow)
+                            Text("\(Int(food.fatG))g")
+                                .font(.caption2)
+                                .fontWeight(.medium)
+                        }
+                    }
                 }
+
+                Text(food.servingSize)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
 
             Spacer()

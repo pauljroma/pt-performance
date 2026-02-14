@@ -4,12 +4,43 @@
 //  PTPerformance
 //
 //  ACP-813: HD Video Exercise Demos - Full-featured video player
-//  Features: Multi-angle, slow-motion, loop mode, PiP, AirPlay
+//  ACP-1014: Enhanced video player with improved scrubbing, PiP, A-B loop, bookmarks, and preloading
+//  Features: Multi-angle, slow-motion scrubbing, loop mode, PiP, AirPlay, A-B segments, form cue bookmarks
 //
 
 import SwiftUI
 import AVKit
 import AVFoundation
+
+/// Form cue bookmark model
+struct FormCueBookmark: Identifiable, Codable {
+    let id: UUID
+    let timestamp: Double
+    let label: String
+    let createdAt: Date
+
+    init(id: UUID = UUID(), timestamp: Double, label: String, createdAt: Date = Date()) {
+        self.id = id
+        self.timestamp = timestamp
+        self.label = label
+        self.createdAt = createdAt
+    }
+}
+
+/// A-B loop segment model
+struct LoopSegment: Equatable {
+    var pointA: Double?
+    var pointB: Double?
+
+    var isComplete: Bool {
+        pointA != nil && pointB != nil
+    }
+
+    var range: ClosedRange<Double>? {
+        guard let a = pointA, let b = pointB else { return nil }
+        return min(a, b)...max(a, b)
+    }
+}
 
 /// Full-featured HD video player for exercise demonstrations
 struct ExerciseVideoPlayerView: View {
@@ -24,7 +55,14 @@ struct ExerciseVideoPlayerView: View {
     @State private var controlsTimer: Timer?
     @State private var showAngleSelector = false
     @State private var showSpeedSelector = false
+    @State private var showBookmarksPanel = false
+    @State private var showLoopControls = false
     @State private var isFullScreen = false
+    @State private var loopSegment = LoopSegment()
+    @State private var bookmarks: [FormCueBookmark] = []
+    @State private var newBookmarkLabel = ""
+    @State private var showBookmarkInput = false
+    @State private var angleSwitchOpacity: Double = 1.0
 
     @Environment(\.dismiss) private var dismiss
 
@@ -44,13 +82,15 @@ struct ExerciseVideoPlayerView: View {
                 if let player = controller.player {
                     VideoPlayer(player: player)
                         .ignoresSafeArea()
+                        .opacity(angleSwitchOpacity)
                         .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) {
+                            withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
                                 showControls.toggle()
                             }
                             if showControls {
                                 startControlsTimer()
                             }
+                            HapticFeedback.light()
                         }
                 } else if controller.isLoading {
                     loadingView
@@ -75,11 +115,30 @@ struct ExerciseVideoPlayerView: View {
                     speedSelector
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
+
+                // Bookmarks panel
+                if showBookmarksPanel {
+                    bookmarksPanel
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+
+                // Loop controls panel
+                if showLoopControls {
+                    loopControlsPanel
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+
+                // Bookmark input dialog
+                if showBookmarkInput {
+                    bookmarkInputDialog
+                        .transition(.opacity)
+                }
             }
         }
         .onAppear {
             setupInitialVideo()
             startControlsTimer()
+            preloadNextVideos()
         }
         .onDisappear {
             controlsTimer?.invalidate()
@@ -200,20 +259,29 @@ struct ExerciseVideoPlayerView: View {
 
     private func bottomControlBar(geometry: GeometryProxy) -> some View {
         VStack(spacing: 12) {
-            // Progress bar
-            VideoProgressBar(
+            // Enhanced progress bar with bookmarks and loop markers
+            EnhancedVideoProgressBar(
                 currentTime: controller.currentTime,
-                duration: controller.duration
-            ) { newTime in
-                controller.seek(to: newTime)
-                resetControlsTimer()
-            }
+                duration: controller.duration,
+                bookmarks: bookmarks,
+                loopSegment: loopSegment,
+                onSeek: { newTime in
+                    controller.seek(to: newTime)
+                    HapticFeedback.light()
+                    resetControlsTimer()
+                },
+                onBookmarkTap: { bookmark in
+                    controller.seek(to: bookmark.timestamp)
+                    HapticFeedback.medium()
+                }
+            )
 
             // Main controls row
-            HStack(spacing: 20) {
+            HStack(spacing: 16) {
                 // Play/Pause
                 Button {
                     controller.togglePlayPause()
+                    HapticFeedback.light()
                     resetControlsTimer()
                 } label: {
                     Image(systemName: controller.isPlaying ? "pause.fill" : "play.fill")
@@ -221,6 +289,8 @@ struct ExerciseVideoPlayerView: View {
                         .foregroundColor(.white)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel(controller.isPlaying ? "Pause" : "Play")
+                .accessibilityHint("Toggles video playback")
 
                 // Time display
                 HStack(spacing: 4) {
@@ -231,6 +301,8 @@ struct ExerciseVideoPlayerView: View {
                 .font(.caption)
                 .foregroundColor(.white)
                 .monospacedDigit()
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Current time \(formatTime(controller.currentTime)) of \(formatTime(controller.duration))")
 
                 Spacer()
 
@@ -240,7 +312,10 @@ struct ExerciseVideoPlayerView: View {
                         withAnimation(.spring(response: 0.3)) {
                             showAngleSelector.toggle()
                             showSpeedSelector = false
+                            showBookmarksPanel = false
+                            showLoopControls = false
                         }
+                        HapticFeedback.selectionChanged()
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: selectedVideo?.angle.iconName ?? "person.fill")
@@ -251,9 +326,11 @@ struct ExerciseVideoPlayerView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(showAngleSelector ? Color.blue : Color.white.opacity(0.2))
+                        .background(showAngleSelector ? Color.modusCyan : Color.white.opacity(0.2))
                         .cornerRadius(CornerRadius.sm)
                     }
+                    .accessibilityLabel("Camera angle: \(selectedVideo?.angle.displayName ?? "Unknown")")
+                    .accessibilityHint("Change camera angle")
                 }
 
                 // Speed selector
@@ -261,7 +338,10 @@ struct ExerciseVideoPlayerView: View {
                     withAnimation(.spring(response: 0.3)) {
                         showSpeedSelector.toggle()
                         showAngleSelector = false
+                        showBookmarksPanel = false
+                        showLoopControls = false
                     }
+                    HapticFeedback.selectionChanged()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "gauge.with.dots.needle.50percent")
@@ -269,34 +349,76 @@ struct ExerciseVideoPlayerView: View {
                     }
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(controller.playbackSpeed.isSlowMotion ? .blue : .white)
+                    .foregroundColor(controller.playbackSpeed.isSlowMotion ? .modusCyan : .white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(showSpeedSelector ? Color.blue : Color.white.opacity(0.2))
+                    .background(showSpeedSelector ? Color.modusCyan : Color.white.opacity(0.2))
                     .cornerRadius(CornerRadius.sm)
                 }
+                .accessibilityLabel("Playback speed: \(controller.playbackSpeed.displayName)")
+                .accessibilityHint("Adjust playback speed")
 
-                // Loop toggle
+                // A-B Loop button
                 Button {
-                    controller.toggleLoop()
-                    resetControlsTimer()
+                    withAnimation(.spring(response: 0.3)) {
+                        showLoopControls.toggle()
+                        showAngleSelector = false
+                        showSpeedSelector = false
+                        showBookmarksPanel = false
+                    }
+                    HapticFeedback.selectionChanged()
                 } label: {
-                    Image(systemName: controller.isLooping ? "repeat.1" : "repeat")
+                    Image(systemName: loopSegment.isComplete ? "repeat.circle.fill" : "repeat.circle")
                         .font(.title3)
-                        .foregroundColor(controller.isLooping ? .blue : .white)
+                        .foregroundColor(loopSegment.isComplete ? .modusTealAccent : .white)
                         .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("A-B Loop")
+                .accessibilityHint(loopSegment.isComplete ? "Loop is active" : "Set loop points")
+
+                // Bookmarks button
+                Button {
+                    withAnimation(.spring(response: 0.3)) {
+                        showBookmarksPanel.toggle()
+                        showAngleSelector = false
+                        showSpeedSelector = false
+                        showLoopControls = false
+                    }
+                    HapticFeedback.selectionChanged()
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "bookmark.fill")
+                            .font(.title3)
+                            .foregroundColor(bookmarks.isEmpty ? .white : .modusTealAccent)
+                            .frame(width: 44, height: 44)
+
+                        if !bookmarks.isEmpty {
+                            Text("\(bookmarks.count)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(3)
+                                .background(Color.modusCyan)
+                                .clipShape(Circle())
+                                .offset(x: 8, y: -2)
+                        }
+                    }
+                }
+                .accessibilityLabel("Bookmarks")
+                .accessibilityHint("\(bookmarks.count) bookmarks")
 
                 // PiP button
                 if controller.supportsPictureInPicture {
                     Button {
                         controller.togglePictureInPicture()
+                        HapticFeedback.medium()
                     } label: {
                         Image(systemName: "pip.enter")
                             .font(.title3)
                             .foregroundColor(.white)
                             .frame(width: 44, height: 44)
                     }
+                    .accessibilityLabel("Picture in Picture")
+                    .accessibilityHint("Enable picture in picture mode")
                 }
             }
             .padding(.horizontal, 16)
@@ -398,7 +520,345 @@ struct ExerciseVideoPlayerView: View {
         .ignoresSafeArea()
     }
 
+    // MARK: - Bookmarks Panel
+
+    private var bookmarksPanel: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 16) {
+                // Header
+                HStack {
+                    Text("Form Cue Bookmarks")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            showBookmarksPanel = false
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                }
+
+                // Add bookmark button
+                Button {
+                    showBookmarkInput = true
+                    HapticFeedback.light()
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Bookmark at \(formatTime(controller.currentTime))")
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.modusCyan)
+                    .cornerRadius(CornerRadius.md)
+                }
+                .accessibilityLabel("Add bookmark at current time")
+
+                // Bookmarks list
+                if bookmarks.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "bookmark")
+                            .font(.largeTitle)
+                            .foregroundColor(.white.opacity(0.5))
+                        Text("No bookmarks yet")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.7))
+                        Text("Tap + to save form cues")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    .padding(.vertical, 24)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 8) {
+                            ForEach(bookmarks.sorted { $0.timestamp < $1.timestamp }) { bookmark in
+                                bookmarkRow(bookmark)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 200)
+                }
+            }
+            .padding()
+            .background(Color.black.opacity(0.95))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .padding()
+        }
+        .ignoresSafeArea()
+    }
+
+    private func bookmarkRow(_ bookmark: FormCueBookmark) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(bookmark.label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.white)
+                Text(formatTime(bookmark.timestamp))
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.7))
+                    .monospacedDigit()
+            }
+
+            Spacer()
+
+            // Jump to button
+            Button {
+                controller.seek(to: bookmark.timestamp)
+                HapticFeedback.medium()
+                withAnimation(.spring(response: 0.3)) {
+                    showBookmarksPanel = false
+                }
+            } label: {
+                Image(systemName: "play.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.modusTealAccent)
+            }
+            .accessibilityLabel("Jump to \(bookmark.label)")
+
+            // Delete button
+            Button {
+                withAnimation {
+                    bookmarks.removeAll { $0.id == bookmark.id }
+                }
+                HapticFeedback.light()
+            } label: {
+                Image(systemName: "trash.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.red.opacity(0.8))
+            }
+            .accessibilityLabel("Delete bookmark")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(CornerRadius.sm)
+    }
+
+    // MARK: - Bookmark Input Dialog
+
+    private var bookmarkInputDialog: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    showBookmarkInput = false
+                    newBookmarkLabel = ""
+                }
+
+            VStack(spacing: 20) {
+                Text("Add Form Cue")
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text("At \(formatTime(controller.currentTime))")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.7))
+                    .monospacedDigit()
+
+                TextField("e.g., Keep back straight", text: $newBookmarkLabel)
+                    .textFieldStyle(.roundedBorder)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        addBookmark()
+                    }
+
+                HStack(spacing: 12) {
+                    Button("Cancel") {
+                        showBookmarkInput = false
+                        newBookmarkLabel = ""
+                        HapticFeedback.light()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.white.opacity(0.2))
+                    .foregroundColor(.white)
+                    .cornerRadius(CornerRadius.md)
+
+                    Button("Save") {
+                        addBookmark()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.modusCyan)
+                    .foregroundColor(.white)
+                    .cornerRadius(CornerRadius.md)
+                    .disabled(newBookmarkLabel.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .padding(24)
+            .background(Color.black.opacity(0.95))
+            .cornerRadius(CornerRadius.lg)
+            .padding(.horizontal, 40)
+        }
+    }
+
+    // MARK: - Loop Controls Panel
+
+    private var loopControlsPanel: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 16) {
+                // Header
+                HStack {
+                    Text("A-B Loop")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Button {
+                        withAnimation(.spring(response: 0.3)) {
+                            showLoopControls = false
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                }
+
+                // Instructions
+                if !loopSegment.isComplete {
+                    Text("Set start and end points to loop a specific segment")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                }
+
+                // Loop point buttons
+                HStack(spacing: 12) {
+                    // Point A
+                    Button {
+                        loopSegment.pointA = controller.currentTime
+                        HapticFeedback.medium()
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("A")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            if let pointA = loopSegment.pointA {
+                                Text(formatTime(pointA))
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            } else {
+                                Text("Set Start")
+                                    .font(.caption)
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(loopSegment.pointA != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
+                        .cornerRadius(CornerRadius.md)
+                    }
+                    .accessibilityLabel(loopSegment.pointA != nil ? "Point A set at \(formatTime(loopSegment.pointA!))" : "Set point A")
+
+                    // Point B
+                    Button {
+                        loopSegment.pointB = controller.currentTime
+                        HapticFeedback.medium()
+                        if loopSegment.isComplete {
+                            controller.setLoopSegment(loopSegment.range)
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("B")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            if let pointB = loopSegment.pointB {
+                                Text(formatTime(pointB))
+                                    .font(.caption)
+                                    .monospacedDigit()
+                            } else {
+                                Text("Set End")
+                                    .font(.caption)
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(loopSegment.pointB != nil ? Color.modusTealAccent : Color.white.opacity(0.2))
+                        .cornerRadius(CornerRadius.md)
+                    }
+                    .accessibilityLabel(loopSegment.pointB != nil ? "Point B set at \(formatTime(loopSegment.pointB!))" : "Set point B")
+                }
+
+                // Active loop info
+                if loopSegment.isComplete, let range = loopSegment.range {
+                    HStack {
+                        Image(systemName: "repeat.circle.fill")
+                            .foregroundColor(.modusTealAccent)
+                        Text("Looping \(formatTime(range.lowerBound)) - \(formatTime(range.upperBound))")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Color.modusTealAccent.opacity(0.2))
+                    .cornerRadius(CornerRadius.sm)
+                }
+
+                // Clear button
+                if loopSegment.pointA != nil || loopSegment.pointB != nil {
+                    Button {
+                        loopSegment = LoopSegment()
+                        controller.setLoopSegment(nil)
+                        HapticFeedback.light()
+                    } label: {
+                        HStack {
+                            Image(systemName: "xmark.circle")
+                            Text("Clear Loop Points")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.8))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.white.opacity(0.15))
+                        .cornerRadius(CornerRadius.md)
+                    }
+                }
+            }
+            .padding()
+            .background(Color.black.opacity(0.95))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .padding()
+        }
+        .ignoresSafeArea()
+    }
+
     // MARK: - Helper Methods
+
+    private func addBookmark() {
+        guard !newBookmarkLabel.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+
+        let bookmark = FormCueBookmark(
+            timestamp: controller.currentTime,
+            label: newBookmarkLabel.trimmingCharacters(in: .whitespaces)
+        )
+        bookmarks.append(bookmark)
+        newBookmarkLabel = ""
+        showBookmarkInput = false
+        HapticFeedback.success()
+    }
+
+    private func preloadNextVideos() {
+        // Preload other angle videos for this exercise
+        let videosToPreload = videos.filter { !ExerciseVideoService.shared.isVideoCached($0) }
+        if !videosToPreload.isEmpty {
+            Task {
+                for video in videosToPreload.prefix(2) {
+                    try? await ExerciseVideoService.shared.cacheVideo(video)
+                }
+            }
+        }
+    }
 
     private func setupInitialVideo() {
         // Use primary video or first video
@@ -415,19 +875,33 @@ struct ExerciseVideoPlayerView: View {
         let currentPosition = controller.currentTime / max(controller.duration, 1)
         let wasPlaying = controller.isPlaying
 
-        // Switch video
-        controller.setupPlayer(with: video)
-
-        // Restore position approximately
-        if controller.duration > 0 {
-            let newTime = currentPosition * controller.duration
-            controller.seek(to: newTime)
+        // Smooth crossfade animation
+        withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
+            angleSwitchOpacity = 0.0
         }
 
-        // Restore playback state
-        if wasPlaying {
-            controller.play()
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDuration.standard / 2) {
+            // Switch video at midpoint of fade
+            controller.setupPlayer(with: video)
+
+            // Restore position approximately
+            if controller.duration > 0 {
+                let newTime = currentPosition * controller.duration
+                controller.seek(to: newTime)
+            }
+
+            // Restore playback state
+            if wasPlaying {
+                controller.play()
+            }
+
+            // Fade back in
+            withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
+                angleSwitchOpacity = 1.0
+            }
         }
+
+        HapticFeedback.selectionChanged()
     }
 
     private func startControlsTimer() {
@@ -492,6 +966,7 @@ class ExerciseVideoPlayerController: ObservableObject {
     private var statusObserver: NSKeyValueObservation?
     private var endObserver: NSObjectProtocol?
     private var pipController: AVPictureInPictureController?
+    private var loopSegmentRange: ClosedRange<Double>?
 
     nonisolated deinit {
         // Note: cleanup is handled by ARC for most resources
@@ -545,7 +1020,14 @@ class ExerciseVideoPlayerController: ObservableObject {
         let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
-                self?.currentTime = time.seconds.isFinite ? time.seconds : 0
+                guard let self = self else { return }
+                self.currentTime = time.seconds.isFinite ? time.seconds : 0
+
+                // Check A-B loop segment
+                if let loopRange = self.loopSegmentRange,
+                   self.currentTime >= loopRange.upperBound {
+                    self.player?.seek(to: CMTime(seconds: loopRange.lowerBound, preferredTimescale: CMTimeScale(NSEC_PER_SEC)))
+                }
             }
         }
 
@@ -589,6 +1071,13 @@ class ExerciseVideoPlayerController: ObservableObject {
         isLooping.toggle()
     }
 
+    func setLoopSegment(_ range: ClosedRange<Double>?) {
+        loopSegmentRange = range
+        if range != nil && !isLooping {
+            isLooping = true
+        }
+    }
+
     func setPlaybackSpeed(_ speed: PlaybackSpeed) {
         playbackSpeed = speed
         if isPlaying {
@@ -598,7 +1087,7 @@ class ExerciseVideoPlayerController: ObservableObject {
 
     func seek(to time: Double) {
         let cmTime = CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        player?.seek(to: cmTime)
+        player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero)
     }
 
     func togglePictureInPicture() {
@@ -638,6 +1127,145 @@ class ExerciseVideoPlayerController: ObservableObject {
         player?.pause()
         player = nil
         pipController = nil
+    }
+}
+
+// MARK: - Enhanced Video Progress Bar
+
+struct EnhancedVideoProgressBar: View {
+    let currentTime: Double
+    let duration: Double
+    let bookmarks: [FormCueBookmark]
+    let loopSegment: LoopSegment
+    let onSeek: (Double) -> Void
+    let onBookmarkTap: (FormCueBookmark) -> Void
+
+    @State private var isDragging = false
+    @State private var dragPosition: Double = 0
+
+    var progress: Double {
+        guard duration > 0 else { return 0 }
+        return isDragging ? dragPosition : currentTime / duration
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Background track
+                Rectangle()
+                    .fill(Color.white.opacity(0.3))
+                    .frame(height: 4)
+
+                // Loop segment highlight
+                if let range = loopSegment.range, duration > 0 {
+                    let startX = CGFloat(range.lowerBound / duration) * geometry.size.width
+                    let endX = CGFloat(range.upperBound / duration) * geometry.size.width
+                    Rectangle()
+                        .fill(Color.modusTealAccent.opacity(0.4))
+                        .frame(width: endX - startX, height: 4)
+                        .offset(x: startX)
+                }
+
+                // Progress track
+                Rectangle()
+                    .fill(Color.modusCyan)
+                    .frame(width: geometry.size.width * progress, height: 4)
+
+                // Bookmark indicators
+                ForEach(bookmarks) { bookmark in
+                    if duration > 0 {
+                        let position = CGFloat(bookmark.timestamp / duration) * geometry.size.width
+                        Button {
+                            onBookmarkTap(bookmark)
+                        } label: {
+                            Image(systemName: "bookmark.fill")
+                                .font(.caption2)
+                                .foregroundColor(.modusTealAccent)
+                                .frame(width: 16, height: 16)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                                .offset(x: position - 8, y: -10)
+                        }
+                        .accessibilityLabel(bookmark.label)
+                    }
+                }
+
+                // Loop point A marker
+                if let pointA = loopSegment.pointA, duration > 0 {
+                    let position = CGFloat(pointA / duration) * geometry.size.width
+                    VStack(spacing: 2) {
+                        Text("A")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(2)
+                            .background(Color.modusTealAccent)
+                            .clipShape(Circle())
+                        Rectangle()
+                            .fill(Color.modusTealAccent)
+                            .frame(width: 2, height: 8)
+                    }
+                    .offset(x: position - 1, y: -18)
+                }
+
+                // Loop point B marker
+                if let pointB = loopSegment.pointB, duration > 0 {
+                    let position = CGFloat(pointB / duration) * geometry.size.width
+                    VStack(spacing: 2) {
+                        Text("B")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(2)
+                            .background(Color.modusTealAccent)
+                            .clipShape(Circle())
+                        Rectangle()
+                            .fill(Color.modusTealAccent)
+                            .frame(width: 2, height: 8)
+                    }
+                    .offset(x: position - 1, y: -18)
+                }
+
+                // Playhead thumb
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: isDragging ? 16 : 12, height: isDragging ? 16 : 12)
+                    .shadow(color: .black.opacity(0.3), radius: 2)
+                    .offset(x: geometry.size.width * progress - (isDragging ? 8 : 6))
+                    .animation(.easeInOut(duration: 0.15), value: isDragging)
+            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        if !isDragging {
+                            HapticFeedback.light()
+                        }
+                        isDragging = true
+                        let newPosition = max(0, min(1, value.location.x / geometry.size.width))
+                        dragPosition = newPosition
+                    }
+                    .onEnded { value in
+                        isDragging = false
+                        let newPosition = max(0, min(1, value.location.x / geometry.size.width))
+                        onSeek(newPosition * duration)
+                        HapticFeedback.selectionChanged()
+                    }
+            )
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 16)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Video progress")
+        .accessibilityValue("\(Int(progress * 100)) percent")
+        .accessibilityAdjustableAction { direction in
+            let increment: Double = 5.0 // 5 seconds
+            switch direction {
+            case .increment:
+                onSeek(min(duration, currentTime + increment))
+            case .decrement:
+                onSeek(max(0, currentTime - increment))
+            @unknown default:
+                break
+            }
+        }
     }
 }
 

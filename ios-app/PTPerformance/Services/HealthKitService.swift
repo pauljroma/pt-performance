@@ -165,6 +165,10 @@ class HealthKitService: ObservableObject {
     @Published var exportedWorkoutsCount: Int = 0
     @Published var syncConfig: HealthSyncConfig = HealthSyncConfig.load()
 
+    // ACP-1037: Authorization change monitoring
+    @Published var authorizationChangedAt: Date?
+    @Published var authorizationWasRevoked: Bool = false
+
     // MARK: - Private Properties
 
     private var healthStore: HKHealthStore?
@@ -173,6 +177,7 @@ class HealthKitService: ObservableObject {
     private nonisolated(unsafe) let supabaseClient: PTSupabaseClient
     private let logger = DebugLogger.shared
     private let errorLogger = ErrorLogger.shared
+    private var authorizationObserver: NSObjectProtocol?
 
     // MARK: - Focused Services (lazy initialization)
 
@@ -287,6 +292,11 @@ class HealthKitService: ObservableObject {
         if HKHealthStore.isHealthDataAvailable() {
             self.healthStore = HKHealthStore()
         }
+
+        // Set up authorization change monitoring on main actor
+        Task { @MainActor in
+            self.setupAuthorizationChangeMonitoring()
+        }
     }
 
     /// Initializer for dependency injection (testing)
@@ -296,6 +306,18 @@ class HealthKitService: ObservableObject {
         // Initialize health store only if HealthKit is available
         if HKHealthStore.isHealthDataAvailable() {
             self.healthStore = HKHealthStore()
+        }
+
+        // Set up authorization change monitoring on main actor
+        Task { @MainActor in
+            self.setupAuthorizationChangeMonitoring()
+        }
+    }
+
+    deinit {
+        // Clean up observer
+        if let observer = authorizationObserver {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 
@@ -357,8 +379,87 @@ class HealthKitService: ObservableObject {
 
         // Consider authorized if we have write permission (means user was prompted)
         let authorized = canWriteWorkouts || canWriteActiveEnergy
+
+        // Detect authorization revocation
+        if isAuthorized && !authorized {
+            authorizationWasRevoked = true
+            authorizationChangedAt = Date()
+            logger.log("[HealthKitService] HealthKit authorization was revoked", level: .warning)
+        } else if !isAuthorized && authorized {
+            authorizationWasRevoked = false
+            authorizationChangedAt = Date()
+            logger.log("[HealthKitService] HealthKit authorization was granted", level: .success)
+        }
+
         isAuthorized = authorized
         return authorized
+    }
+
+    // MARK: - Authorization Change Monitoring
+
+    /// Set up monitoring for HealthKit authorization changes
+    /// Handles edge case when user revokes permissions mid-session
+    private func setupAuthorizationChangeMonitoring() {
+        guard let healthStore = healthStore else { return }
+
+        // Monitor for HealthKit authorization changes (iOS 12+)
+        #if !targetEnvironment(macCatalyst)
+        if #available(iOS 12.0, *) {
+            authorizationObserver = NotificationCenter.default.addObserver(
+                forName: NSNotification.Name.HKUserPreferencesDidChange,
+                object: healthStore,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    let wasAuthorized = self.isAuthorized
+                    let nowAuthorized = self.checkAuthorizationStatus()
+
+                    if wasAuthorized && !nowAuthorized {
+                        self.handleAuthorizationRevoked()
+                    } else if !wasAuthorized && nowAuthorized {
+                        self.handleAuthorizationGranted()
+                    }
+                }
+            }
+            logger.log("[HealthKitService] Authorization change monitoring enabled", level: .diagnostic)
+        }
+        #endif
+    }
+
+    /// Handle when user revokes HealthKit authorization
+    private func handleAuthorizationRevoked() {
+        logger.log("[HealthKitService] Handling authorization revocation", level: .warning)
+
+        // Clear cached data
+        todayHRV = nil
+        todaySleep = nil
+        todayRestingHR = nil
+        lastSyncDate = nil
+
+        // Show user-friendly error
+        error = "Apple Health access was revoked. Please re-enable in Settings > Privacy > Health."
+
+        authorizationWasRevoked = true
+        authorizationChangedAt = Date()
+    }
+
+    /// Handle when user grants HealthKit authorization
+    private func handleAuthorizationGranted() {
+        logger.log("[HealthKitService] Handling authorization grant", level: .success)
+
+        authorizationWasRevoked = false
+        authorizationChangedAt = Date()
+        error = nil
+
+        // Automatically sync data now that we have permission
+        Task {
+            do {
+                _ = try await syncTodayData()
+            } catch {
+                logger.log("[HealthKitService] Auto-sync after authorization failed: \(error.localizedDescription)", level: .warning)
+            }
+        }
     }
 
     /// Verify HealthKit connection by attempting to query data

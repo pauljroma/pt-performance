@@ -184,8 +184,11 @@ class HealthKitSyncService: ObservableObject {
 
         logger.log("[HealthKitSync] Starting sync for date: \(date)", level: .diagnostic)
 
-        // 1. Fetch data from HealthKit sub-services in parallel
+        // 1. Fetch data from HealthKit sub-services in parallel with timezone normalization
         let isToday = Calendar.current.isDateInToday(date)
+
+        // Normalize date to UTC for consistent storage
+        let normalizedDate = normalizeToUTC(date)
 
         async let hrvTask: Double? = try? healthKitService.fetchHRV(for: date)
         async let sleepTask: SleepData? = try? healthKitService.fetchSleepData(for: date)
@@ -214,11 +217,18 @@ class HealthKitSyncService: ObservableObject {
         // Resolve steps from dayData or individual fetch
         let resolvedSteps: Int? = dayData?.stepCount ?? (steps > 0 ? Int(steps) : nil)
 
-        // 3. Package into payload matching Edge Function input
+        // 3. Detect data gaps and handle edge cases
+        let hasAnyData = hrv != nil || sleep != nil || rhr != nil || resolvedSteps != nil
+        if !hasAnyData {
+            logger.log("[HealthKitSync] No data available for date: \(date). This may indicate a data gap.", level: .warning)
+            // Continue syncing anyway to mark the date as "no data" in the backend
+        }
+
+        // 4. Package into payload matching Edge Function input with UTC-normalized date
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.timeZone = TimeZone.current
-        let metricDate = dateFormatter.string(from: date)
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")!
+        let metricDate = dateFormatter.string(from: normalizedDate)
 
         let payload = HealthKitSyncPayload(
             patientId: patientId.uuidString,
@@ -236,10 +246,10 @@ class HealthKitSyncService: ObservableObject {
             deviceName: "Apple Watch"
         )
 
-        // 4. Call sync-healthkit-data Edge Function
+        // 5. Call sync-healthkit-data Edge Function
         let response = try await callSyncEdgeFunction(payload: payload)
 
-        // 5. Update state
+        // 6. Update state
         lastSyncDate = Date()
         UserDefaults.standard.set(Date(), forKey: Self.lastSyncDateKey)
 
@@ -250,6 +260,22 @@ class HealthKitSyncService: ObservableObject {
         logger.log("[HealthKitSync] Sync completed successfully. Recovery score: \(response.data?.recoveryScore?.description ?? "N/A")", level: .success)
 
         return response
+    }
+
+    // MARK: - Timezone Normalization
+
+    /// Normalize a date to UTC to ensure consistent storage regardless of timezone
+    /// This handles edge cases when users travel across timezones
+    private func normalizeToUTC(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents(in: TimeZone.current, from: date)
+        var utcComponents = DateComponents()
+        utcComponents.year = components.year
+        utcComponents.month = components.month
+        utcComponents.day = components.day
+        utcComponents.timeZone = TimeZone(identifier: "UTC")
+
+        return Calendar.current.date(from: utcComponents) ?? date
     }
 
     /// Backfill historical data for the last N days

@@ -405,7 +405,7 @@ final class ReadinessScoreService: ObservableObject {
                 sourceType: .dailyCheckIn,
                 sourceId: "supplement_today",
                 timestamp: Date(),
-                snippet: "\(supplementCompliance.takenCount)/\(supplementCompliance.totalCount) supplements"
+                snippet: "\(supplementCompliance.takenCount)/\(supplementCompliance.plannedCount) supplements"
             ))
         }
 
@@ -489,7 +489,7 @@ final class ReadinessScoreService: ObservableObject {
             }
         } catch {
             // Silently handle - biomarkers are optional
-            DebugLogger.shared.log("ReadinessScoreService", "No biomarker data available")
+            DebugLogger.shared.info("ReadinessScoreService", "No biomarker data available")
         }
 
         return nil
@@ -684,7 +684,7 @@ final class ReadinessScoreService: ObservableObject {
                 .execute()
         } catch {
             // Silently handle - persistence is nice to have
-            DebugLogger.shared.log("ReadinessScoreService", "Could not persist score: \(error.localizedDescription)")
+            DebugLogger.shared.warning("ReadinessScoreService", "Could not persist score: \(error.localizedDescription)")
         }
     }
 
@@ -739,7 +739,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.log("ReadinessScoreService", "No sleep check-in data")
+            DebugLogger.shared.info("ReadinessScoreService", "No sleep check-in data")
         }
 
         return nil
@@ -776,7 +776,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.log("ReadinessScoreService", "No stress check-in data")
+            DebugLogger.shared.info("ReadinessScoreService", "No stress check-in data")
         }
 
         return nil
@@ -813,7 +813,7 @@ final class ReadinessScoreService: ObservableObject {
                 )
             }
         } catch {
-            DebugLogger.shared.log("ReadinessScoreService", "No soreness check-in data")
+            DebugLogger.shared.info("ReadinessScoreService", "No soreness check-in data")
         }
 
         return nil

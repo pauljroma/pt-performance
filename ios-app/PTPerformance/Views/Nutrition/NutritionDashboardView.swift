@@ -139,21 +139,49 @@ struct NutritionDashboardView: View {
             enhancedProgressCard
                 .staggeredAppearance(index: 1, isVisible: isContentVisible)
 
+            // Calorie Surplus/Deficit Indicator (ACP-1018)
+            CalorieSurplusDeficitIndicator(
+                currentCalories: viewModel.caloriesToday,
+                targetCalories: viewModel.calorieGoal
+            )
+            .staggeredAppearance(index: 2, isVisible: isContentVisible)
+
             // AI Meal Suggestion Card
             aiSuggestionCard
-                .staggeredAppearance(index: 2, isVisible: isContentVisible)
+                .staggeredAppearance(index: 3, isVisible: isContentVisible)
 
             // Macro Distribution with rings
             enhancedMacroCard
-                .staggeredAppearance(index: 3, isVisible: isContentVisible)
+                .staggeredAppearance(index: 4, isVisible: isContentVisible)
+
+            // Protein Timing Chart (ACP-1018: Protein timing visualization)
+            if !viewModel.todaysLogs.isEmpty {
+                ProteinTimingChart(
+                    logs: viewModel.todaysLogs,
+                    proteinGoal: viewModel.proteinGoal
+                )
+                .staggeredAppearance(index: 5, isVisible: isContentVisible)
+            }
+
+            // Meal Timeline (ACP-1018: Meal-by-meal breakdown)
+            MealTimelineView(
+                logs: viewModel.todaysLogs,
+                plannedMeals: viewModel.todaysPlannedMeals,
+                onDelete: { log in
+                    Task {
+                        await viewModel.deleteLog(log)
+                    }
+                }
+            )
+            .staggeredAppearance(index: 6, isVisible: isContentVisible)
 
             // Quick Log Buttons
             quickLogSection
-                .staggeredAppearance(index: 4, isVisible: isContentVisible)
+                .staggeredAppearance(index: 7, isVisible: isContentVisible)
 
-            // Today's Meals
+            // Today's Meals (Legacy - kept for backwards compatibility)
             todaysMealsSection
-                .staggeredAppearance(index: 5, isVisible: isContentVisible)
+                .staggeredAppearance(index: 8, isVisible: isContentVisible)
         }
     }
 

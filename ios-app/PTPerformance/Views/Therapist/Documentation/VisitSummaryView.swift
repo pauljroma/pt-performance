@@ -218,7 +218,7 @@ struct VisitSummaryView: View {
                     .padding()
             } else {
                 ForEach(viewModel.exercises) { exercise in
-                    ExerciseSummaryRow(exercise: exercise)
+                    VisitExerciseSummaryRow(exercise: exercise)
                 }
             }
         }
@@ -416,8 +416,8 @@ struct MetricBox: View {
 
 // MARK: - Exercise Summary Row
 
-struct ExerciseSummaryRow: View {
-    let exercise: ExerciseSummary
+struct VisitExerciseSummaryRow: View {
+    let exercise: VisitExerciseSummary
 
     var body: some View {
         HStack {
@@ -548,7 +548,7 @@ class VisitSummaryViewModel: ObservableObject {
     @Published var averageRPE: Double = 0
     @Published var painLevel: Double = 0
     @Published var painNotes: String?
-    @Published var exercises: [ExerciseSummary] = []
+    @Published var exercises: [VisitExerciseSummary] = []
     @Published var rpeDistribution: [RPEDistributionItem] = []
     @Published var clinicalNotes: [ClinicalNote] = []
 
@@ -590,7 +590,7 @@ class VisitSummaryViewModel: ObservableObject {
                 .value
 
             exercises = logs.map { log in
-                ExerciseSummary(
+                VisitExerciseSummary(
                     id: log.id,
                     name: log.exercise?.name ?? "Unknown Exercise",
                     setsCompleted: log.setsCompleted ?? 0,
@@ -739,7 +739,7 @@ class VisitSummaryViewModel: ObservableObject {
 
 // MARK: - Supporting Models
 
-struct ExerciseSummary: Identifiable {
+struct VisitExerciseSummary: Identifiable {
     let id: UUID
     let name: String
     let setsCompleted: Int

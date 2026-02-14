@@ -55,7 +55,7 @@ final class SupplementViewModel: ObservableObject {
     @Published var newCategory: SupplementCategory = .vitamins
     @Published var newDosage: String = ""
     @Published var newFrequency: SupplementFrequency = .daily
-    @Published var newTimeOfDay: Set<TimeOfDay> = [.morning]
+    @Published var newTimeOfDay: Set<SupplementTimeOfDay> = [.morning]
     @Published var newWithFood: Bool = false
     @Published var newNotes: String = ""
 
@@ -484,7 +484,7 @@ final class SupplementViewModel: ObservableObject {
         newCategory = .vitamins
         newDosage = ""
         newFrequency = .daily
-        newTimeOfDay = [.morning]
+        newTimeOfDay = [SupplementTimeOfDay.morning]
         newWithFood = false
         newNotes = ""
     }

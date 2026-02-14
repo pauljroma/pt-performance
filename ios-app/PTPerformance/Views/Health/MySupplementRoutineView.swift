@@ -684,7 +684,7 @@ private struct SupplementRoutineAddSheet: View {
         return .mg
     }
 
-    private func mapTimeOfDayToTiming(_ timeOfDay: TimeOfDay) -> SupplementTiming {
+    private func mapTimeOfDayToTiming(_ timeOfDay: SupplementTimeOfDay) -> SupplementTiming {
         switch timeOfDay {
         case .morning: return .morning
         case .afternoon: return .afternoon

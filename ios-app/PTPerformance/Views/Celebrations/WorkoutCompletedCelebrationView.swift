@@ -283,6 +283,7 @@ struct StatBubble: View {
 // MARK: - Workout Summary Card with Celebration
 
 /// Card shown after workout completion with optional celebration elements
+/// Tappable to show enhanced summary
 struct WorkoutSummaryCard: View {
     let workoutName: String
     let completedAt: Date
@@ -291,8 +292,29 @@ struct WorkoutSummaryCard: View {
     let exerciseCount: Int
     let newPRs: [String] // Exercise names with new PRs
     let currentStreak: Int
+    let onTap: (() -> Void)?
+
+    @State private var showEnhancedSummary = false
 
     var body: some View {
+        Button(action: {
+            HapticFeedback.light()
+            if let onTap = onTap {
+                onTap()
+            } else {
+                showEnhancedSummary = true
+            }
+        }) {
+            cardContent
+        }
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showEnhancedSummary) {
+            // Enhanced summary placeholder - will be populated with actual data
+            Text("Enhanced Summary Coming Soon")
+        }
+    }
+
+    private var cardContent: some View {
         VStack(spacing: Spacing.md) {
             // Header
             HStack {
@@ -378,6 +400,17 @@ struct WorkoutSummaryCard: View {
                     }
                 }
             }
+
+            // Tap to view detail indicator
+            HStack {
+                Spacer()
+                Text("Tap for detailed summary")
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.modusCyan)
+            }
         }
         .padding()
         .background(
@@ -452,7 +485,8 @@ struct WorkoutCompletedCelebrationView_Previews: PreviewProvider {
                 volume: 15000,
                 exerciseCount: 7,
                 newPRs: ["Bench Press", "Overhead Press"],
-                currentStreak: 14
+                currentStreak: 14,
+                onTap: nil
             )
             .padding()
             .previewDisplayName("Summary Card")

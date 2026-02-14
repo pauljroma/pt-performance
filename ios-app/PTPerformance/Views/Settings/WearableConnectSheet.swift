@@ -142,7 +142,7 @@ struct WearableConnectSheet: View {
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
 
-            FlowLayout(spacing: Spacing.xs) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80), spacing: Spacing.xs)], spacing: Spacing.xs) {
                 ForEach(dataCapabilities, id: \.self) { capability in
                     HStack(spacing: 4) {
                         Image(systemName: capability.icon)

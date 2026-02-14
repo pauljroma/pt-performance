@@ -56,7 +56,7 @@ struct Supplement: Identifiable, Codable, Hashable {
     let category: SupplementCategory
     let dosage: String
     let frequency: SupplementFrequency
-    let timeOfDay: [TimeOfDay]
+    let timeOfDay: [SupplementTimeOfDay]
     let withFood: Bool
     let notes: String?
     let momentousProductId: String?
@@ -170,7 +170,7 @@ enum SupplementFrequency: String, Codable, CaseIterable {
     }
 }
 
-enum TimeOfDay: String, Codable, CaseIterable, Equatable {
+enum SupplementTimeOfDay: String, Codable, CaseIterable, Equatable {
     case morning = "morning"
     case afternoon = "afternoon"
     case evening = "evening"

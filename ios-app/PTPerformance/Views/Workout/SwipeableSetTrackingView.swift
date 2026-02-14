@@ -4,6 +4,7 @@
 //  PTPerformance
 //
 //  ACP-503: Swipe-to-Complete Exercise Integration
+//  ACP-1013: Workout Execution Flow Refinement
 //  Demonstrates set-by-set swipe tracking using SwipeableExerciseCard
 //
 
@@ -20,6 +21,8 @@ struct SetTrackingState: Identifiable {
     var actualReps: Int?
     var actualWeight: Double?
     var modificationApplied: ExerciseModificationOption?
+    var restTimerStarted: Date?
+    var isRestTimerActive: Bool = false
 
     init(setNumber: Int, targetReps: Int? = nil, targetWeight: Double? = nil) {
         self.id = UUID()
@@ -29,6 +32,8 @@ struct SetTrackingState: Identifiable {
         self.actualReps = targetReps
         self.actualWeight = targetWeight
         self.modificationApplied = nil
+        self.restTimerStarted = nil
+        self.isRestTimerActive = false
     }
 }
 
@@ -48,6 +53,17 @@ struct SwipeableSetTrackingView: View {
     @State private var sets: [SetTrackingState] = []
     @State private var showCompletionCelebration = false
     @State private var completionFeedbackScale: CGFloat = 1.0
+    @State private var editingSetId: UUID?
+    @State private var editingField: EditField?
+    @State private var editValue: String = ""
+    @State private var showRestTimer = false
+    @State private var restTimeRemaining: Int = 0
+    @State private var restTimerTask: Task<Void, Never>?
+
+    enum EditField {
+        case reps
+        case weight
+    }
 
     // MARK: - Computed Properties
 
@@ -75,25 +91,41 @@ struct SwipeableSetTrackingView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Exercise header
-            exerciseHeader
+        ZStack {
+            VStack(spacing: Spacing.lg) {
+                // Exercise header
+                exerciseHeader
 
-            // Progress indicator
-            progressIndicator
+                // Progress indicator
+                progressIndicator
 
-            // Instructions
-            instructionsBanner
+                // Rest timer (if active)
+                if showRestTimer {
+                    restTimerView
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
 
-            // Set cards
-            setCardsSection
+                // Instructions
+                instructionsBanner
 
-            // Action buttons
-            if isExerciseComplete {
-                completionActions
+                // Set cards
+                setCardsSection
+
+                // Action buttons
+                if isExerciseComplete {
+                    completionActions
+                }
+            }
+            .padding()
+            .blur(radius: editingSetId != nil ? 3 : 0)
+            .animation(.easeInOut(duration: AnimationDuration.quick), value: editingSetId != nil)
+
+            // Quick edit overlay
+            if editingSetId != nil {
+                quickEditOverlay
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
         }
-        .padding()
         .onAppear {
             initializeSets()
         }
@@ -101,6 +133,7 @@ struct SwipeableSetTrackingView: View {
             if complete {
                 showCompletionCelebration = true
                 HapticFeedback.success()
+                stopRestTimer()
 
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
                     completionFeedbackScale = 1.1
@@ -109,6 +142,9 @@ struct SwipeableSetTrackingView: View {
                     completionFeedbackScale = 1.0
                 }
             }
+        }
+        .onDisappear {
+            stopRestTimer()
         }
     }
 
@@ -143,7 +179,7 @@ struct SwipeableSetTrackingView: View {
     // MARK: - Progress Indicator
 
     private var progressIndicator: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Spacing.xs) {
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -151,21 +187,21 @@ struct SwipeableSetTrackingView: View {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(Color.gray.opacity(0.2))
 
-                    // Completed progress (green)
+                    // Completed progress (teal accent)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(.systemGreen))
+                        .fill(Color.modusTealAccent)
                         .frame(width: geometry.size.width * (Double(completedSetsCount) / Double(max(sets.count, 1))))
 
-                    // Skipped overlay (orange, stacked after completed)
+                    // Skipped overlay (warning color, stacked after completed)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color(.systemOrange))
+                        .fill(DesignTokens.statusWarning)
                         .frame(width: geometry.size.width * (Double(skippedSetsCount) / Double(max(sets.count, 1))))
                         .offset(x: geometry.size.width * (Double(completedSetsCount) / Double(max(sets.count, 1))))
                 }
             }
             .frame(height: 10)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: completedSetsCount)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: skippedSetsCount)
+            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: completedSetsCount)
+            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: skippedSetsCount)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Progress: \(Int(progressPercentage * 100)) percent complete")
             .accessibilityValue("\(completedSetsCount) completed, \(skippedSetsCount) skipped, \(remainingSetsCount) remaining")
@@ -175,13 +211,15 @@ struct SwipeableSetTrackingView: View {
                 if completedSetsCount > 0 {
                     Label("\(completedSetsCount) completed", systemImage: "checkmark.circle.fill")
                         .font(.caption)
-                        .foregroundColor(Color(.systemGreen))
+                        .foregroundColor(.modusTealAccent)
+                        .accessibilityLabel("\(completedSetsCount) sets completed")
                 }
 
                 if skippedSetsCount > 0 {
                     Label("\(skippedSetsCount) skipped", systemImage: "forward.circle.fill")
                         .font(.caption)
-                        .foregroundColor(Color(.systemOrange))
+                        .foregroundColor(DesignTokens.statusWarning)
+                        .accessibilityLabel("\(skippedSetsCount) sets skipped")
                 }
 
                 Spacer()
@@ -190,43 +228,197 @@ struct SwipeableSetTrackingView: View {
                     Text("\(remainingSetsCount) remaining")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityLabel("\(remainingSetsCount) sets remaining")
                 }
             }
         }
         .scaleEffect(completionFeedbackScale)
+        .animation(.spring(response: 0.35, dampingFraction: 0.6), value: completionFeedbackScale)
+    }
+
+    // MARK: - Rest Timer View
+
+    private var restTimerView: some View {
+        VStack(spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "timer")
+                    .font(.title3)
+                    .foregroundColor(.modusCyan)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Rest Timer")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text(formatRestTime(restTimeRemaining))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.modusCyan)
+                        .monospacedDigit()
+                }
+
+                Spacer()
+
+                Button {
+                    HapticFeedback.light()
+                    stopRestTimer()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Stop rest timer")
+                .accessibilityHint("Double tap to stop the rest timer")
+            }
+            .padding(Spacing.md)
+            .background(Color.modusCyan.opacity(0.1))
+            .cornerRadius(CornerRadius.md)
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(Color.modusCyan.opacity(0.3), lineWidth: 2)
+            )
+
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.gray.opacity(0.2))
+
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.modusCyan)
+                        .frame(width: geometry.size.width * restProgress)
+                        .animation(.linear(duration: 1.0), value: restProgress)
+                }
+            }
+            .frame(height: 6)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Rest timer: \(formatRestTime(restTimeRemaining)) remaining")
+    }
+
+    private var restProgress: CGFloat {
+        guard let restPeriod = exercise.restPeriodSeconds, restPeriod > 0 else { return 0 }
+        return 1.0 - (CGFloat(restTimeRemaining) / CGFloat(restPeriod))
+    }
+
+    private func formatRestTime(_ seconds: Int) -> String {
+        let mins = seconds / 60
+        let secs = seconds % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+
+    // MARK: - Quick Edit Overlay
+
+    private var quickEditOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismissQuickEdit()
+                }
+
+            VStack(spacing: Spacing.lg) {
+                VStack(spacing: Spacing.sm) {
+                    Text(editingField == .reps ? "Edit Reps" : "Edit Weight")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.modusPrimary)
+
+                    if let set = sets.first(where: { $0.id == editingSetId }) {
+                        Text("Set \(set.setNumber)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                TextField(editingField == .reps ? "Reps" : "Weight", text: $editValue)
+                    .keyboardType(.decimalPad)
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .padding()
+                    .background(Color.modusLightTeal)
+                    .cornerRadius(CornerRadius.md)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(Color.modusCyan, lineWidth: 2)
+                    )
+                    .accessibilityLabel(editingField == .reps ? "Edit reps value" : "Edit weight value")
+                    .accessibilityHint("Enter the new value")
+
+                HStack(spacing: Spacing.md) {
+                    Button {
+                        HapticFeedback.light()
+                        dismissQuickEdit()
+                    } label: {
+                        Text("Cancel")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.secondary.opacity(0.2))
+                            .foregroundColor(.primary)
+                            .cornerRadius(CornerRadius.md)
+                    }
+                    .accessibilityLabel("Cancel")
+                    .accessibilityHint("Double tap to cancel editing")
+
+                    Button {
+                        saveQuickEdit()
+                    } label: {
+                        Text("Save")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.modusCyan)
+                            .foregroundColor(.white)
+                            .cornerRadius(CornerRadius.md)
+                    }
+                    .accessibilityLabel("Save")
+                    .accessibilityHint("Double tap to save changes")
+                }
+            }
+            .padding(Spacing.xl)
+            .background(
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Shadow.prominent.color, radius: Shadow.prominent.radius, x: Shadow.prominent.x, y: Shadow.prominent.y)
+            )
+            .padding(Spacing.xl)
+        }
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: - Instructions Banner
 
     private var instructionsBanner: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Spacing.sm) {
             Image(systemName: "hand.draw")
                 .font(.title2)
-                .foregroundColor(Color(.systemBlue))
+                .foregroundColor(.modusCyan)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Swipe to Track Sets")
                     .font(.subheadline)
-                    .fontWeight(.medium)
+                    .fontWeight(.semibold)
 
-                Text("Swipe right to complete, left for options")
+                Text("Swipe right to complete • Tap values to edit")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             Spacer()
         }
-        .padding()
-        .background(Color(.systemBlue).opacity(0.15))
+        .padding(Spacing.md)
+        .background(Color.modusCyan.opacity(0.1))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Instructions: Swipe right to complete, left for options")
+        .accessibilityLabel("Instructions: Swipe right to complete sets, tap weight or reps values to edit them quickly")
     }
 
     // MARK: - Set Cards Section
 
     private var setCardsSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.sm) {
             ForEach($sets) { $set in
                 SwipeableExerciseCard(
                     exercise: exercise,
@@ -234,11 +426,19 @@ struct SwipeableSetTrackingView: View {
                     totalSets: sets.count,
                     isCompleted: set.isCompleted,
                     isSkipped: set.isSkipped,
+                    actualReps: set.actualReps,
+                    actualWeight: set.actualWeight,
                     onComplete: {
                         handleSetComplete(set.id)
                     },
                     onModify: { option in
                         handleSetModify(set.id, option: option)
+                    },
+                    onEditReps: {
+                        startQuickEdit(setId: set.id, field: .reps, currentValue: set.actualReps)
+                    },
+                    onEditWeight: {
+                        startQuickEdit(setId: set.id, field: .weight, currentValue: set.actualWeight)
                     }
                 )
                 .transition(.asymmetric(
@@ -252,65 +452,73 @@ struct SwipeableSetTrackingView: View {
     // MARK: - Completion Actions
 
     private var completionActions: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.md) {
             // Celebration message
             HStack {
-                Image(systemName: "star.fill")
-                    .foregroundColor(Color(.systemYellow))
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.modusTealAccent)
                 Text("Exercise Complete!")
                     .font(.headline)
                     .fontWeight(.bold)
-                Image(systemName: "star.fill")
-                    .foregroundColor(Color(.systemYellow))
+                    .foregroundColor(.modusPrimary)
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.modusTealAccent)
             }
-            .padding()
-            .background(Color(.systemGreen).opacity(0.15))
+            .padding(Spacing.md)
+            .background(Color.modusTealAccent.opacity(0.15))
             .cornerRadius(CornerRadius.md)
+            .accessibilityLabel("Exercise completed successfully")
 
             // Summary
-            HStack(spacing: 20) {
-                VStack {
+            HStack(spacing: Spacing.xl) {
+                VStack(spacing: Spacing.xxs) {
                     Text("\(completedSetsCount)")
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(Color(.systemGreen))
+                        .foregroundColor(.modusTealAccent)
                     Text("Completed")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(completedSetsCount) sets completed")
 
                 if skippedSetsCount > 0 {
-                    VStack {
+                    VStack(spacing: Spacing.xxs) {
                         Text("\(skippedSetsCount)")
                             .font(.title)
                             .fontWeight(.bold)
-                            .foregroundColor(Color(.systemOrange))
+                            .foregroundColor(DesignTokens.statusWarning)
                         Text("Skipped")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(skippedSetsCount) sets skipped")
                 }
             }
 
             // Continue button
             Button {
+                HapticFeedback.medium()
                 onExerciseComplete(sets)
             } label: {
                 Text("Continue to Next Exercise")
                     .font(.headline)
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.systemBlue))
+                    .padding(Spacing.md)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
+            .adaptiveShadow(Shadow.medium)
             .accessibilityLabel("Continue to next exercise")
             .accessibilityHint("Double tap to proceed to the next exercise")
+            .accessibilityAddTraits(.isButton)
         }
         .transition(.scale.combined(with: .opacity))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Exercise complete summary")
     }
 
     // MARK: - Helper Methods
@@ -332,16 +540,25 @@ struct SwipeableSetTrackingView: View {
     private func handleSetComplete(_ setId: UUID) {
         guard let index = sets.firstIndex(where: { $0.id == setId }) else { return }
 
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        HapticFeedback.success()
+
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
             sets[index].isCompleted = true
             sets[index].isSkipped = false
+        }
+
+        // Start rest timer if there are more sets and rest period is defined
+        if !isExerciseComplete, let restPeriod = exercise.restPeriodSeconds, restPeriod > 0 {
+            startRestTimer(duration: restPeriod)
         }
     }
 
     private func handleSetModify(_ setId: UUID, option: ExerciseModificationOption) {
         guard let index = sets.firstIndex(where: { $0.id == setId }) else { return }
 
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        HapticFeedback.light()
+
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) {
             sets[index].modificationApplied = option
 
             switch option {
@@ -374,6 +591,106 @@ struct SwipeableSetTrackingView: View {
                 // For now, skip the set
                 sets[index].isSkipped = true
             }
+        }
+    }
+
+    // MARK: - Quick Edit Methods
+
+    private func startQuickEdit(setId: UUID, field: EditField, currentValue: Any?) {
+        HapticFeedback.light()
+
+        editingSetId = setId
+        editingField = field
+
+        if field == .reps, let reps = currentValue as? Int {
+            editValue = String(reps)
+        } else if field == .weight, let weight = currentValue as? Double {
+            editValue = String(format: "%.1f", weight)
+        } else {
+            editValue = ""
+        }
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            // Overlay will appear
+        }
+    }
+
+    private func saveQuickEdit() {
+        guard let setId = editingSetId,
+              let index = sets.firstIndex(where: { $0.id == setId }),
+              let field = editingField else {
+            dismissQuickEdit()
+            return
+        }
+
+        HapticFeedback.success()
+
+        if field == .reps, let reps = Int(editValue), reps > 0 {
+            sets[index].actualReps = reps
+        } else if field == .weight, let weight = Double(editValue), weight >= 0 {
+            sets[index].actualWeight = weight
+        }
+
+        dismissQuickEdit()
+    }
+
+    private func dismissQuickEdit() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            editingSetId = nil
+            editingField = nil
+            editValue = ""
+        }
+    }
+
+    // MARK: - Rest Timer Methods
+
+    private func startRestTimer(duration: Int) {
+        HapticFeedback.medium()
+
+        restTimeRemaining = duration
+        showRestTimer = true
+
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            // Timer view will appear
+        }
+
+        // Cancel existing timer
+        restTimerTask?.cancel()
+
+        // Start countdown
+        restTimerTask = Task {
+            while restTimeRemaining > 0 && !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                if !Task.isCancelled {
+                    restTimeRemaining -= 1
+
+                    // Haptic at halfway point
+                    if restTimeRemaining == duration / 2 {
+                        HapticFeedback.light()
+                    }
+
+                    // Haptic at 3, 2, 1
+                    if restTimeRemaining <= 3 && restTimeRemaining > 0 {
+                        HapticFeedback.light()
+                    }
+
+                    // Success haptic when complete
+                    if restTimeRemaining == 0 {
+                        HapticFeedback.success()
+                        stopRestTimer()
+                    }
+                }
+            }
+        }
+    }
+
+    private func stopRestTimer() {
+        restTimerTask?.cancel()
+        restTimerTask = nil
+
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            showRestTimer = false
+            restTimeRemaining = 0
         }
     }
 }
