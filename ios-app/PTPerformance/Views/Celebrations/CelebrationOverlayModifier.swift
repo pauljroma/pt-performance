@@ -286,6 +286,7 @@ struct MiniCelebrationEffect: View {
                     .opacity(particle.opacity)
             }
         }
+        .drawingGroup()
         .onChange(of: isActive) { _, newValue in
             if newValue {
                 triggerEffect()

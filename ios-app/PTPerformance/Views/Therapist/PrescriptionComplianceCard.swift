@@ -368,11 +368,15 @@ struct PrescriptionComplianceCard: View {
         return "DUE DATE"
     }
 
-    private func formatDueDate(_ date: Date) -> String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatDueDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 
     private var accessibilityDescription: String {
@@ -396,6 +400,12 @@ struct PrescriptionComplianceCard: View {
 struct CompactPrescriptionCard: View {
     let item: PrescriptionWithPatient
     let onTap: () -> Void
+
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
 
     private var prescription: WorkoutPrescription { item.prescription }
     private var patient: Patient { item.patient }
@@ -491,9 +501,7 @@ struct CompactPrescriptionCard: View {
             if days <= 7 { return "In \(days)d" }
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        return Self.monthDayFormatter.string(from: date)
     }
 }
 

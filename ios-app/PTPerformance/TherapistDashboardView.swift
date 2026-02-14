@@ -243,7 +243,7 @@ struct TherapistDashboardView: View {
                                         ? Color.blue.opacity(0.1)
                                         : Color.clear
                                 )
-                                .cornerRadius(12)
+                                .cornerRadius(CornerRadius.md)
                                 .onTapGesture {
                                     handlePatientSelection(patient)
                                 }
@@ -346,7 +346,7 @@ struct PatientCardView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }

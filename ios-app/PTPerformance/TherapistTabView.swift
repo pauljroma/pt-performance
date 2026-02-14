@@ -8,8 +8,8 @@ import SwiftUI
 // - Smooth tab transition animations
 
 struct TherapistTabView: View {
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @ObservedObject private var badgeManager = TabBarBadgeManager.shared
+    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var badgeManager = TabBarBadgeManager.shared
 
     // Track selected tab for haptic feedback and icon state
     @State private var selectedTab: TherapistTab = .patients
@@ -174,7 +174,7 @@ struct TherapistTabView: View {
                 .accessibilityLabel(TherapistTab.settings.title)
                 .accessibilityHint(TherapistTab.settings.accessibilityHint)
         }
-        .tint(.accentColor)  // Consistent tint color across light/dark mode
+        .tint(.modusCyan)  // Consistent tint color across light/dark mode
         .onChange(of: selectedTab) { _, newTab in
             // Subtle haptic feedback for tab switching
             HapticFeedback.tabSwitch()
@@ -210,7 +210,7 @@ struct TherapistTabView: View {
             .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
         ]
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttributes
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.accentColor)
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.modusCyan)
 
         // Configure badge appearance
         appearance.stackedLayoutAppearance.normal.badgeBackgroundColor = UIColor.systemRed
@@ -229,7 +229,7 @@ struct TherapistTabView: View {
 // MARK: - Therapist Settings View
 
 struct TherapistSettingsView: View {
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
     @EnvironmentObject var appState: AppState
     @State private var showingLogoutConfirmation = false
     @State private var isLoggingOut = false
@@ -262,7 +262,7 @@ struct TherapistSettingsView: View {
                     } label: {
                         HStack {
                             Image(systemName: "questionmark.circle")
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(.modusCyan)
                             Text("View Tutorial")
                                 .foregroundColor(.primary)
                         }

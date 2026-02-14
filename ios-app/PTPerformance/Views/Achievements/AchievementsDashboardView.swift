@@ -37,6 +37,12 @@ enum AchievementDashboardTab: String, CaseIterable, Identifiable {
 struct AchievementsDashboardView: View {
     let patientId: UUID
 
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     @StateObject private var achievementService = AchievementService.shared
     @State private var selectedTab: AchievementDashboardTab = .achievements
     @State private var selectedFilter: AchievementFilter = .all
@@ -79,9 +85,7 @@ struct AchievementsDashboardView: View {
                 // Generate share text inline
                 let dateString: String
                 if let date = achievement.unlockedAt {
-                    let formatter = DateFormatter()
-                    formatter.dateStyle = .medium
-                    dateString = formatter.string(from: date)
+                    dateString = Self.mediumDateFormatter.string(from: date)
                 } else {
                     dateString = "recently"
                 }
@@ -129,7 +133,7 @@ struct AchievementsDashboardView: View {
                     .frame(maxWidth: .infinity)
                     .background(
                         RoundedRectangle(cornerRadius: CornerRadius.md)
-                            .fill(selectedTab == tab ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
+                            .fill(selectedTab == tab ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                     )
                     .foregroundColor(selectedTab == tab ? Color(.systemBackground) : .primary)
                 }

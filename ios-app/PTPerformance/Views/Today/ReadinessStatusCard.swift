@@ -29,9 +29,9 @@ struct ReadinessStatusCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -132,7 +132,7 @@ struct ReadinessStatusCard: View {
                 .padding()
                 .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(DesignTokens.cornerRadiusSmall + 2)
+                .cornerRadius(CornerRadius.sm + 2)
             }
             .accessibilityLabel("Check In Now")
             .accessibilityHint("Opens daily readiness check-in form")

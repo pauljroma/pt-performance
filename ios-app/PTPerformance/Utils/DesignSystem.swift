@@ -118,88 +118,72 @@ enum Shadow {
 
 /// Centralized haptic feedback manager
 /// Provides consistent haptic feedback across the app
+/// Delegates to HapticService.shared for pre-warmed generator performance
 enum HapticFeedback {
     /// Light tap feedback (button presses)
     static func light() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
+        HapticService.shared.trigger(.light)
     }
 
     /// Medium tap feedback (selections)
     static func medium() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        HapticService.shared.trigger(.medium)
     }
 
     /// Heavy tap feedback (important actions)
     static func heavy() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
+        HapticService.shared.trigger(.heavy)
     }
 
     /// Success feedback (completion, confirmation)
     static func success() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.success)
+        HapticService.shared.trigger(.success)
     }
 
     /// Error feedback (validation errors, failures)
     static func error() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.error)
+        HapticService.shared.trigger(.error)
     }
 
     /// Warning feedback (alerts, cautions)
     static func warning() {
-        let generator = UINotificationFeedbackGenerator()
-        generator.notificationOccurred(.warning)
+        HapticService.shared.trigger(.warning)
     }
 
     /// Selection changed feedback (picker, toggle)
     static func selectionChanged() {
-        let generator = UISelectionFeedbackGenerator()
-        generator.selectionChanged()
+        HapticService.shared.trigger(.selection)
     }
 
     /// Tab switch feedback - soft impact with prepared generator for responsiveness
     /// Uses a rigid style with low intensity for subtle but responsive feedback
     static func tabSwitch() {
-        let generator = UIImpactFeedbackGenerator(style: .rigid)
-        generator.prepare()
-        generator.impactOccurred(intensity: 0.5)
+        HapticService.shared.triggerImpact(style: .rigid, intensity: 0.5)
     }
 
     /// Pull-to-refresh trigger feedback - light haptic to confirm refresh started
     static func pullToRefresh() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.prepare()
-        generator.impactOccurred(intensity: 0.6)
+        HapticService.shared.triggerImpact(style: .light, intensity: 0.6)
     }
 
     /// Sheet/modal presentation feedback - subtle feedback for context switch
     static func sheetPresented() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred(intensity: 0.4)
+        HapticService.shared.triggerImpact(style: .light, intensity: 0.4)
     }
 
     /// Toggle switch feedback - selection feedback for toggle state changes
     static func toggle() {
-        let generator = UISelectionFeedbackGenerator()
-        generator.prepare()
-        generator.selectionChanged()
+        HapticService.shared.trigger(.selection)
     }
 
     /// Form submission feedback with success/error indication
     static func formSubmission(success: Bool) {
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(success ? .success : .error)
+        HapticService.shared.trigger(success ? .success : .error)
     }
 
     /// Scroll threshold feedback - subtle feedback when crossing scroll thresholds
     static func scrollThreshold() {
-        let generator = UIImpactFeedbackGenerator(style: .soft)
-        generator.impactOccurred(intensity: 0.3)
+        HapticService.shared.triggerImpact(style: .soft, intensity: 0.3)
     }
 }
 
@@ -218,7 +202,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, Spacing.md)
             .background(
                 isDisabled ? Color.gray :
-                configuration.isPressed ? Color.blue.opacity(0.8) : Color.blue
+                configuration.isPressed ? Color.modusCyan.opacity(0.8) : Color.modusCyan
             )
             .cornerRadius(CornerRadius.md)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
@@ -751,7 +735,7 @@ struct EmptyStateView: View {
                     .font(.headline)
                     .padding(.horizontal, Spacing.lg)
                     .padding(.vertical, Spacing.md)
-                    .background(Color.blue)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
                 }

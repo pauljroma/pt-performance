@@ -170,7 +170,7 @@ struct ExerciseHistorySheet: View {
                         }
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
@@ -208,7 +208,7 @@ private struct StatCard: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(highlight ? .yellow : .accentColor)
+                .foregroundColor(highlight ? .yellow : .modusCyan)
                 .accessibilityHidden(true)
 
             Text(value)

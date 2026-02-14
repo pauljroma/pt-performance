@@ -206,7 +206,7 @@ struct ProgressAssessmentView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
@@ -224,11 +224,11 @@ struct ProgressAssessmentView: View {
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: CornerRadius.xs)
                         .fill(color.opacity(0.2))
                         .frame(height: 6)
 
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: CornerRadius.xs)
                         .fill(color)
                         .frame(width: total > 0 ? geometry.size.width * (Double(current) / Double(total)) : 0, height: 6)
                 }
@@ -298,7 +298,7 @@ struct ProgressAssessmentView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
@@ -328,7 +328,7 @@ struct ProgressAssessmentView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
@@ -455,16 +455,16 @@ struct ProgressAssessmentView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: CornerRadius.sm)
                         .fill(Color(.tertiarySystemGroupedBackground))
                 )
             }
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .padding(.horizontal)
@@ -515,7 +515,7 @@ struct ProgressAssessmentView: View {
 
                     TextEditor(text: $formViewModel.objectiveFindings)
                         .frame(minHeight: 120)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                         .padding(.horizontal)
@@ -546,13 +546,13 @@ struct ProgressAssessmentView: View {
 
                     TextEditor(text: $formViewModel.chiefComplaint)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
                         .fill(Color(.secondarySystemGroupedBackground))
                 )
 
@@ -567,13 +567,13 @@ struct ProgressAssessmentView: View {
 
                     TextEditor(text: $formViewModel.objectiveFindings)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
                         .fill(Color(.secondarySystemGroupedBackground))
                 )
 
@@ -588,13 +588,13 @@ struct ProgressAssessmentView: View {
 
                     TextEditor(text: $formViewModel.assessmentSummary)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
                         .fill(Color(.secondarySystemGroupedBackground))
                 )
 
@@ -609,13 +609,13 @@ struct ProgressAssessmentView: View {
 
                     TextEditor(text: $formViewModel.treatmentPlan)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.lg)
                         .fill(Color(.secondarySystemGroupedBackground))
                 )
             }
@@ -680,7 +680,7 @@ private struct StatCard: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
@@ -741,7 +741,7 @@ private struct MCIDAchievementRow: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(item.meetsMcid ? Color.green.opacity(0.1) : Color(.tertiarySystemGroupedBackground))
         )
     }
@@ -823,7 +823,7 @@ private struct ROMComparisonCard: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .padding(.horizontal)
@@ -880,7 +880,7 @@ private struct PainComparisonCard: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .padding(.horizontal)
@@ -967,11 +967,11 @@ private struct PAGoalProgressCard: View {
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: CornerRadius.xs)
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 8)
 
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: CornerRadius.xs)
                         .fill(progressColor)
                         .frame(width: geometry.size.width * (progressPercentage / 100), height: 8)
                 }
@@ -980,7 +980,7 @@ private struct PAGoalProgressCard: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .padding(.horizontal)
@@ -1015,9 +1015,9 @@ private struct PAEmptyStateCard: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(32)
+        .padding(Spacing.xl)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
         .padding(.horizontal)

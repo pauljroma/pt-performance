@@ -283,13 +283,16 @@ struct EstimatedOneRMTrendChart: View {
     // MARK: - Lift Detail Section
 
     private func liftDetailSection(exercise: ExerciseOneRMProgress) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
+        let sortedPoints = exercise.dataPoints.sorted(by: { $0.date > $1.date })
+        let recentPoints = Array(sortedPoints.prefix(8))
+
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
             Text("Session History")
                 .font(.headline)
                 .foregroundColor(.modusDeepTeal)
                 .accessibilityAddTraits(.isHeader)
 
-            ForEach(exercise.dataPoints.sorted(by: { $0.date > $1.date }).prefix(8)) { point in
+            ForEach(recentPoints) { point in
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(point.date, style: .date)
@@ -317,7 +320,7 @@ struct EstimatedOneRMTrendChart: View {
                 }
                 .padding(.vertical, Spacing.xs)
 
-                if point.id != exercise.dataPoints.sorted(by: { $0.date > $1.date }).prefix(8).last?.id {
+                if point.id != recentPoints.last?.id {
                     Divider()
                 }
             }

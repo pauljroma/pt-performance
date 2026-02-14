@@ -20,10 +20,16 @@ import UserNotifications
 /// - Configure prescription notification preferences
 struct NotificationSettingsView: View {
 
+    private static let timeWithSecondsFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
+
     // MARK: - Environment
 
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
 
     // MARK: - State
 
@@ -549,12 +555,9 @@ struct NotificationSettingsView: View {
 
         isSaving = true
 
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm:ss"
-
         let update = NotificationSettingsUpdate(
             smartTimingEnabled: smartTimingEnabled,
-            fallbackReminderTime: timeFormatter.string(from: fallbackTime),
+            fallbackReminderTime: Self.timeWithSecondsFormatter.string(from: fallbackTime),
             reminderMinutesBefore: reminderMinutesBefore,
             streakAlertsEnabled: streakAlertsEnabled,
             weeklySummaryEnabled: weeklySummaryEnabled

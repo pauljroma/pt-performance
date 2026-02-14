@@ -252,7 +252,7 @@ struct ArmCareAssessmentView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .shadow(color: Color(.systemGray4).opacity(0.05), radius: 2, x: 0, y: 1)
         )
     }
 
@@ -335,7 +335,7 @@ struct ArmCareAssessmentView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .shadow(color: Color(.systemGray4).opacity(0.05), radius: 2, x: 0, y: 1)
         )
     }
 
@@ -395,7 +395,7 @@ struct ArmCareAssessmentView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                .shadow(color: Color(.systemGray4).opacity(0.05), radius: 2, x: 0, y: 1)
         )
     }
 

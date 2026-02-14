@@ -84,6 +84,12 @@ struct WeeklySummaryData: Equatable {
 struct WeeklySummaryCard: View {
     let data: WeeklySummaryData
 
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
     var body: some View {
         VStack(spacing: 16) {
             // Header
@@ -178,10 +184,7 @@ struct WeeklySummaryCard: View {
         }
         let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? today
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-
-        return "\(formatter.string(from: weekStart)) - \(formatter.string(from: weekEnd))"
+        return "\(Self.monthDayFormatter.string(from: weekStart)) - \(Self.monthDayFormatter.string(from: weekEnd))"
     }
 
     private func formatVolume(_ volume: Double) -> String {

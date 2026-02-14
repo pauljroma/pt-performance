@@ -20,7 +20,7 @@ struct ProgramsHubView: View {
     // MARK: - Environment
 
     @EnvironmentObject var storeKit: StoreKitService
-    @ObservedObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
 
     // MARK: - State
 

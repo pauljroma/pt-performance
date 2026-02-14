@@ -531,10 +531,14 @@ struct AlertDetailSheet: View {
         }
     }
 
-    private var patientSinceText: String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: exception.patient.createdAt)
+        return formatter
+    }()
+
+    private var patientSinceText: String {
+        Self.mediumDateFormatter.string(from: exception.patient.createdAt)
     }
 
     private func painColor(for pain: Double) -> Color {

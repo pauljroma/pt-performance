@@ -485,11 +485,15 @@ struct ConsentAuditLogView: View {
         }
     }
 
-    private func formatTimestamp(_ date: Date) -> String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatTimestamp(_ date: Date) -> String {
+        Self.mediumDateShortTimeFormatter.string(from: date)
     }
 }
 

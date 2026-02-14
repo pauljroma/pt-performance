@@ -146,7 +146,7 @@ struct QuickWorkoutExecutionView: View {
                     .foregroundColor(workoutTypeColor)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Color.white)
+                    .background(Color(.systemBackground))
                     .cornerRadius(CornerRadius.xl)
                 } else {
                     Button {

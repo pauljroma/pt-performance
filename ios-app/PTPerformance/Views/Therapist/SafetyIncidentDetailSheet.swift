@@ -14,7 +14,7 @@ import SwiftUI
 /// Provides incident information, patient context, and resolution options
 struct SafetyIncidentDetailSheet: View {
     let incident: SafetyIncident
-    let patientName: String?
+    var patientName: String? = nil
     var onAcknowledge: (() -> Void)?
     var onEscalate: (() -> Void)?
     var onDismiss: (() -> Void)?

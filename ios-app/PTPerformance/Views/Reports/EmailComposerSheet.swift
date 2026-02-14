@@ -106,7 +106,7 @@ struct EmailComposerSheet: View {
             PDFThumbnailView(data: report.pdfData)
                 .frame(width: 60, height: 80)
                 .cornerRadius(CornerRadius.sm)
-                .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
+                .shadow(color: Color(.systemGray4).opacity(0.1), radius: 2, y: 1)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(report.configuration.reportType.displayName)
@@ -368,11 +368,15 @@ struct EmailComposerSheet: View {
 
     // MARK: - Helpers
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let shortDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.shortDateShortTimeFormatter.string(from: date)
     }
 }
 

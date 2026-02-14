@@ -197,12 +197,12 @@ struct HistoricalTrendsView: View {
         } label: {
             Text(range.displayName)
                 .font(.caption.weight(.medium))
-                .foregroundColor(isSelected ? .accentColor : .secondary)
+                .foregroundColor(isSelected ? .modusCyan : .secondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
+                        .fill(isSelected ? Color.modusCyan.opacity(0.1) : Color.clear)
                 )
         }
         .buttonStyle(.plain)
@@ -249,7 +249,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -322,7 +322,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -345,7 +345,7 @@ struct HistoricalTrendsView: View {
         .padding(40)
         .frame(maxWidth: .infinity)
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -368,7 +368,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 
@@ -386,7 +386,7 @@ struct HistoricalTrendsView: View {
             ForEach(viewModel.insights, id: \.self) { insight in
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "arrow.right.circle.fill")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .font(.caption)
 
                     Text(insight)
@@ -397,7 +397,7 @@ struct HistoricalTrendsView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .padding(.horizontal)
     }
 }
@@ -439,7 +439,7 @@ struct TrendStatisticBox: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 }
 

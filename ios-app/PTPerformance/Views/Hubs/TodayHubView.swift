@@ -23,7 +23,7 @@ struct TodayHubView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var supabase: PTSupabaseClient
     @EnvironmentObject var storeKit: StoreKitService
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var modeService = ModeService.shared
 
     // MARK: - State
 

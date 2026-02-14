@@ -127,12 +127,12 @@ private struct PatientRow: View {
         HStack(spacing: Spacing.sm) {
             // Avatar
             Circle()
-                .fill(Color.accentColor.opacity(0.2))
+                .fill(Color.modusCyan.opacity(0.2))
                 .frame(width: 44, height: 44)
                 .overlay(
                     Text(patient.initials)
                         .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 )
 
             // Patient info

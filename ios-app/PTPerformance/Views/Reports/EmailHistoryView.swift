@@ -417,11 +417,15 @@ struct EmailHistoryRow: View {
         .accessibilityLabel("Resend this email")
     }
 
-    private func formatDateTime(_ date: Date) -> String {
+    private static let shortDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatDateTime(_ date: Date) -> String {
+        Self.shortDateShortTimeFormatter.string(from: date)
     }
 }
 

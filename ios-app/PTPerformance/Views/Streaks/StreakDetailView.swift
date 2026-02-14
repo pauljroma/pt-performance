@@ -127,7 +127,7 @@ struct StreakDetailView: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
+                .shadow(color: Color(.systemGray4).opacity(0.1), radius: 10, x: 0, y: 4)
         )
     }
 
@@ -368,6 +368,12 @@ class StreakDetailViewModel: ObservableObject {
 
     // MARK: - Properties
 
+    private static let dayLetterFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEEE"
+        return formatter
+    }()
+
     private let patientId: UUID
     private let streakType: StreakType
     private let service: StreakTrackingService
@@ -409,16 +415,13 @@ class StreakDetailViewModel: ObservableObject {
             guard let date = calendar.date(byAdding: .day, value: offset, to: startOfWeek) else {
                 return nil
             }
-            let dayFormatter = DateFormatter()
-            dayFormatter.dateFormat = "EEEEE"
-
             let hasActivity = historyEntries.contains { entry in
                 calendar.isDate(entry.activityDate, inSameDayAs: date) && activityMatchesType(entry)
             }
 
             return WeekDay(
                 date: date,
-                dayLetter: dayFormatter.string(from: date),
+                dayLetter: Self.dayLetterFormatter.string(from: date),
                 hasActivity: hasActivity
             )
         }

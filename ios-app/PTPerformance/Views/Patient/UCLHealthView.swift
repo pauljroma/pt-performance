@@ -194,7 +194,7 @@ struct UCLHealthView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
     // MARK: - Check-in Prompt Card
@@ -294,7 +294,7 @@ struct UCLHealthView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
     // MARK: - Recent Assessments Section
@@ -311,7 +311,7 @@ struct UCLHealthView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
     // MARK: - Education Section
@@ -346,7 +346,7 @@ struct UCLHealthView: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.05), radius: 5, x: 0, y: 2)
     }
 
     // MARK: - Not Signed In View

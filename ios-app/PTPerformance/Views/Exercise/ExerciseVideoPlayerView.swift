@@ -1228,7 +1228,7 @@ struct EnhancedVideoProgressBar: View {
                 Circle()
                     .fill(Color.white)
                     .frame(width: isDragging ? 16 : 12, height: isDragging ? 16 : 12)
-                    .shadow(color: .black.opacity(0.3), radius: 2)
+                    .shadow(color: Color(.systemGray4).opacity(0.3), radius: 2)
                     .offset(x: geometry.size.width * progress - (isDragging ? 8 : 6))
                     .animation(.easeInOut(duration: 0.15), value: isDragging)
             }

@@ -15,6 +15,12 @@ struct PrescribedWorkoutsCard: View {
     let onStartPrescription: (WorkoutPrescription) -> Void
     let onViewAll: () -> Void
 
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter
+    }()
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Section header
@@ -62,9 +68,9 @@ struct PrescribedWorkoutsCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color.purple.opacity(0.3), lineWidth: 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -158,7 +164,7 @@ struct PrescribedWorkoutsCard: View {
                     .padding()
                     .background(Color.purple)
                     .foregroundColor(.white)
-                    .cornerRadius(DesignTokens.cornerRadiusMedium)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("Start prescribed workout: \(prescription.name)")
                 .accessibilityHint("Begins the workout prescribed by your therapist")
@@ -178,14 +184,14 @@ struct PrescribedWorkoutsCard: View {
                     .padding(.vertical, 6)
                     .background(Color.purple.opacity(0.15))
                     .foregroundColor(.purple)
-                    .cornerRadius(DesignTokens.cornerRadiusSmall)
+                    .cornerRadius(CornerRadius.sm)
                 }
                 .accessibilityLabel("Start workout: \(prescription.name)")
             }
         }
         .padding(isFirst ? 16 : 12)
         .background(isFirst ? Color.purple.opacity(0.05) : Color(.systemGray6))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Priority Badge
@@ -214,7 +220,7 @@ struct PrescribedWorkoutsCard: View {
         .padding(.vertical, 4)
         .background(color.opacity(0.15))
         .foregroundColor(color)
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Due Date Label
@@ -237,9 +243,7 @@ struct PrescribedWorkoutsCard: View {
             text = "Due tomorrow"
             color = .blue
         } else {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            text = "Due \(formatter.string(from: date))"
+            text = "Due \(Self.shortDateFormatter.string(from: date))"
             color = .secondary
         }
 

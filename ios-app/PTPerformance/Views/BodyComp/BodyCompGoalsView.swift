@@ -398,7 +398,7 @@ struct BodyCompGoalsView: View {
                         .foregroundColor(.blue)
                         .padding(.horizontal, 32)
                         .padding(.vertical, 12)
-                        .background(Color.white)
+                        .background(Color(.systemBackground))
                         .cornerRadius(CornerRadius.xl)
                 }
                 .padding(.top)

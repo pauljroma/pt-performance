@@ -299,7 +299,7 @@ struct TimerPickerView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentColor)
+            .background(Color.modusCyan)
             .foregroundColor(.white)
             .cornerRadius(CornerRadius.md)
             .adaptiveShadow(Shadow.prominent)
@@ -538,7 +538,7 @@ private struct CategoryChip: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
         }
@@ -632,10 +632,10 @@ private struct PresetCard: View {
                 .fill(Color(.secondarySystemGroupedBackground))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                        .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
                 )
         )
-        .shadow(color: isSelected ? Color.accentColor.opacity(0.3) : Color.black.opacity(0.05), radius: isSelected ? 8 : 4)
+        .shadow(color: isSelected ? Color.modusCyan.opacity(0.3) : Color(.systemGray4).opacity(0.05), radius: isSelected ? 8 : 4)
         .scaleEffect(isSelected ? 1.02 : 1.0)
         .animation(.spring(response: 0.3), value: isSelected)
         .onTapGesture {
@@ -696,9 +696,9 @@ private struct PresetPreview: View {
             // Icon
             Image(systemName: preset.templateJson.type.iconName)
                 .font(.title)
-                .foregroundColor(.accentColor)
+                .foregroundColor(.modusCyan)
                 .frame(width: 44, height: 44)
-                .background(Color.accentColor.opacity(0.1))
+                .background(Color.modusCyan.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
 
             // Info
@@ -717,7 +717,7 @@ private struct PresetPreview: View {
             Button(action: onDetailTap) {
                 Image(systemName: "info.circle")
                     .font(.title3)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
             }
             .accessibilityLabel("View details")
         }
@@ -739,7 +739,7 @@ private struct PresetDetailView: View {
                     HStack {
                         Image(systemName: preset.templateJson.type.iconName)
                             .font(.largeTitle)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
 
                         Spacer()
 

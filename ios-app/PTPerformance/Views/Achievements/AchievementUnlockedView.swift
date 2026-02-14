@@ -144,7 +144,7 @@ struct AchievementUnlockedView: View {
                     Image(systemName: achievement.iconName)
                         .font(.system(size: 60))
                         .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.3), radius: 5)
+                        .shadow(color: Color(.systemGray4).opacity(0.3), radius: 5)
                         .scaleEffect(badgeScale * (glowPulse ? 1.05 : 1.0))
                         .rotationEffect(.degrees(badgeRotation))
                 }
@@ -524,6 +524,7 @@ struct AchievementConfettiView: View {
                     )
                 }
             }
+            .drawingGroup()
             .onAppear {
                 generateParticles(in: geometry.size)
             }
@@ -531,7 +532,8 @@ struct AchievementConfettiView: View {
     }
 
     private func generateParticles(in size: CGSize) {
-        particles = (0..<particleCount).map { index in
+        let cappedCount = min(particleCount, 60)
+        particles = (0..<cappedCount).map { index in
             AchievementConfettiParticle(
                 x: CGFloat.random(in: 0...size.width),
                 color: colors[index % colors.count],

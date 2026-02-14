@@ -26,7 +26,7 @@ struct TimelineEventCard: View {
     // MARK: - Body
 
     var body: some View {
-        HStack(alignment: .top, spacing: DesignTokens.spacingMedium) {
+        HStack(alignment: .top, spacing: Spacing.sm) {
             // Timeline indicator
             timelineIndicator
 
@@ -34,9 +34,9 @@ struct TimelineEventCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Main card content
                 cardContent
-                    .padding(DesignTokens.spacingMedium)
+                    .padding(Spacing.sm)
                     .background(cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -54,7 +54,7 @@ struct TimelineEventCard: View {
                 }
             }
         }
-        .padding(.horizontal, DesignTokens.spacingLarge)
+        .padding(.horizontal, Spacing.md)
         .onAppear {
             if event.hasConflicts {
                 startConflictAnimation()
@@ -95,9 +95,9 @@ struct TimelineEventCard: View {
     // MARK: - Card Content
 
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             // Header row
-            HStack(alignment: .center, spacing: DesignTokens.spacingSmall) {
+            HStack(alignment: .center, spacing: Spacing.xs) {
                 // Event icon
                 Image(systemName: event.eventType.iconName)
                     .font(.system(size: 16, weight: .semibold))
@@ -171,13 +171,13 @@ struct TimelineEventCard: View {
     // MARK: - Expanded Content
 
     private func expandedContent(detail: TimelineEventDetail) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             Divider()
-                .padding(.top, DesignTokens.spacingSmall)
+                .padding(.top, Spacing.xs)
 
             // Detail sections
             ForEach(detail.detailSections) { section in
-                VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(section.title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.primary)
@@ -186,7 +186,7 @@ struct TimelineEventCard: View {
                         detailItemRow(item: item)
                     }
                 }
-                .padding(.horizontal, DesignTokens.spacingSmall)
+                .padding(.horizontal, Spacing.xs)
             }
 
             // Conflicting events section
@@ -194,19 +194,19 @@ struct TimelineEventCard: View {
                 conflictingEventsSection(conflicts: conflicts)
             }
         }
-        .padding(.horizontal, DesignTokens.spacingMedium)
-        .padding(.bottom, DesignTokens.spacingMedium)
+        .padding(.horizontal, Spacing.sm)
+        .padding(.bottom, Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(
             UnevenRoundedRectangle(
-                bottomLeadingRadius: DesignTokens.cornerRadiusMedium,
-                bottomTrailingRadius: DesignTokens.cornerRadiusMedium
+                bottomLeadingRadius: CornerRadius.md,
+                bottomTrailingRadius: CornerRadius.md
             )
         )
     }
 
     private func detailItemRow(item: TimelineEventDetail.DetailItem) -> some View {
-        HStack(spacing: DesignTokens.spacingSmall) {
+        HStack(spacing: Spacing.xs) {
             if let icon = item.icon {
                 Image(systemName: icon)
                     .font(.caption)
@@ -229,7 +229,7 @@ struct TimelineEventCard: View {
     }
 
     private func conflictingEventsSection(conflicts: [TimelineEvent]) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
@@ -238,7 +238,7 @@ struct TimelineEventCard: View {
             }
 
             ForEach(conflicts) { conflict in
-                HStack(spacing: DesignTokens.spacingSmall) {
+                HStack(spacing: Spacing.xs) {
                     Image(systemName: conflict.sourceType.iconName)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -261,7 +261,7 @@ struct TimelineEventCard: View {
                 )
             }
         }
-        .padding(.horizontal, DesignTokens.spacingSmall)
+        .padding(.horizontal, Spacing.xs)
     }
 
     // MARK: - Card Background
@@ -269,14 +269,14 @@ struct TimelineEventCard: View {
     private var cardBackground: some View {
         Group {
             if event.hasConflicts {
-                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemGroupedBackground))
                     .overlay(
-                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .stroke(Color.orange.opacity(0.3), lineWidth: 1)
                     )
             } else {
-                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .fill(Color(.secondarySystemGroupedBackground))
             }
         }
@@ -315,9 +315,9 @@ struct TimelineSectionHeader: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, DesignTokens.spacingLarge)
-        .padding(.vertical, DesignTokens.spacingSmall)
-        .padding(.leading, 20 + DesignTokens.spacingMedium) // Align with card content
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
+        .padding(.leading, 20 + Spacing.sm) // Align with card content
     }
 }
 

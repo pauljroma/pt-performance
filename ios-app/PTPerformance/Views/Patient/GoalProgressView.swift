@@ -24,10 +24,14 @@ struct GoalProgressDataPoint: Identifiable, Hashable {
         self.milestone = milestone
     }
 
-    var formattedDate: String {
+    private static let monthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    var formattedDate: String {
+        Self.monthDayFormatter.string(from: date)
     }
 }
 
@@ -270,6 +274,7 @@ struct CelebrationOverlay: View {
                     .animation(.spring(response: 0.4, dampingFraction: 0.5), value: showCheckmark)
             }
         }
+        .drawingGroup()
         .onAppear {
             generateParticles()
             withAnimation {
@@ -670,10 +675,14 @@ struct DeadlineCountdownView: View {
         return (days, hours, minutes, isOverdue)
     }
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 }
 

@@ -27,9 +27,9 @@ struct ArmCareStatusCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -123,7 +123,7 @@ struct ArmCareStatusCard: View {
                 .padding()
                 .background(Color.orange)
                 .foregroundColor(.white)
-                .cornerRadius(DesignTokens.cornerRadiusSmall + 2)
+                .cornerRadius(CornerRadius.sm + 2)
             }
             .accessibilityLabel("Quick Arm Check")
             .accessibilityHint("Opens 30-second arm care assessment")

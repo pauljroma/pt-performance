@@ -601,11 +601,15 @@ struct ReadinessCheckInView: View {
         await viewModel.submitReadiness()
     }
 
-    /// Format today's date
-    private var dateString: String {
+    private static let fullDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE, MMMM d, yyyy"
-        return formatter.string(from: Date())
+        return formatter
+    }()
+
+    /// Format today's date
+    private var dateString: String {
+        Self.fullDateFormatter.string(from: Date())
     }
 
     /// Auto-fill form fields from HealthKit data

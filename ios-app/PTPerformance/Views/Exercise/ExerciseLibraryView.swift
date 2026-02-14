@@ -575,7 +575,7 @@ struct RecentExerciseCard: View {
                     .frame(width: 120, alignment: .leading)
 
                 // Difficulty indicator
-                DifficultyBadge(difficulty: exercise.difficulty)
+                ExerciseDifficultyBadge(difficulty: exercise.difficulty)
             }
         }
         .buttonStyle(.plain)
@@ -593,7 +593,7 @@ struct RecentExerciseCard: View {
 
 // MARK: - Difficulty Badge
 
-struct DifficultyBadge: View {
+struct ExerciseDifficultyBadge: View {
     let difficulty: ExerciseDifficulty
 
     var body: some View {
@@ -657,7 +657,7 @@ struct ExerciseLibraryRow: View {
 
                     HStack(spacing: 8) {
                         // Difficulty
-                        DifficultyBadge(difficulty: exercise.difficulty)
+                        ExerciseDifficultyBadge(difficulty: exercise.difficulty)
 
                         // Equipment badge
                         if let equipment = exercise.equipment {
@@ -1278,7 +1278,7 @@ struct SimilarExerciseCard: View {
                     .lineLimit(2)
                     .frame(width: 110, alignment: .leading)
 
-                DifficultyBadge(difficulty: exercise.difficulty)
+                ExerciseDifficultyBadge(difficulty: exercise.difficulty)
             }
         }
         .buttonStyle(.plain)

@@ -128,7 +128,7 @@ struct DailyCheckInView: View {
         if step.rawValue < viewModel.currentStepIndex {
             return .green
         } else if step == viewModel.currentStep {
-            return .accentColor
+            return .modusCyan
         } else if step.isOptional {
             return .gray.opacity(0.3)
         } else {
@@ -196,7 +196,7 @@ struct DailyCheckInView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.accentColor)
+                .background(Color.modusCyan)
                 .cornerRadius(CornerRadius.md)
             }
             .padding(.horizontal, 32)
@@ -619,7 +619,7 @@ struct DailyCheckInView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 12)
-                .background(viewModel.canProceed ? Color.accentColor : Color.gray)
+                .background(viewModel.canProceed ? Color.modusCyan : Color.gray)
                 .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canProceed)
@@ -762,7 +762,7 @@ struct DailyCheckInView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 32)
                     .padding(.vertical, 12)
-                    .background(Color.accentColor)
+                    .background(Color.modusCyan)
                     .cornerRadius(CornerRadius.md)
             }
 

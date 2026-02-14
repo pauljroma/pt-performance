@@ -379,10 +379,20 @@ private struct CalendarDayCell: View {
     let isSelected: Bool
     let onTap: () -> Void
 
-    private var dayNumber: String {
+    private static let dayNumberFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private static let longDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        return formatter
+    }()
+
+    private var dayNumber: String {
+        Self.dayNumberFormatter.string(from: date)
     }
 
     private var completionStatus: CompletionStatus {
@@ -397,9 +407,7 @@ private struct CalendarDayCell: View {
     }
 
     private var accessibilityLabelText: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        let dateString = formatter.string(from: date)
+        let dateString = Self.longDateFormatter.string(from: date)
 
         switch completionStatus {
         case .completed:

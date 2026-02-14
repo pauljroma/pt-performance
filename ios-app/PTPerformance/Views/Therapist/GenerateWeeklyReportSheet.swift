@@ -247,10 +247,14 @@ struct GenerateWeeklyReportSheet: View {
         return (start, end)
     }
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let monthDayYearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d, yyyy"
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.monthDayYearFormatter.string(from: date)
     }
 }
 

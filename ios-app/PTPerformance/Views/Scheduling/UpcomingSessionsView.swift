@@ -238,6 +238,24 @@ struct UpcomingSessionsView: View {
 struct UpcomingSessionRow: View {
     let session: ScheduledSession
 
+    private static let monthAbbrevFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        return formatter
+    }()
+
+    private static let dayNumberFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d"
+        return formatter
+    }()
+
+    private static let weekdayAbbrevFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+
     var body: some View {
         HStack(spacing: 12) {
             // Date badge
@@ -325,21 +343,15 @@ struct UpcomingSessionRow: View {
     }
 
     private var monthAbbreviation: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM"
-        return formatter.string(from: session.scheduledDate).uppercased()
+        Self.monthAbbrevFormatter.string(from: session.scheduledDate).uppercased()
     }
 
     private var dayNumber: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: session.scheduledDate)
+        Self.dayNumberFormatter.string(from: session.scheduledDate)
     }
 
     private var weekday: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: session.scheduledDate).uppercased()
+        Self.weekdayAbbrevFormatter.string(from: session.scheduledDate).uppercased()
     }
 }
 

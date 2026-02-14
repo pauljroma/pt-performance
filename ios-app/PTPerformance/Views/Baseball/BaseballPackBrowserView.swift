@@ -589,7 +589,7 @@ struct BaseballProgramCard: View {
         .frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.06), radius: 8, x: 0, y: 2)
     }
 }
 

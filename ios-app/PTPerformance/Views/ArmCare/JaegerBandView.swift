@@ -179,7 +179,7 @@ private struct ProtocolOptionCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.systemBackground))
-                    .shadow(color: isSelected ? Color.orange.opacity(0.3) : Color.black.opacity(0.1), radius: isSelected ? 8 : 4)
+                    .shadow(color: isSelected ? Color.orange.opacity(0.3) : Color(.systemGray4).opacity(0.1), radius: isSelected ? 8 : 4)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -337,7 +337,7 @@ private struct ExerciseDetailCard: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        .shadow(color: Color(.systemGray4).opacity(0.1), radius: 8, x: 0, y: 4)
     }
 }
 
@@ -725,7 +725,7 @@ private struct NavigationButtonsView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: -2)
+        .shadow(color: Color(.systemGray4).opacity(0.1), radius: 4, x: 0, y: -2)
     }
 }
 

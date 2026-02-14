@@ -21,7 +21,7 @@ struct TodaySessionView: View {
     @State private var isLoadingArmCare = false
 
     // ACP-MODE: Mode-specific dashboard navigation
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var modeService = ModeService.shared
     @State private var showRehabDashboard = false
     @State private var showStrengthDashboard = false
     @State private var showPerformanceDashboard = false
@@ -716,7 +716,7 @@ struct TodaySessionView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, DesignTokens.spacingXLarge)
+                    .padding(.horizontal, Spacing.lg)
 
                 Button {
                     HapticFeedback.light()
@@ -725,10 +725,10 @@ struct TodaySessionView: View {
                     Label("Browse Workout Library", systemImage: "books.vertical")
                         .font(.headline)
                         .foregroundColor(.white)
-                        .padding(.horizontal, DesignTokens.spacingXLarge)
-                        .padding(.vertical, DesignTokens.spacingMedium)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
                         .background(Color.blue)
-                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                        .cornerRadius(CornerRadius.md)
                 }
                 .padding(.top, 8)
             }

@@ -418,13 +418,17 @@ enum FastingProtocolType: String, CaseIterable, Codable {
         return "\(startTime) - \(endTime)"
     }
 
-    private func formatHour(_ hour: Int) -> String {
+    private static let hourAmPmFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "h a"
+        return formatter
+    }()
+
+    private func formatHour(_ hour: Int) -> String {
         var components = DateComponents()
         components.hour = hour
         let date = Calendar.current.date(from: components) ?? Date()
-        return formatter.string(from: date)
+        return Self.hourAmPmFormatter.string(from: date)
     }
 }
 

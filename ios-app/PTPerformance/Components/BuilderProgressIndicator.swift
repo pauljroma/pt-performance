@@ -64,7 +64,7 @@ private struct StepDot: View {
             if isCompleted {
                 // Completed step - filled with checkmark
                 Circle()
-                    .fill(Color.accentColor)
+                    .fill(Color.modusCyan)
                     .frame(width: 24, height: 24)
                     .overlay(
                         Image(systemName: "checkmark")
@@ -74,11 +74,11 @@ private struct StepDot: View {
             } else if isCurrent {
                 // Current step - larger with ring
                 Circle()
-                    .fill(Color.accentColor)
+                    .fill(Color.modusCyan)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Circle()
-                            .stroke(Color.accentColor.opacity(0.3), lineWidth: 4)
+                            .stroke(Color.modusCyan.opacity(0.3), lineWidth: 4)
                             .frame(width: 36, height: 36)
                     )
             } else {
@@ -120,7 +120,7 @@ struct BuilderProgressBar: View {
 
                     // Progress fill
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.accentColor)
+                        .fill(Color.modusCyan)
                         .frame(width: geometry.size.width * progress, height: 4)
                         .animation(.easeInOut(duration: 0.3), value: progress)
                 }
@@ -169,7 +169,7 @@ struct BuilderNumberedSteps: View {
                     // Connector line (except for last step)
                     if index < allSteps.count - 1 {
                         Rectangle()
-                            .fill(step.rawValue < currentStep.rawValue ? Color.accentColor : Color(.systemGray4))
+                            .fill(step.rawValue < currentStep.rawValue ? Color.modusCyan : Color(.systemGray4))
                             .frame(height: 2)
                             .animation(.easeInOut(duration: 0.3), value: currentStep)
                     }
@@ -188,7 +188,7 @@ private struct NumberedStepCircle: View {
         ZStack {
             if isCompleted {
                 Circle()
-                    .fill(Color.accentColor)
+                    .fill(Color.modusCyan)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Image(systemName: "checkmark")
@@ -197,7 +197,7 @@ private struct NumberedStepCircle: View {
                     )
             } else if isCurrent {
                 Circle()
-                    .fill(Color.accentColor)
+                    .fill(Color.modusCyan)
                     .frame(width: 28, height: 28)
                     .overlay(
                         Text("\(number)")

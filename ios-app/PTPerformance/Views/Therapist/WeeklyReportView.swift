@@ -413,13 +413,17 @@ struct WeeklyReportView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    // MARK: - Helpers
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateShortTimeFormatter.string(from: date)
     }
 }
 

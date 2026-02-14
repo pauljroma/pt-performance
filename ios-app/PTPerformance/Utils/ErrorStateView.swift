@@ -62,7 +62,7 @@ struct ErrorStateView: View {
                         .padding()
                         .background(Color.blue)
                         .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                 }
 
@@ -79,7 +79,7 @@ struct ErrorStateView: View {
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
                         .foregroundColor(.primary)
-                        .cornerRadius(12)
+                        .cornerRadius(CornerRadius.md)
                     }
                 }
             }
@@ -331,7 +331,7 @@ struct CompactErrorView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(8)
+        .cornerRadius(CornerRadius.sm)
     }
 
     /// Create a compact error view from any Error
@@ -444,7 +444,7 @@ struct ErrorBannerView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(Color.white.opacity(0.2))
-                    .cornerRadius(6)
+                    .cornerRadius(CornerRadius.xs)
                 }
                 .disabled(isRetrying)
             }

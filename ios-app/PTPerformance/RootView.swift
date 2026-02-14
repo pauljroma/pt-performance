@@ -2,8 +2,8 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var modeService = ModeService.shared
     @AppStorage("hasAcceptedPrivacyNotice") private var hasAcceptedPrivacyNotice = false
     @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
     @State private var showPrivacyNotice = false

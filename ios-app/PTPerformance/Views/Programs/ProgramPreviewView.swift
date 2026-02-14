@@ -210,7 +210,7 @@ struct ProgramPreviewView: View {
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
-            .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
+            .shadow(color: Color(.systemGray4).opacity(0.05), radius: 4, y: 2)
         }
         .padding()
         .background(Color(.systemBackground))

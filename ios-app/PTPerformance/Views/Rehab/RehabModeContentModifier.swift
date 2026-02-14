@@ -10,7 +10,7 @@ import SwiftUI
 
 /// View modifier that adds Rehab-specific content when user is in Rehab mode
 struct RehabModeContentModifier: ViewModifier {
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var modeService = ModeService.shared
 
     let patientId: UUID?
 

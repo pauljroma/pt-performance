@@ -178,7 +178,7 @@ struct CohortAnalyticsDashboardView: View {
                             .foregroundColor(.blue)
                     }
                 }
-                .padding(10)
+                .padding(Spacing.sm)
                 .background(Color.orange.opacity(0.1))
                 .cornerRadius(CornerRadius.sm)
             }
@@ -194,7 +194,7 @@ struct CohortAnalyticsDashboardView: View {
                 .foregroundColor(.secondary)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
@@ -490,7 +490,7 @@ struct CohortAnalyticsDashboardView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
@@ -576,7 +576,7 @@ struct CohortAnalyticsDashboardView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(12)
+        .padding(Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -647,7 +647,7 @@ struct CohortAnalyticsDashboardView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
@@ -728,7 +728,7 @@ struct CohortAnalyticsDashboardView: View {
                 .frame(height: 8)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)

@@ -41,6 +41,8 @@
 	<string>Modus can save your workout data to Apple Health to help you track your fitness progress across all your health apps.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Modus needs microphone access to record audio with your exercise videos so your therapist can hear your questions and provide better feedback.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Modus uses speech recognition to automatically transcribe your health journal entries, making it easy to search and review your wellness notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Modus needs photo library access to let you select and share exercise videos and images with your physical therapist.</string>
 	<key>NSSiriUsageDescription</key>

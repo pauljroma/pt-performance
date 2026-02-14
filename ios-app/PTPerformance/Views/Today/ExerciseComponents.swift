@@ -44,9 +44,9 @@ struct ExerciseRow: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -135,7 +135,7 @@ struct ExerciseDetailView: View {
                     .padding()
                     .background(Color.purple)
                     .foregroundColor(.white)
-                    .cornerRadius(DesignTokens.cornerRadiusMedium)
+                    .cornerRadius(CornerRadius.md)
                 }
                 .accessibilityLabel("View Technique Guide")
                 .accessibilityHint("Shows video and instructions for proper exercise form")
@@ -154,7 +154,7 @@ struct ExerciseDetailView: View {
                             .padding()
                             .background(Color.blue)
                             .foregroundColor(.white)
-                            .cornerRadius(DesignTokens.cornerRadiusMedium)
+                            .cornerRadius(CornerRadius.md)
                     }
                 } else {
                     Text("Log This Exercise")
@@ -162,7 +162,7 @@ struct ExerciseDetailView: View {
                         .padding()
                         .background(Color.gray)
                         .foregroundColor(.white)
-                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                        .cornerRadius(CornerRadius.md)
                         .overlay(
                             Text("Sign in to log exercises")
                                 .font(.caption)

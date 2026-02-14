@@ -10,7 +10,7 @@ import SwiftUI
 
 struct AuthLandingView: View {
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
 
     @State private var isLoading = false
     @State private var errorMessage: String?

@@ -224,7 +224,7 @@ extension Notification.Name {
 
 @available(iOS 16.0, *)
 struct SiriIntentHandler: ViewModifier {
-    @ObservedObject private var siriService = SiriIntentService.shared
+    @StateObject private var siriService = SiriIntentService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     func body(content: Content) -> some View {

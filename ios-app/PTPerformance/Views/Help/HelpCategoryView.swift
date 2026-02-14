@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HelpCategoryView: View {
-    @ObservedObject private var contentLoader = HelpContentLoader.shared
+    @StateObject private var contentLoader = HelpContentLoader.shared
     @State private var selectedCategory: HelpCategory?
 
     var body: some View {
@@ -115,7 +115,7 @@ struct CategoryCard: View {
 
 struct CategoryArticleListView: View {
     let category: HelpCategory
-    @ObservedObject private var contentLoader = HelpContentLoader.shared
+    @StateObject private var contentLoader = HelpContentLoader.shared
 
     var filteredArticles: [HelpArticle] {
         contentLoader.articles.filter { $0.category == category }

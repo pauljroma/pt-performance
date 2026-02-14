@@ -120,7 +120,7 @@ struct ProgramWorkoutHistoryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Streak Section
@@ -162,7 +162,7 @@ struct ProgramWorkoutHistoryView: View {
                 endPoint: .trailing
             )
         )
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Current streak: \(viewModel.stats.currentStreak) days. Best streak: \(viewModel.stats.longestStreak) days")
     }
@@ -208,7 +208,7 @@ struct ProgramWorkoutHistoryView: View {
                             }
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.tertiarySystemGroupedBackground))
@@ -220,7 +220,7 @@ struct ProgramWorkoutHistoryView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Loading View
@@ -494,7 +494,7 @@ private struct ProgramWorkoutDetailSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var statsRow: some View {
@@ -552,7 +552,7 @@ private struct ProgramWorkoutDetailSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func loadExercises() async {

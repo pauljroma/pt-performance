@@ -261,7 +261,7 @@ struct AchievementLeaderboardView: View {
                 FilterChip(
                     label: filter.displayName,
                     icon: filter.icon,
-                    color: .accentColor,
+                    color: .modusCyan,
                     isSelected: viewModel.selectedFilter == filter
                 ) {
                     HapticFeedback.selectionChanged()

@@ -192,7 +192,7 @@ struct ActiveProgramDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Program: \(enrollment.program.title)")
     }
@@ -274,7 +274,7 @@ struct ActiveProgramDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     private func statCard(icon: String, value: String, label: String, color: Color) -> some View {
@@ -356,7 +356,7 @@ struct ActiveProgramDetailView: View {
             }
             .padding(12)
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Workout History, \(viewModel.completedWorkouts) workouts completed")
@@ -397,7 +397,7 @@ struct ActiveProgramDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Loading View
@@ -444,7 +444,7 @@ struct ActiveProgramDetailView: View {
             }
             .padding()
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -469,7 +469,7 @@ struct ActiveProgramDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Program Options Section
@@ -528,7 +528,7 @@ struct ActiveProgramDetailView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Helpers

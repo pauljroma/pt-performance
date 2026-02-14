@@ -33,7 +33,7 @@ struct CanonicalTimelineView: View {
             // Filter bar
             TimelineFilterBar(viewModel: viewModel)
                 .background(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.05), radius: 2, y: 2)
+                .shadow(color: Color(.systemGray4).opacity(0.05), radius: 2, y: 2)
 
             // Date range selector
             dateRangeHeader
@@ -79,7 +79,7 @@ struct CanonicalTimelineView: View {
     // MARK: - Date Range Header
 
     private var dateRangeHeader: some View {
-        HStack(spacing: DesignTokens.spacingMedium) {
+        HStack(spacing: Spacing.sm) {
             // Date range display
             Button {
                 showDatePicker = true
@@ -111,8 +111,8 @@ struct CanonicalTimelineView: View {
                 quickDateButton(range: .month)
             }
         }
-        .padding(.horizontal, DesignTokens.spacingLarge)
-        .padding(.vertical, DesignTokens.spacingSmall)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
         .background(Color(.systemBackground))
     }
 
@@ -130,7 +130,7 @@ struct CanonicalTimelineView: View {
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.accentColor : Color(.quaternarySystemFill))
+                        .fill(isSelected ? Color.modusCyan : Color(.quaternarySystemFill))
                 )
         }
         .buttonStyle(.plain)
@@ -213,7 +213,7 @@ struct CanonicalTimelineView: View {
                 Color.clear
                     .frame(height: 100)
             }
-            .padding(.top, DesignTokens.spacingSmall)
+            .padding(.top, Spacing.xs)
         }
         .background(Color(.systemGroupedBackground))
     }
@@ -221,7 +221,7 @@ struct CanonicalTimelineView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: DesignTokens.spacingLarge) {
+        VStack(spacing: Spacing.md) {
             ProgressView()
                 .scaleEffect(1.5)
 
@@ -236,7 +236,7 @@ struct CanonicalTimelineView: View {
     // MARK: - Empty State View
 
     private var emptyStateView: some View {
-        VStack(spacing: DesignTokens.spacingXLarge) {
+        VStack(spacing: Spacing.lg) {
             Spacer()
 
             // Icon
@@ -254,10 +254,10 @@ struct CanonicalTimelineView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignTokens.spacingXXLarge)
+                .padding(.horizontal, Spacing.xl)
 
             // Action buttons
-            VStack(spacing: DesignTokens.spacingMedium) {
+            VStack(spacing: Spacing.sm) {
                 if viewModel.hasActiveFilters {
                     Button {
                         viewModel.clearFilters()
@@ -265,9 +265,9 @@ struct CanonicalTimelineView: View {
                         Label("Clear Filters", systemImage: "xmark.circle.fill")
                             .font(.headline)
                             .foregroundColor(.white)
-                            .padding(.horizontal, DesignTokens.spacingXLarge)
-                            .padding(.vertical, DesignTokens.spacingMedium)
-                            .background(Color.accentColor)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.modusCyan)
                             .clipShape(Capsule())
                     }
                 }
@@ -277,7 +277,7 @@ struct CanonicalTimelineView: View {
                 } label: {
                     Text("Try Last Month")
                         .font(.subheadline.weight(.medium))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 }
             }
 

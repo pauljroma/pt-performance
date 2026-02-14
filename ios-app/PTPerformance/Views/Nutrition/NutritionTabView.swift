@@ -93,8 +93,8 @@ struct NutritionTabView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(selectedSection == section ? Color.accentColor.opacity(0.1) : Color.clear)
-                    .foregroundColor(selectedSection == section ? .accentColor : .secondary)
+                    .background(selectedSection == section ? Color.modusCyan.opacity(0.1) : Color.clear)
+                    .foregroundColor(selectedSection == section ? .modusCyan : .secondary)
                 }
             }
         }
@@ -182,7 +182,7 @@ struct FoodLibraryView: View {
                             .font(.caption)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(selectedCategory == nil ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
+                            .background(selectedCategory == nil ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                             .foregroundColor(selectedCategory == nil ? .white : .primary)
                             .cornerRadius(CornerRadius.lg)
                     }
@@ -196,7 +196,7 @@ struct FoodLibraryView: View {
                                 .font(.caption)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(selectedCategory == category ? Color.accentColor : Color(.tertiarySystemGroupedBackground))
+                                .background(selectedCategory == category ? Color.modusCyan : Color(.tertiarySystemGroupedBackground))
                                 .foregroundColor(selectedCategory == category ? .white : .primary)
                                 .cornerRadius(CornerRadius.lg)
                         }

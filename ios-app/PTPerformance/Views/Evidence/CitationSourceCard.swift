@@ -35,7 +35,7 @@ struct CitationSourceCard: View {
                 showingDetail = true
             }
         } label: {
-            VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 // Header row
                 headerRow
 
@@ -70,7 +70,7 @@ struct CitationSourceCard: View {
 
     @ViewBuilder
     private var headerRow: some View {
-        HStack(spacing: DesignTokens.spacingSmall) {
+        HStack(spacing: Spacing.xs) {
             // Source type icon
             ZStack {
                 Circle()
@@ -110,21 +110,21 @@ struct CitationSourceCard: View {
             .font(.caption)
             .foregroundColor(.primary)
             .lineLimit(isExpanded ? nil : 2)
-            .padding(DesignTokens.spacingSmall)
+            .padding(Spacing.xs)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(DesignTokens.cornerRadiusSmall)
+            .cornerRadius(CornerRadius.sm)
     }
 
     // MARK: - Expanded Content
 
     @ViewBuilder
     private var expandedContent: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Divider()
 
             // Confidence explanation
-            HStack(spacing: DesignTokens.spacingXSmall) {
+            HStack(spacing: Spacing.xxs) {
                 Image(systemName: "checkmark.shield.fill")
                     .font(.caption)
                     .foregroundColor(citation.confidence.color)
@@ -135,7 +135,7 @@ struct CitationSourceCard: View {
             }
 
             // Reliability score
-            HStack(spacing: DesignTokens.spacingXSmall) {
+            HStack(spacing: Spacing.xxs) {
                 Image(systemName: "chart.bar.fill")
                     .font(.caption)
                     .foregroundColor(.modusCyan)
@@ -151,7 +151,7 @@ struct CitationSourceCard: View {
                     HapticService.medium()
                     onViewOriginal?()
                 } label: {
-                    HStack(spacing: DesignTokens.spacingXSmall) {
+                    HStack(spacing: Spacing.xxs) {
                         Image(systemName: "arrow.up.right.square")
                             .font(.caption)
 
@@ -196,10 +196,10 @@ struct CitationSourceCard: View {
 
     @ViewBuilder
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+        RoundedRectangle(cornerRadius: CornerRadius.md)
             .fill(Color(.secondarySystemGroupedBackground))
             .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(citation.confidence.color.opacity(0.3), lineWidth: 1)
             )
     }
@@ -229,7 +229,7 @@ struct CompactCitationCard: View {
             HapticService.light()
             onTap?()
         } label: {
-            HStack(spacing: DesignTokens.spacingSmall) {
+            HStack(spacing: Spacing.xs) {
                 // Source icon
                 Image(systemName: citation.sourceType.iconName)
                     .font(.caption)
@@ -258,10 +258,10 @@ struct CompactCitationCard: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            .padding(.horizontal, DesignTokens.spacingSmall)
-            .padding(.vertical, DesignTokens.spacingXSmall)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, Spacing.xxs)
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(DesignTokens.cornerRadiusSmall)
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -284,7 +284,7 @@ struct CitationPreviewCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             // Header
             HStack {
                 Label("Evidence Sources", systemImage: "doc.text.fill")
@@ -326,7 +326,7 @@ struct CitationPreviewCard: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
     }
 }
 
@@ -433,7 +433,7 @@ struct CitationStrengthIndicator: View {
 struct CitationSourceCard_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView {
-            VStack(spacing: DesignTokens.spacingLarge) {
+            VStack(spacing: Spacing.md) {
                 // Full card
                 Text("Citation Source Card")
                     .font(.headline)

@@ -12,6 +12,12 @@ struct AthletePlanView: View {
     let athleteId: UUID
     let athleteName: String
 
+    private static let dayMonthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        return formatter
+    }()
+
     @StateObject private var viewModel: AthletePlanViewModel
     @State private var showingEditSheet = false
     @State private var showingActionSheet = false
@@ -331,7 +337,7 @@ struct AthletePlanView: View {
                     .font(.headline)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.accentColor)
+                    .background(Color.modusCyan)
                     .foregroundColor(.white)
                     .cornerRadius(CornerRadius.md)
             }
@@ -370,9 +376,7 @@ struct AthletePlanView: View {
         } else if calendar.isDateInYesterday(date) {
             return "Yesterday"
         } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "EEEE, MMM d"
-            return formatter.string(from: date)
+            return Self.dayMonthDayFormatter.string(from: date)
         }
     }
 }
@@ -491,7 +495,7 @@ struct TaskCompletionSheet: View {
                 Section {
                     HStack {
                         Image(systemName: task.taskType.iconName)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                         VStack(alignment: .leading) {
                             Text(task.title)
                                 .font(.headline)
@@ -522,7 +526,7 @@ struct TaskCompletionSheet: View {
                                 Spacer()
                                 if selectedStatus == status {
                                     Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
+                                        .foregroundColor(.modusCyan)
                                 }
                             }
                         }

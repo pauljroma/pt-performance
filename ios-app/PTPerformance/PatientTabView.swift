@@ -18,11 +18,11 @@ import SwiftUI
 // - Animated tab transitions when mode changes
 
 struct PatientTabView: View {
-    @ObservedObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var badgeManager = TabBarBadgeManager.shared
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var badgeManager = TabBarBadgeManager.shared
+    @StateObject private var modeService = ModeService.shared
     @StateObject private var featureVisibility = FeatureVisibilityViewModel()
 
     // Track selected tab for haptic feedback

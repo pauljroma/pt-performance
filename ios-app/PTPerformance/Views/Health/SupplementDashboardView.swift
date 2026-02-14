@@ -6,7 +6,7 @@ import SwiftUI
 /// swipe-to-log, goal-based recommendations, and evidence grades
 struct SupplementDashboardView: View {
     @StateObject private var viewModel = SupplementDashboardViewModel()
-    @ObservedObject private var interactionService = SupplementInteractionService.shared
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var showingQuickLog = false
     @State private var showingRoutineEditor = false

@@ -233,7 +233,7 @@ struct RiskIndicatorDot: View {
 
 /// Badge specifically designed for tab bar items
 struct TabRiskBadge: View {
-    @ObservedObject var badgeManager = TabBarBadgeManager.shared
+    @StateObject var badgeManager = TabBarBadgeManager.shared
 
     var body: some View {
         Group {

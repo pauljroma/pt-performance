@@ -36,9 +36,9 @@ struct TodayEnrolledProgramsSection: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
         .adaptiveShadow(Shadow.subtle)
@@ -138,12 +138,12 @@ struct EnrolledProgramCardInline: View {
             // Progress Bar
             progressBarSection
         }
-        .padding(DesignTokens.spacingMedium)
+        .padding(Spacing.sm)
         .frame(width: 160, height: 150)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
         )
     }

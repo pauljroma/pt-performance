@@ -10,7 +10,7 @@ import SwiftUI
 
 struct LearningView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var contentLoader = LearningContentLoader.shared
+    @StateObject private var contentLoader = LearningContentLoader.shared
     @State private var searchText = ""
     @State private var selectedCategory: LearningCategory?
     @State private var showCategoryBrowser = false

@@ -177,7 +177,7 @@ struct TemplateLibraryView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(filteredTemplates) { template in
-                    TemplateCard(template: template)
+                    WorkoutTemplateCard(template: template)
                         .onTapGesture {
                             selectedTemplate = template
                         }
@@ -279,7 +279,7 @@ struct TemplateLibraryView: View {
 
 // MARK: - Template Card
 
-struct TemplateCard: View {
+struct WorkoutTemplateCard: View {
     let template: WorkoutTemplate
 
     var body: some View {
@@ -301,11 +301,11 @@ struct TemplateCard: View {
 
                     HStack(spacing: 8) {
                         // Category badge
-                        CategoryBadge(category: template.category)
+                        TemplateCategoryBadge(category: template.category)
 
                         // Difficulty badge
                         if let difficulty = template.difficultyLevel {
-                            DifficultyBadge(difficulty: difficulty)
+                            TemplateDifficultyBadge(difficulty: difficulty)
                         }
 
                         // Popular badge
@@ -389,7 +389,7 @@ struct TemplateCard: View {
 
 // MARK: - Badges
 
-struct CategoryBadge: View {
+struct TemplateCategoryBadge: View {
     let category: WorkoutTemplate.TemplateCategory
 
     var body: some View {
@@ -415,7 +415,7 @@ struct CategoryBadge: View {
     }
 }
 
-struct DifficultyBadge: View {
+struct TemplateDifficultyBadge: View {
     let difficulty: WorkoutTemplate.DifficultyLevel
 
     var body: some View {

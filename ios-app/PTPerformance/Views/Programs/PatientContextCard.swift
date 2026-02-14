@@ -133,7 +133,7 @@ struct PatientContextCard: View {
             } label: {
                 Text("Change")
                     .font(.subheadline)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
             }
             .buttonStyle(.plain)
         }
@@ -173,7 +173,7 @@ struct PatientContextCard: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [.accentColor, .accentColor.opacity(0.7)],
+                        colors: [.modusCyan, .modusCyan.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -289,10 +289,10 @@ struct PatientContextCard: View {
                 Text("\(patientGoals.count)")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(Color.accentColor.opacity(0.1))
+                    .background(Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
             }
 
@@ -327,7 +327,7 @@ struct PatientContextCard: View {
 
                     Image(systemName: "person.fill.badge.plus")
                         .font(.title3)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {

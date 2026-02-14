@@ -15,6 +15,12 @@ struct MealTimelineView: View {
     let plannedMeals: [MealPlanItem]
     let onDelete: (NutritionLog) -> Void
 
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
     @State private var isVisible = false
 
     private var allMealsChronological: [(type: TimelineItemType, time: Date, item: Any)] {
@@ -96,9 +102,7 @@ struct MealTimelineView: View {
     }
 
     private func timeFromString(_ timeString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        guard let time = formatter.date(from: timeString) else { return nil }
+        guard let time = Self.timeFormatter.date(from: timeString) else { return nil }
 
         // Combine with today's date
         let calendar = Calendar.current

@@ -346,6 +346,7 @@ struct RTSConfettiView: View {
                     RTSConfettiParticleView(particle: particle)
                 }
             }
+            .drawingGroup()
             .onAppear {
                 createParticles(in: geometry.size)
             }
@@ -354,7 +355,8 @@ struct RTSConfettiView: View {
     }
 
     private func createParticles(in size: CGSize) {
-        particles = (0..<count).map { _ in
+        let cappedCount = min(count, 60)
+        particles = (0..<cappedCount).map { _ in
             RTSConfettiParticle(
                 x: CGFloat.random(in: 0...size.width),
                 y: -20,

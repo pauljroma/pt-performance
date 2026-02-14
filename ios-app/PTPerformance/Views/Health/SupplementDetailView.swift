@@ -4,7 +4,7 @@ import SwiftUI
 /// Supplement Detail View - View supplement details and add to routine
 struct SupplementDetailView: View {
     @StateObject private var viewModel = SupplementDetailViewModel()
-    @ObservedObject private var interactionService = SupplementInteractionService.shared
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.dismiss) private var dismiss
 
     let supplementId: UUID

@@ -174,11 +174,11 @@ struct ConflictGroupResolutionSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .fill(selectedResolution == .useFirst ? Color.blue.opacity(0.1) : Color(.tertiarySystemFill))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .stroke(selectedResolution == .useFirst ? Color.blue : Color.clear, lineWidth: 2)
                     )
                 }
@@ -215,11 +215,11 @@ struct ConflictGroupResolutionSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .fill(selectedResolution == .useSecond ? Color.purple.opacity(0.1) : Color(.tertiarySystemFill))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .stroke(selectedResolution == .useSecond ? Color.purple : Color.clear, lineWidth: 2)
                     )
                 }
@@ -235,7 +235,7 @@ struct ConflictGroupResolutionSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Resolution Options Card
@@ -259,7 +259,7 @@ struct ConflictGroupResolutionSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .animation(.spring(response: 0.3), value: selectedResolution)
     }
 
@@ -275,7 +275,7 @@ struct ConflictGroupResolutionSheet: View {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : option.icon)
                     .font(.title3)
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
+                    .foregroundColor(isSelected ? .modusCyan : .secondary)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(option.rawValue)
@@ -306,15 +306,15 @@ struct ConflictGroupResolutionSheet: View {
                 .frame(minHeight: 80)
                 .padding(8)
                 .background(Color(.systemBackground))
-                .cornerRadius(DesignTokens.cornerRadiusSmall)
+                .cornerRadius(CornerRadius.sm)
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusSmall)
+                    RoundedRectangle(cornerRadius: CornerRadius.sm)
                         .stroke(Color(.separator), lineWidth: 1)
                 )
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Resolve Button
@@ -335,9 +335,9 @@ struct ConflictGroupResolutionSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentColor)
+            .background(Color.modusCyan)
             .foregroundColor(.white)
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
         .disabled(isResolving || (selectedResolution == .manual && customValue.isEmpty))
     }

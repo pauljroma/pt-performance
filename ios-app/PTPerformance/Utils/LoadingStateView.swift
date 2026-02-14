@@ -58,9 +58,9 @@ struct SkeletonCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
         .onAppear {
@@ -182,7 +182,7 @@ struct ChartLoadingView: View {
                 .frame(width: 150, height: 20)
                 .shimmer(isAnimating: isAnimating)
 
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 200)
                 .shimmer(isAnimating: isAnimating)
@@ -256,7 +256,7 @@ struct TodaySessionLoadingView: View {
         }
         .padding()
         .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Skeleton Readiness Section
@@ -294,9 +294,9 @@ struct TodaySessionLoadingView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
     }
@@ -366,14 +366,14 @@ struct TodaySessionLoadingView: View {
                 .frame(height: 1)
 
             // Start Workout Button skeleton
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 56)
                 .shimmer(isAnimating: isAnimating)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
     }
 }
@@ -623,7 +623,7 @@ struct NutritionDashboardLoadingView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -657,7 +657,7 @@ struct NutritionDashboardLoadingView: View {
         }
         .padding()
         .background(Color.gray.opacity(0.1))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     // MARK: - Skeleton Macro Card
@@ -696,7 +696,7 @@ struct NutritionDashboardLoadingView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -712,7 +712,7 @@ struct NutritionDashboardLoadingView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(0..<4, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .fill(Color.gray.opacity(0.3))
                             .frame(width: 80, height: 70)
                             .shimmer(isAnimating: isAnimating)
@@ -771,7 +771,7 @@ struct NutritionDashboardLoadingView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 
@@ -817,7 +817,7 @@ struct NutritionDashboardLoadingView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -1034,11 +1034,11 @@ struct ProgramLibrarySkeletonView: View {
                         .shimmer(isAnimating: isAnimating)
                 }
             }
-            .padding(12)
+            .padding(Spacing.sm)
         }
         .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
     }
 }
@@ -1106,7 +1106,7 @@ struct TodayHubSkeletonView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
     }
 
     private var enrolledProgramsSkeleton: some View {
@@ -1128,7 +1128,7 @@ struct TodayHubSkeletonView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(0..<2, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
                             .fill(Color.gray.opacity(0.3))
                             .frame(width: 200, height: 100)
                             .shimmer(isAnimating: isAnimating)
@@ -1168,9 +1168,9 @@ struct TodayHubSkeletonView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color(.separator), lineWidth: 1)
         )
     }
@@ -1232,14 +1232,14 @@ struct TodayHubSkeletonView: View {
             .padding(.vertical, 8)
 
             // Start button skeleton
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color.gray.opacity(0.3))
                 .frame(height: 56)
                 .shimmer(isAnimating: isAnimating)
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(16)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
     }
 }

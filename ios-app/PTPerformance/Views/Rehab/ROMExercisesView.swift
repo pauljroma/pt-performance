@@ -37,7 +37,7 @@ struct ROMExercisesView: View {
                                 }
                                 .padding(.horizontal, Spacing.lg)
                                 .padding(.vertical, Spacing.sm)
-                                .background(Color.accentColor)
+                                .background(Color.modusCyan)
                                 .foregroundColor(.white)
                                 .cornerRadius(CornerRadius.md)
                             }

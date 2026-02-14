@@ -44,8 +44,8 @@ struct ExerciseDetailSheet: View {
                     // Bottom padding for scrolling
                     Color.clear.frame(height: 20)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.horizontal, Spacing.md)
+                .padding(.top, Spacing.xs)
             }
             .navigationTitle(substitution.exerciseName)
             .navigationBarTitleDisplayMode(.inline)
@@ -79,7 +79,7 @@ struct ExerciseDetailSheet: View {
 
     private var videoPlaceholder: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color.gray.opacity(0.1))
                 .frame(height: 250)
 
@@ -145,7 +145,7 @@ struct ExerciseDetailSheet: View {
                 .cornerRadius(CornerRadius.sm)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -189,7 +189,7 @@ struct ExerciseDetailSheet: View {
                 )
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -280,7 +280,7 @@ struct ExerciseDetailSheet: View {
                 }
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -302,7 +302,7 @@ struct ExerciseDetailSheet: View {
                 .font(.body)
                 .foregroundColor(.primary)
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color.orange.opacity(0.05))
         .cornerRadius(CornerRadius.md)
         .overlay(
@@ -327,7 +327,7 @@ struct ExerciseDetailSheet: View {
                 .font(.body)
                 .foregroundColor(.primary)
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color.red.opacity(0.05))
         .cornerRadius(CornerRadius.md)
         .overlay(

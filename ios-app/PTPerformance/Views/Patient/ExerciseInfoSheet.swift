@@ -216,7 +216,7 @@ struct ExerciseTemplateInfoSheet: View {
                                                     }
                                                     Spacer()
                                                 }
-                                                .padding(4)
+                                                .padding(Spacing.xxs)
                                             }
                                         }
                                     )
@@ -277,7 +277,7 @@ struct ExerciseTemplateInfoSheet: View {
                 cueGroup(title: "Breathing", icon: "lungs.fill", cues: cues.breathing, color: .teal)
             }
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color(uiColor: .systemBackground))
         .cornerRadius(CornerRadius.md)
         .adaptiveShadow(Shadow.subtle)
@@ -328,7 +328,7 @@ struct ExerciseTemplateInfoSheet: View {
                 .font(.body)
                 .foregroundColor(.primary)
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color.orange.opacity(0.05))
         .cornerRadius(CornerRadius.md)
         .overlay(
@@ -353,7 +353,7 @@ struct ExerciseTemplateInfoSheet: View {
                 .font(.body)
                 .foregroundColor(.primary)
         }
-        .padding(16)
+        .padding(Spacing.md)
         .background(Color.red.opacity(0.05))
         .cornerRadius(CornerRadius.md)
         .overlay(

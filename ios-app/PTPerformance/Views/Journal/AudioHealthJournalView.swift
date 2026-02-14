@@ -160,6 +160,18 @@ struct JournalEntryCard: View {
     let onTap: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
+    private static let fullDayNameFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        return formatter
+    }()
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -259,17 +271,14 @@ struct JournalEntryCard: View {
     }
 
     private var formattedDate: String {
-        let formatter = DateFormatter()
         if Calendar.current.isDateInToday(entry.date) {
             return "Today"
         } else if Calendar.current.isDateInYesterday(entry.date) {
             return "Yesterday"
         } else if Calendar.current.isDate(entry.date, equalTo: Date(), toGranularity: .weekOfYear) {
-            formatter.dateFormat = "EEEE"
-            return formatter.string(from: entry.date)
+            return Self.fullDayNameFormatter.string(from: entry.date)
         } else {
-            formatter.dateStyle = .medium
-            return formatter.string(from: entry.date)
+            return Self.mediumDateFormatter.string(from: entry.date)
         }
     }
 }

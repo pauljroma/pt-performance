@@ -5,7 +5,7 @@ import SwiftUI
 struct PerformanceAnalyticsView: View {
     @EnvironmentObject var storeKit: StoreKitService
 
-    @ObservedObject private var fatigueService = FatigueTrackingService.shared
+    @StateObject private var fatigueService = FatigueTrackingService.shared
     @State private var todayReadiness: DailyReadiness?
     @State private var isLoading = true
     @State private var loadError: String?
@@ -40,7 +40,7 @@ struct PerformanceAnalyticsView: View {
                                 }
                                 .padding(.horizontal, Spacing.lg)
                                 .padding(.vertical, Spacing.sm)
-                                .background(Color.accentColor)
+                                .background(Color.modusCyan)
                                 .foregroundColor(.white)
                                 .cornerRadius(CornerRadius.md)
                             }
@@ -142,7 +142,7 @@ struct PerformanceAnalyticsView: View {
                             } label: {
                                 Text("Retry")
                                     .font(.caption)
-                                    .foregroundColor(.accentColor)
+                                    .foregroundColor(.modusCyan)
                             }
                         }
                         .padding()

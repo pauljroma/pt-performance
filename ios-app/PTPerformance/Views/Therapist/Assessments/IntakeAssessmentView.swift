@@ -235,7 +235,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.chiefComplaint)
                         .frame(minHeight: 80)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.subjectiveError {
@@ -251,7 +251,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.historyOfPresentIllness)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
@@ -262,7 +262,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.pastMedicalHistory)
                         .frame(minHeight: 80)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
@@ -287,7 +287,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.objectiveFindings)
                         .frame(minHeight: 120)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.objectiveError {
@@ -340,7 +340,7 @@ struct IntakeAssessmentView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.orange)
                         }
-                        .padding(12)
+                        .padding(Spacing.sm)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(Color.orange.opacity(0.1))
@@ -390,7 +390,7 @@ struct IntakeAssessmentView: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
-                    .padding(12)
+                    .padding(Spacing.sm)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color.red.opacity(0.1))
@@ -506,7 +506,7 @@ struct IntakeAssessmentView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.orange)
                         }
-                        .padding(12)
+                        .padding(Spacing.sm)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(Color.orange.opacity(0.1))
@@ -555,7 +555,7 @@ struct IntakeAssessmentView: View {
                                     .foregroundColor(.red)
                             }
                         }
-                        .padding(12)
+                        .padding(Spacing.sm)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
                                 .fill(Color(.tertiarySystemGroupedBackground))
@@ -602,7 +602,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.assessmentSummary)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                 }
@@ -613,7 +613,7 @@ struct IntakeAssessmentView: View {
                         .font(.subheadline.weight(.medium))
                     TextEditor(text: $viewModel.treatmentPlan)
                         .frame(minHeight: 100)
-                        .padding(8)
+                        .padding(Spacing.xs)
                         .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(CornerRadius.sm)
                     if let error = viewModel.assessmentError {
@@ -644,7 +644,7 @@ struct IntakeAssessmentView: View {
                         .foregroundColor(assessment.status.color)
                     Spacer()
                 }
-                .padding(12)
+                .padding(Spacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
                         .fill(assessment.status.color.opacity(0.1))
@@ -716,7 +716,7 @@ struct IntakeAssessmentView: View {
                 Text("Saving...")
                     .font(.headline)
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color(.systemBackground))

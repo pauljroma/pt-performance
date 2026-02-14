@@ -22,8 +22,8 @@ struct SupplementInteractionView: View {
 
     // MARK: - Properties
 
-    @ObservedObject private var interactionService = SupplementInteractionService.shared
-    @ObservedObject private var supplementService = SupplementService.shared
+    @StateObject private var interactionService = SupplementInteractionService.shared
+    @StateObject private var supplementService = SupplementService.shared
     @Environment(\.colorScheme) private var colorScheme
 
     // MARK: - State

@@ -252,7 +252,7 @@ struct ProgramListCard: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(program.resolvedProgramType.color.opacity(0.15))
-            .cornerRadius(8)
+            .cornerRadius(CornerRadius.sm)
 
             // Patient name
             HStack {
@@ -329,15 +329,15 @@ struct ProgramEffectivenessIndicator: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(colorForScore(score).opacity(0.15))
-            .cornerRadius(6)
+            .cornerRadius(CornerRadius.xs)
         } else {
             // Show analytics available indicator
             Image(systemName: "chart.bar.xaxis")
                 .font(.caption2)
                 .foregroundColor(.secondary)
-                .padding(4)
+                .padding(Spacing.xxs)
                 .background(Color(.systemGray5))
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
         }
     }
 

@@ -20,7 +20,7 @@ struct ProgramDetailSheet: View {
     @State private var phasesError: String?
 
     // Access current user for enrollment
-    @ObservedObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
 
     var body: some View {
         NavigationStack {

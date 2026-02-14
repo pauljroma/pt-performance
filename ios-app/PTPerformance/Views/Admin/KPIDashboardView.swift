@@ -27,7 +27,7 @@ import Charts
 
 struct KPIDashboardView: View {
     @StateObject private var viewModel = KPIDashboardViewModel()
-    @ObservedObject private var kpiService = KPITrackingService.shared
+    @StateObject private var kpiService = KPITrackingService.shared
     @State private var selectedPeriod: DateRangePeriod = .lastWeek
     @State private var showingExport = false
     @State private var selectedIncident: SafetyIncident?
@@ -168,11 +168,11 @@ struct KPIDashboardView: View {
                 kpiService.stopAutoRefresh()
             }
             .sheet(item: $selectedIncident) { incident in
-                SafetyIncidentDetailSheet(incident: incident) {
+                SafetyIncidentDetailSheet(incident: incident, onDismiss: {
                     Task {
                         await viewModel.refresh()
                     }
-                }
+                })
             }
             .sheet(isPresented: $showingExport) {
                 KPIExportSheet(dashboard: viewModel.dashboard, viewModel: viewModel)
@@ -308,10 +308,14 @@ struct KPIDashboardView: View {
         .padding(.top, 8)
     }
 
-    private func formatDate(_ date: Date) -> String {
+    private static let shortDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatDate(_ date: Date) -> String {
+        Self.shortDateFormatter.string(from: date)
     }
 
     // MARK: - Period Selector
@@ -786,105 +790,6 @@ enum DateRangePeriod: String, CaseIterable {
         case .lastWeek: return 7
         case .lastMonth: return 30
         case .lastQuarter: return 90
-        }
-    }
-}
-
-// MARK: - Safety Incident Detail Sheet
-
-struct SafetyIncidentDetailSheet: View {
-    let incident: SafetyIncident
-    let onDismiss: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var resolutionNotes = ""
-    @State private var isResolving = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Incident Details") {
-                    LabeledContent("Type", value: incident.incidentType.displayName)
-                    LabeledContent("Severity", value: incident.severity.displayName)
-                    LabeledContent("Status", value: incident.status.displayName)
-                    LabeledContent("Created", value: incident.ageString)
-                }
-
-                Section("Description") {
-                    Text(incident.description)
-                }
-
-                if incident.triggerData != nil {
-                    Section("Trigger Data") {
-                        Text("Data available")
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                if incident.status == .open || incident.status == .investigating {
-                    Section("Resolution") {
-                        TextField("Resolution notes", text: $resolutionNotes, axis: .vertical)
-                            .lineLimit(3...6)
-
-                        Button("Resolve Incident") {
-                            Task {
-                                await resolveIncident(dismissed: false)
-                            }
-                        }
-                        .disabled(resolutionNotes.isEmpty || isResolving)
-
-                        Button("Dismiss Incident") {
-                            Task {
-                                await resolveIncident(dismissed: true)
-                            }
-                        }
-                        .foregroundColor(.secondary)
-                        .disabled(resolutionNotes.isEmpty || isResolving)
-                    }
-                }
-
-                if incident.isResolved {
-                    Section("Resolution Info") {
-                        if let notes = incident.resolutionNotes {
-                            Text(notes)
-                        }
-                        if let resolvedAt = incident.resolvedAt {
-                            LabeledContent("Resolved", value: resolvedAt.formatted())
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Incident Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-
-    private func resolveIncident(dismissed: Bool) async {
-        isResolving = true
-        defer { isResolving = false }
-
-        guard let userId = UUID(uuidString: PTSupabaseClient.shared.userId ?? "") else { return }
-
-        let resolution = IncidentResolution(
-            incidentId: incident.id,
-            resolvedBy: userId,
-            notes: resolutionNotes,
-            dismissed: dismissed
-        )
-
-        do {
-            try await SafetyService.shared.resolveIncident(incidentId: incident.id, resolution: resolution)
-            onDismiss()
-            dismiss()
-        } catch {
-            ErrorLogger.shared.logError(error, context: "SafetyIncidentDetailSheet.resolveIncident")
         }
     }
 }

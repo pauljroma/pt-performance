@@ -322,7 +322,7 @@ struct GestureHintOverlay: View {
                         )
                     }
                 }
-                .padding(24)
+                .padding(Spacing.lg)
                 .background(Color(.systemBackground))
                 .cornerRadius(CornerRadius.lg)
                 .adaptiveShadow(Shadow.prominent)
@@ -343,7 +343,7 @@ struct GestureHintOverlay: View {
                 .padding(.horizontal, 24)
                 .accessibilityLabel("Dismiss gesture hints")
             }
-            .padding(32)
+            .padding(Spacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black.opacity(0.4))
             .transition(.opacity)

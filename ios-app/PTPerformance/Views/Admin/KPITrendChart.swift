@@ -308,21 +308,35 @@ struct KPITrendChart: View {
         }
     }
 
-    private func formatAxisDate(_ date: Date) -> String {
+    private static let weekdayAbbrevFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        if data.count <= 7 {
-            formatter.dateFormat = "EEE"
-        } else {
-            formatter.dateFormat = "M/d"
-        }
-        return formatter.string(from: date)
-    }
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
 
-    private func formatFullDate(_ date: Date) -> String {
+    private static let monthSlashDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return formatter
+    }()
+
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formatAxisDate(_ date: Date) -> String {
+        if data.count <= 7 {
+            return Self.weekdayAbbrevFormatter.string(from: date)
+        } else {
+            return Self.monthSlashDayFormatter.string(from: date)
+        }
+    }
+
+    private func formatFullDate(_ date: Date) -> String {
+        Self.mediumDateFormatter.string(from: date)
     }
 
     private func handleChartInteraction(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {

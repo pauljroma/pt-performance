@@ -738,19 +738,27 @@ struct WeekTrendCard: View {
         )
     }
 
-    private var weekDayAbbrev: String {
+    private static let monthAbbrevFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM"
-        return formatter.string(from: trend.weekStart)
+        return formatter
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    private var weekDayAbbrev: String {
+        Self.monthAbbrevFormatter.string(from: trend.weekStart)
     }
 
     private func formatDateRange(_ startDate: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        let start = formatter.string(from: startDate)
+        let start = Self.monthDayFormatter.string(from: startDate)
 
         if let endDate = Calendar.current.date(byAdding: .day, value: 6, to: startDate) {
-            let end = formatter.string(from: endDate)
+            let end = Self.monthDayFormatter.string(from: endDate)
             return "\(start) - \(end)"
         }
         return start

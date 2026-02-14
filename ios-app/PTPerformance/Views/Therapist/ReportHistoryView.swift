@@ -14,6 +14,12 @@ import SwiftUI
 struct ReportHistoryView: View {
     let patient: Patient
 
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
     @StateObject private var viewModel = ReportHistoryViewModel()
     @State private var selectedReport: WeeklyReport?
     @State private var showReportDetail = false
@@ -348,9 +354,7 @@ struct ReportHistoryView: View {
         let weekStart = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
         let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? date
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return "\(formatter.string(from: weekStart)) - \(formatter.string(from: weekEnd))"
+        return "\(Self.monthDayFormatter.string(from: weekStart)) - \(Self.monthDayFormatter.string(from: weekEnd))"
     }
 }
 

@@ -218,7 +218,7 @@ struct AIChatView: View {
         .padding(.horizontal)
         .padding(.vertical, Spacing.sm)
         .background(Color(.systemBackground))
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .shadow(color: Color(.systemGray4).opacity(0.05), radius: 2, x: 0, y: 1)
     }
 
     // MARK: - Search Bar
@@ -932,7 +932,7 @@ struct PinnedMessageCard: View {
         .padding(Spacing.sm)
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.sm)
-        .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+        .shadow(color: Color(.systemGray4).opacity(0.08), radius: 2, x: 0, y: 1)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Pinned message from \(message.role == "user" ? "you" : "AI Assistant"): \(message.content)")
     }

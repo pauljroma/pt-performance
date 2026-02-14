@@ -19,7 +19,7 @@ struct TimelineFilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: DesignTokens.spacingSmall) {
+            HStack(spacing: Spacing.xs) {
                 // All filter
                 allFilterChip
 
@@ -34,8 +34,8 @@ struct TimelineFilterBar: View {
                     filterChip(for: type)
                 }
             }
-            .padding(.horizontal, DesignTokens.spacingLarge)
-            .padding(.vertical, DesignTokens.spacingSmall)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.xs)
         }
         .background(Color(.systemBackground))
     }
@@ -66,7 +66,7 @@ struct TimelineFilterBar: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(viewModel.hasActiveFilters ? Color(.tertiarySystemFill) : Color.accentColor)
+                    .fill(viewModel.hasActiveFilters ? Color(.tertiarySystemFill) : Color.modusCyan)
             )
         }
         .buttonStyle(.plain)
@@ -128,7 +128,7 @@ struct TimelineFilterBarCompact: View {
     @ObservedObject var viewModel: CanonicalTimelineViewModel
 
     var body: some View {
-        HStack(spacing: DesignTokens.spacingSmall) {
+        HStack(spacing: Spacing.xs) {
             ForEach(TimelineEventType.allCases) { type in
                 compactFilterButton(for: type)
             }
@@ -142,12 +142,12 @@ struct TimelineFilterBarCompact: View {
                 } label: {
                     Text("Clear")
                         .font(.caption.weight(.medium))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 }
             }
         }
-        .padding(.horizontal, DesignTokens.spacingLarge)
-        .padding(.vertical, DesignTokens.spacingSmall)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs)
     }
 
     private func compactFilterButton(for type: TimelineEventType) -> some View {
@@ -182,7 +182,7 @@ struct TimelineDateRangePicker: View {
     @State private var showCustomPicker = false
 
     var body: some View {
-        HStack(spacing: DesignTokens.spacingMedium) {
+        HStack(spacing: Spacing.sm) {
             // Preset buttons
             ForEach([TimelineDateRange.today, .week, .month], id: \.id) { range in
                 dateRangeButton(for: range)
@@ -203,14 +203,14 @@ struct TimelineDateRangePicker: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(viewModel.selectedDateRange == .custom ? Color.accentColor : Color(.tertiarySystemFill))
+                        .fill(viewModel.selectedDateRange == .custom ? Color.modusCyan : Color(.tertiarySystemFill))
                 )
             }
             .buttonStyle(.plain)
 
             Spacer()
         }
-        .padding(.horizontal, DesignTokens.spacingLarge)
+        .padding(.horizontal, Spacing.md)
         .sheet(isPresented: $showCustomPicker) {
             CustomDateRangeSheet(viewModel: viewModel)
         }
@@ -230,7 +230,7 @@ struct TimelineDateRangePicker: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
+                        .fill(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))
                 )
         }
         .buttonStyle(.plain)

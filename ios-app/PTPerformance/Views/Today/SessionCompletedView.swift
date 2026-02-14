@@ -36,9 +36,9 @@ struct SessionCompletedView: View {
                 // Options for next steps
                 nextStepsSection
             }
-            .padding(DesignTokens.spacingXLarge)
+            .padding(Spacing.lg)
             .background(Color(.systemBackground))
-            .cornerRadius(DesignTokens.cornerRadiusLarge)
+            .cornerRadius(CornerRadius.lg)
             .adaptiveShadow(Shadow.medium)
             .padding()
 
@@ -242,7 +242,7 @@ struct SessionCompletedView: View {
                 .padding()
                 .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
+                .cornerRadius(CornerRadius.md)
             }
             .accessibilityLabel("Browse Workout Library")
             .accessibilityHint("Opens saved workout templates")
@@ -261,9 +261,9 @@ struct SessionCompletedView: View {
                 .padding()
                 .background(Color.green.opacity(0.15))
                 .foregroundColor(.green)
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
+                .cornerRadius(CornerRadius.md)
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .stroke(Color.green, lineWidth: 1)
                 )
             }

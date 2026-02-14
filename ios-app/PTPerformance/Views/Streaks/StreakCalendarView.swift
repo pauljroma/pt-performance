@@ -130,7 +130,7 @@ struct StreakCalendarView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
+                .shadow(color: Color(.systemGray4).opacity(0.1), radius: 6, x: 0, y: 2)
         )
     }
 
@@ -401,7 +401,7 @@ struct StreakCalendarView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
+                .shadow(color: Color(.systemGray4).opacity(0.1), radius: 6, x: 0, y: 2)
         )
     }
 
@@ -472,10 +472,14 @@ class StreakCalendarViewModel: ObservableObject {
 
     // MARK: - Computed Properties
 
-    var currentMonthTitle: String {
+    private static let monthYearFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: currentMonth)
+        return formatter
+    }()
+
+    var currentMonthTitle: String {
+        Self.monthYearFormatter.string(from: currentMonth)
     }
 
     var canGoForward: Bool {

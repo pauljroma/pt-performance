@@ -46,9 +46,9 @@ struct CompletedWorkoutsSection: View {
         }
         .padding()
         .background(Color.green.opacity(0.1))
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadiusMedium)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .stroke(Color.green.opacity(0.3), lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
@@ -98,7 +98,7 @@ struct CompletedWorkoutsSection: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(Color(.secondarySystemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(workoutAccessibilityLabel(workout))

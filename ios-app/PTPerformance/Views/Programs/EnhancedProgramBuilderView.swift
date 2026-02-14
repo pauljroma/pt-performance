@@ -108,7 +108,7 @@ struct EnhancedProgramBuilderView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.white)
                             }
-                            .padding(24)
+                            .padding(Spacing.lg)
                             .background(Color(.systemGray3).opacity(0.9))
                             .cornerRadius(CornerRadius.lg)
                         )
@@ -228,7 +228,7 @@ struct EnhancedProgramBuilderView: View {
                         Text("Back")
                     }
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
                     .frame(height: 50)
                     .frame(maxWidth: .infinity)
                     .background(Color(.secondarySystemGroupedBackground))
@@ -260,7 +260,7 @@ struct EnhancedProgramBuilderView: View {
                 .foregroundColor(.white)
                 .frame(height: 50)
                 .frame(maxWidth: .infinity)
-                .background(viewModel.canProceed ? Color.accentColor : Color.gray)
+                .background(viewModel.canProceed ? Color.modusCyan : Color.gray)
                 .cornerRadius(CornerRadius.md)
             }
             .disabled(!viewModel.canProceed || viewModel.isLoading)
@@ -310,7 +310,7 @@ private struct StartStepView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "rectangle.stack.badge.plus")
                         .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .padding(.bottom, 8)
                         .accessibilityHidden(true)
 
@@ -366,9 +366,9 @@ private struct CreationModeCard: View {
                 // Icon
                 Image(systemName: mode.icon)
                     .font(.system(size: 28))
-                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .foregroundColor(isSelected ? .white : .modusCyan)
                     .frame(width: 56, height: 56)
-                    .background(isSelected ? Color.accentColor : Color.accentColor.opacity(0.1))
+                    .background(isSelected ? Color.modusCyan : Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.md)
 
                 // Text
@@ -389,7 +389,7 @@ private struct CreationModeCard: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 24))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 }
             }
             .padding()
@@ -397,7 +397,7 @@ private struct CreationModeCard: View {
             .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -418,7 +418,7 @@ private struct QuickBuildPickerStepView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .padding(.bottom, 8)
                         .accessibilityHidden(true)
 
@@ -509,7 +509,7 @@ private struct QuickBuildTemplateSelectionCard: View {
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title2)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                     }
                 }
 
@@ -559,13 +559,13 @@ private struct QuickBuildTemplateSelectionCard: View {
                     .foregroundColor(.purple)
                 }
             }
-            .padding(16)
+            .padding(Spacing.md)
             .frame(minHeight: 180)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -585,7 +585,7 @@ private struct TemplatePickerStepView: View {
             VStack(spacing: 8) {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 60))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
                     .padding(.bottom, 8)
 
                 Text("Choose a Template")
@@ -618,7 +618,7 @@ private struct TemplatePickerStepView: View {
                     }
                 }
             }
-            .padding(12)
+            .padding(Spacing.sm)
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.md)
             .padding(.horizontal, 20)
@@ -659,7 +659,7 @@ private struct TemplatePickerStepView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
-                        .background(Color.accentColor)
+                        .background(Color.modusCyan)
                         .cornerRadius(CornerRadius.sm)
                     }
                     .accessibilityLabel("Retry loading templates")
@@ -708,9 +708,9 @@ private struct ProgramTemplateCard: View {
                 // Category icon
                 Image(systemName: template.categoryIcon)
                     .font(.system(size: 24))
-                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .foregroundColor(isSelected ? .white : .modusCyan)
                     .frame(width: 50, height: 50)
-                    .background(isSelected ? Color.accentColor : Color.accentColor.opacity(0.1))
+                    .background(isSelected ? Color.modusCyan : Color.modusCyan.opacity(0.1))
                     .cornerRadius(CornerRadius.sm)
 
                 // Template info
@@ -759,7 +759,7 @@ private struct ProgramTemplateCard: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title2)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 }
             }
             .padding()
@@ -767,7 +767,7 @@ private struct ProgramTemplateCard: View {
             .cornerRadius(CornerRadius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -789,7 +789,7 @@ private struct PatientStepView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "person.crop.circle.badge.plus")
                         .font(.system(size: 60))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .padding(.bottom, 8)
 
                     Text("Assign to Patient")
@@ -820,10 +820,10 @@ private struct PatientStepView: View {
                             Text(selectedPatient == nil ? "Select a Patient" : "Change Patient")
                         }
                         .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.md)
                     }
 
@@ -852,12 +852,12 @@ private struct SelectedPatientCard: View {
         HStack(spacing: 16) {
             // Avatar
             Circle()
-                .fill(Color.accentColor.opacity(0.2))
+                .fill(Color.modusCyan.opacity(0.2))
                 .frame(width: 56, height: 56)
                 .overlay(
                     Text(patient.initials)
                         .font(.title2.bold())
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                 )
                 .accessibilityHidden(true)
 
@@ -893,7 +893,7 @@ private struct SelectedPatientCard: View {
         .cornerRadius(CornerRadius.lg)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.accentColor, lineWidth: 2)
+                .stroke(Color.modusCyan, lineWidth: 2)
         )
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Selected patient: \(patient.fullName)")
@@ -934,7 +934,7 @@ private struct BasicsStepView: View {
                     FormField(title: "Description") {
                         TextEditor(text: $viewModel.description)
                             .frame(minHeight: 80)
-                            .padding(8)
+                            .padding(Spacing.xs)
                             .background(Color(.systemBackground))
                             .cornerRadius(CornerRadius.sm)
                             .accessibilityLabel("Program description")
@@ -1061,10 +1061,10 @@ private struct PhasesStepView: View {
                             Text("Add Phase")
                         }
                         .font(.headline)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.modusCyan)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.md)
                     }
                     .accessibilityLabel("Add phase")
@@ -1278,9 +1278,9 @@ private struct PhaseWorkoutCard: View {
                 if phase.workoutAssignments.isEmpty {
                     HStack {
                         Image(systemName: "plus.circle")
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                         Text("Tap to add workouts")
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                     }
                     .font(.subheadline)
                 } else {

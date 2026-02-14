@@ -133,7 +133,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func dateRangeButton(_ range: ReportDateRange) -> some View {
@@ -158,8 +158,8 @@ struct WeeklyReportGeneratorSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
-            .cornerRadius(DesignTokens.cornerRadiusSmall)
+            .background(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))
+            .cornerRadius(CornerRadius.sm)
         }
         .buttonStyle(.plain)
     }
@@ -191,7 +191,7 @@ struct WeeklyReportGeneratorSheet: View {
             } else {
                 Text("\(selectedPatients.count) patients selected")
                     .font(.subheadline)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
                     .padding(.vertical, 8)
             }
 
@@ -207,7 +207,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Report Options Section
@@ -225,7 +225,7 @@ struct WeeklyReportGeneratorSheet: View {
                     Text("Progress Charts")
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
 
             Toggle(isOn: $includeRecommendations) {
                 HStack {
@@ -234,11 +234,11 @@ struct WeeklyReportGeneratorSheet: View {
                     Text("AI Recommendations")
                 }
             }
-            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+            .toggleStyle(SwitchToggleStyle(tint: .modusCyan))
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Export Format Section
@@ -257,7 +257,7 @@ struct WeeklyReportGeneratorSheet: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     private func exportFormatButton(_ format: ExportFormat) -> some View {
@@ -272,7 +272,7 @@ struct WeeklyReportGeneratorSheet: View {
             VStack(spacing: 6) {
                 Image(systemName: format.icon)
                     .font(.title2)
-                    .foregroundColor(isSelected ? .white : .accentColor)
+                    .foregroundColor(isSelected ? .white : .modusCyan)
 
                 Text(format.rawValue)
                     .font(.caption.weight(.medium))
@@ -280,8 +280,8 @@ struct WeeklyReportGeneratorSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(isSelected ? Color.accentColor : Color(.tertiarySystemFill))
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .background(isSelected ? Color.modusCyan : Color(.tertiarySystemFill))
+            .cornerRadius(CornerRadius.md)
         }
         .buttonStyle(.plain)
     }
@@ -299,9 +299,9 @@ struct WeeklyReportGeneratorSheet: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentColor)
+            .background(Color.modusCyan)
             .foregroundColor(.white)
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
     }
 
@@ -314,12 +314,12 @@ struct WeeklyReportGeneratorSheet: View {
             // Animated document icon
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.1))
+                    .fill(Color.modusCyan.opacity(0.1))
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "doc.text.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.modusCyan)
                     .scaleEffect(generationProgress < 1 ? 1.0 + (0.1 * sin(generationProgress * .pi * 4)) : 1.0)
                     .animation(.linear(duration: 0.25), value: generationProgress)
             }
@@ -336,7 +336,7 @@ struct WeeklyReportGeneratorSheet: View {
             // Progress bar
             VStack(spacing: 8) {
                 ProgressView(value: generationProgress)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .accentColor))
+                    .progressViewStyle(LinearProgressViewStyle(tint: .modusCyan))
                     .scaleEffect(y: 2)
 
                 Text("\(Int(generationProgress * 100))%")
@@ -387,9 +387,9 @@ struct WeeklyReportGeneratorSheet: View {
                     Label("Share Report", systemImage: "square.and.arrow.up")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor)
+                        .background(Color.modusCyan)
                         .foregroundColor(.white)
-                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                        .cornerRadius(CornerRadius.md)
                 }
 
                 Button {
@@ -400,8 +400,8 @@ struct WeeklyReportGeneratorSheet: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.secondarySystemGroupedBackground))
-                        .foregroundColor(.accentColor)
-                        .cornerRadius(DesignTokens.cornerRadiusMedium)
+                        .foregroundColor(.modusCyan)
+                        .cornerRadius(CornerRadius.md)
                 }
 
                 Button {

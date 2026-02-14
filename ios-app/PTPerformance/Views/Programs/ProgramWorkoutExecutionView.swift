@@ -847,7 +847,7 @@ struct ProgramWorkoutExecutionView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.1), radius: 4, y: -2)
+        .shadow(color: Color(.systemGray4).opacity(0.1), radius: 4, y: -2)
     }
 
     // MARK: - Helper Colors

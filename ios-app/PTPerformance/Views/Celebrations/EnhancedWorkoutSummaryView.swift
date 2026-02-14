@@ -231,6 +231,10 @@ struct EnhancedWorkoutSummaryView: View {
         }
     }
 
+    private var sortedMuscleGroups: [MuscleGroupVolume] {
+        muscleGroupBreakdown.sorted(by: { $0.volume > $1.volume })
+    }
+
     // MARK: - Muscle Group Section
 
     private var muscleGroupSection: some View {
@@ -257,7 +261,7 @@ struct EnhancedWorkoutSummaryView: View {
 
     private var muscleGroupChart: some View {
         Chart {
-            ForEach(muscleGroupBreakdown.sorted(by: { $0.volume > $1.volume })) { group in
+            ForEach(sortedMuscleGroups) { group in
                 BarMark(
                     x: .value("Volume", group.volume),
                     y: .value("Muscle Group", group.displayName)
@@ -284,7 +288,7 @@ struct EnhancedWorkoutSummaryView: View {
 
     private var muscleGroupList: some View {
         VStack(spacing: Spacing.xs) {
-            ForEach(muscleGroupBreakdown.sorted(by: { $0.volume > $1.volume })) { group in
+            ForEach(sortedMuscleGroups) { group in
                 HStack {
                     Circle()
                         .fill(group.color)

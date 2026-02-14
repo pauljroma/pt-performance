@@ -294,7 +294,7 @@ private struct FeatureCard: View {
 
             Spacer(minLength: 0)
         }
-        .padding(14)
+        .padding(Spacing.sm)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
         .accessibilityElement(children: .combine)
@@ -339,7 +339,7 @@ private struct OnboardingGetStartedPage: View {
                 SetupBenefitRow(text: "Goal tracking tailored to you")
                 SetupBenefitRow(text: "Takes less than 60 seconds")
             }
-            .padding(20)
+            .padding(Spacing.md)
             .background(Color.modusLightTeal)
             .cornerRadius(CornerRadius.md)
             .padding(.horizontal, 32)

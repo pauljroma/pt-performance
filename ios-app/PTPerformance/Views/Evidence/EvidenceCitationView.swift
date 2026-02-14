@@ -86,7 +86,7 @@ struct EvidenceCitationView: View {
 
     @ViewBuilder
     private var loadingView: some View {
-        VStack(spacing: DesignTokens.spacingMedium) {
+        VStack(spacing: Spacing.sm) {
             ProgressView()
                 .scaleEffect(1.2)
 
@@ -102,7 +102,7 @@ struct EvidenceCitationView: View {
     @ViewBuilder
     private var loadedContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.spacingLarge) {
+            VStack(alignment: .leading, spacing: Spacing.md) {
                 // Summary header
                 summaryHeader
 
@@ -127,15 +127,15 @@ struct EvidenceCitationView: View {
 
     @ViewBuilder
     private var summaryHeader: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
             // Overall confidence
             HStack {
-                VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text("Overall Confidence")
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    HStack(spacing: DesignTokens.spacingSmall) {
+                    HStack(spacing: Spacing.xs) {
                         ConfidenceGradeBadge(
                             grade: viewModel.overallConfidence,
                             size: .large
@@ -149,7 +149,7 @@ struct EvidenceCitationView: View {
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: DesignTokens.spacingXSmall) {
+                VStack(alignment: .trailing, spacing: Spacing.xxs) {
                     Text("Total Sources")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -162,7 +162,7 @@ struct EvidenceCitationView: View {
             }
 
             // Source type distribution
-            HStack(spacing: DesignTokens.spacingSmall) {
+            HStack(spacing: Spacing.xs) {
                 ForEach(viewModel.sourceTypes, id: \.self) { sourceType in
                     SourceTypePill(
                         sourceType: sourceType,
@@ -173,14 +173,14 @@ struct EvidenceCitationView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     // MARK: - Empty View
 
     @ViewBuilder
     private var emptyView: some View {
-        VStack(spacing: DesignTokens.spacingLarge) {
+        VStack(spacing: Spacing.md) {
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
@@ -201,7 +201,7 @@ struct EvidenceCitationView: View {
 
     @ViewBuilder
     private func errorView(message: String) -> some View {
-        VStack(spacing: DesignTokens.spacingLarge) {
+        VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
                 .foregroundColor(.orange)
@@ -243,7 +243,7 @@ struct CitationGroupSection: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             Button(action: onToggle) {
-                HStack(spacing: DesignTokens.spacingSmall) {
+                HStack(spacing: Spacing.xs) {
                     // Source type icon
                     ZStack {
                         Circle()
@@ -297,7 +297,7 @@ struct CitationGroupSection: View {
                 .background(Color(.tertiarySystemGroupedBackground))
             }
         }
-        .cornerRadius(DesignTokens.cornerRadiusMedium)
+        .cornerRadius(CornerRadius.md)
         .animation(.easeInOut(duration: DesignTokens.animationDurationNormal), value: isExpanded)
     }
 }
@@ -311,12 +311,12 @@ struct CitationRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(alignment: .top, spacing: DesignTokens.spacingMedium) {
+            HStack(alignment: .top, spacing: Spacing.sm) {
                 // Confidence grade
                 ConfidenceGradeBadge(grade: citation.confidence, size: .small)
 
                 // Content
-                VStack(alignment: .leading, spacing: DesignTokens.spacingXSmall) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(citation.sourceTitle)
                         .font(.subheadline)
                         .fontWeight(.medium)
@@ -354,7 +354,7 @@ struct SourceTypePill: View {
     let count: Int
 
     var body: some View {
-        HStack(spacing: DesignTokens.spacingXSmall) {
+        HStack(spacing: Spacing.xxs) {
             Image(systemName: sourceType.iconName)
                 .font(.caption2)
 
@@ -363,10 +363,10 @@ struct SourceTypePill: View {
                 .fontWeight(.medium)
         }
         .foregroundColor(sourceType.color)
-        .padding(.horizontal, DesignTokens.spacingSmall)
-        .padding(.vertical, DesignTokens.spacingXSmall)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
         .background(sourceType.color.opacity(0.15))
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
     }
 }
 
@@ -416,7 +416,7 @@ struct ConfidenceGradeBadge: View {
             .padding(.horizontal, size.padding)
             .padding(.vertical, size.padding / 2)
             .background(grade.color)
-            .cornerRadius(DesignTokens.cornerRadiusSmall)
+            .cornerRadius(CornerRadius.sm)
             .accessibilityLabel("Grade \(grade.rawValue): \(grade.displayLabel)")
     }
 }
@@ -433,7 +433,7 @@ struct CitationDetailSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DesignTokens.spacingLarge) {
+                VStack(alignment: .leading, spacing: Spacing.md) {
                     // Header
                     headerSection
 
@@ -469,8 +469,8 @@ struct CitationDetailSheet: View {
 
     @ViewBuilder
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingMedium) {
-            HStack(spacing: DesignTokens.spacingMedium) {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(spacing: Spacing.sm) {
                 // Source type icon
                 ZStack {
                     Circle()
@@ -504,16 +504,16 @@ struct CitationDetailSheet: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(citation.confidence.color.opacity(0.1))
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
+                .cornerRadius(CornerRadius.md)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     @ViewBuilder
     private func excerptSection(_ excerpt: String) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Label("Evidence Excerpt", systemImage: "quote.bubble.fill")
                 .font(.headline)
 
@@ -523,31 +523,31 @@ struct CitationDetailSheet: View {
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.tertiarySystemGroupedBackground))
-                .cornerRadius(DesignTokens.cornerRadiusMedium)
+                .cornerRadius(CornerRadius.md)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     @ViewBuilder
     private var metadataSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spacingSmall) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Label("Details", systemImage: "info.circle.fill")
                 .font(.headline)
 
-            VStack(spacing: DesignTokens.spacingSmall) {
+            VStack(spacing: Spacing.xs) {
                 metadataRow(label: "Captured", value: citation.formattedTimestamp)
                 metadataRow(label: "Source ID", value: String(citation.sourceId.prefix(12)) + "...")
                 metadataRow(label: "Reliability", value: "\(Int(citation.sourceType.reliabilityWeight * 100))%")
             }
             .padding()
             .background(Color(.tertiarySystemGroupedBackground))
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
     }
 
     @ViewBuilder
@@ -579,7 +579,7 @@ struct CitationDetailSheet: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color.modusCyan)
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
     }
 }
@@ -599,7 +599,7 @@ struct ViewSourcesButton: View {
             HapticService.selection()
             isShowingCitations = true
         } label: {
-            HStack(spacing: DesignTokens.spacingXSmall) {
+            HStack(spacing: Spacing.xxs) {
                 Image(systemName: "doc.text.fill")
                     .font(.caption)
 
@@ -637,7 +637,7 @@ struct CitationCountBadge: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(Color.modusCyan.opacity(0.15))
-        .cornerRadius(DesignTokens.cornerRadiusSmall)
+        .cornerRadius(CornerRadius.sm)
         .accessibilityLabel("\(count) citations")
     }
 }

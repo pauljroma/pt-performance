@@ -187,7 +187,7 @@ struct PTPerformanceApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     @StateObject private var appState = AppState()
-    @ObservedObject private var storeKit = StoreKitService.shared
+    @StateObject private var storeKit = StoreKitService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     // ACP-932: Cold Start Optimization - Track launch time for <2 second target

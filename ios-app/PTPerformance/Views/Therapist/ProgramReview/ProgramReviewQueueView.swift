@@ -280,7 +280,7 @@ struct ReviewFilterTabButton: View {
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, Spacing.xs)
-            .background(isSelected ? Color.accentColor : Color(.secondarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan : Color(.secondarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.md)
         }

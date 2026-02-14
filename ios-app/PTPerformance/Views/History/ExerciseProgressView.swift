@@ -213,7 +213,7 @@ struct ExerciseProgressView: View {
                             }
                             .font(.subheadline)
                             .fontWeight(.medium)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(.secondarySystemGroupedBackground))

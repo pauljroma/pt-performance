@@ -10,7 +10,7 @@ import SwiftUI
 
 /// View modifier that adds Strength-specific content when user is in Strength mode
 struct StrengthModeContentModifier: ViewModifier {
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var modeService = ModeService.shared
 
     let patientId: UUID?
 

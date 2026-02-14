@@ -17,11 +17,11 @@ struct ProtocolTemplateCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 // Header with category badge
                 HStack {
-                    CategoryBadge(category: template.category)
+                    ProtocolCategoryBadge(category: template.category)
                     Spacer()
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                     }
                 }
 
@@ -61,11 +61,11 @@ struct ProtocolTemplateCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.1), radius: isSelected ? 8 : 4, x: 0, y: 2)
+                    .shadow(color: Color(.systemGray4).opacity(0.1), radius: isSelected ? 8 : 4, x: 0, y: 2)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -74,7 +74,7 @@ struct ProtocolTemplateCard: View {
 
 // MARK: - Category Badge
 
-struct CategoryBadge: View {
+struct ProtocolCategoryBadge: View {
     let category: ProtocolTemplate.ProtocolCategory
 
     var body: some View {
@@ -117,7 +117,7 @@ struct TemplatePreviewSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
-                        CategoryBadge(category: template.category)
+                        ProtocolCategoryBadge(category: template.category)
 
                         Text(template.name)
                             .font(.title2)
@@ -197,7 +197,7 @@ struct InfoCard: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.accentColor)
+                .foregroundColor(.modusCyan)
 
             Text(value)
                 .font(.headline)

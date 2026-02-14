@@ -427,10 +427,14 @@ struct ForecastCard: View {
 struct ForecastDayView: View {
     let forecast: ReadinessForecast
 
-    private var dayName: String {
+    private static let weekdayAbbrevFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"
-        return formatter.string(from: forecast.date)
+        return formatter
+    }()
+
+    private var dayName: String {
+        Self.weekdayAbbrevFormatter.string(from: forecast.date)
     }
 
     private var band: ReadinessBand {

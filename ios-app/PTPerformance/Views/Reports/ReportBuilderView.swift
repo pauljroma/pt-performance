@@ -370,9 +370,14 @@ struct ReportBuilderView: View {
 
     // MARK: - Computed Properties
 
-    private var dateRangeDisplayText: String {
+    private static let mediumDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
+        return formatter
+    }()
+
+    private var dateRangeDisplayText: String {
+        let formatter = Self.mediumDateFormatter
 
         let startDate: Date
         let endDate: Date

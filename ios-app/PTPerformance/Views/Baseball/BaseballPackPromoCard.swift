@@ -24,7 +24,7 @@ struct BaseballPackPromoCard: View {
         }
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .shadow(color: Color(.systemGray4).opacity(0.1), radius: 4, x: 0, y: 2)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Baseball Pack promo, 12 plus programs for pitchers and position players")
     }
@@ -207,7 +207,7 @@ struct BaseballPackPromoCardCompact: View {
         .background(Color(.systemBackground))
         .cornerRadius(CornerRadius.md)
         .clipped()
-        .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
+        .shadow(color: Color(.systemGray4).opacity(0.08), radius: 2, x: 0, y: 1)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Baseball Pack compact, 12 plus programs")
     }

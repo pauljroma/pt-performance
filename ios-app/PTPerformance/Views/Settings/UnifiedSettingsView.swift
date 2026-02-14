@@ -17,9 +17,9 @@ struct UnifiedSettingsView: View {
 
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var supabase = PTSupabaseClient.shared
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var modeService = ModeService.shared
     @StateObject private var therapistLinkingVM = TherapistLinkingViewModel()
     @StateObject private var healthKitService = HealthKitService.shared
     @StateObject private var settingsViewModel = SettingsViewModel()

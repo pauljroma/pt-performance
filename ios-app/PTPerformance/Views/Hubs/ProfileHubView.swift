@@ -17,9 +17,9 @@ struct ProfileHubView: View {
 
     @EnvironmentObject var storeKit: StoreKitService
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var supabase = PTSupabaseClient.shared
-    @ObservedObject private var onboardingCoordinator = OnboardingCoordinator.shared
-    @ObservedObject private var modeService = ModeService.shared
+    @StateObject private var supabase = PTSupabaseClient.shared
+    @StateObject private var onboardingCoordinator = OnboardingCoordinator.shared
+    @StateObject private var modeService = ModeService.shared
     @AppStorage("hasCompletedQuickSetup") private var hasCompletedQuickSetup = false
 
     // MARK: - State

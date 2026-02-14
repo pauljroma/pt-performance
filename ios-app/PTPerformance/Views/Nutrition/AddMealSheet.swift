@@ -11,6 +11,12 @@ import SwiftUI
 struct AddMealSheet: View {
     @Environment(\.dismiss) private var dismiss
 
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
     let planId: UUID
     let planType: MealPlanType
     let selectedDay: DayOfWeek
@@ -190,9 +196,7 @@ struct AddMealSheet: View {
         }
 
         // Format time as HH:mm
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        let timeString = formatter.string(from: mealTime)
+        let timeString = Self.timeFormatter.string(from: mealTime)
 
         let dto = CreateMealPlanItemDTO(
             mealPlanId: planId.uuidString,

@@ -816,10 +816,14 @@ struct TrainingWindowsCard: View {
 struct TrainingWindowRow: View {
     let forecast: ReadinessForecast
 
-    private var dayName: String {
+    private static let fullDayNameFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE"
-        return formatter.string(from: forecast.date)
+        return formatter
+    }()
+
+    private var dayName: String {
+        Self.fullDayNameFormatter.string(from: forecast.date)
     }
 
     private var recommendation: String {

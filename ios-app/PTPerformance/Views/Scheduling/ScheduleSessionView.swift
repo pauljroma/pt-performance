@@ -200,11 +200,21 @@ struct ScheduleSessionView: View {
         selectedSession != nil && !isLoading
     }
 
-    private var formattedScheduledDateTime: String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: combinedDateTime)
+        return formatter
+    }()
+
+    private static let shortTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private var formattedScheduledDateTime: String {
+        Self.mediumDateShortTimeFormatter.string(from: combinedDateTime)
     }
 
     private var combinedDateTime: Date {
@@ -240,9 +250,7 @@ struct ScheduleSessionView: View {
     // MARK: - Helper Methods
 
     private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.shortTimeFormatter.string(from: date)
     }
 
     private func estimatedDuration(for session: Session) -> Int {

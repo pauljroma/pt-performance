@@ -26,7 +26,7 @@ struct TodayWorkoutCard: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .cornerRadius(DesignTokens.cornerRadiusLarge)
+        .cornerRadius(CornerRadius.lg)
         .adaptiveShadow(Shadow.medium)
         .contextMenu {
             Button {
@@ -150,7 +150,7 @@ struct TodayWorkoutCard: View {
             .padding()
             .background(Color.green)
             .foregroundColor(.white)
-            .cornerRadius(DesignTokens.cornerRadiusMedium)
+            .cornerRadius(CornerRadius.md)
         }
         .accessibilityLabel("Start Workout")
         .accessibilityHint("Begins today's prescribed workout session")

@@ -436,10 +436,10 @@ extension ReadinessScoreViewModel {
 
 extension ReadinessScoreViewModel {
     /// Standard spacing for score displays
-    var displaySpacing: CGFloat { DesignTokens.spacingMedium }
+    var displaySpacing: CGFloat { Spacing.sm }
 
     /// Corner radius for score cards
-    var cardCornerRadius: CGFloat { DesignTokens.cornerRadiusLarge }
+    var cardCornerRadius: CGFloat { CornerRadius.lg }
 
     /// Animation duration for score changes
     var scoreAnimationDuration: Double { DesignTokens.animationDurationNormal }

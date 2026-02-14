@@ -947,7 +947,7 @@ private struct FastingGoalCelebrationView: View {
                         .foregroundColor(.modusDeepTeal)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Spacing.md)
-                        .background(Color.white)
+                        .background(Color(.systemBackground))
                         .cornerRadius(CornerRadius.lg)
                 }
                 .buttonStyle(.plain)
@@ -992,6 +992,7 @@ private struct FastingConfettiView: View {
                         .opacity(particle.opacity)
                 }
             }
+            .drawingGroup()
             .onAppear {
                 createParticles(in: geometry.size)
             }
@@ -1000,26 +1001,26 @@ private struct FastingConfettiView: View {
     }
 
     private func createParticles(in size: CGSize) {
-        for i in 0..<50 {
-            let particle = FastingConfettiParticle(
+        let count = 50
+        particles = (0..<count).map { i in
+            FastingConfettiParticle(
                 id: i,
                 color: colors.randomElement() ?? .yellow,
                 size: CGFloat.random(in: 4...10),
                 position: CGPoint(x: CGFloat.random(in: 0...size.width), y: -20),
                 opacity: 1.0
             )
-            particles.append(particle)
+        }
 
-            // Animate each particle falling
+        // Animate each particle falling using direct index access (avoids O(n^2) firstIndex lookups)
+        for index in particles.indices {
             withAnimation(
                 .easeIn(duration: Double.random(in: 1.5...3.0))
                 .delay(Double.random(in: 0...0.5))
             ) {
-                if let index = particles.firstIndex(where: { $0.id == i }) {
-                    particles[index].position.y = size.height + 20
-                    particles[index].position.x += CGFloat.random(in: -50...50)
-                    particles[index].opacity = 0
-                }
+                particles[index].position.y = size.height + 20
+                particles[index].position.x += CGFloat.random(in: -50...50)
+                particles[index].opacity = 0
             }
         }
     }

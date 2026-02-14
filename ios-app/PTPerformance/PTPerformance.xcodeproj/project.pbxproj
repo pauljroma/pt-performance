@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		001A5F7C2E8B3D4A9F6C0D12 /* SafetyIncidentDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ED5FF7B309AAD32A7330132 /* SafetyIncidentDetailSheet.swift */; };
 		002DD3BE398878BAD055EAB7 /* RTSClearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = C723C46F2FBEAFD17CAD4BDE /* RTSClearance.swift */; };
 		0040B0C4213509848FA4EE85 /* NutritionDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A12546ED898EB09FDB2C805 /* NutritionDashboardView.swift */; };
 		004C91BB0CED08BFDB106497 /* KPIDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81132592A322272732503AB6 /* KPIDashboardViewModel.swift */; };
@@ -1386,7 +1387,7 @@
 		5E99E0AA8D49746DDC8F9A4A /* ManualSessionExercise.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ManualSessionExercise.swift; path = Models/ManualSessionExercise.swift; sourceTree = "<group>"; };
 		5EAB446161E5194FF2E53F07 /* NutritionGuideline.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NutritionGuideline.swift; path = Models/NutritionGuideline.swift; sourceTree = "<group>"; };
 		5ED14CF8DBF025EA0FBA79FD /* StrengthProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StrengthProgressView.swift; sourceTree = "<group>"; };
-		5ED5FF7B309AAD32A7330132 /* SafetyIncidentDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SafetyIncidentDetailSheet.swift; sourceTree = "<group>"; };
+		5ED5FF7B309AAD32A7330132 /* SafetyIncidentDetailSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SafetyIncidentDetailSheet.swift; path = ../Views/Therapist/SafetyIncidentDetailSheet.swift; sourceTree = "<group>"; };
 		5EEA115D113D4861CFE7F5A2 /* RTSClearanceView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RTSClearanceView.swift; path = Views/RTS/RTSClearanceView.swift; sourceTree = "<group>"; };
 		5F078004CE6697AC2E69E733 /* VolumeAnalyticsService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VolumeAnalyticsService.swift; path = Services/Analytics/VolumeAnalyticsService.swift; sourceTree = "<group>"; };
 		5F4F0858A426417E8FDEDB66 /* FeatureVisibilityViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureVisibilityViewModel.swift; sourceTree = "<group>"; };
@@ -5046,6 +5047,7 @@
 				5FDA292753B26D474930E574 /* HistoricalTrendsView.swift in Sources */,
 				75044007CD771F3CE50C57E7 /* X2CommandCenterViewModel.swift in Sources */,
 				109C0901B559CFD5B5A9C43B /* SafetyAlertCard.swift in Sources */,
+				001A5F7C2E8B3D4A9F6C0D12 /* SafetyIncidentDetailSheet.swift in Sources */,
 				32C2C8C97B4A4B4867778EF6 /* ReportHistoryView.swift in Sources */,
 				829D0F84F42C16158A44B35B /* GenerateWeeklyReportSheet.swift in Sources */,
 				7DA274206AE788887B4EC46A /* WeeklyReport.swift in Sources */,

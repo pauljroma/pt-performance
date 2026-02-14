@@ -15,6 +15,12 @@ struct WeeklyNutritionChart: View {
     let trends: [WeeklyNutritionTrend]
     let calorieGoal: Int
 
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
     @State private var selectedTrend: WeeklyNutritionTrend?
     @State private var isAnimating = false
     @Environment(\.colorScheme) private var colorScheme
@@ -168,9 +174,7 @@ struct WeeklyNutritionChart: View {
     }
 
     private func weekLabel(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        Self.monthDayFormatter.string(from: date)
     }
 
     private func selectTrend(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
@@ -218,6 +222,12 @@ struct NutritionLegendItem: View {
 struct TrendDetailCard: View {
     let trend: WeeklyNutritionTrend
 
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
     var body: some View {
         HStack(spacing: Spacing.lg) {
             VStack(alignment: .leading, spacing: 2) {
@@ -263,12 +273,10 @@ struct TrendDetailCard: View {
     }
 
     private func formatDateRange(_ startDate: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        let start = formatter.string(from: startDate)
+        let start = Self.monthDayFormatter.string(from: startDate)
 
         if let endDate = Calendar.current.date(byAdding: .day, value: 6, to: startDate) {
-            let end = formatter.string(from: endDate)
+            let end = Self.monthDayFormatter.string(from: endDate)
             return "\(start) - \(end)"
         }
         return start

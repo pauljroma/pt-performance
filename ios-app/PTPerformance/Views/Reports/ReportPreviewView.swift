@@ -177,7 +177,7 @@ struct ReportPreviewView: View {
         }
         .padding()
         .background(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.1), radius: 4, y: -2)
+        .shadow(color: Color(.systemGray4).opacity(0.1), radius: 4, y: -2)
     }
 
     // MARK: - Share Menu Content
@@ -271,11 +271,15 @@ struct ReportPreviewView: View {
 
     // MARK: - Helpers
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateShortTimeFormatter.string(from: date)
     }
 }
 
@@ -501,11 +505,15 @@ struct RecentReportRow: View {
         .accessibilityHint("Tap to preview report")
     }
 
-    private func formattedDate(_ date: Date) -> String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    private func formattedDate(_ date: Date) -> String {
+        Self.mediumDateShortTimeFormatter.string(from: date)
     }
 }
 

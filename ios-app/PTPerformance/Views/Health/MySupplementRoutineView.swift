@@ -5,7 +5,7 @@ import SwiftUI
 /// User's routine grouped by timing (morning, pre-workout, etc.)
 struct MySupplementRoutineView: View {
     @StateObject private var viewModel = MySupplementRoutineViewModel()
-    @ObservedObject private var interactionService = SupplementInteractionService.shared
+    @StateObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 

@@ -189,13 +189,17 @@ struct SessionSummaryView: View {
         .padding(.horizontal)
     }
 
-    // MARK: - Formatting Helpers
-
-    private func formatDate(_ date: Date) -> String {
+    private static let mediumDateShortTimeFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        return formatter.string(from: date)
+        return formatter
+    }()
+
+    // MARK: - Formatting Helpers
+
+    private func formatDate(_ date: Date) -> String {
+        Self.mediumDateShortTimeFormatter.string(from: date)
     }
 
     private func formatVolume(_ volume: Double) -> String {

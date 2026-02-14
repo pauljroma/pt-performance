@@ -493,9 +493,14 @@ private struct PeriodSummaryCard: View {
         .cornerRadius(CornerRadius.md)
     }
 
-    private var dateRangeString: String {
+    private static let monthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    private var dateRangeString: String {
+        let formatter = Self.monthDayFormatter
         return "\(formatter.string(from: dateInterval.start)) - \(formatter.string(from: dateInterval.end))"
     }
 }

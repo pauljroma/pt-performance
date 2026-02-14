@@ -185,7 +185,7 @@ struct BaseballPackMarketingView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+                .shadow(color: Color(.systemGray4).opacity(0.06), radius: 8, x: 0, y: 2)
         )
     }
 
@@ -362,7 +362,7 @@ private struct BaseballFeatureRow: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.04), radius: 4, x: 0, y: 2)
+                .shadow(color: Color(.systemGray4).opacity(0.04), radius: 4, x: 0, y: 2)
         )
     }
 }

@@ -188,7 +188,7 @@ struct TaskCustomizationRow: View {
             } label: {
                 Image(systemName: customization.isIncluded ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundColor(customization.isIncluded ? .accentColor : .gray)
+                    .foregroundColor(customization.isIncluded ? .modusCyan : .gray)
             }
 
             // Task info
@@ -218,7 +218,7 @@ struct TaskCustomizationRow: View {
                     if customization.reminderEnabled {
                         Image(systemName: "bell.fill")
                             .font(.caption2)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                     }
                 }
             }
@@ -247,6 +247,12 @@ struct TaskDetailEditor: View {
     @Binding var customization: PlanCustomization.TaskCustomization
     @Environment(\.dismiss) private var dismiss
 
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
     @State private var selectedTime: Date = Date()
     @State private var customInstructions: String = ""
 
@@ -257,7 +263,7 @@ struct TaskDetailEditor: View {
                 Section {
                     HStack {
                         Image(systemName: task.taskType.iconName)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.modusCyan)
                         Text(task.title)
                             .font(.headline)
                     }
@@ -286,9 +292,7 @@ struct TaskDetailEditor: View {
                             displayedComponents: .hourAndMinute
                         )
                         .onChange(of: selectedTime) { _, newValue in
-                            let formatter = DateFormatter()
-                            formatter.dateFormat = "HH:mm"
-                            customization.customTime = formatter.string(from: newValue)
+                            customization.customTime = Self.timeFormatter.string(from: newValue)
                         }
 
                         Toggle("Send Reminder", isOn: $customization.reminderEnabled)
@@ -336,9 +340,7 @@ struct TaskDetailEditor: View {
     private func setupInitialValues() {
         // Parse time string to Date
         if let timeString = customization.customTime ?? task.defaultTime {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm"
-            if let date = formatter.date(from: timeString) {
+            if let date = Self.timeFormatter.date(from: timeString) {
                 selectedTime = date
             }
         }

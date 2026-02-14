@@ -154,7 +154,7 @@ struct GestureSetLogger: View {
             // Background
             RoundedRectangle(cornerRadius: CornerRadius.xl)
                 .fill(gestureAreaBackground)
-                .shadow(color: Color.black.opacity(0.1), radius: 8, y: 4)
+                .shadow(color: Color(.systemGray4).opacity(0.1), radius: 8, y: 4)
 
             // Content
             VStack(spacing: Spacing.xl) {
