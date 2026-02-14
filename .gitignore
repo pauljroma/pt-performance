@@ -39,3 +39,4 @@ docker-compose.yaml
 # Temp files
 *.backup
 *.tmp
+.mcp.json

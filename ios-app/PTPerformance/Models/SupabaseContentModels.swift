@@ -64,7 +64,7 @@ struct ContentData: Codable, Hashable {
 }
 
 /// Helper for decoding heterogeneous JSONB values
-enum AnyCodableValue: Codable, Hashable {
+enum AnyCodableValue: Codable, Hashable, Sendable {
     case string(String)
     case int(Int)
     case double(Double)
