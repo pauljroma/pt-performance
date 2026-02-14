@@ -155,7 +155,7 @@ struct StreakDetailView: View {
                                 Group {
                                     if Calendar.current.isDateInToday(day.date) {
                                         Circle()
-                                            .stroke(Color.accentColor, lineWidth: 2)
+                                            .stroke(Color.modusCyan, lineWidth: 2)
                                     }
                                 }
                             )
@@ -252,7 +252,7 @@ struct StreakDetailView: View {
 
             if isAchieved {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                    .foregroundColor(.modusTealAccent)
             } else {
                 let daysNeeded = badge.minDays - viewModel.longestStreak
                 Text("\(daysNeeded) to go")
@@ -338,7 +338,7 @@ struct StreakDetailView: View {
     private func tipRow(icon: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
                 .frame(width: 20)
 
             Text(text)

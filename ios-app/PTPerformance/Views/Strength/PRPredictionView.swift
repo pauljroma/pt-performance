@@ -219,7 +219,7 @@ struct PRPredictionView: View {
                         )
                         .frame(width: geometry.size.width * min(CGFloat(currentProgress), 1.0), height: 8)
                 }
-                .cornerRadius(4)
+                .cornerRadius(CornerRadius.xs)
             }
             .frame(height: 8)
 

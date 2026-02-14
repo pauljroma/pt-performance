@@ -28,7 +28,7 @@ enum HealthInsightType: String, Codable {
         switch self {
         case .info: return .modusCyan
         case .positive: return .modusTealAccent
-        case .warning: return .orange
+        case .warning: return DesignTokens.statusWarning
         case .critical: return .red
         }
     }

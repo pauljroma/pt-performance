@@ -623,7 +623,7 @@ private struct BaseballCategoryChip: View {
             .cornerRadius(CornerRadius.xl)
             .overlay(
                 // Premium indicator border
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .strokeBorder(
                         isPremium && !isSelected ? Color.modusCyan.opacity(0.4) : Color.clear,
                         lineWidth: 1.5

@@ -77,7 +77,7 @@ struct StreakCardView: View {
                                 Text("At Risk")
                                     .font(.caption)
                             }
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
                         } else if viewModel.currentStreak > 0 {
                             HStack(spacing: 4) {
                                 Image(systemName: "checkmark.circle.fill")
@@ -175,7 +175,7 @@ class StreakCardViewModel: ObservableObject {
 
     var streakColor: Color {
         if currentStreak == 0 { return .gray }
-        if currentStreak < 7 { return .orange }
+        if currentStreak < 7 { return DesignTokens.statusWarning }
         if currentStreak < 30 { return Color.modusCyan }
         return Color.modusTealAccent
     }

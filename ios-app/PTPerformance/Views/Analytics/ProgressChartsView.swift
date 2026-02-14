@@ -416,7 +416,7 @@ struct ProgressChartsView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.title)
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
                         Text("Unable to generate chart image")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -483,7 +483,7 @@ struct ProgressChartsView: View {
             title: LocalizedStrings.EmptyStates.signInRequired,
             message: "Sign in to your account to view your progress analytics, track workout volume, and monitor strength gains.",
             icon: "person.crop.circle.badge.exclamationmark",
-            iconColor: .orange,
+            iconColor: DesignTokens.statusWarning,
             action: nil
         )
         .padding(.vertical, 40)
@@ -493,7 +493,7 @@ struct ProgressChartsView: View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.title2)
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
 
             Text("Unable to Load \(section) Data")
                 .font(.headline)

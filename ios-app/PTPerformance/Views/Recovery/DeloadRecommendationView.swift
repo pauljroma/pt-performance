@@ -145,7 +145,7 @@ struct DeloadRecommendationView: View {
             // Description
             HStack {
                 Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.modusCyan)
                 Text(viewModel.fatigueDescription)
                     .font(.subheadline)
                     .foregroundColor(.primary)
@@ -154,7 +154,7 @@ struct DeloadRecommendationView: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.modusCyan.opacity(0.1))
             )
 
             // Metrics row
@@ -164,28 +164,28 @@ struct DeloadRecommendationView: View {
                         title: "Readiness",
                         value: String(format: "%.0f%%", summary.avgReadiness7d),
                         icon: "heart.fill",
-                        color: summary.avgReadiness7d > 60 ? .green : .orange
+                        color: summary.avgReadiness7d > 60 ? .modusTealAccent : DesignTokens.statusWarning
                     )
 
                     metricPill(
                         title: "ACR",
                         value: String(format: "%.2f", summary.acuteChronicRatio),
                         icon: "arrow.up.arrow.down",
-                        color: summary.acuteChronicRatio > 1.3 ? .orange : .green
+                        color: summary.acuteChronicRatio > 1.3 ? DesignTokens.statusWarning : .modusTealAccent
                     )
 
                     metricPill(
                         title: "Low Days",
                         value: "\(summary.consecutiveLowDays)",
                         icon: "calendar.badge.exclamationmark",
-                        color: summary.consecutiveLowDays > 2 ? .orange : .green
+                        color: summary.consecutiveLowDays > 2 ? DesignTokens.statusWarning : .modusTealAccent
                     )
                 }
             }
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -340,7 +340,7 @@ struct DeloadRecommendationView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -376,7 +376,7 @@ struct DeloadRecommendationView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
-                            .foregroundColor(.orange)
+                            .foregroundColor(DesignTokens.statusWarning)
 
                         Text(factor)
                             .font(.subheadline)
@@ -387,14 +387,14 @@ struct DeloadRecommendationView: View {
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.orange.opacity(0.1))
+                            .fill(DesignTokens.statusWarning.opacity(0.1))
                     )
                 }
             }
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -512,7 +512,7 @@ struct DeloadRecommendationView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -549,7 +549,7 @@ struct DeloadRecommendationView: View {
         VStack(spacing: 16) {
             Image(systemName: "heart.text.square")
                 .font(.system(size: 60))
-                .foregroundColor(.green.opacity(0.6))
+                .foregroundColor(.modusTealAccent.opacity(0.6))
 
             Text("No Recovery Data")
                 .font(.title2.bold())
@@ -756,7 +756,7 @@ struct PrescriptionDetailRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.body)
-                .foregroundColor(.blue)
+                .foregroundColor(.modusCyan)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -786,7 +786,7 @@ struct PrescriptionDetailRow: View {
 struct ContributingFactorRow: View {
     let factor: String
     var icon: String = "exclamationmark.triangle.fill"
-    var iconColor: Color = .orange
+    var iconColor: Color = DesignTokens.statusWarning
 
     var body: some View {
         HStack(spacing: 12) {

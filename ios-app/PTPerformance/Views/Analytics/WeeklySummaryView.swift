@@ -795,7 +795,7 @@ struct WeeklySummaryView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
 
             Text(LocalizedStrings.ErrorStates.couldntLoadSummary)
                 .font(.headline)

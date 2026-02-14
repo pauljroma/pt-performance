@@ -358,7 +358,7 @@ struct ModeCard: View {
             .background(Color(.secondarySystemGroupedBackground))
             .cornerRadius(CornerRadius.lg)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: CornerRadius.lg)
                     .stroke(isSelected ? Color.modusCyan : Color.clear, lineWidth: 2)
             )
         }

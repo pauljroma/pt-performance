@@ -316,7 +316,7 @@ struct ConfettiView: View {
                 color: [
                     Color.modusCyan, Color.modusTealAccent, Color.modusDeepTeal,
                     Color.yellow, Color.orange, Color.mint, Color.cyan
-                ].randomElement()!,
+                ].randomElement() ?? .modusCyan,
                 size: CGFloat.random(in: 8...16),
                 rotation: Double.random(in: 0...360),
                 delay: Double.random(in: 0...0.5)

@@ -19,6 +19,7 @@ struct StrengthProgressView: View {
                     if isLoading {
                         ProgressView("Loading volume data...")
                             .frame(maxWidth: .infinity, minHeight: 200)
+                            .accessibilityLabel("Loading volume data")
                     } else if let error = loadError {
                         // Error state with retry
                         VStack(spacing: Spacing.md) {
@@ -47,6 +48,8 @@ struct StrengthProgressView: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 200)
                         .padding()
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Error loading volume data: \(error)")
                     } else if weeklyVolumeData == nil && monthlyVolumeData == nil {
                         // Empty state
                         strengthEmptyState
@@ -60,6 +63,7 @@ struct StrengthProgressView: View {
                                 Text("Training Volume")
                                     .font(.headline)
                             }
+                            .accessibilityAddTraits(.isHeader)
 
                             HStack(spacing: Spacing.lg) {
                                 StrengthVolumeMetricView(
@@ -110,6 +114,8 @@ struct StrengthProgressView: View {
             }
             .padding(.vertical, Spacing.lg)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No volume data yet. Start logging workouts to track your training volume over time.")
     }
 
     // MARK: - Data Loading
@@ -159,6 +165,14 @@ struct StrengthVolumeMetricView: View {
         }
     }
 
+    private var accessibilityLabel: String {
+        if let data = volumeData {
+            return "\(title): \(Int(data.totalVolume)) pounds"
+        } else {
+            return "\(title): No data yet"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(title)
@@ -191,5 +205,7 @@ struct StrengthVolumeMetricView: View {
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
     }
 }

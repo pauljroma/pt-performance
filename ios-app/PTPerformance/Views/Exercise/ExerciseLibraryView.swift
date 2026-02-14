@@ -144,7 +144,7 @@ struct ExerciseLibraryView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 48))
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
             Text("Unable to Load Exercises")
                 .font(.headline)
             Text(message)
@@ -204,6 +204,7 @@ struct ExerciseLibraryView: View {
                 Spacer()
             }
             .padding(.horizontal, Spacing.md)
+            .accessibilityAddTraits(.isHeader)
 
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: Spacing.sm),
@@ -330,13 +331,14 @@ struct ExerciseLibraryView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "flame.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                 Text("Popular Exercises")
                     .font(.headline)
                     .foregroundColor(.primary)
                 Spacer()
             }
             .padding(.horizontal, Spacing.md)
+            .accessibilityAddTraits(.isHeader)
 
             ForEach(viewModel.popularExercises) { exercise in
                 ExerciseLibraryRow(exercise: exercise) {
@@ -376,6 +378,7 @@ struct ExerciseLibraryView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding(.horizontal, Spacing.md)
+                .accessibilityAddTraits(.isHeader)
             }
 
             ForEach(exercises) { exercise in
@@ -449,6 +452,7 @@ struct ExerciseMuscleGroupCell: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(group.displayName), \(exerciseCount) exercises")
     }
 }
 
@@ -483,6 +487,7 @@ private struct ExerciseEquipmentChip: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(equipment.displayName) equipment filter")
     }
 }
 
@@ -517,6 +522,7 @@ struct DifficultyChip: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(difficulty.rawValue) difficulty filter")
     }
 }
 
@@ -693,6 +699,8 @@ struct ExerciseLibraryRow: View {
             .adaptiveShadow(Shadow.subtle)
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(exercise.name), \(exercise.difficulty.rawValue) difficulty")
     }
 
     private var exerciseThumbnail: some View {
@@ -1179,10 +1187,10 @@ struct ExerciseLibraryDetailSheet: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                 Text("Safety Notes")
                     .font(.headline)
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
             }
 
             Text(notes)
@@ -1190,11 +1198,11 @@ struct ExerciseLibraryDetailSheet: View {
                 .foregroundColor(.primary)
         }
         .padding(Spacing.md)
-        .background(Color.orange.opacity(0.05))
+        .background(DesignTokens.statusWarning.opacity(0.05))
         .cornerRadius(CornerRadius.md)
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                .stroke(DesignTokens.statusWarning.opacity(0.3), lineWidth: 1)
         )
     }
 

@@ -173,10 +173,10 @@ struct StreakDashboardView: View {
             HStack(spacing: 8) {
                 if viewModel.isAtRisk {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(DesignTokens.statusWarning)
                     Text("Complete a workout to keep your streak!")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(DesignTokens.statusWarning)
                 } else {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(Color.modusTealAccent)
@@ -188,8 +188,8 @@ struct StreakDashboardView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(viewModel.isAtRisk ? Color.orange.opacity(0.1) : Color.modusTealAccent.opacity(0.1))
+                RoundedRectangle(cornerRadius: CornerRadius.sm)
+                    .fill(viewModel.isAtRisk ? DesignTokens.statusWarning.opacity(0.1) : Color.modusTealAccent.opacity(0.1))
             )
 
             // Longest streak
