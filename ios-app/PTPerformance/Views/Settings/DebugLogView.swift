@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Enhanced debug log viewer with file persistence and export
 struct DebugLogView: View {
-    @ObservedObject var logger = LoggingService.shared
+    @StateObject var logger = LoggingService.shared
     @Environment(\.dismiss) var dismiss
 
     @State private var selectedFilter: LogFilter = .all

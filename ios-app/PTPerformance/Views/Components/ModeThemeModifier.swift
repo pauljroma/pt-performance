@@ -10,7 +10,7 @@ import SwiftUI
 
 /// View modifier that applies mode-specific styling
 struct ModeThemeModifier: ViewModifier {
-    @ObservedObject var modeService = ModeService.shared
+    @StateObject var modeService = ModeService.shared
     @Environment(\.colorScheme) var colorScheme
 
     func body(content: Content) -> some View {
@@ -39,7 +39,7 @@ extension View {
 
 /// Mode-aware card background
 struct ModeCardBackground: View {
-    @ObservedObject var modeService = ModeService.shared
+    @StateObject var modeService = ModeService.shared
 
     var body: some View {
         let theme = ModeTheme.theme(for: modeService.currentMode)
@@ -57,7 +57,7 @@ struct ModeCardBackground: View {
 
 /// Mode-aware button style
 struct ModeButtonStyle: ButtonStyle {
-    @ObservedObject var modeService = ModeService.shared
+    @StateObject var modeService = ModeService.shared
     var isPrimary: Bool = true
 
     func makeBody(configuration: Configuration) -> some View {
@@ -96,7 +96,7 @@ enum ModeTextStyle {
 }
 
 struct ModeStyledText: View {
-    @ObservedObject var modeService = ModeService.shared
+    @StateObject var modeService = ModeService.shared
     let text: Text
     let style: ModeTextStyle
 

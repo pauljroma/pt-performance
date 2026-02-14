@@ -13,7 +13,7 @@ import Combine
 /// Displays the current sync status of pending changes
 /// Shows when changes are pending, syncing, or if errors occurred
 struct SyncStatusIndicator: View {
-    @ObservedObject var pendingQueue = PendingChangesQueue.shared
+    @StateObject var pendingQueue = PendingChangesQueue.shared
 
     @State private var showDetails = false
     @State private var isAnimating = false
@@ -124,8 +124,8 @@ struct SyncStatusIndicator: View {
 // MARK: - Sync Status Detail View
 
 struct SyncStatusDetailView: View {
-    @ObservedObject var pendingQueue = PendingChangesQueue.shared
-    @ObservedObject var optimisticManager = OptimisticUpdateManager.shared
+    @StateObject var pendingQueue = PendingChangesQueue.shared
+    @StateObject var optimisticManager = OptimisticUpdateManager.shared
 
     @Environment(\.dismiss) var dismiss
     @State private var isSyncing = false
@@ -327,7 +327,7 @@ struct SyncStatusDetailView: View {
 
 /// Minimal sync indicator for toolbar or small spaces
 struct CompactSyncBadge: View {
-    @ObservedObject var pendingQueue = PendingChangesQueue.shared
+    @StateObject var pendingQueue = PendingChangesQueue.shared
 
     var body: some View {
         if pendingQueue.hasPendingChanges || pendingQueue.hasFailedChanges {

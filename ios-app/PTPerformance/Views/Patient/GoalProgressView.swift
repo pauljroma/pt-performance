@@ -289,7 +289,7 @@ struct CelebrationOverlay: View {
             ConfettiParticle(
                 x: CGFloat.random(in: -size/2...size/2),
                 y: CGFloat.random(in: -size/2...size/2),
-                color: [Color.green, Color.yellow, Color.blue, Color.orange, Color.purple].randomElement()!,
+                color: [Color.green, Color.yellow, Color.blue, Color.orange, Color.purple].randomElement() ?? .modusCyan,
                 size: CGFloat.random(in: 4...8),
                 delay: Double.random(in: 0...0.5)
             )

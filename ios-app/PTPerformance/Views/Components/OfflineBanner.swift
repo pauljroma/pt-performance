@@ -12,8 +12,8 @@ import SwiftUI
 /// Banner that appears when the app is offline or has pending sync items
 /// Shows user-friendly message, pending count, and retry option
 struct OfflineBanner: View {
-    @ObservedObject var supabase = PTSupabaseClient.shared
-    @ObservedObject var offlineQueue = OfflineQueueManager.shared
+    @StateObject var supabase = PTSupabaseClient.shared
+    @StateObject var offlineQueue = OfflineQueueManager.shared
     @State private var isCheckingConnection = false
 
     /// Show banner when offline OR when there are pending sync items
@@ -162,7 +162,7 @@ struct OfflineBanner: View {
 
 /// Small indicator showing pending sync count for use in toolbars/headers
 struct PendingSyncIndicator: View {
-    @ObservedObject var offlineQueue = OfflineQueueManager.shared
+    @StateObject var offlineQueue = OfflineQueueManager.shared
 
     var body: some View {
         if offlineQueue.pendingCount > 0 {
