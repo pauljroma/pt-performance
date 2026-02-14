@@ -1,0 +1,194 @@
+{
+  "skill_id": "polyglot-performance",
+  "name": "Polyglot Performance Programming",
+  "version": "1.0",
+  "type": "language_selection",
+  "description": "Claude automatically selects optimal language (Python/Cython/Rust) for performance-critical code",
+
+  "activation": {
+    "mode": "proactive",
+    "triggers": [
+      "performance bottleneck keywords (optimize, speed up, slow, bottleneck)",
+      "large dataset keywords (millions of rows, process 1M+)",
+      "concurrency keywords (parallel, multi-threaded, GIL)",
+      "systems programming keywords (low-level, CLI tool, parser)",
+      "hot loop detected in code",
+      "user explicitly requests (use Cython, use Rust, write in Rust)"
+    ]
+  },
+
+  "languages": {
+    "python": {
+      "role": "default",
+      "use_for": ["prototyping", "general purpose", "non-critical paths"],
+      "strengths": ["rapid development", "readability", "ecosystem"],
+      "performance": "baseline (1x)"
+    },
+    "cython": {
+      "role": "python_optimizer",
+      "use_for": ["hot loops", "numerical computation", "10-100x speedup"],
+      "strengths": ["Python interop", "gradual optimization", "NumPy integration"],
+      "performance": "10-100x speedup",
+      "complexity": "medium"
+    },
+    "rust": {
+      "role": "maximum_performance",
+      "use_for": ["systems programming", "CLI tools", "100-1000x speedup", "parallelism"],
+      "strengths": ["memory safety", "true parallelism", "zero-cost abstractions"],
+      "performance": "100-1000x speedup",
+      "complexity": "high"
+    }
+  },
+
+  "decision_rules": {
+    "use_python": {
+      "conditions": [
+        "performance is acceptable",
+        "clarity > speed",
+        "rapid iteration needed",
+        "not a bottleneck"
+      ]
+    },
+    "use_cython": {
+      "conditions": [
+        "hot loop with numeric operations",
+        "processing >1M items",
+        "need 10-100x speedup",
+        "Python interop required",
+        "NumPy arrays involved"
+      ],
+      "complexity_threshold": 6
+    },
+    "use_rust": {
+      "conditions": [
+        "need 100-1000x speedup",
+        "concurrency/parallelism required",
+        "GIL is bottleneck",
+        "systems programming",
+        "CLI tool",
+        "memory safety critical"
+      ],
+      "complexity_threshold": 8
+    }
+  },
+
+  "templates": {
+    "cython": {
+      "files": ["module.pyx", "setup.py", "__init__.py", "benchmark.py"],
+      "build_command": "python setup.py build_ext --inplace",
+      "typical_speedup": "10-100x",
+      "setup_time_minutes": 15
+    },
+    "rust_pyo3": {
+      "files": ["src/lib.rs", "Cargo.toml", "__init__.py", "benchmark.py"],
+      "build_command": "maturin develop --release",
+      "typical_speedup": "100-1000x",
+      "setup_time_minutes": 60
+    }
+  },
+
+  "benchmarking": {
+    "auto_create": true,
+    "n_runs": 10,
+    "report_metrics": ["mean", "std", "min", "max", "speedup"],
+    "minimum_speedup_to_justify": {
+      "cython": 5,
+      "rust": 20
+    }
+  },
+
+  "integration": {
+    "insight_collab": {
+      "enabled": true,
+      "use_o1_for": [
+        "algorithm selection (before language choice)",
+        "architecture design for high-performance systems",
+        "tradeoff analysis (Cython vs Rust)"
+      ]
+    }
+  },
+
+  "detection_patterns": {
+    "hot_loop": {
+      "pattern": "for .+ in range\\([0-9]{6,}\\)",
+      "action": "suggest_cython",
+      "reason": "Large loop (1M+ iterations) detected"
+    },
+    "numpy_heavy": {
+      "pattern": "import numpy|np\\.array|np\\.ndarray",
+      "action": "suggest_cython",
+      "reason": "NumPy-heavy code benefits from Cython"
+    },
+    "parallel_needed": {
+      "pattern": "ThreadPoolExecutor|multiprocessing|concurrent\\.futures",
+      "action": "suggest_rust",
+      "reason": "Python parallelism limited by GIL"
+    },
+    "cli_tool": {
+      "pattern": "if __name__ == .__main__.|argparse|click",
+      "action": "suggest_rust",
+      "reason": "CLI tools benefit from compiled binary"
+    }
+  },
+
+  "examples": [
+    {
+      "scenario": "ETL pipeline processing 10M rows",
+      "python_time": "2 hours",
+      "cython_time": "7 minutes",
+      "rust_time": "3 minutes",
+      "recommendation": "cython",
+      "reason": "17x speedup sufficient, easier maintenance"
+    },
+    {
+      "scenario": "Parse 100MB JSON file",
+      "python_time": "30 seconds",
+      "cython_time": "10 seconds",
+      "rust_time": "0.5 seconds",
+      "recommendation": "rust",
+      "reason": "60x speedup, no GIL, memory safe"
+    },
+    {
+      "scenario": "Monte Carlo simulation (1M iterations)",
+      "python_time": "10 minutes",
+      "cython_time": "30 seconds",
+      "rust_time": "15 seconds",
+      "recommendation": "cython",
+      "reason": "20x speedup sufficient, NumPy integration"
+    },
+    {
+      "scenario": "Code formatter (CLI tool)",
+      "python_time": "5 seconds",
+      "cython_time": "2 seconds",
+      "rust_time": "0.2 seconds",
+      "recommendation": "rust",
+      "reason": "CLI benefits from instant startup, single binary"
+    }
+  ],
+
+  "cost_benefit": {
+    "cython": {
+      "setup_cost_minutes": 30,
+      "per_module_minutes": 20,
+      "maintenance_difficulty": "medium",
+      "typical_speedup": "10-100x",
+      "worth_if_used": ">1000 times per day"
+    },
+    "rust": {
+      "setup_cost_minutes": 120,
+      "per_module_minutes": 60,
+      "maintenance_difficulty": "high",
+      "typical_speedup": "100-1000x",
+      "worth_if_used": ">100 times per day OR CLI tool OR systems code"
+    }
+  },
+
+  "workflow": {
+    "step_1": "Detect performance need",
+    "step_2": "Analyze requirements (speedup, concurrency, Python interop)",
+    "step_3": "Select language (Python → Cython → Rust escalation)",
+    "step_4": "Create implementation + build config",
+    "step_5": "Create benchmark to verify speedup",
+    "step_6": "Report results with speedup metrics"
+  }
+}

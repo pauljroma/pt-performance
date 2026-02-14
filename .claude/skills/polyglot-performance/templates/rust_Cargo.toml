@@ -1,0 +1,78 @@
+[package]
+name = "fast_ops_rust"  # Change this to your module name
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "High-performance Rust extension for Python"
+
+[lib]
+name = "fast_ops_rust"  # Must match the module name in lib.rs
+crate-type = ["cdylib"]  # Create dynamic library for Python
+
+[dependencies]
+# PyO3 - Python bindings
+pyo3 = { version = "0.20", features = ["extension-module", "abi3-py38"] }
+
+# Rayon - Data parallelism
+rayon = "1.8"
+
+# Serde - Serialization/deserialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Optional: NumPy support
+# numpy = "0.20"
+
+# Optional: Async support
+# tokio = { version = "1", features = ["full"] }
+# pyo3-asyncio = "0.20"
+
+# Optional: Additional performance libraries
+# ndarray = "0.15"  # N-dimensional arrays
+# nalgebra = "0.32"  # Linear algebra
+# polars = "0.35"  # Fast DataFrame library
+
+[profile.release]
+# Optimization settings for maximum performance
+opt-level = 3              # Maximum optimization
+lto = "fat"                # Link-time optimization
+codegen-units = 1          # Better optimization (slower compile)
+strip = true               # Strip symbols (smaller binary)
+panic = "abort"            # Smaller binary, no unwinding
+
+# Optional: CPU-specific optimizations
+# Add to build command: RUSTFLAGS="-C target-cpu=native" maturin develop --release
+# Or uncomment:
+# [target.'cfg(target_arch = "x86_64")']
+# rustflags = ["-C", "target-cpu=native"]
+
+[profile.dev]
+# Development profile (faster compilation)
+opt-level = 0
+
+# Build instructions:
+#
+# Development build (fast, for testing):
+#   maturin develop
+#
+# Release build (optimized):
+#   maturin develop --release
+#
+# Production build (maximum optimization):
+#   RUSTFLAGS="-C target-cpu=native" maturin build --release
+#
+# Install from wheel:
+#   pip install target/wheels/fast_ops_rust-*.whl
+
+# Usage in Python:
+#
+# import fast_ops_rust
+#
+# # Call functions
+# result = fast_ops_rust.process_parallel(data)
+# stats = fast_ops_rust.compute_stats(data)
+#
+# # Use classes
+# processor = fast_ops_rust.DataProcessor(threshold=5.0)
+# processor.add_data([1.0, 2.0, 3.0])
+# result = processor.process()

@@ -1,0 +1,89 @@
+{
+  "skill_id": "insight-collab",
+  "name": "Insight Collaboration",
+  "version": "1.0",
+  "type": "collaborative_reasoning",
+  "description": "Claude consults OpenAI o1 for complex reasoning tasks",
+
+  "activation": {
+    "mode": "proactive",
+    "complexity_threshold": 7,
+    "triggers": [
+      "complex swarm planning (>10 phases)",
+      "architecture decision keywords (microservices, architecture, design pattern)",
+      "algorithm optimization request",
+      "scientific/mathematical problem",
+      "strategic planning (roadmap, long-term)",
+      "user explicitly requests (consult o1, ask openai, get reasoning)"
+    ]
+  },
+
+  "models": {
+    "claude": {
+      "model": "claude-sonnet-4-5-20250929",
+      "role": "executor",
+      "strengths": ["tool usage", "coordination", "implementation", "communication"]
+    },
+    "openai_o1": {
+      "model": "o1-preview",
+      "role": "reasoner",
+      "strengths": ["deep reasoning", "complex math", "strategic planning", "tradeoff analysis"]
+    }
+  },
+
+  "cost_controls": {
+    "daily_budget_usd": 10.00,
+    "per_consultation_max_usd": 2.00,
+    "require_user_approval_above_usd": 1.00,
+    "use_o1_mini_when_complexity_below": 8
+  },
+
+  "usage_guidelines": {
+    "use_o1_for": [
+      "Swarm planning with >10 phases",
+      "Architecture decisions with >3 options",
+      "Algorithm optimization (performance-critical)",
+      "Scientific computation (complex math)",
+      "Strategic planning (>6 months)",
+      "Novel problems (no clear precedent)"
+    ],
+    "dont_use_o1_for": [
+      "Simple CRUD operations",
+      "File operations",
+      "Direct tool usage",
+      "Well-established patterns",
+      "Time-sensitive operations (o1 is slow)"
+    ]
+  },
+
+  "workflow": {
+    "step_1": "Claude analyzes user request",
+    "step_2": "Claude calculates complexity (1-10)",
+    "step_3": "If complexity >= 7, consult o1",
+    "step_4": "o1 provides deep reasoning (30-60s)",
+    "step_5": "Claude implements o1's recommendations",
+    "step_6": "Claude reports results to user"
+  },
+
+  "mcp_integration": {
+    "server": "openai-reasoning",
+    "primary_tool": "consult_o1",
+    "supporting_tools": ["deep_analysis", "plan_strategy", "get_reasoning_metrics"]
+  },
+
+  "swarm_integration": {
+    "agent_type": "reasoning-agent",
+    "consultation_mode": "auto",
+    "budget_allocation": "per_swarm"
+  },
+
+  "metrics": {
+    "track": [
+      "consultations_total",
+      "total_cost_usd",
+      "average_reasoning_time_sec",
+      "value_rating (user feedback)"
+    ],
+    "report_frequency": "daily"
+  }
+}
