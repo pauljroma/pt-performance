@@ -15,7 +15,7 @@ GRANT SELECT, INSERT, UPDATE ON patient_supplement_stacks TO anon;
 GRANT SELECT, INSERT, UPDATE ON biomarker_values TO anon;
 
 -- ============================================================================
--- TABLE: ai_chat_sessions
+-- TABLE: ai_chat_sessions (uses athlete_id, not patient_id)
 -- ============================================================================
 
 -- SELECT policy
@@ -28,7 +28,7 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_sessions_select" ON ai_chat_sessions
             FOR SELECT TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (athlete_id = '00000000-0000-0000-0000-000000000001'::uuid);
     END IF;
 END $$;
 
@@ -42,7 +42,7 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_sessions_insert" ON ai_chat_sessions
             FOR INSERT TO anon
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            WITH CHECK (athlete_id = '00000000-0000-0000-0000-000000000001'::uuid);
     END IF;
 END $$;
 
@@ -56,13 +56,13 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_sessions_update" ON ai_chat_sessions
             FOR UPDATE TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid)
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (athlete_id = '00000000-0000-0000-0000-000000000001'::uuid)
+            WITH CHECK (athlete_id = '00000000-0000-0000-0000-000000000001'::uuid);
     END IF;
 END $$;
 
 -- ============================================================================
--- TABLE: ai_chat_messages
+-- TABLE: ai_chat_messages (join through session_id -> ai_chat_sessions.athlete_id)
 -- ============================================================================
 
 -- SELECT policy
@@ -75,7 +75,11 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_messages_select" ON ai_chat_messages
             FOR SELECT TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (EXISTS (
+                SELECT 1 FROM ai_chat_sessions s
+                WHERE s.id = session_id
+                AND s.athlete_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;
 
@@ -89,7 +93,11 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_messages_insert" ON ai_chat_messages
             FOR INSERT TO anon
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            WITH CHECK (EXISTS (
+                SELECT 1 FROM ai_chat_sessions s
+                WHERE s.id = session_id
+                AND s.athlete_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;
 
@@ -103,8 +111,16 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_ai_chat_messages_update" ON ai_chat_messages
             FOR UPDATE TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid)
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (EXISTS (
+                SELECT 1 FROM ai_chat_sessions s
+                WHERE s.id = session_id
+                AND s.athlete_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ))
+            WITH CHECK (EXISTS (
+                SELECT 1 FROM ai_chat_sessions s
+                WHERE s.id = session_id
+                AND s.athlete_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;
 
@@ -297,7 +313,7 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- TABLE: biomarker_values (verify existing)
+-- TABLE: biomarker_values (join through lab_result_id -> lab_results.patient_id)
 -- ============================================================================
 
 -- SELECT policy
@@ -310,7 +326,11 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_biomarker_values_select" ON biomarker_values
             FOR SELECT TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (EXISTS (
+                SELECT 1 FROM lab_results lr
+                WHERE lr.id = lab_result_id
+                AND lr.patient_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;
 
@@ -324,7 +344,11 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_biomarker_values_insert" ON biomarker_values
             FOR INSERT TO anon
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            WITH CHECK (EXISTS (
+                SELECT 1 FROM lab_results lr
+                WHERE lr.id = lab_result_id
+                AND lr.patient_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;
 
@@ -338,7 +362,15 @@ BEGIN
     ) THEN
         CREATE POLICY "demo_patient_biomarker_values_update" ON biomarker_values
             FOR UPDATE TO anon
-            USING (patient_id = '00000000-0000-0000-0000-000000000001'::uuid)
-            WITH CHECK (patient_id = '00000000-0000-0000-0000-000000000001'::uuid);
+            USING (EXISTS (
+                SELECT 1 FROM lab_results lr
+                WHERE lr.id = lab_result_id
+                AND lr.patient_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ))
+            WITH CHECK (EXISTS (
+                SELECT 1 FROM lab_results lr
+                WHERE lr.id = lab_result_id
+                AND lr.patient_id = '00000000-0000-0000-0000-000000000001'::uuid
+            ));
     END IF;
 END $$;

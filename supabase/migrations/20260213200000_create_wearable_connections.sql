@@ -13,7 +13,7 @@ BEGIN;
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.wearable_connections (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
 
     -- Device identification
@@ -172,14 +172,14 @@ INSERT INTO public.wearable_connections (
     connected_at
 )
 SELECT
-    id,
+    p.id,
     'whoop',
     TRUE,
     TRUE,
-    whoop_credentials,
-    COALESCE(updated_at, NOW())
-FROM public.patients
-WHERE whoop_credentials IS NOT NULL
+    p.whoop_credentials,
+    NOW()
+FROM public.patients p
+WHERE p.whoop_credentials IS NOT NULL
 ON CONFLICT (patient_id, wearable_type) WHERE is_active = TRUE
 DO UPDATE SET credentials = EXCLUDED.credentials, is_primary = TRUE;
 
