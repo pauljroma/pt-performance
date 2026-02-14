@@ -86,30 +86,24 @@ struct ProgramReviewDetailView: View {
             ReviewApprovalSheet(
                 review: review,
                 onApprove: { notes in
-                    Task {
-                        await viewModel.approveProgram(notes: notes)
-                        if viewModel.error == nil {
-                            HapticFeedback.success()
-                            dismiss()
-                        }
+                    await viewModel.approveProgram(notes: notes)
+                    if viewModel.error == nil {
+                        HapticFeedback.success()
+                        dismiss()
                     }
                 },
                 onReject: { reason in
-                    Task {
-                        await viewModel.rejectProgram(reason: reason)
-                        if viewModel.error == nil {
-                            HapticFeedback.warning()
-                            dismiss()
-                        }
+                    await viewModel.rejectProgram(reason: reason)
+                    if viewModel.error == nil {
+                        HapticFeedback.warning()
+                        dismiss()
                     }
                 },
                 onRequestRevision: { notes in
-                    Task {
-                        await viewModel.requestRevision(notes: notes)
-                        if viewModel.error == nil {
-                            HapticFeedback.medium()
-                            dismiss()
-                        }
+                    await viewModel.requestRevision(notes: notes)
+                    if viewModel.error == nil {
+                        HapticFeedback.medium()
+                        dismiss()
                     }
                 }
             )
@@ -595,9 +589,11 @@ struct ProgramReviewDetailView: View {
                     Button("Save") {
                         Task {
                             await viewModel.saveNotes()
+                            if viewModel.error == nil {
+                                HapticFeedback.success()
+                                showNotesSheet = false
+                            }
                         }
-                        HapticFeedback.success()
-                        showNotesSheet = false
                     }
                 }
             }
@@ -673,6 +669,8 @@ struct ContraindicationBanner: View {
 /// Uses `ReviewEvidenceCitation` (ACP-395 variant) with: title, authors, journal,
 /// year, doi, relevanceNote, evidenceLevel, formattedAuthors.
 struct ReviewCitationRow: View {
+    private static let doiBaseURL = URL(string: "https://doi.org")!
+
     let citation: ReviewEvidenceCitation
 
     var body: some View {
@@ -714,7 +712,7 @@ struct ReviewCitationRow: View {
                     Spacer()
 
                     if let doi = citation.doi, !doi.isEmpty {
-                        Link(destination: URL(string: "https://doi.org/\(doi)") ?? URL(string: "https://doi.org")!) {
+                        Link(destination: URL(string: "https://doi.org/\(doi)") ?? Self.doiBaseURL) {
                             Label("DOI", systemImage: "link")
                                 .font(.caption)
                         }
@@ -779,7 +777,7 @@ struct EvidenceLevelBadge: View {
 // MARK: - Detail View Model
 
 @MainActor
-class ProgramReviewDetailViewModel: ObservableObject {
+final class ProgramReviewDetailViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var reviewNotes = ""

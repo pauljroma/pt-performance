@@ -169,7 +169,7 @@ enum ProgramReviewServiceError: LocalizedError {
 
 /// Service for therapists to review and approve AI-generated programs
 @MainActor
-class ProgramReviewService: ObservableObject {
+final class ProgramReviewService: ObservableObject {
     private let supabase: PTSupabaseClient
     private let logger = DebugLogger.shared
     private let errorLogger = ErrorLogger.shared

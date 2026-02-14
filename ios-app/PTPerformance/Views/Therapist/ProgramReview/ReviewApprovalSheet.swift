@@ -20,9 +20,9 @@ struct ReviewApprovalSheet: View {
     // MARK: - Properties
 
     let review: ProgramReview
-    let onApprove: (String) -> Void
-    let onReject: (String) -> Void
-    let onRequestRevision: (String) -> Void
+    let onApprove: (String) async -> Void
+    let onReject: (String) async -> Void
+    let onRequestRevision: (String) async -> Void
 
     // MARK: - State
 
@@ -329,13 +329,17 @@ struct ReviewApprovalSheet: View {
             HapticFeedback.medium()
             isSubmitting = true
 
-            switch selectedAction {
-            case .approve:
-                onApprove(notes)
-            case .requestRevision:
-                onRequestRevision(notes)
-            case .reject:
-                onReject(notes)
+            Task {
+                switch selectedAction {
+                case .approve:
+                    await onApprove(notes)
+                case .requestRevision:
+                    await onRequestRevision(notes)
+                case .reject:
+                    await onReject(notes)
+                }
+
+                isSubmitting = false
             }
         } label: {
             HStack {

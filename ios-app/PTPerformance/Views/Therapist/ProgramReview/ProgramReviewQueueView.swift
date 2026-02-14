@@ -65,8 +65,25 @@ struct ProgramReviewQueueView: View {
 
     // MARK: - Computed Properties
 
+    private var tabCounts: (all: Int, pending: Int, inReview: Int, completed: Int) {
+        var pending = 0
+        var inReview = 0
+        var completed = 0
+        for review in viewModel.reviewQueue {
+            switch review.status {
+            case .pendingReview:
+                pending += 1
+            case .inReview:
+                inReview += 1
+            case .approved, .rejected, .revisionRequested:
+                completed += 1
+            }
+        }
+        return (viewModel.reviewQueue.count, pending, inReview, completed)
+    }
+
     private var pendingCount: Int {
-        viewModel.reviewQueue.filter { $0.status == .pendingReview }.count
+        tabCounts.pending
     }
 
     private var filteredReviews: [ProgramReview] {
@@ -87,13 +104,21 @@ struct ProgramReviewQueueView: View {
     // MARK: - Filter Tabs
 
     private var filterTabs: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        let counts = tabCounts
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.xs) {
                 ForEach(ReviewFilterTab.allCases, id: \.self) { tab in
                     ReviewFilterTabButton(
                         tab: tab,
                         isSelected: selectedFilter == tab,
-                        count: count(for: tab)
+                        count: {
+                            switch tab {
+                            case .all: return counts.all
+                            case .pending: return counts.pending
+                            case .inReview: return counts.inReview
+                            case .completed: return counts.completed
+                            }
+                        }()
                     ) {
                         HapticFeedback.selectionChanged()
                         withAnimation(.easeInOut(duration: AnimationDuration.quick)) {
@@ -217,22 +242,6 @@ struct ProgramReviewQueueView: View {
         .accessibilityLabel("\(pendingCount) pending \(pendingCount == 1 ? "review" : "reviews")")
     }
 
-    // MARK: - Helpers
-
-    private func count(for tab: ReviewFilterTab) -> Int {
-        switch tab {
-        case .all:
-            return viewModel.reviewQueue.count
-        case .pending:
-            return viewModel.reviewQueue.filter { $0.status == .pendingReview }.count
-        case .inReview:
-            return viewModel.reviewQueue.filter { $0.status == .inReview }.count
-        case .completed:
-            return viewModel.reviewQueue.filter {
-                $0.status == .approved || $0.status == .rejected || $0.status == .revisionRequested
-            }.count
-        }
-    }
 }
 
 // MARK: - Filter Tab Enum
@@ -450,7 +459,7 @@ extension ReviewStatus {
 // MARK: - View Model
 
 @MainActor
-class ProgramReviewQueueViewModel: ObservableObject {
+final class ProgramReviewQueueViewModel: ObservableObject {
     @Published var reviewQueue: [ProgramReview] = []
     @Published var isLoading = false
     @Published var error: String?
@@ -462,11 +471,15 @@ class ProgramReviewQueueViewModel: ObservableObject {
         error = nil
         defer { isLoading = false }
 
+        guard let userIdString = PTSupabaseClient.shared.userId,
+              let therapistId = UUID(uuidString: userIdString) else {
+            self.error = "Not authenticated. Please sign in again."
+            return
+        }
+
         do {
-            // In production, therapistId comes from the authenticated user session.
-            // The service handles fetching and populates its reviewQueue property.
             let reviews = try await reviewService.fetchReviewQueue(
-                therapistId: UUID() // TODO: Replace with authenticated therapist ID
+                therapistId: therapistId
             )
             reviewQueue = reviews
         } catch {

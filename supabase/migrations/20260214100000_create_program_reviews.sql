@@ -13,16 +13,16 @@ BEGIN;
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.program_reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     program_id UUID NOT NULL REFERENCES public.programs(id) ON DELETE CASCADE,
-    reviewer_id UUID NOT NULL REFERENCES public.therapists(id) ON DELETE CASCADE,
+    reviewer_id UUID NOT NULL REFERENCES public.therapists(id) ON DELETE RESTRICT,
 
     -- Review status workflow
     status TEXT NOT NULL DEFAULT 'pending_review'
         CHECK (status IN ('pending_review', 'in_review', 'approved', 'rejected', 'revision_requested')),
 
     -- AI generation metadata
-    ai_generated BOOLEAN DEFAULT TRUE,
+    ai_generated BOOLEAN NOT NULL DEFAULT TRUE,
     ai_model TEXT,
     ai_confidence_score DOUBLE PRECISION CHECK (ai_confidence_score IS NULL OR (ai_confidence_score >= 0 AND ai_confidence_score <= 100)),
 
@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS public.program_reviews (
     approved_at TIMESTAMPTZ,
 
     -- Audit timestamps
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ============================================================================
@@ -72,6 +72,11 @@ CREATE INDEX IF NOT EXISTS idx_program_reviews_queue
 -- Filter by status across all reviews
 CREATE INDEX IF NOT EXISTS idx_program_reviews_status
     ON public.program_reviews (status);
+
+-- Ensure only one active review per program at a time
+CREATE UNIQUE INDEX IF NOT EXISTS idx_program_reviews_one_active_per_program
+    ON public.program_reviews (program_id)
+    WHERE status IN ('pending_review', 'in_review');
 
 -- Programs pending review (for dashboard counts)
 CREATE INDEX IF NOT EXISTS idx_programs_review_status
@@ -172,11 +177,20 @@ CREATE POLICY "Patients can view reviews for their programs"
         )
     );
 
+-- Service role for server-side operations (edge functions, cron jobs, etc.)
+CREATE POLICY "Service role has full access"
+    ON public.program_reviews
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
 -- ============================================================================
 -- 6. UPDATED_AT TRIGGER
 -- ============================================================================
 
 -- Depends on: update_updated_at_column() from 20260104220000_build138_complete_schema.sql
+DROP TRIGGER IF EXISTS update_program_reviews_updated_at ON public.program_reviews;
 CREATE TRIGGER update_program_reviews_updated_at
     BEFORE UPDATE ON public.program_reviews
     FOR EACH ROW

@@ -4,7 +4,7 @@ import SwiftUI
 /// Supplement Detail View - View supplement details and add to routine
 struct SupplementDetailView: View {
     @StateObject private var viewModel = SupplementDetailViewModel()
-    @StateObject private var interactionService = SupplementInteractionService.shared
+    @ObservedObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.dismiss) private var dismiss
 
     let supplementId: UUID
@@ -236,7 +236,7 @@ struct SupplementDetailView: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("No known interactions with your current routine")
             } else {
-                ForEach(relevantInteractions, id: \.description) { interaction in
+                ForEach(relevantInteractions) { interaction in
                     HStack(alignment: .top, spacing: Spacing.sm) {
                         Circle()
                             .fill(interactionSeverityColor(interaction.severity))

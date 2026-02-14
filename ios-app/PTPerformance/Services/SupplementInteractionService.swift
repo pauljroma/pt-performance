@@ -286,7 +286,7 @@ private struct CachedResult {
 /// ## Thread Safety
 /// Marked `@MainActor` for safe UI state updates. All network operations are async.
 @MainActor
-class SupplementInteractionService: ObservableObject {
+final class SupplementInteractionService: ObservableObject {
 
     // MARK: - Singleton
 

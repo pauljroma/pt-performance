@@ -6,7 +6,7 @@ import SwiftUI
 /// swipe-to-log, goal-based recommendations, and evidence grades
 struct SupplementDashboardView: View {
     @StateObject private var viewModel = SupplementDashboardViewModel()
-    @StateObject private var interactionService = SupplementInteractionService.shared
+    @ObservedObject private var interactionService = SupplementInteractionService.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var showingQuickLog = false
     @State private var showingRoutineEditor = false
@@ -84,11 +84,15 @@ struct SupplementDashboardView: View {
             }
             .task {
                 await viewModel.loadData()
-                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
+                if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
+                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                }
             }
             .refreshable {
                 await viewModel.loadData()
-                try? await interactionService.checkCurrentRoutine(patientId: UUID()) // TODO: Replace with authenticated patient ID
+                if let userId = PTSupabaseClient.shared.userId, let patientId = UUID(uuidString: userId) {
+                    try? await interactionService.checkCurrentRoutine(patientId: patientId)
+                }
             }
             .sheet(isPresented: $showingInteractionView) {
                 NavigationStack {
@@ -137,7 +141,7 @@ struct SupplementDashboardView: View {
                     SafetyWarningBanner(
                         safetyRating: rating,
                         interactionCount: interactionService.interactions.count,
-                        mostCriticalMessage: interactionService.interactions.first?.description,
+                        mostCriticalMessage: interactionService.interactions.max(by: { $0.severity < $1.severity })?.description,
                         onTap: {
                             showingInteractionView = true
                         }

@@ -412,22 +412,6 @@ struct ProgramReview: Codable, Identifiable, Hashable, Equatable, Sendable {
     }
 }
 
-// MARK: - Hashable Conformance for Structs with Arrays
-
-extension ProgramReview {
-    static func == (lhs: ProgramReview, rhs: ProgramReview) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.status == rhs.status &&
-        lhs.updatedAt == rhs.updatedAt
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(status)
-        hasher.combine(updatedAt)
-    }
-}
-
 // MARK: - Preview Support
 
 #if DEBUG

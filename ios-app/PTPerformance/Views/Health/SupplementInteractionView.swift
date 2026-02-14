@@ -22,7 +22,7 @@ struct SupplementInteractionView: View {
 
     // MARK: - Properties
 
-    @StateObject private var interactionService = SupplementInteractionService.shared
+    @ObservedObject private var interactionService = SupplementInteractionService.shared
     @ObservedObject private var supplementService = SupplementService.shared
     @Environment(\.colorScheme) private var colorScheme
 
@@ -59,7 +59,7 @@ struct SupplementInteractionView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.lg) {
+            LazyVStack(alignment: .leading, spacing: Spacing.lg) {
                 // Input Section
                 inputSection
 
@@ -443,6 +443,10 @@ struct SupplementInteractionView: View {
         .accessibilityLabel("No interactions found. Your supplement combination appears safe.")
     }
 
+    private var sortedInteractions: [SupplementInteraction] {
+        (lastResult?.interactions ?? []).sorted { $0.severity > $1.severity }
+    }
+
     /// List of interaction cards sorted by severity
     private func interactionsListSection(_ interactions: [SupplementInteraction]) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -456,7 +460,7 @@ struct SupplementInteractionView: View {
             }
             .accessibilityAddTraits(.isHeader)
 
-            ForEach(interactions) { interaction in
+            ForEach(sortedInteractions) { interaction in
                 InteractionResultCard(interaction: interaction)
             }
         }
