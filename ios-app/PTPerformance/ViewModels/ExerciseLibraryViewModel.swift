@@ -286,22 +286,35 @@ class ExerciseLibraryViewModel: ObservableObject {
     // MARK: - Published State
 
     /// All available exercises
-    @Published var allExercises: [LibraryExerciseItem] = []
+    @Published var allExercises: [LibraryExerciseItem] = [] {
+        didSet {
+            recomputeExerciseCountsByGroup()
+            recomputeFilteredExercises()
+        }
+    }
 
     /// Search text with debounce
     @Published var searchText: String = ""
 
     /// Active muscle group filter
-    @Published var selectedExerciseMuscleGroup: ExerciseMuscleGroup? = nil
+    @Published var selectedExerciseMuscleGroup: ExerciseMuscleGroup? = nil {
+        didSet { recomputeFilteredExercises() }
+    }
 
     /// Active equipment filters (multi-select)
-    @Published var selectedEquipment: Set<EquipmentType> = []
+    @Published var selectedEquipment: Set<EquipmentType> = [] {
+        didSet { recomputeFilteredExercises() }
+    }
 
     /// Active difficulty filter
-    @Published var selectedDifficulty: ExerciseDifficulty? = nil
+    @Published var selectedDifficulty: ExerciseDifficulty? = nil {
+        didSet { recomputeFilteredExercises() }
+    }
 
     /// Currently selected exercise for detail view
-    @Published var selectedExercise: LibraryExerciseItem? = nil
+    @Published var selectedExercise: LibraryExerciseItem? = nil {
+        didSet { recomputeCachedSimilarExercises() }
+    }
 
     /// Recently viewed exercises
     @Published var recentlyViewed: [LibraryExerciseItem] = []
@@ -315,6 +328,15 @@ class ExerciseLibraryViewModel: ObservableObject {
     /// Popular exercises (most commonly used)
     @Published var popularExercises: [LibraryExerciseItem] = []
 
+    /// Cached filtered exercises list (Fix 2: avoids recomputing on every access)
+    @Published private(set) var cachedFilteredExercises: [LibraryExerciseItem] = []
+
+    /// Pre-computed exercise counts per muscle group (Fix 3: avoids O(N*M) per render)
+    @Published var exerciseCountsByGroup: [ExerciseMuscleGroup: Int] = [:]
+
+    /// Cached similar exercises for the selected exercise (Fix 9: avoids recomputing on every access)
+    @Published private(set) var cachedSimilarExercises: [LibraryExerciseItem] = []
+
     // MARK: - Private
 
     private var cancellables = Set<AnyCancellable>()
@@ -323,8 +345,14 @@ class ExerciseLibraryViewModel: ObservableObject {
 
     // MARK: - Computed Properties
 
-    /// Filtered exercise list based on active filters
+    /// Filtered exercise list based on active filters (delegates to cached version)
     var filteredExercises: [LibraryExerciseItem] {
+        cachedFilteredExercises
+    }
+
+    /// Recomputes the cached filtered exercises list. Called from didSet of filter properties
+    /// and from the search debounce pipeline. (Fix 2)
+    private func recomputeFilteredExercises() {
         var results = allExercises
 
         // Apply muscle group filter
@@ -371,27 +399,32 @@ class ExerciseLibraryViewModel: ObservableObject {
             }
         }
 
-        return results.sorted { $0.name < $1.name }
+        cachedFilteredExercises = results.sorted { $0.name < $1.name }
     }
 
-    /// Whether any filters are active
-    var hasActiveFilters: Bool {
-        selectedExerciseMuscleGroup != nil || !selectedEquipment.isEmpty || selectedDifficulty != nil
+    /// Pre-computes exercise counts per muscle group (Fix 3)
+    private func recomputeExerciseCountsByGroup() {
+        var counts: [ExerciseMuscleGroup: Int] = [:]
+        for group in ExerciseMuscleGroup.allCases {
+            counts[group] = allExercises.filter { exercise in
+                if let mg = exercise.muscleGroup, mg == group { return true }
+                let lowerName = exercise.name.lowercased()
+                let lowerCategory = exercise.category?.lowercased() ?? ""
+                let lowerRegion = exercise.bodyRegion?.lowercased() ?? ""
+                return group.bodyRegionMatches.contains(where: { lowerRegion.contains($0) })
+                    || group.categoryMatches.contains(where: { lowerCategory.contains($0) || lowerName.contains($0) })
+            }.count
+        }
+        exerciseCountsByGroup = counts
     }
 
-    /// Count of active filters
-    var activeFilterCount: Int {
-        var count = 0
-        if selectedExerciseMuscleGroup != nil { count += 1 }
-        count += selectedEquipment.count
-        if selectedDifficulty != nil { count += 1 }
-        return count
-    }
-
-    /// Similar exercises to the selected one
-    var similarExercises: [LibraryExerciseItem] {
-        guard let selected = selectedExercise else { return [] }
-        return allExercises
+    /// Recomputes cached similar exercises when selectedExercise changes (Fix 9)
+    private func recomputeCachedSimilarExercises() {
+        guard let selected = selectedExercise else {
+            cachedSimilarExercises = []
+            return
+        }
+        cachedSimilarExercises = allExercises
             .filter { $0.id != selected.id }
             .filter { exercise in
                 // Match on same muscle group
@@ -418,15 +451,34 @@ class ExerciseLibraryViewModel: ObservableObject {
             .map { $0 }
     }
 
+    /// Whether any filters are active
+    var hasActiveFilters: Bool {
+        selectedExerciseMuscleGroup != nil || !selectedEquipment.isEmpty || selectedDifficulty != nil
+    }
+
+    /// Count of active filters
+    var activeFilterCount: Int {
+        var count = 0
+        if selectedExerciseMuscleGroup != nil { count += 1 }
+        count += selectedEquipment.count
+        if selectedDifficulty != nil { count += 1 }
+        return count
+    }
+
+    /// Similar exercises to the selected one (delegates to cached version, Fix 9)
+    var similarExercises: [LibraryExerciseItem] {
+        cachedSimilarExercises
+    }
+
     // MARK: - Initialization
 
     init() {
-        // Set up search debounce
+        // Set up search debounce - recompute filtered exercises when search text changes
         $searchText
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { [weak self] _ in
-                self?.objectWillChange.send()
+                self?.recomputeFilteredExercises()
             }
             .store(in: &cancellables)
     }

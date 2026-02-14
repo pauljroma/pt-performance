@@ -131,14 +131,14 @@ struct PRPredictionView: View {
                         label: "ETA",
                         value: formatWeeks(prediction.estimatedWeeksToMilestone),
                         unit: "",
-                        color: .orange
+                        color: .modusCyan.opacity(0.8)
                     )
 
                     predictionStat(
                         label: "Rate",
                         value: String(format: "+%.1f", prediction.weeklyProgressRate),
                         unit: "/wk",
-                        color: .purple
+                        color: .modusDeepTeal
                     )
                 }
 
@@ -330,15 +330,15 @@ struct PRPredictionView: View {
 
                 // Milestone line
                 RuleMark(y: .value("Milestone", prediction.nextMilestone))
-                    .foregroundStyle(Color.orange.opacity(0.5))
+                    .foregroundStyle(Color.modusDeepTeal.opacity(0.5))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
                     .annotation(position: .top, alignment: .trailing) {
                         Text(String(format: "%.0f %@", prediction.nextMilestone, WeightUnit.defaultUnit))
                             .font(.caption2)
                             .fontWeight(.medium)
-                            .foregroundColor(.orange)
+                            .foregroundColor(.modusDeepTeal)
                             .padding(3)
-                            .background(Color.orange.opacity(0.1))
+                            .background(Color.modusDeepTeal.opacity(0.1))
                             .cornerRadius(CornerRadius.xs)
                     }
             }
@@ -389,11 +389,11 @@ struct PRPredictionView: View {
 
                 HStack(spacing: 4) {
                     Rectangle()
-                        .fill(Color.orange)
+                        .fill(Color.modusDeepTeal)
                         .frame(width: 16, height: 3)
                         .overlay(
                             Rectangle()
-                                .stroke(Color.orange, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                                .stroke(Color.modusDeepTeal, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
                                 .frame(height: 1)
                         )
                     Text("Milestone")
@@ -449,7 +449,7 @@ struct PRPredictionView: View {
 
     private func confidenceColor(_ confidence: Double) -> Color {
         if confidence >= 75 { return .modusTealAccent }
-        if confidence >= 50 { return .orange }
+        if confidence >= 50 { return .modusCyan.opacity(0.8) }
         return .secondary
     }
 

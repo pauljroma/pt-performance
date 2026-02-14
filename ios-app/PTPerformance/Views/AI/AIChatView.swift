@@ -10,7 +10,7 @@
 import SwiftUI
 
 struct AIChatView: View {
-    @ObservedObject private var chatService = AIChatService.shared
+    @StateObject private var chatService = AIChatService.shared
     @State private var messageText = ""
     @State private var scrollProxy: ScrollViewProxy?
     @State private var errorMessage: String?
@@ -18,7 +18,6 @@ struct AIChatView: View {
     @State private var lastFailedMessage: String?
     @State private var showSearch = false
     @State private var showPinnedSection = false
-    @State private var appearedMessageIds: Set<UUID> = []
     @FocusState private var isInputFocused: Bool
 
     var body: some View {
@@ -422,7 +421,7 @@ struct AIChatView: View {
             }
         }
         .padding()
-        .background(Color.orange)
+        .background(DesignTokens.statusError)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Error: \(error). Tap retry to try again.")
     }
@@ -433,7 +432,7 @@ struct AIChatView: View {
         VStack(spacing: Spacing.sm) {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: "exclamationmark.circle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusError)
                     .accessibilityHidden(true)
 
                 Text("Unable to get a response")
@@ -458,7 +457,7 @@ struct AIChatView: View {
             }
         }
         .padding()
-        .background(Color.orange.opacity(0.1))
+        .background(DesignTokens.statusError.opacity(0.1))
         .cornerRadius(CornerRadius.md)
         .padding(.horizontal)
     }
@@ -735,10 +734,14 @@ struct ChatBubblePolished: View {
         }
     }
 
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .abbreviated
+        return f
+    }()
+
     private func timeAgo(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
+        Self.relativeDateFormatter.localizedString(for: date, relativeTo: Date())
     }
 }
 

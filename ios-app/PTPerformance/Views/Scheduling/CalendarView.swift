@@ -26,16 +26,70 @@ struct CalendarView: View {
     @State private var selectedDate = Date()
     @State private var currentMonth = Date()
     @State private var viewMode: CalendarViewMode = .month
-    @State private var scheduledSessions: [ScheduledSession] = []
+    @State private var scheduledSessions: [ScheduledSession] = [] {
+        didSet { rebuildSessionsByDate() }
+    }
+    /// Cached dictionary mapping date strings ("yyyy-MM-dd") to sessions (Fix 4)
+    @State private var sessionsByDate: [String: [ScheduledSession]] = [:]
     @State private var isLoading = false
     @State private var showScheduleSheet = false
     @State private var showDayDetailSheet = false
     @State private var quickAddDate: Date?
+    /// Cached month dates grid, recalculated only when currentMonth changes (Fix 6)
+    @State private var cachedMonthDates: [Date?] = []
 
     let onDateSelected: ((Date) -> Void)?
 
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+
+    // Fix 5: Static DateFormatters to avoid repeated allocations
+    private static let monthYearFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM yyyy"
+        return f
+    }()
+    private static let dayOfWeekFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE"
+        return f
+    }()
+    private static let daySubtitleFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM d, yyyy"
+        return f
+    }()
+    private static let fullDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .full
+        f.timeStyle = .none
+        return f
+    }()
+    private static let weekRangeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+    private static let dayNumberFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "d"
+        return f
+    }()
+    private static let sessionDateKeyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    private static let mediumDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+    private static let accessibilityDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .full
+        return f
+    }()
 
     init(onDateSelected: ((Date) -> Void)? = nil) {
         self.onDateSelected = onDateSelected
@@ -63,7 +117,11 @@ struct CalendarView: View {
             trainingLoadLegend
         }
         .onAppear {
+            cachedMonthDates = Self.computeMonthDates(for: currentMonth, calendar: calendar)
             loadScheduledSessions()
+        }
+        .onChange(of: currentMonth) { _, newMonth in
+            cachedMonthDates = Self.computeMonthDates(for: newMonth, calendar: calendar)
         }
         .sheet(isPresented: $showScheduleSheet) {
             if let date = quickAddDate {
@@ -420,36 +478,26 @@ struct CalendarView: View {
     // MARK: - Helper Properties
 
     private var headerTitle: String {
-        let formatter = DateFormatter()
         if viewMode == .day {
-            formatter.dateFormat = "EEEE"
-            return formatter.string(from: selectedDate)
+            return Self.dayOfWeekFormatter.string(from: selectedDate)
         }
-        formatter.dateFormat = "MMMM yyyy"
-        return formatter.string(from: currentMonth)
+        return Self.monthYearFormatter.string(from: currentMonth)
     }
 
     private var daySubtitle: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d, yyyy"
-        return formatter.string(from: selectedDate)
+        Self.daySubtitleFormatter.string(from: selectedDate)
     }
 
     private var dayFullDateString: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        formatter.timeStyle = .none
-        return formatter.string(from: selectedDate)
+        Self.fullDateFormatter.string(from: selectedDate)
     }
 
     private var weekRangeString: String {
         guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentMonth) else {
             return ""
         }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        let start = formatter.string(from: weekInterval.start)
-        let end = formatter.string(from: weekInterval.end)
+        let start = Self.weekRangeFormatter.string(from: weekInterval.start)
+        let end = Self.weekRangeFormatter.string(from: weekInterval.end)
         return "\(start) - \(end)"
     }
 
@@ -458,8 +506,14 @@ struct CalendarView: View {
         return Array(symbols.suffix(1) + symbols.prefix(6))
     }
 
+    /// Computes month dates for the calendar grid
     private var monthDates: [Date?] {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth),
+        cachedMonthDates
+    }
+
+    /// Recomputes month dates when currentMonth changes (Fix 6)
+    private static func computeMonthDates(for month: Date, calendar: Calendar) -> [Date?] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: month),
               let monthFirstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start) else {
             return []
         }
@@ -501,10 +555,20 @@ struct CalendarView: View {
         sessionsForDate(selectedDate)
     }
 
+    /// Looks up sessions by date string key (Fix 4: O(1) dictionary lookup instead of O(N) filter)
     private func sessionsForDate(_ date: Date) -> [ScheduledSession] {
-        scheduledSessions.filter { session in
-            calendar.isDate(session.scheduledDate, inSameDayAs: date)
+        let key = Self.sessionDateKeyFormatter.string(from: date)
+        return sessionsByDate[key] ?? []
+    }
+
+    /// Rebuilds the sessionsByDate dictionary when scheduledSessions changes (Fix 4)
+    private func rebuildSessionsByDate() {
+        var dict: [String: [ScheduledSession]] = [:]
+        for session in scheduledSessions {
+            let key = Self.sessionDateKeyFormatter.string(from: session.scheduledDate)
+            dict[key, default: []].append(session)
         }
+        sessionsByDate = dict
     }
 
     // MARK: - Training Load
@@ -598,10 +662,14 @@ struct EnhancedCalendarDateCell: View {
 
     @State private var showQuickAdd = false
 
+    private static let dayNumberFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "d"
+        return f
+    }()
+
     private var dayNumber: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
+        Self.dayNumberFormatter.string(from: date)
     }
 
     var body: some View {
@@ -739,10 +807,14 @@ struct EnhancedCalendarDateCell: View {
 
     // MARK: - Accessibility
 
+    private static let accessibilityDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .full
+        return f
+    }()
+
     private var accessibilityDescription: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        var desc = formatter.string(from: date)
+        var desc = Self.accessibilityDateFormatter.string(from: date)
 
         if isToday { desc += ", Today" }
 
@@ -910,10 +982,14 @@ struct DayDetailSheet: View {
         .presentationDetents([.medium, .large])
     }
 
+    private static let mediumDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
     private var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        Self.mediumDateFormatter.string(from: date)
     }
 
     private var daySummaryHeader: some View {

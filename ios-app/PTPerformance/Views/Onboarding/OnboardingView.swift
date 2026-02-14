@@ -5,7 +5,7 @@ import SwiftUI
 /// Main onboarding view — reduced to 3 value-proposition pages + quick start option
 /// Shows immediate value before asking for any data
 struct OnboardingView: View {
-    @ObservedObject private var coordinator = OnboardingCoordinator.shared
+    @StateObject private var coordinator = OnboardingCoordinator.shared
     @State private var currentPage = 0
     @Environment(\.dismiss) private var dismiss
 
@@ -38,6 +38,8 @@ struct OnboardingView: View {
                                 .background(Color.modusCyan.opacity(0.12))
                                 .cornerRadius(CornerRadius.xl)
                         }
+                        .accessibilityLabel("Quick Start")
+                        .accessibilityHint("Skip onboarding and jump straight into the app")
                         .padding(.trailing, 20)
                     }
                 }
@@ -60,6 +62,10 @@ struct OnboardingView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
+                .accessibilityLabel("Onboarding pages. Page \(currentPage + 1) of \(totalPages)")
+                .onChange(of: currentPage) { _, _ in
+                    HapticFeedback.light()
+                }
 
                 // Bottom CTA area
                 VStack(spacing: 12) {
@@ -74,6 +80,8 @@ struct OnboardingView: View {
                                 .background(Color.modusCyan)
                                 .cornerRadius(CornerRadius.md)
                         }
+                        .accessibilityLabel("Set Up My Profile")
+                        .accessibilityHint("Proceed to personalize your experience")
 
                         // Quick start bypass
                         Button(action: handleQuickStart) {
@@ -81,6 +89,8 @@ struct OnboardingView: View {
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.modusCyan)
                         }
+                        .accessibilityLabel("Explore First")
+                        .accessibilityHint("Skip setup and explore the app")
                         .padding(.bottom, 8)
                     } else {
                         // Non-final pages — subtle next hint
@@ -101,6 +111,7 @@ struct OnboardingView: View {
 
     /// Quick start: skip setup entirely, jump straight into the app
     private func handleQuickStart() {
+        HapticFeedback.medium()
         ErrorLogger.shared.logUserAction(
             action: "onboarding_quick_start",
             properties: ["page_at_skip": currentPage]
@@ -111,6 +122,7 @@ struct OnboardingView: View {
 
     /// Normal flow: complete onboarding, proceed to setup
     private func handleGetStarted() {
+        HapticFeedback.medium()
         ErrorLogger.shared.logUserAction(
             action: "onboarding_completed",
             properties: ["pages_viewed": totalPages]
@@ -206,6 +218,8 @@ private struct ValuePreviewChip: View {
         .padding(.vertical, 14)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
     }
 }
 
@@ -283,6 +297,8 @@ private struct FeatureCard: View {
         .padding(14)
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(CornerRadius.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(subtitle)")
     }
 }
 

@@ -521,11 +521,11 @@ struct ProgramLibraryBrowserView: View {
     private func colorForCategory(_ category: String) -> Color {
         switch category.lowercased() {
         case "all": return .gray
-        case "annuals": return .purple
-        case "strength": return .blue
-        case "mobility": return .green
+        case "annuals": return .modusDeepTeal
+        case "strength": return .modusCyan
+        case "mobility": return .modusTealAccent
         case "conditioning": return .red
-        case "baseball": return .orange
+        case "baseball": return .modusCyan.opacity(0.8)
         default: return .gray
         }
     }
@@ -543,9 +543,9 @@ struct ProgramLibraryBrowserView: View {
     private func colorForDifficulty(_ difficulty: String) -> Color {
         switch difficulty.lowercased() {
         case "all": return .gray
-        case "beginner": return .green
-        case "intermediate": return .orange
-        case "advanced": return .red
+        case "beginner": return .modusTealAccent
+        case "intermediate": return .modusCyan
+        case "advanced": return .modusDeepTeal
         default: return .gray
         }
     }
@@ -612,20 +612,20 @@ private struct BaseballCategoryChip: View {
                 if isPremium {
                     Image(systemName: "lock.fill")
                         .font(.caption2)
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .orange)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .modusCyan.opacity(0.8))
                         .accessibilityHidden(true)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.orange : Color(.tertiarySystemGroupedBackground))
+            .background(isSelected ? Color.modusCyan.opacity(0.8) : Color(.tertiarySystemGroupedBackground))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(CornerRadius.xl)
             .overlay(
                 // Premium indicator border
                 RoundedRectangle(cornerRadius: 20)
                     .strokeBorder(
-                        isPremium && !isSelected ? Color.orange.opacity(0.5) : Color.clear,
+                        isPremium && !isSelected ? Color.modusCyan.opacity(0.4) : Color.clear,
                         lineWidth: 1.5
                     )
             )
@@ -868,13 +868,13 @@ struct ProgramCategoryBadge: View {
 
     private var categoryColor: Color {
         switch category.lowercased() {
-        case "annuals": return .purple
-        case "strength": return .blue
-        case "mobility": return .green
+        case "annuals": return .modusDeepTeal
+        case "strength": return .modusCyan
+        case "mobility": return .modusTealAccent
         case "cardio", "conditioning": return .red
-        case "recovery": return .teal
-        case "sport": return .orange
-        case "baseball": return .orange
+        case "recovery": return .modusTealAccent.opacity(0.7)
+        case "sport": return .modusCyan.opacity(0.8)
+        case "baseball": return .modusCyan.opacity(0.8)
         default: return .gray
         }
     }
@@ -912,9 +912,9 @@ struct ProgramDifficultyBadge: View {
 
     private var difficultyColor: Color {
         switch difficulty.lowercased() {
-        case "beginner": return .green
-        case "intermediate": return .orange
-        case "advanced": return .red
+        case "beginner": return .modusTealAccent
+        case "intermediate": return .modusCyan
+        case "advanced": return .modusDeepTeal
         default: return .gray
         }
     }
@@ -1135,9 +1135,9 @@ private struct PreviewDayRow: View {
 
     private func difficultyColor(_ difficulty: String) -> Color {
         switch difficulty.lowercased() {
-        case "beginner": return .green
-        case "intermediate": return .orange
-        case "advanced": return .red
+        case "beginner": return .modusTealAccent
+        case "intermediate": return .modusCyan
+        case "advanced": return .modusDeepTeal
         default: return .gray
         }
     }
@@ -1256,7 +1256,7 @@ struct ProgramPreviewSheet: View {
                 value: program.formattedDuration,
                 label: "Duration",
                 icon: "calendar",
-                color: .blue
+                color: .modusCyan
             )
 
             statCard(
@@ -1270,7 +1270,7 @@ struct ProgramPreviewSheet: View {
                 value: program.category.capitalized,
                 label: "Category",
                 icon: program.categoryIcon,
-                color: .purple
+                color: .modusDeepTeal
             )
         }
     }
@@ -1327,10 +1327,10 @@ struct ProgramPreviewSheet: View {
                 ForEach(program.tagsList, id: \.self) { tag in
                     Text("#\(tag)")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.modusCyan)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.1))
+                        .background(Color.modusCyan.opacity(0.1))
                         .cornerRadius(CornerRadius.sm)
                 }
             }
@@ -1352,7 +1352,7 @@ struct ProgramPreviewSheet: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(Color.blue)
+                .background(Color.modusCyan)
                 .foregroundColor(.white)
                 .cornerRadius(CornerRadius.md)
             }

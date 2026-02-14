@@ -150,7 +150,7 @@ struct StrengthAnalyticsDeepDiveView: View {
         VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.largeTitle)
-                .foregroundColor(.orange)
+                .foregroundColor(DesignTokens.statusWarning)
 
             Text("Unable to load analytics")
                 .font(.headline)
@@ -272,9 +272,9 @@ enum MuscleGroup: String, CaseIterable, Identifiable {
         case .chest: return .modusCyan
         case .back: return .modusDeepTeal
         case .shoulders: return .modusTealAccent
-        case .legs: return .orange
-        case .arms: return .purple
-        case .core: return .yellow
+        case .legs: return .modusCyan.opacity(0.7)
+        case .arms: return .modusDeepTeal.opacity(0.7)
+        case .core: return .modusTealAccent.opacity(0.7)
         case .fullBody: return .modusLightTeal
         case .other: return .gray
         }
@@ -500,51 +500,65 @@ class StrengthDeepDiveViewModel: ObservableObject {
 
         var allProgress: [ExerciseOneRMProgress] = []
 
-        for record in response {
-            // Fetch time-series for each exercise (limited to top exercises for performance)
-            guard allProgress.count < 20 else { break }
+        // Fix: Use TaskGroup for concurrent fetching instead of sequential N+1 queries
+        await withTaskGroup(of: ExerciseOneRMProgress?.self) { group in
+            for record in response.prefix(20) {
+                group.addTask { [strengthService, patientId, logger] in
+                    do {
+                        let timeSeries = try await strengthService.fetchExerciseProgressTimeSeries(
+                            patientId: patientId,
+                            exerciseName: record.exerciseName,
+                            limit: 30
+                        )
 
-            do {
-                let timeSeries = try await strengthService.fetchExerciseProgressTimeSeries(
-                    patientId: patientId,
-                    exerciseName: record.exerciseName,
-                    limit: 30
-                )
+                        let dataPoints = timeSeries.map { point in
+                            let est1RM = RMCalculator.epley(weight: point.weight, reps: point.reps)
+                            return OneRMDataPoint(
+                                date: point.date,
+                                weight: point.weight,
+                                reps: point.reps,
+                                estimated1RM: est1RM,
+                                volume: point.volume
+                            )
+                        }
 
-                let dataPoints = timeSeries.map { point in
-                    let est1RM = RMCalculator.epley(weight: point.weight, reps: point.reps)
-                    return OneRMDataPoint(
-                        date: point.date,
-                        weight: point.weight,
-                        reps: point.reps,
-                        estimated1RM: est1RM,
-                        volume: point.volume
-                    )
+                        guard !dataPoints.isEmpty else { return nil }
+
+                        let current1RM = dataPoints.last?.estimated1RM ?? 0
+                        let peak1RM = dataPoints.map { $0.estimated1RM }.max() ?? 0
+                        let muscleGroup = MuscleGroup.from(exerciseName: record.exerciseName)
+
+                        // Calculate weekly progress rate inline
+                        let weeklyRate: Double = {
+                            guard dataPoints.count >= 2 else { return 0 }
+                            let sorted = dataPoints.sorted { $0.date < $1.date }
+                            guard let first = sorted.first, let last = sorted.last else { return 0 }
+                            let weeks = max(1, Calendar.current.dateComponents([.weekOfYear], from: first.date, to: last.date).weekOfYear ?? 1)
+                            return (last.estimated1RM - first.estimated1RM) / Double(weeks)
+                        }()
+
+                        return ExerciseOneRMProgress(
+                            id: record.exerciseName,
+                            exerciseName: record.exerciseName,
+                            dataPoints: dataPoints,
+                            current1RM: current1RM,
+                            peak1RM: peak1RM,
+                            muscleGroup: muscleGroup,
+                            lastPerformedDate: record.lastPerformed,
+                            weeklyProgressRate: weeklyRate
+                        )
+                    } catch {
+                        // Continue even if individual exercise fails
+                        await logger.warning("STRENGTH_DEEP_DIVE", "Failed to fetch time-series for \(record.exerciseName): \(error.localizedDescription)")
+                        return nil
+                    }
                 }
+            }
 
-                guard !dataPoints.isEmpty else { continue }
-
-                let current1RM = dataPoints.last?.estimated1RM ?? 0
-                let peak1RM = dataPoints.map { $0.estimated1RM }.max() ?? 0
-                let muscleGroup = MuscleGroup.from(exerciseName: record.exerciseName)
-
-                // Calculate weekly progress rate
-                let weeklyRate = calculateWeeklyProgressRate(from: dataPoints)
-
-                let progress = ExerciseOneRMProgress(
-                    id: record.exerciseName,
-                    exerciseName: record.exerciseName,
-                    dataPoints: dataPoints,
-                    current1RM: current1RM,
-                    peak1RM: peak1RM,
-                    muscleGroup: muscleGroup,
-                    lastPerformedDate: record.lastPerformed,
-                    weeklyProgressRate: weeklyRate
-                )
-                allProgress.append(progress)
-            } catch {
-                // Continue even if individual exercise fails
-                logger.warning("STRENGTH_DEEP_DIVE", "Failed to fetch time-series for \(record.exerciseName): \(error.localizedDescription)")
+            for await result in group {
+                if let progress = result {
+                    allProgress.append(progress)
+                }
             }
         }
 
@@ -556,8 +570,7 @@ class StrengthDeepDiveViewModel: ObservableObject {
     private func calculateWeeklyProgressRate(from dataPoints: [OneRMDataPoint]) -> Double {
         guard dataPoints.count >= 2 else { return 0 }
         let sorted = dataPoints.sorted { $0.date < $1.date }
-        let first = sorted.first!
-        let last = sorted.last!
+        guard let first = sorted.first, let last = sorted.last else { return 0 }
 
         let weeks = max(1, Calendar.current.dateComponents([.weekOfYear], from: first.date, to: last.date).weekOfYear ?? 1)
         return (last.estimated1RM - first.estimated1RM) / Double(weeks)

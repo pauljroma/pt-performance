@@ -216,7 +216,7 @@ struct ExerciseLibraryView: View {
                     ExerciseMuscleGroupCell(
                         group: group,
                         isSelected: viewModel.selectedExerciseMuscleGroup == group,
-                        exerciseCount: countExercises(for: group)
+                        exerciseCount: viewModel.exerciseCountsByGroup[group] ?? 0
                     ) {
                         withAnimation(.easeInOut(duration: AnimationDuration.standard)) {
                             if viewModel.selectedExerciseMuscleGroup == group {
@@ -418,18 +418,6 @@ struct ExerciseLibraryView: View {
         .padding(.vertical, 60)
     }
 
-    // MARK: - Helpers
-
-    private func countExercises(for group: ExerciseMuscleGroup) -> Int {
-        viewModel.allExercises.filter { exercise in
-            if let mg = exercise.muscleGroup, mg == group { return true }
-            let lowerName = exercise.name.lowercased()
-            let lowerCategory = exercise.category?.lowercased() ?? ""
-            let lowerRegion = exercise.bodyRegion?.lowercased() ?? ""
-            return group.bodyRegionMatches.contains(where: { lowerRegion.contains($0) })
-                || group.categoryMatches.contains(where: { lowerCategory.contains($0) || lowerName.contains($0) })
-        }.count
-    }
 }
 
 // MARK: - Muscle Group Cell

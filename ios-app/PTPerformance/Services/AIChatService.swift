@@ -335,15 +335,27 @@ class AIChatService: ObservableObject {
 
     /// Gathers lightweight user context to send with chat requests
     /// This enables the edge function to provide more personalized responses
+    /// Fix 7: Uses async let for parallel database queries instead of sequential
     private func gatherUserContext() async -> [String: Any] {
         var context: [String: Any] = [:]
 
-        do {
-            // Fetch recent workout names
-            struct WorkoutRow: Decodable {
-                let name: String?
+        // Model types declared outside of do block for clarity
+        struct WorkoutRow: Decodable {
+            let name: String?
+        }
+        struct ReadinessRow: Decodable {
+            let readinessScore: Int?
+            enum CodingKeys: String, CodingKey {
+                case readinessScore = "readiness_score"
             }
-            let recentWorkouts: [WorkoutRow] = try await supabase.client
+        }
+        struct GoalRow: Decodable {
+            let title: String
+        }
+
+        do {
+            // Fix 7: Parallelize the 3 independent database queries with async let
+            async let workouts: [WorkoutRow] = supabase.client
                 .from("manual_sessions")
                 .select("name")
                 .eq("completed", value: true)
@@ -352,19 +364,7 @@ class AIChatService: ObservableObject {
                 .execute()
                 .value
 
-            let workoutNames = recentWorkouts.compactMap { $0.name }
-            if !workoutNames.isEmpty {
-                context["recent_workouts"] = workoutNames
-            }
-
-            // Fetch latest readiness score
-            struct ReadinessRow: Decodable {
-                let readinessScore: Int?
-                enum CodingKeys: String, CodingKey {
-                    case readinessScore = "readiness_score"
-                }
-            }
-            let readiness: [ReadinessRow] = try await supabase.client
+            async let readiness: [ReadinessRow] = supabase.client
                 .from("daily_readiness")
                 .select("readiness_score")
                 .order("date", ascending: false)
@@ -372,15 +372,7 @@ class AIChatService: ObservableObject {
                 .execute()
                 .value
 
-            if let score = readiness.first?.readinessScore {
-                context["readiness_score"] = score
-            }
-
-            // Fetch active goal titles
-            struct GoalRow: Decodable {
-                let title: String
-            }
-            let goals: [GoalRow] = try await supabase.client
+            async let goals: [GoalRow] = supabase.client
                 .from("patient_goals")
                 .select("title")
                 .eq("status", value: "active")
@@ -388,7 +380,18 @@ class AIChatService: ObservableObject {
                 .execute()
                 .value
 
-            let goalTitles = goals.map { $0.title }
+            let (w, r, g) = try await (workouts, readiness, goals)
+
+            let workoutNames = w.compactMap { $0.name }
+            if !workoutNames.isEmpty {
+                context["recent_workouts"] = workoutNames
+            }
+
+            if let score = r.first?.readinessScore {
+                context["readiness_score"] = score
+            }
+
+            let goalTitles = g.map { $0.title }
             if !goalTitles.isEmpty {
                 context["goals"] = goalTitles
             }

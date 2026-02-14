@@ -112,7 +112,7 @@ struct StreakDashboardView: View {
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .fill(Color(.secondarySystemGroupedBackground))
                         .adaptiveShadow(Shadow.subtle)
                 )
@@ -133,7 +133,7 @@ struct StreakDashboardView: View {
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
                         .fill(Color(.secondarySystemGroupedBackground))
                         .adaptiveShadow(Shadow.subtle)
                 )
@@ -160,6 +160,8 @@ struct StreakDashboardView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Current streak: \(viewModel.currentStreak) \(viewModel.currentStreak == 1 ? "day" : "days")")
 
             // Motivational message
             Text(viewModel.motivationalMessage)
@@ -206,7 +208,7 @@ struct StreakDashboardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -277,6 +279,7 @@ struct StreakDashboardView: View {
                     )
                     .cornerRadius(CornerRadius.md)
                 }
+                .accessibilityLabel("Use streak shield. \(freezeService.inventory.availableCount) \(freezeService.inventory.availableCount == 1 ? "shield" : "shields") available")
             }
 
             // Next freeze earned info
@@ -299,7 +302,7 @@ struct StreakDashboardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -380,7 +383,7 @@ struct StreakDashboardView: View {
         .padding()
         .frame(width: 130, height: 100)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.md)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.subtle)
         )
@@ -427,6 +430,8 @@ struct StreakDashboardView: View {
                                     .foregroundColor(hasActivity ? .white : .secondary)
                             )
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(dayLetter(for: date)), day \(Calendar.current.component(.day, from: date)). \(densityAccessibilityLabel(for: density))\(Calendar.current.isDateInToday(date) ? ". Today" : "")")
                 }
             }
 
@@ -441,16 +446,20 @@ struct StreakDashboardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
     }
 
+    private static let dayLetterFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEEE" // Single letter day
+        return f
+    }()
+
     private func dayLetter(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEEE" // Single letter day
-        return formatter.string(from: date)
+        Self.dayLetterFormatter.string(from: date)
     }
 
     /// ACP-1029: Color based on activity density using Modus brand colors
@@ -460,6 +469,15 @@ struct StreakDashboardView: View {
         case .light: return Color.modusCyan.opacity(0.4)
         case .moderate: return Color.modusTealAccent.opacity(0.7)
         case .high: return Color.modusTealAccent
+        }
+    }
+
+    private func densityAccessibilityLabel(for density: ActivityDensity) -> String {
+        switch density {
+        case .none: return "Rest day"
+        case .light: return "Light activity"
+        case .moderate: return "Moderate activity"
+        case .high: return "Full activity"
         }
     }
 
@@ -520,7 +538,7 @@ struct StreakDashboardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )
@@ -568,12 +586,14 @@ struct StreakDashboardView: View {
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(level.displayName) flame level, \(level.rawValue) days. \(isCurrent ? "Current level" : isAchieved ? "Achieved" : "Locked")")
                 }
             }
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.lg)
                 .fill(Color(.secondarySystemGroupedBackground))
                 .adaptiveShadow(Shadow.medium)
         )

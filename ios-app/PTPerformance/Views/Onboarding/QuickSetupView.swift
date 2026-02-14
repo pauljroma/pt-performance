@@ -40,6 +40,8 @@ struct QuickSetupView: View {
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.modusCyan)
                         }
+                        .accessibilityLabel("Skip for Now")
+                        .accessibilityHint("Skip setup and go straight to the app")
                         .padding(.trailing, 20)
                         .padding(.top, 4)
                     }
@@ -81,6 +83,7 @@ struct QuickSetupView: View {
                 HStack(spacing: 16) {
                     if viewModel.canGoBack {
                         Button(action: {
+                            HapticFeedback.medium()
                             viewModel.goToPreviousStep()
                         }) {
                             HStack {
@@ -94,9 +97,12 @@ struct QuickSetupView: View {
                             .background(Color(.secondarySystemGroupedBackground))
                             .cornerRadius(CornerRadius.md)
                         }
+                        .accessibilityLabel("Back")
+                        .accessibilityHint("Go to the previous step")
                     }
 
                     Button(action: {
+                        HapticFeedback.medium()
                         Task {
                             await viewModel.handleContinue()
                         }
@@ -119,6 +125,7 @@ struct QuickSetupView: View {
                         .background(viewModel.canContinue ? Color.modusCyan : Color.gray)
                         .cornerRadius(CornerRadius.md)
                     }
+                    .accessibilityLabel(viewModel.continueButtonText)
                     .disabled(!viewModel.canContinue || viewModel.isLoading)
                 }
                 .padding(.horizontal, 20)
@@ -291,7 +298,10 @@ struct ModeSelectionStepView: View {
                     ModeCard(
                         mode: mode,
                         isSelected: selectedMode == mode,
-                        onTap: { selectedMode = mode }
+                        onTap: {
+                            HapticFeedback.selectionChanged()
+                            selectedMode = mode
+                        }
                     )
                 }
             }
@@ -353,6 +363,9 @@ struct ModeCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(mode.displayName). \(mode.description)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -391,6 +404,7 @@ struct GoalSelectionStepView: View {
                             goal: goal,
                             isSelected: selectedGoals.contains(goal),
                             onTap: {
+                                HapticFeedback.light()
                                 if selectedGoals.contains(goal) {
                                     selectedGoals.remove(goal)
                                 } else if selectedGoals.count < 3 {
@@ -477,6 +491,10 @@ struct GoalVisualCard: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(goal.title). \(goal.description)")
+        .accessibilityHint(isSelected ? "Double tap to deselect this goal" : "Double tap to select this goal")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

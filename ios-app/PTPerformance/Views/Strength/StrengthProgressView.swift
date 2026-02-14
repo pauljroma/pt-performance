@@ -24,7 +24,7 @@ struct StrengthProgressView: View {
                         VStack(spacing: Spacing.md) {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.system(size: 36))
-                                .foregroundColor(.orange)
+                                .foregroundColor(DesignTokens.statusWarning)
                             Text("Failed to Load Volume Data")
                                 .font(.headline)
                             Text(error)
@@ -40,7 +40,7 @@ struct StrengthProgressView: View {
                                 }
                                 .padding(.horizontal, Spacing.lg)
                                 .padding(.vertical, Spacing.sm)
-                                .background(Color.accentColor)
+                                .background(Color.modusCyan)
                                 .foregroundColor(.white)
                                 .cornerRadius(CornerRadius.md)
                             }
@@ -56,7 +56,7 @@ struct StrengthProgressView: View {
                             HStack {
                                 Image(systemName: "chart.bar.fill")
                                     .font(.title2)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.modusCyan)
                                 Text("Training Volume")
                                     .font(.headline)
                             }
@@ -98,7 +98,7 @@ struct StrengthProgressView: View {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "chart.bar")
                     .font(.system(size: 48))
-                    .foregroundColor(.blue.opacity(0.5))
+                    .foregroundColor(.modusCyan.opacity(0.5))
 
                 Text("No Volume Data Yet")
                     .font(.headline)
@@ -171,7 +171,6 @@ struct StrengthVolumeMetricView: View {
                     .fontWeight(.bold)
                     .foregroundColor(volumeData != nil ? .primary : .secondary)
                 if volumeData != nil {
-                    // TODO: Replace hardcoded "lbs" with user's preferred unit once VolumeChartData includes a loadUnit property
                     Text("lbs")
                         .font(.caption)
                         .foregroundColor(.secondary)

@@ -282,8 +282,12 @@ struct StreakMilestoneView: View {
 // MARK: - Confetti View
 
 /// Animated confetti particles
+/// Fix 8: Capped to max 60 particles and uses .drawingGroup() for flattened rendering
 struct ConfettiView: View {
     let count: Int
+
+    /// Maximum number of confetti particles to render (Fix 8)
+    private static let maxParticleCount = 60
 
     @State private var particles: [StreakConfettiParticle] = []
 
@@ -294,6 +298,7 @@ struct ConfettiView: View {
                     StreakConfettiParticleView(particle: particle)
                 }
             }
+            .drawingGroup() // Fix 8: Flatten rendering into a single Metal/Core Graphics layer
             .onAppear {
                 createParticles(in: geometry.size)
             }
@@ -302,7 +307,8 @@ struct ConfettiView: View {
     }
 
     private func createParticles(in size: CGSize) {
-        particles = (0..<count).map { _ in
+        let cappedCount = min(count, Self.maxParticleCount) // Fix 8: Cap particle count
+        particles = (0..<cappedCount).map { _ in
             StreakConfettiParticle(
                 x: CGFloat.random(in: 0...size.width),
                 y: -20,

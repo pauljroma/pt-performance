@@ -58,7 +58,7 @@ struct StalledLiftsDetectorView: View {
             VStack(spacing: 4) {
                 Text("\(stalledLifts.count)")
                     .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(stalledLifts.isEmpty ? .modusTealAccent : .orange)
+                    .foregroundColor(stalledLifts.isEmpty ? .modusTealAccent : DesignTokens.statusWarning)
 
                 Text("Stalled")
                     .font(.caption)
@@ -67,7 +67,7 @@ struct StalledLiftsDetectorView: View {
             .frame(maxWidth: .infinity)
             .padding()
             .background(
-                (stalledLifts.isEmpty ? Color.modusTealAccent : Color.orange).opacity(0.1)
+                (stalledLifts.isEmpty ? Color.modusTealAccent : DesignTokens.statusWarning).opacity(0.1)
             )
             .cornerRadius(CornerRadius.md)
 
@@ -133,7 +133,7 @@ struct StalledLiftsDetectorView: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                 Text("Stalled Exercises")
                     .font(.headline)
                     .foregroundColor(.modusDeepTeal)
@@ -179,10 +179,10 @@ struct StalledLiftsDetectorView: View {
                             .font(.caption)
                             .fontWeight(.medium)
                     }
-                    .foregroundColor(.orange)
+                    .foregroundColor(DesignTokens.statusWarning)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.15))
+                    .background(DesignTokens.statusWarning.opacity(0.15))
                     .cornerRadius(CornerRadius.sm)
                 }
 
@@ -222,7 +222,7 @@ struct StalledLiftsDetectorView: View {
                             x: .value("Date", point.date, unit: .day),
                             y: .value("1RM", point.estimated1RM)
                         )
-                        .foregroundStyle(Color.orange.gradient)
+                        .foregroundStyle(DesignTokens.statusWarning.gradient)
                         .interpolationMethod(.catmullRom)
                         .lineStyle(StrokeStyle(lineWidth: 2))
 
@@ -230,7 +230,7 @@ struct StalledLiftsDetectorView: View {
                             x: .value("Date", point.date, unit: .day),
                             y: .value("1RM", point.estimated1RM)
                         )
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(DesignTokens.statusWarning)
                         .symbolSize(20)
                     }
                     .chartYAxis(.hidden)

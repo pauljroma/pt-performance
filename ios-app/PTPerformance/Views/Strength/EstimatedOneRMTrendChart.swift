@@ -146,7 +146,7 @@ struct EstimatedOneRMTrendChart: View {
                 oneRMStatItem(
                     label: "Weekly Gain",
                     value: String(format: "%+.1f", exercise.weeklyProgressRate),
-                    color: exercise.weeklyProgressRate > 0 ? .green : .red
+                    color: exercise.weeklyProgressRate > 0 ? .modusTealAccent : .red
                 )
 
                 Divider().frame(height: 30)
